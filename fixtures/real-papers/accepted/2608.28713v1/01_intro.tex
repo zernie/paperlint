@@ -1,0 +1,179 @@
+Rust~\cite{matsakis2014rust} is designed to be a \emph{type-sound} language,
+aiming to prevent various undesirable behaviors, including memory bugs like
+use-after-free, at compile time through type checking~\cite{jung2017rustbelt}.
+%
+Recognizing this benefit, researchers and practitioners have adopted Rust for
+systems programming to enhance software reliability.
+%
+Operating systems, web browsers, and network stacks have been developed in
+Rust~\cite{levy2017multiprogramming, lankes2020rustyhermit,
+narayanan2020redleaf, boos2020theseus, hu2024unishyper, peng2024framekernel,
+dai2024verifying, hong2024taming, chiang2024securing, anderson2016engineering,
+chen2025atmosphere, shang2025lwrustip};
+%
+legacy systems, including Linux, have begun integrating Rust~\cite{li2024rust,
+netstack3, rust-dropbox, rust-coreutils};
+%
+and techniques to translate legacy code into Rust have been extensively
+studied~\cite{emre2021translating, emre2023aliasing, zhang2023ownership,
+hong2023concrat, hong2024dont, hong2024tag, wu2025genc2rust, hong2025forcrat,
+hong2025automatically, hong2024type, zhou2025c2rusttv, xu2025optimizing,
+zhang2025systematic, cai2026rustmap, zhang2025scalable}.
+%
+All these lines of work rely on the fundamental assumption that the Rust type
+checker is sound.
+
+Unfortunately, \rustc{}, the official Rust compiler, is not free from defects.
+%
+Liu et al.~\cite{liu2025empiricala} recently demonstrated that the compiler
+suffers from various bugs, including crashes, miscompilations, and improper
+diagnostic messages.
+%
+While all bugs warrant attention, \emph{soundness bugs}, where the type checker
+accepts a program that should be rejected, are especially critical, as they
+undermine Rust's core value of type soundness guarantee.
+%
+Notably, among the 301 \rustc{} bugs collected by Liu et al., 22 were identified
+as soundness bugs.
+
+Despite their importance, soundness bugs in the \rustc{} implementation have not
+yet been studied in depth.
+%
+For instance, it remains unclear which language features are most prone to
+soundness bugs, even though such insights would allow researchers to prioritize
+specific features when developing testing techniques or formalizing the type
+system.
+%
+While Liu et al. analyzed \rustc{} bugs and provided valuable insights, their
+study encompassed all bug categories rather than focusing specifically on
+soundness bugs.
+%
+We believe that an in-depth study dedicated to soundness bugs can benefit the
+community and complement existing work.
+
+In this work, we study 30 \emph{soundness issues} collected from the \rustc{}
+GitHub issue tracker, each representing a case where a developer reported that
+the compiler accepted code that should not pass type checking.
+%
+We analyze each issue in depth to characterize the following:
+%
+the \emph{affected feature},
+%
+the \emph{symptom} (i.e., how the feature is erroneously handled),
+%
+the \emph{consequence} (i.e., the specific undesirable behavior enabled by the
+issue),
+%
+the features that \emph{trigger} the issue,
+%
+the \emph{consensus} of the community regarding whether it is indeed a bug,
+%
+and the \emph{lifecycle} of the issue, encompassing its introduction, discovery,
+and fix.
+
+Furthermore, we investigate artifacts that can aid in testing the type soundness
+of \rustc{}.
+%
+Liu et al.'s study showed that existing testing tools for
+\rustc{}~\cite{fuzz-rustc, tree-splicer, icemaker, sharma2023rustsmith,
+yang2024rusttwins, wang2024rustlantis, dewey2015clp} revealed crash bugs but
+failed to identify a single soundness bug.
+%
+A primary reason for this is the absence of a \emph{test oracle} capable of
+determining whether a given program should be accepted or rejected.
+%
+To address this, RustSmith~\cite{sharma2023rustsmith} employs differential
+testing, comparing results across different \rustc{} versions and
+configurations.
+%
+However, its effectiveness is limited because most soundness issues persist
+across multiple versions and settings, as we observe in our study.
+%
+This underscores the necessity of a test oracle tailored to type soundness.
+
+For this reason, we study the following implementations, which serve as
+potential test oracles:
+%
+AddressSanitizer~\cite{serebryany2012addresssanitizer} (a memory bug detector),
+%
+Miri~\cite{jung2026miri, gh-miri} (a Rust interpreter for detecting undefined
+behavior),
+%
+Chalk~\cite{gh-chalk} (an implementation of the Rust trait system based on a
+logic solver),
+%
+and a-mir-formality~\cite{gh-amirformality} (an executable model of the Rust
+type system).
+%
+We assess their effectiveness by checking whether they can determine that the
+programs from the collected issues should be rejected.
+
+In addition, we study existing documentation that explains the semantics of
+Rust.
+%
+Previous research has demonstrated that \emph{mechanized
+specifications}~\cite{park2021jiset, youn2024bringing} can serve as effective
+test oracles for language implementations,
+%
+detecting numerous bugs in JavaScript engines and
+transpilers~\cite{park2021jest, park2023feature, ryu2024javascript} and
+WebAssembly engines~\cite{youn2025west}, as well as soundness bugs in the P4
+type checker~\cite{lee2026failing}.
+%
+Although Rust currently lacks a full specification~\cite{are-we-spec-yet},
+documents such as the Rust Reference~\cite{rust-reference}, the FLS~\cite{fls},
+and Rust RFCs~\cite{rust-rfcs} provide explanations of the semantics.
+%
+Therefore, we investigate the current state of this documentation and assess
+whether these explanations are sufficiently clear to develop test oracles for
+type soundness.
+
+% ~\cite{rust-reference},
+% ~\cite{rust-rfcs}
+% ~\cite{rustc-dev-guide}
+
+\vspace{0.5em} {\bf Contributions.} Overall, our contributions are as follows:
+%
+\begin{itemize}[leftmargin=*]
+  %
+  \item We construct a three-and-a-half-year dataset of 30 soundness issues in
+    \rustc{} (\cref{sec:method}).
+  %
+  \item We conduct an empirical study of the soundness issues across multiple
+    dimensions, including their affected features, symptoms, consequences,
+    triggers, consensus, and lifecycles (\cref{sec:bugs}).
+  %
+  \item Based on our analysis, we summarize key findings and provide actionable
+    suggestions for researchers and \rustc{} developers to better detect and
+    mitigate soundness bugs (\cref{sec:findings}).
+  %
+  \item We assess existing artifacts that could potentially serve as oracles for
+    testing type soundness, discussing their current capabilities and providing
+    guidelines for their use (\cref{sec:oracles}).
+  %
+\end{itemize}
+
+{\bf Summary of Findings.} We summarize our key findings as follows:
+%
+\begin{itemize}[leftmargin=*]
+  %
+  \item Certain soundness bugs lead to memory bugs; specifically, \emph{implied
+    bounds} and \emph{trait objects} are critical triggering features that can
+    compromise memory safety.
+  %
+  \item \emph{Associated types} frequently serve as a mechanism for exploiting
+    edge cases in other features, and the interaction between \emph{lifetimes}
+    and \emph{traits} poses challenges for sound type checking.
+  %
+  \item Many bugs have persisted since the initial introduction of the relevant
+    features, typically requiring a long time to discover and remaining present
+    across multiple compiler versions.
+  %
+  \item AddressSanitizer and Miri can detect soundness bugs that manifest as
+    memory bugs; other bug categories could be identified by a-mir-formality and
+    Chalk in the future, but they are currently immature.
+  %
+  \item Existing documents are often unclear, and constructing a mechanized
+    specification for Rust cannot be achieved simply by collecting them.
+  %
+\end{itemize}

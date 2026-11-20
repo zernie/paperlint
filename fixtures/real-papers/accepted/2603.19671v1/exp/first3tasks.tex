@@ -1,0 +1,235 @@
+
+
+\begin{table}[hbtp!]
+\centering
+% \small
+% \setlength{\tabcolsep}{6pt}
+% \renewcommand{\arraystretch}{0.96}
+\begin{threeparttable}
+\resizebox{0.95\columnwidth}{!}{%
+\begin{tabular}{clccccccc}
+\toprule
+\textbf{Query} & \textbf{Method} & \textbf{Metric} &
+\textbf{AstroPh} & \textbf{Enron} & \textbf{Epinions1} &
+\textbf{Slashdot} & \textbf{Twitter} & \textbf{Epinions2} \\
+\midrule
+% ===================== k-line walks =====================
+\multirow[c]{6}{*}[-2pt]{$Q_{\mathrm{4\text{-}wk}}$}
+& \multirow[c]{2}{*}{$\mathcal{M}_{\mathrm{4\text{-}wk}}$}
+& Rel. err (\%) & \cellcolor{gray!35}1.48 
+& \cellcolor{gray!35}1.82
+& \cellcolor{gray!35}1.18 
+& \cellcolor{gray!35}1.75 
+& \cellcolor{gray!35}1.22 
+& \cellcolor{gray!35}0.91 \\
+& & Comm. & \cellcolor{gray!12}6.76~MB
+& \cellcolor{gray!12}7.01~MB 
+& \cellcolor{gray!12}15.28~MB 
+& \cellcolor{gray!12}17.27~MB 
+& \cellcolor{gray!12}44.07~MB 
+& \cellcolor{gray!12}26.72~MB \\
+
+\cmidrule(lr){2-9}
+& {\multirow[c]{2}{*}{$\mathrm{WalkClip}_4$}}
+& {Rel. err (\%)} 
+& {98.97} 
+& {98.68} 
+& {98.70} 
+& {97.17} 
+& {97.92} 
+& {99.34} \\
+& & {Comm.} & {10.50~GB} & {40.13~GB} & {171.60~GB} & {178.36~GB} & {197.02~GB} & {515.98~GB} \\
+
+\cmidrule(lr){2-9}
+& \multirow[c]{2}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 572.86 & 929.78 & 733.06 & 1719.88 & 308.38 & 687.89 \\
+& & Comm.$^\dagger$ & 168.00~MB & 641.95~MB & 2745.41~MB & 2853.63~MB & 3152.17~MB & 8255.56~MB \\
+\midrule
+
+\multirow[c]{5}{*}[-3pt]{$Q_{\mathrm{5\text{-}wk}}$}
+& \multirow[c]{2}{*}{$\mathcal{M}_{\mathrm{5\text{-}wk}}$}
+& Rel. err (\%) & \cellcolor{gray!35}2.27 
+& \cellcolor{gray!35}2.30 
+& \cellcolor{gray!35}1.72 
+& \cellcolor{gray!35}2.80 
+& \cellcolor{gray!35}1.49 
+& \cellcolor{gray!35}0.88 \\
+& & Comm. & \cellcolor{gray!12}10.07~MB 
+& \cellcolor{gray!12}10.37~MB 
+& \cellcolor{gray!12}22.63~MB 
+& \cellcolor{gray!12}25.61~MB 
+& \cellcolor{gray!12}65.79~MB 
+& \cellcolor{gray!12}39.58~MB \\
+\cmidrule(lr){2-9}
+
+& {\multirow[c]{2}{*}{$\mathrm{WalkClip}_5$}}
+& {Rel. err (\%)} 
+& {99.76} 
+& {99.59} 
+& {99.61} 
+& {98.88} 
+& {99.35} 
+& {99.84} \\
+& & {Comm.} & {13.13~GB} & {50.16~GB} & {214.49~GB} & {222.95~GB} & {246.27~GB} & {644.98~GB} \\
+\cmidrule(lr){2-9}
+
+
+& \multirow[c]{1}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 1854.25 & 3269.04 & 2346.32 & 8122.89 & 1027.45 & 2208.09 \\
+\midrule
+
+\multirow[c]{5}{*}[-4pt]{
+% \marginnote{{R1.O4}}
+{$Q_{\mathrm{6\text{-}wk}}$}}
+& \multirow[c]{2}{*}{{$\mathcal{M}_{\mathrm{6\text{-}wk}}$}}
+& {Rel. err (\%)} 
+& \cellcolor{gray!35} {5.12} 
+& \cellcolor{gray!35} {7.15} 
+& \cellcolor{gray!35} {2.22} 
+& \cellcolor{gray!35} {5.37} 
+& \cellcolor{gray!35} {2.54} 
+& \cellcolor{gray!35} {1.63} \\
+& & {Comm.} 
+& \cellcolor{gray!12} {13.38~MB} 
+& \cellcolor{gray!12} {13.74~MB} 
+& \cellcolor{gray!12} {29.97~MB} 
+& \cellcolor{gray!12} {33.95~MB} 
+& \cellcolor{gray!12} {87.51~MB} 
+& \cellcolor{gray!12} {52.44~MB} \\
+\cmidrule(lr){2-9}
+
+& {\multirow[c]{2}{*}{$\mathrm{WalkClip}_6$}}
+& {Rel. err (\%)} 
+& {99.95} 
+& {99.88} 
+& {99.89} 
+& {99.58} 
+& {99.81} 
+& {99.96} \\
+& & {Comm.} & {15.75~GB} & {60.19~GB} & {257.39~GB} & {267.54~GB} & {295.53~GB} & {773.98~GB} \\
+
+
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{{$RR_{\text{enum}}$}}
+& {Rel. err (\%)} 
+& {6870.55} & {13021.01} & {8660.78} & {42530.83} & {3771.45} & {8179.33} \\
+\midrule
+
+
+% ===================== k-line paths =====================
+\multirow[c]{3}{*}{$Q_{\mathrm{4\text{-}pt}}$}
+& \multirow[c]{2}{*}{${\mathcal{M}}_{\mathrm{4\text{-}pt}}$}
+& Rel. err (\%) & \cellcolor{gray!35}5.67
+& \cellcolor{gray!35}11.47 
+& \cellcolor{gray!35}5.95 
+& \cellcolor{gray!35}14.02 
+& \cellcolor{gray!35}8.91 
+& \cellcolor{gray!35}8.79 \\
+& & Comm. & \cellcolor{gray!12}3.55~MB 
+& \cellcolor{gray!12}3.59~MB 
+& \cellcolor{gray!12}7.84~MB
+& \cellcolor{gray!12}8.92~MB 
+& \cellcolor{gray!12}23.35~MB 
+& \cellcolor{gray!12}13.76~MB \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 477.46 & 791.34 & 600.68 & 1448.47 & 254.75 & 558.30 \\
+\midrule
+
+\multirow[c]{3}{*}{$Q_{\mathrm{5\text{-}pt}}$}
+& \multirow[c]{2}{*}{${\mathcal{M}}_{\mathrm{5\text{-}pt}}$}
+& Rel. err (\%) & \cellcolor{gray!35}11.77 
+& \cellcolor{gray!35}5.95 
+& \cellcolor{gray!35}11.55 
+& \cellcolor{gray!35}10.23 
+& \cellcolor{gray!35}4.13 
+& \cellcolor{gray!35}9.55 \\
+& & Comm. & \cellcolor{gray!12}3.58~MB 
+& \cellcolor{gray!12}3.64~MB 
+& \cellcolor{gray!12}7.96~MB 
+& \cellcolor{gray!12}9.02~MB 
+& \cellcolor{gray!12}23.54~MB
+& \cellcolor{gray!12}13.92~MB \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 1350.34 & 2400.53 & 1655.97 & 5877.49 & 733.03 & 1538.58 \\
+\midrule
+
+\multirow[c]{3}{*}{{$Q_{\mathrm{6\text{-}pt}}$}}
+& \multirow[c]{2}{*}{{${\mathcal{M}}_{\mathrm{6\text{-}pt}}$}}
+& {Rel. err (\%)} 
+& \cellcolor{gray!35} {6.81} 
+& \cellcolor{gray!35} {19.29} 
+& \cellcolor{gray!35} {15.62} 
+& \cellcolor{gray!35} {9.44} 
+& \cellcolor{gray!35} {6.70} 
+& \cellcolor{gray!35} {6.84} \\
+& & {Comm.} 
+& \cellcolor{gray!12} {3.60~MB} 
+& \cellcolor{gray!12} {3.68~MB} 
+& \cellcolor{gray!12} {8.02~MB} 
+& \cellcolor{gray!12} {9.09~MB} 
+& \cellcolor{gray!12} {23.59~MB}
+& \cellcolor{gray!12} {14.03~MB} \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{{$RR_{\text{enum}}$}}
+& {Rel. err (\%)} 
+& {4115.66} & {7936.65} & {4977.07} & {25456.53} & {2209.38} & {4634.36} \\
+\midrule
+
+
+% ===================== acyclic patterns =====================
+\multirow[c]{3}{*}{$Q_{\pi_1}$}
+& \multirow[c]{2}{*}{$\mathcal{M}_{\mathcal{T}_1}$}
+& Rel. err (\%) & \cellcolor{gray!35}12.10 & \cellcolor{gray!35}21.90 & \cellcolor{gray!35}11.71 & \cellcolor{gray!35}27.54 & \cellcolor{gray!35}15.16 & \cellcolor{gray!35}17.38 \\
+& & Comm. & \cellcolor{gray!12}3.37~MB & \cellcolor{gray!12}3.37~MB & \cellcolor{gray!12}7.36~MB & \cellcolor{gray!12}8.39~MB & \cellcolor{gray!12}22.29~MB & \cellcolor{gray!12}12.89~MB \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 256.42 & 198.42 & 178.08 & 368.72 & 65.25 & 166.18 \\
+\midrule
+
+\multirow[c]{3}{*}{$Q_{\pi_2}$}
+& \multirow[c]{2}{*}{$\mathcal{M}_{\mathcal{T}_2}$}
+& Rel. err (\%) & \cellcolor{gray!35}11.53 & \cellcolor{gray!35}23.27 & \cellcolor{gray!35}37.30 & \cellcolor{gray!35}48.14 & \cellcolor{gray!35}18.64 & \cellcolor{gray!35}17.24 \\
+& & Comm. & \cellcolor{gray!12}3.32~MB & \cellcolor{gray!12}3.30~MB & \cellcolor{gray!12}7.23~MB & \cellcolor{gray!12}8.25~MB & \cellcolor{gray!12}21.96~MB & \cellcolor{gray!12}12.67~MB \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{$RR_{\text{enum}}$}
+& Rel. err (\%) & 448.55 & 200.03 & 209.82 & 619.40 & 70.76 & 178.98 \\
+
+\midrule 
+\multirow[c]{3}{*}{{$Q_{\pi_3}$}}
+& \multirow[c]{2}{*}{{$\mathcal{M}_{\mathcal{T}_3}$}}
+& {Rel. err (\%)} 
+& \cellcolor{gray!35} {18.74} 
+& \cellcolor{gray!35} {48.23} 
+& \cellcolor{gray!35} {23.81} 
+& \cellcolor{gray!35} {77.08} 
+& \cellcolor{gray!35} {28.20} 
+& \cellcolor{gray!35} {43.45} \\
+& & {Comm.} 
+& \cellcolor{gray!12} {3.39~MB} 
+& \cellcolor{gray!12} {3.40~MB} 
+& \cellcolor{gray!12} {7.44~MB} 
+& \cellcolor{gray!12} {8.46~MB} 
+& \cellcolor{gray!12} {22.39~MB} 
+& \cellcolor{gray!12} {13.00~MB} \\
+\cmidrule(lr){2-9}
+& \multirow[c]{1}{*}{{$RR_{\text{enum}}$}}
+& {Rel. err (\%)} 
+& {877.11}
+& {273.41} 
+& {205.49} 
+& {547.55} 
+& {54.35} 
+& {232.20} \\
+
+\bottomrule
+\end{tabular}
+}
+\end{threeparttable}
+\caption{
+Relative error (\%) and communication cost (MB{/GB}) for $k$-line walk, $k$-line path, and $k$-edge acyclic pattern counting queries across six datasets.  
+$^\dagger$Communication cost of $RR_{\mathrm{enum}}$ remains constant across queries.  
+}
+\label{tab:3queries}
+\end{table}

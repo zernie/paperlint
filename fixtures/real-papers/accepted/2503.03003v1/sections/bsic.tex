@@ -1,0 +1,83 @@
+%-------------------------------------------------------------------------------
+\section{\bsic}
+\label{sec:bsic}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[t]
+     \centering
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.75\textwidth]{figures/dxr_cram}
+         \caption{\cram model representation of \dxr ($k$=16)}
+         \label{fig:dxr}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.85\textwidth]{figures/bsic_cram}
+         \caption{\cram model representation of \bsic ($k$=16)}
+         \label{fig:bsic}
+     \end{subfigure}
+    \caption{\dxr vs \bsic for IPv4 prefixes in AS65000}
+    \label{fig:dxrvsbsic}
+    \vspace{-\baselineskip}
+\end{figure}
+
+By applying the optimization idioms to \dxr~\cite{dxr}, we create a new \cram lookup algorithm called \bsic, capable of supporting both IPv4 and IPv6. Refer to ~\cref{fig:dxrtobsic} for the intuition to which we now add details.
+
+{\bf \dxr Review:} Inspired by \cite{dir} and \cite{lampson}, \dxr performs binary search on range endpoints using a range table~(binary search table). To reduce the depth of binary search, \dxr uses an initial lookup table directly indexed by the first $k$ bits of the address. The lookup table returns a pointer to the subsection of the range table in which binary search will be performed. \dxr adds two optimizations:
+\begin{inlist}
+  \item Merging neighboring ranges that point to the same next hop.
+  \item Discarding right endpoints.
+\end{inlist}
+
+\subsection{Applying the Optimization Idioms} \label{subsec:designing_bsic}
+
+We show the \cram derivation of \bsic using the IPv4 AS65000 BGP routing table (Sep 2023). Start with the \cram model representation of \dxr in \cref{fig:dxr}. As recommended by \cite{dxr}, set $k=16$~(D16R) for the best IPv4 results. To obtain \bsic in \cref{fig:bsic}, use the idioms as follows:
+
+{\bf 1.} Since \dxr's initial lookup table relies on direct indexing, leaving many entries unused, we compress with TCAM ({\em I1}). Replacing the SRAM-based initial lookup table with a TCAM-based one reduces its memory consumption by over 3X, from 0.25 MB of SRAM to 0.07 MB of TCAM.
+
+{\bf 2.} In \dxr, the range table is repeatedly accessed during binary search. Since lookup tables are limited to a single access per packet in the \cram model, the range table must be split up. We do so through memory fan-out ({\em I8}). By converting the range table into multiple binary search trees (BSTs) and distributing search levels across separate tables accessed at different steps, we ensure each table is visited at most once per packet. However, this greatly increases the amount of memory needed because every internal node has to store up to two pointers. In \cref{fig:dxrvsbsic}, \dxr's range table uses only 2.97 MB of SRAM while \bsic's BST levels use 8.64 MB of SRAM---a 2.9X increase. Although costly, memory fan-out is essential because duplicating the entire range table for each search level would require an infeasible amount of SRAM (26.73 MB).
+
+{\bf 3.} The parameter $k$ is a strategic cut ({\em I4}) that balances memory usage in the initial lookup table against the number of required BST levels. Due to the high memory cost of direct indexing, \dxr's SRAM-based lookup table is limited to $k<=20$. For example, if $k=24$, \dxr's initial lookup table would consume 64 MB of SRAM. To effectively support IPv6, which has longer prefixes, a larger $k$ value is required. Since TCAM can store wildcard entries without prefix expansion, \bsic's TCAM-based initial lookup table can use much larger $k$ values, up to the underlying TCAM block width ($k=44$ for Tofino-2).
+
+\subsection{Building the Data Structures} \label{subsec:building_bsic}
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength\extrarowheight{1.1pt}
+    \begin{tabular}{|c|c|c|}
+    \hline
+    \thead[c]{Key} & \thead[c]{Value} & \thead[c]{BST Entries (for reference)} \\
+    \hline
+    0101 & Pointer to BST 1 & 00** \\
+    011* & Next Hop B & -\\
+    1001 & Pointer to BST 2 & 00**, 01**, 0100, 1010, 1011 \\
+    1010 & Pointer to BST 3 & 0011 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Initial lookup table for \cref{tab:routing_table} ($k=4$)}
+    \label{tab:initial_lookup_table}
+    \vspace{-\baselineskip}
+\end{table}
+
+{\bf Initial Lookup Table:}
+Given a routing database and a slice size $k$, populate the initial lookup table by storing all prefixes as unique $k$-length slices. Duplicate slices are condensed into one entry. Three cases arise when adding a prefix $p$ of length $l$:
+
+\begin{enumerate}
+  \item If $l$ < $k$, pad $p$ with $k-l$ wildcard (*) bits. Its associated table value is $p$'s next hop.
+  \item If $l$ \texttt{==} $k$, do not modify $p$. If there are longer prefixes that share the same $k$-length slice as $p$, its associated table value is a pointer to the corresponding BST's root node. Otherwise, its associated table value is $p$'s next hop.
+  \item If $l$ > $k$, trim $p$ down to $k$ bits. Its associated table value is a pointer to the corresponding BST's root node.
+\end{enumerate}
+
+\cref{tab:initial_lookup_table} shows an initial lookup table with $k$=4 created using \cref{tab:routing_table}. The maximum prefix length is 8. The Key column contains all the $k$-length slices while the Value column stores the associated pointers and next hops. The BST Entries column shows the prefix segments that are pointed to by the slices. Since entries 3-7 in \cref{tab:routing_table} share the same $k$-length slice, they are condensed into a single key 1001 that points to BST 2.
+
+{\bf Binary Search Trees (BSTs):}
+To create a BST for a given lookup table entry, identify all prefixes in the database that match the entry up to the $k$th bit. For all such prefixes, store the remaining bits and next hops as tuples in a list. Take the list of tuples and perform the range expansion and optimizations described in \cite{dxr}. We defer these details to \cref{subsec:bsic_details}.
+
+Use the resulting list of left endpoints to construct a BST in which every node contains four fields: pointers to the left and right child, the next hop, and the left endpoint itself. Repeat this process for all lookup table entries containing pointers.
+
+\subsection{Performing Lookups} \label{subsec:bsic_lookups}
+Start in the initial lookup table by performing a longest prefix match using the first $k$ bits of the destination address. If either a next hop is returned or a miss occurs, search terminates. If a pointer to a BST is returned, follow the pointer to the corresponding root node and form the next search key by extracting the remaining bits of the destination address. Once at a node, perform standard binary search using the search key.
+
+\cref{alg:bsic_lookup} in \cref{subsec:pseudocode} contains pseudocode for \bsic lookups. \cref{subsubsec:bsicupdates} describes incremental updates, deletions, and insertions in \bsic.

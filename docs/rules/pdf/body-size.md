@@ -24,7 +24,7 @@ way a paper is made to fit the page limit. A reviewer or a production editor who
 the paper; a page limit checked on a shrunk paper checks nothing.
 
 It is an error because it was measured to be exact on real papers, not assumed. On five accepted
-papers, built (`fixtures/accepted-papers/body-size.json`, `test/e2e/tex/page-count.e2e.ts`):
+papers, built (`fixtures/real-papers/accepted/body-size.json`, `test/e2e/tex/page-count.e2e.ts`):
 
 | paper                          | declared               | rendered (pdf.js)                          | measured (banal) | finding |
 | ------------------------------ | ---------------------- | ------------------------------------------ | ---------------- | ------- |

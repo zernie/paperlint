@@ -1,0 +1,108 @@
+\section{Datasheet}
+\label{app:datasheet}
+
+Following \cite{gebru2021datasheets}, this datasheet documents \textsc{ShadowTransfer}.
+Items already detailed in the main paper or other appendices are cross-referenced
+rather than repeated.
+
+\subsection{Motivation}
+\textbf{Purpose.} \textsc{ShadowTransfer} was created to enable measurement of
+geographic transfer in overhead shadow detection. No existing overhead shadow
+dataset combines human-verified labels, multiple cities, native multi-resolution
+coverage, and a defined cross-city evaluation protocol (Table~\ref{tab:dataset_comparison});
+the most recent overhead-shadow survey~\citep{hu2026unveiling} identifies
+cross-dataset generalization as an open problem.\\
+\textbf{Creators and funding.} Shagun Mittal, Raymond A.\ Yeh and Satish Ukkusuri (Purdue University). The work received no external funding; compute was provided through ACCESS allocation CIS260282.
+
+\subsection{Composition}
+\textbf{Instances.} 4{,}500 image--mask pairs: 3 cities (Chicago, Miami, Phoenix)
+$\times$ 2 native NAIP resolutions (0.3\,m/px, 0.6\,m/px) $\times$ 750 patches.
+Each instance is a $384\!\times\!384$ RGB orthoimage patch and a co-registered
+binary shadow mask; six-category multiclass masks accompany the patches where
+reliable typing was possible (App.~\ref{app:taxonomy}).\\
+\textbf{Sample vs.\ full.} A spatial sample of NAIP imagery within each city's
+administrative boundary; protocol in App.~\ref{app:sampling}.\\
+\textbf{Files per instance.} 8-bit RGB \texttt{.png}; 8-bit binary mask \texttt{.png}
+($\{0, 255\}$); optional 8-bit multiclass mask (IDs 0--6); and a per-patch metadata
+record (city, native resolution, lat/lon, source NAIP tile, paired-coordinate id,
+shadow types present).\\
+\textbf{Labels.} Pixel-level binary shadow (primary); six typed shadow categories
+(secondary, App.~\ref{app:taxonomy}). Sparse types (vehicle-cast, thin-linear)
+are not recommended as primary evaluation targets.\\
+\textbf{Relationships between instances.} 300 paired patches per city share a
+\texttt{pair\_id} linking the two native resolutions at identical ground coordinates
+(App.~\ref{app:sampling}).\\
+\textbf{Recommended splits.} Per-city: 450 train / 150 val / 150 test, fixed at the
+benchmark level. Cross-city: the LOCO protocol (\S\ref{sec:loco}) defines three
+rotations; pre-built folds are released alongside the per-city raw data.\\
+\textbf{Errors and noise.} Shadow boundaries are inherently imprecise; we recommend
+boundary-tolerant mIoU ($\pm 2$\,px, App.~\ref{app:metric}). A $\approx 3\%$ residual
+inter-annotator disagreement persists after three-phase QC (App.~\ref{app:annotation}).\\
+\textbf{Self-containment.} Self-contained; underlying NAIP imagery is U.S.\ public
+domain (\S\ref{sec:datasheet-distribution}).\\
+\textbf{Sensitive content or identifiable individuals.} None. Patches are land-cover
+orthoimagery; no PII, no identifiable individuals, no confidential information.
+
+\subsection{Collection Process}
+\textbf{Acquisition.} Source NAIP tiles obtained from USDA-FSA APFO; patches cropped
+within each city's administrative boundary under one-patch-per-tile sampling to
+limit spatial autocorrelation (App.~\ref{app:sampling}).\\
+\textbf{Annotation labor.} Seven trained annotators produced masks across 45
+sessions in CVAT~\citep{cvat} with SAM-assisted boundary proposals~\citep{sam};
+annotators were paid INR~20 per accepted image, and a second annotator who reviewed an image was paid a further INR~20, about \$0.50 per image in total (Appendix~\ref{app:annotator-instructions}).\\
+\textbf{Time frame.} A single fall NAIP acquisition window per city; annotation
+completed across the 45 sessions.\\
+\textbf{IRB / ethics review.} Not required: no human subjects, no PII.
+
+\subsection{Preprocessing, Cleaning, Labeling}
+\textbf{Preprocessing.} Patches cropped to $384\!\times\!384$ at native resolution;
+no radiometric, color, or geometric transforms applied. Source tile IDs and patch
+coordinates are released, so raw inputs can be re-derived from NAIP.\\
+\textbf{Labeling.} Three-phase pipeline (App.~\ref{app:annotation}): SAM-assisted
+manual draw, model-in-the-loop acceleration, and a retroactive QC pass that
+intersects each segment with a final-model prediction. Frozen gold masks
+(5 per 100-image batch) drive Cohen's $\kappa$ monitoring; phase-3 mean $\kappa = 0.89$.
+
+\subsection{Uses}
+\textbf{Primary use.} Benchmarking shadow detection on overhead aerial imagery,
+with explicit measurement of geographic transfer (LOCO) and in-domain performance
+per city.\\
+\textbf{Already used for.} Baseline, diagnostic, and case-study results in this
+paper, including cross-task replication on INRIA building footprints
+(\S\ref{sec:sp-gap}, App.~\ref{app:inria}).\\
+\textbf{Other suggested uses.} Building footprint and fa\c{c}ade extraction
+(occlusion priors), shadow-removal research, domain generalization for dense
+prediction, and urban-morphology or solar-geometry analysis from the released
+coordinates and shadow-type labels.\\
+\textbf{Uses not supported.} Generalization beyond grid-pattern North American
+urbanism, beyond NAIP RGB sensor characteristics, or across seasons (the dataset
+captures a single fall window) is not supported. The 0.3\,m/px and 0.6\,m/px
+subsets are separate native acquisitions; users studying resolution transfer
+should not synthesize one from the other.
+
+\subsection{Distribution}
+\label{sec:datasheet-distribution}
+\textbf{Where.} Hugging Face dataset record at
+\url{https://huggingface.co/datasets/shagunmittal/ShadowTransfer};
+DOI \href{https://doi.org/10.57967/hf/11483}{10.57967/hf/11483}~\cite{mittal2026shadowtransferdata}. Code at \url{https://github.com/shagun8/shadowtransfer}.\\
+\textbf{When.} Public release at publication; the version corresponding to paper
+results is Hugging Face revision \texttt{5bef90e}, tagged \texttt{v1.0}.\\
+\textbf{License.} Annotations and metadata are released under \mbox{CC~BY~4.0}.
+NAIP imagery is U.S.\ public domain (USDA-FSA APFO attribution requested for
+derived products). Code is released under the MIT license.\\
+\textbf{Export or regulatory restrictions.} None known.\\
+\textbf{Croissant metadata.} A machine-readable MLCommons~Croissant description,
+including the Responsible AI fields, is released with the dataset at
+\url{https://huggingface.co/datasets/shagunmittal/ShadowTransfer/resolve/main/croissant.json}
+and is consumable by \texttt{mlcroissant}, TFDS, and any Croissant-aware loader.
+
+\subsection{Maintenance}
+\textbf{Maintainer.} Shagun Mittal (\texttt{mittal53@purdue.edu}); correspondence is also handled via the
+Hugging Face dataset record (issues/discussions) and the GitHub repository.\\
+\textbf{Versioning.} Tagged releases on Hugging Face; \texttt{v1.0} freezes the
+splits used for paper results. Errata are posted as new tags; older tags remain
+accessible.\\
+\textbf{Contributions.} External contributions accepted via pull request on the
+GitHub repository, tagged separately from \texttt{v1.0}.\\
+\textbf{Retention or individual rights.} N/A: no individuals or personal data
+are present.

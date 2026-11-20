@@ -38,7 +38,7 @@ export const REGISTER_MEASURES: readonly RegisterMeasureName[] = [
 
 /** One accepted paper of the venue, as the counters measured it. */
 export interface RegisterAnchor {
-  /** What the preset calls it: a directory under `fixtures/accepted-papers/`, or a citation. */
+  /** What the preset calls it: a directory under `fixtures/real-papers/accepted/`, or a citation. */
   readonly paper: string;
   readonly words: number;
   readonly counts: Readonly<Record<RegisterMeasureName, number>>;

@@ -1,0 +1,268 @@
+% SDG and transformations
+
+
+
+\section{Symbolic Dependence Graphs}
+\label{sec:pdg_and_transformations}
+
+As users define DL programs with RTs, \sys constructs a \emph{symbolic dependence graph~(SDG)} of the program, which encodes the dynamic dependencies between operators.
+
+
+\subsection{SDG representation}
+\label{sec:pdg}
+
+An SDG is a directed graph of \emph{operators}. Each operator may have multiple input or output tensors, and cycles are allowed. 
+Each operator~$o$ is tagged with a temporal domain~$\Omega(o)$: the set of temporal \emph{points} in $\mathbb{Z}^{n}$ at which the operator executes, producing output tensors. 
+
+Edges describe how operators at different temporal points depend on each other’s outputs.
+Each \emph{edge}~$o_1\xrightarrow{\smash{\phi}}o_2$ is annotated with a \emph{dependence expression}~$\phi$. It indicates that $o_1$ (the sink) at point $p \in \Omega(o_1)$ \emph{depends on} $o_2$ (the source) at points $\phi(p)$. 
+The domain~$\Omega$ and dependence expressions~$\phi$ are obtained directly from the RTs that defined them.\footnote{Throughout the paper, to simplify notation, we use $t$ for generic temporal dimensions and  omit \emph{identity} dependencies (\ie $\phi(t)=t$) in figures.}
+%%\textrm{mul}[b,i,t] &=  \ldots \cdot \ldots \\
+%\[
+%    \begin{aligned}
+%        \textrm{merge}[b,i,0] &= \textrm{mul}[b,i,0] \\
+%        \textrm{merge}[b,i,t] &= \textrm{merge}[b,i,t\!-\!1] + \textrm{mul}[b,i,t] \\
+%        \textrm{sum}[b,i]   &= \textrm{merge}[b,i,T\!-\!1]
+%    \end{aligned}
+%\]
+
+\mypar{Tensor operators} \sys{} supports a minimal set of 44~stateless operators, most of which are typical elementwise maps, reductions, scans, view, or spatial indexing operators. View and indexing operators (\eg \textop{Reshape}, \textop{Slice}) may use symbolic expressions in shape and index parameters. 
+\textop{UDF}s allow users to register custom operations, useful for injecting (retrieving) values to (from) the runtime. \textop{UDF}s may access \emph{external state}. \sys{} uses \textop{UDF}s to integrate with RL environments~\cite{brockman2016openai} and LLM tokenizers~\cite{kudo2018sentencepiece}.
+
+To support branching RTs, we define \textop{Merge}s. They conditionally select which of their multiple inputs to \emph{move} to their single output based on which edge condition~$\psi$ first evaluates to $\mathrm{true}$ at time~$t$. Edge conditions are obtained from the conditional indexing of RTs.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\columnwidth, trim={0 1 1 1}, clip]{cr_figures/params_state}
+  \caption{Encoding DNN state using cycles \textnormal{(Boxes are subgraphs.)}}
+  \label{fig:params_state}
+\end{figure}
+
+
+\mypar{Encoding state}
+To encode state (\eg DNN parameters) in a graph, Tensorflow~\cite{abadi2016tensorflow} uses stateful operators (\texttt{tf.Variable}). JAX~\cite{frostig2018compiling} graphs are stateless, and JAX offloads state management responsibilities to the user.
+In \sys{}, state is instead encoded in the SDG using \textop{Merge} cycles. 
+
+
+
+\F\ref{fig:params_state} shows an example of this for a DNN parameter. The parameter's initial value is given by a parameter initialization subgraph. Subsequent parameter values are obtained from the optimizer step subgraph, which itself depends on the previous parameter value to compute an update.
+Optimizers such as Adam~\cite{kingma2014adam} also hold state, which is encoded using the same mechanism.
+This approach enables \sys{} to represent state implicitly, without additional operator types that have complex semantics and side-effects, and without requiring users to manage state explicitly.
+
+
+
+
+\mypar{Optimizing symbolically}
+\sys{} applies compiler optimizations to SDGs, such as dead and duplicate code elimination, algebraic equivalences, and broadcasting removal,
+which are extended to support dynamic dependencies.
+
+Suppose that \sys considers a re-association optimization for a chain of matrix multiplications $(A \cdot B) \cdot C$, where $A\in\mathbb{R}^{32, 16}$, $B\in\mathbb{R}^{16, t}$, and $C\in\mathbb{R}^{t, 8}$. Since $t$ is in the shape of $B$ and $C$, $(A \cdot B) \cdot C$ has a dynamic cost of $32 \cdot 16 \cdot t + 32 \cdot t \cdot 8 = 768 \cdot t$ FLOPs. Re-associating as $A \cdot (B \cdot C)$ costs $16 \cdot t \cdot 8 + 32 \cdot 16 \cdot 8 = 128 \cdot t + 4096$, which is lower when $t > 6.4$.
+\sys{} can use the original association for~$t \leq 6$, and re-associate when~$t > 6$.
+%The results of the two branches are combined using a \textop{Merge} with these conditions.
+
+\sys{} also performs \emph{domain reduction}, which reduces the domain of operators to the union of the domains of their dependencies, thus removing redundant work. This is akin to \emph{loop-invariant code motion}~\cite{kennedy2001optimizing} in optimizing compilers.
+
+
+
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}[t]{0.3\columnwidth}
+    \centering
+    \includegraphics[width=0.97\columnwidth, trim={1 1 1 1}, clip]{cr_figures/transforms_shapes_start}
+    \caption{Initial SDG}\label{fig:transformation_pipeline:pdg}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[t]{0.65\columnwidth}
+    \centering
+    \includegraphics[width=0.99\columnwidth, trim={1 1 1 1}, clip]{cr_figures/transforms_shapes_pipeline}
+    \caption{Transformation pipeline}\label{fig:transformation_pipeline:transforms}
+  \end{subfigure}%
+  \caption{SDG passing through \sys{}'s transformation pipeline}
+  \label{fig:transformation_pipeline}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\columnwidth, trim={1 0 2 2}, clip]{cr_figures/lift_visual}
+  \caption{Lifting shown with RTs \textnormal{(left: redundant sum of $0\!:\!t\!+\!1$ at each $t$; right: equivalent with single cumulative sum of $0\!:\!T$)}}
+  \label{fig:lift_visual}
+\end{figure}
+
+
+The SDG in \F\ref{fig:transformation_pipeline:pdg} computes the sum of the \textop{Mul}'s output over timesteps $t$ using a \textop{Merge}.
+ At $t\!=\!0$, the \textop{Merge} simply copies the \textop{Mul}’s output; otherwise, it adds the current \textop{Mul} output to the sum at $t\!-\!1$. Though correct, this SDG is inefficient. 
+\F\ref{fig:transformation_pipeline:transforms} shows how \sys{} progressively \emph{transforms} this SDG for efficient execution.
+
+\mypar{Lifting}
+\sys{} starts by
+eliminating \emph{recurrent patterns} (reductions, scans~\cite{blelloch1990prefix}, and stencils~\cite{ragan2013halide} implemented using \textop{Merge}s) that prevent vectorization. SDGs enable simple pattern-matching of these complex structures, allowing \sys{} to replace them with batch
+\textop{Sum}s, \textop{CumSum}s,  or \textop{Conv}s.
+In \F\ref{fig:transformation_pipeline:transforms}, \sys{} \emph{lifts}~\myc{A} the recurrent addition into a \textop{Sum}.
+
+Lifting can also optimize computation. In \F\ref{fig:lift_visual}, the original computation, $y[t]\!=\!x[0\!:\!t\!+\!1]\mathrm{.sum}()$, redundantly sums the prior steps of $x$ at each timestep~$t$. \sys{} replaces this with $y[t]\!=\!x[0\!:\!T]\mathrm{.cumsum()}$, and restores the temporal dimension $t$ using a spatial indexing operation with $t$ as an index.
+
+
+
+\subsection{Vectorization}
+\label{sec:vectorization}
+
+\emph{Vectorization}~(\myc{B} in \F\ref{fig:transformation_pipeline:transforms}) reduces the execution time of SDGs by laying out temporal dimensions spatially. Vectorized operators execute fewer times but with larger input and output tensors. This offers greater SIMD parallelism~\cite{flynn2005very}, at the cost of increased peak memory usage.
+
+For each temporal dimension $t$, \sys{} finds a set of vectorizable operators and applies a \emph{vectorization rule} to each. 
+Such rules are simple: most operators simply have $t$ removed from their domain and $T$ prepended to their input and output shapes; operators with dimension parameters (\eg \textop{Sum}, \textop{Squeeze}) have them incremented, to account for $T$ being prepended to their input shape; and operators with shape parameters (\eg \textop{Reshape}, \textop{Expand}) also prepend $T$ to this shape.
+When vectorizing \textop{Index}s or \textop{IndexAdd}s and both their source (\ie the tensor being indexed) and index input tensors are also being vectorized, \sys{} must promote these operators into \textop{Gather} and \textop{ScatterAdd}, because index operations only support one-dimensional indexes.
+
+
+\mypar{Vectorizability} 
+Cycles complicate vectorization, because incorrectly vectorizing them can lead to \emph{unschedulable} SDGs. 
+\sys{} avoids unschedulable SDGs using the following conservative approach: we define a cycle as \emph{trivial} on $t$ if all symbolic indexes of that dimension are $[t]$ itself or a constant expression (\eg $[0:T]$, $[5]$, $[0:5]$). \sys does not vectorize operators in non-trivial cycles; operators in trivial cycles must all be vectorized or none can be.
+
+
+\begin{figure}[t]
+  \begin{subfigure}[t]{.28\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth]{cr_figures/vec/vec_both}
+    \caption{Both}\label{fig:vec:vec_both}
+  \end{subfigure}
+  %\hspace{0.02\columnwidth}
+  \hfill
+  \begin{subfigure}[t]{.42\columnwidth}
+    \centering
+    \includegraphics[width=0.665\textwidth]{cr_figures/vec/vec_src_sink_no_dim}
+    \caption{Source~$(t \notin \Omega(\textnormal{sink}))$}\label{fig:vec:vec_src_sink_no_dim}
+  \end{subfigure}
+  %\hspace{0.02\columnwidth}
+  \hfill
+  \begin{subfigure}[t]{.28\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth]{cr_figures/vec/vec_sink_src_has_dim}
+    \caption{Sink}\label{fig:vec:vec_sink_src_has_dim}
+  \end{subfigure}
+
+  \begin{subfigure}[t]{.49\columnwidth}
+    \centering
+    \includegraphics[width=0.82\textwidth]{cr_figures/vec/vec_sink_src_no_dim}
+    \caption{Sink~($t \notin \Omega(\textnormal{source})$)}\label{fig:vec:vec_sink_src_no_dim}
+  \end{subfigure}
+  \begin{subfigure}[t]{.49\columnwidth}
+    \centering
+    \includegraphics[width=0.80\textwidth]{cr_figures/vec/vec_src_sink_has_dim}
+    \caption{Source}\label{fig:vec:vec_src_sink_has_dim}
+  \end{subfigure}
+  \caption{How \sys{} updates edges when vectorizing}
+  \label{fig:vec:edge_updates}
+\end{figure}
+
+\mypar{Handling edges}\sys{} must also update SDG edges for correctness~(see~\F\ref{fig:vec:edge_updates}). If both source and sink are vectorized~(\F\ref{fig:vec:vec_both}) or, if only the source is, and the sink does not have $t$ in its domain~(\F\ref{fig:vec:vec_src_sink_no_dim}), \sys{} drops the $t$ index from the connecting dependence $\phi$. If only the sink is vectorized, the $t$ index is promoted to $0:T$~(\F\ref{fig:vec:vec_sink_src_has_dim}).
+If the sink is vectorized, and the source does not originally vary with $t$~(\F\ref{fig:vec:vec_sink_src_no_dim}), the source shape is expanded to the $T$ elements expected by the sink. Finally, if both vary with $t$, but only the source is vectorized~(\F\ref{fig:vec:vec_src_sink_has_dim}), an \textop{IndexSelect} is added to extract the $t$-th spatial element each step~$t$.
+
+
+
+\subsection{Tiling}
+\label{sec:tiling}
+
+Some operators require too much memory, especially after vectorization. In these cases, \sys{} can \emph{tile} the SDG~(\myc{C} in \F\ref{fig:transformation_pipeline:transforms}). Similar to vectorization, tiling computes a set of operators to tile, applies a tiling rule to each, and updates the edges. Unlike vectorization, however, tiling adds a new temporal dimension~$n$ to the domain of tiled operators and decomposes a chosen spatial dimension of size $D$ into $N$ tiles of size $Z$, with $N=D//Z$.
+
+
+\mypar{Computing the tiled operator set}
+Since reductions (\eg \textop{Sum} and \textop{MatMul}'s contracting dimension) eliminate specific input spatial dimensions, they are natural starting points for tiling. 
+\sys{} picks one of the reduced spatial dimensions, $D$, to tile on, preferring dimensions which are eventually introduced by temporal indexing operations. This is because tiling on these enables
+online garbage collection during scheduling~(\S\ref{sec:mem_sched}) and thus implicitly enables advanced execution strategies, such as \emph{gradient accumulation}~\cite{huang2019gpipe}.
+
+
+Next, \sys{} recursively traverses operator dependencies, adding them to the tiled operator set until it encounters one of the following stopping conditions:
+\begin{myitemize}
+  \item a dependence expression~$\phi$ that creates the spatial dimension being tiled. In this case, \sys{} modifies the expression to instead temporally access the $n$-th tile of size $Z$;
+  \item an operator with a memory demand below a user-defined threshold. Here, \sys{} inserts a \textop{Slice} to spatially slice the $n$-th tile of size $Z$ from the non-tiled dependency;
+  \item an \textop{Expand} that expands the dimension being tiled. \sys{} modifies the \textop{Expand} to expand to $Z$ instead of $D$.
+\end{myitemize}
+
+\noindent
+A tiling rule is then applied to each operator in the tiled operator set. These are essentially the opposite of the corresponding vectorization rules.
+To finish the tiling, \sys{} performs an aggregation over all $K$ tiles (\eg the white sum of \myc{C} in \F\ref{fig:transformation_pipeline:transforms}), restoring the original reduction.
+
+\begin{figure}[t]
+  \begin{subfigure}[t]{.36\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 1 0 0}, clip]{cr_figures/rt_transforms/incremental}
+    \caption{Incremental}\label{fig:rt_transforms:incremental}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.30\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 1 0 0}, clip]{cr_figures/rt_transforms/vectorized}
+    \caption{Vectorized}\label{fig:rt_transforms:vectorized}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.305\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 1 0 0}, clip]{cr_figures/rt_transforms/block_tiled}
+    \caption{Tiled}\label{fig:rt_transforms:tiled}
+  \end{subfigure}
+  \caption{Equivalent execution strategies for \boldmath{$y[t]\!=\!-x[t]$} as RTs \textnormal{(Example assumes {\unboldmath $x$} is not also vectorized or tiled.)}}
+  \label{fig:rt_transforms}
+\end{figure}
+
+\F\ref{fig:rt_transforms} visualizes vectorization and tiling as RTs.
+Initially defined by a user \emph{incrementally}~(\F\ref{fig:rt_transforms:incremental}), the identity dependency allows $y[t]$ to execute immediately after $x[t]$. \sys{} can also vectorize $y$~(\F\ref{fig:rt_transforms:vectorized}), which requires that $y$ wait for all $x[0:T]$ values, increasing memory usage. \sys{} can then tile the freshly vectorized dimension~(\F\ref{fig:rt_transforms:tiled}). Note how $y[n]$ now accesses a tile of size $Z=4$ using the dependence expression $\phi=[n \cdot Z\!:\!(n\!+\!1) \cdot Z]$. Fully tiling on the same spatial dimension brings the SDG back to~\F\ref{fig:rt_transforms:incremental}.
+
+
+
+\mypar{Static tiling}
+In general, dynamic dependencies with changing shapes prevent code-generation. In these cases, \sys{} tiles them into \emph{statically-sized tiles} by adding minimal padding.% This trades-off some parallelism to make the SDG more amenable to fusion and code-generation.
+
+\begin{figure}[t]
+  \begin{subfigure}[t]{.3225\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 1 0 1}, clip]{cr_figures/attention/torch_horiz}
+    \caption{Torch~\cite{paszke2019pytorch}}\label{fig:attention_tiling:torch}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.3225\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 1 0 1}, clip]{cr_figures/attention/jax_horiz}
+    \caption{JAX~\cite{frostig2018compiling}}\label{fig:attention_tiling:jax}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.325\columnwidth}
+    \centering
+    \includegraphics[width=\textwidth, trim={0 2 1 1}, clip]{cr_figures/attention/tempo_horiz}
+    \caption{Tempo}\label{fig:attention_tiling:tempo}
+  \end{subfigure}
+  \caption{\textbf{Attention in DL systems} \textnormal{(Torch computes attention eagerly. JAX optimizes it, but introduces large padding. Tempo tiles it into static tiles, enabling code-generation with minimal padding.)}}
+  \label{fig:attention_tiling}
+\end{figure}
+
+
+
+\F\ref{fig:attention_tiling} shows this for causal attention (\Eq\ref{eq:attention}), which uses $K[t]=k[0\!:\!t\!+\!1]$ to obtain dynamically shaped $K$ and $V$~tensors. As discussed in \S\ref{sec:dataflow}, Torch~\cite{paszke2019pytorch} eagerly executes attention despite the dynamic shapes (\F\ref{fig:attention_tiling:torch}), which prevents optimizations; JAX~\cite{frostig2018compiling} requires padding to a static upper bound~$T$ to enable whole-program optimization, which adds overhead that grows with $T$ (\F\ref{fig:attention_tiling:jax}).
+
+
+In contrast, \sys{} tiles attention,
+trading a dynamic computation for a dynamic number of static tiles~(\F\ref{fig:attention_tiling:tempo}).
+Tiling starts from $W \cdot V$, which contracts the dynamic dimension, and continues through the softmax, down to $K$ and $V$. 
+This creates $\lceil (t\!+\!1)/Z \rceil$ tiles of size $Z$ for each tensor.
+
+
+
+\sys{} uses $K[t,n] = k[n\!\cdot\!Z\!:\!\textrm{min}((n\!+\!1)\!\cdot\!Z, t\!+\!1)]$ to construct each tile, which may not fill $Z$~timesteps due to the use of \texttt{min}.
+Thus, it is necessary to pad the remaining amount: $Z-(t\!+\!1)\!\mod\!Z$. 
+\sys{} also appropriately masks this padding,
+using a $0$ mask for \textop{MatMul}s and \textop{Sum}s, and a $-\infty$ mask for \textop{MaxOp}.
+To obtain the final attention output, \sys{} then sums together each masked attention tile.
+
+Padding and masking overhead is minimal, as they are only applied to the last tile. Furthermore, \sys{} can often optimize them away by hinting to the runtime that buffers for $K$ and $V$ tiles should be pre-allocated with the padded size and pre-filled with the mask value (see~\S\ref{sec:runtime}).
+
+
+
+\subsection{Operator fusion}
+\label{sec:dataflow_fusion}
+
+An SDG often contains static \emph{islands} in which all operators have the same domain and only identity edges between them. Within these islands, the SDG directly passes the outputs of one operator to the inputs of another. The \emph{fusion transformation} identifies and \emph{fuses}~(\myc{D} in \F\ref{fig:transformation_pipeline:transforms}) these islands into a single \textop{Dataflow} operator, routing edges as needed. 
+
+\sys{} initially assigns each operator to its own island and iteratively merges islands with the same domain and no inter-dependencies.
+Dynamic operations (\eg \textop{RNG}, \textop{UDF}, \textop{Merge}) are excluded from fusion, because they cannot be compiled statically. Fusion enables \sys{} to leverage existing DL code-generators~\cite{frostig2018compiling, ansel2024pytorch, tillet2019triton} to generate kernels. This lowers dispatching overheads, minimizes the number of tensors \sys{} must manage, and speeds-up scheduling.
+
+%    End
+

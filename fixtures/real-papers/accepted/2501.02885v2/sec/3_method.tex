@@ -1,0 +1,237 @@
+\section{Method}\label{sec:method}
+In this paper, we focus on VidQA, which can be generalized to other video understanding tasks such as video summarization and grounding~\cite{xiao2024can,liu2025timecraft}.
+This task is formulated as \((V, q) \mapsto \text{answer}\), where \(V=\{f_i\}_{i=1}^{n}\) is a video with \(n\) frames, \(f_i\) is the \(i\)-th frame, and \(q\) is the query.
+The index set of frames is denoted by \(\N_n := \{1, 2, \dots, n\}\), 
+and the list-wise $k$ frame selection can be expressed as: 
+\begin{equation}\label{eq:score}
+    S^* = \mathop{\mathrm{argmax}}_{S \subseteq \N_n , \left|S\right|=k}\ \mathrm{Score}(S)\,.
+\end{equation}
+This problem presents two challenges:
+1) How can we design an effective \(\mathrm{Score}\) function that simultaneously addresses query relevance, list-wise diversity, and sequentiality?
+2) How can we tackle the NP-hard challenges of the list-wise subset frame selection problem to find an effective solution with practical time complexity?
+
+
+In \cref{subsec:method_sim}, we introduce the conditional multiple Gaussian kernel~(CMGK) within the reproducing kernel Hilbert space~(RKHS) to estimate high-dimensional similarities between frames conditioned on the current query.
+In \cref{subsec:method_dpp}, we employ the determinantal point process~(DPP) based on the conditional similarity matrix of the frames, capturing both query relevance and list-wise frame diversity. 
+Moreover, in \cref{subsec:method_kdp}, we partition the video into continuous segments and model frame selection as a Markov decision process~(MDP) to ensure list-wise diversity within local segments while maintaining sequentiality across segments.
+
+
+
+\subsection{High-dimensional Conditional Similarity}\label{subsec:method_sim}
+With the success of VLMs~\cite{radford2021learning,zhai2023sigmoid,alayrac2022flamingo},
+frames and queries can be mapped into a unified latent embedding space.
+For conciseness, we reuse \(f_i\) and \(q\) to denote the embeddings of the \(i\)-th frame and the query, respectively, to avoid defining redundant symbols. 
+This is expressed as:
+\begin{equation}\label{eq:emb} 
+	f_i \leftarrow \mathrm{VLM_{vision}}(f_i) \in \mathbb{R}^d, \ q \leftarrow \mathrm{VLM_{text}}(q) \in \mathbb{R}^d \,,
+\end{equation}
+where \(\mathrm{VLM_{vision}}()\) and \(\mathrm{VLM_{text}}()\) denote the vision and text encoders of the VLM, respectively.
+Notably, since the vision encoder is commonly used in MLLMs, the additional parameters introduced by the text encoder are negligible.
+
+
+Instead of directly estimating similarity using cosine similarity or the inner product of embeddings, we map the embeddings into an RKHS via the reproducing kernel feature map \(\phi \in \mathcal{H}_k\), 
+where, according to the kernel trick~\cite{scholkopf2005support}, the high-dimensional similarity in RKHS is expressed by \(\left<\phi(x), \phi(y)\right> = k(x, y)\).
+%
+We employ a characteristic multi-kernel defined as a convex combination of multiple positive semi-definite~(PSD) kernels \(\{k_u\}\)~(\eg Gaussian kernel): 
+\begin{equation}\label{eq:k_family}
+	\mathcal{K} \triangleq \left\{ 
+		k = \sum_{u=1}^{U} \beta_u k_u : \sum_{u=1}^{U} \beta_u = 1, \beta_u \geq 0, \forall u 
+	\right\}\,.
+\end{equation}
+The multi-kernel utilizes various kernels to enhance the estimation of high-dimensional similarity, thereby providing a principled method for optimal kernel selection~\cite{long2015learning,sun2023enhancing}.
+
+
+In VidQA tasks, both frame-query relevance and list-wise diversity among the selected frames are important. 
+Therefore, estimating frame similarity should consider the query relevance.
+To address this, we propose the CMGK as:
+\begin{equation}\label{eq:cond_k}
+    \tilde{k}(f_i, f_j | q) = g(f_i, q)k(f_i, f_j)g(f_j, q),\quad g, k \in \mathcal{K}\,.
+\end{equation}
+This conditional kernel refines frame similarity by considering the query, reducing the importance of irrelevant frames.
+
+
+Consequently, we construct a high-dimensional conditional similarity matrix that captures the similarities among frames while considering the query relevance, expressed as:
+\begin{equation}\label{eq:tilde_L}
+    \tilde{\mL} \in \mathbb{R}^{n \times n}, \quad \tilde{L}_{ij} = \tilde{k}(f_i, f_j | q)\,.
+\end{equation}
+This can also be expressed as:
+\begin{equation}\label{eq:cmgk}
+    \tilde{\mL} = \mathrm{diag}(\mr)\cdot \mL \cdot \mathrm{diag}(\mr)\,,
+\end{equation}
+with frame similarities \(\mL \in \mathbb{R}^{n \times n}, \mL_{ij} = k(f_i, f_j), k \in \mathcal{K}\), and frame-query relevances \(\mr \in \mathbb{R}^n, \mr_i = g(f_i, q), g \in \mathcal{K}\).
+
+
+\subsection{Determinantal Point Process~(DPP)}\label{subsec:method_dpp}
+
+DPP was initially introduced to model fermion repulsion in quantum physics and has proven effective in modeling list-wise diversity in machine learning~\cite{ye2023compositional,chen2018fast}.
+We apply DPP to the high-dimensional conditional similarity matrix \(\tilde{\mL}\) to capture both query relevance and list-wise diversity in frame selection.
+In fact, it represents the geometric volume of the subset in the RKHS; a larger volume indicates a more well-spread subset, leading to better list-wise diversity. 
+
+
+Formally, DPP \(\mathcal{P}\) serves as a probability measure over the \(2^n\) subsets of frames sampled without replacement from a video \(V = \{f_i\}_{i=1}^{n}\).
+The probability of selecting a subset of frame indices \(S \subseteq \N_n\) is defined as:
+\begin{equation}\label{eq:dpp}
+	\mathcal{P}(S)=\frac{\det(\tilde{\mL}_S)}{\det({\tilde{\mL} + \I})} \propto \det(\tilde{\mL}_S) \,,
+\end{equation}
+where \(\tilde{\mL}_S \equiv [\tilde{\mL}_{ij}]_{i,j \in S} \in \mathbb{R}^{|S|\times|S|}\) is a PSD matrix denoting the submatrix of \(\tilde{\mL}\) corresponding to the selected frame indices in \(S\).
+%
+Based on \cref{eq:cmgk} and \cref{eq:dpp}, we can derive the unnormalized log-probability of the subset \(S\) as:
+\begin{equation}
+	\log\left(\det(\tilde{\mL}_S)\right) = \sum_{i\in S}\log\left(\mr_i^2\right) + \log\left(\det(\mL_S)\right)\,,
+\end{equation}
+which clearly shows how to capture query relevance~(\ie \(\mr\)) and list-wise frame diversity~(\ie \(\det(\tilde{\mL}_S)\)) in frame selection.
+Without loss of generality, we introduce a weighting factor to trade-off query relevance and list-wise diversity:
+\begin{equation}\label{eq:log_dpp}
+	\log \left( \det(\tilde{\mL}_S) \right) = \frac{1}{\lambda} \sum_{i \in S} \log\left(\mr_i^2\right) + \log\left(\det(\mL_S)\right)\,.
+\end{equation}
+This is a more general form of the standard DPP, equivalent to scaling the bandwidth \(h\) in the Gaussian kernel \mbox{\(k(x,y) = \exp\left(-\frac{\| (x-y)/h \|^2}{2\sigma^2}\right)\)} from \(h\) to \(\sqrt{\lambda} \cdot h\).
+
+
+
+Frame selection follows the law of diminishing marginal utility, 
+as the marginal gain from selecting additional frames is non-increasing~(as shown in \cref{fig:gain_on_videomme}).
+This phenomenon is formally known in statistics as \emph{submodularity}, 
+which is a well-established property of DPP, as shown in previous research~\cite{fujishige2005submodular,krause2014submodular}.
+%
+Selecting the optimal subset to maximize the submodular score function~\cref{eq:dpp,eq:log_dpp}, known as the submodular maximization problem in subset selection, is generally NP-hard.
+Fortunately, there is a popular greedy algorithm can solve this problem,
+which offers polynomial complexity and guarantees a \((1 - 1/e)\)-approximation, \ie, the solution is at least \((1 - 1/e)\) of the optimal score~\cite{chen2018fast}.
+
+Specifically, we employ maximum a posteriori~(MAP) inference~\cite{chen2018fast,ye2023compositional} to solve DPP~(corresponding to \cref{eq:dpp,eq:log_dpp}).
+We initialize the selected subset as \(S \leftarrow \emptyset\).
+In each iteration, we select a new frame that maximizes the marginal gain in log-probability, given by:
+\begin{equation}\label{eq:greedy}
+	j = \mathop{\mathrm{argmax}}\limits_{i\in \mathbb{N}_n \backslash S} \log\left(\det(\tilde{L}_{S \cup \{i\}})\right) - \log\left(\det(\tilde{L}_S)\right)\,.
+\end{equation}
+The selected frame index \(j\) is then added to \(S\) until the subset size reaches the capacity limit \(k\).
+%
+By using Cholesky decomposition, the time complexity is reduced from \(\mathcal{O}(nk^3)\) to \(\mathcal{O}(nk)\) per iteration through incremental updates to the Cholesky factor~\cite{chen2018fast}.
+Therefore, the overall time complexity of the MAP inference is \(\mathcal{O}(nk^2)\), compared to the vanilla KNN, the additional latency is negligible while \(k \ll n\)~\cite{ye2023compositional}.
+
+
+\subsection{Markov Decision DPP}\label{subsec:method_kdp}
+
+As described above, applying DPP to the conditional similarity matrix effectively captures both query relevance and list-wise diversity.
+However, standard DPP treats video frames as independently permutable, disregarding the sequential structure inherent in video.
+%
+To address this, existing works on video summarization~\cite{gong2014diverse,zheng2021k} segment a video into multiple consecutive short segments and apply DPP within each segment, conditioned on the selections from the preceding segment.
+This approach effectively models sequentiality by \emph{enhancing diversity among neighboring frames while reducing it for temporally distant ones.}
+%
+In VidQA, frames relevant to the query are often concentrated in specific segments rather than being uniformly distributed across the video. 
+This presents a new challenge in allocating the total selection size \(k\) across multiple segments.
+%
+Focusing on video summarization, \citet{gong2014diverse} allocate \(k\) uniformly across segments,
+while \citet{zheng2021k} formulate it as an integer programming problem and relax the constraints to find an approximate solution.
+%
+Instead, we focus on general VidQA and model this sequential DPP across the segment sequence as an MDP. 
+We propose a dynamic programming algorithm that can optimally allocates the total selection size \(k\) across segments with pseudo-polynomial complexity, without relaxing problem constraints.
+
+
+First, we segment a video into multiple segments of equal length \(m\), so that a video with \(n\) frames is divided into \(T = \lceil n/m \rceil\) segments. 
+The corresponding frame indices of the video, \(\N_n\), are divided as \(\N_n = \bigcup_{t=1}^{T} N_t\), 
+where \(N_t\) denotes the frame indices of the \(t\)-th segment, with $|N_t|=m$.
+Moreover, let the selected subset from the \(t\)-th segment be denoted as \(S_t \subseteq N_t\).
+%
+Therefore, when applying DPP to the \(t\)-th segment, conditioned on the selection in the \((t-1)\)-th segment \(S_{t-1}\), 
+the DPP conditional distribution~\cite{gong2014diverse} for the current segment \(S_t\) is expressed as:
+\begin{equation}\label{eq:cond_dpp}
+    \mathcal{P}(S_t | S_{t-1}) = \frac{\det(\tilde{\mL}_{S_{t-1} \cup S_t})}{\det(\tilde{\mL}_t + \I_t)} \,,
+\end{equation}
+where \(\tilde{\mL}_t\) is the submatrix of \(\tilde{\mL}\) for the indices \(S_{t-1} \cup N_t\), and \(\I_t\) is a diagonal matrix with zeros for \(S_{t-1}\) and ones for \(N_t\).
+%
+Thus, the joint distribution of subsets can be written as:
+\begin{equation}\label{eq:seq_score}
+    \mathcal{P}(S_1, S_2, \dots, S_T) 
+        = \mathcal{P}(S_1) \prod_{t=2}^{T} \mathcal{P}(S_t \mid S_{t-1}) \,.
+\end{equation}
+%
+If the selection size for the \(t\)-th segment is predetermined as \(|S_t| = k_t\),
+the MAP inference in \cref{eq:seq_score} can be performed sequentially, from the first to the last~\cite{gong2014diverse}, similar to Bayesian belief updates (such as Kalman filtering):
+\begin{equation}\label{eq:map_inf}
+    S_t^* = \mathop{\mathrm{argmax}}_{S_t \subseteq N_t, |S_t|=k_t} \mathcal{P}(S_t \mid S_{t-1}^*) \,.
+\end{equation}
+This implies that when determining one of \(k_t\) and \(S_t^*\), the other is uniquely determined, \ie, \(k_t \leftrightarrows S_t^*\).
+
+
+Determining the optimal allocation of selection size \(k_t\) for each segment is challenging. 
+%
+We observe that the MAP inference~(\cref{eq:map_inf}) of the DPP conditional distribution~(\cref{eq:cond_dpp}) uniquely depends on a triplet state, consisting of:
+1)~the candidate indices in the current segment \(N_t\),
+2)~the selections from the preceding segment \(S_{t-1}^*\), determined by $k_{t-1}$, and
+3)~the remaining capacity for further selections \(k - C_{t-1}\), where \(C_{t-1}\) denotes the total selection size before the \((t-1)\)-th~(inclusive) segment.
+Consequently, this MAP inference can be formulated as an MDP, where the state is defined as the triplet \((N_t, k_{t-1}, C_{t-1})\).
+Moreover, the segment index \(t-1\) can uniquely determine \(N_t\).
+Therefore, the state can be represented as \((t \in [1, T], k_t \in [0, k], C_t \in [0, k])\).
+The state transition from \(t-1\) to \(t\) is deterministic when the action of selecting \(k_t\) frames from the \(t\)-th segment is given, which can be expressed as:
+\begin{equation}
+	(t-1, k_{t-1}, C_{t-1})
+	\xrightarrow{\hspace{-0.1cm}
+		\scriptsize\begin{array}{c}
+	        \text{selecting } S_t \\
+	        \text{with } |S_t|=k_t
+    	\end{array}
+	\hspace{-0.1cm}}
+	(t, k_t,\overbrace{C_{t-1}+ k_t}^{C_t})\,.
+\end{equation}
+The corresponding reward in MDP is defined as
+\begin{equation}\label{eq:reward}
+    \R_{S_t}(t-1, k_{t-1}, C_{t-1}) = \log \left(\mathcal{P}(S_t \mid S_{t-1}^*)\right) \,,
+\end{equation}
+where \(S_{t-1}^*\) is uniquely determined by \(k_{t-1}\) in the state $(t-1, k_{t-1}, C_{t-1})$.
+This reward can be efficiently computed using a greedy DPP algorithm applied to the conditional DPP (\ie, \cref{eq:cond_dpp}).
+%
+Therefore, the list-wise \(\mathrm{Score}\) function in \cref{eq:score}, based on \cref{eq:seq_score}, is defined as:
+\begin{equation}\label{eq:opt_score}
+	\mathrm{Score}(S_1,S_2,\dots,S_T) =
+		\sum_{t=0}^{T-1} \R_{S_{t+1}}(t, k_t, C_t)\,.
+\end{equation}
+Using this definition and the \((1 - 1/e)\)-approximate greedy DPP algorithm, we can apply a dynamic programming approach to identify a solution \(\hat{S}\) such that \mbox{\(\mathrm{Score}(\hat{S}) \geq (1 - 1/e) \cdot \mathrm{Score}(S^*)\)}, with a closely \(\mathcal{O}(nk^4)\) time complexity~(proof provided in the Appendix).
+
+We define a value function \(Q(t, k_t, C_t)\) as the maximum accumulated reward from the initial state \((0, 0, 0)\) to the current state \((t, k_t, C_t)\). 
+Consequently, 
+\begin{equation}
+    Q^*(t, C_t) = \max\limits_{0 \leq k_t \leq k - C_t} Q(t, k_t, C_t)
+\end{equation}
+represents the maximum accumulated reward for selecting \(C_t\) frames up to and including the \(t\)-th segment. 
+The solution to \cref{eq:opt_score} is given by \(\hat{S} = \mathop{\mathrm{argmax}}_{S} Q^*(T, k)\).
+
+\input{sec/X_algorithm.tex}
+\input{tables/main_results}
+
+Dynamic programming can be used to update the \(Q\) score and identify the solution \(\hat{S}\) with an optimal allocation of \(k\), with a time complexity closely \(\mathcal{O}(nk^4)\).
+%
+In practice, to improve efficiency further, we adopt lazy dynamic programming strategies.
+First, we directly maintain the \(Q^*\) score instead of updating \(Q\).
+This strategy assumes that selecting a frame from the \(t\)-th segment depends only on the preceding state with optimal $k_{t-1}^*$, \ie, \((t-1, k_{t-1}^*, C_{t-1})\), corresponding to \(Q^*(t-1, C_{t-1})\), similar to the online MAP inference described in \cref{eq:map_inf}~\cite{gong2014diverse}.
+Second, only the most recently selected frame is used as the condition in~\cref{eq:reward}, approximating an adaptive condition size and a fixed candidate segment size \(m\) for the \(t\)-th segment.
+Consequently, with the lazy strategies, the state is simplified to \((t, C_t)\).
+The policy function is denoted by \(S_t^*=\pi(t, C_t)\), and \(\T_{t, C_t}\) is an initially empty list \([\,]\) that tracks the selection trace \([S_1, S_2, \dots, S_t]\).
+%
+The corresponding reward simplifies to:
+\begin{equation}
+	\R_{S_t}^*(t-1,C_t-k_t)=\log (\mathcal{P}(S_t \mid \T_{t-1, C_{t-1}}[-1])), 	
+\end{equation}
+where $C_t-k_t = C_{t-1}$.
+For brevity, we denote $Q^*_{t, C_t}=Q^*(t, C_t)$.
+The dynamic programming update is:
+\begin{align}\label{eq:dp_update}
+	&Q^*_{t, C_t} = \max_{S_t \subseteq N_t} Q^*_{t-1, C_t-k_t} + \R_{S_t}^*(t-1,C_t-k_t)\,, \notag \\
+	&\pi(t, C_t)  = \mathop{\mathrm{argmax}}_{S_t \subseteq N_t} 
+					Q^*_{t-1, C_t-k_t} + \R_{S_t}^*(t-1,C_t-k_t)\,, \notag \\
+	&\T_{t, C_t} = \T_{t, C_t - |S_t^*|} + [S_t^*],\text{where } S_t^* = \pi(t, C_t)\,.
+\end{align}
+The final solution is \(\hat{S} = \mathop{\mathrm{argmax}}_{S} Q^*(T, k) = \T(T, k) \).
+
+
+The pseudocode for \mname{} is provided in \cref{alg}.
+The end index \((t, C_t + k_t)\) is iterated, while the start index \((t-1, C_t)\) remains fixed.
+The update functions are equivalent with \cref{eq:dp_update}.
+This implementation is more efficient as the greedy DPP algorithm (line 9) can be computed incrementally in $\mathcal{O}(mk)$.
+Thus, the worst-case time complexity of \cref{alg} is closely \(\mathcal{O}(nk^3)\) in practice~(proof in Appendix).
+Compared to the standard DPP complexity of \(\mathcal{O}(nk^2)\), the additional factor \(k \ll n\) is negligible. 
+Additionally, the iteration in line 6 is independent, enabling parallel updates.
+This results in a time complexity of \(\mathcal{O}(nk^2)\), making its efficiency comparable to the standard DPP.
+
+
+
+

@@ -14,8 +14,8 @@ _build/
 !skills/paper-pipeline/repro/*.log
 
 # The accepted papers' own .bbl files are the authors' source, as arXiv published them, not our
-# build output (fixtures/accepted-papers/README.md).
-!fixtures/accepted-papers/*/*.bbl
+# build output (fixtures/real-papers/accepted/README.md).
+!fixtures/real-papers/accepted/*/*.bbl
 
 dist/
 # A skill's TypeScript scripts compiled beside themselves (tsconfig.skills.json): a consumer runs

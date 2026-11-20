@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "section/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/threat_model.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_performance.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_baseline.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_transfer_local_llm.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_transfer_pk.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_code_quality.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_transfer_contriever.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/python_transfer_query.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/multi_suggestions.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/lang_description.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/dataset_source.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "61b9c286a4ea16cca852438b3f6ddb4d7710a15cf071282da45b08bc062d5480",
+    "acmart.cls": "f5e24d4b29d24ab1cbdef46002febe7c2521f69b41c03d20bc92d8eef8fb5038",
+    "section/intro.tex": "455d3b94998c4d5c931c054421981e409c75e2f486f47ec715353ea6d84c7505",
+    "section/background.tex": "7598aebe84b372e502ad04d0b0471e83484c0c9e52e7e9cca42201c2483f2edc",
+    "section/threat_model.tex": "9aa25310d162ebe2fe19a689ce57305930950b33203a61cac8389da92c737707",
+    "section/method.tex": "fb3680339edf22ee16a1bbf6da346b84e384002b3bc4205e42a2073b91bf1cd7",
+    "section/evaluation.tex": "c16a622e7f2b5c4814e0ea2a1e3b1d9606759b337b1f2622df41d53eaa3f2aad",
+    "tables/main_performance.tex": "70ea233d3cc75bbf26d986f7a74e205d1ea7ba85b54c100897dab41d03a7d72f",
+    "tables/python_baseline.tex": "1c40c2e7ece015042924ca806e949692dc382fd4053e72073dd0f6d42c6a7141",
+    "tables/python_transfer_local_llm.tex": "2b739d33c839aa69c68bf9bb9d98e428a1ce68461c3816730b58f4855664462f",
+    "tables/python_transfer_pk.tex": "eaed6f7b468ae78a442c390655c373544102dd26c2d9adcab3fcb401d5c8e6ba",
+    "tables/python_code_quality.tex": "f7e46c54f4cb5577412533f54e8907a9557d2240b9a6a12a217e58b701e76519",
+    "tables/python_transfer_contriever.tex": "a6c26b4b7d5e6dd2a993d19fd2cbc021a598349149526e4c7c851589fb188a49",
+    "tables/python_transfer_query.tex": "193f0866fb7dfb8b470a3cbce595fbc60840106f0d0436888cc0a9f32386e00e",
+    "section/discussion.tex": "ab4460355ba8be3f6b0fdcb267d6b2b5d3d5a2c1df7c5203fbcb53f139a5c848",
+    "section/conclusion.tex": "a1faa1d67636adc0e374ab3d0f7c2ebfa2d433115760b06c9da754967e7ef85a",
+    "section/appendix.tex": "66bb19e02cc09120bed4b862d996bac1be8604eb1e7dfe1cccf0cce90fd304e8",
+    "tables/multi_suggestions.tex": "0d087bfc2178174f9ccf2b566c0eafcaa069eb57eba8218706e69a562efb5ebe",
+    "tables/lang_description.tex": "29efd6dbe4d092b3359501802ac5a1d6dfc16f4c74ea120f5aed750bbf716f54",
+    "tables/dataset_source.tex": "577b46e2eda8df40c677581dc5f522f7a893244bc41acaaebf73c905aefabaac"
+  }
+}

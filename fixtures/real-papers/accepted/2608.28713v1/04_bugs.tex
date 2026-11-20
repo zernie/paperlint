@@ -1,0 +1,663 @@
+In this section, we classify the 30 soundness issues according to the affected
+feature and the symptom and describe each category with simplified code
+snippets.
+%
+When describing the issues, we analyze the consequences, triggering features,
+and status as well.
+%
+We identify five affected features and ten symptoms, as shown in
+\cref{tab:features};
+%
+we identify four consequences, as shown in \cref{tab:consequences}, and fourteen
+triggering features:
+%
+{\bf implied} bounds, {\bf assoc}iated types, \C{impl} traits ({\bf IT}s), {\bf
+RPIT}s, {\bf tr}ait {\bf obj}ects, higher-rank ({\bf HR}) polymorphism,
+associated {\bf const}ants, function pointers ({\bf fn ptr}s), {\bf clo}sures,
+{\bf rec}ursive calls, {\bf async}hrony, {\bf try} propagation, {\bf arr}ays,
+and {\bf enum}s
+%
+(in tables, we abbreviate them as shown in bold).
+%
+Note that these affected/triggering features are not intended to systematically
+enumerate all features in Rust;
+%
+rather, they aid in understanding the soundness issues we collected.
+%
+We also classify status into four kinds, as shown in \cref{tab:status-kind}.
+%
+Note that an issue is considered fixed if the code given in the issue is
+rejected by the latest stable compiler, regardless of its GitHub issue
+resolution status.
+%
+We use this criterion because an issue may reveal multiple compiler bugs and may
+not be closed even after the soundness bug has been fixed due to other remaining
+bugs.
+%
+\cref{tab:issues} summarizes the characteristics of each issue.
+%
+For the sake of brevity, we only present code snippets for some issues;
+%
+the omitted ones are available in our supplementary material~\cite{supp}.
+
+\begin{table}[t]
+\caption{Classification of affected features and symptoms of soundness issues}
+\label{tab:features}
+\vspace{-1.15em}
+\renewcommand{\arraystretch}{0.9}
+  {\scriptsize
+\begin{tabular}{l|l}
+  Affected feature & Symptoms \\ \hline
+  Lifetimes & Missing lifetime checks, Anonymous lifetimes allowed \\
+  Traits & Overlapping impls, Missing dyn-compat checks, Orphan impls, Incorrect trait solving \\
+  Type inference & Arbitrary type argument selection, Arbitrary hidden type selection \\
+  Type well-formedness & Missing well-formedness checks \\
+  Type cast & Incorrect type cast allowed \\
+\end{tabular}
+  }
+\vspace{-0.65em}
+\end{table}
+
+\begin{table}[t]
+\caption{Classification of consequences of soundness issues}
+\label{tab:consequences}
+\vspace{-1.15em}
+\renewcommand{\arraystretch}{0.9}
+  {\scriptsize
+\begin{tabular}{l|l}
+  Consequence & Description \\ \hline
+  Memory bug & A memory bug can occur at run time \\
+  Breaking change & A benign change in a library can lead to a compilation error in a client code \\
+  Inconsistency & A code snippet passes type checking while similar ones are rejected \\
+  Misleading behavior & The run-time behavior could be misleading \\
+\end{tabular}
+  }
+\vspace{-0.65em}
+\end{table}
+
+\begin{table}[t]
+\caption{Classification of status of soundness issues}
+\label{tab:status-kind}
+\vspace{-1.15em}
+\renewcommand{\arraystretch}{0.9}
+  {\scriptsize
+\begin{tabular}{l|l}
+  Status & Description \\ \hline
+  Fixed & The compiler has been fixed, and the code snippet is rejected by the latest release (1.93.0) \\
+  Confirmed & The C-bug or I-unsound label has been assigned to by a person other than the reporter\\
+  Reported & The issue is open but not fixed or confirmed yet \\
+  Non-bug & The issue has been closed without being fixed or confirmed \\
+\end{tabular}
+  }
+\vspace{-1.0em}
+\end{table}
+
+\begin{table}[t]
+\caption{Soundness issues in \rustc{}}
+\label{tab:issues}
+  \renewcommand{\arraystretch}{0.9}
+  \vspace{-1.0em}
+  {  \scriptsize
+\begin{tabular}{l|l|l|l|l|l}
+Issue \# & Affected Feature & Symptom & Consequence & Triggers & Status \\ \hline
+\href{https://github.com/rust-lang/rust/issues/96460}{96460}$^\mathsection$& Type inference & Hidden type & Inconsistency & RPIT & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/96927}{96927}&Type inference&Type argument&Inconsistency&try&Confirmed$^\mathparagraph$\\
+\href{https://github.com/rust-lang/rust/issues/98117}{98117}$^\mathsection$& Lifetimes & Missing lifetime checks & Memory bug & implied, tr obj & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/98543}{98543}$^\ddag$&Lifetimes&Missing lifetime checks&Memory bug&implied, assoc&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/99158}{99158}$^\ast$&Lifetimes&Missing lifetime checks&Memory bug&implied, fn ptr&Confirmed\\
+\href{https://github.com/rust-lang/rust/issues/99554}{99554}&Traits&Orphan&Breaking
+change&assoc&Fixed$^{\ast\ast}$\\
+\href{https://github.com/rust-lang/rust/issues/100051}{100051}&Lifetimes&Missing lifetime checks&Memory bug&implied, assoc, HR&Reported\\
+\href{https://github.com/rust-lang/rust/issues/104005}{104005}$^\mathsection$& Lifetimes & Missing lifetime checks & Memory bug & implied, tr obj & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/104763}{104763}$^\mathsection$& Lifetimes & Missing lifetime checks & Inconsistency & const & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/104764}{104764}$^\mathsection$& Lifetimes & Missing lifetime checks & Inconsistency & assoc & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/105251}{105251}$^\ddag$&Lifetimes&Missing lifetime checks&Inconsistency&assoc, RPIT&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/105787}{105787}$^\ddag$&Traits&Overlapping&Inconsistency&assoc, HR&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/106040}{106040}&Traits&Incorrect solving&Inconsistency&assoc&Reported\\
+\href{https://github.com/rust-lang/rust/issues/107268}{107268}&Type inference&Type argument&Inconsistency&assoc, fn ptr&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/108468}{108468}&Lifetimes&Anonymous&Inconsistency&IT, async&Reported\\
+\href{https://github.com/rust-lang/rust/issues/109628}{109628}&Lifetimes&Missing lifetime checks&Inconsistency&assoc&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/110925}{110925}&Type wf-ness&Missing wf-ness checks&Inconsistency&RPIT&Reported\\
+\href{https://github.com/rust-lang/rust/issues/111935}{111935}$^\ddag$&Type inference&Hidden type&Inconsistency&RPIT, rec&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/112417}{112417}&Lifetimes&Missing lifetime checks&Memory bug&implied, RPIT&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/114061}{114061}&Traits&Overlapping&Inconsistency&assoc, HR&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/114389}{114389}$^\dag$&Traits&Overlapping&Memory bug&assoc, tr obj&Confirmed\\
+\href{https://github.com/rust-lang/rust/issues/118876}{118876}$^\mathsection$& Lifetimes & Missing lifetime checks & Memory bug & implied, tr obj, HR, clo & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/123312}{123312}&Lifetimes&Missing lifetime checks&Inconsistency&clo&Reported\\
+\href{https://github.com/rust-lang/rust/issues/126079}{126079}$^\mathsection$& Traits & Missing dyn-compat checks & Memory bug & assoc, tr obj & Fixed \\
+\href{https://github.com/rust-lang/rust/issues/133361}{133361}&Traits&Overlapping&Memory bug&assoc, tr obj&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/134311}{134311}&Type inference&Hidden type&Inconsistency&assoc, RPIT&Reported\\
+\href{https://github.com/rust-lang/rust/issues/136508}{136508}&Type cast&Incorrect cast&Misleading&enum&Reported\\
+\href{https://github.com/rust-lang/rust/issues/139406}{139406}&Type inference&Hidden type&Inconsistency&RPIT, rec&Fixed\\
+\href{https://github.com/rust-lang/rust/issues/141713}{141713}&Lifetimes&Missing lifetime checks&Memory bug&assoc, HR, clo&Confirmed\\
+\href{https://github.com/rust-lang/rust/issues/144045}{144045}&Lifetimes&Missing lifetime checks&Inconsistency&arr&Reported\\
+\end{tabular}
+  \\[-0.1em] $^\ast$ A duplicate of Issue 25860, which was reported in 2015.
+  \\[-0.1em] $^\dag$ A duplicate of Issue 57893, which was reported in 2019.
+  \\[-0.1em] $^\ddag$ Overlaps between ours and Liu et al.'s.
+  \\[-0.1em] $^\mathsection$ Added after comparison with Liu et al.'s.
+  \\[-0.1em] $^\mathparagraph$ This issue was closed as a duplicate of Issue 94902,
+  which is not itself a soundness issue but shares the same root cause.
+  Since Issue 94902 satisfies the ``confirmed'' criterion, Issue 96927 is
+  classified as confirmed.
+  \\[-0.6em] $^{\ast\ast}$ A warning occurs instead of an error.
+  }
+\vspace{-1.5em}
+\end{table}
+
+\subsection{Lifetimes}
+
+\subsubsection{Missing Lifetime Checks}
+
+In fourteen soundness issues, the compiler does not check lifetimes properly.
+%
+As explained in \cref{sec:background:lifetime}, a reference can be used wherever
+its lifetime outlives the expected lifetime, and the compiler must check
+lifetimes when references are used to enforce this requirement.
+%
+If the compiler fails to check lifetimes, references may be used even after
+their lifetimes have ended, incurring memory bugs like use-after-free.
+%
+Among the fourteen issues, eight issues actually break memory safety, while six
+issues do not result in such misuse of references despite missing lifetime
+checks, only exhibiting inconsistent type checking results.
+%
+We first discuss the memory-bug-incurring issues and then the others.
+
+{\it Issue 99158.}
+%
+In this issue, the compiler does not check implied bounds when coercing function
+definitions to function pointers.
+%
+In \cref{lst:i99158}, \C{foo} has the implied bound \C{'a: 'static} due to its
+second parameter (line~\ref{line:99158:1}).
+%
+However, when \C{bar} assigns \C{foo} to \C{f}, this implied bound is not
+checked, and the assignment succeeds even though \C{bar} does not have \C{'a:
+'static} (line~\ref{line:99158:3}).
+%
+By calling \C{f}, \C{bar} can assign \C{'static} to any reference;
+%
+if this reference is not valid for the entire execution, dereferencing it would
+lead to a memory bug.
+%
+Note that explicitly adding the bound \C{'a: 'static} to \C{foo} causes the
+assignment to be rejected correctly.
+
+In six other issues, the compiler does not check implied bounds in other
+contexts and fails to prevent memory bugs:
+%
+it does not check implied bounds when
+%
+a trait has a lifetime bound (Issue 98117),
+%
+a \emph{self type} (i.e., \C{S} in \C{<S as X>::A}) introduces implied bounds
+(Issues 98543 and 100051),
+%
+an implementing type in an \C{impl} introduces implied bounds (Issue 104005),
+%
+an RPIT hidden type is determined (Issue 112417),
+%
+or a closure is coerced (Issue 118876).
+
+{\it Issue 141713.}
+%
+In this issue, the compiler does not properly check the lifetime of the associated
+type of an HRTB.
+%
+In \cref{lst:i141713}, \C{X<T>} declares \C{Fn() -> T} as a \emph{supertrait},
+i.e., a type implementing \C{X<T>} must also implement \C{Fn() -> T}
+(line~\ref{line:i141713:1}).
+%
+\C{Fn() -> T} is a built-in trait automatically implemented by every closure
+that takes no parameters and returns \C{T}.
+%
+It has an associated type named \C{Output}, which is set to \C{T}.
+%
+Additionally, every type implementing \C{Fn() -> T} also implements \C{X<T>}
+(line~\ref{line:i141713:2}).
+%
+In \C{foo}, \C{F} has an HRTB, but it is unclear what \C{F::Output} denotes;
+%
+the compiler allows using \C{F::Output} as a reference with \C{'static} in
+\C{foo} (line~\ref{line:i141713:3}), while it allows using a reference with any
+lifetime as \C{F::Output} in \C{bar} (line~\ref{line:i141713:4}).
+%
+Note that \C{|| \&0} is a closure that takes no parameters and returns \C{\&0}.
+
+{\it Issue 144045.}
+%
+In this issue, the compiler does not check the lifetime of a length-0 array.
+%
+In \cref{lst:i144045}, \C{foo} returns \C{[v; 1]}, which is a length-1 array
+with \C{v} as its element, and it is rejected because \C{'a} does not outlive
+\C{'static} (line~\ref{line:144045:1}).
+%
+On the other hand, \C{bar} is accepted, even though the only difference from
+\C{foo} is that it returns \C{[v; 0]}, which is a length-0 array
+(line~\ref{line:144045:2}).
+%
+This issue does not cause memory bugs because \C{bar} does not actually return
+any reference.
+%
+Nevertheless, this behavior might seem surprising, as developers usually expect
+the type checking of array types to be independent of their lengths.
+
+Similarly, five other issues also reveal cases where the compiler does not check
+lifetimes but still prevents memory bugs.
+%
+In particular, it does not check lifetimes when
+%
+an associated constant or type is accessed (Issues 104763 and 104764),
+%
+an RPIT has nested \C{impl} traits (Issue 105251),
+%
+a type parameter's associated type has a trait bound (Issue 109628),
+%
+or a struct value is constructed inside a closure (Issue 123312).
+
+\begin{figure}[t]
+\begin{lstlisting}[caption={Issue 99158}, label={lst:i99158}]
+fn foo<'a>(v: &'a i32, u: &'static &'a i32) -> &'static i32 { v } $\label{line:99158:1}$
+fn bar<'a>(v: &'a i32) -> &'static i32 { $\label{line:99158:2}$
+    let f: fn(&'a i32, _) -> &'static i32 = foo; f(v, &&0) } $\label{line:99158:3}$
+\end{lstlisting}
+\vspace{-1.2em}
+\begin{lstlisting}[caption={Issue 141713}, label={lst:i141713}]
+trait X<T>: Fn() -> T {} $\label{line:i141713:1}$
+impl<T, F: Fn() -> T> X<T> for F {} $\label{line:i141713:2}$
+fn foo<F>(v: F, u: F::Output) -> &'static i32 where for<'a> F: X<&'a i32>{u}$\label{line:i141713:3}$
+fn bar<'a>(v: &'a i32) -> &'static i32 { foo(|| &0, v) } $\label{line:i141713:4}$
+\end{lstlisting}
+\vspace{-1.2em}
+\begin{lstlisting}[caption={Issue 144045}, label={lst:i144045}]
+fn foo(v: &'a i32) -> [&'static i32; 1] { [v; 1] } // error $\label{line:144045:1}$
+fn bar(v: &'a i32) -> [&'static i32; 0] { [v; 0] } // ok $\label{line:144045:2}$
+\end{lstlisting}
+\vspace{-1.2em}
+\begin{lstlisting}[caption={Issue 108468}, label={lst:i108468}]
+trait X<T> {} $\label{line:i108468:1}$
+fn foo(v: impl X<&i32>) {} // error $\label{line:i108468:2}$
+fn bar<'a>(v: impl X<&'a i32>) {} // ok $\label{line:i108468:3}$
+async fn baz(v: impl X<&i32>) {} // ok $\label{line:i108468:4}$
+\end{lstlisting}
+\vspace{-1.2em}
+\end{figure}
+
+\subsubsection{Anonymous Lifetimes Allowed}
+
+In one soundness issue, the compiler unexpectedly allows \emph{anonymous
+lifetimes}.
+%
+In Rust, when the compiler can automatically introduce necessary lifetime
+parameters according to predefined rules~\cite{rust-lifetime-elision},
+programmers can use anonymous lifetimes.
+%
+For example, \C{foo} and \C{bar} are equivalent in the following code:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+fn foo(v: &i32) {} fn bar<'a>(v: &'a i32) {}
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+However, anonymous lifetimes are explicitly disallowed in some contexts, and if
+the compiler allows them, it may be considered a soundness bug.
+
+{\it Issue 108468.}
+%
+In this issue, using an \C{async} function causes the compiler to allow
+anonymous lifetimes.
+%
+In \cref{lst:i108468}, the function \C{foo} is rejected because anonymous
+lifetimes must not occur in \C{impl} traits (line~\ref{line:i108468:2}), while
+\C{bar} is accepted (line~\ref{line:i108468:3}).
+%
+However, the \C{async} function \C{baz} passes type checking even though it
+contains an anonymous lifetime in an \C{impl} trait (line~\ref{line:i108468:4}).
+%
+% In fact, when the unstable feature \C{anonymous\_lifetime\_in\_impl\_trait} is
+% explicitly enabled, such anonymous lifetimes are allowed even for synchronous
+% functions.
+%
+% In the future, the \rustc{} developers may stabilize this feature, making
+% \C{foo} accepted as well, rather than fixing the compiler to reject \C{baz}.
+
+\subsection{Traits}
+
+\subsubsection{Overlapping Implementations}
+
+In four soundness issues, the compiler allows \emph{overlapping impls}, i.e.,
+those implementing the same trait for the same type.
+%
+Rust prohibits overlapping \C{impl}s because they create ambiguity when deciding
+which \C{impl} to use during method resolution.
+%
+For example, the following code is rejected:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+trait X { fn foo(self) -> i32; } struct S;
+impl X for S{fn foo(self)->i32{0}}impl X for S{fn foo(self)->i32{1}} // error
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+Therefore, if code with overlapping \C{impl}s passes type checking, it can be
+considered a soundness bug.
+%
+Among the four issues in this category, two lead to memory bugs, while two
+only cause inconsistency.
+
+{\it Issue 114389.}
+%
+In this issue, the compiler allows a user-defined \C{impl} to overlap with a
+\emph{built-in impl}---for every trait \C{X}, the type \C{dyn X} automatically
+implements \C{X}, called a built-in \C{impl}.
+%
+In \cref{lst:i114389}, every type implements \C{X}, even including dynamically
+sized types due to the bound \C{?Sized} on \C{T} (line~\ref{line:114389:2}).
+%
+In \C{foo}, since \C{<T as X>::A} and \C{\&'static i32} are the same type, it
+can return the given value as is (line~\ref{line:114389:3}).
+%
+On the other hand, when \C{bar} calls \C{foo}, the type argument is \C{dyn X<A =
+\&'a i32>}, so the parameter type \C{<T as X>::A} becomes \C{\&'a i32}.
+%
+Consequently, \C{bar} can use a value of \C{\&'a i32} as \C{\&'static i32} by
+passing it to \C{foo} (line~\ref{line:114389:4}).
+%
+This issue arises because \C{dyn X<A = \&'a i32>} has two overlapping \C{impl}s
+of \C{X}:
+%
+the one with \C{A = \&'static i32} defined in line~\ref{line:114389:2} and the
+built-in \C{impl} with \C{A = \&'a i32}.
+
+In another issue (Issue 133361), two user-defined \C{impl}s for trait objects
+overlap and similarly incur memory bugs by setting the same associated type to
+two different types.
+%
+In two other issues, the compiler fails to detect overlapping \C{impl}s when
+higher-rank polymorphism is involved, but memory bugs do not occur
+%
+because the compiler always selects one \C{impl} and ignores the other (Issue
+105787),
+%
+or when the associated type is used, the compiler recognizes that two different
+types are possible and rejects the code (Issue 114061).
+
+\begin{figure}[t]
+\begin{lstlisting}[caption={Issue 114389}, label={lst:i114389}]
+trait X { type A; } impl<T: ?Sized> X for T { type A = &'static i32; } $\label{line:114389:2}$
+fn foo<T: ?Sized>(v: <T as X>::A) -> &'static i32 { v } $\label{line:114389:3}$
+fn bar<'a>(v: &'a i32) -> &'static i32 { foo::<dyn X<A = &'a i32>>(v) } $\label{line:114389:4}$
+\end{lstlisting}
+\vspace{-2em}
+\end{figure}
+
+\subsubsection{Missing Dyn-compatibility Checks}
+
+In one soundness issue (Issue 126079), the compiler does not check the
+\emph{dyn-compatibility} of a trait.
+%
+To use a type \C{dyn T}, the trait \C{T} must satisfy dyn-compatibility, which
+requires several conditions, such as not having a method return type containing
+\C{Self}.
+%
+However, the compiler does not check dyn-compatibility when an associated type
+of a supertrait, referred to using \C{Self}, is used as a return type.
+%
+This allows a single return type to be interpreted as two different types,
+leading to memory bugs.
+
+\subsubsection{Orphan Implementations}
+
+In one soundness issue, the compiler allows \emph{orphan impls}, i.e., those
+implementing external traits for external types.
+%
+In Rust, a \emph{crate} is a compilation unit, and items defined in other crates
+are considered external.
+%
+If orphan \C{impl}s are allowed, a seemingly innocent change in a library can
+prevent a dependent program from compiling:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+// crate a $\label{line:orphan:1}$
+trait X {} struct S; $\label{line:orphan:2}$
+// crate b (depends on crate a) $\label{line:orphan:3}$
+trait Y {} struct R; $\label{line:orphan:4}$
+impl a::X for a::S {} // error $\label{line:orphan:5}$
+impl a::X for R {} impl Y for a::S {} // ok $\label{line:orphan:6}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+While the crate \C{a} currently does not implement \C{X} for \C{S}, it can
+freely add an \C{impl} in the future.
+%
+If the crate \C{b} is allowed to implement \C{X} for \C{S}, such an update in
+\C{a} becomes an abrupt breaking change, making \C{b} uncompilable due to two
+overlapping \C{impl}s of \C{X} for \C{S}.
+%
+To prevent this in advance, the orphan implementation is rejected
+(line~\ref{line:orphan:5}), while implementing \C{X} for its own type \C{R} or
+its own trait \C{Y} for \C{S} is accepted (line~\ref{line:orphan:6}).
+%
+Therefore, the issue in this category leads to a failure in preventing future
+breaking changes.
+
+{\it Issue 99554.}
+%
+In this issue, the compiler allows an orphan \C{impl} when an associated type is
+used.
+%
+In \cref{lst:i99554}, \C{a} defines \C{X} (line~\ref{line:i99554:2}).
+%
+In \C{b}, implementing \C{X} for any type \C{T} that implements \C{Y} is
+considered orphan and correctly rejected, as such \C{T} can be external
+(line~\ref{line:i99554:5}).
+%
+However, writing \C{<T as Y>::A}, which is equivalent to \C{T}, causes the
+compiler to accept the \C{impl} (line~\ref{line:i99554:6}).
+
+\subsubsection{Incorrect Trait Solving}
+
+In one soundness issue, the compiler draws an incorrect conclusion in
+\emph{trait solving}, i.e., deciding whether a given type implements a certain
+trait.
+
+{\it Issue 106040.}
+%
+In this issue, trait solving succeeds despite the existence of cyclic
+requirements when associated types have trait bounds.
+%
+In \cref{lst:i106040}, the compiler needs to determine whether \C{S} implements
+\C{Unpin} (line~\ref{line:i106040:4}), where \C{Unpin} is a trait defined in the
+standard library.
+%
+This requires \C{S: X<A = S>} (line~\ref{line:i106040:3}), which in turn
+requires \C{S: Unpin} (line~\ref{line:i106040:2}), forming a cycle.
+%
+However, the compiler concludes that \C{S} implements \C{Unpin} and accepts the
+entire program.
+%
+This result can be considered inconsistent because the compiler successfully
+detects the cycle and rejects the code when the bound is directly applied to the
+type parameter, instead of the associated type, as follows:
+
+\vspace{-0.5em}
+\begin{lstlisting}[firstnumber=2]
+impl<T: Unpin> X for T { type A = T; }
+\end{lstlisting}
+\vspace{-0.5em}
+
+\begin{figure}[t]
+\begin{lstlisting}[caption={Issue 99554}, label={lst:i99554}]
+// crate a $\label{line:i99554:1}$
+trait X<T, U> {} $\label{line:i99554:2}$
+// crate b $\label{line:i99554:3}$
+struct S; trait Y { type A; } impl<T> Y for T { type A = T; } $\label{line:i99554:4}$
+impl<T: Y> a::X<S, T> for T {} // error $\label{line:i99554:5}$
+impl<T: Y> a::X<S, T> for <T as Y>::A {} // ok $\label{line:i99554:6}$
+\end{lstlisting}
+\vspace{-1.2em}
+\begin{lstlisting}[caption={Issue 106040}, label={lst:i106040}]
+trait X { type A where Self: Unpin; } $\label{line:i106040:1}$
+impl<T> X for T { type A = T where T: Unpin; } $\label{line:i106040:2}$
+struct S; impl Unpin for S where S: X<A = S> {} $\label{line:i106040:3}$
+fn foo<T: Unpin>() {} fn bar() { foo::<S>() } $\label{line:i106040:4}$
+\end{lstlisting}
+\vspace{-1.2em}
+\begin{lstlisting}[caption={Issue 96927}, label={lst:i96927}]
+fn foo<T>() -> Option<T> { None } $\label{line:i96927:1}$
+fn bar() -> Option<i32> { foo(); None } // error $\label{line:i96927:2}$
+fn baz() -> Option<i32> { foo()?; None } // ok $\label{line:i96927:3}$
+\end{lstlisting}
+\vspace{-2em}
+\end{figure}
+
+\subsection{Type Inference}
+
+\subsubsection{Arbitrary Type Argument Selection}
+
+In two soundness issues, the compiler arbitrarily chooses a type argument during
+type inference even when multiple types are possible.
+%
+In Rust, type inference of a type argument should succeed only when the possible
+type is unique.
+%
+In the following example, \C{foo(0)} is accepted because \C{i32} is the only
+possible type, while \C{baz()} is rejected because any type would be valid:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+fn foo<T>(t: T) {} fn bar() { foo(0); } // ok
+fn baz<T>() {} fn qux() { baz(); } // error
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+If the compiler arbitrarily chooses one among multiple possible types, it can be
+considered inconsistent, and the run-time behavior may deviate from the
+developer's expectation.
+
+{\it Issue 96927.}
+%
+In this issue, type inference selects an arbitrary type when the try propagation
+operator (\C{?}) is used.
+%
+In \cref{lst:i96927}, \C{foo} returns \C{Option<T>}, which expresses the
+optional existence of a value, allowing \C{Some(v)} for a value or \C{None} for
+no value (line~\ref{line:i96927:1}).
+%
+Since \C{bar} does not use the return value, the type argument can be any type,
+and type inference fails (line~\ref{line:i96927:2}).
+%
+On the other hand, \C{baz} uses \C{?}, which immediately returns \C{None} if the
+result is \C{None} and extracts the inner value otherwise
+(line~\ref{line:i96927:3}).
+%
+The compiler still has no information about the type, but chooses an arbitrary
+one---\C{!} (signifying that the function never returns) in recent versions, or
+\C{()} (the empty tuple) in older versions---and accepts the code.
+
+In another issue (Issue 107268), the compiler chooses an arbitrary type as a
+type argument when a function with a lifetime parameter is coerced to a function
+pointer.
+
+\subsubsection{Arbitrary Hidden Type Selection}
+
+In four soundness issues, type inference chooses an arbitrary type as the
+hidden type for an RPIT even when multiple types are possible.
+%
+Such issues are also considered inconsistent and may lead to unexpected run-time
+behavior.
+
+{\it Issue 139406.}
+%
+In this issue, type inference selects an arbitrary hidden type when recursive
+calls exist.
+%
+The function \C{foo} passes the result of a recursive call to another recursive
+call (line~\ref{line:i139406:3}).
+%
+While both \C{T} and \C{!} are valid choices, the compiler chooses \C{T} and
+accepts the code.
+
+In three other issues, the hidden type is arbitrarily selected when
+a built-in type \C{PhantomData} (Issue 96460),
+recursive calls (Issue 111935), or associated types (Issue 134311) are involved.
+
+\begin{figure}[t]
+\begin{lstlisting}[caption={Issue 139406}, label={lst:i139406}]
+trait X {} impl<T> X for T {} $\label{line:i139406:1}$
+fn foo<T>(v: T) -> impl X { foo::<T>(foo::<T>(v)) } $\label{line:i139406:3}$
+\end{lstlisting}
+\vspace{-1em}
+\begin{lstlisting}[caption={Issue 110925}, label={lst:i110925}]
+trait X<T> {} impl<T> X<T> for i32 {} trait Y {} struct S<T: Y>(T); $\label{line:i110925:1}$
+fn foo() -> impl X<S<i32>> { 0 } // ok $\label{line:i110925:2}$
+fn bar(v: impl X<S<i32>>) {} // error $\label{line:i110925:3}$
+\end{lstlisting}
+\vspace{-1em}
+\begin{lstlisting}[caption={Issue 136508}, label={lst:i136508}]
+enum E { A } enum F { B(i32) } $\label{line:i136508:1}$
+fn foo() { let x = E::A as i32; // ok $\label{line:i136508:2}$
+           let y = F::B(0) as i32; // error $\label{line:i136508:3}$
+           let z = F::B as i32; } // ok $\label{line:i136508:4}$
+\end{lstlisting}
+\vspace{-1em}
+\end{figure}
+
+\subsection{Type Well-formedness}
+
+{\it Issue 110925.}
+%
+In this issue, the compiler does not check the well-formedness of a type in an
+RPIT.
+%
+In \cref{lst:i110925}, \C{S<i32>} is not well-formed because no type implements
+\C{Y}, while \C{S<T>} requires \C{T: Y} (line~\ref{line:i110925:1}).
+%
+However, \C{foo} is accepted despite using \C{S<i32>} in the RPIT
+(line~\ref{line:i110925:2}).
+%
+The compiler rejects the use of \C{S<i32>} in other contexts, including APITs
+(line~\ref{line:i110925:3}).
+%
+This inconsistency does not lead to memory bugs because a value of \C{S<i32>}
+cannot be constructed.
+
+\subsection{Type Cast}
+
+{\it Issue 136508.}
+%
+This issue allows casting an enum constructor to an integer.
+%
+In Rust, an enum consists of multiple \emph{variants}, each of which may have
+associated data.
+%
+In \cref{lst:i136508}, \C{E} has one variant \C{A} without data, and \C{F} has
+one variant \C{B} with an \C{i32} value (line~\ref{line:i136508:1}).
+%
+Rust allows casting \C{E::A}, which has no data, to an integer
+(line~\ref{line:i136508:2}), but disallows casting \C{F::B(0)}, which contains
+data (line~\ref{line:i136508:3}).
+%
+Somewhat surprisingly, casting \C{F::B} to an integer is accepted
+(line~\ref{line:i136508:4}).
+%
+In fact, this behavior is intended according to the Rust Reference, as \C{F::B}
+is an enum constructor and treated as a function;
+%
+casting it to an integer gives its address.
+%
+However, the reporter of this issue claims that this behavior is misleading
+because a developer might attempt to cast \C{F::B} under the mistaken impression
+that it is a variant without data.

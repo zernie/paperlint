@@ -1,0 +1,12 @@
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig4_2.png}
+  \caption{
+\textbf{SIB module and gap to the upper bound.}
+\textbf{(a)}~Spectral Information Bottleneck (SIB) plug-in module. Three color-tinted zones group components by the diagnostic finding they target: architecture-aware preprocessing (FDA on CNN inputs, SAG on U-Net skips, both bypassed for ViT); spectral bottleneck on the encoder output (Haar split of features $F$ into content $F_{LL}$ and boundary subbands, content compressed strongly, boundaries gently, $F_{HH}$ passed through); deployment-time coverage threshold $c^*$. Component-to-finding mapping in \S\ref{sec:sib-design}.
+\textbf{(b)}~Per-method gap to the within-city upper bound across $9$ leave-one-city-out (LOCO) cells. Open markers: mean gap with $95\%$ CI; filled: worst cell; dashed grey line: Vanilla mean gap. Values in Table~\ref{tab:method-profile}.
+FDA: Fourier Domain Adaptation; SAG: Skip Attention Gates.
+}
+  \label{fig:sib}
+\end{figure*}
+

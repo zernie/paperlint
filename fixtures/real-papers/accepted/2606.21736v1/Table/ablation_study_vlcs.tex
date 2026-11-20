@@ -1,0 +1,24 @@
+\begin{table}[!htbp]
+\caption{Ablation studies on individual components of our proposed method on VLCS dataset with SDG setting.}
+\vspace{-2.0mm}
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\footnotesize
+\renewcommand\arraystretch{0.9}
+\scalebox{0.90}{
+\begin{tabular}{cccc|cccc|>{\columncolor{gray!30}}c}
+\hline
+\textbf{T2I}  &\textbf{CPT} &\textbf{AD} &\textbf{PTS} &\textbf{V}  &\textbf{L}  &\textbf{C}   &\textbf{S}   &\textbf{Avg.}   \\
+\hline
+\ding{55}   &\ding{55}  &\ding{55}  &\ding{55} &71.81       &61.06       &52.60        &62.32        &61.95           \\
+\ding{51}   &\ding{55}  &\ding{55}  &\ding{55} &72.08       &69.31       &60.75        &70.95        &68.28           \\
+\ding{51}   &\ding{51}  &\ding{55}  &\ding{55} &72.68       &70.44       &61.54        &71.70        &69.09           \\
+\ding{51}   &\ding{51}  &\ding{51}  &\ding{55} &72.94       &73.95       &67.94        &75.20        &72.51           \\
+\ding{51}   &\ding{51}  &\ding{51}  &\ding{51} &\textbf{73.16}       &\textbf{74.69}       &\textbf{69.66}        &\textbf{75.96}        &\textbf{73.37}           \\
+\hline
+\end{tabular}
+}
+\end{adjustbox}
+\label{tab:ablation_study_vlcs}
+\vspace{-4.0mm}
+\end{table}

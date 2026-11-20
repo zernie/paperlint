@@ -1,0 +1,102 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2025_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\input{0.5-usepacks}
+
+
+\title{Multi-Label Node Classification with Label Influence Propagation}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\author{Yifei Sun\textsuperscript{\rm 1}, 
+Zemin Liu\textsuperscript{\rm 1}\thanks{Corresponding authors.} ,
+Bryan Hooi\textsuperscript{\rm 2},
+Yang Yang\textsuperscript{\rm 1}\footnotemark[1] ,
+% Guang Tan\textsuperscript{\rm 1},
+Rizal Fathony\textsuperscript{\rm 3},
+Jia Chen\textsuperscript{\rm 4},
+Bingsheng He\textsuperscript{\rm 2}\footnotemark[1]\\
+\textsuperscript{\rm 1}Zhejiang University, 
+\textsuperscript{\rm 2}National University of Singapore,\\
+\textsuperscript{\rm 3}Capital One,
+\textsuperscript{\rm 4}GrabTaxi Holdings Pte. Ltd.\\
+\texttt{\{yifeisun, liu.zemin, yangya\}@zju.edu.cn,}\\
+\texttt{\{bhooi, hebs\}@comp.nus.edu.sg,}\\
+\texttt{rizal.fathony@capitalone.com,}
+\texttt{jia.chen@grab.com}
+}
+% Liu.zemin@zju.edu.cn
+
+
+
+
+% \author{Yifei Sun, Zemin Liu  \\
+% % Department of Computer Science and \\
+% Zhejiang University\\
+% % Pittsburgh, PA 15213, USA \\
+% \texttt{\{yifeisun,Liu.zemin\}@zju.edu.cn} 
+% Ji Q. Ren \& Yevgeny LeNet \\
+% Department of Computational Neuroscience \\
+% University of the Witwatersrand \\
+% Joburg, South Africa \\
+% \texttt{\{robot,net\}@wits.ac.za} \\
+% \AND
+% Coauthor \\
+% Affiliation \\
+% Address \\
+% \texttt{email}
+% }
+% \thanks{ Use footnote for providing further information
+% about author (webpage, alternative address)---\emph{not} for acknowledging
+% funding agencies.  Funding acknowledgements go at the end of the paper.}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\input{1-abs}
+\input{2-intro}
+\input{3-related}
+\input{4-prelim}
+\input{5-model}
+\input{6-exp}
+\input{7-conclusion}
+
+\newpage
+
+\subsubsection*{Acknowledgments}
+This research is supported by the National Research Foundation, Singapore and Infocomm Media Development Authority under its Trust Tech Funding Initiative, and the National Research Foundation, Singapore under its AI Singapore Programme (AISG Award No: AISG2-TC-2021-002). Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not reflect the views of National Research Foundation, Singapore and Infocomm Media Development Authority. This work is also supported by NSFC (No. 62322606, No. 62441605), Zhejiang NSF (LR22F020005), and CCF-Zhipu Large Model Fund.
+
+
+% \newpage
+\bibliography{iclr2025_conference}
+\bibliographystyle{iclr2025_conference}
+
+\newpage
+
+\appendix
+\input{8-appendix}
+
+
+\end{document}

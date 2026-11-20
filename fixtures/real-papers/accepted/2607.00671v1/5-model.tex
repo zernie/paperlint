@@ -1,0 +1,263 @@
+\section{Label Influence Propagation}  \label{sec:method}
+% \syfC{注意不要随意引入动、静的概念，如果要说一定要讲清楚}
+% \syfC{需要讲清楚正反的区别和意义，想一下这个两个其实是都要考虑的，以及是相对独立的，这样后面结合也方便。而且还能说明ablation的意义}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/LIP_iclr_1.pdf}
+% \includegraphics[width=0.9\linewidth]{figs/Intro_new.png}
+% \centering
+\setlength{\belowcaptionskip}{-0.35cm}
+\caption{
+The overall framework of \model: (a) quantify the influence correlations in \textbf{P} operation (Sec.~\ref{sec:forw}) where the arrows with colors represents the mutual influence between labels; (b) quantify the influence correlations in \textbf{T} operation (Sec.~\ref{sec:back}) where $\mathcal{L}_{\text{bi}}$ separately calculates the loss of each label; (c) combine these two influence correlations to get the high-order label influence, and propagate through the constructed graph $G_{LIP}$ to calculate the important score $R$ for each label (Sec.~\ref{sec:InfProp}).
+}
+%\vspace{-0.2cm}
+\label{figure:framework}
+\end{figure*}
+
+
+\subsection{Overview}~\label{sec:over}
+% 总体说一下从总idea，延伸到具体做法。
+The core idea of \model is to capture the influence between labels to guide the training process of model that need to be encouraged or suppressed within the overall set of labels.
+% The encouragement or suppression mentioned here is reflected by the coefficients corresponding to the loss of specific label types. Intuitively, if a label is detrimental to many other labels, the coefficient of the loss corresponding to this label should be reduced to lessen its negative impact. Conversely, if a label is beneficial to many other labels, the coefficient of the loss corresponding to this label should be increased to enhance its positive impact.
+% 总的讲一下实现这个目标的步骤
+To achieve this, we first need to quantify the relationships of mutual influence between labels. Then, based on this influence relationship, we further capture high-order relationship between labels and calculate the importance score of loss corresponding to each label during training. Finally, we combine the losses with their respective importance levels to improve the MLNC tasks.
+
+
+\vpara{The analysis from message passing.} 
+While the graph structure makes analyzing label influence relationships highly challenging, these influences arise through the shared GNN backbone decomposed from Sec.~\ref{sec:pipe}. 
+GNN relies on message passing as its core mechanism, enabling solutions to a wide range of graph applications~\citep{wu2020comprehensive}. 
+Therefore, we begin by breaking down the message passing into two \emph{independent} operations: propagation (\textbf{P}) and transformation (\textbf{T})~\citep{zhang2022model}. 
+In short, the \textbf{P} step is a form of Laplacian smoothing that aggregates the information of neighbors, while the \textbf{T} step applies non-linear transformations to capture the data distribution of the training samples. 
+% Hence the following sections s
+On the one hand, in Sec.~\ref{sec:forw}, theoretical analysis shows that the influence values in \textbf{P} operation are independent of the node embeddings, and therefore unrelated to the parameters of message passing. 
+% Hence this part corresponds to the \textbf{P} step. 
+On the other hand, Sec.~\ref{sec:back} analyzes the influence between labels in \textbf{T} operation which does not affect the topological structure between node sets with different labels, and is thus unrelated to the aggregation in message passing.
+Since the two operations are independent, the quantified influence can be further combined as the foundation of computing high-order influence correlations and help to improve MLNC task (Sec.~\ref{sec:InfProp}). 
+% , corresponding instead to the \textbf{T} step.
+
+The overall framework is shown in Fig.~\ref{figure:framework} with three main parts: (a) calculating the influence between labels in \textbf{P} operation, (b) calculating the influence between labels in \textbf{T} operation, and (c) 
+propagating the influence on the label information propagation graph to form the final learning objective.
+
+% Building on the decomposed pipeline of MLNC (Sec~\ref{sec:pipe}), which includes both shared and private components, we delve deeper into the potential factors within these components that could foster interactions among labels. For capturing fine-grained influence, we first focus on dual-interactions between pairs of labels. Then, higher-order mutual influences between labels are captured in the next step through the label graph.
+
+\subsection{Influences in Propagation Operation} \label{sec:forw}
+% In this section, we analysis the interactions between label sets originated from the \emph{shared component in MLNC}.
+% Specifically, within the shared backbone, each label leverages its labeled nodes to compute node representations. 
+This \emph{propagation operation} involves aggregating information from their contextual nodes, which may belong to different labels. Consequently, the intertwined distribution of nodes from various labels facilitates their interactions.
+During propagation, the interaction we seek to analyze is between two label sets $Y_a$ and $Y_b$ ($1 \leq a, b \leq k$), which is shown in Fig.~\ref{figure:framework}(a).
+Specifically, 
+% the influence exerted from nodes in $Y_a$ on nodes $Y_b$ can either enhance or harm the performance for the latter.
+% \iclr{
+we decompose the computation of influence correlations among labels during the P step into two parts: the magnitude of influence between all pairs of nodes ("Influence between node pairs") and the positive or negative direction of influence between node pairs with different labels ("Influence between label sets").
+% }
+% delete
+% $\mathcal{L}_{a}, \mathcal{L}_{b}, \mathcal{L}_{c}, \mathcal{L}_{d}, \mathcal{L}_{\model}, G_{\model}, \textsc{Inf}^{P}, \textsc{Inf}^{T}, \textsc{InfMat}$
+
+% (a) is described in Sec~\ref{sec:forw}, (b) is described in Sec~\ref{sec:back}, (c) is described in Sec~\ref{sec:lip}
+
+% 先分析单个节点
+\stitle{Influence between node pairs.}
+We start the analysis by investigating the influence between node pairs $v_i$ and $v_j$. 
+% The influence between node sets can be seen as accumulation of the influence between node pairs.
+Inspired by previous work~\citep{xu2018representation,wang2020unifying,zhang2021node}, the influence from $v_i$ to $v_j$ can be quantified by measuring how alterations in the input feature $\v{x}_i$ of $v_i$ affect the node embedding $\v{z}_j$ of $v_j$ after $l$ iterations of message passing. 
+In particular, for $v_i$ and $v_j$, supposing the message passing of the shared backbone $\Phi_{\theta}$ as $\v{Z}^{(k)} = \hat{\v{A}}^k \v{Z}^{(0)} \theta $ where $\v{Z}^{(0)} = \v{X}$ and $\hat{\v{A}}= \mathbf{{\tilde{D}}}^{-1/2} \mathbf{{\tilde{A}}} \mathbf{{\tilde{D}}}^{-1/2}$ is the symmetrically normalized adjacency matrix with self-loops, the influence of $v_i$ on the final embedding of $v_j$, \ie, $I(i,j)$, can be defined as
+\begin{equation} \label{eq:inf}
+    \textstyle I(i,j) =  \frac{\partial \v{z}^{(k)}_{j}}{\partial \v{z}^{(0)}_{i}}.
+    % \propto ,
+    % _{\forall h \in \{1, \ldots, d\}} = \hat{A}^{k}_{ij} W.
+\end{equation}
+% which is proportional in expectation to a slightly modified $k$-step random walk distribution starting at the root node $v_i$~\citep{xu2018representation}, and is independent of their node features and embeddings.
+% Since the random walk distribution is purely correlated with the graph structure $A$, the influence between nodes is independent of both the input feature $X$ and the node embedding $Z$. 
+Although the calculation of $I(i,j)$ initially involves node features, inspired by \citep{xu2018representation}, we prove that the magnitude of $I(i,j)$ is actually independent of the features themselves and is instead proportional in expectation to a random walk distribution $\mathbf{\pi}_{\text{lim}}^{(ji)}$, namely $I(i, j) \propto \mathbf{\pi}_{\text{lim}}^{(ji)}$. 
+% See Appendix~\ref{app:theory} for more discussion.
+To further quantify and compute this distribution $\mathbf{\pi}_{\text{lim}}$, inspired by \citep{gasteiger2018predict}, we find that we can solving the Personalized PageRank (PPR) $\mathbf{\pi}_{\text{ppr}}$ instead. 
+By iteratively computing the PPR, we can obtain the influence correlations between any two nodes.
+Thus, we derive the quantification of the influence between any pair of nodes $v_i, v_j$ during the P phase as: 
+
+% Moreover, the value of influence, which is proportional in expectation to a random walk distribution, can be quantified by the Personalized PageRank (PPR) \citep{gasteiger2018predict,chen2021topology} and thus is independent of node features and embeddings.
+% Formally, we calculate the influence value as
+\begin{equation} \label{eq:InfVal}
+    % \textsc{Inf}^{P}(v_i, v_j) = \{ \alpha (\v{I}_n - (1 - \alpha)\hat{\v{A}})^{-1} \v{s}_{v_i} \}_{v_j} \propto I(i,j),
+    \textsc{Inf}^{P}(v_i, v_j) := I(i, j) \propto \mathbf{\pi}_{\text{ppr}}^{(ji)} = \{ \alpha (\mathbf{I}_n - (1 - \alpha)\hat{\mathbf{A}})^{-1} \mathbf{s}_{v_i} \}_{v_j},
+\end{equation}
+where $\v{I}_n\in\mathbb{R}^{n\times n}$ is the identity matrix, $\alpha \in (0,1]$ is the teleport (or restart) probability, $\v{s}_{v_i}$ is a one-hot indicator vector, and  $\{ \cdot \}_{v_j}$ means the 
+$v_j$-th element of $\{ \cdot \}$. 
+% For more details, please see App.~\ref{app:theory}.
+Detailed discussion is in App.~\ref{app:theory}.
+
+
+\begin{wrapfigure}{r}{0.41\textwidth}
+    \centering
+    % \setlength{\abovecaptionskip}{-0.05cm}   %调整图片标题与图距离
+    % \setlength{\belowcaptionskip}{-0.2cm} 
+    \includegraphics[width=.38\textwidth]{figs/For.pdf}
+    % \includegraphics[width=.61\textwidth]{figs/Intro_new.png}
+    % \includesvg[width=.4\textwidth]{fig/heatmap_perform_newest.svg}  
+    % \setlength{\abovecaptionskip}{-0.05cm} 
+    % \setlength{\belowcaptionskip}{-0.30cm} 
+    \caption{Illustration of the direction of positive and negative influence during P step. The nodes with both colors indicates the ones with both labels.}
+    \label{fig:forward}
+\end{wrapfigure}
+\stitle{Influence between label sets.}
+% While we have quantified the influence values, we still need to determine when this influence is positive and when it is negative.
+% Moreover, from the above derivation and analysis, the influence between very distant nodes is almost zero. Therefore, we can assume that all nodes have influence on each other. Even though, in our following analysis, all node pairs are discussed, since the numerical calculations above could reduce the influence of distant pairs to be zero.
+% \iclr{
+Having computed the influence correlations magnitude $\textsc{Inf}^{P}(v_i, v_j)$ between any pair of nodes during the P phase, represented as an $n\times n$ node influence correlations matrix, the second part involves integrating the influence from all nodes in $Y_a$ (with label $y_a$) on all nodes in $Y_b$ (with label $y_b$) to get the label influence correlation between $y_a$ and  $y_b$. This part yields a $k \times k$ label influence relationship matrix $\textsc{Inf}^{P}(y_a,y_b)$. 
+% }\iclr{
+A straightforward way would be to directly sum up the node level influence. However, as shown in our analysis in Fig.~\ref{fig:intro}, there are both positive and negative influences between labels. 
+% }
+
+Therefore, we proceed to analyze the combinations of two node sets $Y_a$ and $Y_b$ with different labels to determine which node pairs exert positive influence and which exert negative influence.
+Specifically, if a node $v_i$ is labeled with $y_j$, it can be seen that this node is labeled as 1 in the binary classification of whether it has the label $y_j$; conversely, if it does not have the label $y_j$, it can be seen as being labeled as 0.
+% homophily assumption~\citep{mcpherson2001birds} of 
+Based on the Laplacian smoothing in the P operation~\citep{zhang2022model}, the information transmitted by source node $v_i$ labeled with 1 makes it easier for target nodes $v_j$ to be identified as labeled 1 in the same label space.
+% Moreover, the influence from source node set comes from not only
+% In this case, we analyse the direction influence between label set $Y_a$ to label set $Y_b$ in Fig.~\ref{fig:forward}.
+Note that we break down the discussion of the influence direction between $Y_a$ and $Y_b$ by first analyzing the influence from $Y_a$ to $Y_b$. 
+% The 
+The reverse direction can be inferred by analogy.
+Thus, we first analyze the influence from $Y_a$ to $Y_b$, where the target is the set of all nodes with label $y_b$. 
+% We separately analyze the sources of positive and negative influences, and by integrating these, we can determine the direction of influence between the labels.
+% $V_{pos}$ target node set $V_{pos}$ from the following two aspects:
+% First, 
+From analysis in Fig.~\ref{fig:forward}, we discuss the source from the following two aspects: 
+
+\begin{itemize}[leftmargin=*]
+\item In the label set $Y_a$, the nodes are labeled as $[1,0]$ (possessing $y_a$), it therefore has negative influence on label set $Y_b$ ($[0,1]$). However, the overlapping nodes are labeled as $[1,1]$ where the positive and negative influences to target nodes are neutralized. 
+% Thus, we define the source of negative influence as 
+\begin{definition}[Source of Negative Influence $\textsc{Inf}^{P_-}$] \label{def:NegInf}
+% Given source node set $V_s$ and target node set $V_t$, t
+\begin{equation}
+      V_{neg} = Y_a \setminus (Y_a \cap Y_b) \rightarrow Y_b ,
+\end{equation}
+where $\setminus$ means set difference and $\cap$ means intersection.
+% is all of the source of negative signals and $\overline{V_t}$ is the negative signals that originally possessed by $V_t$.
+\end{definition}
+\item Intuitively, nodes with the label $y_b$, noted as $[*, 1]$, may contribute positive influence to all nodes in $Y_b$ (those with the label $[0, 1]$). However, nodes that simultaneously have both $y_a$ and $y_b$ labels (noted as $[1, 1]$) neutralize their positive and negative influences on $Y_b$. Therefore, the source of positive influence from $Y_a$ to $Y_b$ can be defined as follows:
+% \item \iclr{All nodes containing label $y_a$ positively impact the label set $Y_b$ because these nodes are label 1 in the label space $Y_b$.}
+% Hence, the \iclr{positive} influence from $Y_a$ to $Y_b$ can be defined as follows:
+\begin{definition}[Source of Positive Influence $\textsc{Inf}^{P_+}$] \label{def:PosInf}
+% Given source node set $V_s$ and target node set $V_t$, t
+\begin{equation}
+   V_{pos} = \overline{Y_a} \setminus \overline{Y_a \cup Y_b} = \overline{Y_a} \cap Y_b \rightarrow Y_b,
+\end{equation}
+where $\overline{\cdot}$ means complement and $\cup$ means union.
+\end{definition}
+\end{itemize}
+% \label{eq:InfVal}
+Thus, by simply substituting $\textsc{Inf}^{P_+}$ as the index into Eq.~\ref{eq:InfVal} and normalizing by number of nodes, we can obtain the value of positive influence from $Y_a$ to $Y_b$; similarly, we can obtain the value of negative influence by substituting $\textsc{Inf}^{P_-}$.
+Adding the positive and negative influence together yields the complete influence in propagation operation $\textsc{Inf}^{P}$ between any two labels.
+
+
+
+% To recap, in the forward propagation process, if the final value of influence is positive, it signifies that $Y_i$ has a positive influence on $Y_j$ during forward propagation, meaning the existence of $Y_i$ makes $Y_j$ easier to classify correctly, and vice versa. The final numerical value indicates the level of the benefit or harm.
+
+% \zeminC{上面这一段中，最后得归结到：如何计算这个influence上来，要将量化的计算方法写出来。}
+
+% First, we analyze the one-way information passing from the source node set $V_s$ to the target node set $V_t$, 
+% identifying which types of signals act as beneficial messages and which types serve as detrimental messages.
+
+% Consequently, we evaluate whether the source set $V_s$ facilitates the target set $V_t$ in more accurately determining the presence or absence of the target label $Y_j$.
+
+% Inspired by JK-Net~\citep{xu2018representation}, we measure the influence 
+
+\subsection{Influences in Transformation Operation} \label{sec:back}
+% \syfC{需要讲清楚的是，我们考虑的不同标签对应的节点集合带来的梯度的关系，而不是所有节点}
+% \zeminC{这里需要答复进行简化：1. 解释为什么是backbone的梯度产生了influence，尽可能用符号来表示，比如梯度XXX对backbone XXX产生了XXX影响，继而对XXX产生了XXX影响；2. 梯度到底产生了怎样的influence，如何计算？}
+In this section, we analyze interactions between label sets in transformation operation from message passing.
+The shared GNN backbone learns from the training data through model parameters in this transformation operation.
+Moreover, the direction and magnitudes of parameter updates in the shared backbone $\Phi_\theta$ is determined by each label $y_i$, but different labels may require different directions and magnitudes of updates to reach their own optimal solutions.
+Thus, labels influence each other through parameter transformation during back propagation, which is through gradient descent. 
+Next, we further quantify and analyze the gradient influence exerted by different labels.
+
+% Specifically, the optimization of parameters guides the transformation operation within the shared component $\Phi_{\theta}$. 
+% that emerge from the label-guided back propagation. 
+% Here, the computed node embeddings, $\mathbf{Z}$, are employed for multi-label classification. 
+% , in conjunction with its labeled data,
+% 这几句是在解释具体的binary loss以可以通过分开loss来算梯度
+Note that we use binary cross-entropy losses as $\mathcal{L}_{\text{bi}}$ for each label individually, which can be changed to other types of binary classification loss:
+\begin{equation} \label{eq:lossBi}
+    \mathcal{L}_{\text{bi}}(\v{y}, \hat{\v{y}}) = -\frac{1}{M} \sum_{i=1}^{M} \left[ \v{y}_i \log(\hat{\v{y}}_i) + (1 - \v{y}_i) \log(1 - \hat{\v{y}}_i) \right],
+\end{equation}
+where $\v{y} \in \{0, 1\}$ is a binary label indicating whether a node possess a certain label and $M$ is the number of the training nodes.
+% Contrary to forward propagation, where direct interactions between nodes of different labels can be more easily observed, backward propagation presents a scenario where nodes associated with different labels do not directly interact. This indirect interaction poses a challenge in directly measuring the mutual influence during this process. %delete
+% Although there is no interplay between labels during propagation operation within the private component, each label exerts influence on others during \emph{transformation operation} because of the private component. 
+
+Therefore, the binary classification loss $\mathcal{L}_{\text{bi}}$ of each label exerts specific gradient $\nabla_{bi}$ to the shared component during the transformation operation:
+\begin{equation} \label{eq:gradient}
+    \nabla_{bi} = \frac{\partial \mathcal{L}_{\text{bi}}}{\partial \Phi_{\theta}}.
+\end{equation}
+These different gradients generated by the losses of different labels may either be mutually beneficial or mutually harmful. Therefore, during this transformation operation, any pair of labels will influence each other through their respective gradients as shown in Fig.~\ref{figure:framework}(b).
+
+Inspired by the definition of gradients conflicting \citep{yu2020gradient}, we propose that as the angle between the gradients of two losses increases, the positive influence between the labels becomes less significant. Conversely, the smaller the angle between the gradients generated by different labels, the smaller the negative influence they have on each other.
+Accordingly, here we give a formal definition on measuring the influence in transformation \textbf{T} step.
+\begin{definition}[\textbf{T} step Influence $\textsc{Inf}^{T}$]\label{def:backinf}
+Given two losses $L_a$ and $L_b$ ($1 \leq a, b \leq k$) from label $y_a$ and $y_b$ respectively, the influence in transformation operation is the accumulated differences between the gradients $\nabla_a$ and $\nabla_b$:
+\begin{equation}
+  \textstyle  \textsc{Inf}^{T}(a,b) = \textsc{Inf}^{T}(b,a) = - \sum_{\theta} \textsc{Angle} ( \nabla_a(\theta),\nabla_b(\theta) ),
+\end{equation}
+where $\nabla_a(\theta)$ is the gradient of binary loss $\mathcal{L}_a$ on shared backbone $\Phi_{\theta}$, and $\textsc{Angle}(\cdot)$ can measure the angle between directions of two gradients. In our implementation, we determine the angle between the two gradients by calculating the cosine similarity.
+\end{definition}
+
+
+\subsection{Influence Propagation on Label Graph} \label{sec:InfProp}
+% \zeminC{这里简化一下，尽可能用符号来表示，形成一个最终的公式来表示结果的计算。}
+% \syf{Add the perspectives of propagation and update in Graph Neural Networks.}
+\vpara{Label graph construction.} From the previous work~\citep{zhang2022model,wu2019simplifying,zhang2022graph} and the above analysis, it can be seen that the influence between labels during propagation and transformation operation is independent of each other. Therefore, the influences from these two parts can be combined through multiplication to obtain the final relationship matrix of label influence:
+% Therefore, once we obtain the two influence matrices $\textsc{Inf}^{P}$ and $\textsc{Inf}^{T}$, we directly multiply them to derive the final label influence matrix 
+\begin{equation}
+    \textsc{InfMat} = \textsc{Inf}^{P} * \textsc{Inf}^{T}, \quad \textsc{InfMat} \in \mathbb{R}^{k \times k},
+\end{equation}
+where $*$ means element-wise multiply.
+Each value in $\textsc{InfMat}$ reflects the relationship between each pair of labels. 
+However, we still need to analyze the higher-order correlations between labels. 
+% For example, if label $Y_i$ has an influence of $\textsc{InfMat}(Y_i, Y_j)$ on label $Y_j$, and label $Y_j$ has an influence of $\textsc{InfMat}(Y_j, Y_t)$ on label $Y_j$, then how the influence of label $Y_i$ on label $Y_t$ through label $Y_j$ should be measured.
+% Note that $\textsc{InfMat}(Y_i, Y_t)$ is the direct influence of label $Y_i$ on label $Y_t$ rather than the higher order influence through label $Y_j$.
+
+Thus, we propose to build a \textit{label graph} $G_{LIP}$. 
+% which depicts how the influence propagation between all the labels.
+ % = \mathbb{R}^{k \times k}, 
+% We propose that the label influence propagation graph should be established based on this label influence matrix $\textsc{InfMat}$.
+Note that $\textsc{InfMat}$ contains both positive and negative values. Our goal is to enhance the positive influence and suppress the negative influence between labels.
+% These values represent the direct influence between labels, rather than how much influence could propagation between labels.
+Thus, we introduce a simple method yet can preserve higher-order influence to convert the $\textsc{InfMat}$ into label graph $G_{LIP}$:
+% all the labels \( y_1, y_2, \ldots, y_k \subseteq \mathbf{Y} \) and
+\begin{definition} \label{def:G_lip}
+Given the label influence matrix $\textsc{InfMat} \in \mathbb{R}^{k \times k}$, we define label graph as
+\begin{equation}
+    G_{LIP}= (\v{V}_y, \v{A}_{LIP}), \quad \text{with} \ \v{A}_{LIP} = \textsc{SoftMax}_\text{row}(\textsc{InfMat}),
+\end{equation}
+where $\textsc{SoftMax}_\text{row}(\cdot)$ represents calculating softmax along the rows which means that we tend to treat the negative influence as weak positive influence in the higher-order view.
+$\v{V}_y$ denotes the label nodes (triangle nodes in Fig.~\ref{figure:framework}(c)) which represent a certain label type. $\v{A}_{LIP}$ is the weighted adjacent matrix denoting the overall higher-order correlations between all the labels.
+\end{definition}
+
+\vpara{Overall loss function.} \label{sec:learn}
+% \syfC{这里搞成图的传播和learning obj}
+Intuitively, if a label is detrimental to many other labels, we suppressed it by reducing its coefficient of the loss corresponding to this label to lessen its negative impact. Conversely, if a label is beneficial to many other labels, we encourage it by increasing the coefficient of the loss to enhance its positive impact.
+% Based on this label graph $G_{LIP}$, we aim to model to what extent the loss corresponding to the multiple labels should guide the training process. 
+Thus, we propose to quantify the importance coefficient (score) based on the label graph $G_{LIP}$.
+% More specifically, we propose to measure the importance of each loss from the perspective of information propagation between labels each time the model makes predictions. 
+Since the higher-order influence propagation take place on the graph $G_{LIP}$, we turn to the computation of PageRank~\citep{Page1999ThePC} for $G_{LIP}$. 
+
+Formally, we calculate the importance score $R \in [0,1]^k$ of each label node as 
+\begin{equation}
+    R = \left( \v{I}_{h} - \beta \v{A}_{LIP} \right)^{-1} \left( \frac{1 - \beta}{h} \right) \mathbf{1},
+\end{equation}
+where $\v{I}_{h}$ is the identity matrix, $\beta \in (0,1)$ is the teleport (or restart) probability here, $\mathbf{1}$ is an $h$-dimensional vector in which all elements are equal to 1. 
+% In short, we
+
+% \subsection{Learning Objective and Complexity Analysis}
+% \syfC{这里跟上面合并吧}
+
+% After quantifying the importance of labels from the perspective of their information propagation capability, we apply this importance metric to the final learning objective.
+
+% The $R$ is a vector with the length of label types, which can be seen as a coefficient depicting the importance of each label.
+% Given that the importance of this coefficient changes as the training state evolves, it should be reflected in the computation of the loss at all times.
+Incorporating this importance coefficient $R$, we present the overall loss function as
+\begin{equation}
+    \textstyle\mathcal{L}_{\model} = \sum_{j=0}^{k} R_j \mathcal{L}_{\text{bi}}(\hat{\v{y}_j}, \v{y}_j),
+\end{equation}
+% \syf{check sum over nodes?}
+where $\mathcal{L}_{\text{bi}}$ is from Eq.~\ref{eq:lossBi} which can be changed to other imbalanced classification loss \citep{chen2024consistency,zhuo2024partitioning}.
+% \syf{check the definition of $\mathcal{L}_{\text{bi}}$}

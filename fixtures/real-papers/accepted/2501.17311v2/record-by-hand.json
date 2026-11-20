@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acronyms.tex",
+      "role": "body"
+    },
+    {
+      "path": "keywords.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "588a2c770ef45465a7560c6163aa0c4441dfaee98d0dfc0b72513157f7ae41ba",
+    "acronyms.tex": "0ae56ba526711aab8c0ac97e56fb4d244d857c2da93d434b53653dbc510f77ee",
+    "keywords.tex": "94a023d23b122f22187683f7dd7103ef89302ad9d2ccd073a574f69fcff618ce"
+  }
+}

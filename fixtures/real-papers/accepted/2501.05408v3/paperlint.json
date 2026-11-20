@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "sosp-2025",
+      "venue": {
+        "kind": "named",
+        "name": "SOSP 2025",
+        "url": "https://arxiv.org/abs/2501.05408v3"
+      },
+      "opened": "2025-10-08",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-10-08",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

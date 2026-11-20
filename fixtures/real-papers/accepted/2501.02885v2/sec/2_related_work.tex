@@ -1,0 +1,37 @@
+\section{Realted Work}\label{sec:related_work}
+
+MLLMs have achieved impressive performance in visual understanding tasks by utilizing VLMs to process an image into a sequence of visual tokens, with lengths ranging from 64 to 729~\cite{radford2021learning,zhai2023sigmoid}, which are then input into LLMs~\cite{liu2024llavanext,yang2024qwen2,li2024llava,yao2024minicpm,chen2024far}.
+However, in video understanding, a video contains hundreds or even thousands of frames, resulting in a long sequence of visual tokens.
+As a result, feeding an entire video into Video-LLMs becomes impractical. 
+Some research has explored extending the context length of LLMs~\cite{wan2023efficient,zhang2024longva,xiong2024effective,xue2024longvila,song2024moviechat},
+but these methods still struggle with computational burden and the ``lost-in-the-middle'' issue, where important context may be overlooked in long sequences~\cite{liu2024st,yu2024frame}.
+
+
+
+Most existing Video-LLMs rely on uniform frame sampling~\cite{chen2023internvl,li2023videochat,liu2024oryx,shu2024video}, 
+which arbitrarily disregards the current query, often missing relevant frames and including irrelevant ones.
+Traditional key-frame methods that detect significant transitions between adjacent frames also face this limitation~\cite{sheena2015key,nasreen2013key,wolf1996key}.
+%
+Some studies have attempted to use the query to retrieve the top-$k$ most relevant frames with VLMs but fail to consider frame diversity~\cite{wang2024weakly,yu2024self},
+often resulting in redundant frame selection, and increased computational burden without meaningful information gain.
+Some cluster-based methods attempt to regularize pair-wise diversity among frames but still fail to capture combinatorial relationships in a list-wise manner~\cite{keplerlab_katna,jin2024chat}. 
+%
+Recently, \citet{yu2024frame} proposed a frame selection method tailored for VILA~\cite{lin2024vila}, 
+%Recently, \citet{yu2024frame, hu2025m} proposed frame selection methods tailored for specific Video-LLMs,
+which requires collecting a supervised dataset and end-to-end training of a selector, limiting its generalizability to other Video-LLMs.
+Furthermore, these method does not explicitly address list-wise diversity or sequentiality, both of which are essential for effective frame selection.
+
+
+
+The DPP was introduced by~\citet{macchi1975coincidence} to model the distribution of fermions in thermal equilibrium, where no two fermions can occupy the same quantum state, resulting in an ``anti-bunching'' effect that can be interpreted as diversity and effectively modeled using DPP. 
+DPP has been widely applied to characterized list-wise diversity in subset selection problems~\cite{kulesza2012determinantal,moss2023inducing,celis2018fair,li2024evaluation,chen2018fast}. 
+However, standard DPP does not account for sequentiality. 
+\citet{gong2014diverse} addressed this by segmenting the video and modeling local diversity within each segment conditioned on the selections from the preceding segment.
+%
+Nevertheless, allocating the total selection size \(k\) across segments remains challenging.
+\citet{zheng2021k} treat it as an integer programming problem, relaxing problem constraints to find an approximate solution.
+In contrast, we model DPP for sequentiality as an MDP, enabling optimal allocation of \(k\) through a dynamic programming algorithm with pseudo-polynomial time complexity. 
+This approach avoids constraint relaxation and can find the optimal allocation efficiently in practice.
+
+
+

@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tex/1.introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/2.related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/3.methods.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/categorization.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/retrieval.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/4.Experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/5.results.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/bertscore.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/QA.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/qualititive.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/6.conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/error_ratio.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/train_and_revise_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/task_inference_prompt.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/qualititive_prompt.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "8ccf7c35e4c2ee8b9086cc4053fb1334cb4c113443874c4e5c70e11eac7a1e9e",
+    "acl.sty": "f2168b57b2f445aac55af82662c8aa9dbad771f6393da5a154fa163abec2e76a",
+    "tex/1.introduction.tex": "3a865bee5e7b513e8f17985a2891c22823a257e54c77ec7c468b379a87f24210",
+    "tex/2.related_work.tex": "1f03a7055b5cad01ed64d58f2ffb3c30cf35f80733ade4849ae1b8f72db1b1f5",
+    "tex/3.methods.tex": "1309fd3c8f1a28dbd73d32cdd5611d628b2c9b45e3f1feebdf5a1823662428d7",
+    "table/categorization.tex": "7b2e8f3076867b5e31818e4b6bb41652ef78e9ffd2ad5b3279efbf3c7cf23070",
+    "table/retrieval.tex": "a346b7509560068625a78d79a4c01e030246ec0aef943d9c7f87ad36dd1d5844",
+    "tex/4.Experiments.tex": "89d79c94921e191d5a565f965f63b645e7c6f55e2ca124deed41a4a46587bcc5",
+    "tex/5.results.tex": "b21d50ca71d65a9f01e9ddb58a3faae01f6f616ccb3ea8a45283cab1d4cafc9f",
+    "table/bertscore.tex": "cba4901ace1a9b007d1f09b95a157628552ece8a6a67c3a07eb68ffca7e5ea5c",
+    "table/QA.tex": "64c827ef8cbd4d0157a36d339ce7ef88b78b30058a8232e3262f46a6e96566f4",
+    "table/qualititive.tex": "bc4da0df5ccd929b6410585773f77785b370d953b24a009ccbd31f376b2d5e01",
+    "tex/6.conclusion.tex": "3e06ff1e254709ac01a7eaec3bce7d29065bf7940e76f2a4e8219b4645f521ef",
+    "table/error_ratio.tex": "a570fc09d8f4d61038be69da06bc167b01d250ce1928e459836c9b190caa8912",
+    "table/train_and_revise_prompt.tex": "e5881f9e4641e25270d787ca3a520cb4d7a4a56f251d65116c344a575e4b5303",
+    "table/task_inference_prompt.tex": "5256e8f1cdd301526809f17d1c54bc12627733ebd7fef9c452c63ae90a1ad59b",
+    "table/qualititive_prompt.tex": "caa42c79ca322f190d00f782d60d8ecbe1198c318a629cb16602eba7e9a3e2d4"
+  }
+}

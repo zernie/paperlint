@@ -1,0 +1,201 @@
+\begin{table*}[t!]
+\centering
+% 행간 간격 조절 (1.2 정도에서 필요에 따라 조절)
+\renewcommand{\arraystretch}{1}
+% 열 간 간격 조절 (이 값도 적절히 조절)
+\setlength{\tabcolsep}{9pt}
+
+\resizebox{0.95\textwidth}{!}
+{
+\begin{tabular}{lccc ccc ccc ccc c}
+\toprule
+ \multirow{2.3}{*}{Methods}  & \multicolumn{3}{c}{bge-large-en-v1.5} & \multicolumn{3}{c}{e5-large-v2} & \multicolumn{3}{c}{jina-embeddings-v2-base} & \multicolumn{3}{c}{gte-base-en-v1.5} & \multirow{2}{*}{Avg} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+ & @1 & @3 & @5 & @1 & @3 & @5 & @1 & @3 & @5 & @1 & @3 & @5 &  \\
+
+\midrule
+\multicolumn{14}{c}{VisualMRC}\\
+\midrule
+
+Baseline        
+    & 0.5690 & 0.6928 & 0.7314
+    & 0.6044 & 0.7208 & 0.7533
+    & 0.5243 & 0.6418 & 0.6843
+    & 0.5604 & 0.6859 & 0.7248
+    & 0.6578 (6)\\\hline
+\textsc{Revise}$_{meta}$         
+    & 0.5793 & \textbf{0.7030} & 0.7422
+    & 0.6076 & \textbf{0.7232} & 0.7592
+    & 0.5352 & \textbf{0.6553} & 0.6951
+    & 0.5696 & \textbf{0.6960} & \textbf{0.7336}
+    & \textbf{0.6666} (1) \\
+
+\textit{only} Column
+    & 0.5751 & 0.6981 & 0.7348
+    & 0.6005 & 0.7174 & 0.7539
+    & 0.5306 & 0.6477 & 0.6868
+    & 0.5665 & 0.6914 & 0.7321
+    & 0.6612 (3)\\
+\textit{only} Deletion
+    & 0.5684 & 0.6910 & 0.7317
+    & 0.5997 & 0.7190 & 0.7546
+    & 0.5195 & 0.6404 & 0.6789
+    & 0.5555 & 0.6856 & 0.7218
+    & 0.6555 (8)\\
+\textit{only} Insertion
+    & 0.5687 & 0.6920 & 0.7303
+    & 0.5991 & 0.7187 & 0.7524
+    & 0.5233 & 0.6386 & 0.6828
+    & 0.5578 & 0.6831 & 0.7220
+    & 0.6557 (7)\\
+\textit{only} Substitution
+    & 0.5716 & 0.6936 & 0.7332
+    & 0.6018 & 0.7196 & 0.7555
+    & 0.5265 & 0.6430 & 0.6847
+    & 0.5629 & 0.6869 & 0.7250
+    & 0.6587 (4)\\
+\textit{only} Segmentation
+    & \textbf{0.5796} & 0.7021 & \textbf{0.7427}
+    & \textbf{0.6078} & 0.7223 & \textbf{0.7612}
+    & \textbf{0.5362} & 0.6515 & \textbf{0.6954}
+    & \textbf{0.5719} & 0.6948 & 0.7323
+    & 0.6665 (2)\\
+\textit{only} Transposition
+    & 0.5732 & 0.6938 & 0.7320
+    & 0.6024 & 0.7169 & 0.7537
+    & 0.5261 & 0.6440 & 0.6856
+    & 0.5605 & 0.6884 & 0.7242
+    & 0.6584 (5)\\
+
+\midrule
+\multicolumn{14}{c}{DUDE}\\
+\midrule
+
+
+Baseline        
+    & 0.2013
+    & 0.3087
+    & 0.3490
+    & 0.2013
+    & 0.2718
+    & 0.3188
+    & 0.1342 
+    & 0.1846
+    & 0.2584
+    & 0.2047 
+    & 0.2886
+    & 0.3188
+    & 0.2534 (8)\\\hline
+    
+\textsc{Revise}$_{meta}$           
+    & \textbf{0.2282}
+    & 0.3121
+    & 0.3523
+    & 0.2248
+    & 0.2987
+    & 0.3255
+    & \textbf{0.1980}
+    & \textbf{0.2819}
+    & \textbf{0.3221}
+    & \textbf{0.2315}
+    & \textbf{0.3121}
+    & \textbf{0.3591}
+    & 0.2975 (3)\\
+
+
+\textit{only} Column
+    & 0.2215
+    & \textbf{0.3322}
+    & \textbf{0.3691}
+    & 0.2148
+    & \textbf{0.3221}
+    & \textbf{0.3792}
+    & 0.1812
+    & 0.2785
+    & 0.3154
+    & 0.2282
+    & 0.3020 
+    & 0.3423
+    & \textbf{0.3076} (1)\\
+    
+\textit{only} Deletion
+    & 0.1946
+    & 0.2953
+    & 0.3289
+    & 0.2215
+    & 0.2919
+    & 0.3289
+    & 0.1779
+    & 0.255
+    & 0.2886
+    & 0.2047
+    & 0.2987
+    & 0.3423
+    & 0.2729 (7)\\
+    
+\textit{only} Insertion
+    & 0.1913
+    & 0.2953
+    & 0.3456
+    & 0.198
+    & 0.2819
+    & 0.3054
+    & 0.1309
+    & 0.1711 
+    & 0.2617
+    & 0.1846
+    & 0.2987
+    & 0.3423
+    & 0.2774 (5)\\
+    
+\textit{only} Substitution
+    & 0.2013
+    & 0.2987
+    & 0.3456
+    & 0.2047
+    & 0.2819
+    & 0.3221
+    & 0.1913
+    & 0.2852
+    & 0.3087
+    & 0.2215
+    & 0.3020
+    & 0.3356
+    & 0.2819 (4)\\
+    
+\textit{only} Segmentation
+    & 0.2215
+    & 0.3087
+    & 0.3658
+    & \textbf{0.2483}
+    & 0.3020 
+    & 0.3389
+    & 0.1779
+    & 0.2349
+    & 0.2886
+    & 0.2517
+    & 0.3054
+    & 0.3322
+    & 0.2987 (2)\\
+    
+\textit{only} Transposition
+    & 0.1846
+    & 0.2987
+    & 0.3423
+    & 0.198
+    & 0.2718
+    & 0.3188
+    & 0.1779
+    & 0.2383
+    & 0.2886
+    & 0.2181 
+    & 0.2886
+    & 0.3356
+    & 0.2752 (6)\\
+\bottomrule
+\end{tabular}
+}
+
+\caption{Retrieval performance on VisualMRC and DUDE datasets using Recall@k (ranks in parentheses; best scores are in \textbf{bold})}
+\label{tab:retrieval}
+\end{table*}

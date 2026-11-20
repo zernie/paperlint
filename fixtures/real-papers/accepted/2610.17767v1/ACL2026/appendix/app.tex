@@ -1,0 +1,406 @@
+\newpage
+\appendix
+
+\section{Discussions}
+
+\subsection{Root-level gating is tokenization agnostic}
+
+We demonstrate that the design of root token in \Ours~framework is tokenization agnostic over a broader range of model families.
+Other than the settings in the body, we observe that models without specific routing tokens  can achieve robust mode routing by prepending arbitrary prefixes to distinguish between reasoning and non-reasoning modes. 
+Qwen3 models enable mode selection through distinct single tokens for reasoning and non-reasoning modes. 
+Interestingly, even for models lacking such routing tokens, adding arbitrary prefixes to distinguish between reasoning and non-reasoning modes enables routing while preserving base reasoning behavior. 
+In our experiments with R1-Distill-Qwen, a reasoning-only model, we prepend a pair of instruction prefix sentences before the \texttt{<think>} in the chat template prior to SFT. 
+Then, it is observed that the model keeps the reasoning accuracy when performing inference with the reasoning prefix, and routing get possible when no prefix is provided. 
+Several different sentences (about 20${\sim}$30 tokens) are tested and it is found that this behavior is consistent regardless of the sentence content (i.e., token sequence for prefix) (\Autoref{tab:marker_comparison}). 
+We verify these with \Ours~training: when the prefixes are prepended during rollout and trained only on the prefix tokens, routing improved similarly as mentioned in the body of the work that utilizes only single routing tokens for training. 
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llccccccccccccccc}
+\toprule
+Model & Stage & \multicolumn{3}{c}{Math500} & \multicolumn{3}{c}{AIME24} & \multicolumn{3}{c}{AIME25} & \multicolumn{3}{c}{LiveCodeBench} & \multicolumn{3}{c}{GPQA} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}\cmidrule(lr){12-14}\cmidrule(lr){15-17}
+ &  & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\% & P@1 & \#Tok & Think\% \\
+\midrule
+\multirow{3}{*}{Qwen3-8B} 
+ & Baseline (think) & 96.9 & 5,547 & 100.0 & 75.8 & 15,602 & 100.0 & 68.3 & 18,419 & 100.0 & 49.5 & 14,879 & 100.0 & 58.8 & 5,838 & 100.0 \\
+ & + SFT       & 90.9 & 3,251 & 45.8  & 50.4 & 11,196 &  50.0 & 44.4 & 11,593 &  51.3 & 34.4 & 10,519 &  54.4 & 56.6 &  7,092 &  96.8  \\
+ & + \Ours          & 88.0 & 2,412 & 27.8  & 45.2 &  9,437 &  38.1 & 40.6 &  9,650 &  39.6 &  28.7  &  8,362 &  40.1 &  57.1 &  6,908 &  96.2  \\
+\midrule
+\multirow{3}{*}{Qwen3-32B} 
+ & Baseline (think) & 97.3 & 4,806 & 100.0 & 79.4 & 13,235 & 100.0 & 69.8 & 16,431 & 100.0 & 59.1 & 13,498 & 100.0 & 66.2 & 5,108 & 100.0 \\
+ & + SFT       & 92.1 & 2,602 &  42.7 & 59.8 &  9,309 &  56.3 & 54.2 & 10,379 &  58.3 & 58.3 & 11,457 &  90.6 & 66.3 &  4,822 &  98.5  \\
+ & + \Ours          & 92.1 & 1,975 &  20.4 & 63.1 & 10,291 &  61.5 & 58.1 & 11,911 &  68.1 & 54.4 & 10,623 &  87.2 & 65.0 &  4,768 &  97.6  \\
+\bottomrule
+\end{tabular}%
+}
+\caption{LoRA-based mode control and \Ours~on Qwen3. For each model size, we compare the \texttt{<think>}-forced baseline (\textsc{Long}) with LoRA SFT for mode selection and a subsequent \Ours~update. We report Pass@1 (\%), average generated tokens, and \textsc{Think}\% (fraction routed to \textsc{Long}). We set batch size 64 and learning rate $2\times10^{-7}$, and use the Qwen default prompt for math tasks. 
+This table reports a \emph{LoRA-tuned} variant of Qwen3-8B/32B and is therefore not directly comparable to the full-parameter SFT Qwen3-8B in Tab.~\ref{tab:non_math_tasks}; baseline numerical drift across the two tables reflects independent decoding runs under matched settings.}
+\label{tab:qwen3_lora_vs_base_allbench}
+\end{table*}
+
+\subsection{Alternative root token markers}
+\label{sec:marker_comparison}
+
+A potential concern is that \texttt{\textbackslash n} and \texttt{\textbackslash n\textbackslash n} carry semantic meaning in natural text and could introduce ambiguity. We emphasize that the routing decision is confined to a single categorical action at the root position immediately after \texttt{<think>}; newline tokens appearing later in the generation do not affect routing, and \Ours~masks gradients for all non-root tokens. Nevertheless, to verify that our method is not sensitive to the specific marker choice, we compare three marker types on Qwen3-8B~(\Autoref{tab:marker_comparison}).
+
+\begin{table}[h]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|cc|cc}
+\toprule
+\textbf{Marker type} & \textbf{MathAvg P@1} & \textbf{Think\%} & \textbf{LCB P@1} & \textbf{GPQA P@1} \\
+\midrule
+Newline fork (default) & 62.0 & 44.8 & 35.4 & 55.4 \\
+Prefix sentence A & 61.8 & 45.1 & 35.1 & 55.2 \\
+Prefix sentence B & 61.5 & 46.3 & 34.8 & 54.9 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Comparison of root token marker types on Qwen3-8B after +\Ours. \textit{Newline fork} uses \texttt{\textbackslash n} vs.\ \texttt{\textbackslash n\textbackslash n}. \textit{Prefix sentence A/B} use distinct instructional prefixes ($\sim$20--30 tokens) prepended before \texttt{<think>} to distinguish modes. 
+}
+\label{tab:marker_comparison}
+\end{table}
+
+\subsection{What generalizes and what does not}
+\label{sec:generalization_discussion}
+\Ours~often transfers when the target setting rewards \emph{selective compute}, since the update mainly reshapes when the model spends tokens rather than teaching new domain knowledge. In practice, a router learned from verifiable signals (i.e., math problems) can still reduce \textsc{Long} usage on scientific and coding benchmarks, but accuracy improvements are not guaranteed because the optimal routing rule is dataset dependent (see the heterogeneous Think\%/P@1 trade-offs across LiveCodeBench and GPQA-Diamond in \Autoref{tab:non_math_tasks}). Calibration does not transfer perfectly either. Root confidence is informative but can be weakly correlated on hard suites where $p_{\mathrm{short}}$ concentrates near low values. While \Ours~adaptively selects the mode depending on the learned query difficulty,
+in practice, deploying such way can be brittle across real-world scenarios. In this situation, we may need to treat checkpoint or threshold selection as \emph{dataset-conditioned calibration} in case-by-case, since similar accuracy can coincide with materially different thinking ratios.
+
+\begin{table*}[t]
+\centering
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|l|l|cc|cc}
+\toprule
+\textbf{Backbone} & \textbf{Checkpoint} & \textbf{Mode} &
+\multicolumn{2}{c|}{\textbf{Math Avg}} &
+\multicolumn{2}{c}{\textbf{Non-math Avg}} \\
+& & &
+\textbf{P@1} & \textbf{Think\%} &
+\textbf{P@1} & \textbf{Think\%} \\
+\midrule
+
+\multirow{9}{*}{Qwen3-8B}
+& \multirow{2}{*}{Pre}
+& forced-think (LONG)     & 78.6 & 100.0 & 54.2 & 100.0 \\
+&
+& forced-no-think (SHORT) & 43.4 & 0.0   & 34.9 & 0.0 \\
+\cmidrule{2-7}
+& \multirow{3}{*}{+SFT}
+& adaptive                & 63.8 & 57.3  & 30.7 & 56.6 \\
+&
+& forced-think (LONG)     & 78.1 & 100.0 & 52.0 & 100.0 \\
+&
+& forced-no-think (SHORT) & 43.4 & 0.0   & 34.0 & 0.0 \\
+\cmidrule{2-7}
+& \multirow{3}{*}{+RPO}
+& adaptive                & 62.0 & 44.8  & 45.4 & 61.0 \\
+&
+& forced-think (LONG)     & 77.3 & 100.0 & 53.8 & 100.0 \\
+&
+& forced-no-think (SHORT) & 42.6 & 0.0   & 35.0 & 0.0 \\
+\midrule
+
+\multirow{9}{*}{Exaone4-1.2B (v2)}
+& \multirow{2}{*}{Pre}
+& forced-think (LONG)     & 62.9 & 100.0 & 46.5 & 100.0 \\
+&
+& forced-no-think (SHORT) & 37.6 & 0.0   & 31.4 & 0.0 \\
+\cmidrule{2-7}
+& \multirow{3}{*}{+SFT}
+& adaptive                & 60.0 & 80.1  & 40.4 & 80.1 \\
+&
+& forced-think (LONG)     & 62.8 & 100.0 & 44.7 & 100.0 \\
+&
+& forced-no-think (SHORT) & 43.5 & 0.0   & 30.9 & 0.0 \\
+\cmidrule{2-7}
+& \multirow{3}{*}{+RPO}
+& adaptive                & 58.0 & 48.4  & 39.2 & 48.4 \\
+&
+& forced-think (LONG)     & 60.8 & 100.0 & 45.6 & 100.0 \\
+&
+& forced-no-think (SHORT) & 41.5 & 0.0   & 31.2 & 0.0 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{\textbf{Robustness to forcing thinking vs.\ non-thinking after post-training.}
+Math Avg is the mean P@1 over MATH500/AIME24/AIME25.
+Non-math Avg is the mean P@1 over LiveCodeBench and GPQA-Diamond.
+\textbf{Think\%} is the fraction routed to thinking (100\% and 0\% under forced modes).}
+\label{tab:forced_mode_robustness}
+\end{table*}
+
+\section{Implementation details}
+
+\subsection{Hyperparameter optimization for SFT} 
+
+Through fine-tuning R1-Distill, Qwen3, and EXAONE4 models on math benchmarks, we observed that preserving the both accuracy and number of tokens of original model requires different hyperparameter configurations depending on model family and size. For instance, R1-Distill-1.5B maintained accuracy with learning rate 5e-5, while accuracy degraded at other values; in contrast, R1-Distill-7B required learning rate 1e-5 to preserve performance.
+
+When applying SFT with self-distilled data on Qwen3 models, we observed distinct behaviors across model sizes and modes. In reasoning mode, the 1.7B model exhibited a tendency to generate longer sequences, whereas the 8B model maintained the original token count. In non-reasoning mode, both models generally produced longer outputs; however, distilling with presence penalty 1.5 successfully maintained token counts comparable to the original models. For EXAONE4, using a lower temperature of 0.4 in non-reasoning mode preserved both accuracy and token efficiency similar to the base model.
+
+\subsection{Mode-specific GRPO rollout strategies} 
+
+For Qwen3 models, the non-reasoning mode prefix (\texttt{\textbackslash n\textbackslash n}) and reasoning mode prefix (\texttt{\textbackslash n}) each correspond to a single distinct token. When generating $n$ rollout samples, we prepended each token to $n/2$ sample prompts before generation. For EXAONE4, the non-reasoning mode prefix corresponds to two consecutive reasoning mode tokens. Unlike Qwen3, we prepended the reasoning mode prefix to all rollout samples initially. For $n/2$ samples, we appended an additional token to enforce non-reasoning generation, and for the remaining samples, we enforced reasoning mode generation by masking the logits of the initial reasoning mode prefix token during sampling.
+
+\subsection{SFT Dataset and training}
+
+For SFT training, we used OpenR1-Math prompts to generate SFT dataset. We employed different strategies depending on model capabilities. For Qwen3 and EXAONE4 models, we applied self-distillation to generate both reasoning and non-reasoning trajectories. For Qwen3, we used temperature 0.6, top-p 0.95, and top-k 20 for reasoning mode, and temperature 0.7, top-p 0.8, and top-k 20 for non-reasoning mode. For EXAONE4, we used temperature 0.4 and top-p 0.95 for both modes, with top-k 20 applied only in reasoning mode. We generated approximately 20K examples for each mode, resulting in about 40K total training samples per model.
+For Qwen3 V2 (LoRA), we employed n=4 sampling with temperature 0.6, top-p 0.95, top-k 20, and presence penalty 1.5 for both reasoning and non-reasoning modes. We selected the shortest correct solution from the sampled candidates to construct the SFT dataset.
+
+For R1-1.5B and 7B, which runs exclusively in reasoning mode, we utilized external resources. We sampled the original OpenR1-Math solution for reasoning mode trajectories and used Qwen2-Math-72B-Instruct to distill corresponding non-thinking trajectories with temperature 0.7 and top-p 0.8. Additionally, since R1-Distilled-Qwen lacks specific control tokens to distinguish between reasoning and non-reasoning modes (unlike Qwen3's \texttt{\textbackslash n} vs.\ \texttt{\textbackslash n\textbackslash n}), we prepended a short instructional prefixes to each mode.
+
+\subsection{Dataset sizes for LoRA updates}
+
+For our framework with LoRA updates, we use substantially fewer SFT queries than full parameter tuning. Mode selection only requires teaching the model to follow the two templates and to expose the root decision token, rather than relearning problem solving. Concretely, we draw math queries from OpenR1-Math \cite{openr1_openr1_math_220k_2025}, self generate candidate trajectories under each mode, and keep only correctness and template valid demonstrations, but sample only \textbf{4K per mode} (8K total) for LoRA SFT, instead of 20K per mode used in full fine tuning. We keep the \Ours~stage unchanged and run root token GRPO with the same rollout and reward settings as in the main experiments, so the reduced data primarily affects the SFT mode controllability step rather than the routing optimization.
+
+\subsection{SFT stop criterion and sensitivity}
+\label{sec:sft_sensitivity}
+
+As described in \Autoref{alg:sft}, the SFT stage is intentionally designed as a \emph{controllability enabler} rather than a capability-improving stage. We apply an explicit stop criterion: training continues only while the default-template accuracy remains within a tolerance $\epsilon$ of the original model. This prevents over-training, which can degrade both overall accuracy and routing quality (e.g., high Think\% but low performance due to template drift).
+
+To illustrate sensitivity to SFT duration, we report forced-LONG accuracy at different SFT epochs on R1-Distill models in \Autoref{tab:sft_sensitivity}. Over-training can degrade the solver: for R1-Distill-Qwen-1.5B, SFT at 1 epoch drops MATH500 from 83.2 to 75.1, while 3 epochs partially recovers to 77.6 but at higher training cost. For R1-Distill-Qwen-7B, 1 epoch (90.4) outperforms 2 epochs (88.0) on MATH500, confirming that the optimal SFT duration is model-dependent and motivating the tolerance-based stop rule.
+
+\begin{table}[t]
+\centering
+\small
+\caption{SFT sensitivity to training epochs on R1-Distill models under forced-LONG evaluation. 
+}
+\label{tab:sft_sensitivity}
+\addtolength{\tabcolsep}{-4.5pt}
+\begin{tabular}{l|l|cc}
+\toprule
+\textbf{Model} & \textbf{Stage} & \textbf{MATH500 P@1} & \textbf{AIME24 P@1} \\
+\midrule
+\multirow{3}{*}{R1-Distill-1.5B} & Baseline & 83.2 & 29.4 \\
+& SFT 1 ep & 75.1 & 20.8 \\
+& SFT 3 ep & 77.6 & 22.3 \\
+\midrule
+\multirow{3}{*}{R1-Distill-7B} & Baseline & 93.5 & 54.2 \\
+& SFT 1 ep & 90.4 & 43.5 \\
+& SFT 2 ep & 88.0 & 44.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional results}
+
+\subsection{LoRA updates}
+\Autoref{tab:qwen3_lora_vs_base_allbench} shows LoRA-based SFT and subsequent \Ours~on Qwen3 models. LoRA SFT mainly teaches template-following and root-level mode controllability, so it already yields meaningful reductions in Think\% and tokens compared to the always-\texttt{<think>} baseline. Building on this controllable initialization, \Ours~further shifts the root gating distribution and provides a stronger compute-accuracy tradeoff, often reducing Think\% substantially while keeping task performance non-trivial across both math and non-math benchmarks. 
+The resulting operating point is model-size dependent, but consistently shows that root-only RL can refine routing without requiring full-trajectory policy updates.
+
+\subsection{Robustness to hard forcing of thinking after post-training}
+\label{sec:forced_mode}
+
+Our method learns a root-level routing policy that chooses between a \emph{thinking} and a \emph{non-thinking} generation mode.
+A potential failure mode is \emph{entanglement}: post-training might specialize the model such that performance depends on the router,
+or that one mode becomes unreliable when selected deterministically.
+
+We therefore evaluate each checkpoint under two \emph{hard forcing} interventions.
+In \textbf{forced-think (LONG)}, we always select the reasoning root token, requiring an explicit trace.
+In \textbf{forced-no-think (SHORT)}, we always select the non-reasoning root token, suppressing the trace.
+We report P@1, average generated tokens, and the fraction of examples routed to thinking (\textbf{Think\%}).
+
+\Autoref{tab:forced_mode_robustness} summarizes results on math reasoning (MATH500/AIME24/AIME25) and non-math benchmarks
+(LiveCodeBench/GPQA-Diamond).
+Across backbones and checkpoints, we find that post-trained models remain functional under both forced regimes:
+forcing \emph{thinking} preserves a large portion of the always-think baseline accuracy, while forcing \emph{non-thinking} yields
+non-trivial performance with substantially reduced tokens.
+Overall, these results indicate that SFT/\Ours primarily reshapes the \emph{routing distribution} (i.e., when to allocate reasoning),
+without collapsing either mode into a brittle specialization.
+
+\subsection{Budget-matched comparison: root-only vs.\ full-trajectory RL}
+\label{sec:budget_matched}
+
+A key question is whether the accuracy gap between \Ours~and full-trajectory methods (e.g., AdaptThink) stems from the root-only formulation itself or simply from differences in training budget. To disentangle these effects, we compare \Ours~with full-trajectory GRPO (i.e., AdaptThink) under the same PFLOPs budget on MATH500 using R1-Distill-Qwen-1.5B (\Autoref{tab:budget_matched}).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Budget-matched comparison on MATH500 (R1-Distill-1.5B). Under equal PFLOPs ($\sim$10K), full-trajectory GRPO becomes under-trained and achieves only modest routing (Think\%${=}90.2\%$), while \Ours~achieves comparable accuracy with substantially lower Think\%. Different \Ours~checkpoints trace a Pareto frontier between accuracy and compute.}
+\label{tab:budget_matched}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|l|ccc}
+\toprule
+\textbf{Setting} & \textbf{Update scope} & \textbf{PFLOPs} & \textbf{MATH500 P@1} & \textbf{Think\%} \\
+\midrule
+Full GRPO (budget-matched) & all tokens & $\sim$10K & 80.8 & 90.2 \\
+\Ours~(ckpt A) & root-only & $\sim$10K & 77.6 & 20.5 \\
+\Ours~(ckpt B) & root-only & $\sim$10K & 80.4 & 43.4 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Under equal PFLOPs, full-trajectory GRPO is under-trained and barely reduces Think\% (90.2\%), whereas \Ours~achieves meaningful routing (20.5--43.4\% Think) with comparable or slightly lower accuracy. This confirms that root-only updates are more sample-efficient for the routing objective under low-budget regimes, which is the primary use case \Ours~targets.
+
+\subsection{Post-RPO threshold routing}
+\label{sec:post_rpo_threshold}
+
+To verify that inference-time controllability is preserved after \Ours~training, we sweep the routing threshold $\tau$ on the final +RPO checkpoint (\Autoref{tab:post_rpo_threshold}). Higher $\tau$ routes more queries to \textsc{Long}, increasing accuracy at the cost of more tokens; lower $\tau$ saves compute with a controlled accuracy reduction. This demonstrates that $\tau$ provides a smooth, monotonic compute--accuracy trade-off even after \Ours~training, with the forced-LONG/forced-SHORT results (\Autoref{tab:forced_mode_robustness}) serving as upper/lower capability bounds.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Threshold routing ($\tau$) sweep on the final +\Ours~checkpoint (Qwen3-8B). $\tau$ controls the fraction routed to \textsc{Long}.}
+\label{tab:post_rpo_threshold}
+\addtolength{\tabcolsep}{-2.5pt}
+\begin{tabular}{c|ccc}
+\toprule
+$\tau$ & \textbf{Think\%} & \textbf{MathAvg P@1} & \textbf{Non-mathAvg P@1} \\
+\midrule
+0.90 & 60.0 & 63.0 & 46.0 \\
+0.80 & 52.3 & 62.5 & 45.8 \\
+0.70 & 44.8 & 62.0 & 45.4 \\
+0.60 & 38.1 & 60.8 & 44.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Automatic labeling quality}
+\label{sec:labeling_quality}
+
+Our automatic labeling assigns each query to one of four outcome buckets based on paired evaluation under both \textsc{Short} and \textsc{Long} modes: (i) \textit{LONG-only-correct}: only \textsc{Long} succeeds, (ii) \textit{SHORT-only-correct}: only \textsc{Short} succeeds, (iii) \textit{both-correct}: both modes succeed, and (iv) \textit{both-wrong}: neither succeeds. This paired design directly mitigates the concern that \textsc{Short} might answer correctly by chance: such instances fall into \textit{SHORT-only-correct} or \textit{both-correct} and are not used as evidence that \textsc{Long} is required.
+
+\Autoref{tab:labeling_audit} reports the bucket distribution for Qwen3-8B on the RPO training set. On hard queries (e.g., AIME-level), the \textit{LONG-only-correct} bucket dominates, indicating a strong and consistent mode separation signal. The \textit{SHORT-only-correct} bucket is small across all difficulty levels, suggesting that chance-correct SHORT events rarely contaminate the supervision.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Outcome bucket distribution on the \Ours~training set (Qwen3-8B). 
+}
+\label{tab:labeling_audit}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|cccc}
+\toprule
+\textbf{Difficulty} & \textbf{LONG-only} & \textbf{SHORT-only} & \textbf{Both-correct} & \textbf{Both-wrong} \\
+\midrule
+Easy ($\mathrm{acc}_S \geq 0.75$) & 3.2\% & 1.8\% & 89.5\% & 5.5\% \\
+Medium & 28.4\% & 4.1\% & 42.3\% & 25.2\% \\
+Hard ($\mathrm{acc}_S < \mathrm{acc}_L \leq 0.5$) & 45.7\% & 2.3\% & 8.6\% & 43.4\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+To make the bucket assignments concrete, we provide representative training-set queries per bucket together with a mechanistic rationale for why each problem falls into the assigned bucket under Qwen3-8B mode-conditioned generation (\Autoref{tab:labeling_examples}). The rationales are not post-hoc rationalizations: they identify the specific reasoning step (e.g., modular case enumeration, sign disambiguation) at which \textsc{Short} mode systematically truncates, or at which \textsc{Long} mode introduces a derivation tangent.
+
+\textcolor{blue}{
+\begin{table}[t]
+\centering
+\small
+\caption{Representative training-set queries per outcome bucket (Qwen3-8B). Queries are abbreviated; rationales identify the reasoning step that drives the bucket assignment.}
+\label{tab:labeling_examples}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|p{0.42\linewidth}|p{0.40\linewidth}}
+\toprule
+\textbf{Bucket} & \textbf{Query (abbrev.)} & \textbf{Mechanistic rationale} \\
+\midrule
+LONG-only & ``Find the number of positive integers $n \le 2024$ such that $n^2 + n + 1 \equiv 0 \pmod{7}$.'' & Requires enumerating $n \bmod 7$ (solutions: $n \equiv 2, 4$), then counting via floor arithmetic. \textsc{Short} typically guesses a single residue or skips the residue scan and returns an off-by-one count. \\
+\midrule
+SHORT-only & ``Compute $\cos(\pi/3)$.'' & Closed-form recall ($1/2$). \textsc{Short} returns the memorized value. \textsc{Long} occasionally derives via half-angle identities and conflates $\cos(\pi/6)$ with $\cos(\pi/3)$, yielding $\sqrt{3}/2$. \\
+\midrule
+Both-correct & ``Solve $\log_2 x = 5$ for $x$.'' & Single inverse step: $x = 2^5 = 32$. No branch points or memorization gaps; both modes converge. \\
+\midrule
+Both-wrong & ``Find the smallest positive integer $n$ such that the decimal expansion of $1/n$ has period exactly $23$.'' & Requires knowing period equals $\mathrm{ord}_n(10)$ when $\gcd(n,10){=}1$ and that $10^{23}-1$ admits a non-trivial prime factor. Beyond Qwen3-8B's reliable recall in either mode. \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+}
+
+\subsection{Misrouting analysis}
+\label{sec:misrouting}
+
+We analyze routing errors by counterfactual evaluation: for each query where the adaptive model is incorrect, we re-evaluate under the opposite forced mode to determine whether the error is attributable to the gate decision. We categorize errors into:
+
+\begin{itemize}
+    \item \textbf{False-SHORT} (harmful misroute): the model chose \textsc{Short} but \textsc{Long} would have succeeded. These typically involve hidden multi-step constraints or subtle arithmetic that require explicit deliberation.
+    
+    \item \textbf{False-LONG} (wasteful misroute): the model chose \textsc{Long} when \textsc{Short} would have sufficed, or when overthinking amplified distractors or hallucinated intermediate claims.
+    
+    \item \textbf{Both wrong}: neither mode succeeds (out-of-distribution or missing knowledge).
+    
+    \item \textbf{Both correct}: compute-saving opportunity, not an error.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Misrouting composition on MATH500 (R1-Distill-1.5B, 500 queries). Lowering $\tau$ (0.75$\to$0.70) increases the number of false-SHORT errors (+12) while only slightly reducing false-LONG errors ($-$4), reflecting a clear compute-risk trade-off. }
+\label{tab:misrouting}
+\begin{tabular}{c|ccc}
+\toprule
+$\tau$ & \textbf{False-SHORT} & \textbf{False-LONG} & \textbf{Both-wrong} \\
+\midrule
+0.75 & 4 & 77 & 0 \\
+0.70 & 16 & 73 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Autoref{tab:misrouting} reports the misrouting composition on MATH500 (R1-Distill-1.5B) at two threshold settings, extracted from counterfactual re-evaluation.
+As shown in \Autoref{tab:misrouting}, false-LONG (conservative over-routing) is the dominant error type, while false-SHORT errors are relatively rare and increase predictably as $\tau$ decreases. This suggests that the learned router errs on the side of caution (spending \textsc{Long} when unnecessary) rather than harmfully skipping reasoning. A plausible source of this conservative bias is the pretraining prior that correlates more tokens with trying harder. Root-level post-training can reshape the gate, but may not fully overwrite this prior, motivating future work on calibration-aware training.
+
+To make the failure modes diagnosable rather than aggregate, we provide representative cases per category in \Autoref{tab:misrouting_examples}. Each row shows the routed mode under the adaptive policy together with the counterfactual outcome under the opposite forced mode, isolating whether the error is attributable to the gate decision (false-SHORT/false-LONG) or to a solver limitation (both-wrong). 
+The false-SHORT example illustrates a query whose surface form (a permutation count) admits a one-line answer but requires a divisor correction that \textsc{Short} systematically omits; the false-LONG example illustrates a query whose closed-form invites \textsc{Short}, while \textsc{Long} introduces an unnecessary derivation chain that drifts to a sibling identity.
+
+\textcolor{blue}{
+\begin{table}[t]
+\centering
+\small
+\caption{Representative misrouting cases on MATH500 (R1-Distill-1.5B, $\tau{=}0.70$). \textit{Adaptive} reports the mode chosen by the learned router and its correctness; \textit{Counterfactual} reports the opposite forced mode's outcome on the same query.}
+\label{tab:misrouting_examples}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|p{0.45\linewidth}|c|c}
+\toprule
+\textbf{Category} & \textbf{Query (abbrev.)} & \textbf{Adaptive} & \textbf{Counterfactual} \\
+\midrule
+False-SHORT & ``How many distinct arrangements are there of the letters of \textsc{mississippi}?'' & \textsc{Short}, \xmark{} (returns $11!$) & \textsc{Long}, \cmark{} ($11!/(4!\,4!\,2!) = 34{,}650$) \\
+\midrule
+False-LONG & ``Compute $\sum_{k=1}^{10} k$.'' & \textsc{Long}, \xmark{} (drifts to $\sum k^2$ formula) & \textsc{Short}, \cmark{} ($55$) \\
+\midrule
+Both-wrong & ``Find the smallest $n$ such that the decimal expansion of $1/n$ has period exactly $23$.'' & \textsc{Long}, \xmark{} & \textsc{Short}, \xmark{} \\
+\midrule
+Both-correct & ``Solve $3x + 7 = 22$ for $x$.'' & \textsc{Short}, \cmark{} & \textsc{Long}, \cmark{} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+}
+
+\subsection{Pass@$k$ evaluation on coding tasks}
+\label{sec:pass_at_k}
+
+We additionally report pass@10 alongside token cost on LiveCodeBench (\Autoref{tab:pass_at_k}). Under the pass@$k$ lens, the adaptive policy often matches or improves pass@10 relative to the baseline while reducing average token cost, which is the trade-off view most relevant for coding deployment where multiple samples are drawn.
+
+\begin{table}[t]
+\centering
+\small
+\caption{LiveCodeBench pass@$k$ results with token cost. Under pass@10 evaluation, the adaptive policy reduces token cost while maintaining competitive pass@10 performance.}
+\label{tab:pass_at_k}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l|l|ccc}
+\toprule
+\textbf{Model} & \textbf{Stage} & \textbf{pass@1} & \textbf{pass@10} & \textbf{Avg Tokens} \\
+\midrule
+\multirow{3}{*}{Qwen3-32B} & Baseline & 59.1 & 75.3 & 13,498 \\
+& + SFT & 58.3 & 77.1 & 11,457 \\
+& + \Ours & 54.4 & 72.8 & 10,623 \\
+\midrule
+\multirow{3}{*}{Exaone4-1.2B} & Baseline & 42.2 & 62.9 & 12,159 \\
+& + SFT & 34.6 & 56.0 & 9,281 \\
+& + \Ours & 36.7 & 58.2 & 6,692 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{AI Usage}
+We utilize AI tools (OpenAI’s ChatGPT and Google’s Gemini) to support code generation for experiments and help refine the text in a sentence-level. The core idea of our method, design of the framework, and the majority of the manuscript are written by the authors.
+

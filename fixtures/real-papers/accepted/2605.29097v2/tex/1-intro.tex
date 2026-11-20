@@ -1,0 +1,52 @@
+\section{Introduction}
+\label{sec:intro}
+
+Geometry reconstruction is a fundamental problem that enables a wide range of applications 
+in fields such as virtual reality~\cite{dong2025digital, guo2025articulatedgs, li2025single} and robotics~\cite{heppert2023carto, kerr2024robot}.  
+In recent years, neural reconstruction methods~\cite{wang2021neus, takikawa2021neural, muller2022instant, 
+munkberg2022extracting, liu2023nero} have gained significant attention.  
+A key advantage of these methods is their ability to represent the geometry of a scene continuously, which can help in many downstream tasks.
+However, vision-based sensors often struggle in environments with adverse weather 
+conditions~\cite{zhao2018rf, guan2020through, madani2022radatron, liu2023echoes} 
+or even become completely unusable when objects are obscured by 
+occlusions~\cite{adib2013see, zhao2018through, zhao2019through, korany2019xmodal, yanik2019near, dodds2025mito, dodds2024around}. 
+
+
+In contrast, radio frequency (RF) sensing, specifically wireless millimeter-wave (mmWave) sensing, has the ability to see \textit{through} occlusions 
+and remains robust under challenging visibility conditions
+and, unlike X-Ray, is not dangerous to humans~\cite{wu2015safe}, making it a compelling alternative for 3D reconstruction.
+This could open up a plethora of applications; for example, seeing whether items inside a box are the correct items, are damaged, or pose a threat, without having to ever open up the box.
+On the other hand, mmWave resolution is extremely low compared to vision. Fig.~\ref{fig:intro-fig} shows an example of one radar image, which shows significantly less visual context than camera images provide, making it hard to directly extract 3D reconstruction from a radar image alone.
+In order to perform more complete 3D reconstruction, some works~\cite{adib2013see, zhao2018through, korany2019xmodal, yanik2019near, dodds2024around} 
+have done 3D point cloud reconstruction or human body tracking by leveraging movement or emulating larger antenna apertures, however, the recovered point clouds from RF are still too sparse and noisy to reliably recover detailed geometry.
+Other works~\cite{borts2024radar, huang2024dart} have proposed using neural implicit representations for RF sensing, aiming to concentrate scene information from heavy noise through neural optimization.
+\input{figures/intro-fig}
+However, their systems are designed for large-scale environments and are far from achieving millimeter-level precision.
+Compared to near-field surface reconstruction, propagation characteristics of RF signals change dramatically when objects are close to the radar~\cite{yanik2019near,sheen2001three}, meaning processing methods for large scale scenes, such as beamforming~\cite{benesty2008conventional}, introduces a considerable amount of distortion and noise, often exceeding the noise acceptable for gradient descent leading to unstable optimization.
+
+In this paper, we propose {\bf\em the first method} to overcome the fundamental dilemma between massive RF noise in the input and millimeter-level geometry reconstruction by using neural representation learning, shown in Fig.~\ref{fig:intro-fig}.
+Achieving this goal, however, is not so straightforward. Using RF imaging directly to infer surface geometry
+presents fundamentally different challenges from traditional image-based approaches, in three main ways.
+\textbf{(1)} A key challenge is the absence of a lens-based imaging model in wireless systems.  
+While vision rendering uses lenses to filter and focus relevant light rays, wireless systems operate via \textit{lensless imaging}, capturing all incoming RF signals without directional filtering.  
+This leads to low signal-to-noise ratios, as irrelevant signals cannot be excluded.
+\textbf{(2)} There is a fundamental difference in the propagation characteristics between RF signals and visible light.  
+While visible light propagation is predominantly determined by scattering, RF reflections are dominated by specular reflections.  
+Therefore, volumetric rendering techniques that are designed for scattering-based vision sensors are unsuitable for RF imaging.
+\textbf{(3)} Finally, a major challenge is the high computational cost of lensless volumetric rendering.  
+Unlike lens-based rendering, which samples along 1D rays, lensless rendering requires sampling across the full 3D space, leading to cubic complexity, making naïve implementations intractable.
+
+
+To address the outlined challenges, we propose the following key contributions:
+\textbf{(1)} We perform geometry reconstruction by introducing a {\bf matched filter (MF)} into the 
+framework that discards irrelevant signals and preserves the most informative ones.  
+\textbf{(2)} We implement {\bf physics-based RF volumetric rendering}, which integrates a RF-specific 
+reflection model and incorporates a mathematical framework for specular reflections directly into the 
+rendering process.
+\textbf{(3)} We propose a novel {\bf lensless sampling and lensless alpha blending} strategy that enables comprehensive scene 
+coverage while significantly reducing computational cost, making volumetric rendering feasible for millimeter-level RF applications.
+Building upon these components, we design our neural model with three key sub-networks: a Signed Distance Function Network, a Reflective Network, and a Signal Power Prediction, which are implemented with MLPs or trainable parameters.
+
+We evaluate our system using a 77\,GHz mmWave radar mounted on a robotic arm, scanning a variety of real-world objects.  
+Our results demonstrate that \name{} takes a significant first step toward accurate 3D reconstruction from RF signals, outperforming currently adopted methods in both reconstruction quality and robustness to experimental noise.  
+These findings highlight \name{}'s ability to infer more detailed scene geometry, as compared to current methods, even under challenging sensing conditions.

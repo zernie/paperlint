@@ -1,0 +1,342 @@
+\section{LDP Walk Counting}
+\label{sec:k-wk}
+
+
+We begin with a special case of acyclic pattern counting: $k$-line path counting. 
+As a preliminary step, we develop a mechanism for the related task of $k$-line walk counting.
+% Before that, we first discuss $k$-line walk counting. 
+As noted in Section~\ref{subsec:prelim_pattern_counting}, walk counting can be viewed as a simpler variant of path counting.
+Although walk counting does not fall under acyclic graph pattern counting, it forms the foundation for our mechanisms for both path counting and general acyclic graph pattern counting.
+{In this section, we first provide a brief overview of the existing one-round RR-based solution for walk counting, which incurs an error of $O(N^k)$.}
+% In this section, we first present a strawman solution for walk counting using RR, which incurs a variance of $\Omega(N^{k+1})$. 
+We then introduce our multi-round LDP approach, which achieves an error bound of $\tilde{O}(Nd(G)^{k-1})$ with constant probability, while improving communication and computation costs by an order of magnitude.
+
+ 
+
+% \subsection{Strawman: Releasing Noisy Graph with RR}
+\subsection{{Overview of the RR-Based Method}}
+\label{subsec:strawman}
+
+
+% Similar with other most pattern counting tasks under local-DP (e.g., triangle counting), the key challenge, for answering ...,  lies in capturing correlations among multiple edges.
+% One straightforward idea to address is issue is to first construct 
+% a noisy graph $\tilde{G}$ is constructed by perturbing each edge... and then counting the ... over the noisy graph...
+% More precisely, we utilize 
+
+
+
+Similar to many pattern counting tasks under LDP, such as triangle counting, the key challenge in answering $k$-line walk queries lies in capturing correlations across multiple edges. 
+{\cite{suppakitpaisarn2025counting} adopts a straightforward one-round approach that first constructs a noisy graph $\tilde{G}$ using RR, as described in Section~\ref{subsec:ldp}.
+Given $\tilde{G}$, for each node pair $(v_i, v_j)$, the analyzer $\mathcal{A}$ then computes an unbiased estimator $\hat{a}_{i,j}$ for the binary existence of edge $(v_i, v_j)$ in the original graph $G$.
+Since the existence of any walk can be unbiasedly estimated by the product of the estimators of its constituent edges, $\mathcal{A}$ enumerates all $(k+1)$-node sequences and sums the corresponding walk estimators to compute the total count.
+This method guarantees an unbiased estimate with an additive error of $O(N^k)$ for $k$-line walk counting, and it extends naturally to general $k$-edge acyclic pattern counting with the same asymptotic utility guarantee.
+}
+
+
+
+
+\paragraph{Redundant count removal}
+The above solution treats walk orientations distinctly; that is, the sequences $(v_1, \dots, v_{k+1})$ and $(v_{k+1}, \dots, v_1)$ are considered different walks. 
+{To eliminate redundant counts due to orientation, ~\cite{suppakitpaisarn2025counting} divides the total count by the number of automorphisms~\cite{godsil2013algebraic} of the queried pattern.}
+{Due to space constraints, we defer detailed discussions on redundant count handling across pattern counting queries to Appendix~{A.1} of the full version~\cite{full_version}.}
+
+
+
+
+
+\paragraph{Communication and computation analysis}
+The total communication cost is $O(N^2)$, as each node $v_i$ sends a message of size $O(N)$ to construct the noisy graph. 
+For computation, the analyzer $\mathcal{A}$ requires $O(N^{k+1})$ time to enumerate
+all possible sequences,
+% all possible sequences $w$,
+while each node incurs $O(N)$ time to perturb its neighbor list.
+
+
+
+
+
+\subsection{Our Approach: Multi-Round Aggregation}
+\label{subsec:k-wk}
+
+
+
+The problem with the strawman solution is that we publish ``too much'' information 
+of nodes
+in an overly ``fine-grained'' manner. 
+Fundamentally, the more information is released with the same privacy level, the more difficult it is to achieve higher utility based on the released data.
+Therefore, we would like to collect the data in a more ``local'' and more ``aggregated'' manner. 
+Given edge counting (i.e., $1$-line walk counting) as an example, instead of letting each node publish its perturbed neighbor list, we release only the degree information.
+The analyzer then aggregates the perturbed degrees to produce the query result.
+With this approach, the error can be reduced from typically $\Omega(N)$
+to $O(\sqrt{N})$, by simply adding Laplace noises of scale $2/\varepsilon$ to each node's degree count. 
+
+
+
+
+\begin{algorithm}
+\small
+\caption{Local randomizer $\mathcal{R}^{(\ell)}$ of $\mathcal{M}_{\mathrm{k\text{-}wk}}$}
+\label{alg:k-wk_randomizer}
+\SetNoFillComment
+
+\tcc{Initialization} 
+\ForEach{$i \in \{1, \dots, N\}$}{
+    $\mathcal{X}^{(0)}_i \leftarrow 1$
+}
+
+\SetKwFunction{r}{$\mathcal{R}^{(\ell)}$}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\r{$G_i$, $\varepsilon$}}{
+
+Received $\mathcal{X}^{(\ell -1)}_i$ for each $i \in \{1, \dots, N\}$
+
+    $ \|\mathcal{X}^{(\ell-1)}\|_\infty := \max_i|\mathcal{X}_i^{(\ell-1)}|$ \\
+    % $GS_Q \leftarrow \|\mathcal{X}^{(\ell-1)}\|_\infty$\\
+    $\mathcal{X}^{(\ell)}_i \leftarrow 
+    \sum_{j \in \mathcal{N}(i)}\mathcal{X}^{(\ell-1)}_j +
+    \operatorname{Lap}(\frac{2k}{\varepsilon}\|\mathcal{X}^{(\ell-1)}\|_\infty)$\\
+    
+    \textbf{Publish} $\mathcal{X}^{(\ell)}_i$
+   
+}
+\end{algorithm}
+
+
+
+
+
+
+This idea, {also explored in~\cite{betzer2024publishing}}, can be extended to support arbitrary $k$-line walk counting queries with multiple rounds of communication: 
+At the beginning, we initialize $\mathcal{X}^{(0)}_i =1$ for any $v_i\in V$, representing that the number of $0$-line walk ending at each node is $1$.
+Then, in round $\ell \in \{1, \dots, k\}$, each node collects the number of $(\ell-1)$-line walks ending at its neighbors.
+By aggregating these values, each node can compute the number of $\ell$-line walks that end at itself.
+To ensure the reported counts satisfy edge-LDP, each node must add noise to obscure the presence or absence of edges between its neighbors.
+Specifically, {unlike~\cite{betzer2024publishing} that limits the global sensitivity using a clipping mechanism,}
+our approach adds Laplace noise with a scale proportional to the maximum count from the previous round.
+% Laplace noise is added with a scale proportional to the maximum count from the previous round.
+\uline{Notably, for each node, the noise scale is determined by the maximum count across all nodes rather than just its own neighborhood, thereby preventing leakage of local structural information.}
+Besides, since each edge contributes to the computation in every round, the total privacy budget is divided across the $k$ rounds, allocating $\varepsilon/k$ to each.
+Finally, the counts produced in round $k$ are sent to the analyzer $\mathcal{A}$, which aggregates all node reports and returns 
+\begin{equation*}
+\label{e:k_owk_output}
+     \mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) =  \sum_{i=1}^N \mathcal{X}^{(k)}_i
+\end{equation*}
+as the output.
+The detailed local randomizer $\mathcal{R}^{(\ell)}$ applied at round~$\ell$ of this $k$-round local-DP mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ is described in Algorithm~\ref{alg:k-wk_randomizer}. 
+
+
+
+Figure~\ref{fig:2-wk} illustrates the execution of the $2$-round mechanism $\mathcal{M}_{\mathrm{2\text{-}wk}}$ on graph $G$ with a total privacy budget of $\varepsilon = 4$.
+Each node is assigned a per-round privacy budget of $\varepsilon / 2k = 1$.
+In both rounds $1$ and $2$, each node first aggregates the outputs from its neighbors in the previous round (shown in blue), and then adds Laplace noise to privatize the result (shown in red).
+The final output of the mechanism, $5.7$, is computed by summing the privatized values of all nodes in round $2$.
+
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.58\linewidth]{figures/2-wk.pdf} % file myfig.svg in figs/
+\caption{Illustration of the 2-line walk counting mechanism $\mathcal{M}_{\mathrm{2\text{-}wk}}$ applied to graph $G$ with privacy budget $\varepsilon = 4$.
+For simplicity, $\sum$ denotes $\sum_{j \in \mathcal{N}(i)}$.}
+\label{fig:2-wk}
+\end{figure}
+
+
+
+For privacy and utility, we establish the following guarantees:
+\begin{theorem}
+\label{the:k-owk-privacy}
+For any graph $G$, walk length $k$, and privacy budget $\varepsilon$, $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+
+\begin{theorem}
+\label{the:o_k-wk_utility}
+For any graph $G$, walk length $k$, and parameters $\varepsilon$ and $\beta$, the $k$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies
+$\mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon)] = {W}_k$,
+and with probability at least $1 - \beta$,
+\begin{equation*}
+|\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k|
+  \leq  k\gamma \sqrt{N} (d(G) + \gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1}),
+\end{equation*}
+where $\gamma = 2k\sqrt{8\log(2kN/\beta)}/\varepsilon = \tilde{O}(1)$.  
+\end{theorem}
+
+
+{Proofs of all lemmas and theorems in this paper are provided in Appendix~A.3 of the full version~\cite{full_version}.}
+By Theorem~\ref{the:o_k-wk_utility}, $\mathcal{M}_\mathrm{k\text{-}wk}$ successfully reduces the error from typically {$O(N^k)$} to $\tilde{O}(\sqrt{N}d(G)^{k-1})$ for general $k$-line walk counting queries.
+
+
+
+\paragraph{Communication and computation analysis}
+The total communication cost of the $k$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ is $O(N^2)$. 
+Specifically, in the first $k-1$ rounds, each node $v_i$ broadcasts its count of $O(1)$ size to all other nodes, incurring a total cost of $O(N^2)$, considering that $k$ is a constant. 
+In the final round, each node sends its count to the analyzer, contributing an additional $O(N)$ cost.
+For the computational cost, the analyzer $\mathcal{A}$ runs in $O(N)$ time to aggregate the values received from all $N$ nodes in round $k$. 
+Each node performs $O(N)$ computation across all $k$ rounds: in each round, it spends $O(N)$ time computing a maximum and another $O(N)$ time aggregating values from neighbors.
+
+
+
+\subsection{Optimization in Efficiency}
+\label{subsec:opt_wk}
+
+
+So far, $\mathcal{M}_{\mathrm{k\text{-}wk}}$ has achieved improved computational complexity with state-of-the-art utility. 
+Next, we further optimize both communication and computation.
+
+
+\paragraph{Round reduction:} 
+
+
+
+The number of rounds in $\mathcal{M}_{\mathrm{k\text{-}wk}}$ can be reduced from $k$ to $k-1$. 
+The key observation is that, for each $k$-line walk, the final edge is shared between the second-to-last node and the last node. 
+Therefore, once the second-to-last node obtains the noisy count of $(k-1)$-line walks ending at itself, it can compute the number of $k$-line walks where it serves as the second-to-last node, eliminating the need for round $k$.
+More precisely, in round $k-1$, each node $v_i$ computes $\mathcal{X}^{(k-1)}_i$ as in Algorithm~\ref{alg:k-wk_randomizer} and multiplies it by $d(v_i) + \mathrm{Lap}(2k/\varepsilon)$. 
+The analyzer $\mathcal{A}$ then aggregates these values to produce the final output. 
+We will show that this modification preserves both the privacy and utility guarantees stated in Theorem~\ref{the:k-owk-privacy} and Theorem~\ref{the:o_k-wk_utility}.
+
+
+
+\paragraph{Computational cost reduction:} 
+
+
+
+
+Another observation is that, in each round, each node scans through all $N$ results from the previous round to compute a maximum, which incurs significant computational redundancy. 
+To address this, we can shift the maximum computation to the analyzer. 
+More precisely, 
+at the end of each round $\ell \in \{1, \dots, k-2\}$, each node $v_i$ additionally sends its value $\mathcal{X}^{(\ell)}_i$ to the analyzer $\mathcal{A}$, which computes the global round maximum and broadcasts it to all nodes. 
+This reduces the computation cost at each node from $O(N)$ to $O(d(G))$.
+
+
+
+
+\paragraph{Communication cost reduction:}
+
+The communication cost between nodes can be reduced from $O(N^2)$ to $O(M)$ under the assumption that nodes connected by an edge have direct communication channels. 
+In this setting, at the end of each of the first $k-2$ rounds, each node sends its result only to its neighbors, while the global maximum is computed by the analyzer as discussed above. 
+This change does not affect the node-level computation, as each node only requires the results from its neighbors and the global maximum. 
+Consequently, in each of the first $k-2$ rounds, each edge facilitates bidirectional communication between its endpoints, leading to a total communication cost of $O(M)$ between nodes.
+
+
+
+
+
+\begin{algorithm}
+\small
+\caption{Local randomizer $\mathcal{R}^{(\ell)}$ of optimized $\mathcal{M}_{\mathrm{k\text{-}wk}}$}
+\label{alg:k-wk-opt_randomizer}
+\SetNoFillComment
+
+\ForEach{$i \in \{1, \dots, N\}$}{
+    $\mathcal{X}^{(0)}_i \leftarrow 1$
+}
+
+\SetKwFunction{r}{$\mathcal{R}^{(\ell)}$}
+\SetKwProg{Fn}{Function}{:}{}
+\Fn{\r{$G_i$, $\varepsilon$}}{
+
+% \tcc{Computational cost reduction}
+Received $\|\mathcal{X}^{(\ell-1)}\|_\infty$ from $\mathcal{A}$
+
+% \tcc{Communication cost reduction}
+   Received $\mathcal{X}^{(\ell-1)}_j$ for each $j \in \mathcal{N}(i)$
+
+    
+    $\mathcal{X}^{(\ell)}_i \leftarrow 
+    \sum_{j \in \mathcal{N}(i)}\mathcal{X}^{(\ell-1)}_j +
+    \operatorname{Lap}(\frac{2k}{\varepsilon}\|\mathcal{X}^{(\ell-1)}\|_\infty)$\\
+
+  \If{$\ell = k-1$}{
+        % \tcc{Round reduction}
+         ${\mathcal{X}}^{(\ell)}_i 
+        \leftarrow 
+        {\mathcal{X}}^{(\ell)}_i \cdot 
+        (d(v_i) + \operatorname{Lap}(\frac{2k}{\varepsilon}))$\\
+    }
+
+    
+    \textbf{Send out} $\mathcal{X}^{(\ell)}_i$ to $\mathcal{N}(i)$ and $\mathcal{A}$
+   
+}
+\end{algorithm}
+
+
+
+The revised local randomizer is shown in Algorithm~\ref{alg:k-wk-opt_randomizer}.
+These refinements collectively reduce the total number of rounds from $k$ to $k-1$, lower the overall communication cost from $O(N^2)$ to $O(M+N)$, and achieve an
+improvement from $O(N)$ to $O(d(G))$ in the per-node computational cost.
+Below, we show that these refinements will not affect the privacy and utility guarantee:
+\begin{theorem}
+For any graph $G$, walk length $k$, and privacy budget $\varepsilon$, the optimized mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+
+\begin{theorem}
+For any graph $G$, walk length $k$, and parameters $\varepsilon$ and $\beta$, the optimized $(k-1)$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies
+$
+     \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon)] = {W}_k,
+$
+and with probability at least $1 - \beta$,
+\begin{equation*}
+|\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k|
+  \leq  k\gamma \sqrt{N} (d(G) + \gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1}),
+\end{equation*}
+where $\gamma = 2k\sqrt{8\log(2kN/\beta)}/\varepsilon = \tilde{O}(1)$.  
+\end{theorem}
+
+
+
+
+
+% move to former part.......
+% \subsection{Unoriented Walk Counting}
+
+
+
+% In the earlier part of this section, we focused on counting oriented walks, where two $k$-walks—$w_1$ from $v_1$ to $v_{k+1}$ and $w_2$ from $v_{k+1}$ to $v_1$—are treated as distinct. 
+% This reflects common scenarios where a trip from location $a$ to $b$ is considered different from one in the reverse direction. 
+% Let $W_k$ denote the number of unoriented $k$-walks of the input graph. 
+% Since walks may contain repeated nodes or edges, a walk can be symmetric, that is, its node sequence remains the same under reversal.
+% For example, $(v_1, v_2, v_1)$ is a symmetric $3$-line walk.
+% As a result, $W_k$ cannot be derived directly from having the oriented walk count $O_k$, because symmetric walks are counted only once in $O_k$.
+% Nevertheless, both the strawman and our proposed mechanisms can be extended to handle the unoriented walk counting problem under local-DP, where $w_1$ and $w_2$ are treated as equivalent.
+
+
+% % \textbf{Our extension.}
+% We construct our local-DP scheme $\mathcal{M}_{\mathrm{k\text{-}wk}}$ for counting unoriented $k$-line walks, building upon $\mathcal{M}_{\mathrm{k\text{-}owk}}$ as follows.
+% The key idea is that although $W_k$ cannot be directly derived from $O_k$, it satisfies the relation $W_k = (O_k + U_k)/2$, where $U_k$ denotes the number of symmetric walks of length $k$. 
+% Since $\mathcal{M}_{\mathrm{k\text{-}owk}}$ produces an unbiased estimator of $O_k$, the task of estimating $W_k$ reduces to estimating $U_k$.
+% Intuitively, a symmetric $k$-line walk is fully determined by its first $\lceil k/2 \rceil$ nodes, with the remaining nodes mirrored accordingly. 
+% Hence, $U_k = O_{\lceil k/2 \rceil}$, further reducing the task to estimating $O_{\lceil k/2 \rceil}$.
+% Recall that $\mathcal{M}_{\mathrm{k\text{-}owk}}$ computes, in each round $\ell$ from $1$ to $k$, the number of oriented $\ell$-line walks ending at each node.
+% Thus, we construct $\mathcal{M}_{\mathrm{k\text{-}wk}}$ by introducing an additional step at round $\lceil k/2 \rceil$, in which the analyzer not only computes the maximum of the received node counts, but also aggregates them to compute an unbiased estimator $\hat{U}_k$ of $O_{\lceil k/2 \rceil}$.
+% In the final round, the analyzer outputs $(\hat{O}_k + \hat{U}_k)/2$, yielding an unbiased estimator of $W_k$.
+
+% In general, this modification adds an additional $O(N)$ computational cost while leaving the communication cost unchanged, neither of which asymptotically affects the overall cost.
+% Since the additional step involves only post-processing of privatized results, $\mathcal{M}_{\mathrm{k\text{-}wk}}$ also satisfies $\varepsilon$-edge-DP.
+% In terms of utility, the overall error is bounded by the sum of the error bounds for $\hat{O}_k$ and $\hat{U}_k$. 
+% The error in $\hat{O}_k$ asymptotically dominates, so the overall utility bound remains $\tilde{O}(\sqrt{N}D^{k-1})$.
+% Compared to the centralized-DP Laplace mechanism, which incurs error $O(D^{k-1})$ on the same query, our method still achieves the optimal amplification factor of $O(\sqrt{N})$.
+
+
+
+% \green{here}
+
+
+
+% example? 
+
+
+
+
+
+
+
+
+
+
+
+
+

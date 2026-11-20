@@ -1,0 +1,69 @@
+\section{The QEVA Method}
+\label{sec:method}
+
+We introduce \textbf{QEVA}, a novel evaluation framework designed to assess how comprehensively and faithfully a textual video summary captures the original video's content. QEVA is grounded in the principle that \textit{"a good summary should serve as an effective substitute for the source video"}. To operationalize this intuition, QEVA employs multimodal question answering (QA) as its core mechanism: a high-quality summary should allow accurate answering of critical questions derived from the source video content. Unlike prior work relying solely on direct LLM-based judgments, QEVA integrates both Video-LMMs and LLMs within a collaborative pipeline, thus mitigating the inherent limitations of Video-LMMs as direct evaluators (see Section~\ref{sec:ablation} for detailed analyses). Given a source video and candidate summary, QEVA outputs a multidimensional quality score reflecting the summary's \textit{coverage}, \textit{factuality}, and \textit{chronology (chronological fidelity)}. Figure~\ref{fig:qeva_pipeline} provides an overview of our QEVA workflow.
+
+\subsection{Evaluation Criteria}
+Inspired by prior work in text summarization evaluation (e.g., SummEval) and recent multimodal captioning evaluation metrics (e.g., ACCR in G-VEval), we define three complementary criteria to comprehensively evaluate video summaries: \textbf{Coverage}, \textbf{Factuality}, and \textbf{Chronology}.
+
+\paragraph{Coverage.}
+Coverage measures whether the summary includes essential content, key events, and the main messages of the source video. A high-coverage summary should comprehensively represent all core information and omit no major events or salient points.
+
+\paragraph{Factuality.}
+Factuality assesses whether the summary accurately reflects details present in the source video without introducing hallucinated or unsupported information. Good factuality implies all claims in the summary can be directly verified from the video.
+
+\paragraph{Chronology.}
+Chronology (chronological fidelity) evaluates whether a summary preserves the source video's order of events and correctly interprets non-linear structures (e.g., flashbacks/flash-forwards). 
+This criterion concerns ordering only; fine-grained timing such as duration or pace is not evaluated.
+
+These criteria are mutually complementary. A summary may comprehensively cover all major events (\textit{Coverage}) but misrepresent critical details (\textit{Factuality}), or accurately summarize events but distort their order (\textit{Chronology}). By explicitly defining these distinct evaluation dimensions, QEVA ensures consistent and interpretable evaluation, minimizing subjective interpretation and inter-annotator variance.
+
+\subsection{Question-Answer Generation}
+\label{sec:qa-generation}
+For each evaluation criterion, QEVA generates tailored question-answer (QA) pairs to probe summary quality. Figure~\ref{fig:qa_prompts} illustrates example prompts for QA generation, with complete prompts provided in Appendix~\ref{sec:full-prompts}.
+
+\paragraph{Coverage QA Generation.}
+We prompt a Video-LMM with the full source video and a specialized instruction to generate $N$ diverse, high-level questions. These prompts encourage synthesis and inference-based questions that target main events, causal relations, and overarching themes, explicitly avoiding superficial factual or timestamp-specific queries.
+
+\paragraph{Factuality QA Generation.}
+We prompt an LLM to extract salient elements from the candidate summary and categorize them (entities, actions, attributes, counting, etc.). Then, we generate targeted factual queries that require answers strictly supported by the summary itself, enabling verification of summary correctness against the source video.
+
+\paragraph{Chronology QA Generation.}
+We first employ a Video-LMM to extract a chronological sequence of key events from the video. Subsequently, we sample pairs of events (adjacent and non-adjacent) and generate three types of chronological questions: (1) order verification (yes/no), (2) temporal precedence (multiple-choice), and (3) event sequence sorting tasks. These questions explicitly evaluate if the summary accurately preserves event ordering.
+
+\subsection{Question and Answer Filtering}
+To ensure the quality and discriminative power of generated QA pairs, we introduce a two-stage automatic filtering step. This process is designed to eliminate questions that either do not require the source context (i.e., are trivial) or are inherently flawed (i.e., ambiguous or low-quality). Specifically, we employ an alternative Video-LMM or LLM (distinct from the model used for generating the QA pairs) to answer each question under two conditions:
+
+\begin{itemize}
+    \item \textbf{Trivial Filtering:} If the alternative model correctly answers a question without any context (using only the question and answer choices), we consider it trivial and remove it. This step is vital to ensure that QEVA genuinely tests for faithfulness to the provided context rather than the model's own parametric knowledge.
+    \item \textbf{Low-quality Filtering:} If the model fails to answer correctly even when provided with the appropriate context (the source video or summary), the question is considered ambiguous or unanswerable and is thus discarded. This removes noise from the evaluation.
+\end{itemize}
+
+This two-stage filtering ensures retained QA pairs are neither trivial nor excessively ambiguous.
+
+\subsection{QEVA Score Computation}
+For each criterion, QEVA computes an evaluation score as the proportion of correctly answered questions from the filtered set. Let \(Q_{Cov}\), \(Q_{Fact}\), and \(Q_{Chrono}\) denote the filtered QA sets for Coverage, Factuality, and Chronology, respectively.
+
+\begin{itemize}
+    \item For \textbf{Coverage} and \textbf{Chronology}, the summary \(S\) is used as the context. The scores are the proportions of correctly answered questions:
+    \begin{align}
+        \mathrm{Score}_{Cov}(S, Q_{Cov}) &= \frac{\left|Q_{Cov, \text{correct}}\right|}{\left|Q_{Cov}\right|} \\
+        \mathrm{Score}_{Chrono}(S, Q_{Chrono}) &= \frac{\left|Q_{Chrono, \text{correct}}\right|}{\left|Q_{Chrono}\right|}
+    \end{align}
+    \item For \textbf{Factuality}, the source video \(V\) is used as the context. The score is the proportion of questions confirmed as accurate:
+    \begin{equation}
+        \mathrm{Score}_{Fact}(V, Q_{Fact}) = \frac{\left|Q_{Fact, \text{correct}}\right|}{\left|Q_{Fact}\right|}
+    \end{equation}
+\end{itemize}
+
+The final QEVA score is the arithmetic mean of these three component scores. This provides a final score on a normalized 0-to-1 scale. Formally, for a summary \(S\) and video \(V\), the score is defined as:
+\begin{equation}
+\begin{split}
+\mathrm{QEVA}(S, V) = \bigl( & \mathrm{Score}_{Cov}(S, Q_{Cov}) \\
+& + \mathrm{Score}_{Fact}(V, Q_{Fact}) \\
+& + \mathrm{Score}_{Chrono}(S, Q_{Chrono}) \bigr) / 3
+\end{split}
+\end{equation}
+
+\subsection{Implementation Details}
+For our default experimental setup, we use Gemini-1.5 Pro as the primary Video-LMM and GPT-4o as the primary LLM for QA generation and answering. Alternative settings with open-source models (e.g., Qwen2.5-VL, InternVL3, LLaMA-3.1, Gemma-3) are also explored in Section~\ref{sec:ablation}. All prompts, hyperparameters, and scripts necessary for full reproducibility are included in the supplementary material and will be publicly released upon acceptance.

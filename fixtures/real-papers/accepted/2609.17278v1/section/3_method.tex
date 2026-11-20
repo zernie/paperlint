@@ -1,0 +1,119 @@
+\section{Method}
+To address the research questions, this paper presents a study comparing pairs of visualisations: conventional versus DS-enhanced, across a range of topics. Tasks were developed based on Bloom's taxonomy to assess different levels of cognitive complexity. A within-subjects design was used, where participants completed both multiple-choice and open-ended question-based tasks for each visualisation pair.
+The rest of this section outlines the key elements of the study, including: i) the dataset and materials used; ii) the creation and transformation process for conventional and DS-enhanced visualisations; iii) the development of question-based tasks aligned with Bloom's taxonomy to evaluate the visualisations; iv) the experimental design and procedure; v) participant recruitment and demographics; and vi) the analysis performed for each research question.
+
+\subsection{Dataset and Materials}
+\label{dataset}
+In order to compare conventional visualisations with those containing DS-enhancements (RQs 1-4), we first needed to identify an appropriate dataset that could be used to extract a set of data stories to communicate.
+
+For this study, we aimed to find a dataset that would be unfamiliar enough to the general public that they would require the visualisations to complete tasks of different complexity, but not so inaccessible that they would be unable to answer questions at all. To this end, we selected open-source data from the \textit{Our World in Data} website. The data stories presented in this study were based on the interconnected topics of \textit{Colonisation}, \textit{Territory Control}, \textit{State Capacity}, and \textit{Tax as a percentage of GDP}, as explained by \citet{herre2023statecap}\footnote{Dataset: \url{https://ourworldindata.org/state-capacity}}. These topics were chosen over alternative datasets because the \textit{Our World in Data} page already contained well-documented insights, reducing the risk of introducing bias or fabricating narratives. Moreover, the topics offered a diverse set of visual representations, including both maps and line charts, alongside detailed endnotes, which provided a rich context for DS-enhancements.
+
+The visualisations in this study (to be fully described below, in Section \ref{design_process}) were created using Python's \textit{Matplotlib} and \textit{Geopandas} library. Additional visual embellishments, such as annotations, were added using the graphic design platform \textit{Canva} \footnote{Canva: \url{https://www.canva.com/}}.
+
+\subsection{Visualisation Design and Transformation Process}
+\label{design_process}
+The design process to create the pairs of visualisations for this study followed the \textit{Data Storytelling Framework} developed by \citet{zdanovic2022influence} and the visual enhancements described in the data storytelling and visualisation literature \cite{tufte2001visual, knaflic2015storytelling, ryan2016visual, echeverria2018exploratory, stokes2023striking}. \citet{zdanovic2022influence}'s framework is divided into three distinct phases – 1) \textit{Explore the data}, 2) \textit{Craft the visualisation}, and 3) \textit{Tell the story} – each with individual steps that are necessary to guide the visualisation creation process. While generating conventional visualisations generally involves going through the first two phases – data exploration and visualisation creation – generating data stories extends this process by performing a more nuanced crafting of the visualisation in the second phase and incorporating storytelling elements in the third phase, enriching the narrative and enhancing the communication of insights. The full details about the visualisation design, transformation process, and implementation, are available at \href{https://github.com/mmilesi45/DataStorytelling-ComplexTasks/blob/main/1.%20Visualisations/visualisation-design.pdf}{this link}. The resulting pairs of visualisations are depicted in Figures \ref{fig:visA}-\ref{fig:visD}. 
+
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/vis-A.png}
+    \caption{Visualisation \texttt{A} based on the topic of Colonialism. The pair consists of the conventional visualisation \texttt{A-CV} [left] and the DS-enhanced visualisation \texttt{A-DS} [right].}
+    \Description{A pair of line charts each depicting the number of European colonies from 1400 to 2000. For both visualisations the number of colonies is the y-axis and time is on the x-axis. The left visualisation is a conventional visualisation. It has a descriptive title, a legend, gridlines, axis labels, and a footnote paragraph detailing key events. The right visualisation is enhanced by data storytelling. It has an explanatory title, no gridlines, minimal text on the axes, and annotations next to key events.}
+    \label{fig:visA}
+\end{figure*}
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/vis-B.png}
+    \caption{Visualisation \texttt{B} based on the topic of Territory Control. The pair consists of the conventional visualisation \texttt{B-CV} [left] and the DS-enhanced visualisation \texttt{B-DS} [right].}
+    \Description{A pair of maps each depicting the percentage of territory not controlled by the government in 2022. The left visualisation is a traditional visualisation with a descriptive title, a legend, labels for particular country names, and a footnote paragraph highlighting key countries with reasons for their percentage of controlled territory. The right visualisation is enhanced by data storytelling. It has an explanatory title and annotations labelling key countries accompanied with a reason for their percentage of controlled territory.}
+    \label{fig:visB}
+\end{figure*}
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/vis-C.png}
+    \caption{Visualisation \texttt{C} based on the topic of State Capacity. The pair consists of the conventional visualisation \texttt{C-CV} [left] and the DS-enhanced visualisation \texttt{C-DS} [right].}
+    \Description{A pair of line charts each depicting the state capacity of Oman, Syria, and the Global Average from 1960 to 2012. For both visualisations state capacity is the y-axis and the year is on the x-axis. The left visualisation is a traditional visualisation. It has a descriptive title, a legend, gridlines, axis labels, and a footnote paragraph detailing key events. The right visualisation is enhanced by data storytelling. It has an explanatory title, no gridlines, minimal text on the axes, and annotations next to key events.}
+    \label{fig:visC}
+\end{figure*}
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/vis-D.png}
+    \caption{Visualisation \texttt{D} based on the topic of Tax Revenue as a share of GDP. The pair consists of the conventional visualisation \texttt{D-CV} [left] and the DS-enhanced visualisation \texttt{D-DS} [right].}
+    \Description{A pair of maps each depicting the tax revenue as a share of GDP in 2022. The left visualisation is a traditional visualisation with a descriptive title, a legend, labels for particular country names, and a footnote paragraph highlighting key countries with reasons for their tax revenue percentage. The right visualisation is enhanced by data storytelling. It has an explanatory title and annotations labelling key countries along with with a reason for their tax revenue percentage.}
+    \label{fig:visD}
+\end{figure*}
+
+The conventional visualisations were crafted using the original aesthetics and visualisation types from the respective \textit{Our World in Data} data stories. To ensure a fair comparison between tasks solved with the conventional and DS-enhanced visualisations, we applied the same data filtering process (as outlined in \citet{zdanovic2022influence}) to include identical data points in both visualisations. Consequently, some conventional visualisations differ slightly from the original visualisation from \textit{Our World in Data}. For instance, in conventional visualisation A (Figure \ref{fig:visA}), certain European empires included in the original visualisation were excluded. Both the original \textit{Our World in Data} visualisations and the conventional visualisations from this study can be viewed via \href{https://github.com/mmilesi45/DataStorytelling-ComplexTasks/blob/main/1.%20Visualisations/visualisations.pdf}{this link}.
+
+In the DS-enhanced visualisations, text from \citet{herre2023statecap} was adapted to the form of annotations and explanatory titles. Using the suggestions by \citet{kim2021towards} and \citet{stokes2023striking}, annotations were carefully placed to guide the audience towards the data points they were describing. Pre-attentive attributes for text, such as bolding particular terms or using colour to highlight to further draw attention towards key terms or data-points \cite{knaflic2015storytelling}. Additionally, a footnote was added to the bottom of the conventional visualisations to provide participants with the same contextual information, ensuring that differences in responses were due to how the information was presented (i.e., DS-enhanced vs. conventional) rather than the amount of information provided.
+
+\subsection{Human-in-the-Loop-AI Question-Based Task Generation Process}
+To generate question-based tasks aligned with the various levels of Bloom's taxonomy and ensure comprehensive coverage of the selected dataset, we adopted a \textit{Human-in-the-Loop-AI} collaborative process \cite{hao2024transforming}. This process involves instructing AI systems to generate question-based tasks on a large scale, followed by human review and refinement of the content \cite{hao2024transforming, attali2022interactive, zu2023automated}. Our question-based task generation process included four steps: 
+
+\noindent \textbf{Step 1: Generation with LLMs.} Motivated by the latest research in automated item generation \cite{hao2024transforming, attali2022interactive, zu2023automated}, GPT-4 was used to create an initial pool of questions. The rationale behind using GPT-4 was to efficiently generate a large set of potential questions that aligned with both the content of the visualisations and the specific levels of Bloom's taxonomy. This aligns with emerging approaches, such as those used by Duolingo for generating assessment items, which leverage LLMs to efficiently create questions at varying levels of complexity while minimising human bias and keeping a consistent style and tone \cite{attali2022interactive}. For the first five levels of Bloom's taxonomy, the conventional visualisations were uploaded alongside specific prompts based on definitions from \citet{krathwohl2002revision}. The conventional visualisations were chosen to be uploaded as they contained the least amount of explanatory information to ensure fair comparisons. For example, to generate questions for the \textit{Understand} level, GPT-4 was instructed as follows: ``\textit{You are an expert learning scientist. Given the provided graph, generate 10 close-ended questions (e.g., multiple-choice, ranking questions, checkboxes) for the second level of Bloom's taxonomy: Understand. Determining the meaning of instructional messages, including oral, written, and graphic communication (e.g., Explaining)}''. 
+    
+
+\noindent \textbf{Step 2: Validation with BloomBERT.}
+A total of 89 questions were generated by GPT-4 which were then validated using BloomBERT \cite{BloomBERT}, a fine-tuned DistilBERT model on over 6K questions for 40 epochs achieving a classification accuracy of 91\% for Bloom's taxonomy levels. The 46 questions that BloomBERT accurately categorised into the intended Bloom's level were retained for further refinement. 
+
+\noindent \textbf{Step 3: Adaptation by Authors.}
+Following validation by BloomBERT, the resulting 46 questions were reviewed by two of the authors, who jointly refined them for clarity, relevance, and alignment with the visualisations. Low quality questions were discarded leaving 36 viable questions.
+
+\noindent \textbf{Step 4: Validation by Human Annotators.}
+Finally, the questions were validated by another two of the authors who were not involved in the previous steps. They categorised each question according to Bloom's taxonomy levels as described by \citet{burns2020evaluate} and \citet{krathwohl2002revision}. The inter-rater agreement between the human annotators was evaluated using Cohen’s Kappa, resulting in an initial agreement score of 0.89, indicating almost perfect agreement. Any questions where the annotators disagreed were discarded. An example of questions for visualisation \texttt{A} are available in appendix \ref{sec:appendix-questions}. 
+
+\subsection{Study Design}
+We conducted a controlled study to investigate the impact of DS-enhancements in visualisations using a within-subjects design. Participants were exposed to both conditions: conventional visualisations and DS-enhanced visualisations. Figure \ref{fig:survey-structure} details the structure of the survey. The survey structure, managed via Qualtrics, handled the randomisation process to minimise order effects. The full questionnaire is available \href{https://github.com/mmilesi45/DataStorytelling-ComplexTasks/blob/main/Effects%20of%20Increasing%20Task%20Complexity%20on%20the%20Effectiveness%20of%20Data%20Storytelling%20Enhanced%20Visualisations%20-%20Questions.pdf}{here.}
+
+\label{sec:instrument}
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/survey-structure-v2.png}
+    \caption{Outline of the study design comparing conventional and DS-enhanced visualisations. Participants, after a pre-test, were randomly assigned to view both types of visualisations and answer MCQ for each visualisation and an open task linking each pair. Lastly, participants provided a qualitative evaluation of their preferences.}
+    \Description{This figure illustrates the structure of the controlled study. Participants first completed a knowledge pre-test to filter out those with prior knowledge on the topics. They were then randomly assigned to one of two groups: (1) viewing DS-enhanced visualisations for the first two visualisations and conventional visualisations for the last two (AB-DS, CD-CV) or (2) viewing the reverse order (AB-CV, CD-DS). Each participant completed multiple-choice tasks for both line charts (A and C) and maps (B and D), followed by a higher-order "Create" task where they integrated insights from both visualisations. Lastly, participants provided qualitative evaluations.}
+    \label{fig:survey-structure}
+\end{figure*}
+
+% Prior Knowledge Questions
+\noindent \textbf{Prior Knowledge Questions.} To ensure responses were based on information from visualisations rather than prior knowledge, inspired by \citet{zdanovic2022influence}, participants completed a self-assessment (five-point Likert scale) and a multiple-choice question on each topic. Participants who self-reported as \textit{Very Knowledgeable} or \textit{Extremely Knowledgeable} and answered correctly were excluded and compensated for their time with $1$ USD. 
+
+\noindent \textbf{RQ1: Measuring Effectiveness \& RQ2: Efficiency.} Participants answered eight multiple-choice questions per visualisation, covering the first five levels of Bloom’s taxonomy, with an “\textit{I am not sure}” option to discourage guessing \cite{nobre2024,shao2024datastorytelling}. Visualisations \texttt{A} and \texttt{B} and \texttt{C} and \texttt{D} were presented alternately with and without DS enhancements (\texttt{AB-DS/CD-CV} or \texttt{AB-CV/CD-DS}), ensuring exposure to one conventional and one DS-enhanced line chart and map per participant. 
+
+\noindent \textbf{RQ3: Measuring Quality of Response to Create Tasks.} Next, participants completed an open-ended "Create" task requiring them to integrate insights from visualisations. For example, participants wrote compositions combining information from \texttt{A} and \texttt{B} (e.g., \texttt{A-CV} and \texttt{B-CV}) and \texttt{C} and \texttt{D} (e.g., \texttt{C-DS} and \texttt{D-DS}).
+
+\noindent \textbf{RQ4: Measuring Perception of Data Storytelling.} Lastly, participants compared DS-enhanced and conventional visualisations of the same type (e.g., line charts). They indicated preferences and justified their choices. Additionally, participants clicked on visual elements they found useful to simulate eye-tracking insights.
+
+\subsection{Participants}
+A priori power analysis using G*Power 3.1 determined that a sample size of 128 participants was needed to achieve sufficient statistical power ($\alpha = 0.05, \text{power} = 0.95$) using an effect size of 0.3 based on \citet{shao2024datastorytelling}. Three pilot studies preceded the main study: the first refined the survey design with feedback from four HCI experts; the second, involving five participants, estimated study duration; and the third, with 25 participants, tested randomisation and analysis. Participants who answered questions that changed during pilots (e.g., changing the heatmap questions to allow multiple clicks) had their results excluded from the final dataset.
+
+Participants for the main study were recruited through CloudConnect. The study lasted a median of 51 minutes ($\text{IQR} = 30$), and participants were compensated $9$ USD. Pre-screening ensured fluency in English and a balanced sex ratio. Of 157 initial participants, 128 valid responses remained after excluding eight overly knowledgeable individuals, ten who failed attention checks, and 21 suspected of using generative AI for written tasks. Written responses with a calculated word-per-minute rate of over 50 \cite{dhakal2018observations} were manually checked for attributes that are characteristic of GPT-4, such as being overly verbose or formal in language \cite{kabir2024stack}.
+
+The final sample included 63 males (49\%) and 65 females (51\%), aged 18–64 years ($\mu = 24.14, \sigma = 7.02$). Educational backgrounds varied: 41\% had some college education, 37\% held bachelor’s or associate degrees, and 14\% had high school diplomas. Participants were mostly from the US (109), with smaller numbers from the UK, Canada, Australia, New Zealand, and Ireland. Most participants (53–54\%) expressed confidence in understanding and interpreting data, with fewer than 10\% lacking confidence. Ethics approval was obtained from Monash University. Informed consent was secured from each participant.
+
+\subsection{Metrics} 
+\textit{Effectiveness} (RQ1) was measured as the percentage of correct responses, calculated separately for each visualisation type and cognitive category (e.g., \textit{Identify}). For a set \( S \), effectiveness was determined by averaging the binary correctness of responses, where each correct answer scored 1 and incorrect answers scored 0.
+
+\textit{Efficiency} (RQ2) assessed the time participants took to answer questions correctly, measured from when a question was displayed to when the correct answer was submitted. Efficiency was calculated as the average time spent on correctly answered questions for each participant, separated by visualisation type and cognitive levels in Bloom’s taxonomy.
+
+To compare text compositions across visualisation conditions, the \textit{Percentage Change} was used, reflecting the proportional difference in the number of sentences normalised by the larger value. This symmetric metric bounded changes between \(-1\) and \(1\). For example, the percentage change between DS-enhanced and conventional conditions was calculated as:
+
+\[
+\text{Percentage Change}_{\text{Overall}} = \frac{DS-enhanced - conventional}{\max(DS-enhanced, conventional)}\times 100
+\]
+
+
+\subsection{Data Analysis}
+We used the Shapiro-Wilk W-test to evaluate the normality of the \textit{effectiveness} and \textit{efficiency} scores. The results indicated that these variables deviated significantly from a normal distribution, thus we used non-parametric tests for the analysis. Wilcoxon signed-rank test was used to compute differences between paired observations; and consequently used the matched pairs rank biserial correlation to calculate the effect size \cite{kerby2014simple}. We report the absolute value of the effect size. 
+
+For the \textit{effectiveness} (RQ1) and \textit{efficiency} (RQ2), we calculated the score for each set of visualisations (DS-enhanced and conventional) for each participant, both overall and at each level of Bloom's taxonomy. We then applied the Wilcoxon signed-rank test, suitable for paired observations, to evaluate within-subject differences. This analysis was conducted both overall and across each level of Bloom's taxonomy, with corrections for multiple comparisons applied using the Benjamini-Hochberg (BH) procedure.
+
+%\subsubsection{RQ3: Quality of Creation Tasks}
+The \textit{Create} task (RQ3) involved sentence-level rhetorical structure analysis \cite{mann1987rhetorical}. Several frameworks could be employed for this analysis including Rhetorical Structure Theory \cite{burstein2003finding}, semantic content levels for accessible visualisations \cite{lundgard2022accessible} and Bloom’s taxonomy \cite{adar2021communicative,iqbal2023towards, iqbal2024towards}. Among these, we selected Bloom’s taxonomy for its hierarchical and systematic approach to evaluating cognitive processes involved in text comprehension and creation \cite{iqbal2023towards, iqbal2024towards} and its previous use as a taxonomy for visualisation learning objectives \cite{adar2021communicative,leerobbins2022learning, shao2024datastorytelling}.  The dataset consisted of 1818 sentences coming from 256 texts (two texts per participant). Four researchers developed a rubric for annotation (see Appendix \ref{sec:appendix-create-rubric}), with two independently labelling 32 sentences to validate the rubric, achieving an inter-rater reliability of 0.78 (Cohen's Kappa). Discrepancies were resolved through discussion, and remaining sentences were annotated individually, including Bloom’s taxonomy levels and uncertainty. The annotators then met to discuss the sentences where they were not certain to reach a consensus. 
+
+The total number of sentences and their distribution across Bloom's levels were calculated separately for DS-enhanced and conventional conditions. Tasks from visualisation pairs (\texttt{AB-DS}/\texttt{CD-DS} and \texttt{AB-CV}/\texttt{CD-CV}) were aggregated to account for differences in visualisation sets, and potential effects of the presentation sequence, as explored in  \citet{hullman2013deeper}. A Wilcoxon signed-rank test, with Benjamini-Hochberg adjustments, was used to assess within-subject differences between conditions.
+
+User preferences (RQ4) were evaluated based on the frequency of DS-enhanced visualisation selection (overall preference rate). Clickstream interactions generated heatmaps highlighting useful elements (e.g., titles, annotations).  In addition, we calculated the number of clicks on specific elements of focus including the title, legend, axis labels, specific data points within the graph, annotations on data points on the graph, and contextual information on data points or as a footnote. Thematic analysis of open-ended responses identified key themes, reviewed and verified by two researchers. Finally, the frequency of these themes was calculated for each group (DS-enhanced vs conventional). 
+

@@ -1,0 +1,37 @@
+\input{figures/nvs_explanation_fig}
+\section{Novel View Synthesis}
+\label{sec:app-nvs}
+We also demonstrate \name{}'s capability in novel view synthesis  (NVS)~\cite{mildenhall2021nerf}.
+To evaluate this, we split the available views into training and test sets.
+Figure~\ref{fig:nvs_explanation} illustrates the detailed data split. The results are shown in Fig.~\ref{fig:nvs}.
+
+
+\section{Discussion}
+\label{sec:app-discussion}
+\subsection{Potential Societal Impacts}
+There are a few potential negative impacts that RF neural representations could cause. Being able to perform 3D reconstruction of things behind occlusions could potentially raise concerns for privacy. Additionally like many other learning based work, the heavy compute power raises concerns over the environment sustainability. However, this work could also potentially help with things like suspicious package detection.
+
+\subsection{Limitations \& Future Work}
+\noindent \textbf{Radar Scans }Our method currently is limited by the diversity of the networks radar heatmap ground truths collected. More specifically, if there was a point that existed on the surface of the object, which never reflects back to the radar in any of the scans taken, then the network has no way of creating a point in that location, because it has never received any reflection from that location, making it invisible. Future work is required for dealing with unseen surfaces, and more comprehensive scanning methods.
+
+\noindent \textbf{Materials} We currently tested the system with objects made of metals, which allows for more clear reflections. On the other hand, metal objects are \textit{very} specular, meaning more radar scans are required to receive signals from all parts of the object. Dealing with objects made of other materials or a composition of materials is left for future work, which will require significantly adjusting the radar reflection model.
+
+\noindent \textbf{Thick Occlusions} We have shown results for some occlusions (cardboard, paper), however, in the case of thicker occlusions this problem is not so straightforward since this requires the network to predict \textit{two or more} surfaces rather than ignoring the weak occlusion reflections. Future work is required to extend the surface reconstruction to deal with multiple surfaces.
+
+\noindent \textbf{Better Radio Frequency Model}
+As discussed in the radar physics section, unlike vision-based inverse rendering which often adopts the Cook-Torrance BRDF~\cite{cook1982reflectance}, with components such as the Fresnel term, Schlick-GGX geometry function, and Trowbridge-Reitz GGX distribution to model diffraction and metallic reflections, the radio frequency (RF) domain still relies on the simplified Lambertian model.
+This model is not even sufficient for accurate forward rendering, leading to significant reflection errors.
+As a result, inverse rendering based on such a coarse approximation cannot reliably reconstruct detailed geometry, since the underlying reflection model introduces substantial errors.
+
+\noindent \textbf{Lower Computational Complexity}
+Even with the introduction of lens-less sampling and alpha blending, which make real-time differentiable rendering feasible, the computational cost remains significantly higher compared to vision-based rendering.
+In the vision domain, reflective models benefit from techniques such as split-sum approximation~\cite{munkberg2022extracting} and spherical harmonics~\cite{verbin2022ref}, which avoid costly Monte Carlo sampling by operating efficiently over 1D rays.
+
+However, directly applying these techniques to radar reflection is not feasible, since traditional alpha blending operates along 1D rays, whereas radar rendering requires sampling over a 3D space.
+This dimensional difference introduces substantial complexity.Therefore, future work should explore how to achieve 3D space sampling with computational complexity comparable to that of 1D ray-based sampling, in order to further improve the efficiency of RF-based differentiable rendering.
+
+\noindent \textbf{Accurate multi-level surface representation}
+In vision-based geometry reconstruction, multi-level surfaces are typically not a concern, as surfaces occluded by others are not visible in RGB images and therefore do not contribute to reconstruction.
+However, this is not the case in radar sensing, where signals can penetrate and reflect off multiple layers of geometry, resulting in observable multi-level surfaces.
+As a result, representing and reconstructing such multi-layered structures becomes a key challenge in RF-based 3D reconstruction.
+Developing an effective multi-level surface representation is thus essential for fully leveraging the unique capabilities of radar.

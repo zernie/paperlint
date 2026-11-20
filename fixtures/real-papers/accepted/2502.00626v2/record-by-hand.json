@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/related_works.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/theory.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/reduced_space_simulation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/limitation_and_discussion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "02383139ccf0710a6938da5933e858ff51358e22b18b12014fbd52b38425b033",
+    "sections/abstract.tex": "34a705d0bd100fc6603b774d7992e6c3b00328c41edafe4046fe83240a24e0cc",
+    "sections/introduction.tex": "d2373d085f7af69505df1d9e89f6acf14fdd2594118afe021d8d971b5119071a",
+    "sections/related_works.tex": "d0751f60e39bcf94a4edb637108ae6d3a2bfcc76628368ae7589264743d198ab",
+    "sections/theory.tex": "9ee7cc1bd9db7a981b0afdd4a7fadd62dc48a72aeff0416230c4bfe93fb29d23",
+    "sections/reduced_space_simulation.tex": "fbde21f4092c0546c698598e3083c50da4234f7bf82acebd0ee3240eb26ccfa0",
+    "sections/results.tex": "8a82f1b9ef62c88fa712d67efa4818786d8d7e284fd30f3b60bbb00e5b0a70ec",
+    "sections/limitation_and_discussion.tex": "90ee22e9a88e0f4b0f78673c4bbe8f31d907819e19a1dfd872f0fd720071f4c3"
+  }
+}

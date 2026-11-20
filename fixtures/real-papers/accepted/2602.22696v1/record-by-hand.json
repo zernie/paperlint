@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "table/results_p4g_humaneval_persuasiveness.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/result_daily_persuasion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/time_p4g_dp.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/agent_strategy_analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/result_extended_strategies.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/turns_distribution.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/strategy_list_rel.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_simulator_template.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_gen_persona_desc.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/init_intention_descriptions.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/final_intention_description.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_simple.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_procot_template.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_procot_template_english.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/prompt_evaluation_model.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/simple_daily_persuasion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/procot_daily_persuasion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/prompts/judge_daily_persuasion.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/model_comparison_split_init_category_sr_ais_en.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/agent_strategy_analysis_both.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/intention_shifts.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/results_daily_persuasion_per_domain.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/results_daily_persuasion_per_history_turns.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/example_1turn.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "ff43520cec6916ff42cca8819decd309f2cdbcad84bdde021b99dc3e9f833683",
+    "acl.sty": "57ec5021756530bd01dab30657a3ca88bd20b1fd5694122b7f0daa9cfaa3e3ac",
+    "table/results_p4g_humaneval_persuasiveness.tex": "b163bb5ef62dab026ae56f76b9514683e3bff3089fff8769d63951ae77269ee3",
+    "table/result_daily_persuasion.tex": "3f31dac41b0e03fca8adbd6e17333221763181a3d560a4cba4f71dc08aff8f03",
+    "table/time_p4g_dp.tex": "f40fc434485a4fc7e0c49c0b33f3de868e0e2b0f27e2a0a3305dd8332df719fb",
+    "table/agent_strategy_analysis.tex": "d7e37375e58b818155b5d30e1f51bbe32154198074cbc5fe43f5c3c1ecc7f0ea",
+    "table/result_extended_strategies.tex": "9286c617f892072dd1a71b2e31cf9fc5a9c82159f0036a94ebfb853bf5ca493e",
+    "table/turns_distribution.tex": "f24c9ccf245ba885f23cf30d2a396c92319ffdfafddb8201c120d5adbdcde488",
+    "table/strategy_list_rel.tex": "bee18626cde416e7a7a5c6a627a4e0f1aca198f85c2487ff6606c6933e8d4ba5",
+    "table/prompts/prompt_simulator_template.tex": "ddfad3e1a952fa0f49dbc26668f96e67f82b3b2bed9b72d0341e1ebedd7339a8",
+    "table/prompts/prompt_gen_persona_desc.tex": "585cac36b0831ce25265d8588384dd0dcc260479d402dec3c8bc18c7e55c1493",
+    "table/prompts/init_intention_descriptions.tex": "c883ca30100e46f4cfc5b7d77351ad6256cfe64c1719190c38936543c6d8b182",
+    "table/prompts/final_intention_description.tex": "f718561a693fa8b5bdb22af51f51d3c3137f71dc00ea171c9c900bc4a6d4639e",
+    "table/prompts/prompt_simple.tex": "b1342a2079b85a07e25b91220a3192f9164b8010a770ea98c9a91810db2c53bb",
+    "table/prompts/prompt_procot_template.tex": "9288d33e0e5374310171fd51dfc49fcc77cee9175a7788fb46575d012f555cb8",
+    "table/prompts/prompt_procot_template_english.tex": "f0fbf272c6d3d68901524c3e4798502f4157f29c0988b4068bdcdd08d52f2d46",
+    "table/prompts/prompt_evaluation_model.tex": "6b0de398023d785d82ddd315f492ce45ebca82e0b8893cf9aba7485a0d84ab31",
+    "table/prompts/simple_daily_persuasion.tex": "352aa81d4031f4694534e85c490d00f640849ab0ef1572b730bb284746dd28ab",
+    "table/prompts/procot_daily_persuasion.tex": "83a003c0a9f923fc76b2c952f236021e405ea3005bb3fddebcc3e6f4e8c44414",
+    "table/prompts/judge_daily_persuasion.tex": "2a9a638949d2ec0d9582fc303497391d2259c96336dde34e93acb0ebe37ce71d",
+    "table/model_comparison_split_init_category_sr_ais_en.tex": "c9439c1c22f56b2abb263d843addcd20c405adbdcb108f58e5dbc3b6fcc56470",
+    "table/agent_strategy_analysis_both.tex": "ce13b4394b2c367701f0e87e4618989d2f29c01f9968e091dcf3cb7d3204f959",
+    "table/intention_shifts.tex": "c8086bb38410ce1a40b1d6acea59428ef1d795fd59222a1faa7d3a943462670c",
+    "table/results_daily_persuasion_per_domain.tex": "23fdf1ce0fc010b2a8222dc43d482ee847de6f877d9d2214dbf35baeab67cfb8",
+    "table/results_daily_persuasion_per_history_turns.tex": "850856000c2523a99fefcbde167d2e3cf3028675b7d8c420cbd4fcc39546a067",
+    "table/example_1turn.tex": "997f174e4b611c0e2045e6eb6ecc1d94a0ff5fb822d80b52504dbea6e000d54e"
+  }
+}

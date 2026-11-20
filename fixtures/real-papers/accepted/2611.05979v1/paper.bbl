@@ -1,0 +1,259 @@
+\begin{thebibliography}{51}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Akkaya et~al.(2019)Akkaya, Andrychowicz, Chociej, Litwin, McGrew, Petron, Paino, Plappert, Powell, Ribas et~al.}]{akkaya2019solving}
+Akkaya, I.; Andrychowicz, M.; Chociej, M.; Litwin, M.; McGrew, B.; Petron, A.; Paino, A.; Plappert, M.; Powell, G.; Ribas, R.; et~al. 2019.
+\newblock Solving rubik's cube with a robot hand.
+\newblock \emph{arXiv preprint arXiv:1910.07113}.
+
+\bibitem[{Bain and Sammut(1995)}]{bain1995framework}
+Bain, M.; and Sammut, C. 1995.
+\newblock A Framework for Behavioural Cloning.
+\newblock In \emph{Machine intelligence 15}, 103--129.
+
+\bibitem[{Black et~al.(2024)Black, Brown, Driess, Esmail, Equi, Finn, Fusai, Groom, Hausman, Ichter et~al.}]{black2410pi0}
+Black, K.; Brown, N.; Driess, D.; Esmail, A.; Equi, M.; Finn, C.; Fusai, N.; Groom, L.; Hausman, K.; Ichter, B.; et~al. 2024.
+\newblock $\pi$0: A vision-language-action flow model for general robot control.
+\newblock \emph{arXiv preprint arXiv:2410.24164}.
+
+\bibitem[{Calli et~al.(2015)Calli, Walsman, Singh, Srinivasa, Abbeel, and Dollar}]{calli2015benchmarking}
+Calli, B.; Walsman, A.; Singh, A.; Srinivasa, S.; Abbeel, P.; and Dollar, A.~M. 2015.
+\newblock Benchmarking in manipulation research: The ycb object and model set and benchmarking protocols.
+\newblock \emph{arXiv preprint arXiv:1502.03143}.
+
+\bibitem[{Carpentier et~al.(2019)Carpentier, Saurel, Buondonno, Mirabel, Lamiraux, Stasse, and Mansard}]{carpentier2019pinocchio}
+Carpentier, J.; Saurel, G.; Buondonno, G.; Mirabel, J.; Lamiraux, F.; Stasse, O.; and Mansard, N. 2019.
+\newblock The Pinocchio C++ library -- A fast and flexible implementation of rigid body dynamics algorithms and their analytical derivatives.
+\newblock In \emph{IEEE International Symposium on System Integrations (SII)}.
+
+\bibitem[{Chao et~al.(2021)Chao, Yang, Xiang, Molchanov, Handa, Tremblay, Narang, Van~Wyk, Iqbal, Birchfield et~al.}]{chao2021dexycb}
+Chao, Y.-W.; Yang, W.; Xiang, Y.; Molchanov, P.; Handa, A.; Tremblay, J.; Narang, Y.~S.; Van~Wyk, K.; Iqbal, U.; Birchfield, S.; et~al. 2021.
+\newblock {DexYCB}: A benchmark for capturing hand grasping of objects.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, 9044--9053.
+
+\bibitem[{Chen et~al.(2023)Chen, Tippur, Wu, Kumar, Adelson, and Agrawal}]{chen2023visual}
+Chen, T.; Tippur, M.; Wu, S.; Kumar, V.; Adelson, E.; and Agrawal, P. 2023.
+\newblock Visual dexterity: In-hand reorientation of novel and complex object shapes.
+\newblock \emph{Science Robotics}, 8(84): eadc9244.
+
+\bibitem[{Chen et~al.(2025{\natexlab{a}})Chen, Wang, Yang, and Liu}]{chen2024object}
+Chen, Y.; Wang, C.; Yang, Y.; and Liu, C.~K. 2025{\natexlab{a}}.
+\newblock Object-Centric Dexterous Manipulation from Human Motion Data.
+\newblock In \emph{Proceedings of The 8th Conference on Robot Learning}, volume 270 of \emph{Proceedings of Machine Learning Research}, 3828--3846. PMLR.
+
+\bibitem[{Chen et~al.(2025{\natexlab{b}})Chen, Chen, Arlaud, Laptev, and Schmid}]{chen2024vividex}
+Chen, Z.; Chen, S.; Arlaud, E.; Laptev, I.; and Schmid, C. 2025{\natexlab{b}}.
+\newblock {ViViDex}: Learning Vision-based Dexterous Manipulation from Human Videos.
+\newblock In \emph{2025 IEEE International Conference on Robotics and Automation (ICRA)}.
+
+\bibitem[{Chi et~al.(2023)Chi, Xu, Feng, Cousineau, Du, Burchfiel, Tedrake, and Song}]{chi2023diffusion}
+Chi, C.; Xu, Z.; Feng, S.; Cousineau, E.; Du, Y.; Burchfiel, B.; Tedrake, R.; and Song, S. 2023.
+\newblock Diffusion policy: Visuomotor policy learning via action diffusion.
+\newblock \emph{The International Journal of Robotics Research}, 02783649241273668.
+
+\bibitem[{Fan et~al.(2023)Fan, Taheri, Tzionas, Kocabas, Kaufmann, Black, and Hilliges}]{fan2023arctic}
+Fan, Z.; Taheri, O.; Tzionas, D.; Kocabas, M.; Kaufmann, M.; Black, M.~J.; and Hilliges, O. 2023.
+\newblock {ARCTIC}: A dataset for dexterous bimanual hand-object manipulation.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, 12943--12954.
+
+\bibitem[{Gupta et~al.(2016)Gupta, Eppner, Levine, and Abbeel}]{gupta2016learning}
+Gupta, A.; Eppner, C.; Levine, S.; and Abbeel, P. 2016.
+\newblock Learning dexterous manipulation for a soft robotic hand from human demonstrations.
+\newblock In \emph{2016 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)}, 3786--3793. IEEE.
+
+\bibitem[{Hong, Zheng, and Chen(2024)}]{hong2024easyhec++}
+Hong, Z.; Zheng, K.; and Chen, L. 2024.
+\newblock {EasyHeC++}: Fully Automatic Hand-Eye Calibration with Pretrained Image Models.
+\newblock \emph{International Conference on Intelligent Robots and Systems (IROS)}.
+
+\bibitem[{Jin(2024)}]{jin2024complementarity}
+Jin, W. 2024.
+\newblock Complementarity-free multi-contact modeling and optimization for dexterous manipulation.
+\newblock \emph{arXiv preprint arXiv:2408.07855}.
+
+\bibitem[{Li et~al.(2025)Li, Li, Liu, Li, and Huang}]{li2025maniptrans}
+Li, K.; Li, P.; Liu, T.; Li, Y.; and Huang, S. 2025.
+\newblock {ManipTrans}: Efficient Dexterous Bimanual Manipulation Transfer via Residual Learning.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, 6991--7003.
+
+\bibitem[{Liu et~al.(2025)Liu, Adalibieke, Han, Qin, and Yi}]{liu2025dextrack}
+Liu, X.; Adalibieke, J.; Han, Q.; Qin, Y.; and Yi, L. 2025.
+\newblock {DexTrack}: Towards Generalizable Neural Tracking Control for Dexterous Manipulation from Human References.
+\newblock \emph{arXiv preprint arXiv:2502.09614}.
+
+\bibitem[{Liu et~al.(2022)Liu, Liu, Jiang, Lyu, Wan, Shen, Liang, Fu, Wang, and Yi}]{liu2022hoi4d}
+Liu, Y.; Liu, Y.; Jiang, C.; Lyu, K.; Wan, W.; Shen, H.; Liang, B.; Fu, Z.; Wang, H.; and Yi, L. 2022.
+\newblock {HOI4D}: A 4d egocentric dataset for category-level human-object interaction.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, 21013--21022.
+
+\bibitem[{Ma et~al.(2025)Ma, Cramariuc, Farshidian, and Hutter}]{ma2025learning}
+Ma, Y.; Cramariuc, A.; Farshidian, F.; and Hutter, M. 2025.
+\newblock Learning coordinated badminton skills for legged manipulators.
+\newblock \emph{Science Robotics}, 10(102): eadu3922.
+
+\bibitem[{Ma et~al.(2022)Ma, Sodhani, Jayaraman, Bastani, Kumar, and Zhang}]{ma2022vip}
+Ma, Y.~J.; Sodhani, S.; Jayaraman, D.; Bastani, O.; Kumar, V.; and Zhang, A. 2022.
+\newblock {VIP}: Towards Universal Visual Reward and Representation via Value-Implicit Pre-Training.
+\newblock \emph{arXiv preprint arXiv:2210.00030}.
+
+\bibitem[{Mendonca, Bahl, and Pathak(2023)}]{mendonca2023structured}
+Mendonca, R.; Bahl, S.; and Pathak, D. 2023.
+\newblock Structured World Models from Human Videos.
+\newblock In \emph{Robotics: Science and Systems XIX}.
+
+\bibitem[{Mordatch, Popovi{\'c}, and Todorov(2012)}]{mordatch2012contact}
+Mordatch, I.; Popovi{\'c}, Z.; and Todorov, E. 2012.
+\newblock Contact-invariant optimization for hand manipulation.
+\newblock In \emph{Proceedings of the ACM SIGGRAPH/Eurographics symposium on computer animation}, 137--144.
+
+\bibitem[{Nair et~al.(2022)Nair, Rajeswaran, Kumar, Finn, and Gupta}]{nair2022r3m}
+Nair, S.; Rajeswaran, A.; Kumar, V.; Finn, C.; and Gupta, A. 2022.
+\newblock {R3M}: A universal visual representation for robot manipulation.
+\newblock \emph{arXiv preprint arXiv:2203.12601}.
+
+\bibitem[{Pan, Junge, and Hughes(2024)}]{pan2024vision}
+Pan, C.; Junge, K.; and Hughes, J. 2024.
+\newblock Vision-language-action model and diffusion policy switching enables dexterous control of an anthropomorphic hand.
+\newblock \emph{arXiv preprint arXiv:2410.14022}.
+
+\bibitem[{Pang et~al.(2023)Pang, Suh, Yang, and Tedrake}]{pang2023global}
+Pang, T.; Suh, H.~T.; Yang, L.; and Tedrake, R. 2023.
+\newblock Global planning for contact-rich manipulation via local smoothing of quasi-dynamic contact models.
+\newblock \emph{IEEE Transactions on robotics}, 39(6): 4691--4711.
+
+\bibitem[{Qi et~al.(2017{\natexlab{a}})Qi, Su, Mo, and Guibas}]{qi2017pointnet}
+Qi, C.~R.; Su, H.; Mo, K.; and Guibas, L.~J. 2017{\natexlab{a}}.
+\newblock {PointNet}: Deep learning on point sets for 3d classification and segmentation.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, 652--660.
+
+\bibitem[{Qi et~al.(2017{\natexlab{b}})Qi, Yi, Su, and Guibas}]{qi2017pointnet++}
+Qi, C.~R.; Yi, L.; Su, H.; and Guibas, L.~J. 2017{\natexlab{b}}.
+\newblock {PointNet++}: Deep hierarchical feature learning on point sets in a metric space.
+\newblock \emph{Advances in neural information processing systems}, 30.
+
+\bibitem[{Qi et~al.(2023)Qi, Yi, Suresh, Lambeta, Ma, Calandra, and Malik}]{qi2023general}
+Qi, H.; Yi, B.; Suresh, S.; Lambeta, M.; Ma, Y.; Calandra, R.; and Malik, J. 2023.
+\newblock General in-hand object rotation with vision and touch.
+\newblock In \emph{Conference on Robot Learning}, 2549--2564. PMLR.
+
+\bibitem[{Qin et~al.(2022)Qin, Wu, Liu, Jiang, Yang, Fu, and Wang}]{qin2022dexmv}
+Qin, Y.; Wu, Y.-H.; Liu, S.; Jiang, H.; Yang, R.; Fu, Y.; and Wang, X. 2022.
+\newblock {DexMV}: Imitation learning for dexterous manipulation from human videos.
+\newblock In \emph{European Conference on Computer Vision}, 570--587. Springer.
+
+\bibitem[{Qin et~al.(2023)Qin, Yang, Huang, Van~Wyk, Su, Wang, Chao, and Fox}]{qin2023anyteleop}
+Qin, Y.; Yang, W.; Huang, B.; Van~Wyk, K.; Su, H.; Wang, X.; Chao, Y.-W.; and Fox, D. 2023.
+\newblock {AnyTeleop}: A general vision-based dexterous robot arm-hand teleoperation system.
+\newblock \emph{arXiv preprint arXiv:2307.04577}.
+
+\bibitem[{Radford et~al.(2019)Radford, Wu, Child, Luan, Amodei, and Sutskever}]{radford2019language}
+Radford, A.; Wu, J.; Child, R.; Luan, D.; Amodei, D.; and Sutskever, I. 2019.
+\newblock Language Models are Unsupervised Multitask Learners.
+\newblock OpenAI technical report.
+
+\bibitem[{Rajeswaran et~al.(2017)Rajeswaran, Kumar, Gupta, Vezzani, Schulman, Todorov, and Levine}]{rajeswaran2017learning}
+Rajeswaran, A.; Kumar, V.; Gupta, A.; Vezzani, G.; Schulman, J.; Todorov, E.; and Levine, S. 2017.
+\newblock Learning complex dexterous manipulation with deep reinforcement learning and demonstrations.
+\newblock \emph{arXiv preprint arXiv:1709.10087}.
+
+\bibitem[{Romero, Tzionas, and Black(2017)}]{romero2022embodied}
+Romero, J.; Tzionas, D.; and Black, M.~J. 2017.
+\newblock Embodied Hands: Modeling and Capturing Hands and Bodies Together.
+\newblock \emph{ACM Transactions on Graphics}, 36(6): 245:1--245:17.
+
+\bibitem[{Rong, Shiratori, and Joo(2020)}]{rong2020frankmocap}
+Rong, Y.; Shiratori, T.; and Joo, H. 2020.
+\newblock {FrankMocap}: Fast monocular 3d hand and body motion capture by regression and integration.
+\newblock \emph{arXiv preprint arXiv:2008.08324}.
+
+\bibitem[{Rus(1999)}]{rus1999hand}
+Rus, D. 1999.
+\newblock In-hand dexterous manipulation of piecewise-smooth 3-d objects.
+\newblock \emph{The International Journal of Robotics Research}, 18(4): 355--381.
+
+\bibitem[{Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and Klimov}]{schulman2017proximal}
+Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and Klimov, O. 2017.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1707.06347}.
+
+\bibitem[{Shi et~al.(2025)Shi, Liu, Zeng, Ai, Hong, and Su}]{shi2025learning}
+Shi, L.; Liu, Y.; Zeng, L.; Ai, B.; Hong, Z.; and Su, H. 2025.
+\newblock Learning Adaptive Dexterous Grasping from Single Demonstrations.
+\newblock In \emph{2025 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)}.
+
+\bibitem[{Singh et~al.(2025)Singh, Loquercio, Sferrazza, Wu, Qi, Abbeel, and Malik}]{singh2024hand}
+Singh, H.~G.; Loquercio, A.; Sferrazza, C.; Wu, J.; Qi, H.; Abbeel, P.; and Malik, J. 2025.
+\newblock Hand-Object Interaction Pretraining from Videos.
+\newblock In \emph{2025 IEEE International Conference on Robotics and Automation (ICRA)}.
+
+\bibitem[{Sundaralingam et~al.(2023)Sundaralingam, Hari, Fishman, Garrett, Van~Wyk, Blukis, Millane, Oleynikova, Handa, Ramos, Ratliff, and Fox}]{sundaralingam2023curobo}
+Sundaralingam, B.; Hari, S. K.~S.; Fishman, A.; Garrett, C.; Van~Wyk, K.; Blukis, V.; Millane, A.; Oleynikova, H.; Handa, A.; Ramos, F.; Ratliff, N.; and Fox, D. 2023.
+\newblock {cuRobo}: Parallelized Collision-Free Minimum-Jerk Robot Motion Generation.
+\newblock \emph{arXiv preprint arXiv:2310.17274}.
+
+\bibitem[{Tobin et~al.(2017)Tobin, Fong, Ray, Schneider, Zaremba, and Abbeel}]{tobin2017domain}
+Tobin, J.; Fong, R.; Ray, A.; Schneider, J.; Zaremba, W.; and Abbeel, P. 2017.
+\newblock Domain randomization for transferring deep neural networks from simulation to the real world.
+\newblock In \emph{2017 IEEE/RSJ international conference on intelligent robots and systems (IROS)}, 23--30. IEEE.
+
+\bibitem[{Towers et~al.(2024)Towers, Kwiatkowski, Terry, Balis, De~Cola, Deleu, Goul{\~a}o, Kallinteris, Krimmel, KG et~al.}]{towers2024gymnasium}
+Towers, M.; Kwiatkowski, A.; Terry, J.; Balis, J.~U.; De~Cola, G.; Deleu, T.; Goul{\~a}o, M.; Kallinteris, A.; Krimmel, M.; KG, A.; et~al. 2024.
+\newblock {Gymnasium}: A Standard Interface for Reinforcement Learning Environments.
+\newblock \emph{arXiv preprint arXiv:2407.17032}.
+
+\bibitem[{Wan et~al.(2023)Wan, Geng, Liu, Shan, Yang, Yi, and Wang}]{wan2023unidexgrasp++}
+Wan, W.; Geng, H.; Liu, Y.; Shan, Z.; Yang, Y.; Yi, L.; and Wang, H. 2023.
+\newblock {UniDexGrasp++}: Improving dexterous grasping policy learning via geometry-aware curriculum and iterative generalist-specialist learning.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, 3891--3902.
+
+\bibitem[{Wang et~al.(2024{\natexlab{a}})Wang, Shi, Wang, Zhang, Fei-Fei, and Liu}]{wang2024dexcap}
+Wang, C.; Shi, H.; Wang, W.; Zhang, R.; Fei-Fei, L.; and Liu, C.~K. 2024{\natexlab{a}}.
+\newblock {DexCap}: Scalable and portable mocap data collection system for dexterous manipulation.
+\newblock \emph{arXiv preprint arXiv:2403.07788}.
+
+\bibitem[{Wang et~al.(2024{\natexlab{b}})Wang, Yuan, Che, Qi, Ma, Malik, and Wang}]{wang2024lessons}
+Wang, J.; Yuan, Y.; Che, H.; Qi, H.; Ma, Y.; Malik, J.; and Wang, X. 2024{\natexlab{b}}.
+\newblock Lessons from Learning to Spin {``Pens''}.
+\newblock \emph{arXiv preprint arXiv:2407.18902}.
+
+\bibitem[{Wen et~al.(2024)Wen, Yang, Kautz, and Birchfield}]{wen2024foundationpose}
+Wen, B.; Yang, W.; Kautz, J.; and Birchfield, S. 2024.
+\newblock {FoundationPose}: Unified 6d pose estimation and tracking of novel objects.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, 17868--17879.
+
+\bibitem[{Wu, Guo, and Liu(2022)}]{wu2022learning}
+Wu, A.; Guo, M.; and Liu, C.~K. 2022.
+\newblock Learning diverse and physically feasible dexterous grasps with generative model and bilevel optimization.
+\newblock \emph{arXiv preprint arXiv:2207.00195}.
+
+\bibitem[{Xiang et~al.(2020)Xiang, Qin, Mo, Xia, Zhu, Liu, Liu, Jiang, Yuan, Wang et~al.}]{xiang2020sapien}
+Xiang, F.; Qin, Y.; Mo, K.; Xia, Y.; Zhu, H.; Liu, F.; Liu, M.; Jiang, H.; Yuan, Y.; Wang, H.; et~al. 2020.
+\newblock {SAPIEN}: A simulated part-based interactive environment.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, 11097--11107.
+
+\bibitem[{Ye et~al.(2025)Ye, Wang, Yuan, Yang, Li, Zhu, Qin, Zou, and Wang}]{ye2025dex1b}
+Ye, J.; Wang, K.; Yuan, C.; Yang, R.; Li, Y.; Zhu, J.; Qin, Y.; Zou, X.; and Wang, X. 2025.
+\newblock Dex1B: Learning with 1B Demonstrations for Dexterous Manipulation.
+\newblock \emph{arXiv preprint arXiv:2506.17198}.
+
+\bibitem[{Yuan et~al.(2024)Yuan, Che, Qin, Huang, Yin, Lee, Wu, Lim, and Wang}]{yuan2024robot}
+Yuan, Y.; Che, H.; Qin, Y.; Huang, B.; Yin, Z.-H.; Lee, K.-W.; Wu, Y.; Lim, S.-C.; and Wang, X. 2024.
+\newblock Robot synesthesia: In-hand manipulation with visuotactile sensing.
+\newblock In \emph{2024 IEEE International Conference on Robotics and Automation (ICRA)}, 6558--6565. IEEE.
+
+\bibitem[{Zhao et~al.(2024)Zhao, Zhu, Chen, Li, Zhang, Ding, and Tomizuka}]{zhao2024dexh2r}
+Zhao, S.; Zhu, X.; Chen, Y.; Li, C.; Zhang, X.; Ding, M.; and Tomizuka, M. 2024.
+\newblock {DexH2R}: Task-oriented Dexterous Manipulation from Human to Robots.
+\newblock \emph{arXiv preprint arXiv:2411.04428}.
+
+\bibitem[{Zhong et~al.(2025)Zhong, Huang, Li, Zhang, Liang, Yang, and Chen}]{zhong2025dexgraspvla}
+Zhong, Y.; Huang, X.; Li, R.; Zhang, C.; Liang, Y.; Yang, Y.; and Chen, Y. 2025.
+\newblock {DexGraspVLA}: A vision-language-action framework towards general dexterous grasping.
+\newblock \emph{arXiv preprint arXiv:2502.20900}.
+
+\bibitem[{Zhou et~al.(2024)Zhou, Yuan, Fu, and Lu}]{zhou2024learning}
+Zhou, B.; Yuan, H.; Fu, Y.; and Lu, Z. 2024.
+\newblock Learning diverse bimanual dexterous manipulation skills from human demonstrations.
+\newblock \emph{arXiv preprint arXiv:2410.02477}.
+
+\end{thebibliography}

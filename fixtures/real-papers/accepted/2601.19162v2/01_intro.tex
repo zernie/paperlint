@@ -1,0 +1,44 @@
+\section{Introduction}
+\label{sec:intro}
+
+Multi-access edge computing (MEC) brings computational power closer to mobile devices by connecting with 5G cellular networks~\cite{wavelength, tmobile}.
+It enables latency-critical (LC) applications, from smart stadium~\cite{www-orange-5gstadium,www-red5perfect5G-in-venue} and AR/VR~\cite{www-cloudxr,liu2019edge} to cloud gaming~\cite{www-xbox-cloud,www-ericsson-cloud-gaming} and autonomous driving~\cite{www-dt-driving} to offload their compute-intensive tasks to edge servers. 
+These applications typically operate through request-response interactions between clients and edge servers, where each request and response may span multiple packets, and each application must meet strict service-level objectives (SLOs) on request-to-response latency.
+
+Unfortunately, today's MEC deployments fall short of this promise.
+Our measurement studies across three cities from three countries reveal that commercial MEC services suffer from high tail latencies that frequently violate application SLOs (\autoref{sec:motivation}).
+The root cause is resource contention at both the radio access network (RAN) and edge servers, compounded by resource schedulers that lack SLO-awareness, causing resource allocation decisions to directly impact request progress and SLO satisfaction.
+
+Existing SLO-aware scheduling approaches suffer from practical limitations that prevent real-world deployment.
+Systems like \tutti{}~\cite{xu2022tutti} and \arma{}~\cite{arma:mobisys25} require explicit coordination between RAN schedulers and edge applications, which is impractical because RAN infrastructure and edge servers are typically managed by different entities (\eg Verizon operates the RAN while AWS provides edge compute).
+Even if such coordination were feasible, we find that feedback delays between edge servers and RAN prevent timely resource allocation when applications need it most. 
+Moreover, these solutions focus narrowly on specific application types while ignoring edge compute resource management, failing to address the heterogeneous nature of MEC workloads where multiple applications with diverse SLO requirements compete for both network and compute resources.
+
+This paper introduces \sys{},\footnote{Short for \textbf{S}LO-aware \textbf{MEC}} a practical SLO-aware resource management framework that operates through complete decoupling. 
+\sys{} runs entirely independent resource managers at the RAN and edge server, each making deadline-aware resource allocation decisions without any coordination between them. 
+Both managers prioritize latency-critical applications approaching their deadlines by estimating \emph{remaining time budgets}, enabling timely resource allocation when applications need it most.
+This decoupled design enables deployment in realistic settings where different entities control the RAN and edge infrastructure.
+\sys{} supports heterogeneous workloads, ensuring LC tasks meet their deadlines without starving best-effort (BE) traffic.
+
+While our approach sounds promising, designing such a decoupled framework introduces three key technical challenges.
+First, the RAN scheduler must identify application request boundaries to estimate time budgets without packet payload inspection due to strict timing constraints.
+Second, the edge server must estimate the uplink transmission time already consumed by incoming requests and predict the future downlink transmission time for responses, all without visibility into RAN delays.
+Third, the edge server also must predict processing time across heterogeneous workloads without requiring intrusive application modifications.
+
+Our key insight is that standard 5G protocols and applications' request-response patterns provide useful signals to solve these challenges independently.
+We find that these signals can be exposed with minimal or no application modifications.
+First, we exploit patterns in 5G control signals (\eg Buffer Status Reports) to infer new request arrivals at the RAN without payload inspection.
+Second, at the edge, we leverage the stability of downlink transmissions to estimate network latency via a lightweight probing protocol and a client-side API without coordinating with the RAN.
+Third, for processing time estimation at the edge, we exploit key lifecycle events of requests exposed through a server-side API, enabling \sys{} to track execution history and predict processing times for incoming requests.
+Based on this information, \sys{} enables the RAN and the edge to compute the remaining time budget for requests independently and manage resources based on these budgets.    
+
+\modified{We implemented \sys{} as user-space resource managers in C++ and Python that run across the RAN, edge servers, and client devices.
+At the RAN, our resource manager operates as a pluggable scheduling module for srsRAN's MAC layer, implementing request identification and deadline-aware scheduling without affecting other RAN functionalities.
+At the edge, our resource manager runs as a user-space daemon that estimates network and processing times while dynamically managing CPU and GPU allocations.
+Client devices run a lightweight timing daemon to support the probing protocol for network latency estimation.
+We have open-sourced \sys{}, including the evaluated applications and experiment scripts: \url{https://github.com/smec-project}.}
+
+We evaluated \sys{} on our private 5G MEC testbed using three LC applications and one BE application running on 12 client devices.
+\sys{} achieves 90--96\% SLO satisfaction under both static and dynamic workloads, compared to less than 6\% for existing approaches.
+It reduces tail latency by up to 122$\times$ for uplink-intensive applications and consistently improves P99 latency by 2--89$\times$ across all workloads.
+\modified{Importantly, \sys{} allows  BE applications to fairly share remaining bandwidth without prolonged starvation.}

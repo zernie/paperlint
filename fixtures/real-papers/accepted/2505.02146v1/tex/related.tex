@@ -1,0 +1,23 @@
+
+\section{Related Work}
+
+
+
+
+\textbf{Rule-based approaches.}
+These methods focus on transcompiling source programs to target languages using expert-defined rules~\cite{C2Rust, cxgo, HIPIFY, 10.1145/2400682.2400713}. For instance, C2Rust~\cite{C2Rust} and CxGo~\cite{cxgo} translate C code to Rust and Go, respectively, while HIPIFY~\cite{HIPIFY} converts CUDA to HIP. PPCG~\cite{10.1145/2400682.2400713} extracts the polyhedral model from the source program, applies predefined rules for scheduling and parallelization, and generates code from the transformed model.
+These approaches are labor-intensive, relying on manual rules that require extensive knowledge of both the source and target languages, limiting their applicability to specific platforms. Moreover, they often struggle with irregular code structures, reducing their robustness and general applicability.
+
+\textbf{Data-driven approaches.}
+Data-driven methods, which train neural networks using supervised or unsupervised corpora, have gained prominence following the success of Neural Machine Translation (NMT). Tools like TransCoder~\cite{Roziere20NIPS} use sequence-to-sequence models for translating between C++, Java, and Python.
+More recent works leverage LLMs (e.g., CodeX~\cite{chen2021evaluating}, StarCoder~\cite{li2023starcoder}, CodeGen~\cite{nijkamp2022codegen}, CodeT5~\cite{wang2021codet5}, CodeGeeX~\cite{zheng2023codegeex}, LLaMA~\cite{touvron2023llama}, Gemini~\cite{team2023gemini}, GPT-4~\cite{achiam2023gpt}, and OpenAI o1~\cite{openaio1}) for program translation, achieving superior performance.
+However, while these methods reduce human effort, they often fail to guarantee the functional correctness of the translated code, especially across different DLS.
+
+\textbf{Symbolic synthesis approaches.}
+Symbolic synthesis approaches generate semantically equivalent code from input-output pairs or formal semantic specifications. For example, C2TACO~\cite{magalhaes2023c2taco} uses a guided enumerative synthesizer and automatically generated I/O examples to translate C tensor code into the TACO DSL~\cite{kjolstad2017taco}. Recent methods like MetaLift~\cite{bhatia_et_al:LIPIcs.ECOOP.2023.38} and Tenspiler~\cite{DBLP:conf/ecoop/QiuCBHSC24} adopt a more extensible approach by first converting the source program into a unified intermediate representation (IR) and then synthesizing target programs in the same IR domain.
+These approaches reduce the need for manual transformation rules and are effective for small-scale projects. However, they rely on expensive search-based SMT solvers, which makes them less scalable for larger, real-world applications. Additionally, methods like MetaLift and Tenspiler require users to manually define the semantics of the target language using the specification IR, which is both challenging and error-prone.
+
+
+In summary, existing approaches either demand significant manual effort, suffer from functional correctness issues, or have limited scalability, making them ineffective for automatically translating programs across DLS with different programming models.
+In contrast, ~\name{} is the first work to tackle this challenge by proposing a novel neural-symbolic synthesis framework, where translation is performed through a series of LLM-assisted transformations, with functional equivalence ensured for each transformation via small-scale symbolic synthesis.
+

@@ -242,10 +242,10 @@ export function recordOnDisk(dir: string, shape: Shape): void {
 // ── an accepted paper on disk, with its snapshot beside it ──────────────────────────────────
 
 /**
- * The snapshot beside a paper on disk (`fixtures/accepted-papers/<name>/`): `tex-truth.json`, TeX's
+ * The snapshot beside a paper on disk (`fixtures/real-papers/accepted/<name>/`): `tex-truth.json`, TeX's
  * record of a build — or, for a paper that does not compile in paperlint's TeX tree,
  * `record-by-hand.json`: the same shape, the files its `\\input`s name, which is not TeX's answer
- * (fixtures/accepted-papers/README.md).
+ * (fixtures/real-papers/accepted/README.md).
  */
 const truthOf = (paperDir: string): string =>
   [

@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "ase-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:ieee-conference"
+      },
+      "opened": "2025-10-01",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-10-01",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

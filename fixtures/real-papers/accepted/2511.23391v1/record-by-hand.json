@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sec/abs.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "tabs/evaluation_detial.tex",
+      "role": "body"
+    },
+    {
+      "path": "tabs/compared_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "tabs/curves.tex",
+      "role": "body"
+    },
+    {
+      "path": "tabs/consumption.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/con.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/limitations.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "a1ea9059138d3222cfcec14a6e66502b51a11da6ddb0655c4f3ea1aa9ec77d39",
+    "acl.sty": "8a6305f26fbedd69be2474eb063a1304eefc22c01a81a73bbc55e26fcef871b8",
+    "sec/abs.tex": "89b43a2add01af756e33f8e306f541dcbfa3f3442c15b5cf19cd6a3e534e6177",
+    "sec/intro.tex": "c798a10fb2adb723f67ee582c0348d684237ecc612d2b60ec1c56a32c07a5f48",
+    "sec/method.tex": "ec08f97186147215184e6e7c81d9bc89fddb3acf0383871e0b234157862d838e",
+    "sec/exp.tex": "cb6659bdaf0297a3294bc83dbe231908f3ce8e71c54009b0238e5b738cbb2fbf",
+    "tabs/evaluation_detial.tex": "843820be514053d89b3ea074dc42cd34567968a774a712239615e3f3be65cfdf",
+    "tabs/compared_result.tex": "34be39f1dadffc906a488af4e3fa4729540cc62cffe93e1c77c249137380b864",
+    "tabs/curves.tex": "bc8c8eda9f9291e4b8e9365dddc4e3b629a3bc048489b259f9ccab8e6ca7e738",
+    "tabs/consumption.tex": "fb65eb31494b8a1118896db1a64d3b2584acb11d808e74d60207a7d94c3c2806",
+    "sec/related_work.tex": "03f8f48a60ed8fe1a023db1e287826771f7c17bfa3866b7ca9eb944e5c38a796",
+    "sec/con.tex": "dc27fc4ae5e7d6fe3b49d8652745c9243b0a745ece0552194107aaa6345749fb",
+    "sec/limitations.tex": "84e5eeb0f822a98356029c3446e50681020efecd5e0a8b3e93b47914d73c7237"
+  }
+}

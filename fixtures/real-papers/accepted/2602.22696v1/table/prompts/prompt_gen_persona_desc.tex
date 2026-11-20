@@ -1,0 +1,28 @@
+% ./src/prompts/template/persona_rephrase_prompt.py のプロンプトを使用
+
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{15cm}}
+        \toprule
+        % \bf{Prompt} \\
+        % \midrule
+        You need to incorporate the following persona attributes and generate a cohesive persona description. You need to ensure the description is easy to understand. \\
+        ******** \\
+        Age: \{age\} \\
+        Sex: \{sex\} \\
+        Marital: \{marital\_status\} \\
+        Education: \{educational\_status\} \\
+        Income: \{income\} \\
+        Religion: \{religion\} \\
+        Ideology: \{ideology\} \\
+        Big-Five Personality: \{big\_five\_label\} \\
+        Decision-Making Style: \{decision\_making\_style\_label\} \\
+        ******** \\
+        An Example: You are a 28-year-old female software developer. Your personality is characterized by openness to experience, which means you are curious, imaginative, and willing to try new things. In your occupation, you excel at analyzing problems and finding logical solutions. Your decision-making style is analytical, meaning you carefully consider all available information before making a choice. \\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Prompt to generate persona description in P4G.}
+    \label{tab:persona-desc-prompt}
+\end{table*}

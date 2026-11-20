@@ -1,0 +1,467 @@
+\begin{thebibliography}{10}
+
+\bibitem{fungible}
+{The Fungible DPU™: A New Category of Microprocessor for the Data-Centric Era : Hot Chips 2020}.
+\newblock In {\em 2020 IEEE Hot Chips 32 Symposium (HCS)}, pages 1--25, 2020.
+
+\bibitem{amd_pensando}
+{Advanced Micro Devices, Inc.}
+\newblock {{AMD Pensando Networking}}.
+\newblock \url{https://www.amd.com/en/products/accelerators/pensando.html}.
+
+\bibitem{amd_fpga}
+{Advanced Micro Devices, Inc.}
+\newblock {{Vitis Networking P4}}.
+\newblock \url{https://www.xilinx.com/products/intellectual-property/ef-di-vitisnetp4.html}.
+
+\bibitem{tofino_slides}
+Anurag Agrawal and Changhoon Kim.
+\newblock {Intel Tofino2 – A 12.9Tbps P4-Programmable Ethernet Switch}.
+\newblock In {\em 2020 IEEE Hot Chips 32 Symposium (HCS)}, pages 1--32, 2020.
+
+\bibitem{tcampower}
+B.~Agrawal and T.~Sherwood.
+\newblock {Modeling TCAM power for next generation network devices}.
+\newblock In {\em 2006 IEEE International Symposium on Performance Analysis of Systems and Software}, pages 120--129, 2006.
+
+\bibitem{snap}
+Mina~Tahmasbi Arashloo, Yaron Koral, Michael Greenberg, Jennifer Rexford, and David Walker.
+\newblock {SNAP: Stateful Network-Wide Abstractions for Packet Processing}.
+\newblock In {\em Proceedings of the 2016 ACM SIGCOMM Conference}, SIGCOMM '16, page 29–43, New York, NY, USA, 2016. Association for Computing Machinery.
+
+\bibitem{poptrie}
+Hirochika Asai and Yasuhiro Ohara.
+\newblock {Poptrie: A Compressed Trie with Population Count for Fast and Scalable Software IP Routing Table Lookup}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 45(4):57–70, August 2015.
+
+\bibitem{flashtrie}
+Masanori Bando, Yi-Li Lin, and H.~Jonathan Chao.
+\newblock {FlashTrie: beyond 100-Gb/s IP route lookup using hash-based prefix-compressed trie}.
+\newblock {\em IEEE/ACM Trans. Netw.}, 20(4):1262–1275, August 2012.
+
+\bibitem{rmt}
+Pat Bosshart, Glen Gibb, Hun-Seok Kim, George Varghese, Nick McKeown, Martin Izzard, Fernando Mujica, and Mark Horowitz.
+\newblock {Forwarding metamorphosis: fast programmable match-action processing in hardware for SDN}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 43(4):99–110, August 2013.
+
+\bibitem{dleft}
+A.~Broder and M.~Mitzenmacher.
+\newblock Using multiple hash functions to improve ip lookups.
+\newblock In {\em {Proceedings IEEE INFOCOM 2001. Conference on Computer Communications. Twentieth Annual Joint Conference of the IEEE Computer and Communications Society (Cat. No.01CH37213)}}, volume~3, pages 1454--1463 vol.3, 2001.
+
+\bibitem{bloom_filters}
+Andrei Broder and Michael Mitzenmacher.
+\newblock {Network Applications of Bloom Filters: A Survey}.
+\newblock {\em Internet Mathematics}, 1(4):485 -- 509, 2003.
+
+\bibitem{aes}
+Xiaoqi Chen.
+\newblock {Implementing AES Encryption on Programmable Switches via Scrambled Lookup Tables}.
+\newblock In {\em Proceedings of the Workshop on Secure Programmable Network Infrastructure}, SPIN '20, page 8–14, New York, NY, USA, 2020. Association for Computing Machinery.
+
+\bibitem{conquest}
+Xiaoqi Chen, Shir~Landau Feibish, Yaron Koral, Jennifer Rexford, Ori Rottenstreich, Steven~A Monetti, and Tzuu-Yi Wang.
+\newblock {Fine-grained queue measurement in the data plane}.
+\newblock In {\em Proceedings of the 15th International Conference on Emerging Networking Experiments And Technologies}, CoNEXT '19, page 15–29, New York, NY, USA, 2019. Association for Computing Machinery.
+
+\bibitem{p4dfa}
+Xiaoqi Chen, Andrew Johnson, Mengying Pan, and David Walker.
+\newblock {Synthesizing state machines for data planes}.
+\newblock In {\em Proceedings of the Symposium on SDN Research}, SOSR '22, page 81–88, New York, NY, USA, 2022. Association for Computing Machinery.
+
+\bibitem{drmt}
+Sharad Chole, Andy Fingerhut, Sha Ma, Anirudh Sivaraman, Shay Vargaftik, Alon Berger, Gal Mendelson, Mohammad Alizadeh, Shang-Tse Chuang, Isaac Keslassy, Ariel Orda, and Tom Edsall.
+\newblock {dRMT: Disaggregated Programmable Switching}.
+\newblock In {\em Proceedings of the Conference of the ACM Special Interest Group on Data Communication}, SIGCOMM '17, page 1–14, New York, NY, USA, 2017. Association for Computing Machinery.
+
+\bibitem{cisco_silicon_one}
+{Cisco Systems, Inc.}
+\newblock {{Cisco Silicon One - Network Processors for Unified Architecture - Cisco}}.
+\newblock \url{https://www.cisco.com/site/us/en/products/networking/silicon-one/index.html}.
+
+\bibitem{count_min_sketch}
+Graham Cormode and S.~Muthukrishnan.
+\newblock {An improved data stream summary: the count-min sketch and its applications}.
+\newblock {\em Journal of Algorithms}, 55(1):58--75, 2005.
+
+\bibitem{tofino_rmt}
+Rajdeep Das and Alex~C Snoeren.
+\newblock {Memory Management in ActiveRMT: Towards Runtime-programmable Switches}.
+\newblock In {\em Proceedings of the ACM SIGCOMM 2023 Conference}, ACM SIGCOMM '23, page 1043–1059, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{lulea}
+Mikael Degermark, Andrej Brodnik, Svante Carlsson, and Stephen Pink.
+\newblock {Small forwarding tables for fast routing lookups}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 27(4):3–14, October 1997.
+
+\bibitem{nvidia_smartnic_2}
+Kevin Deierling.
+\newblock {NVIDIA's Resource Transmutable Network Processing ASIC}.
+\newblock In {\em 2023 IEEE Hot Chips 35 Symposium (HCS)}, pages 1--14, 2023.
+
+\bibitem{dharma}
+Sarang Dharmapurikar, Praveen Krishnamurthy, and David~E. Taylor.
+\newblock {Longest prefix matching using bloom filters}.
+\newblock In {\em Proceedings of the 2003 Conference on Applications, Technologies, Architectures, and Protocols for Computer Communications}, SIGCOMM '03, page 201–212, New York, NY, USA, 2003. Association for Computing Machinery.
+
+\bibitem{tree_bitmap}
+Will Eatherton, George Varghese, and Zubin Dittia.
+\newblock {Tree bitmap: hardware/software IP lookups with incremental updates}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 34(2):97–122, April 2004.
+
+\bibitem{ram}
+Matteo Frigo and Victor Luchangco.
+\newblock {Computation-centric memory models}.
+\newblock In {\em Proceedings of the Tenth Annual ACM Symposium on Parallel Algorithms and Architectures}, SPAA '98, page 240–249, New York, NY, USA, 1998. Association for Computing Machinery.
+
+\bibitem{pensando_arch}
+Michael Galles and Francis Matus.
+\newblock {Pensando Distributed Services Architecture}.
+\newblock {\em IEEE Micro}, 41(2):43--49, 2021.
+
+\bibitem{bgp_report_ipv6}
+{Geoff Huston}.
+\newblock {{AS131072 - IPv6 BGP Table Statistics}}.
+\newblock \url{https://bgp.potaroo.net/v6/as2.0/index.html}.
+
+\bibitem{bgp_report_ipv4}
+{Geoff Huston}.
+\newblock {{AS65000 - BGP Table Statistics}}.
+\newblock \url{https://bgp.potaroo.net/as2.0/}.
+
+\bibitem{cidr_report_ipv4}
+{Geoff Huston}.
+\newblock {{CIDR Report}}.
+\newblock \url{https://www.cidr-report.org/as2.0/}.
+
+\bibitem{cidr_report_ipv6}
+{Geoff Huston}.
+\newblock {{IPv6 CIDR Report}}.
+\newblock \url{https://www.cidr-report.org/v6/as2.0/}.
+
+\bibitem{dir}
+P.~Gupta, S.~Lin, and N.~McKeown.
+\newblock {Routing lookups in hardware at memory access speeds}.
+\newblock In {\em Proceedings. IEEE INFOCOM '98, the Conference on Computer Communications. Seventeenth Annual Joint Conference of the IEEE Computer and Communications Societies. Gateway to the 21st Century (Cat. No.98}, volume~3, pages 1240--1247 vol.3, 1998.
+
+\bibitem{pkt_class_surv1}
+P.~Gupta and N.~McKeown.
+\newblock {Algorithms for packet classification}.
+\newblock {\em IEEE Network}, 15(2):24--32, 2001.
+
+\bibitem{indira}
+B.~Indira, K.~Valarmathi, and D.~Devaraj.
+\newblock {A Trie based IP Lookup Approach for High Performance Router/Switch}.
+\newblock In {\em 2019 IEEE International Conference on Intelligent Techniques in Control, Optimization and Signal Processing (INCOS)}, pages 1--6, 2019.
+
+\bibitem{intel_ipu}
+{Intel Corporation}.
+\newblock {{Intel® Infrastructure Processing Unit (Intel® IPU)}}.
+\newblock \url{https://www.intel.com/content/www/us/en/products/details/network-io/ipu.html}.
+
+\bibitem{p4_insight}
+{Intel Corporation}.
+\newblock {{Intel® P4 Insight Tool}}.
+\newblock \url{https://www.intel.com/content/www/us/en/products/details/network-io/intelligent-fabric-processors/p4-insight.html}.
+
+\bibitem{intel_fpga}
+{Intel Corporation}.
+\newblock {{Intel® P4 Suite for FPGAs}}.
+\newblock \url{https://www.intel.com/content/www/us/en/software/programmable/p4-suite-fpga/overview.html}.
+
+\bibitem{intel_tofino}
+{Intel Corporation}.
+\newblock {{Intel® Tofino™ 2}}.
+\newblock \url{https://www.intel.com/content/www/us/en/products/details/network-io/intelligent-fabric-processors/tofino-2.html}.
+
+\bibitem{netcache}
+Xin Jin, Xiaozhou Li, Haoyu Zhang, Robert Soul\'{e}, Jeongkeun Lee, Nate Foster, Changhoon Kim, and Ion Stoica.
+\newblock {NetCache: Balancing Key-Value Stores with Fast In-Network Caching}.
+\newblock In {\em Proceedings of the 26th Symposium on Operating Systems Principles}, SOSP '17, page 121–136, New York, NY, USA, 2017. Association for Computing Machinery.
+
+\bibitem{rmt_compilers}
+Lavanya Jose, Lisa Yan, George Varghese, and Nick McKeown.
+\newblock {Compiling Packet Programs to Reconfigurable Switches}.
+\newblock In {\em 12th USENIX Symposium on Networked Systems Design and Implementation (NSDI 15)}, pages 103--115, Oakland, CA, May 2015. USENIX Association.
+
+\bibitem{portcatcher}
+Changhun Jung, Sian Kim, Rhongho Jang, David Mohaisen, and DaeHun Nyang.
+\newblock {A Scalable and Dynamic ACL System for In-Network Defense}.
+\newblock In {\em Proceedings of the 2022 ACM SIGSAC Conference on Computer and Communications Security}, CCS '22, page 1679–1693, New York, NY, USA, 2022. Association for Computing Machinery.
+
+\bibitem{decision_tree_p4}
+Radhakrishna Kamath and Krishna~M Sivalingam.
+\newblock {Machine Learning based Flow Classification in DCNs using P4 Switches}.
+\newblock In {\em 2021 International Conference on Computer Communications and Networks (ICCCN)}, pages 1--10, 2021.
+
+\bibitem{binary_search_on_length}
+Kun~Suk Kim and S.~Sahni.
+\newblock {IP lookup by binary search on prefix length}.
+\newblock In {\em Proceedings of the Eighth IEEE Symposium on Computers and Communications. ISCC 2003}, pages 77--82 vol.1, 2003.
+
+\bibitem{pram}
+Clyde~P. Kruskal, Larry Rudolph, and Marc Snir.
+\newblock {A complexity theory of efficient parallel algorithms}.
+\newblock {\em Theoretical Computer Science}, 71(1):95--132, 1990.
+
+\bibitem{sketch_sampling}
+A.~Kumar and J.~Xu.
+\newblock {Sketch Guided Sampling - Using On-Line Estimates of Flow Size for Adaptive Data Collection}.
+\newblock In {\em Proceedings IEEE INFOCOM 2006. 25TH IEEE International Conference on Computer Communications}, pages 1--11, 2006.
+
+\bibitem{insomnia}
+Sailesh Kumar, Balakrishnan Chandrasekaran, Jonathan Turner, and George Varghese.
+\newblock {Curing regular expressions matching algorithms from insomnia, amnesia, and acalculia}.
+\newblock In {\em Proceedings of the 3rd ACM/IEEE Symposium on Architecture for Networking and Communications Systems}, ANCS '07, page 155–164, New York, NY, USA, 2007. Association for Computing Machinery.
+
+\bibitem{pkt_class_surv3}
+Karthik Lakshminarayanan, Anand Rangarajan, and Srinivasan Venkatachary.
+\newblock {Algorithms for advanced packet classification with ternary CAMs}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 35(4):193–204, August 2005.
+
+\bibitem{lampson}
+B.~Lampson, V.~Srinivasan, and G.~Varghese.
+\newblock {IP lookups using multiway and multicolumn search}.
+\newblock In {\em Proceedings. IEEE INFOCOM '98, the Conference on Computer Communications. Seventeenth Annual Joint Conference of the IEEE Computer and Communications Societies. Gateway to the 21st Century (Cat. No.98}, volume~3, pages 1248--1256 vol.3, 1998.
+
+\bibitem{flowradar}
+Yuliang Li, Rui Miao, Changhoon Kim, and Minlan Yu.
+\newblock {FlowRadar: a better NetFlow for data centers}.
+\newblock In {\em Proceedings of the 13th Usenix Conference on Networked Systems Design and Implementation}, NSDI'16, page 311–324, USA, 2016. USENIX Association.
+
+\bibitem{neurocuts}
+Eric Liang, Hang Zhu, Xin Jin, and Ion Stoica.
+\newblock {Neural packet classification}.
+\newblock In {\em Proceedings of the ACM Special Interest Group on Data Communication}, SIGCOMM '19, page 256–269, New York, NY, USA, 2019. Association for Computing Machinery.
+
+\bibitem{liu}
+Huan Liu.
+\newblock {Routing table compaction in ternary CAM}.
+\newblock {\em IEEE Micro}, 22(1):58--64, 2002.
+
+\bibitem{coolertcam}
+Haibin Lu.
+\newblock {Improved trie partitioning for cooler TCAMs}.
+\newblock In {\em IASTED International Conference on Advances in Computer Science and Technology}. Citeseer, 2004.
+
+\bibitem{estan}
+Daniel Luchaup, Randy Smith, Cristian Estan, and Somesh Jha.
+\newblock {Multi-byte Regular Expression Matching with Speculation}.
+\newblock In {\em Proceedings of the 12th International Symposium on Recent Advances in Intrusion Detection}, RAID '09, page 284–303, Berlin, Heidelberg, 2009. Springer-Verlag.
+
+\bibitem{virtual_routers}
+Layong Luo, Gaogang Xie, Steve Uhlig, Laurent Mathy, Kav\'{e} Salamatian, and Yingke Xie.
+\newblock {Towards TCAM-based scalable virtual routers}.
+\newblock In {\em Proceedings of the 8th International Conference on Emerging Networking Experiments and Technologies}, CoNEXT '12, page 73–84, New York, NY, USA, 2012. Association for Computing Machinery.
+
+\bibitem{marvell_teralynx}
+{Marvell Technology, Inc.}
+\newblock {{Data Center Switches | Enabling the AI cloud with High-bandwidth, low-latency, multi-terabit network switches}}.
+\newblock \url{https://www.marvell.com/products/data-center-switches.html}.
+
+\bibitem{nick_letter}
+{Nick McKeown}.
+\newblock {{Intel's commitment to P4}}.
+\newblock \url{https://groups.google.com/a/lists.p4.org/g/p4-announce/c/frXi_jjmawE}.
+
+\bibitem{lctrie}
+S.~Nilsson and G.~Karlsson.
+\newblock {Fast address look-up for internet routers}.
+\newblock In {\em Proceedings of the IFIP TC6/WG6.2 Fourth International Conference on Broadband Communications: The Future of Telecommunications}, BC '98, page 11–22, GBR, 1998. Chapman \& Hall, Ltd.
+
+\bibitem{nvidia_bluefield}
+{Nvidia Corporation}.
+\newblock {{NVIDIA BlueField Networking Platform}}.
+\newblock \url{https://www.nvidia.com/en-us/networking/products/data-processing-unit/}.
+
+\bibitem{nvidia_spectrum}
+{Nvidia Corporation}.
+\newblock {{The Spectrum Ethernet Platform}}.
+\newblock \url{https://www.nvidia.com/en-us/networking/products/ethernet/}.
+
+\bibitem{bf_p4c}
+{P4 Compiler Project}.
+\newblock {{p4c/backends/tofino/bf-p4c at main · p4lang/p4c · GitHub}}.
+\newblock \url{https://github.com/p4lang/p4c/tree/main/backends/tofino/bf-p4c}, 2025.
+
+\bibitem{p4_ecosystem}
+{P4 Project}.
+\newblock {{P4 Ecosystem – P4 – Language Consortium}}.
+\newblock \url{https://p4.org/ecosystem/?_product_category=hardware}.
+
+\bibitem{flowblaze}
+Salvatore Pontarelli, Roberto Bifulco, Marco Bonola, Carmelo Cascone, Marco Spaziani, Valerio Bruschi, Davide Sanvito, Giuseppe Siracusano, Antonio Capone, Michio Honda, Felipe Huici, and Giuseppe Siracusano.
+\newblock {{FlowBlaze}: Stateful Packet Processing in Hardware}.
+\newblock In {\em 16th USENIX Symposium on Networked Systems Design and Implementation (NSDI 19)}, pages 531--548, Boston, MA, February 2019. USENIX Association.
+
+\bibitem{easecam}
+V.C. Ravikumar, R.N. Mahapatra, and Laxmi~Narayan Bhuyan.
+\newblock {EaseCAM: an energy and storage efficient TCAM-based router architecture for IP lookup}.
+\newblock {\em IEEE Transactions on Computers}, 54(5):521--533, 2005.
+
+\bibitem{atomic_updates_data_plane}
+Mark Reitblatt, Nate Foster, Jennifer Rexford, Cole Schlesinger, and David Walker.
+\newblock {Abstractions for network update}.
+\newblock In {\em Proceedings of the ACM SIGCOMM 2012 Conference on Applications, Technologies, Architectures, and Protocols for Computer Communication}, SIGCOMM '12, page 323–334, New York, NY, USA, 2012. Association for Computing Machinery.
+
+\bibitem{models_of_computation}
+John~E. Savage.
+\newblock {\em {Models of Computation: Exploring the Power of Computing}}.
+\newblock Addison-Wesley Longman Publishing Co., Inc., USA, 1st edition, 1997.
+
+\bibitem{pensando_p4}
+Alexandru Seibulescu and Mario Baldi.
+\newblock {Leveraging P4 Flexibility to Expose Target-specific Features}.
+\newblock In {\em Proceedings of the 3rd P4 Workshop in Europe}, EuroP4'20, page 36–42, New York, NY, USA, 2020. Association for Computing Machinery.
+
+\bibitem{tcam_updates}
+D.~Shah and P.~Gupta.
+\newblock {Fast updating algorithms for TCAM}.
+\newblock {\em IEEE Micro}, 21(1):36--47, 2001.
+
+\bibitem{hibst}
+Tong Shen, Xian Yu, Gaogang Xie, and Dafang Zhang.
+\newblock {High-Performance IPv6 Lookup with Real-Time Updates Using Hierarchical-Balanced Search Tree}.
+\newblock In {\em 2018 IEEE Global Communications Conference (GLOBECOM)}, pages 1--7, 2018.
+
+\bibitem{tag_bits}
+Sandeep Sikka and George Varghese.
+\newblock {Memory-efficient state lookups with fast updates}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 30(4):335–347, August 2000.
+
+\bibitem{hypercuts}
+Sumeet Singh, Florin Baboescu, George Varghese, and Jia Wang.
+\newblock {Packet classification using multidimensional cutting}.
+\newblock In {\em Proceedings of the 2003 Conference on Applications, Technologies, Architectures, and Protocols for Computer Communications}, SIGCOMM '03, page 213–224, New York, NY, USA, 2003. Association for Computing Machinery.
+
+\bibitem{hashpipe}
+Vibhaalakshmi Sivaraman, Srinivas Narayana, Ori Rottenstreich, S.~Muthukrishnan, and Jennifer Rexford.
+\newblock {Heavy-Hitter Detection Entirely in the Data Plane}.
+\newblock In {\em Proceedings of the Symposium on SDN Research}, SOSR '17, page 164–176, New York, NY, USA, 2017. Association for Computing Machinery.
+
+\bibitem{extendedtcam}
+E.~Spitznagel, D.~Taylor, and J.~Turner.
+\newblock {Packet classification using extended TCAMs}.
+\newblock In {\em 11th IEEE International Conference on Network Protocols, 2003. Proceedings.}, pages 120--131, 2003.
+
+\bibitem{prefix_expansion}
+V.~Srinivasan and George Varghese.
+\newblock {Faster IP lookups using controlled prefix expansion}.
+\newblock {\em SIGMETRICS Perform. Eval. Rev.}, 26(1):1–10, June 1998.
+
+\bibitem{e2000}
+Naru Sundar, Brad Burres, Yadong Li, Dave Minturn, Brian Johnson, and Nupur Jain.
+\newblock {9.4 An In-depth Look at the Intel IPU E2000}.
+\newblock In {\em 2023 IEEE International Solid-State Circuits Conference (ISSCC)}, pages 162--164, 2023.
+
+\bibitem{suri}
+Subhash Suri, G.~Varghese, and P.R. Warkhede.
+\newblock {Multiway range trees: scalable IP lookup with fast updates}.
+\newblock In {\em GLOBECOM'01. IEEE Global Telecommunications Conference (Cat. No.01CH37270)}, volume~3, pages 1610--1614 vol.3, 2001.
+
+\bibitem{homunculus}
+Tushar Swamy, Annus Zulfiqar, Luigi Nardi, Muhammad Shahbaz, and Kunle Olukotun.
+\newblock {Homunculus: Auto-Generating Efficient Data-Plane ML Pipelines for Datacenter Networks}.
+\newblock In {\em Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 3}, ASPLOS 2023, page 329–342, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{pkt_class_surv2}
+David~E. Taylor.
+\newblock {Survey and taxonomy of packet classification techniques}.
+\newblock {\em ACM Comput. Surv.}, 37(3):238–275, September 2005.
+
+\bibitem{treecam}
+Balajee Vamanan and T.~N. Vijaykumar.
+\newblock {TreeCAM: decoupling updates and lookups in packet classification}.
+\newblock In {\em Proceedings of the Seventh COnference on Emerging Networking EXperiments and Technologies}, CoNEXT '11, New York, NY, USA, 2011. Association for Computing Machinery.
+
+\bibitem{network_algorithmics}
+George Varghese.
+\newblock {\em {Network Algorithmics,: An Interdisciplinary Approach to Designing Fast Networked Devices (The Morgan Kaufmann Series in Networking)}}.
+\newblock Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 2004.
+
+\bibitem{waldvogel}
+Marcel Waldvogel, George Varghese, Jon Turner, and Bernhard Plattner.
+\newblock {Scalable high speed IP routing lookups}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 27(4):25–36, October 1997.
+
+\bibitem{hyperscan}
+Xiang Wang, Yang Hong, Harry Chang, KyoungSoo Park, Geoff Langdale, Jiayu Hu, and Heqing Zhu.
+\newblock {Hyperscan: a fast multi-pattern regex matcher for modern CPUs}.
+\newblock In {\em Proceedings of the 16th USENIX Conference on Networked Systems Design and Implementation}, NSDI'19, page 631–648, USA, 2019. USENIX Association.
+
+\bibitem{mousika}
+Guorui Xie, Qing Li, Yutao Dong, Guanglin Duan, Yong Jiang, and Jingpu Duan.
+\newblock {Mousika: Enable General In-Network Intelligence in Programmable Switches by Knowledge Distillation}.
+\newblock In {\em IEEE INFOCOM 2022 - IEEE Conference on Computer Communications}, pages 1938--1947, 2022.
+
+\bibitem{flexcore}
+Jiarong Xing, Kuo-Feng Hsu, Matty Kadosh, Alan Lo, Yonatan Piasetzky, Arvind Krishnamurthy, and Ang Chen.
+\newblock {Runtime Programmable Switches}.
+\newblock In {\em 19th USENIX Symposium on Networked Systems Design and Implementation (NSDI 22)}, pages 651--665, Renton, WA, April 2022. USENIX Association.
+
+\bibitem{nvidia_smartnic}
+Jiarong Xing, Yiming Qiu, Kuo-Feng Hsu, Songyuan Sui, Khalid Manaa, Omer Shabtai, Yonatan Piasetzky, Matty Kadosh, Arvind Krishnamurthy, T.~S.~Eugene Ng, and Ang Chen.
+\newblock {Unleashing SmartNIC Packet Processing Performance in P4}.
+\newblock In {\em Proceedings of the ACM SIGCOMM 2023 Conference}, ACM SIGCOMM '23, page 1028–1042, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{transistors}
+Rui Yang, Haitong Li, Kirby K.~H. Smithe, Taeho~R. Kim, Kye Okabe, Eric Pop, Jonathan~A. Fan, and H.-S.~Philip Wong.
+\newblock {Ternary content-addressable memory with MoS2 transistors for massively parallel data search}.
+\newblock {\em Nature Electronics}, 2(3):108--114, Mar 2019.
+
+\bibitem{sail}
+Tong Yang, Gaogang Xie, YanBiao Li, Qiaobin Fu, Alex~X. Liu, Qi~Li, and Laurent Mathy.
+\newblock {Guarantee IP lookup performance with FIB explosion}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 44(4):39–50, August 2014.
+
+\bibitem{magictcam}
+Ruyi Yao, Cong Luo, Xuandong Liu, Ying Wan, Bin Liu, Wenjun Li, and Yang Xu.
+\newblock {MagicTCAM: A Multiple-TCAM Scheme for Fast TCAM Update}.
+\newblock In {\em 2021 IEEE 29th International Conference on Network Protocols (ICNP)}, pages 1--11, 2021.
+
+\bibitem{changhoon}
+Changhoon Yim, Bomi Lee, and Hyesook Lim.
+\newblock {Efficient binary search for IP address lookup}.
+\newblock {\em IEEE Communications Letters}, 9(7):652--654, 2005.
+
+\bibitem{halfsiphash}
+Sophia Yoo and Xiaoqi Chen.
+\newblock {Secure Keyed Hashing on Programmable Switches}.
+\newblock In {\em Proceedings of the ACM SIGCOMM 2021 Workshop on Secure Programmable Network INfrastructure}, SPIN '21, page 16–22, New York, NY, USA, 2021. Association for Computing Machinery.
+
+\bibitem{opensketch}
+Minlan Yu, Lavanya Jose, and Rui Miao.
+\newblock {Software defined traffic measurement with OpenSketch}.
+\newblock In {\em Proceedings of the 10th USENIX Conference on Networked Systems Design and Implementation}, nsdi'13, page 29–42, USA, 2013. USENIX Association.
+
+\bibitem{coolcam}
+F.~Zane, Girija Narlikar, and A.~Basu.
+\newblock {Coolcams: power-efficient TCAMs for forwarding engines}.
+\newblock In {\em IEEE INFOCOM 2003. Twenty-second Annual Joint Conference of the IEEE Computer and Communications Societies (IEEE Cat. No.03CH37428)}, volume~1, pages 42--52 vol.1, 2003.
+
+\bibitem{dxr}
+Marko Zec, Luigi Rizzo, and Miljenko Mikuc.
+\newblock {DXR: towards a billion routing lookups per second in software}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 42(5):29–36, September 2012.
+
+\bibitem{xoroffsettrie}
+Chunyang Zhang and Gaogang Xie.
+\newblock {Using XorOffsetTrie for high-performance IPv6 lookup in the backbone network}.
+\newblock {\em Computer Communications}, 181:438--445, 2022.
+
+\bibitem{inml_survey}
+Changgang Zheng, Xinpeng Hong, Damu Ding, Shay Vargaftik, Yaniv Ben-Itzhak, and Noa Zilberman.
+\newblock {In-Network Machine Learning Using Programmable Network Devices: A Survey}.
+\newblock {\em IEEE Communications Surveys \& Tutorials}, 26(2):1171--1200, 2024.
+
+\bibitem{IIsy}
+Changgang Zheng, Zhaoqi Xiong, Thanh~T. Bui, Siim Kaupmees, Riyad Bensoussane, Antoine Bernabeu, Shay Vargaftik, Yaniv Ben-Itzhak, and Noa Zilberman.
+\newblock {IIsy: Hybrid In-Network Classification Using Programmable Switches}.
+\newblock {\em IEEE/ACM Trans. Netw.}, 32(3):2555–2570, February 2024.
+
+\bibitem{planter}
+Changgang Zheng, Mingyuan Zang, Xinpeng Hong, Liam Perreault, Riyad Bensoussane, Shay Vargaftik, Yaniv Ben-Itzhak, and Noa Zilberman.
+\newblock {Planter: Rapid Prototyping of In-Network Machine Learning Inference}.
+\newblock {\em SIGCOMM Comput. Commun. Rev.}, 54(1):2–21, August 2024.
+
+\end{thebibliography}

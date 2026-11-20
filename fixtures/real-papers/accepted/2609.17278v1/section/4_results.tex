@@ -1,0 +1,137 @@
+\section{Results}
+In this section, we present results for each of our research questions.
+
+\subsection{RQ1: Effectiveness}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/correctness_2.pdf}
+    \caption{\textbf{\textit{Effectiveness}} of participants in answering questions across different cognitive levels of Bloom’s taxonomy for DS-enhanced and conventional visualisations. The effectiveness is measured as the percentage of correct answers. Error bars represent a 95\% confidence interval, $*$ indicates significance at $ p < 0.05 $, $**$ at $ p < 0.01 $, and $***$ at $ p < 0.001 $.}
+    \label{fig:correctness}
+    \Description{The figure displays a bar chart comparing the effectiveness (in percentage) of participants in answering questions across different cognitive levels of Bloom’s Taxonomy using either conventional (orange) or DS-enhanced (blue with crosshatch pattern) visualisations. The cognitive levels are listed on the x-axis as: Remember, Understand, Apply, Analyse, Evaluate, and Overall. The y-axis shows the effectiveness in percentage, ranging from 0 to 80.} 
+\end{figure}
+
+In the first analysis, we examined participants' \textit{effectiveness} when answering questions about the DS-enhanced and conventional visualisations for the first five levels of Bloom's taxonomy. As seen on the \textit{Overall} bar in Figure \ref{fig:correctness}, we observed that generally participants performed better in the DS-enhanced set of questions compared to the conventional set. The overall \textit{effectiveness} for the DS-enhanced and conventional visualisation sets were 57\% and 53\%, respectively. A Wilcoxon signed-rank test \footnote{The non-parametric test was performed after significant Shapiro tests, $W = 0.978$,  $p = 0.038$ and $W= 0.966$, $p = 0.003$} revealed a statistically significant difference with a moderate effect size ($W = 2217$, $p=0.004$,  $r =0.31$)
+
+Transitioning to a more detailed analysis of the effectiveness in tasks of different complexity, Table \ref{tab:correctness_efficiency} and Figure \ref{fig:correctness} show the fine-grained effectiveness scores per Bloom's taxonomy level. In the first three levels: \textit{Identify}, \textit{Understand}, and \textit{Apply} -- the DS-enhanced condition outperformed the conventional visualisations. For \textit{Identify} ($W=667$, $p=0.96$, $r=0.22$) and \textit{Apply} ($W=1826$, $p=0.16$, $r=0.16$), the DS-enhanced effectiveness was 5\% higher than the conventional condition, though these differences were not statistically significant and the effect size was small. The most substantial difference occurred at the \textit{Understand} level ($W=336$, $p<0.001$, $r=0.59$), where the DS-enhanced effectiveness was 15\% higher than conventional visualisations, with a mean score of 86\% compared to 71\% for the conventional condition -- a statistically significant difference and a moderate effect. Different from the lower cognitive levels where DS-enhanced effectiveness was higher than the conventional scores, at the higher cognitive levels --\textit{Analyse} ($W=1398$, $p=0.17$, $r=0.13$) and \textit{Evaluate} ($W=954$, $p=0.70$, $r=0.05$) -- conventional visualisations performed slightly better by 4\% and 1\%, respectively, though these differences were not statistically significant.
+
+\begin{table*}[t]
+\centering
+\caption{Comparison of \textit{Effectiveness} and \textit{Efficiency} between conventional and DS-enhanced visualisations at different cognitive levels. \textit{Effectiveness} is measured as percentage of correct answers and \textit{Efficiency} as the median correct answering time in seconds}
+\begin{tabular}{l|ccc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Level}} & \multicolumn{3}{c|}{\textit{Effectiveness}} & \multicolumn{3}{c}{\textit{Efficiency}} \vspace{0.8mm}  \\ 
+\cline{2-7}
+ & conventional & DS-enhanced & \textit{p}-value & conventional & DS-enhanced  & \textit{p}-value \vspace{0.8mm} \\ \midrule
+Identify & 84\% & \textbf{89\%} & 0.096 & \textbf{24.2} ($IQR$=21.9) & 27.4 ($IQR$= 19.9) & 0.661\\
+Understand & 71\% & \textbf{86\%} & <0.001 & 18.6 ($IQR$=15.1) & \textbf{16.9} ($IQR$= 12.8) & <0.001 \\
+Apply & 41\% & \textbf{46\%} & 0.156 & 32.7 ($IQR$=31.0) & \textbf{30.2} ($IQR$=22.6) & <0.001 \\
+Analyse & \textbf{46\%} & 42\% & 0.145 & 39.3 ($IQR$=25.5) & \textbf{37.2} ($IQR$=27.6) & <0.001 \\ 
+Evaluate & \textbf{24\%} & 23\% & 0.699 & 27.6 ($IQR$=26.5) & \textbf{27.4} ($IQR$=19.5) & <0.001 \\ 
+Overall & 53\% & \textbf{57\%} & 0.004 & \textbf{29.7} ($IQR$=19.7) & 30.7 ($IQR$=20.5) & 0.249 \\ \bottomrule
+\end{tabular}
+\label{tab:correctness_efficiency}
+\end{table*}
+
+In summary, participants generally performed better with DS-enhanced visualisations, achieving a significantly higher overall effectiveness (57\%) compared to conventional visualisations (53\%). The most notable improvement for DS-enhanced visualisations was at the \textit{Understand} level, where effectiveness was 15\% higher than conventional visualisations
+
+\subsection{RQ2: Efficiency}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/seconds_2.pdf}
+    \caption{\textbf{\textit{Efficiency}} of participants in answering questions across different cognitive levels of Bloom’s Taxonomy for the DS-enhanced and conventional visualisations. The efficiency is measured as the average correct answer time. Error bars represent a 95\% confidence interval, $*$ indicates significance at $ p < 0.05 $, $**$ at $ p < 0.01 $, and $***$ at $ p < 0.001 $.}
+    \Description{The figure displays a bar chart comparing the median time (in seconds) it took participants to answer questions across different cognitive levels of Bloom’s Taxonomy using either conventional (orange) or DS-enhanced (blue with crosshatch pattern) visualisations. The cognitive levels are listed on the x-axis as: Remember, Understand, Apply, Analyse, Evaluate, and Overall. The y-axis shows the median time in seconds, ranging from 0 to 40.} 
+    \label{fig:efficiency-result}
+\end{figure}
+
+Regarding RQ2, we examined participants' \textit{efficiency} in answering the questions correctly. The efficiency data presented in Table \ref{tab:correctness_efficiency} and Figure \ref{fig:efficiency-result} indicates how quickly participants arrived at the correct answers in both sets of questions. The table shows the median seconds of participants and the IQR. In general, there was no significant difference in the overall \textit{efficiency} between the two visualisation methods ($W =3644$, $p=0.2$, $r=0.11$). However, interesting trends emerge at specific levels of Bloom's taxonomy. At the lowest level, \textit{Identify}, participants were able to identify the correct answers faster when using the conventional visualisations, with a median time of 24.2 seconds, which was more than 3 seconds faster than the median time for the DS-enhanced condition (27.4 seconds). Despite this, the within-subjects difference was not statistically significant ($W=3944$, $p=0.7$, $r=0.03$). 
+
+In contrast, for the higher levels of Bloom's taxonomy --\textit{Understand} ($W=2471$, $p<0.001$, $r=0.18$), \textit{Apply} ($W=2482$, $p<0.001$, $r=0.02$), \textit{Analyse} ($W=2381$, $p=<0.001$, $r=0.04$), and \textit{Evaluate} ($W=691$, $p<0.001$, $r=0.16$) -- participants were more efficient when using the DS-enhanced visualisations. The median time per participant for the DS-enhanced visualisations was consistently lower than the conventional visualisations across these levels, and the differences within subjects were statistically significant. This suggests that participants were significantly more efficient at arriving at the correct answers when engaging with visualisations that included data storytelling elements at these higher cognitive levels.
+
+To summarise, participants showed no significant difference in overall efficiency between DS-enhanced and conventional visualisations. However, participants were significantly more efficient with DS-enhanced visualisations at higher cognitive levels (\textit{Understand}, \textit{Apply}, \textit{Analyse}, and \textit{Evaluate}) with a low effect size.
+
+\subsection{RQ3: Quality of Complex Writing Creation Tasks}
+To investigate cognitive differences in the \textit{Create} task, we analysed participants' sentence-level responses. The focus was to determine whether visualisations with data storytelling elements (DS-enhanced) influenced participants' text composition compared to conventional visualisations (conventional). Overall, the average sentences for both conditions was 7.1 and there were no within-subject differences ($W = 1774$, $p = 0.958$, $r<0.01$). The most frequent cognitive level across conditions was \textit{Identify}, with participants writing an average of 2.6 sentences, followed by \textit{Analysis} (1.7 sentences) and \textit{Understand} (0.9 sentences). The least frequent levels were \textit{Evaluate} (0.7 sentences), \textit{Create} (0.4 sentences), \textit{Other} (0.36 sentences), and finally \textit{Apply}, which was the least frequent category with an average of 0.32 sentences.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/updated-figs/create_2.pdf}
+    \caption{Distribution of sentences across different cognitive levels of Bloom’s taxonomy for DS-enhanced and conventional visualisations. Error bars represent a 95\% confidence interval.}
+    \Description{The figure displays a bar chart comparing the number of sentences participants wrote on their Create task across different cognitive levels of Bloom’s Taxonomy using either conventional (orange) or DS-enhanced (blue with crosshatch pattern) visualisations. The cognitive levels are listed on the x-axis as: Remember, Understand, Apply, Analyse, Evaluate, and Overall. The y-axis shows the number of sentences, ranging from 0 to 3.} 
+    \label{fig:create-dist}
+\end{figure}
+Figure \ref{fig:create-dist} visualises the distribution of sentences across cognitive categories for each condition. Analysis of the data, as shown in Table \ref{tab:create-levels}, revealed no significant within-subject differences in text composition between the DS-enhanced and conventional visualisations. However, some trends were notable: participants who viewed conventional visualisations tended to produce more sentences at the \textit{Identify} ($W=2152$, $p=0.19$, $r=0.15$) and \textit{Evaluate} level ($W=867$, $p=0.12$, $r=0.22$). 
+
+\begin{table*}[t]
+\centering
+\caption{Comparison of the average number of sentences participants wrote across cognitive levels when using DS-enhanced and conventional visualisations.}
+\begin{tabular}{l|ccccc}
+\toprule
+\textbf{Level} & DS-enhanced & conventional & \texttt{DS - CV} & Percentage Change (\%) & \textit{p}-value \vspace{0.8mm} \\ \midrule
+Identify   & 2.44 & \textbf{2.70} & -0.26 & -11\% & 0.19 \\
+Understand & \textbf{1.04} & 0.86 & \textbf{0.18}& 21\% & 0.10 \\
+Apply      & \textbf{0.34} & 0.30 & \textbf{0.04}& 16\% & 0.57 \\
+Analysis   & \textbf{1.77} & 1.63 & \textbf{0.14}& 9\% & 0.55 \\
+Evaluate   & 0.66 & \textbf{0.86} & -0.20 & -29\% & 0.12 \\
+Create     & \textbf{0.48} & 0.39 & \textbf{0.09} & 24\% & 0.39 \\
+Other      & 0.37 & 0.36 & 0.01 & 2\% &0.99 \\
+\bottomrule
+\end{tabular}
+\label{tab:create-levels}
+\end{table*}
+
+As seen in Table \ref{tab:create-levels}, \textit{Evaluate} had the largest percentage change between the conditions involving DS-enhanced and conventional visualisations. When the participants composed a text using the conventional visualisations, they wrote on average 29\% more \textit{Evaluate} sentences. In contrast, those who used DS-enhanced visualisations wrote 21\% more sentences in the \textit{Understand} level ($W=1188$, $p=0.1$, $r=0.21$), 9\% more at the \textit{Analysis} level ($W=1818$, $p=0.55$, $r=0.07$), and 24\% more at the \textit{Create} level  ($W=622$, $p=0.39$, $r=0.13$). 
+
+To sum up, although not statistically significant, the most notable differences between the tasks with conventional and DS-enhanced visualisations were that participants using DS-enhanced wrote, on average, 21\% more \textit{Understand} sentences and 24\% more \textit{Create} sentences, but 29\% fewer \textit{Evaluate} sentences 
+
+
+\subsection{RQ4: User Perception}
+
+To explore how visualisations with data storytelling elements are perceived compared to conventional visualisations, we analysed participants' preferences and justifications. The results showed that the DS-enhanced visualisations were favoured over the conventional visualisations 60\%  of the time across both graph types. 
+
+When participants chose the DS-enhanced visualisation over the conventional visualisation (60\% of the time), we found that in the justification of their choice, the most commonly mentioned element was the placement of contextual information directly next to relevant data points (e.g., next to country names) cited 84\% of participants. In particular, one participant stated: \textit{``I think the blurbs of text that explain the trends in the lines give some much-needed context in a visually pleasing format''}. Another noted that the DS-enhancements permitted them to ``\textit{piece data connections together like a puzzle}''. Additionally, 17\% specifically mentioned annotations on data points on the graph, specifically the display of exact values (such as percentages) on the visualisation. One participant noted the direct percentages: \textit{``The percentages were up with the country name and made it easier to process, requiring less time to find percentages''}. Furthermore, 16\% of participants mentioned that the high contrast between colours, particularly among different categories, made distinctions clearer; while 11\% mentioned the different dashed line patterns in the line charts, for example, one participant stated: \textit{``I think the difference in the pattern of the lines in the second graph also made the countries more differentiable''}. Lastly, 5\% praised the focus on important areas. As one participant stated: \textit{I appreciate that it focused on specific places and didn't color the other ones that were not of focus — it helped keep the perspective and focus on the areas of interest instead of being overwhelming''}. 
+
+In contrast, when participants preferred the conventional visualisation (40\% of the time), 56\% of the justification cited a preference for minimal clutter, favouring charts that were not overloaded with information. Furthermore, 21\% referred to the map's legend preferring a legend where the intervals between different categories are consistent and evenly distributed and lastly, 13\% expressed a preference for a monotonic colour scale.
+
+\begin{figure}[t]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/updated-figs/heatmap_A-DS.png}
+        \caption{Heatmap showing the aspects that participants found useful in \texttt{A-DS}.}
+        \label{fig:heatmap-A}
+        \Description{Heatmap displaying the useful elements clicked in the DS-enhanced line chart (A-DS). Participants clicked most on annotations describing the trends over time, as well as key historical events marked on the graph.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/updated-figs/heatmap_A-Trad.png}
+        \caption{Heatmap showing the aspects that participants found useful in \texttt{A-CV}.}
+        \Description{Heatmap depicting the useful elements clicked in the conventional line chart (A-CV). Participants highlighted the legend and y-axis labels, showing less interaction with data points compared to the DS-enhanced version.}
+        \label{fig:heatmap-A-trad}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/updated-figs/heatmap_B-DS.png}
+        \caption{Heatmap showing the elements that participants found useful in \texttt{B-DS}.}
+        \Description{Heatmap showing the useful elements clicked by participants in the DS-enhanced map (B-DS). The most clicked areas include annotations on data points, such as country names, and key information presented within the map.}
+        \label{fig:heatmap-map-C}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/updated-figs/heatmap_B-Trad.png}
+        \caption{Heatmap showing the aspects that participants found useful in \texttt{B-CV}.}
+        \label{fig:heatmap-map-D}
+        \Description{Heatmap illustrating the useful elements clicked by participants in the conventional version of the map (B-CV). The key elements clicked include the legend and some country names, with fewer clicks on specific data points compared to the DS-enhanced version.}
+    \end{minipage}
+\end{figure}
+
+Complementing participants' written justifications, Figure \ref{fig:heatmap-map-C} and Figure \ref{fig:heatmap-map-D} display heatmaps of participants' clicks for visualisation \texttt{B}. In both versions, conventional (Figure \ref{fig:heatmap-map-D}) and DS-enhanced (Figure \ref{fig:heatmap-map-C}), the most popular areas were the annotations on data points on the graph (like the country names) and the legends. Moreover, the heatmaps shown in Figure \ref{fig:heatmap-A} (DS-enhanced) and Figure \ref{fig:heatmap-A-trad} (conventional) show the areas perceived as useful from visualisation \texttt{A}. 
+
+In Figure \ref{fig:heatmap-A} (DS-enhanced) the contextual information on data points were clicked on 170 times whereas in Figure \ref{fig:heatmap-A-trad} (conventional) the contextual information as a footnote received three times fewer clicks (only 46 clicks). Instead, in Figure \ref{fig:heatmap-A-trad} (conventional), the most highlighted element is the legend which was clicked on 75 times. Interestingly, both charts have the same y-axis label yet it is one of the main chosen elements in Figure \ref{fig:heatmap-A-trad} (conventional) clicked on it by 29 participants and it was less frequently chosen in Figure \ref{fig:heatmap-A} (DS-enhanced) where it was only selected by 8 participants.
+
+In summary, participants generally favoured DS-enhanced visualisations over conventional ones 60\% of the time, citing the placement of contextual information next to relevant data points (84\%), clear colour contrast (16\%), and distinct line patterns (11\%) as key reasons. In contrast, those who preferred conventional visualisations (40\%) valued minimal clutter (56\%), evenly spaced legends (21\%), and monotonic colour scales (13\%).

@@ -1,0 +1,289 @@
+\begin{thebibliography}{10}
+
+\bibitem{sutton1998reinforcement}
+Richard~S Sutton, Andrew~G Barto, et~al.
+\newblock {\em Reinforcement learning: An introduction}, volume~1.
+\newblock MIT press Cambridge, 1998.
+
+\bibitem{dulac2021challenges}
+Gabriel Dulac-Arnold, Nir Levine, Daniel~J Mankowitz, Jerry Li, Cosmin
+  Paduraru, Sven Gowal, and Todd Hester.
+\newblock Challenges of real-world reinforcement learning: definitions,
+  benchmarks and analysis.
+\newblock {\em Machine Learning}, 110(9):2419--2468, 2021.
+
+\bibitem{nachum2018data}
+Ofir Nachum, Shixiang~Shane Gu, Honglak Lee, and Sergey Levine.
+\newblock Data-efficient hierarchical reinforcement learning.
+\newblock {\em Advances in neural information processing systems}, 31, 2018.
+
+\bibitem{pateria2021hierarchical}
+Shubham Pateria, Budhitama Subagdja, Ah-hwee Tan, and Chai Quek.
+\newblock Hierarchical reinforcement learning: A comprehensive survey.
+\newblock {\em ACM Computing Surveys (CSUR)}, 54(5):1--35, 2021.
+
+\bibitem{arora2021survey}
+Saurabh Arora and Prashant Doshi.
+\newblock A survey of inverse reinforcement learning: Challenges, methods and
+  progress.
+\newblock {\em Artificial Intelligence}, 297:103500, 2021.
+
+\bibitem{ziebart2008maximum}
+Brian~D Ziebart, Andrew~L Maas, J~Andrew Bagnell, Anind~K Dey, et~al.
+\newblock Maximum entropy inverse reinforcement learning.
+\newblock In {\em Aaai}, volume~8, pages 1433--1438. Chicago, IL, USA, 2008.
+
+\bibitem{finn2016guided}
+Chelsea Finn, Sergey Levine, and Pieter Abbeel.
+\newblock Guided cost learning: Deep inverse optimal control via policy
+  optimization.
+\newblock In {\em International conference on machine learning}, pages 49--58.
+  PMLR, 2016.
+
+\bibitem{wan2023deir}
+Shanchuan Wan, Yujin Tang, Yingtao Tian, and Tomoyuki Kaneko.
+\newblock Deir: efficient and robust exploration through
+  discriminative-model-based episodic intrinsic rewards.
+\newblock {\em arXiv preprint arXiv:2304.10770}, 2023.
+
+\bibitem{penzkofer2024int}
+Anna Penzkofer, Simon Schaefer, Florian Strohm, Mihai B{\^a}ce, Stefan
+  Leutenegger, and Andreas Bulling.
+\newblock Int-hrl: towards intention-based hierarchical reinforcement learning.
+\newblock {\em Neural Computing and Applications}, pages 1--12, 2024.
+
+\bibitem{pan2018human}
+Xinlei Pan, Eshed Ohn-Bar, Nicholas Rhinehart, Yan Xu, Yilin Shen, and Kris~M
+  Kitani.
+\newblock Human-interactive subgoal supervision for efficient inverse
+  reinforcement learning.
+\newblock {\em arXiv preprint arXiv:1806.08479}, 2018.
+
+\bibitem{yi2024survey}
+Zihao Yi, Jiarui Ouyang, Yuwen Liu, Tianhao Liao, Zhe Xu, and Ying Shen.
+\newblock A survey on recent advances in llm-based multi-turn dialogue systems.
+\newblock {\em arXiv preprint arXiv:2402.18013}, 2024.
+
+\bibitem{brooks2023large}
+Ethan Brooks, Logan Walls, Richard~L Lewis, and Satinder Singh.
+\newblock Large language models can implement policy iteration.
+\newblock {\em Advances in Neural Information Processing Systems},
+  36:30349--30366, 2023.
+
+\bibitem{zhao2024expel}
+Andrew Zhao, Daniel Huang, Quentin Xu, Matthieu Lin, Yong-Jin Liu, and Gao
+  Huang.
+\newblock Expel: Llm agents are experiential learners.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial
+  Intelligence}, volume~38, pages 19632--19642, 2024.
+
+\bibitem{zhai2025enhancing}
+Yuanzhao Zhai, Tingkai Yang, Kele Xu, Dawei Feng, Cheng Yang, Bo~Ding, and
+  Huaimin Wang.
+\newblock Enhancing decision-making for llm agents via step-level q-value
+  models.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial
+  Intelligence}, volume~39, pages 27161--27169, 2025.
+
+\bibitem{roziere2023code}
+Baptiste Roziere, Jonas Gehring, Fabian Gloeckle, Sten Sootla, Itai Gat,
+  Xiaoqing~Ellen Tan, Yossi Adi, Jingyu Liu, Romain Sauvestre, Tal Remez,
+  et~al.
+\newblock Code llama: Open foundation models for code.
+\newblock {\em arXiv preprint arXiv:2308.12950}, 2023.
+
+\bibitem{yan2023codescope}
+Weixiang Yan, Haitian Liu, Yunkun Wang, Yunzhe Li, Qian Chen, Wen Wang, Tingyu
+  Lin, Weishan Zhao, Li~Zhu, Hari Sundaram, et~al.
+\newblock Codescope: An execution-based multilingual multitask multidimensional
+  benchmark for evaluating llms on code understanding and generation.
+\newblock {\em arXiv preprint arXiv:2311.08588}, 2023.
+
+\bibitem{yang2024qwen2}
+An~Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo~Zheng, Bowen Yu,
+  Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, et~al.
+\newblock Qwen2. 5 technical report.
+\newblock {\em arXiv preprint arXiv:2412.15115}, 2024.
+
+\bibitem{yao2023react}
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+  and Yuan Cao.
+\newblock React: Synergizing reasoning and acting in language models.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2023.
+
+\bibitem{guo2025deepseek}
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu,
+  Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et~al.
+\newblock Deepseek-r1: Incentivizing reasoning capability in llms via
+  reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2501.12948}, 2025.
+
+\bibitem{cao2024surveylargelanguagemodelenhanced}
+Yuji Cao, Huan Zhao, Yuheng Cheng, Ting Shu, Yue Chen, Guolong Liu, Gaoqi
+  Liang, Junhua Zhao, Jinyue Yan, and Yun Li.
+\newblock Survey on large language model-enhanced reinforcement learning:
+  Concept, taxonomy, and methods, 2024.
+
+\bibitem{brohan2023can}
+Anthony Brohan, Yevgen Chebotar, Chelsea Finn, Karol Hausman, Alexander Herzog,
+  Daniel Ho, Julian Ibarz, Alex Irpan, Eric Jang, Ryan Julian, et~al.
+\newblock Do as i can, not as i say: Grounding language in robotic affordances.
+\newblock In {\em Conference on robot learning}, pages 287--318. PMLR, 2023.
+
+\bibitem{dalal2024plan}
+Murtaza Dalal, Tarun Chiruvolu, Devendra Chaplot, and Ruslan Salakhutdinov.
+\newblock Plan-seq-learn: Language model guided rl for solving long horizon
+  robotics tasks.
+\newblock {\em arXiv preprint arXiv:2405.01534}, 2024.
+
+\bibitem{du2023guiding}
+Yuqing Du, Olivia Watkins, Zihan Wang, C{\'e}dric Colas, Trevor Darrell, Pieter
+  Abbeel, Abhishek Gupta, and Jacob Andreas.
+\newblock Guiding pretraining in reinforcement learning with large language
+  models.
+\newblock In {\em International Conference on Machine Learning}, pages
+  8657--8677. PMLR, 2023.
+
+\bibitem{xie2024text2reward}
+Tianbao Xie, Siheng Zhao, Chen~Henry Wu, Yitao Liu, Qian Luo, Victor Zhong,
+  Yanchao Yang, and Tao Yu.
+\newblock Text2reward: Automated dense reward function generation for
+  reinforcement learning.
+\newblock In {\em International Conference on Learning Representations (ICLR),
+  2024 (07/05/2024-11/05/2024, Vienna, Austria)}, 2024.
+
+\bibitem{ma2023eureka}
+Yecheng~Jason Ma, William Liang, Guanzhi Wang, De-An Huang, Osbert Bastani,
+  Dinesh Jayaraman, Yuke Zhu, Linxi Fan, and Anima Anandkumar.
+\newblock Eureka: Human-level reward design via coding large language models.
+\newblock {\em arXiv preprint arXiv:2310.12931}, 2023.
+
+\bibitem{hazra2024revolve}
+Rishi Hazra, Alkis Sygkounas, Andreas Persson, Amy Loutfi, and Pedro
+  Zuidberg~Dos Martires.
+\newblock Revolve: Reward evolution with large language models using human
+  feedback.
+\newblock {\em arXiv preprint arXiv:2406.01309}, 2024.
+
+\bibitem{yu2019meta}
+Tianhe Yu, Deirdre Quillen, Zhanpeng He, Ryan Julian, Karol Hausman, Chelsea
+  Finn, and Sergey Levine.
+\newblock Meta-world: A benchmark and evaluation for multi-task and meta
+  reinforcement learning.
+\newblock In {\em Conference on Robot Learning (CoRL)}, 2019.
+
+\bibitem{taomaniskill3}
+Stone Tao, Fanbo Xiang, Arth Shukla, Yuzhe Qin, Xander Hinrichsen, Xiaodi Yuan,
+  Chen Bao, Xinsong Lin, Yulin Liu, Tse kai Chan, Yuan Gao, Xuanlin Li,
+  Tongzhou Mu, Nan Xiao, Arnav Gurha, Viswesh~Nagaswamy Rajesh, Yong~Woo Choi,
+  Yen-Ru Chen, Zhiao Huang, Roberto Calandra, Rui Chen, Shan Luo, and Hao Su.
+\newblock Maniskill3: Gpu parallelized robotics simulation and rendering for
+  generalizable embodied ai.
+\newblock {\em Robotics: Science and Systems}, 2025.
+
+\bibitem{prasad2023adapt}
+Archiki Prasad, Alexander Koller, Mareike Hartmann, Peter Clark, Ashish
+  Sabharwal, Mohit Bansal, and Tushar Khot.
+\newblock Adapt: As-needed decomposition and planning with language models.
+\newblock {\em arXiv preprint arXiv:2311.05772}, 2023.
+
+\bibitem{sarukkai2024automatedrewardsllmgeneratedprogress}
+Vishnu Sarukkai, Brennan Shacklett, Zander Majercik, Kush Bhatia, Christopher
+  Ré, and Kayvon Fatahalian.
+\newblock Automated rewards via llm-generated progress functions, 2024.
+
+\bibitem{cao2024drlc}
+Meng Cao, Lei Shu, Lei Yu, Yun Zhu, Nevan Wichers, Yinxiao Liu, and Lei Meng.
+\newblock Drlc: Reinforcement learning with dense rewards from llm critic.
+\newblock {\em arXiv e-prints}, pages arXiv--2401, 2024.
+
+\bibitem{khot2023decomposedpromptingmodularapproach}
+Tushar Khot, Harsh Trivedi, Matthew Finlayson, Yao Fu, Kyle Richardson, Peter
+  Clark, and Ashish Sabharwal.
+\newblock Decomposed prompting: A modular approach for solving complex tasks,
+  2023.
+
+\bibitem{yuan2023tasklamaprobingcomplextask}
+Quan Yuan, Mehran Kazemi, Xin Xu, Isaac Noble, Vaiva Imbrasaite, and Deepak
+  Ramachandran.
+\newblock Tasklama: Probing the complex task understanding of language models,
+  2023.
+
+\bibitem{chen2023nl2tl}
+Yongchao Chen, Rujul Gandhi, Yang Zhang, and Chuchu Fan.
+\newblock Nl2tl: Transforming natural languages to temporal logics using large
+  language models.
+\newblock {\em arXiv preprint arXiv:2305.07766}, 2023.
+
+\bibitem{chen2024autotamp}
+Yongchao Chen, Jacob Arkin, Charles Dawson, Yang Zhang, Nicholas Roy, and
+  Chuchu Fan.
+\newblock Autotamp: Autoregressive task and motion planning with llms as
+  translators and checkers.
+\newblock In {\em 2024 IEEE International conference on robotics and automation
+  (ICRA)}, pages 6695--6702. IEEE, 2024.
+
+\bibitem{devidze2024informativenessrewardfunctionsreinforcement}
+Rati Devidze, Parameswaran Kamalaruban, and Adish Singla.
+\newblock Informativeness of reward functions in reinforcement learning, 2024.
+
+\bibitem{eschmann2021reward}
+Jonas Eschmann.
+\newblock Reward function design in reinforcement learning.
+\newblock {\em Reinforcement learning algorithms: Analysis and Applications},
+  pages 25--33, 2021.
+
+\bibitem{gao2023pal}
+Luyu Gao, Aman Madaan, Shuyan Zhou, Uri Alon, Pengfei Liu, Yiming Yang, Jamie
+  Callan, and Graham Neubig.
+\newblock Pal: Program-aided language models.
+\newblock In {\em International Conference on Machine Learning}, pages
+  10764--10799. PMLR, 2023.
+
+\bibitem{ng1999policy}
+Andrew~Y Ng, Daishi Harada, and Stuart Russell.
+\newblock Policy invariance under reward transformations: Theory and
+  application to reward shaping.
+\newblock In {\em Icml}, volume~99, pages 278--287. Citeseer, 1999.
+
+\bibitem{Wiewiora_2003}
+E.~Wiewiora.
+\newblock Potential-based shaping and q-value initialization are equivalent.
+\newblock {\em Journal of Artificial Intelligence Research}, 19:205–208,
+  September 2003.
+
+\bibitem{gao2022simcsesimplecontrastivelearning}
+Tianyu Gao, Xingcheng Yao, and Danqi Chen.
+\newblock Simcse: Simple contrastive learning of sentence embeddings, 2022.
+
+\bibitem{haarnoja2018softactorcriticoffpolicymaximum}
+Tuomas Haarnoja, Aurick Zhou, Pieter Abbeel, and Sergey Levine.
+\newblock Soft actor-critic: Off-policy maximum entropy deep reinforcement
+  learning with a stochastic actor, 2018.
+
+\bibitem{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock {\em arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem{stable-baselines3}
+Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian
+  Ernestus, and Noah Dormann.
+\newblock Stable-baselines3: Reliable reinforcement learning implementations.
+\newblock {\em Journal of Machine Learning Research}, 22(268):1--8, 2021.
+
+\bibitem{hurst2024gpt}
+Aaron Hurst, Adam Lerer, Adam~P Goucher, Adam Perelman, Aditya Ramesh, Aidan
+  Clark, AJ~Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, et~al.
+\newblock Gpt-4o system card.
+\newblock {\em arXiv preprint arXiv:2410.21276}, 2024.
+
+\bibitem{liu2024exploring}
+Fang Liu, Yang Liu, Lin Shi, Houkun Huang, Ruifeng Wang, Zhen Yang, Li~Zhang,
+  Zhongqi Li, and Yuchi Ma.
+\newblock Exploring and evaluating hallucinations in llm-powered code
+  generation.
+\newblock {\em arXiv preprint arXiv:2404.00971}, 2024.
+
+\end{thebibliography}

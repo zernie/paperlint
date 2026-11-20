@@ -32,7 +32,7 @@ A reader sees a paragraph's length before reading a word. A page-long block is s
 the argument turns on in the middle of it is lost. 150 is the wall `writing-craft.md` names (its
 "wall-of-text check"); it is a general default, not a venue's.
 
-Measured with this rule's own counter on the accepted papers of `fixtures/accepted-papers/`
+Measured with this rule's own counter on the accepted papers of `fixtures/real-papers/accepted/`
 (p50 / p95 / p99 / max in words; one finding per paragraph over 150):
 
 | paper                                     | layout          | paragraphs | p50 | p95 | p99 | max | over 150 |

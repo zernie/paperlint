@@ -1,0 +1,299 @@
+\section{Side Channel Attacks}
+\label{sec:side_channel}
+In this section, we utilize the leakage vectors identified in Section~\ref{sec:reverse_engineering} to design three side-channel attacks: website fingerprinting, video fingerprinting, and application fingerprinting. We assume a malicious process continually profiles timing side-channel leakage through \textit{syncfs} while a victim process visits a website, watches a video, or launches an application. This approach enables the identification of the specific website, video, or application accessed by the victim. The website and video fingerprinting attacks are demonstrated on Linux file systems (Section~\ref{subsec:web_finger} and Section~\ref{subsec:video_finger}), while the application launch identification attack (Section~\ref{subsec:app_finger}) is conducted on Android devices. 
+
+
+
+
+
+
+
+
+\begin{figure*}[ht]
+    \centering
+    % First subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/google.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-4mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{google.com}
+    \end{subfigure}
+    % Second subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/netflix.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-4mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{netflix.com}
+    \end{subfigure}
+    % Third subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/reddit.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-4mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{reddit.com}
+    \end{subfigure}
+    
+    \caption{The STFTs of side-channel traces collected during the victim’s access to different websites show distinct patterns for (a) google.com, (b) netflix.com, and (c) reddit.com.}
+    \label{fig:web_stft}
+\end{figure*}
+
+\subsection{Attack 1: Web Fingerprinting on Linux}
+\label{subsec:web_finger}
+
+
+
+In this attack, we demonstrate that an attacker can infer the specific website visited by the victim user in a closed-world setting over the top 100 websites from the Alexa top 1 million list~\cite{alexa_100} and an open-world setting with the top 100 websites and an \texttt{other-class} for websites that not listed in the top 100 websites. 
+
+\textbf{{Experimental setup and attack overview.}} We run our experiments with the Chrome browser (Version 124.0.6367.201) on an i7-11800h CPU and Ubuntu 20.04. We assume the attacker is a normal user on that machine and can access the unprivileged \textit{rdtsc} timer and \textit{syncfs} system call. The system configurations are all in default with the ext4 file system. The attack and the victim co-locate on the main partition of the disk that is running the ext4 file system. We assume the victim Chrome browser has browser cache enabled as default. 
+
+Our attack consists of two main stages: an online data collection phase and an offline phase for data preprocessing and trace evaluation. In the online phase, the attacker profiles the file system's write pattern in the background while the victim loads a website. As the website loads, the browser requests necessary files from the server and stores them in its cache. These temporary cache files are often partially encrypted and have limited user access. Although Chrome isolates each tab or process in a sandboxed environment to protect its cache, the browser cache files still share the page cache with other processes. Each website has a unique \textit{syncfs} delay pattern due to its specific write frequency and object sizes. 
+
+
+
+\textbf{Observing STFT distinguishability and classification.}
+To process the data, we apply the short-time Fourier transform (STFT)~\cite{griffin1984signal} on the traces with a window size of 256 to capture frequency information. STFT highlights how frequency components change over time, refining signal analysis~\cite{rauscher2024idleleak, huang2019ecg_stft, chikkerur2007fingerprint_stft}. Using the \textit{scipy} package~\cite{virtanen2020scipy}, we implement STFT and present the results in Figure~\ref{fig:web_stft}, showing traces for \texttt{google.com}, \texttt{netflix.com}, and \texttt{reddit.com}. The x-axis represents sample numbers, with each trace containing 50,000 samples, while the y-axis indicates frequency changes. Observing the STFTs of these websites reveals clear distinguishability, enabling us to classify them by feeding these STFT images into a convolutional neural network (CNN).
+
+We use the ResNet-152 CNN model~\cite{he2016deep} with pre-trained weights, customizing the first layer to accept a single input channel for our grayscale STFT images. The STFT images are resized to 224 by 224 pixels, and we train and evaluate the model in PyTorch~\cite{paszke2019pytorch} version 2.1.2 using 10-fold cross-validation~\cite{kohavi1995study}. For each fold, we evaluate performance using three metrics: F1 score (F1), Precision (Prec), and Recall (Rec). Our training setup utilizes the \textit{CrossEntropyLoss} function for multi-class classification and optimizes using the \textit{Adam} optimizer with a learning rate of 0.0001 and weight decay of 1e-5.
+
+\textbf{{Evaluation in close-world setting.}} We collect 10,000 traces (100 per website) for a closed-world attack, resulting in 100 STFT images per website. The last layer of ResNet-152 is set to 100 classes, and the model is evaluated on an NVIDIA Tesla V100 GPU. We use a batch size of 80 for both training and evaluation. Table~\ref{tb:web_results} presents the performance of our side-channel attack on website fingerprinting. The average F1 score across 10 folds is 93.82\%, with a standard deviation of 6.96\%. Precision averages over 94\%, with a standard deviation of 5.58\%, while recall reaches an average of 93.77\%, with a 7.09\% standard deviation across 10-fold cross-validation.
+
+ \textbf{{Evaluation in open-world setting.}} The classification results reported in previous sections were based on datasets collected in a closed-world setting (100 traces for each of the Alexa top 100 websites). To evaluate our attack in an open-world setting, we collected additional traces following the methodology outlined in prior works~\cite{ferguson2024webgpu, rauscher2024idleleak, wu2022rendering}. The open-world dataset includes the closed-world data plus 5,000 randomly selected Alexa websites (1 trace per website). We used the same ResNet-152 model, adjusting the last layer to classify 101 classes. Table~\ref{tb:web_results} presents our website fingerprinting attack's performance in the open-world setting. The average F1 score across 10 folds slightly decreases from 93.82\% to 93.25\%, with a standard deviation of 6.79\%, due to the addition of the new \texttt{other-class}. Precision remains above 94\%, with a standard deviation of 5.42\%, and recall averages 93.25\%, with a standard deviation of 6.67\% across 10-fold cross-validation.
+
+
+
+
+
+
+
+% \begin{figure*}[ht]
+%     \centering
+%     % First row of figures
+%     \subfigure[Reduction (from CUDA samples).]{
+%         \includegraphics[width=0.31\textwidth]{figures/}
+%         \label{fig:reduction}
+%     }
+%     \hfill
+%     \subfigure[bf16TensorCoreGemm (from CUDA samples).]{
+%         \includegraphics[width=0.31\textwidth]{figures/}
+%         \label{fig:bf16}
+%     }
+%     \hfill
+%     \subfigure[Srad (from Rodinia benchmarks).]{
+%         \includegraphics[width=0.31\textwidth]{figures/}
+%         \label{fig:srad}
+%     }
+%     \vspace{-0.3cm}
+%     \caption{The STFTs of the traces of different website show distinct patterns: (a) and (b).}
+%     \label{fig:web_stft}
+% \end{figure*}
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{table}[]
+\centering
+% \normalsize
+\caption{Web fingerprint performance: F1 (\%), Precision (\%), and Recall (\%).}
+\begin{tabular}{c|c|c|c|}
+\cline{2-4}
+                                  & \textbf{F1}     & \textbf{Precision} & \textbf{Recall} \\ \cline{2-4} 
+                                  & \textbf{$ \mu (\sigma)$} &  \textbf{$ \mu (\sigma)$}    & \textbf{$ \mu (\sigma)$} \\ \hline \hline
+\multicolumn{1}{|c|}{Close world} & 93.82 (6.96)    & 94.99 (5.58)       & 93.77 (7.09)    \\ \hline
+\multicolumn{1}{|c|}{Open world}  & 93.25 (6.79)               & 94.67 (5.42)                   &   93.25 (6.67)              \\ \hline
+\end{tabular}
+\label{tb:web_results}
+\end{table}
+
+
+\subsection{Attack 2: Video Fingerprinting on Linux}
+\label{subsec:video_finger}
+
+\begin{figure*}[ht]
+    \centering
+    % First subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/video2.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{Video 1 from \texttt{youtube.com}}
+    \end{subfigure}
+    % Second subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/video7.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{Video 2 from \texttt{youtube.com}}
+    \end{subfigure}
+    % Third subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/video11.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{Video 3 from \texttt{youtube.com}}
+    \end{subfigure}
+    
+    \caption{The STFTs of side-channel traces collected during the victim’s playback of different videos on \texttt{youtube.com} reveal distinct patterns for each of the three videos.}
+    \label{fig:video_stft}
+\end{figure*}
+
+In this attack, we demonstrate that an attacker can infer the specific video played by the victim in a closed-world setting across the top 20 videos from two platforms: YouTube (\texttt{youtube.com}) and Bilibili (\texttt{bilibili.com}) trending lists. We also evaluate in an open-world setting, which includes the top 20 videos plus an \texttt{other-class} for videos not listed in the trending lists.
+
+\textbf{{Experimental setup and data collection.}} In this attack, we conduct our experiments on an i7-11800h CPU with Ubuntu 20.04. We assume the attacker is a standard user on the machine with access to the unprivileged \textit{rdtsc} timer and \textit{syncfs} system call. Following the previous video fingerprinting attack setup, we use FFmpeg for live video streaming, as done in previous works~\cite{singh2018video, gu2018walls, garboan2012camcorder, blaskiewicz2020droppix}. FFmpeg, an open-source audio and video converter, supports most industry-standard codecs, enabling efficient file format conversion~\cite{tomar2006converting}. 
+
+In our attack, we assume the victim uses \textit{ffplay}, a lightweight media player based on FFmpeg libraries, to watch video streams, while a separate host machine runs \textit{ffmpeg} as the streaming server. Meanwhile, the attacker profiles the write patterns of the victim's \textit{ffplay} in the background. For smooth playback, \textit{ffplay} uses a file system-backed temporary file to store received raw data. As the MPEG video is encoded, the received data is written to this file. The size and frequency of these writes are closely correlated with the visual content and dynamics of the video. Higher-resolution videos yield higher-quality signals, as the encoder operates more slowly and produces larger outputs, resulting in richer side-channel traces and improved classification accuracy. Consequently, the attacker can fingerprint the victim’s video by profiling these write patterns via the \textit{syncfs} system call.
+
+
+ \textbf{Observing STFT Differentiability and Classification.} Following our web fingerprinting attack’s preprocessing method, we use STFT to extract frequency-based features from time-series leakages collected via the \textit{syncfs} system call. The STFT uses a window size of 256 to capture frequency information. Fig~\ref{fig:video_stft} shows the STFT images representing playback patterns for three videos when the victim streams them. The x-axis denotes sample numbers, with each trace containing 50,000 samples, while the y-axis represents frequency features. Observing these STFTs reveals clear differentiability, enabling the attacker to identify which video is playing on the victim’s device.
+
+We use the same ResNet-152 CNN model as in our web fingerprinting attack, modifying the last layer to classify 20 classes. The model is evaluated using 10-fold cross-validation and three performance metrics: F1 score (F1), Precision (Prec), and Recall (Rec). Our training setup includes \textit{CrossEntropyLoss} as the loss function and \textit{AdamW} as the optimizer, with a learning rate of 0.0001 and weight decay of 1e-5.
+
+\textbf{{Close-world setting.}} We collect 2,000 traces (100 per video) for a closed-world attack, resulting in 100 STFT images per video. A batch size of 20 is used for both training and evaluation. Table~\ref{tb:youtube_results} and Table~\ref{tb:bili_results} present the performance of our video fingerprinting attack across two platforms. On YouTube, the average F1 score across 10 folds exceeds 95\%, with a small standard deviation of 7.64\%. Precision averages 96.45\%, with a standard deviation of 6.22\%, while recall averages 95.68\%, with a 7.63\% standard deviation across 10-fold cross-validation. However, on Bilibili, the model performs slightly worse: the F1 score drops to 89.68\%, with a higher standard deviation of 15.84\%. Precision remains above 90\%, with a standard deviation of 14.57\%, and recall decreases to 89.80\%, with a standard deviation of 15.54\%. We conjecture that the difference in performance between the two platforms is due to video quality. On Bilibili, videos are played in low quality by default~\cite{zhang2023multi}, whereas YouTube does not impose this constraint. 
+
+% The lower video quality of the Bilibili platform generates similar side channel leakages () makes our model harder to distingish the top 20 videos
+
+\textbf{{Open-world setting.}} In addition to the top 20 videos in the closed-world setting, we add an \texttt{other-class} containing 50 randomly selected videos (1 trace per video). We retrained the same ResNet-152 model, adjusting the last layer to classify 21 classes. Table~\ref{tb:youtube_results} and Table~\ref{tb:bili_results} present the performance of our video fingerprinting attack in the open-world setting. On YouTube, the F1 score decreases by approximately 3\%, with precision dropping around 2\% and recall by 3\% compared to the closed-world setting. On Bilibili, performance also decreases, but the F1 score still exceeds 87\%, with precision reaching 89.26\% and recall remaining over 87\%.
+
+
+
+\textbf{Web vs video.} We assume, consistent with prior web and video fingerprinting attacks, that the attacker already knows whether the victim is browsing the web or watching videos. However, this assumption is not critical since we observe that \textit{syncfs} exhibits distinct timing patterns across these activities that would allow an attacker to recognize when these applications execute. Thus, a spy could continuously collect \textit{syncfs} traces, which are then processed to identify when our target applications start to spy on them.  To provide evidence that the signal can be used to identify applications, we show that we can tell traces from our two target applications apart.  In particular, we train a binary classifier using the same CNN model employed in our fingerprinting attacks to infer the victim’s activity type, to provide evidence that the attack does not rely on knowing when the target applications are launched. The dataset contains 4,000 signal traces, evenly split between web browsing and video watching. Our model achieves an F1 score exceeding 99\% across 10-fold cross-validation, with a standard deviation of just 0.12\%. The average precision and recall are 99.98\% and 99.82\%, respectively, with standard deviations of 0.07\% and 0.25\%. %\nael{This classifier assumes that we know that one of them was launched and all we have to do is to tell them apart. I think the reviewer wants evidence that we can recognize when they get started at an arbitrary time or recognize them out of a group of other applications.  Perhaps we can rephrase the claim to something where this classifier supports the statement?}
+
+
+\textbf{Robustness against noise.} Our preceding experiments were conducted in a relatively quiet environment. However, in real-world settings, other applications may also run on the same file system, introducing noise that degrades the quality of side-channel leakages. To evaluate the impact of such noise on the video fingerprinting attack, we ran a web browser in the background and opened additional browser tabs, then re-evaluated the attack under these conditions. We used the same experimental testbed and classifiers for consistency. As a result, when one browser tab was opened in the background, the average F1 score on YouTube dropped from 95.69\% to 79.57\%, with a standard deviation of 12.61\%. When five tabs were opened, the F1 score dropped further to 74.93\%, with a standard deviation of 13.75\%. Even with noise, the results remain far above the 5\% random-guess baseline for 20-class classification. This demonstrates that the side channel remains leaky and exploitable even in noisier environments.
+
+\begin{table}[]
+\centering
+% \footnotesize
+\caption{Video fingerprint performance on Youtube: F1 (\%), Precision (\%), and Recall (\%).}
+\begin{tabular}{c|c|c|c|}
+\cline{2-4}
+                                  & \textbf{F1}     & \textbf{Precision} & \textbf{Recall} \\ \cline{2-4} 
+                                  & \textbf{$ \mu (\sigma)$} & \textbf{$ \mu (\sigma)$}    & \textbf{$ \mu (\sigma)$} \\ \hline \hline
+\multicolumn{1}{|c|}{Close world} &   95.69 (7.64)  &   96.45 (6.22)    &  95.68 (7.63) \\ \hline
+\multicolumn{1}{|c|}{Open world}  &   92.74 (12.87)              &       94.70  (9.21)             &   92.69 (12.95)              \\ \hline
+\end{tabular}
+\label{tb:youtube_results}
+\end{table}
+
+
+\begin{table}[]
+\centering
+% \footnotesize
+\caption{Video fingerprint performance on Bilibili: F1 (\%), Precision (\%), and Recall (\%).}
+\begin{tabular}{c|c|c|c|}
+\cline{2-4}
+                                  & \textbf{F1}     & \textbf{Precision} & \textbf{Recall} \\ \cline{2-4} 
+                                  & \textbf{$ \mu (\sigma)$} & \textbf{$ \mu (\sigma)$}    & \textbf{$ \mu (\sigma)$} \\ \hline \hline
+\multicolumn{1}{|c|}{Close world} &  89.68 (15.84)  &   90.87 (14.57)     &   89.80 (15.54)  \\ \hline
+\multicolumn{1}{|c|}{Open world}  &    87.03 (18.33)             &     89.26 (15.69)               &     87.26 (17.87)            \\ \hline
+\end{tabular}
+\label{tb:bili_results}
+\end{table}
+
+
+\subsection{Attack 3: Application Fingerprinting on Android}
+\label{subsec:app_finger}
+
+Information about other concurrent applications can reveal sensitive details about user activity and provide context for additional attacks, such as phishing~\cite{diao2016no} and keystroke inference~\cite{zhang2023s}. In this section, we show that an attacker can identify specific applications launched by the victim from a set of 15 popular Android applications.
+
+\textbf{{Experimental setup and data collection.}} In this attack, we conduct our experiments on a Samsung S20 running Android 14. We assume the attacker is a standard user on this phone, with access to the unprivileged \textit{clock\_gettime} timer and \textit{syncfs} system call.  Following the setup of our previous fingerprinting attacks, we assume the victim launches applications in the foreground, while the attacker profiles the write patterns of these launches in the background. The sampling rate of the attacker's profiler is around 150,000 cycles/sec. Since each application launch generates unique write patterns in the Android system’s page cache, the attacker can infer the victim’s application by monitoring these patterns through the \textit{syncfs} system call. 
+Table~\ref{tb:applist} lists the tested applications, all of which were downloaded from the Google Play Store. These apps represent the most popular choices within their respective categories. 
+
+\begin{table}[tb]
+\small
+\centering
+\begin{tabular}{|l|L{4.5cm}|}
+\hline
+\textbf{Category} & \textbf{Application}                                              \\ \hline
+\hline
+Social \& Entertainment      & Bluesky, Instagram, Tiktok, X, Netflix, IMDB, Youtube, Genshin Impact                          \\ \hline
+Shopping \& E-commerce        & Amazon, Temu                    \\ \hline
+Travel \& Services     & Airbnb, Uber \\ \hline
+Finance \& Utilities     & Wells Fargo, ChatGPT, Google Map \\ \hline
+\end{tabular}
+\caption{Applications evaluated for the application fingerprinting attack.}
+\label{tb:applist}
+\end{table}
+
+
+
+\begin{figure*}[t]
+    \centering
+    % First subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/x.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{X (Twitter)}
+    \end{subfigure}
+    % Second subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/tiktok.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{Tiktok}
+    \end{subfigure}
+    % Third subfigure
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[width=\textwidth]{figures/uber.png}}; % Replace with your actual image file
+            \node[above=-5mm] at (image.south) {Sample}; % Move "Sample" slightly farther away
+            \node[rotate=90, anchor=south, yshift=-3mm] at (image.west) {Frequency}; % Move "Frequency" closer
+        \end{tikzpicture}
+        \caption{Uber}
+    \end{subfigure}
+    
+    \caption{The STFTs of side-channel traces collected during the victim’s launch of different applications on an Android phone reveal distinct patterns for (a) X (Twitter), (b) TikTok, and (c) Uber.} 
+    \label{fig:app_stft}
+\end{figure*}
+
+\textbf{Application fingerprinting demonstration and results.} We use STFT for data preprocessing to extract frequency-based features from time-series leakages collected via the \textit{syncfs} system call. The STFT uses a window size of 256 to capture frequency information. Fig~\ref{fig:app_stft} displays STFT images representing the launch patterns of three popular Android applications: X, TikTok, and Uber. The x-axis denotes sample numbers, with each trace containing 600,000 samples, while the y-axis represents frequency features. Utilizing the new timer on the Android phone provides a higher sample rate than in the previous two attacks. This results in clearly differentiated STFT images, allowing us to identify which application is concurrently running on the victim’s device. We use the same ResNet-152 CNN model as in our web fingerprinting attack, modifying the last layer to classify 15 classes. During training, we set \textit{CrossEntropyLoss} as the loss function and \textit{AdamW} as the optimizer, with a learning rate of 0.0001 and weight decay of 1e-5. The batch size for both training and testing is set to 80.
+
+
+Table~\ref{tb:app_results} presents the performance of our application fingerprinting attack across 10 folds. The average F1 score is 93.49\%, with a standard deviation of 9.09\%. Precision averages 95.13\%, with a standard deviation of 6.85\%, while recall is over 96\%, with a standard deviation of 8.85\% across 10-fold cross-validation.
+
+\begin{table}[t]
+\centering
+% \footnotesize
+\caption{Application fingerprint performance on Android phone: F1 (\%), Precision (\%), and Recall (\%).}
+\begin{tabular}{c|c|c|c|}
+\cline{2-4}
+                                  & \textbf{F1}     & \textbf{Precision} & \textbf{Recall} \\ \cline{2-4} 
+                                  & \textbf{$ \mu (\sigma)$} & \textbf{$ \mu (\sigma)$}    & \textbf{$ \mu (\sigma)$} \\ \hline \hline
+\multicolumn{1}{|c|}{Android} & 93.49 (9.09)  &   95.13 (6.85)     &   96.62 (8.85)  \\ \hline
+
+\end{tabular}
+\label{tb:app_results}
+\end{table}

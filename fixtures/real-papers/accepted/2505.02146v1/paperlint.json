@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "osdi-2025",
+      "venue": {
+        "kind": "named",
+        "name": "OSDI 2025",
+        "url": "https://arxiv.org/abs/2505.02146v1"
+      },
+      "opened": "2025-05-04",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-05-04",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

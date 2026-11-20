@@ -1,0 +1,255 @@
+\begin{figure*}[t]
+\vspace{-20pt}
+\centering
+\includegraphics[width=0.95\linewidth]{figures/Neural-Symbolic_Program_Synthesis.pdf}
+    \vspace{-10pt}
+    \caption{An illustrative example of the proposed neural-symbolic program synthesis on a tensorization case.}% The black arrows show the candidate programs of the translated code. }
+    % \vspace{-15pt}
+    \label{fig:transformation-example}
+    \vspace{-10pt}
+\end{figure*}
+
+\vspace{-10pt}
+\section{Neural-Symbolic Program Synthesis}\label{sec:transformation}
+\name{} breaks down the traditional program transformation process into multiple transformation passes, with each pass covering a full workflow of neural-symbolic program synthesis containing program annotation, meta-prompts based transformation, bug localization, and SMT-based code repairing.
+The neural processes, program annotation, and meta-prompts based transformation, leverage the programming manual and the prior knowledge within the LLM to enhance the flexibility of program transformation, enabling \name{} to handle larger-scale code compared to traditional methods. 
+Meanwhile, the symbolic processes, bug localization, and SMT-based code repairing, ensure the correctness of the transformed program.
+These four processes are illustrated in Figure~\ref{fig:transformation-example}.
+
+
+\vspace{-10pt}
+\subsection{Program Annotation}
+For a specific transformation pass, the program annotation process marks code blocks with semantics related to the transformation pass, assisting in the subsequent program transformation process.
+
+As shown in Algorithm~\ref{alg:code_annotation}, program annotation consists of two parts. The first part (lines 2-3) is semantics annotation which involves identifying computational operations with semantics (e.g., \texttt{operation(matmul)}). This part is performed by an LLM. 
+The second part (lines 4-11) is reference annotation which involves performing an information retrieval in the programming manual based on each identified computational operation to obtain the corresponding target operation and parameters (e.g., \texttt{intrinsic(\_\_bang\_mlp(input[Nram, Wram], output[Nram])}). This part is first performed by a BM25 search engine~\cite{10.1145/2682862.2682863} which can retrieve related information from the programming manual. Then, the retrieved information and the source program are sent to an LLM to annotate the operator with references. 
+
+Program annotation serves two main purposes. First, by identifying the computation operations in the source program, semantics annotation abstracts the platform-agnostic functional semantics of the source program instead of focusing on platform-specific details, which can help LLMs generate semantically correct programs in the subsequent LLM-assisted program transformation. 
+Second, by applying reference annotation, the identified computational operations and their associated hardware characteristics (e.g., memory or computation shape constraints for special intrinsics) can be used in the subsequent meta-prompts based transformation process, aiding LLMs in generating more accurate programs.
+\vspace{-10pt}
+
+\begin{algorithm}[!h]
+\scriptsize
+\SetAlgoLined
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{A source program $P$}
+\Output{An annotated program}
+\textbf{Given:} LLM, BM25 search engine (SE), programming manual $M$
+
+\text{// Annotate program with identified computation}
+
+$P_{d} \gets LLM(P) $
+
+\text{\footnotesize{// Get the list of computation information}}
+
+$L \gets \text{TraverseComputation}(P_{d})$
+
+\For{$n$ in $L$}{
+    \text{\footnotesize{// Retrieve the programming manual of each computation}}
+    
+    $D \gets SE(n, M)$
+    
+    \text{// Annotate program with memory spaces or tensor intrinsics}
+    
+    $P_{d} \gets LLM(P_{d}, D)$
+}
+\textbf{return} $P_{d}$
+\caption{Program Annotation Algorithm}
+\label{alg:code_annotation}
+\end{algorithm}
+
+\vspace{-20pt}
+\subsection{Meta-Prompts based Transformation}
+Meta-prompts-based transformation uses LLMs to convert the source program into the target program with a correct program sketch. 
+In this approach, meta-prompt is a high-level prompt template that can be adapted to different source programs based on the results of the previous program annotation process. The adapted prompt, along with the source program, is then provided as input to the LLMs. 
+Each transformation pass has its own meta-prompt. Meta-prompts mainly consist of three parts: platform-agnostic description, platform-specific examples, and tuning knobs.
+
+\textbf{Platform-agnostic description.}
+The platform-agnostic part describes the program's functionality and detailed constraints that must be considered during implementation. For example, in the case of Figure~\ref{fig:transformation-example}, the platform-agnostic part refers to the functionality of the tensorization in the context of SIMD and the application scenarios like deep learning frameworks and common linear algebra kernels. This part of the prompt remains the same across different platforms.
+
+
+ \textbf{Platform-specific examples.}
+Although operators on different platforms share similar functional semantics, their implementation details, e.g., function names and parameters, can vary significantly. As a result, directly transforming programs across platforms with LLMs often leads to incorrect programs.
+To address this, we utilize the annotated source program and the LLM to search for platform-specific implementation examples in the target platform's programming manual that are functionally related to the source program. These examples are incorporated into the meta-prompt as the platform-specific component, bridging the gap between the high-level functional semantics of the operators and target platform. This guides LLM in generating the target program.
+%Figure~\ref{fig:transformation-example} 
+For instance, in Figure~\ref{fig:transformation-example}, the search results include an example of how to transcompile a \texttt{matmul} from C to BANGC.
+
+\textbf{Tuning knobs.}
+The loop split pass and loop reorder pass require more constraints related to the target platform.
+This information is included in the meta-prompt optionally.
+For example, loop split needs to determine the loop split alignment size for the target platform and use this as the minimum unit to expand into a corresponding search space, which is then used for the auto-tuning of the generated program. Please refer to details in Section~\ref{sec:auto-tuning}.
+
+Based on the meta-prompt, the LLM can generate the transformed code with a generally correct program sketch but error-prone values. Then, we fix these buggy values with symbolic approaches including bug localization and SMT-based code repairing, which will be introduced as follows.
+
+%\vspace{-5pt}
+\subsection{Bug Localization}
+The feasibility of \name{} relies on reducing the problem scale for code repair, which requires accurately localizing buggy code snippets during unit tests.
+
+
+For bug localization, the transformed code is validated by the provided unit tests and if it fails, 
+% it will be repaired by a small-scale SMT-based code repairing in the subsequent process. Else, the transformed code will be passed to the next transformation pass. 
+% The feasibility of \name{} hinges on confining the problem scale for code repairing, necessitating precise localization of buggy code snippets during unit tests. 
+Algorithm \ref{alg:error_localization} will be employed to locate the buggy code snippets with unit tests precisely. Initially, we identify the code snippet to be transformed based on the loop index or buffer name and compare the buggy transformed snippet with the original. By inserting print statements after relevant memory locations using binary search, we compare printed values to narrow down the scope of the error-containing snippet. Mappings between source-level control flow statements and diverging inputs then help determine when and where the transcompiled program starts exhibiting erroneous behavior. \name{} subsequently enumerates the constraints in the snippet for each assigned concrete index variable, loop boundary, buffer size, or tensor semantic, and generates queries for the subsequent SMT-based code-repairing process. 
+% Ultimately, a repaired program with the same functionality is generated.
+
+
+%\vspace{-10pt}
+\begin{algorithm}[h]
+\scriptsize
+\SetAlgoLined
+\DontPrintSemicolon
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+
+\Input{Source program $S$, Buggy transcompiled program $E$, Loop index $I$, Buffer name $N$, control-flow matching model $M$}
+\Output{Error Nodes $M_{t}$}
+$S_{n} \gets \text{AST}(S)$ \; 
+$S_{s} \gets \text{ExtractASTSegment}(S_{n}, I, N)$ \;
+\text{// Obtain the buffer list} \;
+$B_{s} \gets \text{TraverseBuffers}(S_{s})$ \;
+$E_{n} \gets \text{BinarySearchErrorNodes}(B_{s}, E, S)$ \;
+$M_{b} \gets \text{FindMatchingCodeBlocks}(M, S_{s}, E_{n})$ \; 
+\For {$M_{s} \leftrightarrow M_{t} $ in $M_{b}$}{
+   \If {$\text{Diverses}(M_{s}, M_{t})$} {
+    \KwRet $M_{t}$ 
+   } 
+}
+\caption{Bug Localization Algorithm}
+\label{alg:error_localization}
+\end{algorithm}
+%\vspace{-20pt}
+
+
+\subsection{SMT-based Code Repairing}
+Once the bug is located, the buggy code snippet will be repaired by an SMT solver. 
+% The SMT-based code repairing process is orthogonal to the transformation pass. 
+In the SMT-based code repairing process, we focus on the implementation details such as loop boundaries, indexing, and instruction parameters~\cite{DBLP:conf/ecoop/QiuCBHSC24}, which are orthogonal to the transformation pass.
+%\vspace{-10pt}
+
+\begin{algorithm}[h]
+\scriptsize
+\SetAlgoLined
+\caption{SMT-based Code Repairing Algorithm}
+\label{alg:code_repair}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\Input{A source program $P$, error program $E$}
+\Output{A repaired program $F$}
+\textbf{Given:} Error code snippet $S$ 
+
+$T_{s} \gets \text{AST}(P)$; $S_{s} \gets \text{extract}(T_{s}, S)$
+
+
+    $T_{e} \gets \text{AST}(E)$; $S_{e} \gets \text{extract}(T_{e}, S)$
+
+    \text{\footnotesize{// Generate the sketch according to the transformation definition.}}
+    
+    $S_{k} \gets \text{GenerateCodeSketch}(S_{s}, S_{e})$
+
+    \text{\footnotesize{// Generate the smt query}}
+    
+    $Q \gets \text{CreateSMTQuery}(S_{s}, S_{e})$
+
+    \text{\footnotesize{// Generate the verified code snippet}}
+
+    $R \gets \text{SynthesisCode}(Q)$
+
+$F \gets \text{StitchBack}(P, R, S)$
+
+\textbf{return} $F$
+
+\end{algorithm}
+
+%\vspace{-10pt}
+
+Specifically, as illustrated in Algorithm \ref{alg:code_repair}, \name{} first parses the source code and generates the corresponding sketch based on the definition of the specific loop transformation. Then, the transcompiler explicitly enumerates the corresponding constraints over each assigned concrete index variable and loop boundary, generating code targeting the SMT solver. Finally, by formulating these boundary constraints and buffer index constraints for the SMT solver, the missing expressions in the sketch are filled in. Examples of the constraints for loop split and cache reads are shown in Figure \ref{fig:constraints}.
+
+By symbolically aligning these details with the source program with an SMT solver, we correct errors in the target program transformed by the LLM. This program is outputted as the final program of one transformation pass.
+
+\begin{figure}[t]
+    \vspace{-5pt}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/Constrains-figureN.png}
+    \vspace{-15pt}
+    \caption{\small The SMT constraints for loop split and cache read.}
+    \label{fig:constraints}
+    \vspace{-10pt}
+\end{figure}
+
+\section{Hierarchical Performance Auto-Tuning}
+\label{sec:auto-tuning}
+To fully automate code transcompilation and achieve higher performance, \name{} employs a hierarchical auto-tuning approach, which effectively decouples high-level code structures from low-level details, enabling flexible enumeration of high-level program sketches (i.e., strategizing parallelization and thread bindings), as well as efficient sampling of low-level specifics (i.e., tiling size and loop orders). As a result, transcompilation exploration space can be formalized as follows:
+
+\vspace{-5pt}
+\small\begin{equation}
+S = \left\{ S^{(n)} \mid 
+\begin{array}{l}
+S^{(t)} = \text{apply}(\text{apply}(S^{(t-1)}, d_t), k_t), \\
+\forall d_t \in D_t, 1 \leq i \leq n, \\
+\forall k_t \in K_t, 1 \leq t \leq n
+\end{array}
+\right\}
+\label{eq:searchspace}
+\end{equation}
+\normalsize
+where $s^{0}$ denotes the source tensor program, and $d_{t}$ represents a random selected pass from the pre-defined passes $D_{t}$, $k_{t}$ represents a tuning option from the pre-defined tuning knobs $K_{t}$, and $n$ is number of transformation. Thus, the size of the exploration space aligns with the number of
+pass sequences and tuning knobs. We have:
+\small\begin{equation}
+|S| = |D_{1}| \times |K_{1}| \times |D_{2}| \times |K_{2}| \times \ldots \times |D_{n}| \times |K_n|
+\end{equation}
+\normalsize
+To explore this huge search space, \name{} puts forward a hierarchical performance auto-tuning consisting of two main components creatively: (1) \textbf{Intra-Pass Auto-Tuning}, which focuses on fine-tuning the performance of translated programs; and (2) \textbf{Inter-Pass Auto-Tuning with MCTS}, which is responsible for constructing a vast valid search space to identify the most optimal code transcompilation.
+
+
+
+\subsection{Intra-Pass Auto-Tuning}% using Meta-Prompts}
+During the transformation process, passes such as \texttt{loop split} and \texttt{loop reorder} are tasked with making a series of critical decisions, including the split size and loop order, which significantly affect the performance of the resulting tensor program. To address these challenges, we consider implementing auto-tuning, an effective technique for automatically generating high-performance programs. Specifically, auto-tuning is implemented as a functional module that interacts with the aforementioned passes to create a search space consisting of multiple candidate programs. It then explores this space to identify the optimal program configuration.
+
+\textbf{Search space generation.} The basis of intra-pass auto-tuning is to construct a search space with a large number of candidate programs, and our approach generates such space with the help of LLM and programming manuals. As shown in Figure~\ref{fig:overview}, the auto-tuning module first interacts with the \emph{loop split} to generate multiple programs with different adjustable parameters including: (1) the number of blocks for each logical loop, (2) the loop order after making decisions on (1). This is achieved by using specially designed meta-prompts as shown in Figure~\ref{fig:prompt-loopsplitreorder}, which are then transferred to the prompts of the loop split and loop reorder pass. Then, the intra-pass auto-tuning module interacts with other passes to generate different program sketches, such as different loop binding strategies.
+\begin{figure}[t]
+    \vspace{-5pt}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/split_prompt.pdf}
+    \vspace{-20pt}
+    \caption{\small The auto-tuning prompt for loop split.}
+    \label{fig:prompt-loopsplitreorder}
+    \vspace{-15pt}
+\end{figure}
+
+\textbf{Search space exploration.} Depending on the characteristics of the target code, e.g., in the case of BANG C language with larger instruction granularity resulting in a small search space, we directly employ a brute-force search approach for exploring the program with optimal performance. Actually, the size of the search space varies significantly for different DLS. Take the Matmul operation(512 × 512 × 512) as an example, on GPU the size of search space (K in Equation \ref{eq:searchspace}) is $150$ while on MLU the size is only $10$.
+
+\vspace{-5pt}
+\subsection{Inter-Pass Auto-Tuning with MCTS}
+% Although Intro-pass auto-tuning can identify the most optimal code within specified high-level code structure, it is expected to generate a large search space of code structures with comprehensive coverage of optimizations. 
+We employs MCTS, which formulates the transcompilation as a Markov decision process where each intermediate program is represented as a state and the actions are the different passes that could be applied next. The reward is proportional to the execution time improvement. The solution would be the actions that lead to the optimal pass sequence.
+
+
+
+\textbf{Reward function.} To enhance the accuracy of the cost model while minimizing additional overhead, we add real execution time measurements each time a new transformation pass is declared. While the program is not fully translated, MCTS runs in parallel with the current programs, records the best real throughput as the reward of the current transformation sequence and its corresponding program.
+At step $t$, the reward function is
+
+
+\vspace{-10pt}
+
+\footnotesize
+\begin{align}
+T_{ti} &=
+\begin{cases}
+    T(p_{ti}), & \text{if } p_{ti} \\[5pt]
+    0, & \text{otherwise}
+\end{cases} \\
+R_{t} &= \max(T_{ti})
+\end{align}
+\vspace{-10pt}
+\normalsize
+
+
+
+where $p_{t}$ denotes the transformed programs at iteration $t$, $i$ is the index of transformed program within intra-pass auto-tuning search space, and $T$ is the throughput of program. 
+% This reward function progressively increases the ability of MCTS to find concrete transformation sequence whose performance is better than the performance of the last one.
+
+\textbf{Searching parameters setting.}
+MCTS may fail to effectively reach a terminal node in a given iteration or even fail to generate the final transcompiled program. Therefore, to determine the appropriate maximum search depth(i.e., $n$ in Equation \ref{eq:searchspace}) and the total number of simulations, we conducted design space exploration to balance search time and reward. Specifically, the maximum search depth of MCTS should exceed 11 passes, as all passes are crucial and may be repeated, with the number of simulations directly impacting both search time and reward. Ultimately, we selected $N=13$ and 512 simulations for MCTS, which provides optimal performance of the transcompiled program within a reasonable search time (e.g., hours).
+\vspace{-5pt}
+

@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "icra-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:ieee-conference"
+      },
+      "opened": "2025-02-06",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-02-06",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

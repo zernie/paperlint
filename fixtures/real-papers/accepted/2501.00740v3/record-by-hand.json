@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "cvpr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "sec/X_suppl.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "80cb7cc695a44dbdb4c76a8b5a096948d180c44ea6103a54c6f0e19f4e3625f3",
+    "cvpr.sty": "c25f23c1ba74c0e08167c3dd4bcbfd23e725934f0fbe7a99c8f59a6a2b2e618c",
+    "preamble.tex": "75415cdda3738200750a9f348b3dc99f5afd7ebaa96e92e11cd6a55c3db1cf70",
+    "sec/X_suppl.tex": "98b23f91c7bcf0c2b8483915ac1a43b337ccc38bf33d1b5a5d77c6542628a75c"
+  }
+}

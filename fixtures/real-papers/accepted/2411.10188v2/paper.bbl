@@ -1,0 +1,735 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{61}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[195(1957)]%
+        {1957fundamental}
+ \bibinfo{year}{1957}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Fundamental Concepts in the Theory of
+  Systems}}.
+\newblock \bibinfo{publisher}{Wright Air Development Center, Air Research and
+  Development Command, United States Air Force}.
+\newblock
+
+
+\bibitem[Abdulla et~al\mbox{.}(2012a)]%
+        {abdulla2012timed}
+\bibfield{author}{\bibinfo{person}{Parosh~Aziz Abdulla},
+  \bibinfo{person}{Mohamed~Faouzi Atig}, {and} \bibinfo{person}{Jonathan
+  Cederberg}.} \bibinfo{year}{2012}\natexlab{a}.
+\newblock \showarticletitle{Timed lossy channel systems}. In
+  \bibinfo{booktitle}{\emph{IARCS Annual Conference on Foundations of Software
+  Technology and Theoretical Computer Science (FSTTCS 2012)}}. Schloss
+  Dagstuhl-Leibniz-Zentrum fuer Informatik.
+\newblock
+
+
+\bibitem[Abdulla et~al\mbox{.}(2012b)]%
+        {abdulla2012dense}
+\bibfield{author}{\bibinfo{person}{Parosh~Aziz Abdulla},
+  \bibinfo{person}{Mohamed~Faouzi Atig}, {and} \bibinfo{person}{Jari Stenman}.}
+  \bibinfo{year}{2012}\natexlab{b}.
+\newblock \showarticletitle{Dense-timed pushdown automata}. In
+  \bibinfo{booktitle}{\emph{2012 27th Annual IEEE Symposium on Logic in
+  Computer Science}}. IEEE, \bibinfo{pages}{35--44}.
+\newblock
+
+
+\bibitem[Abdulla and Jonsson(1993)]%
+        {AbJo:lossy}
+\bibfield{author}{\bibinfo{person}{Parosh~Aziz Abdulla} {and}
+  \bibinfo{person}{Bengt Jonsson}.} \bibinfo{year}{1993}\natexlab{}.
+\newblock \showarticletitle{Verifying Programs with Unreliable Channels}. In
+  \bibinfo{booktitle}{\emph{Proc. LICS '93-8th IEEE Int. Symp. on Logic in
+  Computer Science}}. \bibinfo{pages}{160--170}.
+\newblock
+
+
+\bibitem[Abdulla and Jonsson(1996)]%
+        {AbJo:lossy:IC}
+\bibfield{author}{\bibinfo{person}{Parosh~Aziz Abdulla} {and}
+  \bibinfo{person}{Bengt Jonsson}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{Verifying Programs with Unreliable Channels}.
+\newblock \bibinfo{journal}{\emph{Information and Computation}}
+  \bibinfo{volume}{127}, \bibinfo{number}{2} (\bibinfo{year}{1996}),
+  \bibinfo{pages}{91--101}.
+\newblock
+
+
+\bibitem[Afek et~al\mbox{.}(2020)]%
+        {NXNSAttack}
+\bibfield{author}{\bibinfo{person}{Yehuda Afek}, \bibinfo{person}{Anat
+  Bremler{-}Barr}, {and} \bibinfo{person}{Lior Shafir}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{NXNSAttack: Recursive {DNS} Inefficiencies and
+  Vulnerabilities}. In \bibinfo{booktitle}{\emph{{USENIX} Security 2020}}.
+  \bibinfo{publisher}{{USENIX} Association}, \bibinfo{pages}{631--648}.
+\newblock
+
+
+\bibitem[Afek et~al\mbox{.}(2023)]%
+        {NRDelegationAttack}
+\bibfield{author}{\bibinfo{person}{Yehuda Afek}, \bibinfo{person}{Anat
+  Bremler-Barr}, {and} \bibinfo{person}{Shani Stajnrod}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{NRDelegationAttack}: Complexity {DDoS} attack on
+  {DNS} Recursive Resolvers}. In \bibinfo{booktitle}{\emph{USENIX Security
+  '23}}. \bibinfo{publisher}{USENIX Association}, \bibinfo{pages}{3187--3204}.
+\newblock
+
+
+\bibitem[Aiswarya(2020)]%
+        {aiswarya2020network}
+\bibfield{author}{\bibinfo{person}{C Aiswarya}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{On network topologies and the decidability of
+  reachability problem}. In \bibinfo{booktitle}{\emph{International Conference
+  on Networked Systems}}. Springer, \bibinfo{pages}{3--10}.
+\newblock
+
+
+\bibitem[Almeida(1995)]%
+        {almeida1995finite}
+\bibfield{author}{\bibinfo{person}{Jorge Almeida}.}
+  \bibinfo{year}{1995}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Finite semigroups and universal algebra}}.
+  Vol.~\bibinfo{volume}{3}.
+\newblock \bibinfo{publisher}{World Scientific}.
+\newblock
+
+
+\bibitem[Alur and Dill(1994)]%
+        {alur1994theory}
+\bibfield{author}{\bibinfo{person}{Rajeev Alur} {and} \bibinfo{person}{David~L
+  Dill}.} \bibinfo{year}{1994}\natexlab{}.
+\newblock \showarticletitle{A theory of timed automata}.
+\newblock \bibinfo{journal}{\emph{Theoretical computer science}}
+  \bibinfo{volume}{126}, \bibinfo{number}{2} (\bibinfo{year}{1994}),
+  \bibinfo{pages}{183--235}.
+\newblock
+
+
+\bibitem[Atig et~al\mbox{.}(2008)]%
+        {atig2008reachability}
+\bibfield{author}{\bibinfo{person}{Mohamed~Faouzi Atig}, \bibinfo{person}{Ahmed
+  Bouajjani}, {and} \bibinfo{person}{Tayssir Touili}.}
+  \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{On the reachability analysis of acyclic networks of
+  pushdown systems}. In \bibinfo{booktitle}{\emph{International Conference on
+  Concurrency Theory}}. Springer, \bibinfo{pages}{356--371}.
+\newblock
+
+
+\bibitem[Bouajjani et~al\mbox{.}(1997)]%
+        {bouajjani1997reachability}
+\bibfield{author}{\bibinfo{person}{Ahmed Bouajjani}, \bibinfo{person}{Javier
+  Esparza}, {and} \bibinfo{person}{Oded Maler}.}
+  \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Reachability analysis of pushdown automata:
+  Application to model-checking}. In \bibinfo{booktitle}{\emph{CONCUR '97}}.
+  Springer, \bibinfo{pages}{135--150}.
+\newblock
+
+
+\bibitem[Brand and Zafiropulo(1983)]%
+        {brand1983communicating}
+\bibfield{author}{\bibinfo{person}{Daniel Brand} {and} \bibinfo{person}{Pitro
+  Zafiropulo}.} \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{On communicating finite-state machines}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}}
+  \bibinfo{volume}{30}, \bibinfo{number}{2} (\bibinfo{year}{1983}),
+  \bibinfo{pages}{323--342}.
+\newblock
+
+
+\bibitem[Bushart and Rossow(2024)]%
+        {ResolFuzz}
+\bibfield{author}{\bibinfo{person}{Jonas Bushart} {and}
+  \bibinfo{person}{Christian Rossow}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{ResolFuzz: Differential Fuzzing of DNS
+  Resolvers}}. In \bibinfo{booktitle}{\emph{Computer Security -- ESORICS
+  2023}}. \bibinfo{publisher}{Springer Nature Switzerland},
+  \bibinfo{pages}{62--80}.
+\newblock
+
+
+\bibitem[Carlisle and Fagin(2012)]%
+        {Ironsides}
+\bibfield{author}{\bibinfo{person}{Martin~C. Carlisle} {and}
+  \bibinfo{person}{Barry~S. Fagin}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{{IRONSIDES:} {DNS} with no single-packet denial of
+  service or remote code execution vulnerabilities}. In
+  \bibinfo{booktitle}{\emph{{GLOBECOM} 2012}}. \bibinfo{publisher}{{IEEE}},
+  \bibinfo{pages}{839--844}.
+\newblock
+
+
+\bibitem[C{\'e}c{\'e} et~al\mbox{.}(1996)]%
+        {cece1996unreliable}
+\bibfield{author}{\bibinfo{person}{G{\'e}rard C{\'e}c{\'e}},
+  \bibinfo{person}{Alain Finkel}, {and} \bibinfo{person}{S~Purushothaman
+  Iyer}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{Unreliable channels are easier to verify than
+  perfect channels}.
+\newblock \bibinfo{journal}{\emph{Information and Computation}}
+  \bibinfo{volume}{124}, \bibinfo{number}{1} (\bibinfo{year}{1996}),
+  \bibinfo{pages}{20--31}.
+\newblock
+
+
+\bibitem[Clavel et~al\mbox{.}(2007)]%
+        {DBLP:conf/maude/2007}
+\bibfield{editor}{\bibinfo{person}{Manuel Clavel}, \bibinfo{person}{Francisco
+  Dur{\'{a}}n}, \bibinfo{person}{Steven Eker}, \bibinfo{person}{Patrick
+  Lincoln}, \bibinfo{person}{Narciso Mart{\'{\i}}{-}Oliet},
+  \bibinfo{person}{Jos{\'{e}} Meseguer}, {and} \bibinfo{person}{Carolyn~L.
+  Talcott}} (Eds.). \bibinfo{year}{2007}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{All About Maude - {A} High-Performance
+  Logical Framework, How to Specify, Program and Verify Systems in Rewriting
+  Logic}}. \bibinfo{series}{LNCS}, Vol.~\bibinfo{volume}{4350}.
+\newblock \bibinfo{publisher}{Springer}.
+\newblock
+
+
+\bibitem[Clemente and Lasota(2015)]%
+        {clemente2015timed}
+\bibfield{author}{\bibinfo{person}{Lorenzo Clemente} {and}
+  \bibinfo{person}{Slawomir Lasota}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Timed pushdown automata revisited}. In
+  \bibinfo{booktitle}{\emph{2015 30th Annual ACM/IEEE Symposium on Logic in
+  Computer Science}}. IEEE, \bibinfo{pages}{738--749}.
+\newblock
+
+
+\bibitem[Duan et~al\mbox{.}(2024)]%
+        {camp}
+\bibfield{author}{\bibinfo{person}{Huayi Duan}, \bibinfo{person}{Marco Bearzi},
+  \bibinfo{person}{Jodok Vieli}, \bibinfo{person}{David Basin},
+  \bibinfo{person}{Adrian Perrig}, \bibinfo{person}{Si Liu}, {and}
+  \bibinfo{person}{Bernhard Tellenbach}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{CAMP}: Compositional Amplification Attacks against
+  {DNS}}. In \bibinfo{booktitle}{\emph{USENIX Security '24}}.
+  \bibinfo{publisher}{USENIX Association}, \bibinfo{pages}{5769--5786}.
+\newblock
+
+
+\bibitem[Elz and Bush(1997)]%
+        {rfc2181}
+\bibfield{author}{\bibinfo{person}{Robert Elz} {and} \bibinfo{person}{Randy
+  Bush}.} \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Clarifications to the {DNS} Specification}.
+\newblock \bibinfo{journal}{\emph{{RFC}}}  \bibinfo{volume}{2181}
+  (\bibinfo{year}{1997}), \bibinfo{pages}{1--14}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC2181}
+\showDOI{\tempurl}
+
+
+\bibitem[Esparza et~al\mbox{.}(2000)]%
+        {esparza2000efficient}
+\bibfield{author}{\bibinfo{person}{Javier Esparza}, \bibinfo{person}{David
+  Hansel}, \bibinfo{person}{Peter Rossmanith}, {and} \bibinfo{person}{Stefan
+  Schwoon}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{Efficient algorithms for model checking pushdown
+  systems}. In \bibinfo{booktitle}{\emph{International Conference on Computer
+  Aided Verification}}. Springer, \bibinfo{pages}{232--247}.
+\newblock
+
+
+\bibitem[Finkel and Schnoebelen(2001)]%
+        {finkel2001well}
+\bibfield{author}{\bibinfo{person}{Alain Finkel} {and} \bibinfo{person}{Ph
+  Schnoebelen}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{Well-structured transition systems everywhere!}
+\newblock \bibinfo{journal}{\emph{Theoretical Computer Science}}
+  \bibinfo{volume}{256}, \bibinfo{number}{1-2} (\bibinfo{year}{2001}),
+  \bibinfo{pages}{63--92}.
+\newblock
+
+
+\bibitem[Glushkov(1961)]%
+        {glushkov1961abstract}
+\bibfield{author}{\bibinfo{person}{Victor~Mikhaylovich Glushkov}.}
+  \bibinfo{year}{1961}\natexlab{}.
+\newblock \showarticletitle{The abstract theory of automata}.
+\newblock \bibinfo{journal}{\emph{Russian Mathematical Surveys}}
+  \bibinfo{volume}{16}, \bibinfo{number}{5} (\bibinfo{year}{1961}),
+  \bibinfo{pages}{1}.
+\newblock
+
+
+\bibitem[Goncharov and Pattinson(2014)]%
+        {goncharov2014coalgebraic}
+\bibfield{author}{\bibinfo{person}{Sergey Goncharov} {and}
+  \bibinfo{person}{Dirk Pattinson}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Coalgebraic weak bisimulation from recursive
+  equations over monads}. In \bibinfo{booktitle}{\emph{International Colloquium
+  on Automata, Languages, and Programming}}. Springer,
+  \bibinfo{pages}{196--207}.
+\newblock
+
+
+\bibitem[Heu{\ss}ner et~al\mbox{.}(2010)]%
+        {heussner2010reachability}
+\bibfield{author}{\bibinfo{person}{Alexander Heu{\ss}ner},
+  \bibinfo{person}{J{\'e}r{\^o}me Leroux}, \bibinfo{person}{Anca Muscholl},
+  {and} \bibinfo{person}{Gr{\'e}goire Sutre}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Reachability analysis of communicating pushdown
+  systems}. In \bibinfo{booktitle}{\emph{FoSSaCS '10}}. Springer,
+  \bibinfo{pages}{267--281}.
+\newblock
+
+
+\bibitem[Heu{\ss}ner et~al\mbox{.}(2012)]%
+        {heussner2012reachability}
+\bibfield{author}{\bibinfo{person}{Alexander Heu{\ss}ner},
+  \bibinfo{person}{J{\'e}r{\^o}me Leroux}, \bibinfo{person}{Anca Muscholl},
+  {and} \bibinfo{person}{Gr{\'e}goire Sutre}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Reachability analysis of communicating pushdown
+  systems}.
+\newblock \bibinfo{journal}{\emph{Logical Methods in Computer Science}}
+  \bibinfo{volume}{8} (\bibinfo{year}{2012}).
+\newblock
+
+
+\bibitem[Host(2024)]%
+        {check-host}
+\bibfield{author}{\bibinfo{person}{Check Host}.} \bibinfo{year}{Accessed in
+  July, 2024}\natexlab{}.
+\newblock \bibinfo{title}{DNS checking}.
+\newblock
+\newblock
+\newblock
+\shownote{\url{https://check-host.net/check-dns}}.
+
+
+\bibitem[IETF(0 15)]%
+        {ietf}
+\bibfield{author}{\bibinfo{person}{IETF}.} \bibinfo{year}{Accessed
+  2024-10-15}\natexlab{}.
+\newblock \bibinfo{title}{Internet Engineering Task Force}.
+\newblock \bibinfo{howpublished}{\url{https://www.ietf.org/}}.
+\newblock
+
+
+\bibitem[Kakarla and Beckett(2023)]%
+        {Eywa}
+\bibfield{author}{\bibinfo{person}{Siva Kesava~Reddy Kakarla} {and}
+  \bibinfo{person}{Ryan Beckett}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Oracle-based Protocol Testing with Eywa}.
+\newblock
+\newblock
+\showeprint[arxiv]{2312.06875}~[cs.NI]
+
+
+\bibitem[Kakarla et~al\mbox{.}(2020)]%
+        {groot}
+\bibfield{author}{\bibinfo{person}{Siva Kesava~Reddy Kakarla},
+  \bibinfo{person}{Ryan Beckett}, \bibinfo{person}{Behnaz Arzani},
+  \bibinfo{person}{Todd Millstein}, {and} \bibinfo{person}{George Varghese}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{GRoot: Proactive Verification of DNS
+  Configurations}. In \bibinfo{booktitle}{\emph{SIGCOMM ’20}}.
+  \bibinfo{publisher}{ACM}, \bibinfo{pages}{310–328}.
+\newblock
+
+
+\bibitem[Kakarla et~al\mbox{.}(2021)]%
+        {dns-complex}
+\bibfield{author}{\bibinfo{person}{Siva Kesava~Reddy Kakarla},
+  \bibinfo{person}{Ryan Beckett}, \bibinfo{person}{Todd Millstein}, {and}
+  \bibinfo{person}{George Varghese}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{How Complex is DNS?}. In
+  \bibinfo{booktitle}{\emph{HotNets '21}}. \bibinfo{publisher}{ACM},
+  \bibinfo{pages}{116–122}.
+\newblock
+
+
+\bibitem[Kakarla et~al\mbox{.}(2022)]%
+        {scale}
+\bibfield{author}{\bibinfo{person}{Siva Kesava~Reddy Kakarla},
+  \bibinfo{person}{Ryan Beckett}, \bibinfo{person}{Todd Millstein}, {and}
+  \bibinfo{person}{George Varghese}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{SCALE}: Automatically Finding {RFC} Compliance
+  Bugs in {DNS} Nameservers}. In \bibinfo{booktitle}{\emph{NSDI '22}}.
+  \bibinfo{publisher}{USENIX Association}, \bibinfo{pages}{307--323}.
+\newblock
+
+
+\bibitem[Kozen(2012)]%
+        {kozen2012automata}
+\bibfield{author}{\bibinfo{person}{Dexter~C Kozen}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Automata and computability}}.
+\newblock \bibinfo{publisher}{Springer Science \& Business Media}.
+\newblock
+
+
+\bibitem[Kurose and Ross(2016)]%
+        {KuroseRoss16}
+\bibfield{author}{\bibinfo{person}{James~F. Kurose} {and}
+  \bibinfo{person}{Keith~W. Ross}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Computer Networking: A Top-Down Approach}
+  (\bibinfo{edition}{7} ed.)}.
+\newblock \bibinfo{publisher}{Pearson}, \bibinfo{address}{Boston, MA}.
+\newblock
+\showISBNx{978-0-13-359414-0}
+
+
+\bibitem[Li et~al\mbox{.}(2024)]%
+        {TUDOOR}
+\bibfield{author}{\bibinfo{person}{X. Li}, \bibinfo{person}{W. Xu},
+  \bibinfo{person}{B. Liu}, \bibinfo{person}{M. Zhang}, \bibinfo{person}{Z.
+  Li}, \bibinfo{person}{J. Zhang}, \bibinfo{person}{D. Chang},
+  \bibinfo{person}{X. Zheng}, \bibinfo{person}{C. Wang}, \bibinfo{person}{J.
+  Chen}, \bibinfo{person}{H. Duan}, {and} \bibinfo{person}{Q. Li}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{TUDOOR Attack: Systematically Exploring and
+  Exploiting Logic Vulnerabilities in DNS Response Pre-processing with
+  Malformed Packets}}. In \bibinfo{booktitle}{\emph{2024 IEEE Symposium on
+  Security and Privacy (SP)}}. \bibinfo{publisher}{IEEE Computer Society},
+  \bibinfo{pages}{185--185}.
+\newblock
+\showISSN{2375-1207}
+
+
+\bibitem[Liu et~al\mbox{.}(2023)]%
+        {dnsmaude}
+\bibfield{author}{\bibinfo{person}{Si Liu}, \bibinfo{person}{Huayi Duan},
+  \bibinfo{person}{Lukas Heimes}, \bibinfo{person}{Marco Bearzi},
+  \bibinfo{person}{Jodok Vieli}, \bibinfo{person}{David~A. Basin}, {and}
+  \bibinfo{person}{Adrian Perrig}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A Formal Framework for End-to-End {DNS}
+  Resolution}. In \bibinfo{booktitle}{\emph{{SIGCOMM} '23}}.
+  \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{932--949}.
+\newblock
+
+
+\bibitem[Maury(2015)]%
+        {iDNS}
+\bibfield{author}{\bibinfo{person}{Florian Maury}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \bibinfo{title}{The ``Indefinitely'' Delegating Name Servers (iDNS)
+  Attack}.
+\newblock
+  \bibinfo{howpublished}{\url{https://indico.dns-oarc.net/event/21/contributions/301/attachments/272/492/slides.pdf}}.
+\newblock
+
+
+\bibitem[Milner(1980)]%
+        {milner1980calculus}
+\bibfield{author}{\bibinfo{person}{Robin Milner}.}
+  \bibinfo{year}{1980}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{A calculus of communicating systems}}.
+\newblock \bibinfo{publisher}{Springer}.
+\newblock
+
+
+\bibitem[Milner(1989)]%
+        {milner1989communication}
+\bibfield{author}{\bibinfo{person}{Robin Milner}.}
+  \bibinfo{year}{1989}\natexlab{}.
+\newblock \bibinfo{title}{Communication and Concurrency}.
+\newblock
+\newblock
+
+
+\bibitem[Mockapetris(1987a)]%
+        {rfc1034}
+\bibfield{author}{\bibinfo{person}{P. Mockapetris}.}
+  \bibinfo{year}{1987}\natexlab{a}.
+\newblock \bibinfo{booktitle}{\emph{DOMAIN NAMES - CONCEPTS AND FACILITIES}}.
+\newblock \bibinfo{type}{RFC} 1034. \bibinfo{institution}{RFC Editor}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC1034}
+\showDOI{\tempurl}
+
+
+\bibitem[Mockapetris(1987b)]%
+        {rfc1035}
+\bibfield{author}{\bibinfo{person}{P. Mockapetris}.}
+  \bibinfo{year}{1987}\natexlab{b}.
+\newblock \bibinfo{booktitle}{\emph{DOMAIN NAMES - IMPLEMENTATION AND
+  SPECIFICATION}}.
+\newblock \bibinfo{type}{RFC} 1035. \bibinfo{institution}{RFC Editor}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC1035}
+\showDOI{\tempurl}
+
+
+\bibitem[Moura et~al\mbox{.}(2021)]%
+        {TsuNAME}
+\bibfield{author}{\bibinfo{person}{Giovane C.~M. Moura},
+  \bibinfo{person}{Sebastian Castro}, \bibinfo{person}{John~S. Heidemann},
+  {and} \bibinfo{person}{Wes Hardaker}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{TsuNAME: exploiting misconfiguration and
+  vulnerability to DDoS {DNS}}. In \bibinfo{booktitle}{\emph{{IMC} '21}}.
+  \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{398--418}.
+\newblock
+
+
+\bibitem[Nerode(1958)]%
+        {nerode1958synmon}
+\bibfield{author}{\bibinfo{person}{A. Nerode}.}
+  \bibinfo{year}{1958}\natexlab{}.
+\newblock \showarticletitle{Linear Automaton Transformations}.
+\newblock \bibinfo{journal}{\emph{Proc. Amer. Math. Soc.}} \bibinfo{volume}{9},
+  \bibinfo{number}{4} (\bibinfo{year}{1958}), \bibinfo{pages}{541--544}.
+\newblock
+\showISSN{00029939, 10886826}
+
+
+\bibitem[Nevatia et~al\mbox{.}(2024)]%
+        {tech-rpt}
+\bibfield{author}{\bibinfo{person}{Dhruv Nevatia}, \bibinfo{person}{Si Liu},
+  {and} \bibinfo{person}{David Basin}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Reachability Analysis of the Domain Name
+  System}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2411.10188}
+\showDOI{\tempurl}
+
+
+\bibitem[Ohta(1996)]%
+        {rfc1995}
+\bibfield{author}{\bibinfo{person}{Dr.~Masataka Ohta}.}
+  \bibinfo{year}{1996}\natexlab{}.
+\newblock \bibinfo{title}{{Incremental Zone Transfer in DNS}}.
+\newblock \bibinfo{howpublished}{RFC 1995}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC1995}
+\showDOI{\tempurl}
+
+
+\bibitem[Pin(1995)]%
+        {pin1995variety}
+\bibfield{author}{\bibinfo{person}{Jean-{\'E}ric Pin}.}
+  \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{A variety theorem without complementation}.
+\newblock \bibinfo{journal}{\emph{Russian Mathematics (Izvestija vuzov.
+  Matematika)}}  \bibinfo{volume}{39} (\bibinfo{year}{1995}),
+  \bibinfo{pages}{80--90}.
+\newblock
+
+
+\bibitem[Rabin and Scott(1959)]%
+        {rabinscott1959synmon}
+\bibfield{author}{\bibinfo{person}{M.~O. Rabin} {and} \bibinfo{person}{D.
+  Scott}.} \bibinfo{year}{1959}\natexlab{}.
+\newblock \showarticletitle{Finite Automata and Their Decision Problems}.
+\newblock \bibinfo{journal}{\emph{IBM Journal of Research and Development}}
+  \bibinfo{volume}{3}, \bibinfo{number}{2} (\bibinfo{year}{1959}),
+  \bibinfo{pages}{114--125}.
+\newblock
+
+
+\bibitem[Reps et~al\mbox{.}(2005)]%
+        {reps2005weighted}
+\bibfield{author}{\bibinfo{person}{Thomas Reps}, \bibinfo{person}{Stefan
+  Schwoon}, \bibinfo{person}{Somesh Jha}, {and} \bibinfo{person}{David
+  Melski}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Weighted pushdown systems and their application to
+  interprocedural dataflow analysis}.
+\newblock \bibinfo{journal}{\emph{Science of Computer Programming}}
+  \bibinfo{volume}{58}, \bibinfo{number}{1-2} (\bibinfo{year}{2005}),
+  \bibinfo{pages}{206--263}.
+\newblock
+
+
+\bibitem[Rose and Wijngaards(2012)]%
+        {rfc6672}
+\bibfield{author}{\bibinfo{person}{S. Rose} {and} \bibinfo{person}{W.
+  Wijngaards}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{DNAME Redirection in the DNS}}.
+\newblock \bibinfo{type}{RFC} 6672. \bibinfo{institution}{RFC Editor}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.17487/RFC6672}
+\showDOI{\tempurl}
+
+
+\bibitem[Sen et~al\mbox{.}(2005)]%
+        {Sen05}
+\bibfield{author}{\bibinfo{person}{Koushik Sen}, \bibinfo{person}{Mahesh
+  Viswanathan}, {and} \bibinfo{person}{Gul Agha}.}
+  \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{On Statistical Model Checking of Stochastic
+  Systems}. In \bibinfo{booktitle}{\emph{CAV 2005}}
+  \emph{(\bibinfo{series}{LNCS}, Vol.~\bibinfo{volume}{3576})}.
+  \bibinfo{publisher}{Springer}.
+\newblock
+
+
+\bibitem[Staton(2011)]%
+        {staton2011relating}
+\bibfield{author}{\bibinfo{person}{Sam Staton}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Relating coalgebraic notions of bisimulation}.
+\newblock \bibinfo{journal}{\emph{Logical Methods in Computer Science}}
+  \bibinfo{volume}{7} (\bibinfo{year}{2011}).
+\newblock
+
+
+\bibitem[ThousandEyes(2024)]%
+        {thousandeyes}
+\bibfield{author}{\bibinfo{person}{ThousandEyes}.} \bibinfo{year}{Accessed in
+  July, 2024}\natexlab{}.
+\newblock \bibinfo{title}{DNS Monitoring Across Your Entire Network}.
+\newblock
+\newblock
+\newblock
+\shownote{\url{https://www.thousandeyes.com/solutions/dns-monitoring}}.
+
+
+\bibitem[Tung(2024)]%
+        {azure-outage}
+\bibfield{author}{\bibinfo{person}{Liam Tung}.} \bibinfo{year}{Accessed in July
+  2024}\natexlab{}.
+\newblock \bibinfo{title}{Azure global outage: Our DNS update mangled domain
+  records, says Microsoft}.
+\newblock
+  \bibinfo{howpublished}{\url{https://www.zdnet.com/article/azureglobal-outage-our-dns-update-mangled-domain-records-says-microsoft/}}.
+\newblock
+
+
+\bibitem[Vaandrager et~al\mbox{.}(2023)]%
+        {vaandrager2023learning}
+\bibfield{author}{\bibinfo{person}{Frits Vaandrager}, \bibinfo{person}{Masoud
+  Ebrahimi}, {and} \bibinfo{person}{Roderick Bloem}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Learning Mealy machines with one timer}.
+\newblock \bibinfo{journal}{\emph{Information and Computation}}
+  \bibinfo{volume}{295} (\bibinfo{year}{2023}), \bibinfo{pages}{105013}.
+\newblock
+
+
+\bibitem[van Rooijen and Zeitoun(2013)]%
+        {van2013separation}
+\bibfield{author}{\bibinfo{person}{Lorijn van Rooijen} {and}
+  \bibinfo{person}{Marc Zeitoun}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{The separation problem for regular languages by
+  piecewise testable languages}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1303.2143}}
+  (\bibinfo{year}{2013}).
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2024)]%
+        {10.1145/3663408.3663412}
+\bibfield{author}{\bibinfo{person}{Yao Wang}, \bibinfo{person}{Kexin Yu},
+  \bibinfo{person}{Ziyi Wang}, \bibinfo{person}{Kaiqiang Hu},
+  \bibinfo{person}{Haizhou Du}, \bibinfo{person}{Qiao Xiang},
+  \bibinfo{person}{Xing Fang}, \bibinfo{person}{Geng Li},
+  \bibinfo{person}{Ruiting Zhou}, \bibinfo{person}{Linghe Kong}, {and}
+  \bibinfo{person}{Jiwu Shu}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Rethinking DNS Configuration Verification with a
+  Distributed Architecture}. In \bibinfo{booktitle}{\emph{APNet '24}}.
+  \bibinfo{publisher}{ACM}, \bibinfo{pages}{23–30}.
+\newblock
+\showISBNx{9798400717581}
+
+
+\bibitem[Whittaker(2 07)]%
+        {DNS-outage-1}
+\bibfield{author}{\bibinfo{person}{Zack Whittaker}.} \bibinfo{year}{Accessed
+  2023-02-07}\natexlab{}.
+\newblock \bibinfo{title}{A DNS outage just took down a large chunk of the
+  internet}.
+\newblock
+  \bibinfo{howpublished}{\url{https://techcrunch.com/2021/07/22/a-dns-outage-just-took-down-a-good-chunk-of-the-internet/}}.
+\newblock
+
+
+\bibitem[Wikipedia(2024)]%
+        {facebook-outage}
+\bibfield{author}{\bibinfo{person}{Wikipedia}.} \bibinfo{year}{Accessed in July
+  2024}\natexlab{}.
+\newblock \bibinfo{title}{2021 Facebook outage}.
+\newblock
+  \bibinfo{howpublished}{\url{https://en.wikipedia.org/wiki/2021_Facebook_outage}}.
+\newblock
+
+
+\bibitem[Xu et~al\mbox{.}(2023)]%
+        {TsuKing}
+\bibfield{author}{\bibinfo{person}{Wei Xu}, \bibinfo{person}{Xiang Li},
+  \bibinfo{person}{Chaoyi Lu}, \bibinfo{person}{Baojun Liu},
+  \bibinfo{person}{Haixin Duan}, \bibinfo{person}{Jia Zhang},
+  \bibinfo{person}{Jianjun Chen}, {and} \bibinfo{person}{Tao Wan}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{TsuKing: Coordinating DNS Resolvers and Queries
+  into Potent DoS Amplifiers}. In \bibinfo{booktitle}{\emph{CCS '23}}.
+  \bibinfo{publisher}{ACM}, \bibinfo{pages}{311–325}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2024)]%
+        {ResolverFuzz}
+\bibfield{author}{\bibinfo{person}{Qifan Zhang}, \bibinfo{person}{Xuesong Bai},
+  \bibinfo{person}{Xiang Li}, \bibinfo{person}{Haixin Duan},
+  \bibinfo{person}{Qi Li}, {and} \bibinfo{person}{Zhou Li}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{ResolverFuzz: Automated Discovery of DNS Resolver
+  Vulnerabilities with Query-Response Fuzzing}}. In
+  \bibinfo{booktitle}{\emph{{USENIX} Security '24}}.
+  \bibinfo{publisher}{{USENIX} Association}.
+\newblock
+
+
+\bibitem[Zheng et~al\mbox{.}(2023)]%
+        {DNS-V}
+\bibfield{author}{\bibinfo{person}{Naiqian Zheng}, \bibinfo{person}{Mengqi
+  Liu}, \bibinfo{person}{Yuxing Xiang}, \bibinfo{person}{Linjian Song},
+  \bibinfo{person}{Dong Li}, \bibinfo{person}{Feng Han}, \bibinfo{person}{Nan
+  Wang}, \bibinfo{person}{Yong Ma}, \bibinfo{person}{Zhuo Liang},
+  \bibinfo{person}{Dennis Cai}, \bibinfo{person}{Ennan Zhai},
+  \bibinfo{person}{Xuanzhe Liu}, {and} \bibinfo{person}{Xin Jin}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Automated Verification of an In-Production DNS
+  Authoritative Engine}. In \bibinfo{booktitle}{\emph{SOSP '23}}.
+  \bibinfo{publisher}{ACM}, \bibinfo{pages}{80–95}.
+\newblock
+
+
+\end{thebibliography}

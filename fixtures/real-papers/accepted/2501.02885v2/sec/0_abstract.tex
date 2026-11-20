@@ -1,0 +1,22 @@
+\begin{abstract}
+Video large language models~(Video-LLMs) have made significant progress in understanding videos.
+%
+However, processing multiple frames leads to lengthy visual token sequences,
+presenting challenges such as the limited context length cannot accommodate the entire video,
+and the inclusion of irrelevant frames hinders visual perception.
+%
+Hence, effective frame selection is crucial.
+%
+This paper emphasizes that frame selection should follow three key principles: query relevance, list-wise diversity, and sequentiality.
+Existing methods, such as uniform frame sampling and query-frame matching, do not capture all of these principles.
+%
+Thus, we propose Markov decision determinantal point process with dynamic programming~(\mname{}) for frame selection,
+a training-free and model-agnostic method that can be seamlessly integrated into existing Video-LLMs at test time.
+%
+Our method first estimates frame similarities conditioned on the query using a conditional Gaussian kernel within the reproducing kernel Hilbert space~(RKHS).
+We then apply the determinantal point process~(DPP) to the similarity matrix to capture both query relevance and list-wise diversity.
+To incorporate sequentiality, we segment the video and apply DPP within each segment, conditioned on the preceding segment selection, modeled as a Markov decision process~(MDP) for allocating selection sizes across segments. 
+%
+Theoretically, \mname{} provides a \((1 - 1/e)\)-approximate solution to the NP-hard list-wise frame selection problem with pseudo-polynomial time complexity, demonstrating its efficiency.
+Empirically, \mname{} significantly outperforms existing methods, verifying its effectiveness and robustness.
+\end{abstract}

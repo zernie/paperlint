@@ -1,0 +1,88 @@
+\subsection{Setup}
+\label{subsec:exp_setup}
+
+
+
+
+
+\paragraph{Datasets}
+
+
+
+\begin{table}[!htbp]
+\centering
+\small
+% \setlength{\tabcolsep}{4pt}
+% \renewcommand{\arraystretch}{1}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dataset} & \textbf{Nodes} & \textbf{Edges} & \textbf{Max Degree} & \textbf{Ave. Degree} \\
+\midrule
+\textbf{AstroPh}   & 18,772  & 198,110  & 504   & 21.1 \\
+\textbf{Enron}     & 36,692  & 138,831  & 1,383 & 7.6  \\
+\textbf{Epinions1} & 75,879  & 405,740  & 3,044 & 10.7 \\
+\textbf{Slashdot}  & 77,360  & 546,487  & 2,541 & 14.1 \\
+\textbf{Twitter}   & 81,306  & 1,342,310 & 3,383 & 33.0 \\
+\textbf{Epinions2} & 131,828 & 711,783  & 3,558 & 10.8 \\
+\bottomrule
+\end{tabular}
+\caption{Summary of datasets used in the experiments.}
+\label{tab:dataset}
+\end{table}
+
+
+We evaluate our mechanisms on six real-world graph datasets from SNAP~\cite{leskovec2014snap}, summarized in Table~\ref{tab:dataset}. 
+\textbf{AstroPh} is a co-authorship network in astrophysics, 
+\textbf{Enron} is an email communication network, 
+\textbf{Twitter} and \textbf{Slashdot} are social networks derived from their respective platforms, and 
+\textbf{Epinions1} and \textbf{Epinions2} represent a trust network and a social network from Epinions. 
+All graphs were preprocessed to be undirected and free of self-loops.
+
+
+
+
+
+\paragraph{Queries}
+
+
+For $k$-line walk and path counting tasks, we evaluate cases with $k \in \{4, 5, {6}\}$.
+The corresponding walk counting queries are denoted as $Q_{\mathrm{4\text{-}wk}}$, $Q_{\mathrm{5\text{-}wk}}$, {and $Q_{\mathrm{6\text{-}wk}}$},
+and the path counting queries as $Q_{\mathrm{4\text{-}pt}}$, $Q_{\mathrm{5\text{-}pt}}$,
+{and $Q_{\mathrm{6\text{-}pt}}$}.
+For $k$-edge acyclic pattern counting, we consider {three} representative patterns, denoted $\pi_1$, $\pi_2$, {and $\pi_3$}, with edge counts $k = 4$, $k = 5$, {and $k=6$}, respectively. 
+The associated queries are denoted by $Q_{\pi_1}$, $Q_{\pi_2}$, {and $Q_{\pi_3}$}.
+For the first two patterns, we explore two distinct tree structures as pre-processing results: $\mathcal{T}_1$ and $\mathcal{T}_1'$ for $\pi_1$, and $\mathcal{T}_2$ and $\mathcal{T}_2'$ for $\pi_2$.
+{For the third pattern, we consider a single tree structure $\mathcal{T}_3$.}
+The structural details of the patterns and their corresponding trees are illustrated in Figure~\ref{fig:tree_form}.
+Furthermore, we evaluated {three} cases of $k$-star counting with $k \in \{3, 4, {5}\}$, denoted as queries $Q_{3\star}$, $Q_{4\star}$, {and $Q_{5\star}$}.
+All queries are evaluated without redundant counts in the results.
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.65\linewidth]{figures/exp_pattern.pdf} % file myfig.svg in figs/
+  \caption{
+  {Selected input patterns and their tree formulations with vertex orderings.}}
+  \label{fig:tree_form}
+\end{figure}
+
+
+
+
+\paragraph{Experimental parameters}
+All experiments are conducted on a Linux server with dual 64-core AMD EPYC 9555 CPUs and 2~TB RAM.
+Each experiment is repeated $10$ times.
+To evaluate utility, we discard the highest and lowest $2$ results and report the average of the remaining $6$ runs.
+Communication cost is reported as the average over all $10$ runs.
+We set the default privacy budget to $\varepsilon = 1$.
+{All evaluated methods, including our parameter-free mechanisms, take only the privacy budget $\varepsilon$ and the query pattern as inputs, with no additional hyperparameters or tuning. 
+For each query, all methods are run under identical settings to ensure fair comparison.}
+{As $d(G)$ is assumed to be unknown in the experiments, both $\mathrm{WalkClip}_k$ and $\mathrm{LocalLap}_{k\star}$ require an additional round to estimate the noisy maximum degree $\tilde{d}(G)$. 
+For these two methods, we allocate a privacy budget of $\varepsilon / 10$ to the estimation step, and the remaining $9\varepsilon / 10$ to the main counting algorithm. 
+Following~\cite{betzer2024publishing}, we set the clipping factor\footnote{{The clipping threshold at round $\ell$ is defined as this factor raised to the power of $\ell$.}} in $\mathrm{WalkClip}_k$ as $\sqrt{\tilde{d}(G)}$.
+}
+
+
+
+\input{exp/first3tasks}
+\input{exp/startable}

@@ -1,0 +1,36 @@
+\section{Discussions}
+
+\subsection{Limitations}
+\R{
+One limitation of our approach stems from restricted visibility into certain vendor-specific performance counters. Since \thiswork{} inserts profiling instructions directly into the program to collect runtime information, the set of accessible metrics is constrained by the vendor’s ISA. In contrast, vendor-provided tools such as NVIDIA’s Nsight Compute (NCU) and AMD’s ROCm Tools (e.g., ATT) have privileged access to undocumented performance registers not exposed to third-party developers. These proprietary counters can only be utilized through their official APIs or libraries. While our infrastructure may not achieve full parity with these tools in terms of raw counter access, our IR-level instrumentation enables unique insights into program behavior otherwise difficult to obtain with closed-source profilers.
+}
+
+\subsection{Workload Generality}
+
+\R{
+\paragraph{Beyond AI Workloads.} While \thiswork{} currently targets AI workloads through its integration with the Triton compiler, the core ideas behind our approach, namely a multi-level IR and transformation passes for performance tools, are broadly applicable. These techniques can generalize to other domains and compilers, such as those used in high-performance computing (HPC)~\cite{reed2022reinventing} or scientific simulation~\cite{keyes2013multiphysics}.
+}
+
+\R{
+\paragraph{Distributed Workloads.} \thiswork{} is also amenable to distributed GPU workloads~\cite{wang2025wlb,rap}, which are typically structured as a series of kernels involving both computation and communication. For workloads that launch computation and communication kernels separately, \thiswork{} already provides native support. 
+For fused kernels, where computation and communication are fused within a single kernel\cite{chang2024flux,punniyamurthy2024optimizing}, \thiswork{} can theoretically instrument and analyze them as well. 
+However, full integration depends on ongoing upstream efforts to extend Triton’s support for such fused distributed execution.
+}
+
+\section{Conclusion}
+
+As AI compilers and GPU architectures continue to evolve, performance tooling must also advance to meet the growing demands of modern compilers. 
+To address this need, we introduced \thiswork{}, a novel compiler-centric profiling infrastructure built upon the Triton compiler. 
+\thiswork{} bridges the gap between compiler and profiler design, enabling the development of programmable, reusable tools and unlocking new possibilities for performance analysis and compiler optimizations. 
+We envision \thiswork{} as a foundation for an open, compiler-centric ecosystem, empowering the community to construct diverse and innovative performance tools that adapt to the dynamic needs of AI workloads.
+
+\section*{Acknowledgement}
+
+The authors would like to thank the anonymous reviewers for their constructive feedback on improving the work.
+We also thank our shepherd for the support during the revision process.
+We would like to thank our colleagues from Meta: Bert Maher, Hongtao Yu, Taylor Robie, Elliot Gorokhovsky and OAI people Philippe Tillet, Thomas Raoux, Pawel Szczerbuk, for their early discussion and feedback on this project.
+This work was inspired by Adam Paszke's work on MosaicGPU, presented both at Meta and Triton Conference.
+This work was supported in part by NSF 2124039.
+Keren Zhou's work is supported by a donation from AIGCSEMI LLC.
+
+% \vspace{2cm}

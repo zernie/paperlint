@@ -1,0 +1,56 @@
+\label{sec:authentication}
+
+The SSH authentication protocol ecosystem is complex and distributed (\autoref{fig:client-eco}). This section explains its different components, which will be analyzed in \autoref{sec:050-signatures}.
+
+\paragraph{SSH Authentication Protocol}
+\label{subsec:SSH-AP}
+
+To authenticate itself after the handshake, the client initiates the SSH Authentication Protocol~\cite{rfc4252} by proposing an authentication method, its username, and other parameters (e.g., password or public key/digital signature). SSH supports a variety of different authentication methods, among these:
+\begin{itemize}
+    \item \texttt{password} -- The client provides the user's password directly to the server for verification.
+    \item \texttt{publickey} -- The client sends a public key, and a signature over the session identifier and authentication request. Supported signature algorithms are based on RSA, DSA, ECDSA, and EdDSA.
+    \item \texttt{hostbased} -- Similar to \texttt{publickey}, but the public key is bound to the client's host rather than the user.
+    \item \texttt{keyboard-interactive} -- The server may send one or more authentication prompts to the client, which are to be displayed and answered by the user.
+\end{itemize}
+If the server does not support the proposed authentication method, it may reject and respond with a list of supported methods. The client may request this list directly by proposing the authentication method \verb|none|.
+
+\paragraph{SSH Clients}
+
+\begin{table}
+    \centering
+    \caption{Data to be signed by the client to perform signature-based client authentication as part of the SSH authentication protocol~\cite[Section 7]{rfc4252}. Data types as per~\cite[Section 5]{rfc4251}.}
+    \label{tab:clientsigns}
+    \begin{tabular}{ll}
+        \toprule
+        Data Type        &  Value \\ \midrule
+        \texttt{string}  &  session identifier \\
+        \texttt{byte}    &  SSH\_MSG\_USERAUTH\_REQUEST\\
+        \texttt{string}  &  user name\\
+        \texttt{string}  &  service name\\
+        \texttt{string}  &  ``publickey''\\
+        \texttt{boolean} &  TRUE\\
+        \texttt{string}  &  public key algorithm name\\
+        \texttt{string}  &  public key to be used for authentication \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+If the authentication option \verb|publickey| is chosen, the SSH client authenticates itself via a signature over the exchange hash (similar to the server) plus additional data. In detail, the client signs the data shown in \autoref{tab:clientsigns}. Clients may be configured with multiple public keys using different algorithms to connect to more than one server. Many proprietary implementations of SSH clients exist; for our study, we selected a variety of Linux, Windows, and macOS-based SSH clients (\autoref{tab:clients}).
+
+\paragraph{SSH Servers}
+
+The SSH server is authenticated to the client during the Transport Layer Protocol as part of the handshake. The server's SSH configuration files determine trusted public keys for signature-based client authentication and control which SSH connection protocol features are enabled for each session. For example, SSH access can be limited to a single shell command, or port forwarding can be disabled. The server can advertise the available public key signature algorithms for client authentication in an extension info message~\cite{rfc8308} sent as the first message on the encrypted session before the authentication protocol starts.
+
+\paragraph{SSH Proxies}
+
+Proxies can be used in either of two configurations. As a \emph{jump server}, they allow an authenticated client to access an SSH server on the remote network using port forwarding. In this case, a second SSH connection to a server within an organization's network is tunneled through the first SSH connection to the jump server, which the administrator of the jump server must enable.
+
+Alternatively, the proxy server can act as both an SSH client and server, and thus as a legitimate man-in-the-middle between the SSH client and the destination server. In this case, there are two separate BPP channels: One secure channel between client and proxy (\autoref{fig:client-eco}, 7) and one between proxy and server (\autoref{fig:client-eco}, 13). In the second channel, the proxy (legitimately) can impersonate the client despite public key authentication by making use of \emph{agent forwarding} in the first channel. Agent forwarding provides a signing oracle to the proxy, allowing it to sign the client's authentication request (\autoref{fig:client-eco}, 11) in the second channel without requiring the client to copy its private key files to the proxy.
+
+\paragraph{SSH Agents}
+
+SSH clients may generate digital signatures or delegate signature generation to another program, a so-called \emph{SSH agent}. When used, the SSH agent controls the client's private signing key. The \emph{exchange hash} is computed by the SSH client and then handed over as part of the authentication payload to the SSH agent for signing. Two use cases for SSH agents are mentioned in the literature: (1) to protect the private key of the client by storing it only in the main memory of a separate process, and (2) to enable SSH proxies. SSH agents provide an interface with key management and signing functions~\cite{ietf-sshm-ssh-agent-01}. The primary operations are loading and unloading signing keys, listing the available signing keys, and signing arbitrary data. SSH agents may implement support for constraints on stored keys (for example, requiring explicit user confirmation at the creation of each signature); these constraints require additional configuration. Although agents may limit remote signing to valid user authentication data structures, none of the tested agents enforced any check on the data to be signed---they act as \emph{unconstrained, fully chosen message signing oracles}. SSH agents are popular because they give users access to a passphrase-protected private key without requiring them to enter the passphrase at each login.
+
+\paragraph{Example}
+
+In \autoref{fig:client-eco}, a complex scenario for SSH client authentication is depicted. (1) By some shell/CLI command, an SSH connection to the SSH server is initiated. Since Git can be invoked through a CLI or a GUI that transforms the inputs into CLI commands, our Git use case is covered here. (2) The SSH client will now exchange ASCII banners; since an SSH proxy is configured here, this exchange is between the client and the proxy. (3) The SSH Transport Layer Protocol negotiates algorithms and keys and authenticates the proxy. (4,5,6) In the SSH Authentication Protocol, the client needs a signature over the authentication payload, including the exchange hash. If no proxy is involved, the client has two options: Use its crypto library with its private key or invoke the SSH agent. After establishing the first secure channel (7), the SSH proxy, acting as an SSH client, initiates another banner exchange, this time with the SSH server (8). After the server is authenticated and the BPP parameters are negotiated (9), the SSH proxy can (legitimately) impersonate the client. (11) The authentication payload, including the exchange hash of the second SSH session, is sent to the SSH agent through the first secure BPP channel (7). This is possible because the client has enabled agent forwarding. The SSH proxy receives the signature (12) and completes the protocol (10), establishing a second secure BPP channel (13) between the proxy and server. (14) CLI/shell commands can now be executed on the server securely.

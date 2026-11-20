@@ -1,0 +1,257 @@
+\clearpage
+\appendix
+\renewcommand{\thesection}{\Alph{section}}
+\section*{Appendix}
+This appendix is organized as follows:
+\begin{itemize}
+\item Section~\ref{sec:app-radar} provides more extensive radar background information.
+\item Section~\ref{sec:app-alpha-blending} provides the proof for our lenless alpha blending.
+\item Section~\ref{sec:radar-implementation} describes in detail the experimental parameters for collecting data.
+\item Section~\ref{sec:app-nvs} describes the setup for the Novel View Synthesis experiment.
+\item Section~\ref{sec:app-discussion} goes into detail on limitations, future work and societal impact.
+\end{itemize}
+
+\section{Radar Background} \label{sec:app-radar}
+\subsection{Radar Basics}
+A mmWave radar works by transmitting a wireless
+signal (chirp) and receiving back the reflections that come from various reflectors in the scene. In this case, the transmitter and receiver are collocated, meaning they are side by side.
+It operates in the millimeter-wavelengths frequency bands at 77 GHz, and uses Frequency Modulated Continuous Wave (FMCW) and antenna arrays to help resolve spatial ambiguity. 
+As shown in Fig.~\ref{fig:fmcw}(a), the transmitted FMCW is a function that is linearly increasing in frequency over time. 
+Considering a single reflector and a single antenna, the received chirp is simply a time-delayed version of the transmitted chirp, see Fig.~\ref{fig:fmcw}(b). 
+To resolve range ambiguity, the received chirp is multiplied with the conjugate of the transmitted chirp and can be expressed as a complex function:
+\begin{equation}
+s(t) =  A \cdot e^{-j 2 \pi(f+kt)   d /c}  = A \cdot e^{-(j 2\pi k \tau )t} \cdot e^{-j 2\pi f \tau}
+\end{equation}
+where $A$ is the signal amplitude, $d$ is the round-trip propagation distance, $c$ is the speed of light, $\tau=d/c$ is the round-trip delay, $f$ is the starting frequency, and $k$ is the chirp slope. For multiple reflectors, we simply receive the linear combination of all the reflections.
+
+\subsection{Free-space Power Decay}\label{sec:app-radar-pwr}
+In free space, the power of a radio frequency signal attenuates proportionally to the square of the distance it travels due to spherical spreading. 
+When considering a round-trip path, where the signal travels from the transmitter to a point in space and then reflects back to the receiver, the decay is even more pronounced. 
+This is known as \textit{round-trip free-space path loss}, and the power decay factor reflected from distance \( u \) is given by:
+\begin{equation}
+\label{eq:reflection_dist}
+P_{\text{rx}} \propto \frac{1}{(4\pi u)^4} P_{\text{tx}}
+\end{equation}
+This expression accounts for two instances of inverse-square spreading: one during transmission to the point and another during reflection back to the receiver. 
+As such, the received power decreases proportionally to \( 1/u^4 \).
+
+
+\subsection{Radar Reflections}\label{sec:app-radar-ref}
+Building off of Sec.~\ref{sec:background-mm}, we primarily expect specular reflections, albeit some flexibility in the signals which return to the receiver. Even though a perfectly specular signal will only return to the receiver if the reflecting surface is normal to the transmitted chirp, in actuality, there is a margin in which the signal is not perfectly specular, yet some signal still returns. Similar to commons ways of modeling diffused reflections, we follow a shifted Lambertian model~\cite{richards2010principles, ren2020diffuse}, sometimes also called the directive model.
+We represent the incident direction by the unit vector \( \omega_i \), the surface normal by \( \mathbf{n} \), and the ideal specular reflection direction by:
+\begin{equation}
+     \omega_o =  \omega_i - 2(\mathbf{n} \cdot \omega_i)\mathbf{n}
+\end{equation}
+The ray which returns to the receiver antenna is denoted as \( \omega_r \), and is calculated by taking the unit vector that goes from the surface point to the receiver location.
+The received power is modulated by the directional scaling factor:
+\begin{equation}
+(\omega_o \cdot \omega_r)
+\end{equation}
+\input{figures/near-far-fig}
+following the scaled Lambertian model mentioned above.
+
+\subsection{Near Field vs. Far Field}\label{sec:app-radar-nf-ff}
+Wireless imaging systems operate differently depending on the distance between the sensor and the target. This is denoted as near-field (or near range) and far-field (or far range) imaging. When an object is in the far-field, this is categorized as when the distance between the object and the radar are much larger than the wavelength and the aperture of the antenna system. For example, 10's of meters away. In this case, the incoming waves can be \textit{approximated} as planar~\cite{richards2010principles}. Meaning all the incoming signals are parallel to each other. This significantly simplifies the image reconstruction, assuming the antennas are uniformly spaced, because (1) the corresponding filter weights can be reused across depth and (2) the weights are uniform, allowing us to use \textit{beamforming} and Fourier Transforms to speed up computation time~\cite{andersson2012fast}. However, operating in the far-field comes at the cost of lower resolution reconstruction, since the RF waves spread out the further it travels.
+
+\input{figures/mf_bf_ex_fig.tex}
+On the other hand, in this paper, we are operating in the near-field. This mean the object is much closer to the antenna aperture, within a meter in our case. Importantly, this means that the incoming waves that are reflected from the object in the scene can no longer be approximated as parallel.  The difference in signal paths is illustrated in Fig.~\ref{fig:near-far}. In this case, it is required that the exact signal propagation paths are taken into account, otherwise the radar images appear distorted~\cite{yanik2019near, sheen2001three}. To correctly reconstruct an undistorted radar image, we \textit{need} to use a matched filter (see Sec.~\ref{sec:background}), which comes with a high computational complexity, albeit a higher resolution image. For example, in Fig.~\ref{fig:mf-bf} a heatmap of a wrench is shown when processed with beamforming vs. using the matched filter.
+
+
+\subsection{Differentiable Matched Filter \& Signal Tracing}
+\label{sec:app-mf}
+We have the forward path of the Matched Filter shown in Eq.~\ref{eq:mf-sm}:
+\begin{equation*} 
+P(\mathbf{x}_j) = \left\lVert \sum_{i = 1}^{N_{\text{ant}}} \sum_{t} s(i, t) \cdot e^{j 2\pi k \tau_i t} \cdot e^{j 2\pi f \tau_i} \right\rVert, \mathbf{x}_j \in \Omega_\text{pts},
+\end{equation*}
+The backpropagated gradient to the signal $s(i, t)$ is given by:
+\begin{equation}
+    \frac{\partial L}{\partial s(i,t)} = \sum_{\mathbf{x}_j \in \Omega_\text{pts}} \frac{1}{P(\mathbf{x})} \cdot \frac{\partial L}{\partial P(\mathbf{x})} \cdot e^{-j 2\pi k \tau_i t} \cdot e^{-j 2\pi f \tau_i}
+\end{equation}
+
+Signal Tracing is given by Eq~\ref{eq:ref_sim},
+\begin{equation*} 
+s(i, t) = \sum_{\mathbf{x}_j \in \Omega_\text{pts}} A_{\text{rx}}(\mathbf{x}_j)\, e^{-j 2\pi k \tau_{j} t} \, e^{-j 2\pi f \tau_{j}},
+\end{equation*}
+The backpropagated gradient to the amplitude $A_{\text{rx}}(\mathbf{x}_j)$ is given by:
+\begin{equation} 
+\frac{\partial L}{\partial A_{\text{rx}}(\mathbf{x}_j)}=  \sum_{i = 1}^{N_{\text{ant}}} \sum_{t} \frac{\partial L}{\partial s(i, t)} \cdot e^{j 2\pi k \tau_i t} \cdot e^{j 2\pi f \tau_i}
+\end{equation}
+\subsection{Code Implementation}
+\label{sec:app-alg}
+\noindent {\bf Differentiable Matched Filter} 
+We implement both the forward and backpropagation of the matched filter in CUDA using parallel computation. The corresponding pseudocode is shown in Alg.~\ref{alg:mf_forback}.
+
+\begin{algorithm}[H]
+\caption{Differentiable Matched Filter Algorithm}
+\begin{algorithmic}
+\State \textbf{\textcolor{blue}{[1] Forward:}} Input signal $s(i, t)$ where $i = 0, \ldots, N_{\text{ant}} - 1$, $t = 0, \ldots, N_t - 1$;
+\State sampling points $\mathbf{x}_j$ where $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$
+\For{{\bf Parallel} $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$}
+    \State $P(\mathbf{x}_j) \gets 0$
+    \For{$i = 0, \ldots, N_{\text{ant}} - 1$}
+        \For{$t = 0, \ldots, N_t - 1$}
+            \State $P(\mathbf{x}_j) \gets P(\mathbf{x}_j) + s(i, t) \cdot e^{j 2\pi k \tau_i t} \cdot e^{j 2\pi f \tau_i}$
+        \EndFor
+    \EndFor
+    \State $P(\mathbf{x}_j) \gets \left\lVert P(\mathbf{x}_j) \right\rVert$
+\EndFor
+\State \textbf{Output:} $P(\mathbf{x}_j)$ for all $j$
+\vspace{0.5em}
+\State \textbf{\textcolor{blue}{[2] Backward:}} Gradient of matched filter power $\frac{\partial L}{\partial P(\mathbf{x}_j)}$ for $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$;
+\State Input signal $s(i, t)$ where $i = 0, \ldots, N_{\text{ant}} - 1$, $t = 0, \ldots, N_t - 1$;
+\State Sampling points $\mathbf{x}_j$ where $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$
+\For{{\bf Parallel} $i = 0, \ldots, N_{\text{ant}} - 1$}
+    \For{{\bf Parallel} $t = 0, \ldots, N_t - 1$}
+        \State $\frac{\partial L}{\partial s(i, t)} \gets 0$
+        \For{$j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$}
+            \State $\frac{\partial L}{\partial s(i, t)} \gets \frac{\partial L}{\partial s(i, t)} + \frac{1}{P(\mathbf{x}_j)} \cdot \frac{\partial L}{\partial P(\mathbf{x}_j)} \cdot e^{-j 2\pi k \tau_i t} \cdot e^{-j 2\pi f \tau_i}$
+        \EndFor
+    \EndFor
+\EndFor
+\State \textbf{Output:} $\frac{\partial L}{\partial s(i, t)}$ for all $i, t$
+\end{algorithmic}
+\label{alg:mf_forback}
+\end{algorithm}
+
+\noindent {\bf Signal Tracing} 
+We implement both the forward and backpropagation in CUDA using parallel computation. The corresponding pseudocode is shown in Alg.~\ref{alg:rt_forback}.
+
+\begin{algorithm}[H]
+\caption{Signal Tracing}
+\begin{algorithmic}
+\State \textbf{\textcolor{blue}{[1] Forward:}} Sampling points $\mathbf{x}_j$ where $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$;
+\State Amplitude $A_\text{rx}(\mathbf{x}_j)$ where $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$
+\For{{\bf Parallel} $i = 0, \ldots, N_{\text{ant}} - 1$}
+    \For{{\bf Parallel} $t = 0, \ldots, N_t - 1$}
+        \State $s(i, t) \gets 0$
+        \For{$j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$}
+            \State $s(i, t) \gets s(i, t) + A_{\text{rx}}(\mathbf{x}) \cdot e^{-j 2\pi k \tau_i t} \cdot e^{-j 2\pi f \tau_i}$
+        \EndFor
+    \EndFor
+\EndFor
+\State \textbf{Output:} $s(i, t)$ for all $i, t$
+\State \textbf{\textcolor{blue}{[2] Backward:}} Gradient of signal $\frac{\partial L}{\partial s(i, t)}$ for $i = 0, \ldots, N_{\text{ant}} - 1$, $t = 0, \ldots, N_t - 1$
+\State Sampling points $\mathbf{x}_j$ where $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$
+\For{{\bf Parallel} $j = 0, \ldots, N_{\text{ray}} N_{\text{s}} - 1$}
+    \State $\frac{\partial L}{\partial A_{\text{rx}}(\mathbf{x}_j)} \gets 0$
+    \For{$i = 0, \ldots, N_{\text{ant}} - 1$}
+        \For{$t = 0, \ldots, N_t - 1$}
+            \State $\frac{\partial L}{\partial A_{\text{rx}}(\mathbf{x}_j)} \gets \frac{\partial L}{\partial A_{\text{rx}}(\mathbf{x}_j)} + \frac{\partial L}{\partial s(i, t)} \cdot e^{j 2\pi k \tau_i t} \cdot e^{j 2\pi f \tau_i}$
+        \EndFor
+    \EndFor
+\EndFor
+\State \textbf{Output:} $\frac{\partial L}{\partial A_{\text{rx}}(\mathbf{x}_j)}$ for all $j$
+
+\end{algorithmic}
+\label{alg:rt_forback}
+\end{algorithm}
+
+\section{Lensless Alpha Blending}
+\label{sec:app-alpha-blending}
+\subsection{Alpha} 
+\label{sec:app-alpha-blending-alpha}
+Following~\cite{wang2021neus}, the opaque density computed along the primary ray \( \mathbf{p} \) is defined as:
+\begin{equation}
+    \rho(u) = \max\left(
+    \frac{-\frac{\mathrm{d}\Phi_s}{\mathrm{d}u}(f(\mathbf{x}(u)))}{\Phi_s(f(\mathbf{x}(u)))},\, 0
+    \right),
+\end{equation}
+where \( \phi_s(x) \) and \( \Phi_s(x) \) denote the probability density function (PDF) and cumulative distribution function (CDF) of the logistic distribution, respectively.
+
+The corresponding alpha value over the interval \([u_i, u_{i+1}]\) is then:
+\begin{equation}
+    \alpha_i = 1 - \exp\left(
+    -\int_{u_i}^{u_{i+1}} \rho(u)\mathrm{d}u
+    \right) = 1 - \exp\left(
+    -\int_{u_i}^{u_{i+1}} \frac{-\frac{\mathrm{d}\Phi_s}{\mathrm{d}u}(f(\mathbf{x}(u)))}{\Phi_s(f(\mathbf{x}(u)))} \, \mathrm{d}u
+    \right).
+\end{equation}
+
+When changing from the primary ray \( \mathbf{p} \) to a real ray \( \mathbf{r} \), the derivative term in the numerator transforms as:
+\begin{equation}
+\label{eq:lens-opaque}
+    -\frac{\mathrm{d}\Phi_s}{\mathrm{d}u}(f(\mathbf{x}(u))) = -\frac{\mathrm{d}\Phi_s}{\mathrm{d}u'}(f(\mathbf{x}(u))) \cdot \left|\frac{\mathrm{d}u'}{\mathrm{d}u}\right| = \rho'(u') \cdot \left|\frac{\mathrm{d}u'}{\mathrm{d}u}\right|,
+\end{equation}
+where \( u \) and \( u' \) are the sampling parameters along the primary and real rays, respectively, and \( \rho'(u') \) denotes the opaque density computed along the real ray.
+
+In integration, we have:
+\begin{equation}
+\label{eq:lens-alpha}
+    \alpha_i = 1 - \exp\left(
+    -\int_{u_i}^{u_{i+1}} \rho(u) \, \mathrm{d}u
+    \right) 
+    = 1 - \exp\left(
+    -\int_{u_i}^{u_{i+1}} \rho(u) \, \mathrm{d}u' \cdot \left| \frac{\mathrm{d}u}{\mathrm{d}u'} \right|
+    \right).
+\end{equation}
+
+By substituting the transformed opaque density from Eq.~\ref{eq:lens-opaque} into Eq.~\ref{eq:lens-alpha}, we obtain:
+\begin{equation}
+    \alpha_i = 1 - \exp\left(
+    -\int_{u'_i}^{u'_{i+1}} \rho'(u') \, \mathrm{d}u'
+    \right) = \alpha'_i,
+\end{equation}
+demonstrating that the computed \( \alpha_i \) remains unchanged when transitioning from the primary ray to the real ray.
+
+\subsection{Transmittance}
+\label{sec:app-alpha-blending-trans}
+Following~\cite{wang2021neus}, 
+in the primary ray direction \( \mathbf{p} \), we define the transmittance as:
+\begin{equation}
+\label{eq:tpho_1}
+    T(u)\rho(u) = \left| \nabla f(\mathbf{x}(u)) \cdot \mathbf{p} \right|\, \phi_s(f(\mathbf{x}(u))) = -\frac{\mathrm{d}\Phi_s}{\mathrm{d}u}(f(\mathbf{x}(u))),
+\end{equation}
+where \( \phi_s(\cdot) \) and \( \Phi_s(\cdot) \) are the PDF and CDF of the logistic distribution, respectively.
+
+Given the transmittance is defined as \( T(u) = \exp\left(-\int_0^u \rho(v)\, \mathrm{d}v\right) \), differentiating both sides yields:
+\[
+\frac{\mathrm{d}T}{\mathrm{d}u} = \frac{\mathrm{d}}{\mathrm{d}u} \exp\left(-\int_0^u \rho(v)\, \mathrm{d}v\right) = -\rho(u) \exp\left(-\int_0^u \rho(v)\, \mathrm{d}v\right) = -\rho(u) T(u),
+\]
+which implies:
+\begin{equation}
+\label{eq:tpho_2}
+    T(u)\rho(u) = -\frac{\mathrm{d}T}{\mathrm{d}u}(u).
+\end{equation}
+Combining Eq.~\ref{eq:tpho_1} and Eq.~\ref{eq:tpho_2}, we obtain:
+\begin{equation}
+\label{eq:phiequaltotrans}
+    -\frac{\mathrm{d}\Phi_s}{\mathrm{d}u}(f(\mathbf{x}(u))) = -\frac{\mathrm{d}T}{\mathrm{d}u}(u).
+\end{equation}
+Because the geometry-dependent signed distance function (SDF) does not vary with ray direction, we assume the boundary condition:
+\[
+\Phi_s(f(\mathbf{x}(u))) = \Phi_s(f(\mathbf{x}(u'))).
+\]
+Then, given the starting CDF values \( \Phi_s(f(\mathbf{x}(u_s))) \) on the primary ray \( \mathbf{p} \) and \( \Phi_s(f(\mathbf{x}(u'_s))) \) on the real ray \( \mathbf{r} \), integrating Eq.~\ref{eq:phiequaltotrans} leads to:
+\begin{equation}
+    T(u') - T(u) = \Phi_s(f(\mathbf{x}(u'_s))) - \Phi_s(f(\mathbf{x}(u_s))),
+\end{equation}
+which completes the proof of Eq.~\ref{eq:lens-less-transmittance}.
+
+\input{figures/mf_groundtruth}
+\section{Experiment Details}
+\label{sec:radar-implementation}
+\noindent {\bf Data Collection Setup} We collected our own dataset using a TI 1843BOOST mmWave radar~\cite{ti1843} with a DCA1000EVM for raw data collection, attached to a Franka Research 3 controlled via the FrankaPy library~\cite{frankapy}. We emulate 2D arrays by moving the radar with the robotic arm for 17-68 (more scans were made for more complex objects) different array viewpoints, which are each 0.14m $\times$ 0.25m in size with an antenna spacing of $\sim (\frac{\lambda}{4} - \frac{\lambda}{2})$ between all antennas. Each imaging plan was shifted circularly (yaw) around the center of the objects location to measure various viewpoints.
+A subset of the ground truth heatmaps are visualized in Fig.~\ref{fig:mf_groundtruth_ex}. Though the actual groundtruth used in \name{} is a 3D heatmap, for ease of visualization, we plot the 3D heatmap summed along each of the 3 dimensions (depth, azimuth, elevation), respectively. Each of the columns show the radar heatmap from a different scanning plane.
+
+In order to capture $360^{\circ}$ scans, we use a rotation platform to rotate the object which was placed aroun 0.3-0.5m away. The radar parameters were set to have a starting frequency of 77~GHz usable sweeping bandwidth of 3.59~GHz, giving $0.04m$ in range resolution. The slope used is 70.15(\textit{MHz}/$\mu$s) capturing 64 ADC samples with a 1250ksps sampling rate for each chirp.
+
+\noindent {\bf Training Setup}
+For the SDF Network, we use an MLP with 8 layers and a hidden dimension of 256.  
+We apply sinusoidal positional encoding with 10 frequency levels as input.  
+The Reflectivity Network is implemented as an MLP with 4 layers and a hidden dimension of 256.  
+The signal power prediction is implemented as a single trainable parameter.
+
+We trained our model for 50{,}000 iterations over 32 hours on a single NVIDIA H100 GPU, using \texttt{mmDetection3D}~\cite{mmdet3d2020} as the code base.  
+We used an initial learning rate of \(1 \times 10^{-3}\), but due to the sparsity of the input, the learning rate for the SDF Network was reduced to \(1 \times 10^{-4}\).  
+Training was performed using the AdamW optimizer with cosine annealing learning rate scheduling.
+
+\noindent \textbf{Metric Calculation}
+The metrics used to compare \name{} and the matched filter baseline against the camera ground truth are the F1-Score (evaluated with $\tau = 0.01$) and Chamfer distance. These two metrics evaluate the similarity between two 3D point clouds. For mesh to point cloud conversion, we sample uniformly along the meshes for each of the three candidates with 5000 points. We then align the matched filter point clouds to the camera baseline and align \name{}'s point clouds to the camera baseline. 
+
+The F1-Score is calculated by finding the nearest point in the camera point cloud and computing the distance in both directions. Precision and recall are computed as the proportions of these distances that fall below $\tau$, and the F1-Score is derived by:
+\begin{equation}
+F_1 = 2 \cdot \frac{\text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}
+\end{equation}
+
+The Chamfer distance computes the pairwise distance between two pointclouds by finding the nearest neighbors for each point between point clouds and calculating the squared distance, returning the average distance. This is calculated in both directions. 
+

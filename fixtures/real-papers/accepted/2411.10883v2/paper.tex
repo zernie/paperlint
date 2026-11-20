@@ -1,0 +1,97 @@
+\documentclass[conference,compsoc]{IEEEtran}
+\usepackage{epsfig,endnotes,url}
+\usepackage{tcolorbox}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{cite}
+\usepackage{pgfplots}
+\usepackage{tikz,array}
+\usepackage{soul,xcolor}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcommand{\yicheng}[1]{\textcolor{blue}{YZ: \em #1 }}
+\newcommand{\nael}[1]{\textcolor{brown}{Nael: \em #1 }}
+
+\newcommand{\cheng}[1]{\textcolor{red}{[Cheng: #1]}}
+\newcommand{\eg}{\textit{e}.\textit{g}.,~}
+\newcommand{\hlc}[2][yellow]{{%
+    \colorlet{foo}{#1}%
+    \sethlcolor{foo}\hl{#2}}%
+}
+
+\begin{document}
+
+%don't want date printed
+\date{}
+
+%make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{\Large \bf I know What You \textit{Sync}: Covert and Side Channel Attacks on File Systems via \textit{syncfs}}
+
+% \author{Anonymous author(s)}
+\author{
+\IEEEauthorblockN{Cheng Gu}
+\IEEEauthorblockA{Department of Computer \\ Science and Engineering \\
+University of California, Riverside \\
+cgu024@ucr.edu}
+\and
+\IEEEauthorblockN{Yicheng Zhang}
+\IEEEauthorblockA{Department of Electrical \\ and Computer Engineering \\
+University of California, Riverside
+\\yzhan846@ucr.edu}
+\and
+\IEEEauthorblockN{Nael Abu-Ghazaleh}
+\IEEEauthorblockA{Department of Computer \\ Science and Engineering \\
+University of California, Riverside\\
+nael@cs.ucr.edu}
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+\thispagestyle{empty}
+
+
+\input{abstract}
+
+\input{introduction}
+
+\input{background}
+
+% \input{attackmodel}
+
+\input{reverse_engineering}
+
+
+\input{covert_channel}
+
+\input{side_channel}
+
+\input{cross_container}
+
+\input{mitigation}
+
+\input{relatedwork}
+
+\input{conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{main}
+
+\input{meta_review}
+
+
+% \theendnotes
+
+\end{document}
+
+
+
+
+
+
+

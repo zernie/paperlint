@@ -1,0 +1,39 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{2.4pt}
+\caption{
+\textbf{LOCO baseline performance across architectures and adaptation methods.} Two-class boundary-tolerant mIoU ($\pm 2$\,px). For each architecture-method pair we report mIoU pooled across the $6$ test cells per pair ($3$ held-out cities $\times$ $2$ native resolutions, $150$ paired test images per cell). \textit{Upper} is the within-city upper bound (per-architecture, pooled across the same cells). $\Delta$ is the mean gap to the upper bound (mIoU points; negative is degradation). \textit{Sig.} is the count of cells, out of $6$, with significant degradation under paired bootstrap ($p < 0.05$, $B = 10{,}000$). $^\dagger$High-resolution cells only ($3$ held-out cities); Sig.\ is given out of the evaluated cells. The \textit{Pooled} block pools MAMNet, OGLANet and DINOv3.
+}
+\label{tab:loco-main}
+\begin{tabular}{l|cccc|cccc|cccc|cc}
+\toprule
+& \multicolumn{4}{c|}{\textit{LOCO mIoU}}
+& \multicolumn{4}{c|}{$\Delta$ \textit{(mIoU)}}
+& \multicolumn{4}{c|}{\textit{Sig.}}
+& \multicolumn{2}{c}{\textit{Pooled}} \\
+\textbf{Method} & \textbf{D} & \textbf{M} & \textbf{O} & \textbf{C}$^\dagger$
+                & \textbf{D} & \textbf{M} & \textbf{O} & \textbf{C}$^\dagger$
+                & \textbf{D} & \textbf{M} & \textbf{O} & \textbf{C}$^\dagger$
+                & $\Delta$ & \textit{Sig./18} \\
+\midrule
+\textit{Upper} & $\mathit{77.6}$ & $\mathit{81.7}$ & $\mathit{74.9}$ & $\mathit{78.8}$ & --- & --- & --- & --- & --- & --- & --- & --- & --- & --- \\
+\midrule
+Vanilla   & 70.0 & 77.1 & 67.0 & 75.3 & $-7.6$ & $-4.6$ & $-7.9$ & $-3.5$ & 6 & 6 & 6 & 3/3 & $-6.68$ & 18 \\
+FDA       & 69.4 & 77.0 & 67.0 & 75.1 & $-8.1$ & $-4.7$ & $-8.0$ & $-3.7$ & 6 & 6 & 6 & 3/3 & $-6.93$ & 18 \\
+SegDeSiC  & 73.0 & 76.1 & 65.0 & -- & $-4.6$ & $-5.6$ & $-9.9$ & -- & 5 & 6 & 6 & -- & $-6.68$ & 17 \\
+IIM       & 71.4 & 71.9 & 65.5 & -- & $-6.1$ & $-9.7$ & $-9.4$ & -- & 6 & 6 & 6 & -- & $-8.41$ & 18 \\
+MRFP+     & 72.7 & 71.4 & 60.9 & -- & $-4.9$ & $-10.3$ & $-14.0$ & -- & 6 & 6 & 6 & -- & $-9.74$ & 18 \\
+FADA      & 67.0 & 72.3 & 63.8 & -- & $-10.6$ & $-9.4$ & $-11.1$ & -- & 6 & 6 & 6 & -- & $-10.36$ & 18 \\
+ISW       & 59.0 & 68.3 & 63.9 & -- & $-18.5$ & $-13.4$ & $-11.1$ & -- & 6 & 6 & 6 & -- & $-14.32$ & 18 \\
+SAR$^\dagger$ & 68.4 & 73.1 & 65.4 & 75.3 & $-6.3$ & $-6.6$ & $-7.6$ & $-3.5$ & 3/3 & 3/3 & 3/3 & 3/3 & $-6.86$ & 9/9 \\
+BSM$^\dagger$ & 66.2 & 72.8 & 62.3 & 75.7 & $-5.7$ & $-6.9$ & $-10.7$ & $-3.0$ & 2/2 & 3/3 & 3/3 & 3/3 & $-8.05$ & 8/8 \\
+\midrule
+\textit{Avg.\ $\Delta$} & --- & --- & --- & --- & $-8.6$ & $-8.2$ & $-10.2$ & --- & --- & --- & --- & --- & --- & --- \\
+\textit{\# Sig./$42$} & --- & --- & --- & --- & --- & --- & --- & --- & 41 & 42 & 42 & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize
+\textbf{D}: DINOv3 \quad \textbf{M}: MAMNet \quad \textbf{O}: OGLANet \quad \textbf{C}: CrossEarth. Avg.\ $\Delta$ and \# Sig.\ cover the first seven methods. --: not run; FADA, IIM, MRFP+, SegDeSiC and ISW are defined on a per-pixel head, which CrossEarth's query-based Mask2Former decoder lacks. CrossEarth \sib{} ($-4.4$, 3/3) is in Table~\ref{tab:loco-full-hr}.
+\end{table}

@@ -1,0 +1,11 @@
+\begin{figure*}[t]
+  \centering
+   \includegraphics[width=0.95\linewidth]{figures/lens-less-sampling-v2.pdf}
+   \caption{{\bf\em Left:} Naïve sampling traces rays across the entire space for each antenna, resulting in the highest computational complexity.  
+{\bf\em Middle:} Lensless sampling strategy samples points along the radar's primary ray direction and reuses network predictions across antennas.  
+Alpha blending and transmittance are calculated using lens-less alpha blending.  
+{\bf\em Right:} Signal Tracing Bank: subset of antennas is processed in each iteration, reducing computation for both forward and backward passes.
+}
+\vspace{-1.5em}
+   \label{fig:lens-less-bank}
+\end{figure*}

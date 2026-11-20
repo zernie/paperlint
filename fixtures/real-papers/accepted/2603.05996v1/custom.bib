@@ -1,0 +1,496 @@
+% Multi-turn SQL
+@misc{sun2024qdasqlquestionsenhanceddialogue,
+      title={QDA-SQL: Questions Enhanced Dialogue Augmentation for Multi-Turn Text-to-SQL}, 
+      author={Yinggang Sun and Ziming Guo and Haining Yu and Chuanyi Liu and Xiang Li and Bingxuan Wang and Xiangzhan Yu and Tiancheng Zhao},
+      year={2024},
+      eprint={2406.10593},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2406.10593}, 
+}
+
+@article{xiao2022cqr,
+  title={Cqr-sql: Conversational question reformulation enhanced context-dependent text-to-sql parsers},
+  author={Xiao, Dongling and Chai, Linzheng and Zhang, Qian-Wen and Yan, Zhao and Li, Zhoujun and Cao, Yunbo},
+  journal={arXiv preprint arXiv:2205.07686},
+  year={2022}
+}
+
+@inproceedings{liu-etal-2024-tp,
+    title = "{TP}-Link: Fine-grained Pre-Training for Text-to-{SQL} Parsing with Linking Information",
+    author = "Liu, Ziqiang  and
+      Li, Shujie  and
+      Cai, Zefeng  and
+      Li, Xiangyu  and
+      Li, Yunshui  and
+      Li, Chengming  and
+      Hu, Xiping  and
+      Xu, Ruifeng  and
+      Yang, Min",
+    editor = "Calzolari, Nicoletta  and
+      Kan, Min-Yen  and
+      Hoste, Veronique  and
+      Lenci, Alessandro  and
+      Sakti, Sakriani  and
+      Xue, Nianwen",
+    booktitle = "Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)",
+    month = may,
+    year = "2024",
+    address = "Torino, Italia",
+    publisher = "ELRA and ICCL",
+    url = "https://aclanthology.org/2024.lrec-main.1451",
+    pages = "16686--16697",
+    abstract = "In this paper, we introduce an innovative pre-training framework TP-Link, which aims to improve context-dependent Text-to-SQL Parsing by leveraging Linking information. This enhancement is achieved through better representation of both natural language utterances and the database schema, ultimately facilitating more effective text-to-SQL conversations. We present two novel pre-training objectives: (i) utterance linking prediction (ULP) task that models intricate syntactic relationships among natural language utterances in context-dependent text-to-SQL scenarios, and (ii) schema linking prediction (SLP) task that focuses on capturing fine-grained schema linking relationships between the utterances and the database schema. Extensive experiments demonstrate that our proposed TP-Link achieves state-of-the-art performance on two leading downstream benchmarks (i.e., SParC and CoSQL).",
+}
+
+@inproceedings{zheng-etal-2022-hie,
+    title = "{HIE}-{SQL}: History Information Enhanced Network for Context-Dependent Text-to-{SQL} Semantic Parsing",
+    author = "Zheng, Yanzhao  and
+      Wang, Haibin  and
+      Dong, Baohua  and
+      Wang, Xingjun  and
+      Li, Changshan",
+    editor = "Muresan, Smaranda  and
+      Nakov, Preslav  and
+      Villavicencio, Aline",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2022",
+    month = may,
+    year = "2022",
+    address = "Dublin, Ireland",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.findings-acl.236",
+    doi = "10.18653/v1/2022.findings-acl.236",
+    pages = "2997--3007",
+    abstract = "Recently, context-dependent text-to-SQL semantic parsing which translates natural language into SQL in an interaction process has attracted a lot of attentions. Previous works leverage context dependence information either from interaction history utterances or previous predicted queries but fail in taking advantage of both of them since of the mismatch between the natural language and logic-form SQL. In this work, we propose a History Information Enhanced text-to-SQL model (HIE-SQL) to exploit context dependence information from both history utterances and the last predicted SQL query. In view of the mismatch, we treat natural language and SQL as two modalities and propose a bimodal pre-trained model to bridge the gap between them. Besides, we design a schema-linking graph to enhance connections from utterances and the SQL query to database schema. We show our history information enhanced methods improve the performance of HIE-SQL by a significant margin, which achieves new state-of-the-art results on two context-dependent text-to-SQL benchmarks, the SparC and CoSQL datasets, at the writing time.",
+}
+
+@inproceedings{zhang-etal-2023-act,
+    title = "{ACT}-{SQL}: In-Context Learning for Text-to-{SQL} with Automatically-Generated Chain-of-Thought",
+    author = "Zhang, Hanchong  and
+      Cao, Ruisheng  and
+      Chen, Lu  and
+      Xu, Hongshen  and
+      Yu, Kai",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2023",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.findings-emnlp.227",
+    doi = "10.18653/v1/2023.findings-emnlp.227",
+    pages = "3501--3532",
+    abstract = "Recently Large Language Models (LLMs) have been proven to have strong abilities in various domains and tasks. We study the problem of prompt designing in the text-to-SQL task and attempt to improve the LLMs{'} reasoning ability when generating SQL queries. Besides the trivial few-shot in-context learning setting, we design our chain-of-thought (CoT) prompt with a similar method to schema linking. We provide a method named ACT-SQL to automatically generate auto-CoT exemplars and thus the whole process doesn{'}t need manual labeling. Our approach is cost-saving since we only use the LLMs{'} API call once when generating one SQL query. Furthermore, we extend our in-context learning method to the multi-turn text-to-SQL task. The experiment results show that the LLMs{'} performance can benefit from our ACT-SQL approach. Our approach achieves SOTA performance on the Spider dev set among existing in-context learning approaches.",
+}
+
+
+@inproceedings{hui2021dynamic,
+  title={Dynamic hybrid relation exploration network for cross-domain context-dependent semantic parsing},
+  author={Hui, Binyuan and Geng, Ruiying and Ren, Qiyu and Li, Binhua and Li, Yongbin and Sun, Jian and Huang, Fei and Si, Luo and Zhu, Pengfei and Zhu, Xiaodan},
+  booktitle={Proceedings of the AAAI conference on artificial intelligence},
+  volume={35},
+  number={14},
+  pages={13116--13124},
+  year={2021}
+}
+
+@inproceedings{zhang-etal-2024-coe,
+    title = "{C}o{E}-{SQL}: In-Context Learning for Multi-Turn Text-to-{SQL} with Chain-of-Editions",
+    author = "Zhang, Hanchong  and
+      Cao, Ruisheng  and
+      Xu, Hongshen  and
+      Chen, Lu  and
+      Yu, Kai",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.naacl-long.361",
+    doi = "10.18653/v1/2024.naacl-long.361",
+    pages = "6487--6508",
+    abstract = "Recently, Large Language Models (LLMs) have been demonstrated to possess impressive capabilities in a variety of domains and tasks. We investigate the issue of prompt design in the multi-turn text-to-SQL task and attempt to enhance the LLMs{'} reasoning capacity when generating SQL queries. In the conversational context, the current SQL query can be modified from the preceding SQL query with only a few operations due to the context dependency. We introduce our method called CoE-SQL which can prompt LLMs to generate the SQL query based on the previously generated SQL query with an edition chain. We also conduct extensive ablation studies to determine the optimal configuration of our approach. Our approach outperforms different in-context learning baselines stably and achieves state-of-the-art performances on two benchmarks SParC and CoSQL using LLMs, which is also competitive to the SOTA fine-tuned models.",
+}
+
+@inproceedings{fu2023miga,
+  title={MIGA: a unified multi-task generation framework for conversational text-to-SQL},
+  author={Fu, Yingwen and Ou, Wenjie and Yu, Zhou and Lin, Yue},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={37},
+  number={11},
+  pages={12790--12798},
+  year={2023}
+}
+
+@inproceedings{wang2021tracking,
+  title={Tracking interaction states for multi-turn text-to-sql semantic parsing},
+  author={Wang, Run-Ze and Ling, Zhen-Hua and Zhou, Jingbo and Hu, Yu},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={35},
+  number={16},
+  pages={13979--13987},
+  year={2021}
+}
+
+@misc{zhang2024coesqlincontextlearningmultiturn,
+      title={CoE-SQL: In-Context Learning for Multi-Turn Text-to-SQL with Chain-of-Editions}, 
+      author={Hanchong Zhang and Ruisheng Cao and Hongshen Xu and Lu Chen and Kai Yu},
+      year={2024},
+      eprint={2405.02712},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2405.02712}, 
+}
+
+@inproceedings{cai-etal-2022-star,
+    title = "{STAR}: {SQL} Guided Pre-Training for Context-dependent Text-to-{SQL} Parsing",
+    author = "Cai, Zefeng  and
+      Li, Xiangyu  and
+      Hui, Binyuan  and
+      Yang, Min  and
+      Li, Bowen  and
+      Li, Binhua  and
+      Cao, Zheng  and
+      Li, Weijie  and
+      Huang, Fei  and
+      Si, Luo  and
+      Li, Yongbin",
+    editor = "Goldberg, Yoav  and
+      Kozareva, Zornitsa  and
+      Zhang, Yue",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2022",
+    month = dec,
+    year = "2022",
+    address = "Abu Dhabi, United Arab Emirates",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.findings-emnlp.89",
+    doi = "10.18653/v1/2022.findings-emnlp.89",
+    pages = "1235--1247",
+    abstract = "In this paper, we propose a novel SQL guided pre-training framework STAR for context-dependent text-to-SQL parsing, which leverages contextual information to enrich natural language (NL) utterance and table schema representations for text-to-SQL conversations. Concretely, we propose two novel pre-training objectives which respectively explore the context-dependent interactions of NL utterances and SQL queries within each text-to-SQL conversation: (i) schema state tracking (SST) objective that tracks and explores the schema states of context-dependent SQL queries in the form of schema-states by predicting and updating the value of each schema slot during interaction; (ii) utterance dependency tracking (UDT) objective that employs weighted contrastive learning to pull together two semantically similar NL utterances and push away the representations of semantically dissimilar NL utterances within each conversation. In addition, we construct a high-quality large-scale context-dependent text-to-SQL conversation corpus to pre-train STAR. Extensive experiments show that STAR achieves new state-of-the-art performance on two downstream benchmarks (SParC and CoSQL), significantly outperforming previous pre-training methods and ranking first on the leaderboard. We believe the release of the constructed corpus, codebase and pre-trained STAR checkpoints would push forward the research in this area.",
+}
+
+@inproceedings{zhang-etal-2019-editing,
+    title = "Editing-Based {SQL} Query Generation for Cross-Domain Context-Dependent Questions",
+    author = "Zhang, Rui  and
+      Yu, Tao  and
+      Er, Heyang  and
+      Shim, Sungrok  and
+      Xue, Eric  and
+      Lin, Xi Victoria  and
+      Shi, Tianze  and
+      Xiong, Caiming  and
+      Socher, Richard  and
+      Radev, Dragomir",
+    editor = "Inui, Kentaro  and
+      Jiang, Jing  and
+      Ng, Vincent  and
+      Wan, Xiaojun",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D19-1537",
+    doi = "10.18653/v1/D19-1537",
+    pages = "5338--5349",
+    abstract = "We focus on the cross-domain context-dependent text-to-SQL generation task. Based on the observation that adjacent natural language questions are often linguistically dependent and their corresponding SQL queries tend to overlap, we utilize the interaction history by editing the previous predicted query to improve the generation quality. Our editing mechanism views SQL as sequences and reuses generation results at the token level in a simple manner. It is flexible to change individual tokens and robust to error propagation. Furthermore, to deal with complex table structures in different domains, we employ an utterance-table encoder and a table-aware decoder to incorporate the context of the user utterance and the table schema. We evaluate our approach on the SParC dataset and demonstrate the benefit of editing compared with the state-of-the-art baselines which generate SQL from scratch. Our code is available at \url{https://github.com/ryanzhumich/sparc_atis_pytorch}.",
+}
+
+% Dataset
+@article{yu2018spider,
+  title={Spider: A large-scale human-labeled dataset for complex and cross-domain semantic parsing and text-to-sql task},
+  author={Yu, Tao and Zhang, Rui and Yang, Kai and Yasunaga, Michihiro and Wang, Dongxu and Li, Zifan and Ma, James and Li, Irene and Yao, Qingning and Roman, Shanelle and others},
+  journal={arXiv preprint arXiv:1809.08887},
+  year={2018}
+}
+
+@inproceedings{yu-etal-2019-cosql,
+    title = "{C}o{SQL}: A Conversational Text-to-{SQL} Challenge Towards Cross-Domain Natural Language Interfaces to Databases",
+    author = "Yu, Tao  and
+      Zhang, Rui  and
+      Er, Heyang  and
+      Li, Suyi  and
+      Xue, Eric  and
+      Pang, Bo  and
+      Lin, Xi Victoria  and
+      Tan, Yi Chern  and
+      Shi, Tianze  and
+      Li, Zihan  and
+      Jiang, Youxuan  and
+      Yasunaga, Michihiro  and
+      Shim, Sungrok  and
+      Chen, Tao  and
+      Fabbri, Alexander  and
+      Li, Zifan  and
+      Chen, Luyao  and
+      Zhang, Yuwen  and
+      Dixit, Shreya  and
+      Zhang, Vincent  and
+      Xiong, Caiming  and
+      Socher, Richard  and
+      Lasecki, Walter  and
+      Radev, Dragomir",
+    editor = "Inui, Kentaro  and
+      Jiang, Jing  and
+      Ng, Vincent  and
+      Wan, Xiaojun",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D19-1204",
+    doi = "10.18653/v1/D19-1204",
+    pages = "1962--1979",
+    abstract = "We present CoSQL, a corpus for building cross-domain, general-purpose database (DB) querying dialogue systems. It consists of 30k+ turns plus 10k+ annotated SQL queries, obtained from a Wizard-of-Oz (WOZ) collection of 3k dialogues querying 200 complex DBs spanning 138 domains. Each dialogue simulates a real-world DB query scenario with a crowd worker as a user exploring the DB and a SQL expert retrieving answers with SQL, clarifying ambiguous questions, or otherwise informing of unanswerable questions. When user questions are answerable by SQL, the expert describes the SQL and execution results to the user, hence maintaining a natural interaction flow. CoSQL introduces new challenges compared to existing task-oriented dialogue datasets: (1) the dialogue states are grounded in SQL, a domain-independent executable representation, instead of domain-specific slot value pairs, and (2) because testing is done on unseen databases, success requires generalizing to new domains. CoSQL includes three tasks: SQL-grounded dialogue state tracking, response generation from query results, and user dialogue act prediction. We evaluate a set of strong baselines for each task and show that CoSQL presents significant challenges for future research. The dataset, baselines, and leaderboard will be released at \url{https://yale-lily.github.io/cosql}.",
+}
+
+@inproceedings{yu-etal-2019-sparc,
+    title = "{SP}ar{C}: Cross-Domain Semantic Parsing in Context",
+    author = "Yu, Tao  and
+      Zhang, Rui  and
+      Yasunaga, Michihiro  and
+      Tan, Yi Chern  and
+      Lin, Xi Victoria  and
+      Li, Suyi  and
+      Er, Heyang  and
+      Li, Irene  and
+      Pang, Bo  and
+      Chen, Tao  and
+      Ji, Emily  and
+      Dixit, Shreya  and
+      Proctor, David  and
+      Shim, Sungrok  and
+      Kraft, Jonathan  and
+      Zhang, Vincent  and
+      Xiong, Caiming  and
+      Socher, Richard  and
+      Radev, Dragomir",
+    editor = "Korhonen, Anna  and
+      Traum, David  and
+      M{\`a}rquez, Llu{\'\i}s",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P19-1443",
+    doi = "10.18653/v1/P19-1443",
+    pages = "4511--4523",
+    abstract = "We present SParC, a dataset for cross-domainSemanticParsing inContext that consists of 4,298 coherent question sequences (12k+ individual questions annotated with SQL queries). It is obtained from controlled user interactions with 200 complex databases over 138 domains. We provide an in-depth analysis of SParC and show that it introduces new challenges compared to existing datasets. SParC demonstrates complex contextual dependencies, (2) has greater semantic diversity, and (3) requires generalization to unseen domains due to its cross-domain nature and the unseen databases at test time. We experiment with two state-of-the-art text-to-SQL models adapted to the context-dependent, cross-domain setup. The best model obtains an exact match accuracy of 20.2{\%} over all questions and less than10{\%} over all interaction sequences, indicating that the cross-domain setting and the con-textual phenomena of the dataset present significant challenges for future research. The dataset, baselines, and leaderboard are released at \url{https://yale-lily.github.io/sparc}.",
+}
+
+
+
+% Schema Linking
+@misc{dong2023c3zeroshottexttosqlchatgpt,
+      title={C3: Zero-shot Text-to-SQL with ChatGPT}, 
+      author={Xuemei Dong and Chao Zhang and Yuhang Ge and Yuren Mao and Yunjun Gao and lu Chen and Jinshu Lin and Dongfang Lou},
+      year={2023},
+      eprint={2307.07306},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2307.07306}, 
+}
+
+@misc{talaei2024chesscontextualharnessingefficient,
+      title={CHESS: Contextual Harnessing for Efficient SQL Synthesis}, 
+      author={Shayan Talaei and Mohammadreza Pourreza and Yu-Chen Chang and Azalia Mirhoseini and Amin Saberi},
+      year={2024},
+      eprint={2405.16755},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2405.16755}, 
+}
+
+@misc{lee2024mcssqlleveragingmultipleprompts,
+      title={MCS-SQL: Leveraging Multiple Prompts and Multiple-Choice Selection For Text-to-SQL Generation}, 
+      author={Dongjun Lee and Choongwon Park and Jaehyuk Kim and Heesoo Park},
+      year={2024},
+      eprint={2405.07467},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2405.07467}, 
+}
+
+@misc{li2024codesbuildingopensourcelanguage,
+      title={CodeS: Towards Building Open-source Language Models for Text-to-SQL}, 
+      author={Haoyang Li and Jing Zhang and Hanbing Liu and Ju Fan and Xiaokang Zhang and Jun Zhu and Renjie Wei and Hongyan Pan and Cuiping Li and Hong Chen},
+      year={2024},
+      eprint={2402.16347},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2402.16347}, 
+}
+
+@article{li2024can,
+  title={Can llm already serve as a database interface? a big bench for large-scale database grounded text-to-sqls},
+  author={Li, Jinyang and Hui, Binyuan and Qu, Ge and Yang, Jiaxi and Li, Binhua and Li, Bowen and Wang, Bailin and Qin, Bowen and Geng, Ruiying and Huo, Nan and others},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  year={2024}
+}
+
+@misc{pourreza2024dtssqldecomposedtexttosqlsmall,
+      title={DTS-SQL: Decomposed Text-to-SQL with Small Large Language Models}, 
+      author={Mohammadreza Pourreza and Davood Rafiei},
+      year={2024},
+      eprint={2402.01117},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2402.01117}, 
+}
+
+@inproceedings{qi-etal-2022-rasat,
+    title = "{RASAT}: Integrating Relational Structures into Pretrained {S}eq2{S}eq Model for Text-to-{SQL}",
+    author = "Qi, Jiexing  and
+      Tang, Jingyao  and
+      He, Ziwei  and
+      Wan, Xiangpeng  and
+      Cheng, Yu  and
+      Zhou, Chenghu  and
+      Wang, Xinbing  and
+      Zhang, Quanshi  and
+      Lin, Zhouhan",
+    editor = "Goldberg, Yoav  and
+      Kozareva, Zornitsa  and
+      Zhang, Yue",
+    booktitle = "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2022",
+    address = "Abu Dhabi, United Arab Emirates",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.emnlp-main.211",
+    doi = "10.18653/v1/2022.emnlp-main.211",
+    pages = "3215--3229",
+    abstract = "Relational structures such as schema linking and schema encoding have been validated as a key component to qualitatively translating natural language into SQL queries. However, introducing these structural relations comes with prices: they often result in a specialized model structure, which largely prohibits using large pretrained models in text-to-SQL. To address this problem, we propose RASAT: a Transformer seq2seq architecture augmented with relation-aware self-attention that could leverage a variety of relational structures while inheriting the pretrained parameters from the T5 model effectively. Our model can incorporate almost all types of existing relations in the literature, and in addition, we propose introducing co-reference relations for the multi-turn scenario. Experimental results on three widely used text-to-SQL datasets, covering both single-turn and multi-turn scenarios, have shown that RASAT could achieve competitive results in all three benchmarks, achieving state-of-the-art execution accuracy (75.5{\%} EX on Spider, 52.6{\%} IEX on SParC, and 37.4{\%} IEX on CoSQL).",
+}
+
+@inproceedings{li2023resdsql,
+  title={Resdsql: Decoupling schema linking and skeleton parsing for text-to-sql},
+  author={Li, Haoyang and Zhang, Jing and Li, Cuiping and Chen, Hong},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={37},
+  number={11},
+  pages={13067--13075},
+  year={2023}
+}
+
+% PLM work
+@inproceedings{reimers-gurevych-2019-sentence,
+    title = "Sentence-{BERT}: Sentence Embeddings using {S}iamese {BERT}-Networks",
+    author = "Reimers, Nils  and
+      Gurevych, Iryna",
+    editor = "Inui, Kentaro  and
+      Jiang, Jing  and
+      Ng, Vincent  and
+      Wan, Xiaojun",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D19-1410",
+    doi = "10.18653/v1/D19-1410",
+    pages = "3982--3992",
+    abstract = "BERT (Devlin et al., 2018) and RoBERTa (Liu et al., 2019) has set a new state-of-the-art performance on sentence-pair regression tasks like semantic textual similarity (STS). However, it requires that both sentences are fed into the network, which causes a massive computational overhead: Finding the most similar pair in a collection of 10,000 sentences requires about 50 million inference computations ({\textasciitilde}65 hours) with BERT. The construction of BERT makes it unsuitable for semantic similarity search as well as for unsupervised tasks like clustering. In this publication, we present Sentence-BERT (SBERT), a modification of the pretrained BERT network that use siamese and triplet network structures to derive semantically meaningful sentence embeddings that can be compared using cosine-similarity. This reduces the effort for finding the most similar pair from 65 hours with BERT / RoBERTa to about 5 seconds with SBERT, while maintaining the accuracy from BERT. We evaluate SBERT and SRoBERTa on common STS tasks and transfer learning tasks, where it outperforms other state-of-the-art sentence embeddings methods.",
+}
+
+@inproceedings{zhou-etal-2016-attention,
+    title = "Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification",
+    author = "Zhou, Peng  and
+      Shi, Wei  and
+      Tian, Jun  and
+      Qi, Zhenyu  and
+      Li, Bingchen  and
+      Hao, Hongwei  and
+      Xu, Bo",
+    editor = "Erk, Katrin  and
+      Smith, Noah A.",
+    booktitle = "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P16-2034",
+    doi = "10.18653/v1/P16-2034",
+    pages = "207--212",
+}
+
+@misc{liu2019robertarobustlyoptimizedbert,
+      title={RoBERTa: A Robustly Optimized BERT Pretraining Approach}, 
+      author={Yinhan Liu and Myle Ott and Naman Goyal and Jingfei Du and Mandar Joshi and Danqi Chen and Omer Levy and Mike Lewis and Luke Zettlemoyer and Veselin Stoyanov},
+      year={2019},
+      eprint={1907.11692},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/1907.11692}, 
+}
+
+
+
+% LLM work
+@misc{deepseekai2024deepseekv2strongeconomicalefficient,
+      title={DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model}, 
+      author={DeepSeek-AI and Aixin Liu and Bei Feng and Bin Wang and Bingxuan Wang and Bo Liu and Chenggang Zhao and Chengqi Dengr and Chong Ruan and Damai Dai and Daya Guo and Dejian Yang and Deli Chen and Dongjie Ji and Erhang Li and Fangyun Lin and Fuli Luo and Guangbo Hao and Guanting Chen and Guowei Li and H. Zhang and Hanwei Xu and Hao Yang and Haowei Zhang and Honghui Ding and Huajian Xin and Huazuo Gao and Hui Li and Hui Qu and J. L. Cai and Jian Liang and Jianzhong Guo and Jiaqi Ni and Jiashi Li and Jin Chen and Jingyang Yuan and Junjie Qiu and Junxiao Song and Kai Dong and Kaige Gao and Kang Guan and Lean Wang and Lecong Zhang and Lei Xu and Leyi Xia and Liang Zhao and Liyue Zhang and Meng Li and Miaojun Wang and Mingchuan Zhang and Minghua Zhang and Minghui Tang and Mingming Li and Ning Tian and Panpan Huang and Peiyi Wang and Peng Zhang and Qihao Zhu and Qinyu Chen and Qiushi Du and R. J. Chen and R. L. Jin and Ruiqi Ge and Ruizhe Pan and Runxin Xu and Ruyi Chen and S. S. Li and Shanghao Lu and Shangyan Zhou and Shanhuang Chen and Shaoqing Wu and Shengfeng Ye and Shirong Ma and Shiyu Wang and Shuang Zhou and Shuiping Yu and Shunfeng Zhou and Size Zheng and T. Wang and Tian Pei and Tian Yuan and Tianyu Sun and W. L. Xiao and Wangding Zeng and Wei An and Wen Liu and Wenfeng Liang and Wenjun Gao and Wentao Zhang and X. Q. Li and Xiangyue Jin and Xianzu Wang and Xiao Bi and Xiaodong Liu and Xiaohan Wang and Xiaojin Shen and Xiaokang Chen and Xiaosha Chen and Xiaotao Nie and Xiaowen Sun and Xiaoxiang Wang and Xin Liu and Xin Xie and Xingkai Yu and Xinnan Song and Xinyi Zhou and Xinyu Yang and Xuan Lu and Xuecheng Su and Y. Wu and Y. K. Li and Y. X. Wei and Y. X. Zhu and Yanhong Xu and Yanping Huang and Yao Li and Yao Zhao and Yaofeng Sun and Yaohui Li and Yaohui Wang and Yi Zheng and Yichao Zhang and Yiliang Xiong and Yilong Zhao and Ying He and Ying Tang and Yishi Piao and Yixin Dong and Yixuan Tan and Yiyuan Liu and Yongji Wang and Yongqiang Guo and Yuchen Zhu and Yuduan Wang and Yuheng Zou and Yukun Zha and Yunxian Ma and Yuting Yan and Yuxiang You and Yuxuan Liu and Z. Z. Ren and Zehui Ren and Zhangli Sha and Zhe Fu and Zhen Huang and Zhen Zhang and Zhenda Xie and Zhewen Hao and Zhihong Shao and Zhiniu Wen and Zhipeng Xu and Zhongyu Zhang and Zhuoshu Li and Zihan Wang and Zihui Gu and Zilin Li and Ziwei Xie},
+      year={2024},
+      eprint={2405.04434},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2405.04434}, 
+}
+
+
+% related work
+@misc{lin2018focallossdenseobject,
+      title={Focal Loss for Dense Object Detection}, 
+      author={Tsung-Yi Lin and Priya Goyal and Ross Girshick and Kaiming He and Piotr Dollár},
+      year={2018},
+      eprint={1708.02002},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1708.02002}, 
+}
+
+@misc{zhong2017seq2sqlgeneratingstructuredqueries,
+      title={Seq2SQL: Generating Structured Queries from Natural Language using Reinforcement Learning}, 
+      author={Victor Zhong and Caiming Xiong and Richard Socher},
+      year={2017},
+      eprint={1709.00103},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/1709.00103}, 
+}
+
+@misc{loshchilov2019decoupledweightdecayregularization,
+      title={Decoupled Weight Decay Regularization}, 
+      author={Ilya Loshchilov and Frank Hutter},
+      year={2019},
+      eprint={1711.05101},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1711.05101}, 
+}
+
+@misc{hu2021loralowrankadaptationlarge,
+      title={LoRA: Low-Rank Adaptation of Large Language Models}, 
+      author={Edward J. Hu and Yelong Shen and Phillip Wallis and Zeyuan Allen-Zhu and Yuanzhi Li and Shean Wang and Lu Wang and Weizhu Chen},
+      year={2021},
+      eprint={2106.09685},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2106.09685}, 
+}
+
+@inproceedings{ross2017focal,
+  title={Focal loss for dense object detection},
+  author={Ross, T-YLPG and Doll{\'a}r, GKHP},
+  booktitle={proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={2980--2988},
+  year={2017}
+}

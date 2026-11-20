@@ -1,0 +1,488 @@
+\appendices
+\setcounter{section}{0}
+\renewcommand{\thesubsection}{\Alph{subsection}} 
+\renewcommand{\thesubsubsection}{\thesection.\arabic{subsection}}
+
+\newpage % The Meta-Review should at least start on a new column
+
+% Use \appendices and not \appendix due to IEEEtran.cls quirks
+
+
+
+
+
+
+\section{Theoretical Analysis of Gradient Vanishing for Softmax Attention Mechanism in \cite{song2020information} }
+\label{appendix:ccs20_vanish_theory}
+We provide the formal proof of Theorem~\ref{thm:vanish}  as follows. 
+\begin{proof}
+Since $v=W^\top softmax(z)$, $s=softmax(z)$, 
+by chain rule, we have $  \frac{\partial L}{\partial z}= \frac{\partial s}{\partial z}\cdot \frac{\partial v}{\partial s}\cdot \frac{\partial L}{\partial v}$.
+ From $v=W^\top s$, we have $\frac{\partial v}{\partial s}={(W^\top)}^\top=W$.
+ 
+By the above equations, considering the $i$-th element in $\frac{\partial L}{\partial z}$, we have $    \frac{\partial L}{\partial z_i}=  \frac{\partial s}{\partial z_i} \cdot W\cdot \frac{\partial L}{\partial v}$.
+
+Classical results on the derivative of softmax~\cite{gao2017properties,elfadel1993softmax} gives $\frac{\partial s_j}{\partial z_i}=s_i (\delta_{ij}-s_j)$, 
+where $\delta$ is the Kronecker delta function defined as $
+    \delta_{i j}= \begin{cases}0 & \text { if } i \neq j, \\ 1 & \text { if } i=j.\end{cases} $. Based on the above equations, we have:\\
+\begin{align}
+    \frac{\partial s}{\partial z_i}&=[-s_i s_1, -s_i s_2, \cdots , s_i-s_i^2,-s_i s_{i+1},\cdots,-s_i s_{|V|}] .
+\end{align}
+Thus we have:\\
+\begin{align}
+\label{eq:dsdzW}
+\begin{aligned}
+    (\frac{\partial s}{\partial z_i} \cdot W)_j&=-s_i s_1 W_{1j}-s_i s_2 W_{2j}-\cdots+s_i W_{ij}-s_i^2 W_{ij}-\cdots \\
+    &=s_i W_{ij}- \sum_{k=1}^{|V|} s_i s_k W_{kj}.\\
+\end{aligned}
+\end{align}
+
+We can derive $\frac{\partial L}{\partial z_i}$ from Equation (\ref{eq:dsdzW}):\\
+\begin{align}
+\label{eq:dLdz}
+\begin{aligned}
+\frac{\partial L}{\partial z_i}&=\sum_{j=1}^h (\frac{\partial s}{\partial z_i} \cdot W)_j \frac{\partial L}{\partial v_j}=\sum_{j=1}^h \frac{\partial L}{\partial v_j} (s_i W_{ij}- \sum_{k=1}^{|V|} s_i s_k W_{kj})\\
+&=s_i\sum_{j=1}^h \frac{\partial L}{\partial v_j} ( W_{ij}- \sum_{k=1}^{|V|}  s_k W_{kj}).
+\end{aligned}
+\end{align}
+
+By the linear combination of normal distributions:\\
+\begin{align}
+    W_{ij}- \sum_{k=1}^{|V|}  s_k W_{kj} \sim \mathcal{N}(0,\sigma^2(1-\sum_{k=1}^{|V|} s_k^2)).
+\end{align}
+Further we have:\\
+\begin{align}
+\label{eq:further}
+    \sum_{j=1}^h \frac{\partial L}{\partial v_j} (W_{ij}- \sum_{k=1}^{|V|}  s_k W_{kj}) \sim \mathcal{N}(0,\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2 \sigma^2(1-\sum_{k=1}^{|V|} s_k^2)).
+\end{align}
+
+ Let $S=\sum_{k=1}^{|V|} s_k^2$. From Equation (\ref{eq:dLdz}) and Equation (\ref{eq:further}), we have:\\
+\begin{align}
+    \frac{\partial L}{\partial z_i} ~\sim \mathcal{N}(0,s_i^2\sigma^2 (1-S) \sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2).
+\end{align}
+
+ Let $\sigma_i= s_i\sigma \sqrt{ (1-S)} \sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}$. 
+ Due to $S\ge 0$, $\sigma_i \le s_i \sigma \sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}$. Because $\frac{\partial L}{\partial z_i} \sim \mathcal{N}(0,\sigma_i^2)$, by the properies of normal distribution, with high probability, $|\frac{\partial L}{\partial z_i}| \le 4\sigma_i$.   Therefore, with high probability,  we have:\\
+\begin{align}
+    |\frac{\partial L}{\partial z_i}| \le 4 s_i \sigma \sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}.
+\end{align}
+
+
+Because $\sum_{i=1}^{|V|}s_i=1$, we have:\\
+\begin{align}
+||\frac{\partial L}{\partial z} ||_1=\sum_{i=1}^{|V|} |\frac{\partial L}{\partial z_i}| \le 4  \sigma \sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}.
+\end{align}
+Therefore we prove Theorem~\ref{thm:vanish}.
+\end{proof}
+
+Here we also numerically analyze the case for Llama-7B model. For this model, according to the embedding data distribution, we can set $\sigma=0.025$. We empirically observe that, in most cases, $\sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}\le 5$. By Theorem~\ref{thm:vanish}, we have $||\frac{\partial L}{\partial z} ||_1\le 0.5$, therefore the average of $|\frac{\partial L}{\partial z_i}|\le \frac{0.5}{|V|}\le 2\times 10^{-5}$. For each $i$ that satisfies $s_i\le 2\times 10^{-4}$, which is 6.25 times average $s_i$, $|\frac{\partial L}{\partial z_i}|\le 10^{-4}$. Therefore, for Llama-7B model, most values in $\frac{\partial L}{\partial z_i}$ are smaller than $10^{-4}$, and their average is smaller than $2\times 10^{-5}$. This theoretical estimation well aligns to the empirical observation of Figure~\ref{fig:zgrad}, where most values in $\frac{\partial L}{\partial z_i}$ belongs to $[10^{-6},10^{-4}]$.
+
+
+% \begin{table*}[h]
+% \centering
+% \begin{tabular}{c|ccc}
+% \toprule
+% \multirow{2}{*}{Layer Number} & \multicolumn{3}{c}{Token accuracy(\%)}                                     \\ \cline{2-4} 
+%                               & \multicolumn{1}{c|}{Song et al.} & \multicolumn{1}{c|}{Optimize based on Equation~\ref{eq:ccs20_ablation_goal1}} & Optimize based on Equation~\ref{eq:ccs20_ablation_goal2} \\ \hline
+% 4                             & \multicolumn{1}{c|}{0.4}         & \multicolumn{1}{c|}{69.4}  & 97.2  \\ \hline
+% 8                             & \multicolumn{1}{c|}{0}           & \multicolumn{1}{c|}{22.2}  & 85.8  \\ \hline
+% 16                            & \multicolumn{1}{c|}{0}           & \multicolumn{1}{c|}{1.4}   & 66.9  \\ 
+% %\hline
+% \bottomrule
+% \end{tabular}
+% \caption{This table shows the ablation result of \cite{song2020information}'s softmax attention mechanism, by optimizing based on Equation~\ref{eq:ccs20_ablation_goal1} and Equation~\ref{eq:ccs20_ablation_goal2}.}
+% \label{tab:ablation_ccs20}
+% \end{table*}
+\section{Detailed Algorithms in Our Attack Pipeline}
+
+We elaborate the \textit{constrained optimization} procedure in Algorithm~\ref{alg:optim}, the \textit{adaptive discretization} procedure in Algorithm~\ref{alg:discrete}, and our whole prompt inversion attack algorithm in Algorithm~\ref{alg:core}.
+ 
+\label{appendix:alg}
+\begin{algorithm}[!h]
+   \caption{\emph{Constrained Optimization}}
+   \label{alg:optim}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} Previous participants' layers compute function $F$;  hidden state size $h$; embedding layer $E$; previous participant sent activation $A$; prompt length $|x|$; optimization learning rate $\beta$; optimization iteration number $N$;   constraining parameter $\lambda$
+   \\
+     \STATE {\bfseries Output:} Optimized embedding space result $\hat{v}$\\
+    \STATE Precompute constraint vector $L,R$\\
+    \STATE Define $\hat{x}:\mathbb{N}^{|x|}$
+    \STATE Randomly initialize  embedding vector $\hat{v}\in \mathbb{R}^{|x|\times h}$ by uniform distribution.\\
+    \FOR{$t=1,2,\cdots, N$}
+    \STATE Compute optimization based on Equation (\ref{eq:whole lagrange practical version}):\\
+    \STATE $L=\|F(\hat{v})-A\|_2^2+ \lambda \cdot \sum_{i=1}^{|x|} \min_{t \in \mathcal{V}} \|\hat{v}_i -E(t) \|_2^2$\\
+    \STATE Back propogate $L$, to calculate gradient: $\frac{\partial L}{\partial \hat{v}}$ \\
+    \STATE Update by gradient descent: $\hat{v}=\hat{v}+\beta \cdot \frac{\partial L}{\partial \hat{v}}$ \\
+    \STATE Clip $\hat{v}$ using constraint vector $L, R$:\\
+    \FOR{$i=1,2,\cdots, |x|$}
+    \FOR{$j=1,2,\cdots, h$}
+    \STATE $\hat{v}_{ij}=\min (\hat{v}_{ij},L_j)$ \\
+    \STATE $\hat{v}_{ij}=\max (\hat{v}_{ij},R_j)$ \\
+    \ENDFOR
+    \ENDFOR
+    \ENDFOR
+    \RETURN $\hat{v}$\\
+   
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}[!h]
+   \caption{\emph{Adaptive Discretization}}
+   \label{alg:discrete}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} Optimized embedding vector $\hat{v}$; previous participants' layers compute function $F$; hidden state size $h$; embedding layer $E$; embedding table $e:N\to \mathbb{R}^h$; previous participant activation $A$; prompt length $|x|$;  oracle access to another LLM $\mathsf{OLLM}: N^s\to \mathbb{R}^{|\mathcal{V}|}$, $s$ denotes arbitrary input length. 
+   \\
+  \STATE {\bfseries Output:} Discretized  result $\hat{x}$ \\
+   \FOR{$i=1,2,\cdots, |x|$}
+    \STATE Sort $k\in \{1,2,\cdots,|\mathcal{V}|\}$ in an ascending order by  \\
+    \STATE $\|\hat{v}_i-e(k)\|_2$ obtaining set $S_1$\\
+    \STATE $S_1=\mathsf{Top}-K(S_1)$\\
+    \STATE $S_2=\emptyset$\\
+    \IF{$i>1$}
+    \STATE Predict the token logits using oracle LLM: \\
+    \STATE $S=\mathsf{OLLM}([\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{i-1}])$\\
+     \STATE Sort $k\in \{1,2,\cdots,|\mathcal{V}|\}$ in a descending order by $S_k$   obtaining $S_2$\\
+     \STATE $S_2=\mathsf{Top}-Y(S_2)$\\
+    \ENDIF
+    \STATE Define best token candidate $t$, best distance $D$ \\
+    \FOR {$j \in S_1\bigcup S_2$}
+    \STATE $d=\|F(E([\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{i-1},j]))-A_i\|_2$\\
+    \IF {d<D}
+    \STATE $t=j$\\
+    \STATE $D=d$\\
+    
+    \ENDIF
+    \ENDFOR
+    \STATE $\hat{x}_i=t$\\
+    \ENDFOR
+    \RETURN $\hat{x}$\\
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!h]
+   \caption{\emph{Prompt Inversion Attack for Collaborative Inference}}
+   \label{alg:core}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} Node number $n$; model layer allocated for each participant $F_1,F_2,\cdots,F_n$; hidden state size $h$; embedding layer $E$; embedding table $e:N\to \mathbb{R}^h$; attacker node ID $a$; previous participant activation $A$; prompt length $|x|$; optimization learning rate $\beta$; optimization iteration number $N$;   constraining parameter $\lambda$; oracle access to another LLM $\mathsf{OLLM}: N^s\to \mathbb{R}^{|\mathcal{V}|}$, $s$ denotes arbitrary input length. 
+   \\
+   \STATE {\bfseries Output:} Inversion attack  result $\hat{x}$ \\
+    \STATE Denote $F=F_1 \circ F_2 \cdots \circ F_{a-1}(\cdot)$\\
+    \STATE Perform \textit{constrained optimization} using Algorithm~\ref{alg:optim}:\\
+    \STATE $\hat{v}=\mathsf{ConstrainedOptimization}(E,F,A,\beta,N,\lambda)$\\
+    \STATE Perform \textit{adaptive discretization} using Algorithm~\ref{alg:discrete}:\\
+    \STATE $\hat{x}=\mathsf{AdaptiveDiscretization}(\hat{v},E,e,F,A,\mathsf{OLLM})$\\
+    \RETURN $\hat{x}$\\
+\end{algorithmic}
+\end{algorithm}
+
+\section{Proof of Theorem~\ref{thm:accumulate}}
+\label{appendix:error_accumulate}
+We provide the formal proof for Theorem~\ref{thm:accumulate} in the following. 
+\begin{proof}
+By the definition of $L_2$ norm, we have:\\
+\begin{align}
+\label{eq:discretize error analysis}
+\begin{aligned}
+    &  \| F(E(\hat{x}))-F(E(x)) \|_2^2 \\
+    =& \sum_{i=1}^{|x|} \| F(E(\hat{x}))_i-F(E(x))_i \|_2^2.\\
+\end{aligned}
+\end{align}
+
+Due to the masked self-attention mechanism adopted by LLMs, the activation of the $i$-th token is determined by itself and all of the previous tokens, unrelated to any of the next tokens. Namely, for $\forall i\in \mathbb{N}^+ ,\forall v \in \mathbb{R}^{i\times h}$, we have:\\
+\begin{align}
+\label{eq:masked llm analysis}
+\begin{aligned}
+    &  F(v)_i=  F([v_1,v_2,\cdots,v_i])_i .\\
+\end{aligned}
+\end{align}
+
+By Equation (\ref{eq:masked llm analysis}), we have:\\
+\begin{align}
+\label{eq:masked llm analysis 2}
+\begin{aligned}
+      F(E(\hat{x}))_i &=  F([E(\hat{x_1},\hat{x_2},\cdots,\hat{x_i}])_i \\
+      F(E(x))_i &= F([E(x_1,x_2,\cdots,x_i])_i&=[A_1,\cdots,A_j]_i. \\
+\end{aligned}
+\end{align}
+
+By substituting Equation (\ref{eq:masked llm analysis 2}) into Equation (\ref{eq:discretize error analysis}), we have:\\
+\begin{align}
+\label{eq:discretize error analysis based on masked llm}
+\begin{aligned}
+    &  \| F(E(\hat{x}))-F(E(x)) \|_2^2 \\
+    =& \sum_{i=1}^{|x|} \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x_i}))_i-[A_1,\cdots,A_j]_i \|_2^2.\\
+\end{aligned}
+\end{align}
+
+From Equation (\ref{eq:discretize error analysis based on masked llm}), for any token $t$, we have: 
+\begin{align}
+\label{eq:discretize error analysis based on masked llm}
+\begin{aligned}
+    &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))-[A_1,\cdots,A_j] \|_2^2 \\
+    =& \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},t))_j-[A_1,\cdots,A_j]_j \|_2^2 +\\ 
+    &\sum_{i=1}^{j-1} \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x_i}))_i-[A_1,\cdots,A_j]_i \|_2^2.\\
+\end{aligned}
+\end{align}
+
+Recall the definition of $\hat{x}_j$:
+\begin{align}
+\label{eq:best solution for discretize}
+\begin{aligned}
+\hat{x}_j=\arg\min_{\hat{x}_j\in \mathcal{V}}\| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},\hat{x}_j))_j-A_j \|_2^2 .
+\end{aligned}
+\end{align}
+
+From Equation (\ref{eq:best solution for discretize}), for any token $t$, we have:\\
+\begin{align}
+\label{eq:it is better than the nearest}
+\begin{aligned}
+&\| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},t))_j-[A_1,\cdots,A_j]_j \|_2^2 \ge\\
+&\| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},\hat{x}_j))_j-[A_1,\cdots,A_j]_j\|_2^2.
+\end{aligned}
+\end{align}
+
+Substitute $t=\hat{x}_j$ into Equation (\ref{eq:discretize error analysis based on masked llm}):\\
+\begin{align}
+\label{eq:discretize error analysis for two cases}
+\begin{aligned}
+    &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))-[A_1,\cdots,A_j] \|_2^2 \\
+    =& \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},\hat{x}_j))_j-[A_1,\cdots,A_j]_j \|_2^2 +\\ 
+    &\sum_{i=1}^{j-1} \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x_i}))_i-[A_1,\cdots,A_j]_i \|_2^2.\\
+\end{aligned}
+\end{align}
+
+By Equation (\ref{eq:it is better than the nearest}) and Equation (\ref{eq:discretize error analysis for two cases}), we have:\\
+\begin{align}
+\label{eq:discretize error analysis difference}
+\begin{aligned}
+    &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))-[A_1,\cdots,A_j]) \|_2^2 \\
+      -  &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))-[A_1,\cdots,A_j]) \|_2^2 \\
+    =&  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))_j-[A_1,\cdots,A_j]_j) \|_2^2 \\
+      -  &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))_j-[A_1,\cdots,A_j]_j) \|_2^2 \\
+    \ge& 0.\\
+\end{aligned}
+\end{align}
+
+
+
+% \begin{align}
+% \label{eq:discretize error analysis difference}
+% \begin{aligned}
+%     &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))-F(E(x_1,x_2,\cdots,x_j)) \|_2^2 \\
+%       -  &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},s_j))-F(E(x_1,x_2,\cdots,x_j)) \|_2^2 \\
+%     =& \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},\hat{x}_j))_j-F(E(x_1,x_2,\cdots,x_j))_j \|_2^2 \\ 
+%     -& \| F(E(\hat{x_1},\hat{x_2},\cdots,\hat{x}_{j-1},s_j))_j-F(E(x_1,x_2,\cdots,x_j))_j \|_2^2 \\
+%     \ge& 0\\
+% \end{aligned}
+% \end{align}
+
+% \begin{align}
+%     \begin{aligned}\label{eq:thm2_proof_target}
+%        &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},t))-[A_1,\cdots,A_j]) \|_2^2 \\
+%       \ge  &  \| F(E(\hat{x}_1,\hat{x}_2,\cdots,\hat{x}_{j-1},\hat{x}_j))-[A_1,\cdots,A_j]) \|_2^2 .\\
+% \end{aligned}
+% \end{align}
+Thus we complete the proof of Theorem~\ref{thm:accumulate}.
+\end{proof}
+%\subsection{Ablation of \cite{song2020information} softmax attention mechanism}
+%\label{appendix:ccs20ablation}
+%We consider two ablation studies on \cite{song2020information}. This first setting is to avoid the softmax attention mechanism, we change our optimization problem into:\\
+%\begin{align}
+%    \begin{aligned}
+%  &  \hat{v}_i=V^{\top} \cdot z_i  \text { for } i=1, \ldots, \ell \\
+%  & \min _{Z}\left\|\Phi\left(\left[\hat{v}_1, \ldots, \hat{v}_{\ell}\right]\right)-\Phi(x)\right\|_2^2 
+%\end{aligned}
+%\label{eq:ccs20_ablation_goal1}
+%\end{align}
+
+%Here we still relax the word selection wth a continous variable $z_i$. The difference is we no longer use softmax but directly weight different word vectors using $z_i$. And when we map each $z_i$ back to $\hat{x}$, we choose $\hat{x}$ as the token that is closest to $\hat{v}_i$ in the word embedding matrix.
+
+
+%This second setting is we further remove the word embedding matrix from the optimization problem, thus we change our optimization problem into:\\
+%\begin{align}
+%  & \min _{\hat{v}}\left\|\Phi\left(\left[\hat{v}_1, \ldots, \hat{v}_{\ell}\right]\right)-\Phi(x)\right\|_2^2  %\label{eq:ccs20_ablation_goal2}
+%\end{align}
+%The difference here is we directly optimize on $\hat{v}_i$ instead of optimizing on $z_i$. Similarly, when we map each $\hat{v}_i$ back to $\hat{x}$, we choose $\hat{x}$ as the token that is closest to $\hat{v}_i$ in the word embedding matrix.
+
+%Results in Table~\ref{tab:ablation_ccs20}  by using these two solutions without softmax, we can eventually achieving relatively much better invert token accuracy. Figure~\ref{fig:cos_sim_ccs20} shows that the cosine similarity in the activation space grows more efficiently using the second method to optimize compared with the first method. Due to gradient vanishing, the cosine similarity in the activation space increases very slowly through the optimization procedure. These results strongly demonstrates that gradient vanishing caused by softmax is the crucial reason for \cite{song2020information}'s limited performance on LLMs. The results also can show that whether including the word embedding matrix as linear transform has considerable impact to the invert performance, the reason is that because $h$ is much smaller than $|\mathcal{V}|$, the optimization dimension of $\hat{v}$ is much lower than $z$, making the optimization in $\hat{v}$ space easier than optimizing on $z$.  
+
+
+
+
+
+
+%\begin{figure}[h]
+%\centering
+%\subfloat[cosine similarity in activation space\label{fig:cossim_ccs20_ablation}]{\includegraphics[width=0.4\textwidth]{fig/cos-sim-ccs20-ablation.pdf}}
+%\caption{This figure shows the cosine similarity change through iterations for the ablation study of %\cite{song2020information}.}
+%\label{fig:cos_sim_ccs20}
+%\end{figure}
+
+
+
+
+
+%we utilize \textbf{Perplexity}~\cite{perplexity}, measured on the Vicuna-13B model, to assess the quality of the text generated by differential privacy models. From Figure~\ref{fig:DP} in Appendix~\ref{appendix:defense}, we can see that differential privacy is not effective in defending against our attack, when the variance of noise $\sigma$ is small (e.g., 0.1), the inversion attack still recovers a majority of information (token accuracy 0.8766). When the noise is bigger, the inversion accuracy slightly drops, however, the generated text quality severely drops (when $\sigma=1$, perplexity increases to 14.2), showing that differential privacy is not a very practical defense for decentralized inference.
+%We conduct experiments on the settings where each participant quantizes their activation to 8 bits and 4 bits before sending. Despite the privacy preservation function of activation quantization, it also poses trade-off between text quality and privacy. From Table~\ref{tab:quantization} in Appendix~\ref{appendix:defense}, we can see that, 8 bits quantization only has negligible impact on the inversion accuracy; 4 bits quantization lets the inversion accuracy drop quite significantly, but the text quality is also  harmed severely (perplexity 28.3). Therefore it is not effective as a defense against our attack.
+
+
+
+
+
+
+
+
+
+\section{More experiment results}
+\label{appendix:time}
+
+\begin{table}[ht]
+\centering
+\scalebox{1}
+{
+\begin{tabular}{|l|c|c|c|}
+% \hline
+\hline
+%Metric$\downarrow$, Dataset$\rightarrow$ 
+& Skytrax   &  CMS  &  ECHR  \\ \hline
+Token accuracy  & 0.8838     & 0.9198
+ & 0.9051
+ \\ \hline
+BLEU & 0.8428
+ & 0.9028 & 0.8601 \\ \hline
+NERR & 0.6605
+ & 0.9667  & 0.9565
+ \\ 
+ \hline
+ %\hline
+\end{tabular}
+}
+\caption{Results on three different datasets.}
+\label{fig:dataset}
+
+\end{table}
+
+\begin{table}[ht]
+\centering
+\scalebox{1}
+{
+\begin{tabular}{|l|c|c|c|}
+% \hline
+\hline
+%Metric$\downarrow$, Model$\rightarrow$  
+& Llama-65B   &  Llama-2-70B  & OPT-66B  \\ \hline
+Token accuracy  & 0.8838     & 0.9275
+ & 0.8893
+ \\ \hline
+BLEU & 0.8428
+ & 0.9050 & 0.8456 \\ \hline
+NERR & 0.6605
+ & 0.7783  & 0.7306
+ \\ 
+ %\hline
+\hline
+\end{tabular}
+}
+\caption{Results on three models on Skytrax~\cite{skytrax} dataset.}
+\vspace{-1em}
+\label{fig:model}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|c|}
+\hline                       & Probability (\%) \\ \hline
+$\mathsf{Pr}$(Ground-truth  is the nearest token to $\hat{v}_i$)          & 54.9            \\ \hline
+$\mathsf{Pr}$(Ground-truth  in $S_e$)          & 69.4            \\ \hline
+$\mathsf{Pr}$(Ground-truth  in $S_s$ )       & 30.2            \\ \hline
+$\mathsf{Pr}$(Ground-truth  in $S_e\bigcup S_s$)   & 89.5            \\ \hline
+\makecell{$\mathsf{Pr}$(Ground-truth is chosen  when belonging to $S_e\bigcup S_s$ ) }& 99.2            \\ \hline
+\end{tabular}
+\caption{The probability of a ground-truth token  getting into the two candidate sets and their union, respectively. We also report the probability of a ground-truth token being the nearest token to the optimized embedding, and chosen correctly by activation calibration when it is in $S_e\bigcup S_s$. All data are tested on Skytrax dataset. 
+}
+\label{tab:q2tab1}
+ 
+
+\end{table}
+
+\begin{table}[ht]
+\centering
+\scalebox{1}
+{
+\begin{tabular}{|l|c|c|c|}
+\hline
+         & w/o quant & 8 bits & 4 bits \\ \hline
+Token accuracy &    0.8838             &   0.7891     &   0.2889     \\ \hline
+BLEU     &       0.8428          &   0.7672     &   0.2025     \\ \hline
+NERR     &      0.6605      &   0.5094    &       0.0062  \\ \hline
+Perplexity     &   4.8          &  10.2      &   28.3     \\ \hline
+\end{tabular}
+}
+\caption{Attack accuracy results with activation quantization based defense on Skytrax~\cite{skytrax} dataset. Perplexity reflects the generated text's quality after quantization.}
+\label{tab:quantization}
+%\vspace{-2.5em}
+\end{table}
+
+%\begin{table}[h]
+%\centering
+%\begin{tabular}{cccc}
+%\toprule
+%         & Constrained  & Adaptive & Total \\
+%         & Optimization & Discretization & Time  \\ \midrule
+%Time (s)     &   1,114 
+%         &    242 
+%              &       1,356 
+%          \\ \bottomrule
+%\end{tabular}
+%\caption{Running time decomposition of PIA for a  prompt composed of  150 token. }
+% \vspace{-1.5em}
+%\label{tab:time}
+%\end{table}
+
+
+
+\section{Meta-Review}
+
+The following meta-review was prepared by the program committee for the 2025
+IEEE Symposium on Security and Privacy (S\&P) as part of the review process as
+detailed in the call for papers.
+
+\subsection{Summary}
+This paper presents a timely study of the privacy risks associated with the collaborative inference of LLMs, where each machine processes a portion of the model and sequentially transmits intermediate activations. The authors introduce the concept of prompt inversion attack (PIA), where an adversary intercepts and analyzes these activations to reconstruct the original input prompt. The attack includes two stages, where the first stage ensures that the recovered embedding remains close to valid token embeddings within the vocabulary of the LLM, and the second stage enhances the attack by using an auxiliary LLM to predict likely next tokens, thus improving the recovery process.
+
+\subsection{Scientific Contributions}
+\begin{itemize}
+\item Identifies an Impactful Vulnerability
+\item Provides a valuable step forward in an established field
+\item Establishes a New Research Direction
+\end{itemize}
+
+\subsection{Reasons for Acceptance}
+\begin{enumerate}
+\item This paper presents a novel attack that reveals the privacy risks of the collaborative inferences of LLMs. 
+\item The authors conduct extensive evaluations on a wide range of LLMs and obtain convincing results to demonstrate the effectiveness of the attack.
+\end{enumerate}
+
+%\begin{figure*}
+%\centering
+%\subfloat[100 iterations\label{fig:value_a}]{\includegraphics[width=0.23\textwidth]{fig/two_distribution_100.pdf}} \hspace{1mm}
+%\subfloat[200 iterations\label{fig:value_b}]{\includegraphics[width=0.23\textwidth]{fig/two_distribution_200.pdf}}
+%\hspace{1mm}
+%\subfloat[500 iterations\label{fig:value_c}]{\includegraphics[width=0.23\textwidth]{fig/two_distribution_500.pdf}}
+%\hspace{1mm}
+%\subfloat[1000 iterations\label{fig:value_d}]{\includegraphics[width=0.23\textwidth]{fig/two_distribution_1000.pdf}}
+% \vspace{-0.5em}
+%\caption{Value distributions of ground-truth embedding and $\hat{v}$ obtained by \textit{constrained optimization} of several Skytrax~\cite{skytrax} prompts under different optimization iterations {100,200,500,1000}. With the increase of iteration number, the difference between the two distributions mitigates.}
+% \vspace{-0.5em}
+%\label{fig:value_dist_different_epoch}
+%\end{figure*}
+
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.4\textwidth]{fig/topkratio.pdf}
+% \vspace{-1em}
+%\caption{Top-k ratio under different optimization iterations on Skytrax~\cite{skytrax} dataset.}
+% \vspace{-1em}
+%\label{fig:top_k_ratio}
+%\end{figure}

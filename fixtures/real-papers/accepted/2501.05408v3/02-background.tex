@@ -1,0 +1,137 @@
+% Background
+
+\section{Supporting Dynamic DL Programs}\label{sec:bg}
+
+  \begin{figure}[t]
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_state_passing}
+    \caption{State-passing~\textnormal{\cite{rumelhart1986learning,gu2021efficiently,ho2020denoising}}}\label{fig:access_patterns:state_passing}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_causal}
+    \caption{Causal~\textnormal{\cite{vaswani2017attention, ouyang2022training}}}\label{fig:access_patterns:causal}
+  \end{subfigure}
+  
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_fwd_window}
+    \caption{Forward window~\textnormal{\cite{mnih2016asynchronous, sutton1988learning}}}\label{fig:access_patterns:fwd_window}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_anti_causal}
+    \caption{Anti-causal~\textnormal{\cite{williams1992simple, ouyang2022training, schulman2017proximal}}}\label{fig:access_patterns:anti_causal}
+  \end{subfigure}%
+
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_bwd_window}
+    \caption{Backward window~\textnormal{\cite{zaheer2020big, mnih2013playing}}}\label{fig:access_patterns:bwd_window}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{.475\columnwidth}
+    \centering
+    \includegraphics[width=\columnwidth]{cr_figures/access_patterns/pat_block}
+    \caption{Block-based~\textnormal{\cite{schulman2017proximal, lea2017temporal, ma2022mega}}}\label{fig:access_patterns:block}
+  \end{subfigure}%
+
+  \caption{Dynamic dependencies \textnormal{(Tensor~$y$ at time~$t$ depends on (as indicated by the arrow direction) a dynamic range of $x$~values.)} }
+  \label{fig:access_patterns}
+\end{figure}
+
+
+Today's DL algorithms include diverse dynamic dependencies, often described in papers using recurrence equations~\cite{karp1967organization}, such as those in \F\ref{fig:access_patterns}.
+For example, recurrent~\cite{rumelhart1986learning}, state-space~\cite{gu2021efficiently}, and diffusion models~\cite{ho2020denoising} all pass state from a timestep to the next~(\F\ref{fig:access_patterns:state_passing}, where $x$ may equal $y$).
+DQN~\cite{mnih2013playing} and windowed attention~\cite{zaheer2020big} use backwards windows~(\F\ref{fig:access_patterns:bwd_window}).
+PPO~\cite{schulman2017proximal}, video models~\cite{ma2022mega}, and long-context transformers~\cite{dai2019transformer}  access data in chunks~(\F\ref{fig:access_patterns:block}).
+We now focus on two popular workloads and their dynamic dependencies.%: LLM decoding and RL training.
+
+\myparr{Large language models~(LLMs)}~\cite{brown2020language, dubey2024llama} generate text as sequences of tokens. \F\ref{fig:transformer_decoding} shows a transformer-based LLM architecture. After an initial \emph{user prompt} processing step (prefill), the LLM begins iteratively \emph{decoding}, \ie generating a response one token at a time, until it generates a special \emph{end-of-sequence} token at time $T$.  LLMs are stacks of transformer blocks, each with a feed-forward and an \emph{attention} layer.
+
+Attention uses dynamic computation. It first projects the input~$x_t$ into query $q_t$, key $k_t$, and value $v_t$ vectors, and 
+then computes attention (\Eq\ref{eq:attention}),
+where $s$ is a scaling constant and $\phi(t)$ is called the \emph{attention pattern}.
+This pattern defines a dynamic range of keys and values used to compute attention at timestep~$t$.
+Typical patterns include causal attention~\cite{vaswani2017attention}~(\F\ref{fig:access_patterns:causal}) where $\phi(t)=0\!:\!t\!+\!1$,
+and window attention~\cite{zaheer2020big}~(\F\ref{fig:access_patterns:bwd_window}) where $\phi(t)=\textrm{max}(t\!-\!w, 0)\!:\!t\!+\!1$, with window size~$w$.
+The dynamic section ends when the dot product with values contracts the dynamically-sized dimension.
+\begin{eqnarray}
+    a_t = \textrm{softmax}(q_t k_{\phi(t)}^{\intercal} \cdot s) \, v_{\phi(t)} \label{eq:attention}
+\end{eqnarray}
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth, trim={1 0 2 4}, clip]{cr_figures/transformer_arch}
+  \caption{Simplified Llama-3.2-3B architecture  \textnormal{(Each decoding step depends on a dynamic range of cached key-value (K/V) pairs.)}}
+  \label{fig:transformer_decoding}
+\end{figure}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.975\columnwidth, trim={12 2 9 0}, clip]{cr_figures/actor_learner_with_dings}
+  \caption{Actor-learner architecture in RL systems \textnormal{(Decoupling acting and learning causes \ding{202} duplicate forward passes, \ding{203} serial acting and learning, and \ding{204} high peak memory usage.)}}
+  \label{fig:actor_learner}
+\end{figure}
+
+\myparr{Reinforcement learning~(RL)}~\cite{sutton2018reinforcement} learns an \emph{acting policy}~$\pi_{W}$, represented by a deep neural network~(DNN) with parameters~$W$, from \emph{experience} data collected by trial-and-error interactions with a simulated \emph{environment} (see~\F\ref{fig:actor_learner}).
+At each \emph{timestep}~$t$, starting from the initial observation~$o_0$, the \emph{acting policy} produces an action~$a_t$, which is executed in the environment and, in response, receives the next observation~$o_{t+1}$, a done signal~$d_{t}$, and a reward~$r_{t}$.  
+
+
+In each iteration, a \emph{learner} computes a loss~$\mathcal{L}$ from the generated experience data and backpropagates it into a parameter update~$\nabla_W$. 
+The loss is a sum of per-timestep losses, $\mathcal{L} = \sum_{t=0}^T l_{t}$,
+where each $l_{t}$ \emph{dynamically} accesses only a \emph{portion} of the experience data, depending on the algorithm. 
+REINFORCE~\cite{williams1992simple} accesses all future steps~(\F\ref{fig:access_patterns:anti_causal}), while A2C~\cite{mnih2016asynchronous} uses a forward-looking window~(\F\ref{fig:access_patterns:fwd_window}).
+
+
+
+\subsection{Dynamic DL and whole-program compilation}
+\label{sec:dataflow}
+
+Dynamic algorithms are difficult to represent and optimize in today's DL systems, preventing whole-program compilation.
+\emph{Imperative (eager)} systems, such as PyTorch~\cite{paszke2019pytorch} and TF-Eager~\cite{agrawal2019tensorflow}, support dynamism well: users write imperative code that dynamically dispatches GPU kernels that are appropriately-sized to the dynamic shape~\cite{chetlur2014cudnn}. 
+They rely on the host language (\eg Python) to evaluate control-flow, conditionals, and dynamic dependencies. 
+These systems, however, lack a graph representation that can be optimized and scheduled ahead-of-time, thus placing the burden of writing efficient code on the user. \emph{Lazy eager} approaches~\cite{suhan2021lazytensor} collect small subgraphs before optimizing them, but this is still insufficient for whole-program compilation. 
+
+\emph{Declarative (graph-based)} systems, such as TensorFlow~\cite{abadi2016tensorflow} and JAX~\cite{frostig2018compiling}, first build a dataflow graph of the program before performing optimizations and execution scheduling. TensorFlow uses a flat dataflow graph with several control-flow operators~\cite{yu2018dynamic} that encode loops and conditionals; JAX uses a single \texttt{while} operator~\cite{xla_op_semantics}, with nested subgraphs for loop body and condition. Both approaches, however, require static tensor shapes in the graph, and thus cannot directly express dynamic data dependencies.
+
+As a result, users are forced into different workarounds to implement dynamic computation, 
+each with drawbacks:
+
+\mypar{(a)~Per-shape compilation} Users can compile a separate graph for each possible tensor shape, but this is expensive for highly variable shapes~\cite{suhan2021lazytensor} as found in LLMs and RL.
+
+\mypar{(b)~Unrolling loops} Users can statically unroll the timestep loop~\cite{frostig2018compiling} when $T$ is known, generating all instantiations of dynamic dependencies. This leads to \emph{graph size explosion}, increasing compilation times, and also loses the semantics of dynamic dependencies, which prevents optimizations.
+
+\mypar{(c)~Padding and masking} Users can coarsen dynamic dependencies, padding them to a fixed maximum sequence length $T'>T$. For correctness, users must also mask out valid timesteps. This is cumbersome and introduces processing and memory overheads.
+
+\subsection{Consequences in DL implementations}
+\label{sec:frameworks}
+
+We now discuss how the lack of support for dynamic dependencies affects the implementations of DL algorithms.
+
+\tinyskip
+
+\noindent
+
+In \textbf{LLM inference}, the dependence on past key/value~(K/V) pairs hinders whole-program compilation. This dependence creates dynamic tensor shapes, which require inefficient padding to compile. Furthermore, to avoid recomputing keys and values, K/V caches are used~(see~\F\ref{fig:transformer_decoding}), often managed by external systems~\cite{kwon2023efficient,qin2024mooncake}. 
+
+Managing these caches is complex because different types of attention require different cache policies. 
+While causal attention~\cite{vaswani2017attention} must store all prior K/V pairs, window attention~\cite{zaheer2020big} allows for the deallocation of old K/V pairs. Linear~\cite{katharopoulos2020transformers}, global~\cite{zaheer2020big}, block~\cite{dai2019transformer}, and full attention~\cite{devlin2019bert}, or hybrid models that interleave attention types~\cite{team2024gemma}, demand even more nuanced cache policies.
+Since existing LLM inference systems~\cite{kwon2023efficient, zheng2024sglang} do not model dynamic dependencies, they struggle to offer tailored cache policies,\footnote{\url{https://github.com/vllm-project/vllm/issues/15705}} requiring large engineering effort for each new supported attention type.\footnote{\url{https://github.com/vllm-project/vllm/pull/14097}}
+
+
+
+\myparr{RL frameworks}~\cite{stooke2019rlpyt, Petrenko2020SampleFE, hoffman2020acme, liang2018rllib, weng2021tianshou, rl-games2022, bou2023torchrl} address forward-looking dependencies in loss computation by coarsening them to $0\!:\!T$ and decomposing the computation into two subgraphs: (i)~an \emph{actor} graph executed repeatedly until termination, which produces the full simulation data and stores results in a \emph{replay buffer}~\cite{cassirer2021reverb, wang2023gear}; and (ii)~a \emph{learner} graph that is invoked once after the simulation terminates to compute a parameter update using the experience from the replay buffer.
+
+While the actor-learner model can be applied to most RL algorithms, it has several drawbacks (indicated by the numbers in \F\ref{fig:actor_learner}) due to the independently compiled subgraphs:
+
+\mypar{(1)~Redundant computation} Intermediate activations produced by the actor~$\pi_{W}$ are discarded and recomputed in the learner for use in back-propagation. This adds substantial overhead, as it doubles the amount of inference work per timestep for typical algorithms; %for RNNs, the redundant work grows linearly with the sequence length.
+
+\mypar{(2)~Missed parallelism} The execution of actors and learners must be serialized due to the coarse $0\!:\!T$ dependency. This prevents the parallelization of learning on past timesteps while acting out future timesteps; and
+
+\mypar{(3)~High peak memory usage} The ``all-at-once'' learning prevents early deallocations and results in high peak GPU memory usage, potentially causing out-of-memory errors.\footnote{Consider learning from small $W\!=\!H\!=\!256$ images with $C\!=\!3$ color channels, at $P\!=\!4$b float precision, with a batch size of $B\!=\!512$, and $T\!=\!1000$ timesteps. This requires  at least $T\!\times\!B\!\times\!(W\!\times\!H\!\times\!C\!\times\!P) / 2^{30}=$ 375\unit{GB} of memory.}
+
+% End

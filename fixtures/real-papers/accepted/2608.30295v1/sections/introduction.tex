@@ -1,0 +1,63 @@
+\section{Introduction}
+% The rapid development of large language models (LLMs) has significantly impacted human life. With the growing demand for multi-turn dialogues and long-context inputs, many contemporary models now support context windows of 128K tokens or more~\cite{gpt,llama,qwen,chatglm,gemini,phi}. This capability enables effective performance in tasks involving lengthy texts, such as long-document question answering~\cite{peek,multiqa}, extensive information retrieval~\cite{infinitebench,informationretrieval}, and repository-level code understanding~\cite{codeplan,swebench}. However, the autoregressive nature of transformer-based models leads to increased computational costs, memory access overhead, and memory consumption as context lengths grow, due to the need to store and retrieve all key-value (KV) caches. For instance, using the Llama-3-8B-Instruct-262k~\cite{llama3-8b-262k} model with FlashAttention, extending the context from 1K to 1M tokens increases end-to-end inference latency by more than 3000 times~\cite{minference}. Moreover, when processing an input of approximately 500K tokens with the Llama-3-8B model, memory consumption exceeds 80GB, surpassing the capacity of a single NVIDIA A100-80GB GPU. Consequently, accelerating long-context LLMs is both essential and imperative.
+
+% With the powerful capabilities of large language models (LLMs), there is an increasing demand for long-context inputs. Many contemporary models now support context windows of 128K tokens or more~\cite{gpt,llama,qwen,chatglm,gemini,phi}, enabling effective performance in tasks like long-document question answering~\cite{peek,multiqa}, information retrieval~\cite{infinitebench,informationretrieval}, and repository-level code understanding~\cite{codeplan,swebench}. However, the autoregressive nature of transformer-based models leads to increased computational costs, memory access overhead, and consumption as context lengths grow, due to the need to store and retrieve all key-value (KV) caches. For example, using the Llama-3-8B-Instruct-262k~\cite{llama3-8b-262k} model with FlashAttention, extending the context from 1K to 1M tokens increases inference latency by over 3000 times~\cite{minference}, while processing 550K tokens with the Llama-3-8B model exceeds 80GB in memory usage, surpassing the capacity of a single NVIDIA A100-80GB GPU. Consequently, accelerating long-context LLMs is both essential and imperative.
+
+
+With rapid development of large language models (LLMs), many generalist models support context windows of 128K tokens or more~\cite{gpt,llama,qwen,chatglm,gemini,phi}, enabling to effectively perform tasks like long-document question answering~\cite{peek,multiqa}, information retrieval~\cite{infinitebench,informationretrieval}, and repository-level code understanding~\cite{codeplan,swebench}. However, as context lengths grow, the autoregressive nature of the mainstream LLM paradigm often leads to increased computational costs, memory consumption, and thus the runtime, since we have to store and retrieve all key-value (KV) caches. For example, using the Llama-3-8B-Instruct-262k~\cite{llama3-8b-262k} model with FlashAttention, extending the context from 1K to 1M tokens increases inference latency by over 3000 times~\cite{minference}.
+Therefore, accelerating LLM inference in long contexts is both essential and imperative.
+
+\begin{figure}[t]
+\begin{center}
+    \includegraphics[width=0.48\textwidth]{Figures/intro.pdf}
+    % \vspace{-0.1cm}
+    \caption{Comparison of KV eviction, KV retrieval, and our method. CateKV employs a hybrid KV cache method to reduce memory usage while maintaining high accuracy.
+    % \lhl{put the explanation to the main body}
+    % The KV Eviction Algorithm suffers from accuracy loss due to irreversible eviction, while KV Retrieval incurs high memory usage by retaining all KV pairs. In contrast, our algorithm balances accuracy and memory by retaining critical KV pairs in consistent heads and most KV pairs in adaptive heads for selective retrieval during decoding. 
+    }
+    \vspace{-0.4cm}
+    \label{fig:intro1}
+\end{center}
+\end{figure}
+
+Existing methods for inference acceleration of LLMs under long contexts can be categorized into two types: KV cache eviction and KV cache retrieval strategies. KV eviction strategies reduce the size of the KV cache by systematically discarding KV pairs based on predefined policies~\cite{streamingllm,h2o,snapkv,pyramidkv}. However, this usually suffers from significant accuracy loss, as the removal of essential information without comprehensive contextual understanding adversely affects task performance. In contrast, KV retrieval methods maintain accuracy by preserving all KV pairs in the cache and selectively retrieving relevant tokens during the decoding stage, thereby ensuring that no crucial information is omitted~\cite{quest,shadowkv}. Nevertheless, KV retrieval does not mitigate high memory usage, limiting scalable batch sizes and thus the throughput under long contexts. Furthermore, certain approaches~\cite{minference,duoattention,razorattention} recognize the heterogeneous sparsity patterns across different attention heads within the model and configure the heads with distinct sparsification strategies during inference.
+While they show initial promise in accuracy and efficiency, they do not fully utilize the interplay between the pre-filling and decoding phases to facilitate further optimization.
+% Additionally, selecting top‑k elements during decoding introduces extra computational overhead and approximation errors within the attention mechanism, causing minor latency increases and accuracy reductions.
+
+Different from previous methods, we explore leveraging the experience in pre-filling stage to promote the decoding stage. Our intuition is inspired by an interesting observation: certain attention heads exhibit sequentially consistent attention patterns, spanning across the pre-filling and decoding stages, while some attention heads exhibit rich activation dynamics during the whole process, as shown in Figure~\ref{fig:sequential_consistency}.
+Besides, this phenomenon, reflecting the special head working mechanism, frequently existed in different LLMs and their different layers. 
+This indicates that if we can capture those modes at the pre-filling stage, we can leverage the sequential consistency to only maintain a subset of crucial tokens for certain heads, which achieves both a reduction of the KV cache and the speedup of attention computation during the decoding stage for LLM inference acceleration. 
+% Therefore, identifying these consistent heads is key to fully exploiting this phenomenon.
+
+
+% Our method employs an observation window during the pre-filling stage to identify each attention head's pattern and its corresponding critical tokens. Specifically, we classify attention heads using the Variable Tracking task dataset from the RULER benchmark as the reference dataset. Within the observation window, we record the frequency of tokens designated as critical and calculate the coefficient of variation to distinguish between consistent and adaptive heads. Specifically, we allocate minimal cache budgets to consistent heads and substantial cache budgets to adaptive heads to cache the top‑k most frequent tokens.
+Based on the above analysis, we propose CateKV, a simple, effective, and plug-and-play method designed to enhance LLM inference efficiency by leveraging sequential consistency. CateKV uses an observation window during the pre-filling stage to identify critical tokens and employs a coefficient-of-variation-based score to classify attention heads into consistent and adaptive types, based on a reference dataset. In consistent heads, CateKV retains only a small proportion of critical KV pairs, while in adaptive heads, it retains most, selecting tokens based on their importance derived from attention weights in the pre-filling stage, as shown in Figure~\ref{fig:intro1}. 
+By such an effective routing manner guided by sequential consistency, our method maintains the performance merit of LLM inference and simultaneously enjoys the acceleration gain.
+Our method is orthogonal to and combinable with many existing acceleration approaches, and we conducted extensive experiments on widely used benchmarks including RULER~\cite{ruler}, Longbench~\cite{longbench}, and NIAH~\cite{niah}, using models such as LLaMA-3-8B-Instruct-1048K~\cite{llama3-8b}, GLM-4-9B-1M~\cite{glm}, LLaMA-3.1-8B~\cite{llama3-1} and Yi-9B-200K~\cite{yi} to demonstrate the effectiveness. 
+% The results show that our method achieves performance comparable to full attention, with an $2.14\times$ reduction in memory usage and an $1.81\times$ speedup in decoding on a single A100 GPU.
+In a nutshell, our contributions are summarized as follows:
+\begin{itemize}
+%[itemsep=1pt,parsep=1pt,topsep=1pt,partopsep=1pt]
+% v1
+% \item An observation of sequential consistency in attention heads, leading to their classification into consistent and adaptive heads.
+% \item CateKV, an acceleration method that uses a coefficient-of-variation-based score to classify attention heads, achieving an optimal balance between efficiency and accuracy.
+% % An new algorithm 
+% \item A comprehensive evaluation of CateKV, demonstrating its ability to reduce memory usage by $2.14\times$ and accelerate decoding by $1.81\times$, while preserving high accuracy.
+% v2
+% \item We observe a sequential consistency phenomenon in attention heads, and propose a coefficient-of-variation-based score to classify them.
+% \item We introduce CateKV, a hybrid KV cache acceleration algorithm based on sequential consistency.
+% % An new algorithm 
+% \item CateKV reduces memory usage by $2.14\times$ and decoding latency by $1.81\times$, while maintaining accuracy comparable to full attention on long-context benchmarks.
+% v3
+% \item We observed the phenomenon of sequential consistency in attention heads and further discovered that different heads exhibit varying degrees of consistency, naturally dividing them into consistent and adaptive heads.
+\item We identify that general sequential consistency exhibits in certain attention heads and dynamic activation in others, dividing the attention heads into consistent and adaptive heads, which naturally constructs the basic for decoding acceleration with pre-filling experience.
+\item We propose CateKV, a hybrid KV cache acceleration algorithm leveraging sequential consistency. 
+Employing a coefficient-of-variation-based score, \shortname can precisely classify attention heads into two categories, enabling efficient KV cache eviction while closely approximating the performance of full attention.
+% while maintaining the dynamic capability of full attention.
+% while讲adaptive head能保留类似full attention的能力（所以第三点能preserving performance），这个能力到底咋写
+\item Extensive evaluations on popular benchmarks demonstrate that CateKV reduces memory usage and decoding latency by $2.72\times$ and $2.18\times$ for single inputs, increases throughput by $3.96\times$ in batch scenarios, while maintaining performance comparable to full attention.
+% Moreover, our method is plug-and-play, allowing easy integration with other approaches for further acceleration.
+Further acceleration can be achieved by integrating our plug-and-play method with other approaches.
+
+
+\end{itemize}

@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "aaai-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:aaai-press"
+      },
+      "opened": "2026-11-04",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-11-04",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

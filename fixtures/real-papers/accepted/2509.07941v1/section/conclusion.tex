@@ -1,0 +1,4 @@
+\section{Conclusion}\label{sec:conclu}
+
+In this work, we identify a critical attack surface in RACG, directed malicious dependency hijacking, exposing dual trust chain risks from LLM reliance on RAG and developer overtrust in LLM suggestions. We propose \method, a novel attack framework that crafts poisoned documentation via two synergistic strategies: position-aware beam search to optimize retrieval rankings and multilingual inductive suggestions to jailbreak LLM dependency recommendations. Our experiments across Python, Rust, JavaScript, and SOTA LLMs demonstrate \method's alarming efficacy, achieving 50\%+ success rates against popular dependencies like \texttt{matplotlib} with low poisoning ratios, even for real-world malicious packages. We release a multilingual benchmark to spur defense research. 
+This study highlights urgent supply chain risks in LLM-driven development, necessitating proactive hardening of RAG systems before broader deployment.

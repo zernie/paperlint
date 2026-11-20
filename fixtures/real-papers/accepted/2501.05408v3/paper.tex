@@ -1,0 +1,328 @@
+% Tempo - SOSP 2025 submission
+
+%\documentclass[letterpaper,twocolumn,10pt]{article}
+%\usepackage{usenix2019_v3}
+
+\documentclass[sigplan,10pt]{acmart}
+%\documentclass[sigplan,10pt, anonymous, review]{acmart}
+
+% NOTE: To remove the copyright notice, uncomment the following line
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+%\setcopyright{acmlicensed}
+%\copyrightyear{2018}
+%\acmYear{2018}
+%\acmDOI{XXXXXXX.XXXXXXX}
+%%% These commands are for a PROCEEDINGS abstract or paper.
+%\acmConference[SOSP '25]{}{October 13--16,
+%  2025}{Seoul, Republic of Korea}
+%%%
+%%%  Uncomment \acmBooktitle if the title of the proceedings is different
+%%%  from ``Proceedings of ...''!
+%%%
+%%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%%%  June 03--05, 2018, Woodstock, NY}
+%\acmISBN{978-1-4503-XXXX-X/2018/06}
+
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+% inlined bib file
+%\usepackage{filecontents}
+
+\usepackage{xcolor}
+\usepackage{ipsum}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{mathrsfs}
+%\usepackage{amssymb}
+\usepackage[T1]{fontenc}
+
+\usepackage{pifont}
+
+\usepackage[linesnumbered,ruled,lined]{algorithm2e}
+
+%\usepackage{inconsolata}
+\usepackage{bm} % For \bm
+
+
+
+% Use geometry for margin settings
+%\usepackage[showframe, letterpaper, top=1in, bottom=1in, left=0.75in, right=0.75in, columnsep=0.33in]{geometry}
+
+
+\setlength{\textfloatsep}{6.0pt plus 1.0pt minus 1.0pt}
+\setlength{\dbltextfloatsep}{6.0pt plus 1.0pt minus 1.0pt}
+
+\setlength{\floatsep}{6.0pt plus 1.0pt minus 1.0pt}
+\setlength{\dbltextfloatsep}{6.0pt plus 1.0pt minus 1.0pt}
+
+\setlength{\intextsep}{6.0pt plus 1.0pt minus 1.0pt}
+
+\usepackage[small,compact]{titlesec}
+
+%good
+\newcommand{\cmark}{\ding{51}}
+%neutral
+\newcommand{\mmark}{{\LARGE \textasciitilde}}
+%bad
+\newcommand{\xmark}{\ding{55}}
+
+
+%TODO cite: https://github.com/jax-ml/jax/issues/22346 no pinned tensors
+\newcommand{\diffadd}[1]{\colorbox{green!20}{+\ \texttt{\detokenize{#1}}}}
+\newcommand{\diffdel}[1]{\colorbox{red!20}{-\ \texttt{\detokenize{#1}}}}
+
+\newcommand{\textop}[1]{\texttt{#1Op}} % How to typeset operators
+
+\SetAlgorithmName{Alg.}{}{}
+
+\SetAlFnt{\footnotesize}
+\SetAlCapFnt{\sffamily\bfseries\small}% Set caption font
+\SetAlCapNameFnt{\unskip\sffamily\bfseries\small}% Set caption name font
+
+\lstdefinelanguage{CustomPython}{
+  morekeywords={self,cls,__init__,def,return,for,if,else,elif,while,import,from,as,with,pass,continue,break,assert,raise,try,except,finally,global,nonlocal,lambda,yield,del,not,and,or,is,in,not,print,exec,eval,open,close,read,write,append,seek,split,join,strip,replace,find,index,lower,upper,format,join,split,append,extend,remove,pop,insert,sort,reverse,clear,copy,deepcopy},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinestyle{diffpython}{
+  language=CustomPython,
+  basicstyle=\ttfamily\footnotesize\linespread{0.85}\selectfont,
+  keywordstyle=\color{teal}\bfseries,
+  commentstyle=\color{gray}\slshape,
+  stringstyle=\color{purple},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\scriptsize\color{gray},
+  numbersep=8pt,
+  stepnumber=1,
+  numberblanklines=false, % Do not number blank lines
+  frame=leftline,
+  framesep=4pt,
+  xleftmargin=8pt,
+  xrightmargin=0pt,
+  escapeinside={(*@}{@*)},
+  columns=flexible,
+  keepspaces=true,
+  breaklines=true,
+  breakatwhitespace=true,
+  breakindent=2pt,
+  tabsize=4,
+  %moredelim=**[is][\diffdel]{@}{@},
+}
+
+\usepackage{graphbox}
+\usepackage{fancyvrb}
+\usepackage{xspace}
+\usepackage{url}
+\usepackage{xcomment}
+\usepackage[normalem]{ulem}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage[font={small,bf,sf}, textfont={small,sf}]{caption}
+\captionsetup[table]{skip=3pt, name={Tab.}, labelsep=colon}
+\captionsetup[figure]{skip=3pt, name={Fig.}, labelsep=colon}
+\captionsetup[subfigure]{font={footnotesize,sf,bf}, skip=3pt, textfont={footnotesize,sf,bf}, justification=centering}
+
+
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{setspace}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{pifont}
+\usepackage{balance}
+
+\usepackage{mdframed}
+
+\usepackage{soul}
+
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\SOUL@ulunderline}{\dimen@}{\SOUL@dimen}{}{}
+\patchcmd{\SOUL@ulunderline}{\dimen@}{\SOUL@dimen}{}{}
+\patchcmd{\SOUL@ulunderline}{\dimen@}{\SOUL@dimen}{}{}
+\newdimen\SOUL@dimen
+\makeatother
+
+\usepackage{footnote}
+
+
+\usepackage{xcolor}
+
+\soulregister\cite7
+\soulregister\ref7
+\soulregister\pageref7
+\soulregister\eg7
+\soulregister\unit7
+\soulregister\noteprp7
+\soulregister\gap7
+\soulregister\mypar7
+\soulregister\myparr7
+\soulregister\mypari7
+\soulregister\myparii7
+\soulregister\tinyskip7
+\soulregister\code7
+\soulregister\footnote7
+\soulregister\notemm1
+%\soulregister\todo1
+\soulregister\Cref7
+
+\newcommand{\ie}{i.e.,\ }
+\newcommand{\eg}{e.g.,\ }
+\newcommand{\etal}{et al.~}
+\newcommand{\vs}{vs.\ }
+\newcommand{\cf}{cf.~}
+
+\newcommand{\unit}[1]{\mbox{\hspace{2pt}#1}\xspace}
+
+\newcommand{\Eq}{\mbox{Eq.\hspace{0.25em}}}
+\newcommand{\F}{\mbox{Fig.\hspace{0.25em}}}
+\newcommand{\Fs}{\mbox{Figs.\hspace{0.25em}}}
+\newcommand{\T}{\mbox{Tab.\hspace{0.25em}}}
+\newcommand{\A}{\mbox{Alg.\hspace{0.25em}}}
+
+\usepackage{tikz}
+\newcommand*\myc[1]{%
+\scalebox{0.78}{\begin{tikzpicture}[baseline=-3pt]
+  \protect\node[draw,circle,inner sep=0.5pt, fill=black] {\textcolor{white}{\textsf{\textbf{#1}}}};
+\end{tikzpicture}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{myitemize}{%
+\begin{itemize}[leftmargin=1em, itemsep=.1em, parsep=.1em, topsep=.1em,
+    partopsep=.1em]}
+{\end{itemize}}
+
+\newenvironment{myenumerate}{%
+\begin{enumerate}[leftmargin=1.50em, itemsep=0em, parsep=0em, topsep=.1em,
+    partopsep=.1em]}
+{\end{enumerate}}
+
+\newcommand{\tinyskip}{\vspace{2pt}}
+
+\newcommand{\mypar}[1]{\tinyskip\noindent\textbf{#1.}\xspace}
+\newcommand{\myparr}[1]{\tinyskip\noindent\textbf{#1}\xspace}
+
+\makeatletter
+\lst@AddToHook{OnEmptyLine}{\addtocounter{lstnumber}{-1}\\[-.3em]}%
+% Remove line number increment from listings
+\makeatother
+
+\newcommand{\tighttimes}{\mkern-3mu\times\mkern-3mu}
+\newcommand{\htighttimes}{\mkern-1mu\times\mkern-1mu}
+\newcommand{\sys}{\textsc{Tempo}\xspace}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+%\title{\Large \bf \sys{}: Efficient Deep Reinforcement Learning\\ with Symbolic Dependence Graphs}
+\title[\sys{}: Compiling Dynamic Deep Learning]{\sys{}: Compiled Dynamic Deep Learning with\\ Symbolic Dependence Graphs}
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+\author{Pedro F. Silvestre}
+\email{p.silvestre21@imperial.ac.uk}
+\affiliation{%
+  \institution{Imperial College London}
+  \country{}
+}
+
+\author{Peter Pietzuch}
+\email{prp@imperial.ac.uk}
+\affiliation{%
+  \institution{Imperial College London}
+  \country{}
+}
+
+
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257</concept_id>
+       <concept_desc>Computing methodologies~Machine learning</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010148</concept_id>
+       <concept_desc>Computing methodologies~Symbolic and algebraic manipulation</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[300]{Computing methodologies~Machine learning}
+\ccsdesc[300]{Computing methodologies~Symbolic and algebraic manipulation}
+
+\keywords{Deep Learning, Compilation, Dynamic Tensors}
+%-------------------------------------------------------------------------------
+\begin{abstract}
+%-------------------------------------------------------------------------------
+
+Deep learning~(DL) algorithms are often defined in terms of \emph{temporal relationships}: a tensor at one timestep may depend on tensors from earlier or later timesteps. Such \emph{dynamic} dependencies (and corresponding dynamic tensor shapes) are difficult to express and optimize: while \emph{eager} DL systems support such dynamism, they cannot apply compiler-based optimizations; \emph{graph-based} systems require static tensor shapes, which forces users to pad tensors or break-up programs into multiple static graphs.
+
+We describe \sys{}, a new DL system that combines the dynamism of eager execution with the whole-program optimizations of graph-based compilation. \sys{} achieves this through a declarative programming model with \emph{recurrent tensors}, which include explicit \emph{temporal dimensions}. Temporal dimensions can be indexed using \emph{symbolic expressions} to express dynamic dependencies on past and future tensors. Based on this, \sys{} constructs a \emph{symbolic dependence graph}, which concisely encodes dynamic dependencies between operators, and applies whole-program optimizations, such as algebraic simplifications, vectorization, tiling, and fusion. By tiling dynamic dependencies into static-size blocks, \sys{} can also reuse existing static code-generators. It then uses a polyhedral model to find a feasible execution schedule, which includes memory management operations. We show that \sys{} achieves a 7$\times$ speedup over JAX for Llama-3.2-3B decoding; for reinforcement learning algorithms, \sys{} achieves a 54$\times$ speedup, with 16$\times$ lower peak memory usage.
+
+
+\end{abstract}
+
+
+%\copyrightyear{2025}
+%\acmYear{2025}
+%\setcopyright{cc}
+%\setcctype{by}
+%\acmConference[SOSP '25]{ACM SIGOPS 31st Symposium on Operating Systems Principles}{October 13--16, 2025}{Seoul, Republic of Korea}
+%\acmBooktitle{ACM SIGOPS 31st Symposium on Operating Systems Principles (SOSP '25), October 13--16, 2025, Seoul, Republic of Korea}\acmDOI{10.1145/3731569.3764840}
+%\acmISBN{979-8-4007-1870-0/2025/10}
+
+\settopmatter{printfolios=true,printacmref=false}
+\maketitle
+\pagestyle{plain}
+
+\input{01-introduction}
+\input{02-background}
+%\input{03-overview}
+\input{04-rts}
+\input{05-pdg-transformations}
+\input{06-scheduling}
+\input{07-runtime}
+\input{08-evaluation}
+\input{09-discussion-limitations}
+\input{10-related-work}
+\input{11-conclusion}
+%-------------------------------------------------------------------------------
+\bibliographystyle{unsrt}
+\balance
+\bibliography{\jobname}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks

@@ -1,0 +1,763 @@
+{
+  "_doc": "Query list for sample.mjs. quotas: new papers per field. Each slot is one venue edition: field, series, year, cap (allocation in round 0; later rounds raise it by 1 per round, round-robin, up to hardCap), queries (exact arXiv API search_query strings, tried in order, results concatenated, rank = position in that concatenation), max_results (page size; up to maxPages pages per query are read when a slot is not yet full), venue (regex source that must match the comment next to the edition year), classSpec (key in sample.mjs CLASS_SPECS), allowPoster (a poster is a presentation format of a full paper there). Slots with source semantic-scholar (fields systems, other) take their candidates from the Semantic Scholar bulk venue listing (s2Query; entries with an ArXiv id, ordered by arXiv id ascending) instead of arXiv comment search; the listing is the acceptance evidence (acceptance: s2-venue-listing), rules 2-4 apply unchanged.",
+  "hardCap": 5,
+  "maxPages": 4,
+  "quotas": {
+    "ml": 18,
+    "nlp": 12,
+    "ai": 8,
+    "security": 10,
+    "se": 8,
+    "hci": 8,
+    "systems": 10,
+    "other": 6
+  },
+  "slots": [
+    {
+      "field": "ml",
+      "series": "NeurIPS",
+      "year": 2025,
+      "cap": 4,
+      "queries": [
+        "co:\"NeurIPS 2025\"",
+        "co:\"NIPS 2025\""
+      ],
+      "max_results": 50,
+      "venue": "neur\\s?ips|nips",
+      "classSpec": "neurips",
+      "allowPoster": true
+    },
+    {
+      "field": "ml",
+      "series": "ICML",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"ICML 2025\""
+      ],
+      "max_results": 50,
+      "venue": "icml",
+      "classSpec": "icml",
+      "allowPoster": true
+    },
+    {
+      "field": "ml",
+      "series": "ICLR",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"ICLR 2025\""
+      ],
+      "max_results": 50,
+      "venue": "iclr",
+      "classSpec": "iclr",
+      "allowPoster": true
+    },
+    {
+      "field": "ml",
+      "series": "ICML",
+      "year": 2026,
+      "cap": 3,
+      "queries": [
+        "co:\"ICML 2026\""
+      ],
+      "max_results": 50,
+      "venue": "icml",
+      "classSpec": "icml",
+      "allowPoster": true
+    },
+    {
+      "field": "ml",
+      "series": "ICLR",
+      "year": 2026,
+      "cap": 3,
+      "queries": [
+        "co:\"ICLR 2026\""
+      ],
+      "max_results": 50,
+      "venue": "iclr",
+      "classSpec": "iclr",
+      "allowPoster": true
+    },
+    {
+      "field": "ml",
+      "series": "NeurIPS",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"NeurIPS 2026\""
+      ],
+      "max_results": 50,
+      "venue": "neur\\s?ips|nips",
+      "classSpec": "neurips",
+      "allowPoster": true
+    },
+    {
+      "field": "nlp",
+      "series": "ACL",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"ACL 2025\""
+      ],
+      "max_results": 50,
+      "venue": "\\bacl",
+      "classSpec": "acl"
+    },
+    {
+      "field": "nlp",
+      "series": "EMNLP",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"EMNLP 2025\""
+      ],
+      "max_results": 50,
+      "venue": "emnlp",
+      "classSpec": "acl"
+    },
+    {
+      "field": "nlp",
+      "series": "NAACL",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"NAACL 2025\""
+      ],
+      "max_results": 50,
+      "venue": "naacl",
+      "classSpec": "acl"
+    },
+    {
+      "field": "nlp",
+      "series": "ACL",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"ACL 2026\""
+      ],
+      "max_results": 50,
+      "venue": "\\bacl",
+      "classSpec": "acl"
+    },
+    {
+      "field": "nlp",
+      "series": "EMNLP",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"EMNLP 2026\""
+      ],
+      "max_results": 50,
+      "venue": "emnlp",
+      "classSpec": "acl"
+    },
+    {
+      "field": "nlp",
+      "series": "EACL",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"EACL 2026\""
+      ],
+      "max_results": 50,
+      "venue": "eacl",
+      "classSpec": "acl"
+    },
+    {
+      "field": "ai",
+      "series": "AAAI",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"AAAI 2025\"",
+        "co:\"AAAI-25\""
+      ],
+      "max_results": 50,
+      "venue": "aaai",
+      "classSpec": "aaai"
+    },
+    {
+      "field": "ai",
+      "series": "AAAI",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"AAAI 2026\"",
+        "co:\"AAAI-26\""
+      ],
+      "max_results": 50,
+      "venue": "aaai",
+      "classSpec": "aaai"
+    },
+    {
+      "field": "ai",
+      "series": "IJCAI",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"IJCAI 2025\""
+      ],
+      "max_results": 50,
+      "venue": "ijcai",
+      "classSpec": "ijcai"
+    },
+    {
+      "field": "ai",
+      "series": "IJCAI",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"IJCAI 2026\""
+      ],
+      "max_results": 50,
+      "venue": "ijcai",
+      "classSpec": "ijcai"
+    },
+    {
+      "field": "security",
+      "series": "USENIX Security",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"USENIX Security 2025\"",
+        "co:\"USENIX Security Symposium 2025\""
+      ],
+      "max_results": 50,
+      "venue": "usenix\\s*security",
+      "classSpec": "usenix"
+    },
+    {
+      "field": "security",
+      "series": "IEEE S&P",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"IEEE S&P 2025\"",
+        "co:\"IEEE Symposium on Security and Privacy 2025\""
+      ],
+      "max_results": 50,
+      "venue": "(ieee\\s*)?(s\\s*&\\s*p|s&amp;p|symposium on security and privacy|oakland)",
+      "classSpec": "ieee"
+    },
+    {
+      "field": "security",
+      "series": "NDSS",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"NDSS 2025\""
+      ],
+      "max_results": 50,
+      "venue": "ndss",
+      "classSpec": "ndss"
+    },
+    {
+      "field": "security",
+      "series": "ACM CCS",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"CCS 2025\"",
+        "co:\"ACM CCS 2025\""
+      ],
+      "max_results": 50,
+      "venue": "ccs",
+      "classSpec": "acm"
+    },
+    {
+      "field": "security",
+      "series": "USENIX Security",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"USENIX Security 2026\""
+      ],
+      "max_results": 50,
+      "venue": "usenix\\s*security",
+      "classSpec": "usenix"
+    },
+    {
+      "field": "se",
+      "series": "ICSE",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"ICSE 2025\""
+      ],
+      "max_results": 50,
+      "venue": "icse",
+      "classSpec": "acm_or_ieee"
+    },
+    {
+      "field": "se",
+      "series": "ICSE",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"ICSE 2026\""
+      ],
+      "max_results": 50,
+      "venue": "icse",
+      "classSpec": "acm_or_ieee"
+    },
+    {
+      "field": "se",
+      "series": "ISSTA",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"ISSTA 2025\""
+      ],
+      "max_results": 50,
+      "venue": "issta",
+      "classSpec": "acm"
+    },
+    {
+      "field": "se",
+      "series": "MSR",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"MSR 2025\""
+      ],
+      "max_results": 50,
+      "venue": "msr",
+      "classSpec": "acm_or_ieee"
+    },
+    {
+      "field": "se",
+      "series": "ASE",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"ASE 2025\""
+      ],
+      "max_results": 50,
+      "venue": "\\base",
+      "classSpec": "acm_or_ieee"
+    },
+    {
+      "field": "se",
+      "series": "ISSTA",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"ISSTA 2026\""
+      ],
+      "max_results": 50,
+      "venue": "issta",
+      "classSpec": "acm"
+    },
+    {
+      "field": "hci",
+      "series": "CHI",
+      "year": 2025,
+      "cap": 3,
+      "queries": [
+        "co:\"CHI 2025\"",
+        "co:\"CHI '25\""
+      ],
+      "max_results": 50,
+      "venue": "\\bchi",
+      "classSpec": "acm"
+    },
+    {
+      "field": "hci",
+      "series": "CHI",
+      "year": 2026,
+      "cap": 2,
+      "queries": [
+        "co:\"CHI 2026\"",
+        "co:\"CHI '26\""
+      ],
+      "max_results": 50,
+      "venue": "\\bchi",
+      "classSpec": "acm"
+    },
+    {
+      "field": "hci",
+      "series": "CSCW",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"CSCW 2025\""
+      ],
+      "max_results": 50,
+      "venue": "cscw",
+      "classSpec": "acm"
+    },
+    {
+      "field": "hci",
+      "series": "UIST",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"UIST 2025\""
+      ],
+      "max_results": 50,
+      "venue": "uist",
+      "classSpec": "acm"
+    },
+    {
+      "field": "hci",
+      "series": "CSCW",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"CSCW 2026\""
+      ],
+      "max_results": 50,
+      "venue": "cscw",
+      "classSpec": "acm"
+    },
+    {
+      "field": "systems",
+      "series": "OSDI",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"OSDI 2025\""
+      ],
+      "max_results": 50,
+      "venue": "osdi",
+      "classSpec": "usenix",
+      "source": "semantic-scholar",
+      "s2Venue": "OSDI",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=OSDI&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "SOSP",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"SOSP 2025\""
+      ],
+      "max_results": 50,
+      "venue": "sosp",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SOSP",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SOSP&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "EuroSys",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"EuroSys 2025\""
+      ],
+      "max_results": 50,
+      "venue": "eurosys",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "EuroSys",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=EuroSys&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "NSDI",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"NSDI 2025\""
+      ],
+      "max_results": 50,
+      "venue": "nsdi",
+      "classSpec": "usenix",
+      "source": "semantic-scholar",
+      "s2Venue": "NSDI",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=NSDI&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "VLDB",
+      "year": 2025,
+      "cap": 2,
+      "queries": [
+        "co:\"VLDB 2025\""
+      ],
+      "max_results": 50,
+      "venue": "vldb",
+      "classSpec": "vldb",
+      "source": "semantic-scholar",
+      "s2Venue": "VLDB",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=VLDB&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "SIGMOD",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"SIGMOD 2025\""
+      ],
+      "max_results": 50,
+      "venue": "sigmod",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGMOD",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGMOD&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "PLDI",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"PLDI 2025\""
+      ],
+      "max_results": 50,
+      "venue": "pldi",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "PLDI",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=PLDI&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "POPL",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"POPL 2025\""
+      ],
+      "max_results": 50,
+      "venue": "popl",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "POPL",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=POPL&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "OOPSLA",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"OOPSLA 2025\""
+      ],
+      "max_results": 50,
+      "venue": "oopsla",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "OOPSLA",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=OOPSLA&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "SIGMOD",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"SIGMOD 2026\""
+      ],
+      "max_results": 50,
+      "venue": "sigmod",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGMOD",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGMOD&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "VLDB",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"VLDB 2026\""
+      ],
+      "max_results": 50,
+      "venue": "vldb",
+      "classSpec": "vldb",
+      "source": "semantic-scholar",
+      "s2Venue": "VLDB",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=VLDB&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "OOPSLA",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"OOPSLA 2026\""
+      ],
+      "max_results": 50,
+      "venue": "oopsla",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "OOPSLA",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=OOPSLA&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "systems",
+      "series": "NSDI",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"NSDI 2026\""
+      ],
+      "max_results": 50,
+      "venue": "nsdi",
+      "classSpec": "usenix",
+      "source": "semantic-scholar",
+      "s2Venue": "NSDI",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=NSDI&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "CVPR",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"CVPR 2025\""
+      ],
+      "max_results": 50,
+      "venue": "cvpr",
+      "classSpec": "cvpr",
+      "allowPoster": true,
+      "source": "semantic-scholar",
+      "s2Venue": "CVPR",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=CVPR&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "ICRA",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"ICRA 2025\""
+      ],
+      "max_results": 50,
+      "venue": "icra",
+      "classSpec": "icra",
+      "source": "semantic-scholar",
+      "s2Venue": "ICRA",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=ICRA&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "SIGIR",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"SIGIR 2025\""
+      ],
+      "max_results": 50,
+      "venue": "sigir",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGIR",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGIR&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "STOC",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"STOC 2025\""
+      ],
+      "max_results": 50,
+      "venue": "stoc",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "STOC",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=STOC&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "SIGGRAPH",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"SIGGRAPH 2025\""
+      ],
+      "max_results": 50,
+      "venue": "siggraph",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGGRAPH",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGGRAPH&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "ICCV",
+      "year": 2025,
+      "cap": 1,
+      "queries": [
+        "co:\"ICCV 2025\""
+      ],
+      "max_results": 50,
+      "venue": "iccv",
+      "classSpec": "cvpr",
+      "allowPoster": true,
+      "source": "semantic-scholar",
+      "s2Venue": "ICCV",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=ICCV&year=2025&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "CVPR",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"CVPR 2026\""
+      ],
+      "max_results": 50,
+      "venue": "cvpr",
+      "classSpec": "cvpr",
+      "allowPoster": true,
+      "source": "semantic-scholar",
+      "s2Venue": "CVPR",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=CVPR&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "SIGIR",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"SIGIR 2026\""
+      ],
+      "max_results": 50,
+      "venue": "sigir",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGIR",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGIR&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "ICRA",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"ICRA 2026\""
+      ],
+      "max_results": 50,
+      "venue": "icra",
+      "classSpec": "icra",
+      "source": "semantic-scholar",
+      "s2Venue": "ICRA",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=ICRA&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    },
+    {
+      "field": "other",
+      "series": "SIGGRAPH",
+      "year": 2026,
+      "cap": 0,
+      "queries": [
+        "co:\"SIGGRAPH 2026\""
+      ],
+      "max_results": 50,
+      "venue": "siggraph",
+      "classSpec": "acm",
+      "source": "semantic-scholar",
+      "s2Venue": "SIGGRAPH",
+      "s2Query": "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=*&venue=SIGGRAPH&year=2026&fields=title,externalIds,venue,year,publicationDate"
+    }
+  ]
+}

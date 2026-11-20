@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "icse-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-sigconf"
+      },
+      "opened": "2026-01-29",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-01-29",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

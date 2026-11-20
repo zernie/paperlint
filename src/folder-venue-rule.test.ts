@@ -269,7 +269,7 @@ describe("paper/folder-venue-leftover — silent", () => {
   });
 
   it("a paper on a bare template family declares no venue: a venue in its folder may be its own", () => {
-    // The accepted ACSAC papers in fixtures/accepted-papers/ are exactly this: `…-acsac24` folders
+    // The accepted ACSAC papers in fixtures/real-papers/accepted/ are exactly this: `…-acsac24` folders
     // extending ieee-conference, while ACSAC is a shipped venue, the parent conference of AIDC.
     expect(
       lint("secure-acsac24", { extends: "paperlint:ieee-conference" }),

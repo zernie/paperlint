@@ -41,7 +41,7 @@ import { buildIn, engineIn } from "./build-in.ts";
 
 const ROOT = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const CLI = join(ROOT, "bin", "paperlint.mjs");
-const CORPUS = join(ROOT, "fixtures", "accepted-papers");
+const CORPUS = join(ROOT, "fixtures", "real-papers", "accepted");
 
 /** Where the body ends, as a human established it on the rendered PDF. */
 const Truth = z.object({

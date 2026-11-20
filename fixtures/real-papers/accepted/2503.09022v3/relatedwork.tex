@@ -1,0 +1,96 @@
+\section{Background and Related Work}
+\subsection{Large Language Model (LLM)}
+The large language model (LLM) is a type of large-scale neural network capable of generating human-like text and completing various tasks. We hereby briefly introduce three common concepts  in LLMs.
+
+
+\noindent \textbf{Models.} Currently, most advanced LLMs (\eg, GPT-4~\cite{gpt4}) are built upon the transformer architecture~\cite{vaswani2017attention}. These auto-regressive models predict subsequent words in a sequence based on the preceding context. Given a sequence $x_1, x_2, \ldots, x_n$, the model predicts the next word $x_{n+1}$ based on previous words. An auto-regressive LLM consists of one embedding layer, $d$ stacked transformer layers, and one unembedding layer. Each token is represented by a positive integer. The embedding layer is denoted as $E$, mapping $s$-length token sequence to  $\mathbb{R}^{s\times h}$, where $h$ is the hidden state size for each token.  The $i$-th transformer layer is denoted as $T_i$, mapping $\mathbb{R}^{s\times h}$ to $\mathbb{R}^{s\times h}$. The unembedding layer maps the activation of $\mathbb{R}^{s\times h}$ to a single generated token.
+
+
+
+\noindent \textbf{Prompt.} A prompt in the context of LLMs refers to the initial model input, guiding the context generation of LLMs. For example, if one inputs a prompt like "Briefly describe how to learn Python", the model will generate a   response telling how to learn python. Prompts are crucial in steering the model's generation process and can vary from simple queries to complex instructions.
+
+
+\noindent \textbf{LLM Personalization.} There are two major ways for personal users to personalize their own LLMs. The first way is \emph{in-context learning}, in which they generate prompts to describe their personal writing habit, style, and requirement for the task, 
+%\yuguang{should we mention the special format of in-context learning, the in-context samples?}
+then combine the prompts  with the actual instructions before entering the LLM. The second way is \emph{fine-tuning}. Due to the prohibitive cost of full-weight fine-tuning, personal users normally conduct \emph{parameter-efficient fine-tuning} (only tuning a small proportion of model parameters) on open source LLMs to obtain LLMs with their own style and finish their own task. The most prevalent \emph{parameter-efficient fine-tuning} method is LoRA~\cite{lora}. Under this paradigm, during fine-tuning, only a small proportion of model layers named adapters are updated, while other parameters of the LLM stay frozen.
+
+\subsection{Collaborative Inference System of LLMs}
+
+
+LLMs pose significant memory and computational costs as they generally have hundreds of billions of parameters. To democratize LLMs, collaborative inference systems~\cite{jiang2023hexgen,PETALS,localai_deml,NESA,skyserve} have been proposed to distribute computation across multiple participants using pipeline parallelism~\cite{pipeline-pl}. 
+
+Recall that an LLM comprises an embedding layer, $d$ stacked transformer layers, and an unembedding layer. The embedding and unembedding layers are lightweight and are thus directly held by the first and the last participant, respectively. Different strategies can be used for mapping transformer layers to participants (nodes), depending on their computing capabilities.  For simplicity, we assume that the transformer layers are evenly distributed among the $n$ participants. Concretely, the first participant holds layers $1, 2, \ldots, \lceil\frac{d}{n}\rceil$. 
+
+
+A significant subset of LLM collaborative inference systems~\cite{edgecloud2,edgecloud3,edgecloud1} involves edge-cloud collaboration~\cite{xu2023survey}. These systems can be considered a specific case of LLM collaborative inference with $n=2$, where the participants are the edge device and the cloud server. Since they face similar risks of prompt leakage, we do not consider them separately in this paper.
+
+Given the prohibitive expense of full-weight fine-tuning LLMs for personal users, we primarily focus on collaborative inference of open-source LLMs or parameter-efficiently fine-tuned open-source LLMs.  Note that for proprietary LLMs like GPT-4~\cite{gpt4}, clients call them through their APIs instead of collaborative inference. 
+In the first scenario of open-source LLM inference, we assume that every participant has access to the entire model's weights. In the latter case of parameter-efficiently fine-tuned LLM inference, we assume LoRA~\cite{lora} is adopted due to its prevalence. Under this scenario, before collaborative inference starts, only the client holds his personalized LoRA adapter weights, each participant holds the base model weight which is public. The client distributes the partition of LoRA adapter weights to each participant. Thus, each participant does not know the LoRA weights of other participants.
+
+
+
+
+It is worth noting that collaborative inference is fundamentally different from federated learning~\cite{zhang2021survey}. Firstly, collaborative inference focuses on the inference stage of LLMs, whereas federated learning targets the training phase of models. Secondly, clients (participants) transfer gradients in federated learning, but activation tensors are exchanged in collaborative inference. In addition, each client in federated learning holds the whole model, compared to a small part of the model in collaborative inference. These differences make it impossible for privacy attacks against federated learning to be used directly to attack the collaborative inference of LLMs.
+
+
+
+
+
+
+
+
+\subsection{Inversion Attacks in Machine Learning}
+\label{sec:inversion}
+%\wenjie{add related works about other LLM inversion attacks instead of embedding}
+Inversion attack is one of the most critical privacy threats, aiming at recovering input data through information such as intermediate results of a model. In this section, we introduce existing inversion attacks targeting image and language domains.
+
+
+
+\noindent \textbf{Inversion Attacks on Images.} Inversion attacks were originally proposed to reconstruct input images. Extensive research has been conducted in this area. In general, existing approaches fall into two categories: generation-based inversion~\cite{yang2019neural,tan2021many,khosravy2022model,yin2023ginver}, and optimization-based inversion~\cite{mahendran2015understanding,he2019model,attacking-and-protect-data-privacy,zhang2020secret,struppek2022plug}. 
+%For example, \cite{yang2019neural} proposed to train a neural network to invert the target network. 
+\cite{he2019model} studied inverting CNN intermediate activations by optimizing a loss term combining total variation to encourage the inverted image to look realistic. 
+\cite{zhang2020secret} proposed to optimize GAN's latent vector space to produce high-quality inversion results. 
+However, these methods are not applicable on texts because images can be represented in a continuous space while words in language modality is discrete. This makes the inversion more challenging for language compared with image.
+
+
+
+
+\noindent \textbf{Inversion Attacks on Language.}
+%Embedding language models were designed to map language tokens to vectors. 
+Most inversion attacks on language models focused on recovering sensitive information from word or sentence embeddings.  \cite{song2020information} proposed formulating language embedding inversion as an optimization problem. Several works~\cite{Sentence_inference_attack, Generative-embedding-inversion-attack} trained an extra decoder model to invert sentence embeddings by generation. \cite{pan2020privacy} focused on recovering partial information. 
+
+However, as we will show in later sections, a substantial reason for the ineffectiveness of these methods in recovering a long prompt from LLM activations lies in the strong non-linearity of LLMs. Moreover, \cite{song2020information} has limited performance on LLMs because of its simple discretization procedure which lacks the guidance of ground-truth activation. %The non-linearity of deep LLMs also makes its optimization procedure very challenging.  
+Generation-based methods~\cite{Generative-embedding-inversion-attack,Sentence_inference_attack} only incorporate activation information at the start of auto-regressive decoding. When the generation length increases, it no longer recovers sentences precisely because the dependence between recovered tokens and the activations gradually disappears. 
+ %We address this obstacle for the first time in this work.
+
+%However, these existing attacks are ineffective under our setting due to multiple reasons. Generation-based approaches~\cite{Sentence_inference_attack, Generative-embedding-inversion-attack} lack calibration with inversion target during decoding, thus the error accumulates with generation length. Their performance is very limited when the invert prompt target is long.  Optimization-based approach~\cite{song2020information} lacks incorporating language prior knowledge during optimization and discretization, and its flawed design causes gradient vanishing, analyzed by our paper in Section~\ref{sec:revisit}. 
+
+%\vspace{0.3em}
+%\noindent \textbf{Inversion Attacks on Text Logits.} 
+
+Recent work~\cite{morris2023language} considered another setting of recovering prompts from LLM output logits (output token probability). %Their threat model is quite different with ours. 
+Although their method could be applied under our white-box setting, its  recover accuracy is also very limited. We speculate that the poor performance is because their inversion is also based on a trained  decoder model. Similar to the drawbacks of generation-based embedding inversion methods discussed above,  their recovery accuracy drastically decreases when recovering long text.  
+
+As such, whether LLM collaborative inference is susceptible to inversion attacks remains an open question.
+
+
+% A growing body of work has demonstrated that an eavesdropping attacker can effectively recover image data from gradients transmitted during federated learning. 
+
+
+
+% Some other works focused on collaborative vision model and trained an attacker's model to generate the input of victim's local model by exploiting its output. \cite{Ginver, he2019model}
+% drawbacks: on vision, no model parallel
+
+
+
+
+
+
+
+
+% Weaknesses:
+% some works targetted on only attacking keywords/segments is limited \\
+% some works recover text based on optimization can achieve better result but the accuracy is limited\\
+% decode based methods hard to incorporate model parameter information,\\
+% hard to completely  invert  long sentences, \\
+% hard to add feedback into the decoding procedure\\

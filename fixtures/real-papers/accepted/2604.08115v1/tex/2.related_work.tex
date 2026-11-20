@@ -1,0 +1,20 @@
+
+
+
+\section{Related Works}
+
+\subsection{Optical Character Recognition}
+OCR serves as a foundation of document digitization, transforming images and scanned documents into searchable digital content \cite{article_OCRfoundation}. At its core, CNNs and RNNs are employed to recognize visual patterns in document images and convert them to text \cite{RNN_OCR_CHEN, vinyals2015show, qiang2016memorymattersconvolutionalrecurrent, 6126402, 6460871}, with tools like Tessearct \cite{4376991} and EasyOCR\footnote{\url{https://github.com/JaidedAI/EasyOCR}} in widespread use. Modern systems often utilize encoder-decoder architectures with attention mechanisms to improve recognition accuracy \cite{kim2022ocrfreedocumentunderstandingtransformer}. 
+
+Despite advancements, OCR systems face limitations with image quality and complex layouts. Errors induced from such issues propagate to downstream applications: in information retrieval, studies \cite{4624283, 10.1007/s00799-023-00345-6, 10.1007/978-3-030-45442-5_13, zhang2025ocrhindersragevaluating} have demonstrated that OCR errors substantially degrade retrieval performance by transforming valid words into misspellings that impact term frequencies and relevance scoring. Additionally, OCR errors significantly impact document reasoning tasks \cite{gupte2021lightscameraactionframework, artidigh20, in_depth_analysis_of_OCR}, with extensive research showing cascading effects on document understanding and knowledge base construction, as entities and relationships extracted from OCR text often contain errors that compound through subsequent processing steps, ultimately compromising the reliability of AI systems that are contingent upon accurate document content.
+
+
+\subsection{Document AI Methods}
+Document AI applies AI techniques to understand, process, and extract information from document images \cite{cui2021documentaibenchmarksmodels}, focusing on four main tasks: Document Layout Analysis \cite{zhong2019publaynetlargestdatasetdocument, li2020docbankbenchmarkdatasetdocument}, Document Visual Question Answering \cite{mathew2021docvqa, VisualMRC2021, chen2021websrcdatasetwebbasedstructural}, Visual Information Extraction \cite{8977955, wang2021robustvisualinformationextraction, park2019cord}, and Document Image Classification \cite{harley2015evaluationdeepconvolutionalnets, 19694}. To address OCR shortcomings while excelling at these tasks, two major paradigms have emerged in Document AI.
+
+
+The first approach involves OCR-free Multimodal LLMs \cite{huang2022layoutlmv3pretrainingdocumentai, liu2024textmonkeyocrfreelargemultimodal, li2021structextstructuredtextunderstanding, kim2022ocrfreedocumentunderstandingtransformer}, which process images directly without explicit text extraction. These models achieve impressive performance in document understanding and reasoning through vision-language pretraining; however, their reliance on extensive annotated datasets and computationally intensive training poses considerable challenges for practical deployment, especially in resource-constrained scenarios. The second approach integrates OCR-based LLMs \cite{perot2024lmdxlanguagemodelbaseddocument, he2023icld3ieincontextlearningdiverse, wang2023docllmlayoutawaregenerativelanguage, lu2024boundingboxworthtoken}, extracting text via OCR before applying an LLM for reasoning. While leveraging existing OCR technology, this approach inherits OCR errors and focuses primarily on reasoning-based tasks like question answering and information extraction.
+
+Existing approaches exhibit task dependency, prioritizing answering and reasoning but neglecting crucial intermediate steps like assetization for information retrieval. Our method addresses this issue by providing a task-independent framework, enabling structured OCR outputs that can be effectively utilized in databases or knowledge bases.
+
+

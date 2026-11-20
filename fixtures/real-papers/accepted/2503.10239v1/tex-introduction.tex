@@ -1,0 +1,147 @@
+\vspace{-1em}
+\section{Introduction}
+
+\textbf{Super-apps.}
+With the advances in mobile computing, apps are becoming more and more powerful. Super-apps, such as AliPay~\cite{alipay}, WeChat~\cite{wechat}, and Careem~\cite{careem}, are comprehensive and one-stop applications that allow users to access various mini-apps easily.
+Mini-apps are similar to native apps, enabling super-apps to establish an
+ecosystem like Google Play and the Apple App Store. This design enriches super-apps'
+functionalities and offers great convenience to mobile users. For
+example, the food delivery service provider Ele.me~\cite{Eleme} has greatly
+benefited from this paradigm: merchants can use mini-apps to sell foods
+through AliPay and WeChat directly. Users can browse products, share
+interests on social networks, and make purchases without leaving the
+super-app. Therefore, super-apps have significantly facilitated daily
+activities (e.g., transactions and transportation) from the
+built-in or third-party mini-apps. As shown in Figure~\ref{fig:history}~(a), on the homepages of super-apps, the
+mini-apps are crucial components and can be easily accessed (highlighted in
+the yellow box in Figure~\ref{fig:history}~(a)). 
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{fig-Empirical-button-Sample.pdf}
+    % \vspace{-1em}
+	\caption{Samples of mini-app interaction history.}
+	\label{fig:history}
+ \vspace{-1em}
+\end{figure}
+
+
+\noindent\textbf{Blur Definition in Regulations.}
+Similar to normal mobile apps, the data collection and storage of super-app is regulated by laws, such as the \ac{gdpr} and the \ac{pipl} \cite{koch2023ok,bielova2024effect,lu2021whois,kollnig2023before}. The laws require mobile apps to provide users (data subjects) with transparent information on the collection and processing of personal data \cite{alizadeh2020gdpr}. The regulations also require super-app vendors to store the data safely and prevent them from transferring the collected data to other parties without the consent of the users~\cite{du2023withdrawing}. However, laws are general. In practice, \textit{what kind of data should be protected depends on the academic community's and industry's research and standard agreement}.  
+
+
+
+\noindent\textbf{New Leakage Source.}
+This paper focuses on an underexplored aspect of data privacy in super-apps: \textit{the mini-app interaction history}. The interactions include various user activities, including clicking buttons, and recently-accessed and preferred mini-apps. A department in the super-app vendor is motivated to use such data to infer user privacy to improve their service~\cite{wu2022linkteller}.
+% Thus, all user actions are transparent to the super-apps. 
+These interaction data are dangerous because \textit{the super-app vendor can naturally collect such data from the released version of super-app due to the design philosophy of mini-apps.} The vendors do not need to modify the app (e.g., instrumentation) to obtain the interaction history data. This is because existing mini-app services are provided online and based on cloud servers according to the development guidance of popular super-apps~\cite{alipaysdk,wechatsdk,tiktoksdk}. 
+% 
+Specifically, we study two typical types of mini-app interaction history: \textbf{the Mini-app Usage History (\mini)} and \textbf{the Operation History (\op)}. 
+% 
+\textbf{\mini} includes the mini-apps that the user engaged with over a period of time, which offer clues about user preferences because the frequently accessed mini-app categories can reveal privacy attributes. 
+When a user opens a super-app, the super-app displays the frequently accessed mini-apps on the main screen to provide a better user experience. The list of frequently used mini-apps is obtained by sending an HTTP request to the super-app vendor's server, so it is naturally obtained by the super-app provider.
+% 
+\textbf{\op} includes user interactions within the mini-app, such as button clicks, bar drags, and image views. \op can expose privacy attributes as well. For example, the interaction speed can indicate the user's age information: younger users can navigate and switch interfaces swiftly, whereas older users exhibit slower operation speeds and more repetitive clicks to locate desired information.
+Because all mini-apps are web-based applications, once the user clicks a button, super-apps need to send the name and ID of the clicked button to the server to request the mini-app's subsequent feedback~\cite{10.1145/3607199.3607236}. Thus, the super-app vendor can naturally access \op from the request logs on the server.
+
+
+
+\noindent\revised{
+\noindent\textbf{People's Unawareness.}
+We first study how much attention people (academic researchers and industrial practitioners) pay to this new privacy leakage. To perform a comprehensive study, we surveyed 30 papers published in top-tier conferences from 2019 and 31 real-world super-apps. We found that, to concretize laws like \ac{gdpr} and \ac{pipl}, the community has converged on an extensive list of concrete data items considered sensitive. These include personal information and attributes (e.g., name, gender, age) and device information (e.g., IMEI, MAC address). The large number of protected data types shows the efforts of the community to preserve user privacy. 
+However, we observed that \textit{neither academia nor industry has fully recognized
+the seriousness of the leakage from mini-app interaction history}, let alone the laws and regulations. The literature review shows that none of the existing academic papers has discussed the privacy issues of the mini-app interaction history. The empirical study of super-apps reveals a parallel lack of awareness in the industry. Despite the widespread use of these apps, our analysis indicates that only one app recognized the potential privacy risks associated with \mini. This oversight is particularly concerning because \mini and \op can leak many types of user privacy attributes according to our study.
+}
+
+\noindent\revised{
+\noindent \textbf{New Attack.}
+To show the real threat to user privacy from the mini-app interaction history data, we designed a novel attack called THEFT, \textit{mini-app interac\underline{T}ion \underline{H}istory-ori\underline{E}nted in\underline{F}erence a\underline{T}tack}. 
+THEFT leverages Deep Neural Networks (DNNs) to infer users' privacy attributes from their mini-app interaction history. Unlike prior work~\cite{tu2018your} that relies on comprehensive OS-level data (e.g., cellular tower IDs and all HTTP requests), THEFT only needs mini-app interaction history, which is naturally collected by super-apps through their cloud-based services and deemed non-sensitive. This low requirement significantly lowers the bar for insider threats~\cite{6957307} as the adversaries to obtain minimal labeled data (e.g., from privacy breaches~\cite{liu2015cloudy,mayer2021now,thomas2017data}), match mobile phone numbers, and train DNN models. Once trained, these models can infer sensitive privacy attributes of users at scale, posing severe threats to user privacy.
+}
+
+\noindent\revised{
+\noindent \textbf{Results.}
+We conduct a large-scale experiment on the internal data of \alipay, a real-world super-app with more than 1.3 billion users.
+Experimental results show that THEFT can achieve more than 95.5\% accuracy in inferring privacy attributes of over 16.1\% of more than 219K users with the training data from only 200 users, making THEFT a practical attack. Our attacks in \alipay itself mean the possible privacy leakage for more than 200 million users. This highlights the substantial risk of mini-app interaction history data. The finding demonstrates the practical implications of our threat model: current privacy measurements in super-apps are insufficient against advanced inference attacks.
+}
+
+
+\begin{table*}[]
+\caption{Focused topic and concerned privacy of the papers published in top-tier conferences from 2019 to 2024.}
+%\vspace{-1em}
+\label{tab:paper_summary}
+\begin{adjustbox}{max width=1.\linewidth}
+\begin{tabular}{llll}
+\hline
+\textbf{Paper} & \textbf{Conference} & \textbf{Focused Topic} & \textbf{Concerned Privacy} \\ \hline
+Dong et al.~\cite{dongexploring} & Sec 24 & SDK collected hardware identifiers & Pers./Devi.Info. \\
+Pan et al.~\cite{pantrap} & Sec 24 & Online automated privacy policy generators & Contacts, Location, Pers/Devi.Info., Microphone, Camera, Sensors \\
+Khandelwal et al.~\cite{khandelwal2023unpacking} & Sec 24 & Data safety sections & Location, Pers./Devi.Info. \\
+Klein et al.~\cite{klein2023general} & CCS 23 & Unlawful data processing in web apps & Contacts, Pers.Info. \\
+Xiang et al.~\cite{10.1145/3576915.3623067} & CCS 23 & Completeness of privacy policy & Location, Pers.Info. \\
+Wang et al.~\cite{10.1145/3576915.3616676} & CCS 23 & Hidden APIs in super-apps & Contacts, Location, Pers./Devi.Info. \\
+Zhang et al.~\cite{10.1145/3576915.3616591} & CCS 23 & Leaked master key of mini-apps & Pers.Info. \\
+Ferreira et al.~\cite{ferreira2023rulekeeper} & SP 23 & Pers.Info. data compliance in web apps & Location, Pers/Devi.Info. \\
+Zhang et al.~\cite{zhang2023understanding} & SP 23 & Face verification system in apps & Camera \\
+Xiao et al.~\cite{xiao2023lalaine} & Sec 23 & Compliance of Apple privacy labels & Location, Pers./Devi.Info. \\
+Nan et al.~\cite{nan2023are} & Sec 23 & IoT collected data & Devi.Info., Sensors \\
+Wang et al.~\cite{10.5555/3620237.3620608} & Sec 23 & APIs in cross platform super-apps & Location, Devi.Info., Microphone, Camera \\
+Koch et al.~\cite{koch2023ok} & Sec 23 & Privacy consent dialogs & Location, Devi.Info. \\
+Lyons et al.~\cite{lyons2023log} & Sec 23 & Logged personal data in Android & Location, Pers./Devi.Info. \\
+Meng et al.~\cite{meng2023post} & NDSS 23 & User-unresettable identifiers in Android & Devi.Info. \\
+Jordan et al.~\cite{jordan2021viceroy} & NDSS 23 & Verifiable accountless consumer requests & Contacts, Location, Pers./Devi.Info., Microphone, Camera, Sensors \\
+Nguyen et al.~\cite{nguyen2022freely} & CCS 22 & Notice of third-Party tracking in apps & Pers./Devi.Info. \\
+Li et al.~\cite{li2022collect} & CCS 22 & Cross-user personal data over-delivery in apps & Pers.Info. \\
+Wang et al.~\cite{wang2022srr} & CCS 22 & Location-based service in apps & Location \\
+Yang et al.~\cite{yang2022cross} & CCS 22 & Cross mini-app request forgery & Location, Pers/Devi.Info., Microphone, Camera \\
+Young et al.~\cite{young2022skilldetective} & Sec 22 & Policy violation of voice assistant apps & Microphone, Camera \\
+Balash et al.~\cite{balash2022security} & Sec 22 & Third-party app access for Google account & Pers.Info. \\
+Zhang et al.~\cite{zhang2022identity} & Sec 22 & APIs identity confusion in mini-apps & Pers.Info., Contacts \\
+Diamantaris et al.~\cite{diamantaris2021sneaky} & CCS 21 & Misuse sensors in apps & Location, Pers.Info., Microphone, Camera, Sensors \\
+Bui et al.~\cite{bui2021consistency} & CCS 21 & Consistency of data-usage purposes in apps & Location, Pers./Devi.Info. \\
+Haney et al.~\cite{haney2021s} & Sec 21 & Privacy implications & Microphone, Camera \\
+Nguyen et al.~\cite{nguyen2021share} & Sec 21 & Personal data compliance in apps & Location, Pers./Devi.Info. \\
+\revised{Lu et al.~\cite{lu2020demystifying}} & \revised{CCS 20} & \revised{Security risks of API flaws in mini-apps} & \revised{Location, Pers/Devi.Info., Microphone, Camera} \\
+Zuo et al.~\cite{zuo2019does} & SP 19 & Cloud APIs in apps & Pers.Info. \\
+Chen et al.~\cite{chen2019demystifying} & SP 19 & Hidden privacy settings in apps & Pers.Info. \\ \hline
+\end{tabular}
+\end{adjustbox}
+\vspace{-0em}
+\end{table*}
+
+\noindent \textbf{Generalization.}
+Although we mainly use \alipay as a representative super-app to study the
+privacy leakage of \mini and \op, our findings are generalizable to
+other super-apps. This is because super-apps share
+the same \textit{interface design and code structure} across different platforms. 
+All mini-apps use JavaScript and WebView to easily replicate in different
+super-apps~\cite{li2023minitracker,wang2023taintmini,zhang2022identity}.
+Therefore, for different super-apps, mini-apps of different functionalities
+often have similar user interfaces and features. Figure \ref{fig:history} (b)
+displays four different food delivery mini-apps from four different super-apps.
+Green boxes highlight different subcategories that the mini-app can
+provide, while blue boxes show the list of stores. The content in both the green
+and blue boxes shares similar designs across super-apps. The server's interaction history data collected from these mini-apps are also similar. Therefore,
+our attack and findings could apply to any super-apps. 
+
+
+
+
+\noindent \textbf{Industrial Feedback.}
+We notified 31 super-app vendors and one standards association about the privacy risks of mini-app interaction history. Four vendors agreed to modify the privacy statement of their apps, and the standards association committed to strengthening data protection. Furthermore, these vendors and the association also provided insightful feedback. This feedback ranged from acknowledgments of previously overlooked privacy risks to commitments to enhance data protection measurements. Specifically, developers intended to revise privacy policies and terms on potential dangers and recognize \mini and \op as private data. These responses highlight a growing awareness and proactive stance towards user data privacy in the industry. Overall, the feedback from the industry shows that the mini-app interaction history-oriented inference attack is practical in the real world.
+
+
+We summarize our contributions as follows.
+
+
+$\bullet$ We identify the unprotected user mini-app interaction history as a novel underexplored privacy risk in super-apps. We systematically reveal new privacy threats that have been overlooked in academia (through 30 top-tier papers) and industrial practice (through 31 real-world super-apps). 
+
+\vspace{-0.2em}
+$\bullet$ We design a mini-app interaction history-oriented inference attack (THEFT), to exploit this privacy risk and demonstrate that the attack can effectively and accurately infer the users' privacy attributes.
+
+\vspace{-0.2em}
+$\bullet$ We provide our findings to the super-app vendors to bring their attention to this new privacy risk. We receive valuable feedback acknowledging our contribution to enhancing privacy measurements and the super-app ecosystem.
+
+\vspace{-0.2em}
+
+

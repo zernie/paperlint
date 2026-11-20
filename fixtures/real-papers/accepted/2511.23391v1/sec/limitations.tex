@@ -1,0 +1,5 @@
+\section{limitations}
+\textbf{Rigorous theoretical analysis.} Although AAO has achieved practical success and is intuitively motivated, a more rigorous theoretical and experimental analysis is still necessary to fully understand the impact of ambiguous content during DPO training. Ideally, this can be accomplished by tracking the gradient dynamics associated with ambiguous content and combining these observations with theoretical derivations, in order to obtain more definitive conclusions and insights. We will leave this aspect for future work, aiming to gain a deeper understanding and provide a more quantitative analysis of the impact of ambiguous tokens during training.
+
+\textbf{Design of re-weighting strategy.} 
+In this study, we propose a piecewise similarity-based reweighting curve, designed based on empirical assumptions, to mitigate the adverse effects of ambiguous tokens. Our approach outperforms other curve designs and achieves state-of-the-art results. However, it may not be optimal; future work could explore enabling the model to automatically fit such curves or investigate novel mapping strategies.

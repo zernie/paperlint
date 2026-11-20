@@ -1,0 +1,103 @@
+% !TEX root = ./main.tex
+
+\section{Related Work}\label{sec:related_work}
+ 
+ 
+\paragraph{Expectation Transformers}
+Nondeterminism in probabilistic programs with loops and unbounded numbers (but without conditioning) has been studied by \citet{mciver2005abstraction}, through \textit{expectation transformers}.
+This work was later extended by \citet{olmedo2018conditioning} to discrete probabilistic programs with conditioning and loops but without nondeterminism.
+Additionally,  \citet{olmedo2018conditioning}  showed that nondeterminism and conditioning cannot both be covered by \emph{inductive} expectation transformers.
+They (and previously \citet{shoup2009computational}) also showed that loops can model observations, essentially by emulating rejection sampling.
+However, this requires reasoning about loops, which is particularly difficult in the presence of randomness~\cite{DBLP:journals/acta/KaminskiKM19}.
+
+\paragraph{Probabilistic Programming Languages \textnormal{(PPLs)}}
+A variety of PPLs for Bayesian reasoning has been developed.
+In contrast to our work, these often focus on continuous distributions.
+In fact, some PPLs like Aqua~\cite{huang2021aqua}, Pyro's Variational Inference~\cite{bingham2019pyro}, or Stan~\cite{carpenter2017stan} \emph{only} support continuous distributions.
+Nonetheless, there are many languages which support discrete random variables alongside continuous distributions, for example Anglican~\cite{wood-aistats-2014}, Hakaru~\cite{narayanan2016probabilistic}, SOGA~\cite{randone2024inference} or WebPPL~\cite{dippl}.
+However, \emph{none of the above PPLs support nondeterminism}.
+
+A notable PPL which allows nondeterminism via decision making is ProbLog~\cite{fierens2015inference}. 
+ProbLog features both conditioning via evidence and an extension to determine optimal decisions~\cite{van2010dtproblog}, but explicitly forbids combining them.
+Another example is IBAL~\cite{pfeffer2007design}, which includes a choose-statement to pick the \textit{locally} optimal value to maximize a utility function.
+However, \Cref{sec:subOpt} shows that local reasoning can be insufficient. 
+
+Languages like Psi~\cite{gehr2020lambdapsi} allow unspecified inputs, resulting in parameterized inference.
+Parameters are fundamentally different from nondeterminism.
+In particular, parameters are fixed at program start and hence the semantics of \ref{ExLet1} and \ref{ExLet2} cannot easily be distinguished.
+
+PMAF~\cite{wang2018pmaf} is a framework for the analysis of probabilistic programs with unstructured control flow, recursion, nondeterminism, and observations.
+PMAF can be instantiated with a variety of analyses, and it may be possible to perform \NDICE inference within the framework. 
+However, the semantics of observations differ between PMAF and \NDICE \cite{wang2018denotational}:
+Both assign probability $0$ to failed observations, but PMAF does not normalize the resulting distributions.
+Hence, the PMAF equivalent to $\OBSERVE{\FLIP{\frac{2}{3}}}$ only returns $\TRUE$ with probability $\frac{2}{3}$.
+
+\paragraph{Probabilistic Model Checking and Bisimilarity}
+Since \NDICE reduces inference to a conditional reachability property on an MDP, every problem which can be modeled by a \NDICE program could also be modeled directly as an MDP.
+Then, a \textit{probabilistic model checker} can be used to perform model checking as was seen in the empirical evaluation.
+This approach offers many advantages compared to \NDICE:
+For one, a variety of mature model checkers has been developed over the years \cite{hahn20192019}.
+Secondly, MDPs themselves are more expressive than \NDICE programs as they can model cycles, concurrency and symbolic unbounded numbers.
+Leveraging these advantages, \citet{jansen2016bounded} performed inference on probabilistic programs with nondeterminism by simply unrolling the operational semantics of programs as an MDP, and letting a probabilistic model checker determine the conditional reachability probabilities.
+\Cref{sec:implementation} shows that this can be an effective approach in practice, but the constructed MDPs tend to be very large.
+
+Hence, it is reasonable to consider approaches like \NDICE, which aim to reduce the size of the final MDP in order to speed up model checking.
+Here, model checkers also use ADDs \cite{baier1997symbolic}, but contrary to our work ADDs are used to compactly represent the full state space, rather than to remove states.
+Still, probabilistic model checkers have developed a variety of other techniques to speed up model checking \cite{hartmanns2025revised}.
+Here, \emph{probabilistic bisimulation} \cite{larsen1989bisimulation, segala1995probabilistic} is particularly relevant to our work, since it presents a generic way to minimize MDPs.
+Most notably, the redundant states removed by \NDICE and bisimulations differ, and both approaches remove redundancies which the other misses:
+Bisimulations remove symmetries such as e.g. distinct flip operations which use the same probabilities, whereas the decision diagrams of \NDICE remove \enquote{deterministic} states with only a single successor.
+
+Regarding the empirical evaluation in \Cref{sec:implementation}, we found that using bisimulations to reduce the directly encoded MDPs used by Storm did not yield any speedups compared to applying Storm directly.
+In fact, calculating the minimized MDP was usually very expensive, and frequently resulted in time-outs.
+Consequently, we used Storm without minimizing the MDP first.
+
+
+\paragraph{MDP Modeling Languages}
+	In some ways, \NDICE can be seen as a modeling language for (acyclic) MDPs, and so we will compare it to existing MDP modeling languages like Jani~\cite{budde2017jani} or Prism~\cite{KNP11}.
+	Jani and Prism are used to specify the input for model checking tools like Storm \cite{hensel2022probabilistic} or Modest \cite{hartmanns2014modest}, and they allow one to define general MDPs which may contain cycles or be constructed from multiple modules running in parallel. 
+	Regarding modeling itself, \NDICE specifies models with the syntax and structure of programs, Prism uses a state-based language whereas Jani encodes models in the JSON data format. 
+	However, both Prism and Jani use the same modeling approach:	
+	
+	First, a set of variables is specified, and the state space of the MDP is defined as the set of possible variable assignments. 
+	Transitions then manipulate the variables, and their effects are defined through symbolic expressions which specify the updated values of the variables.
+	Whether or not a transition is enabled in a state is defined with a guard, i.e. a boolean condition on the variables. 
+	A transition can only be taken when its guard condition holds for the state, but beyond that transitions are always enabled.
+	This is useful when modeling e.g. a server which should always be waiting for different requests, but is inconvenient for scenarios where events have to occur in a strict order, such as \Cref{fig:plane}.
+	 Hence, MDPs often need an additional state variable to explicitly capture which transitions should be enabled next, see for example \citet{d1997bounded}.
+	 In contrast, \NDICE automatically defines the order of operations through the natural program order.
+
+
+
+\paragraph{Marginal MAP}
+The goal of a marginal maximum a posteriori (MMAP) query is closely related to our inference task: 
+Find an optimal assignment to some variables -- which can be interpreted as a nondeterministic choice -- in order to maximize the marginal probability over the remaining variables \cite{liu2013variational, choi2022solving}.
+Contrary to this very similar problem statement, we believe that MMAP problems and \NDICE inference require distinct solution approaches.
+
+For one, \NDICE inference cannot easily be performed by MMAP solvers, as the goal of MMAP queries is to find an optimal \textit{assignment} to variables.
+An assignment fixes a single value for every nondeterministic choice, which in the context of \NDICE programs means statically replacing every $\NFLIP$ statement with $\TRUE$ or $\FALSE$.
+Our model of nondeterminism is more general, hence formulating \NDICE inference as a MMAP query may require enumerating all contexts for $\NFLIP$ as a separate choice, leading to exponentially larger input programs.
+%
+Similarly, \NDICE cannot easily solve MMAP queries, as \NDICE may consider too many behaviors.
+Still, MMAP queries could be compiled into \NDICE programs by performing all nondeterministic choices at the start of the program to avoid acting based on probabilistic outcomes. 
+However, this removes some of the program structure which is exploited by ADDs, which would negatively affect the inference efficiency.
+
+
+
+\section{Conclusion and Future Work}\label{sec:future}
+We have introduced syntax and semantics of \NDICE, a probabilistic programming language which conservatively extends \DICE with nondeterminism.
+We also presented a novel inference algorithm for probabilistic programs with nondeterminism.
+The algorithm compiles programs to Boolean formulas and reduces inference queries to conditional reachability in an MDP.
+We evaluated a prototype implementation and showed that our algorithm can feasibly do inference for large programs.
+We believe our work is a promising step towards efficient inference for probabilistic programs with nondeterminism and conditioning.
+As future work, we deem the following worthwhile.
+
+\paragraph{Unbounded Loops}
+PPLs like \DICE, \NDICE or Psi \cite{gehr2016psi} can only approximate the behavior of unbounded loops with bounded loops.
+However, \citet{torres2024iteration} extended \DICE with a statement for \textit{unbounded} iteration, as well as an exact inference method for programs with this new statement.
+We are eager to see if their work can be extended with nondeterminism.
+
+\paragraph{Determining Optimal Programs}
+Our work only determines the maximum probability to return a value, but it may also be of interest to retrieve a purely probabilistic program which generates those probabilities.
+Synthesizing optimal deterministic programs has been considered without conditioning in \citet{batz2024programmatic}, but it is unclear if this approach can be generalized.
+

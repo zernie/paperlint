@@ -1,0 +1,123 @@
+
+\section{A Blind Spot in Mini-App Ecosystem}
+\label{sec:privacy_of_history}
+
+\revised{In this section, we present the motivation of this paper: people's unawareness of the security risk of mini-app interaction history. Contrary to the vast usage of mini-apps, we found that very few people/companies pay attention to the security risk. To comprehensively evaluate people's consciousness, we perform a thorough literature review in the academic community and an empirical study of industrial practice. Our goal is to present the attitude of both researchers and practitioners. }
+
+\vspace{-1em}
+\subsection{Perspective from Academia Community}
+\label{sec:academia_community}
+
+
+\textbf{Methodology.}
+To cover the mainstream opinions of the academic community, we survey the papers published in top-tier security conferences \revised{which are included in CSRankings}, including USENIX Security (Sec), IEEE S\&P (SP), ACM CCS (CCS), and NDSS. 
+We survey the papers published from 2019 to 2024 \revised{because 2019 is the emergence of super-apps~\cite{zuo2019does}.}
+% 
+Our literature review consists of three steps. \revised{First, we reviewed the 4,020 accepted papers from the four conferences and selected 43 papers whose titles
+relate to the privacy of mobile apps or devices. Then, we read the selected paper's
+abstract and introduction sections to filter out 13 papers that did not focus on privacy protection. Finally, we read the full text of the 30 selected papers to summarize the specific types of privacy data that the paper studied. To ensure reliability, four authors (two academic and two industry researchers) independently participated in the above processes, achieving a 99.52\% agreement rate, which indicates a high inter-rater reliability (IRR).}
+
+
+
+\begin{table*}[!t]
+\centering
+\caption{The summary of the collected data types claimed in the privacy policies and terms of 31 super-apps.}
+%\vspace{-1em}
+\label{tab:superapp_summary}
+\begin{adjustbox}{max width=1.\linewidth}
+\begin{tabular}{@{}cccccccccccccc@{}}
+\hline
+\textbf{No.} & \textbf{Super-app} & \textbf{Location} & \textbf{Contacts} & \textbf{Camera} & \textbf{Gallery} & \textbf{Microphone} & \textbf{Calendar} & \textbf{Devi.} & \textbf{Pers.} & \textbf{Payment} & \textbf{Search} & \textbf{\mini} & \textbf{\op} \\ \hline
+01 & AliPay & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+02 & Taobao & \bluec & \redx & \bluec & \bluec & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+03 & UC Browser & \bluec & \redx & \bluec & \bluec & \redx & \redx & \bluec & \bluec & \redx & \bluec & \redx & \redx \\
+04 & Gaode & \bluec & \bluec & \redx & \redx & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+05 & DingTalk & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+06 & Youku & \bluec & \redx & \bluec & \redx & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+07 & WeChat & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \redx & \redx & \bluec & \redx \\
+08 & WeCom & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx & \redx & \redx \\
+09 & QQ & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx & \bluec & \redx & \redx & \redx & \redx \\
+10 & QQ Music & \bluec & \redx & \redx & \redx & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+11 & Tencent Video & \bluec & \redx & \redx & \redx & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+12 & TikTok & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+13 & Toutiao & \bluec & \bluec & \redx & \redx & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+14 & Feishu & \bluec & \bluec & \redx & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+15 & Meituan & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+16 & Dianping & \bluec & \redx & \redx & \redx & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+17 & Baidu & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx & \redx & \redx \\
+18 & Baidu Map & \bluec & \bluec & \redx & \redx & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+19 & iQiYi & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+20 & PinDuoDuo & \bluec & \bluec & \bluec & \redx & \redx & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+21 & XiaoHongShu & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+22 & KuaiShou & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+23 & NetEase Cloud Music & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx & \redx & \redx & \redx & \redx \\
+24 & JingDong & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+25 & Suning & \bluec & \redx & \bluec & \bluec & \bluec & \redx & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+26 & Bilibili & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \bluec & \redx & \redx \\
+27 & Grab & \bluec & \redx & \bluec & \redx & \redx & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+28 & Paytm & \bluec & \redx & \redx & \redx & \redx & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+29 & Go-Jek & \bluec & \bluec & \redx & \redx & \redx & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\
+30 & UnionPay & \bluec & \bluec & \bluec & \redx & \redx & \redx & \bluec & \bluec & \bluec & \redx & \redx & \redx \\ 
+31 & Air Asia & \bluec & \redx &  \bluec &  \bluec &  \bluec &  \bluec &  \bluec &  \bluec &  \bluec &  \bluec & \redx & \redx \\ \hline
+& \textbf{Total} & \textbf{31} & \textbf{20} & \textbf{22} & \textbf{17} & \textbf{20} & \textbf{10} & \textbf{29} & \textbf{30} & \textbf{25} & \textbf{19} & \textbf{1} & \textbf{0} \\
+\hline
+\end{tabular}
+\end{adjustbox}
+\vspace{-0em}
+\end{table*}
+
+
+\noindent \textbf{Result.}
+Over the past few years, there has been a significant focus on privacy protection.
+We display the papers and detailed privacy data types in Table~\ref{tab:paper_summary}. 
+We find that \textit{none} of the existing papers have studied privacy issues of the \mini and \op in super-apps. The privacy content that existing papers have focused on includes contacts, location, personal information (Pers.Info.), device information (Devi.Info.), and data generated by cameras, microphones, and sensors. Specifically, 22 papers concern personal information, such as phone numbers, ID numbers, gender, and age. 17 papers examine the protection of device information such as IMEI and MAC addresses, and 15 papers focus on system-level location information. 
+% 
+Furthermore, increasing studies focus on broader aspects of privacy security. Nine and eight papers study the
+potential privacy leaks from camera and microphone data, respectively. Four papers study the security risks of sensor data, as the adversary can use these data to infer user privacy attributes. These studies
+underscore the multifaceted nature of privacy concerns on mobile devices and
+reflect ongoing efforts within the academic community to address these
+evolving challenges. Nevertheless, existing literature lacks a rigorous study on
+the potential privacy leakage of \mini and \op. 
+
+
+\subsection{Practice in Industrial Companies}
+\label{sec:industrial_practice}
+
+\textbf{Methodology.}
+To comprehensively analyze industrial companies' attitudes toward the types of private data, we study the most popular super-apps in the Google Play and Apple App Store. 
+Our study includes two steps. First, we identified 31 different super-apps from recent research~\cite{yang2022cross,10.5555/3620237.3620608,zhang2022identity}. Second, we manually reviewed the privacy policies and terms of each super-app and summarized the types of privacy data in the privacy policies and terms. We regard the data types explicitly mentioned in the privacy policies and terms as the data the super-apps are concerned with. \revised{Consistent with the methodology in Section~\ref{sec:academia_community}, the four authors independently analyzed the privacy policies and terms, achieving a high IRR with a 99.93\% agreement rate.}
+
+\noindent \textbf{Result.}
+Table~\ref{tab:superapp_summary} displays the fine-grained categorization of private data that appear in the 31 super-apps' privacy policies and terms. We display twelve different types of privacy data,
+including location, contacts, camera, gallery, microphone,
+calendar, device information (Devi.),
+personal information (Pers.), payment details, search history, \mini and \op.
+
+
+
+We found that the industry does not pay enough attention to
+\mini and \op. 
+% 
+Among all super-apps, only one super-app (WeChat)
+mentions that it collects \mini in the privacy policies and terms. \mini is
+crucial for understanding users' behavior and preferences, as it includes the
+mini-apps the user prefers. However, most industrial companies do not
+consider \mini a primary privacy concern due to the lack of research on
+its privacy leakage. From a company's perspective, \mini consists of structural elements, like the
+types of mini-apps. Intuitively, these elements are predetermined and do not involve
+user input data. 
+% 
+Similarly, companies consider \op non-invasive because it only
+captures limited structured behavioral data without explicitly requiring personal input. 
+
+
+Conversely, super-apps often have clear notifications on other
+common privacy data. Personal information and location data are commonly
+included in privacy policies and terms, highlighting their importance for app
+functionality. Device information is also frequently collected for security and
+optimization. Payment data helps the super-app to understand user
+preferences. Additionally, 22, 17, and 20 super-apps claim access to cameras, galleries,
+and microphones. Contacts and calendar data are collected by 20 and 10 social-based super-apps, respectively. Search history is widely used in 19 super-apps, raising attention among users for its sensitive content.
+
+
+

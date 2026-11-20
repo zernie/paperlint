@@ -1,0 +1,54 @@
+\vspace{-1mm}
+\section{Related Work}
+\vspace{-1mm}
+
+\vspace{-1mm}
+\subsection{Open-domain Question Answering}
+\vspace{-1mm}
+
+Open-Domain Question Answering (ODQA) aims to answer factual questions using a large knowledge corpus (\citealp{zhang-etal-2023-survey-efficient}). Standard benchmarks like Natural Questions \citep{NaturalQuestions}, TriviaQA \citep{TriviaQA}, and SearchQA \citep{SearchQA} focus on single-hop queries, where answers reside within a single passage of unstructured text. 
+Further advances were shown by HotpotQA (\citealp{HotpotQA}) and WikiHop (\citealp{WikiHop}), presenting challenging queries that require multi-hop reasoning across multiple passages.
+However, these benchmarks consider only unstructured text and do not address multi-hop reasoning over both structured tables and unstructured passages, which is essential in table-text retrieval tasks.
+OTT-QA \citep{OTT-QA} is the first ODQA benchmark designed to support multi-hop reasoning between tables and text, requiring retrieval and reasoning across both modalities.
+
+
+\vspace{-1mm}
+\subsection{Table-Text Retrieval}
+\vspace{-1mm}
+
+Table-text retrieval methods can be categorized into early fusion and late fusion approaches. These terms, originally used in multi-modal tasks such as image-sentence retrieval, describe whether different modalities are encoded jointly or separately \citep{wang2022comprehensive, snoek2005early, gadzicki2020early}.
+Similarly, in table-text retrieval, early fusion and late fusion approaches differ in whether tables and text are linked before or after the retrieval process~\citep{DoTTeR}.
+
+\emph{Early fusion} approaches \citep{OTT-QA, OTTeR, DoTTeR} pre-link table rows with associated passages via entity linking, forming fused blocks as retrieval units.
+While convenient, this approach has two drawbacks:
+(i) Fused blocks often include query-irrelevant passages, causing noisy retrieval and information loss in block-level embedding. 
+(ii) Offline pre-linked blocks cannot adapt to query-dependent relationships discovered during retrieval (Figure~\ref{fig:motivation}(b)).
+To address (i), we adopt edges—a finer-grained retrieval unit—and employ late interaction during retrieval to minimize information loss and avoid large, noisy blocks. 
+For (ii), we propose query-relevant node expansion to incorporate relationships that emerge in a specific query's context.
+% \emph{Early fusion} approaches \citep{OTT-QA, OTTeR, DoTTeR} pre-link table rows with associated passages via entity linking, forming \emph{fused blocks} that serve as retrieval units.
+% Early fusion approaches show two limitations:
+% (i) The fused blocks may include query-irrelevant passages since they include all passages linked to a row, without considering the query.
+% This large retrieval unit not only introduces unrelated passages into the retrieval results but also increases information loss when encoding the embeddings for the fused blocks, thereby reducing the overall retrieval accuracy.
+% (ii) Offline-generated fused blocks are unable to consider query-dependent relationships that must be resolved online, as illustrated in Figure~\ref{fig:motivation}(b).
+% To address limitation (i), our method adopts \emph{edges} as more fine-grained retrieval units and utilizes late interaction to minimize information loss.
+% Furthermore, to address limitation (ii), we propose a query-relevant node expansion that adds query-dependent relationships online.
+
+\emph{Late fusion} approaches \citep{CORE, COS} dynamically form table-passage connections online. 
+Although more flexible, they must consider many table-passage combinations, typically handled by beam search, which can cause error propagation.
+Our approach mitigates this using edge-based late interaction retrieval, which captures richer contextual relationships by pre-linking table segments with passages offline, enabling more accurate seed document retrieval.
+
+% \emph{Late fusion} approaches (\citealp{CORE, COS}) dynamically group relevant documents online.
+% They first retrieve relevant table segments, then retrieve associated passages.%, constructing connections between the documents.
+% These methods require considering all possible pairs of table segments and passages online, resulting in a vast search space.
+% Beam search is often employed to address this problem, but can lead to an error propagation problem as retrieving a single table segment or passage may contain only partial relevant information. 
+% Our approach utilizes an edge-based late interaction retrieval, which captures richer context by connecting table segments and passages, enabling a more accurate seed document retrieval.
+
+\emph{Both} early and late fusion approaches rely primarily on semantic similarity for retrieval, limiting their ability to retrieve table segments and passages requiring advanced reasoning (e.g., column-wise aggregation, multi-hop inference), as shown in Figure~\ref{fig:motivation}(c).
+To address this, we propose a star-based LLM refinement step, leveraging LLMs for logical inference to refine retrieval results.
+
+{\feditcolor
+DRAMA \citep{DRAMA} and HOLMES \citep{HOLMES} also adopt graph-based multi-hop QA, similar to our approach. 
+However, both methods operate in a constrained setting with given evidence, unlike our open-domain setup.
+GTR \citep{GTR} and MGNETS \citep{MGNETS} improve table encoding using graph-based methods, addressing a problem orthogonal to our focus. 
+In contrast, our work centers on retrieving both tables and text based on their semantic relationships.
+}

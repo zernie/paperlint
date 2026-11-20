@@ -1,0 +1,234 @@
+% To the best of our knowledge, there is no DSL for defining governance policies in systems that address the diversity of participants.
+% Our contribution is a DSL to facilitate the definition of governance policies, while proposing constructs for specifying the profile of participants and their role.
+
+% DSL in governance (motivation)
+% In the context of governance, a DSL can serve as a formal framework for specifying policies, roles, and decision-making procedures, thereby enhancing the transparency and reliability of the interactions.
+A DSL can formalize governance policies, roles, and decision-making procedures, enhancing transparency and reliability.
+%By using a DSL, the developer can use domain-specific constructs and therefore address the problem more efficiently~\cite{DBLP:books/daglib/0034522}, which can be further automated and enforced.
+% Furthermore, by implementing an engine to execute such DSL, the governance policies can be automatically enforced, reducing the risk of human error and ensuring that the systems operate within the defined constraints.
+To the best of our knowledge, there is no DSL for defining governance policies in systems that address the diversity of participants.
+%With our approach, governance policies can be defined in a more structured way, allowing for the specification of the participants involved, the scope of the policy, and the conditions that must be fulfilled. 
+%This is particularly interesting in systems that include agents, as it allows for a clearer understanding of how these agents fit into the overall governance framework.
+
+Several studies % have been conducted to 
+analyze the governance of software projects~\cite{DBLP:conf/icse/ChulaniWY08,DBLP:conf/sigsoft/Herbsleb16}, particularly % in the context of 
+OSS projects~\cite{DBLP:journals/ism/PeltJBO21,DBLP:conf/icse/IzquierdoC15,DBLP:conf/ease/KeertipatiLS16}.
+However, to the best of our knowledge, only C\'anovas Izquierdo and Cabot~\cite{DBLP:conf/icse/IzquierdoC15} proposed a DSL, where they covered the main dimensions  %they identified 
+to define and enforce governance rules in OSS projects.
+Note, their proposal did not provide support to assess the diversity of the participants involved in the decision-making process.
+% Our DSL extends their proposal by providing a more expressive syntax to define the profile of participants involved in the decision-making process and their impact on the decision.
+Our proposal completely revamps that DSL and adapts it to the current reality of software development involving participants with different profiles, the possibility of having uncertain AI agents, and much more complex decision procedures with different participant weighting systems.
+
+To collect the requirements for our DSL, we have carefully considered existing AI governance frameworks and principles~\cite{DBLP:journals/computer/ChestermanGHS24}. 
+%While these frameworks provide valuable guidance on fairness, accountability, and transparency, our DSL operationalizes these principles for practical application in diverse software teams that include both human and agent participants. 
+For instance, we incorporate key AI governance indicators identified in the literature, such as autonomy level~\cite{DBLP:journals/nature/RahwanCOBBBCCCJ19} and explainability~\cite{DBLP:journals/inffus/ArrietaRSBTBGGM20}%
+%, and human oversight~\cite{DBLP:journals/ijhci/Shneiderman20}
+, thus integrating them directly into our language constructs for agent representation.
+
+% DSLs are languages specially designed to help to solve a problem in a particular domain.
+Based on these frameworks and our own experience in open-source development and the analysis of open-source communities, we propose, in what follows, our governance DSL.
+A DSL is composed of three main elements~\cite{DBLP:books/sp/WasowskiB23}: 
+(1) abstract syntax, which defines the concepts and relationships of the domain where the language is applied; 
+(2) concrete syntax, which defines the notation of the language (e.g., textual, diagram-based, etc.); and 
+(3) semantics, which defines the meaning of the language constructs.
+% Furthermore, DSLs can be classified into external DSLs, which are generally defined by a grammar; and internal DSLs, which are embedded in a general-purpose programming language (known as host language).
+In the following, we discuss each component. 
+
+\subsection{Abstract Syntax}
+\label{sec:our-dsl:abstract-syntax}
+
+The abstract syntax of our DSL is defined via the metamodel shown in Figure~\ref{fig:metamodel}. 
+Metamodels restrict the structure of valid models (i.e., DSL instances, in our case, concrete policies) and define the relationships between the different elements of the language (i.e., the different concepts that can be used to define a policy and how these concepts can be linked to each other)~\cite{DBLP:series/synthesis/2017Brambilla}.
+%We have defined a governance policy metamodel that captures the key concepts and relationships involved in defining governance policies.
+%The metamodel is designed to be simple and intuitive, allowing for easy understanding and use by practitioners.
+Governance models conforming to this metamodel represent specific sets of governance policies.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{abstract_syntax_mm_drawio.drawio.pdf}
+    \caption{Abstract syntax metamodel of our DSL.}
+    \label{fig:metamodel}
+\end{figure*}
+
+
+%The concepts represented in the metamodel cover the aspects of previous work~\cite{DBLP:conf/icse/IzquierdoC15} and extend them to include the role of agents in the governance policies.
+Our proposal is structured around key conceptual areas:
+
+\smallskip
+\noindent\textbf{Participants: Embracing Diversity and Agent Characteristics.}
+A vital aspect of our DSL is the representation of \texttt{Participant}. %This is crucial for establishing governance that can adapt to the varied nature of team members.
+The metamodel distinguishes between human participants (potentially detailed with \texttt{Profile} information like gender or role-specific attributes to support fairness or weighted influence) and \texttt{Agent}s. 
+The influence of each participant in the decision-making process can be adjusted through the \texttt{vote\_value} attribute, which can be set to favor certain individuals or groups.
+For \texttt{Agent}s, we describe further attributes critical for governance, such as \texttt{autonomy\_level}, \texttt{explainability} and \texttt{confidence}. %, as discussed in Section~\ref{sec:motivation}. 
+%These attributes allow policies to be aware of the agent's declared capabilities and reliability, thus adapting the impact of the agents in the decision-making. 
+This allows expressing complex policies, such as giving a high-autonomy agent more freedom, while decisions from agents with low explainability might be used only as support.
+Participants can also be grouped by \texttt{Role}, while also being flexible to allow certain individuals to act as part of a role in specific policies (see \texttt{hasRole}).\looseness-1
+
+\smallskip
+\noindent\textbf{Policies: Defining Flexible and Composable Decision-Making.}
+The DSL provides a rich set of \texttt{Policy} constructs to capture diverse decision-making processes essential for adaptive governance.
+It supports various policy resolution strategies, including \texttt{VotingPolicy} (e.g., majority and qualified majority based on a \texttt{ratio}), \texttt{ConsensusPolicy} (including \texttt{LazyConsensus}~\cite{LAZYCONSENSUSWEBSITE} as a practical mechanism for efficient agreement), and \texttt{LeaderDrivenPolicy} (with optional fallback mechanisms). 
+% This variety allows organizations to specify their existing practices or design new ones suitable for human-agent interactions.
+Policies specify a \texttt{DecisionType}, such as \texttt{BooleanDecision} (for accept/reject scenarios like pull request approvals) or \texttt{CandidateChoice} (for selecting one out of multiple options, like electing a leader).
+Simple policies can be combined into \texttt{ComposedPolicy} structures (e.g., requiring sequential evaluation or all sub-policies to pass). 
+This enables the modular construction of complex governance scenarios from simpler, reusable components, thus enhancing clarity and maintainability.
+
+\smallskip
+\noindent\textbf{Scope and Conditions: Contextualizing Policy Application.}
+Governance policies are usually applied in a particular project or granular component of it. Our DSL allows their application to be precisely contextualized.
+Policies are applied within a defined \texttt{Scope}, such as a \texttt{Project}, an \texttt{Activity} (e.g., development, testing), or a specific \texttt{Task} (e.g., a patch). 
+This hierarchical scoping enables granular control, allowing different governance rules for different project areas or activities.
+Furthermore, policies can be described with \texttt{Condition}s (e.g., setting a deadline or a minimum required participants). %, or the exclusion of some participants to prevent conflicts of interest). 
+These conditions can also act as prerequisites (\texttt{pre}) or checks following execution (\texttt{post}). 
+
+
+
+% Mainly, the metamodel is aimed at representing four main aspects: 
+% (1) scope (i.e., where the policy is applied);
+% (2) participants (i.e., who is involved in the policy), 
+% (3) policies (i.e., what the policy is about), and 
+% (4) conditions (i.e., when it should be applied). 
+% Next we describe the main metaclasses of the metamodel according to these four aspects.
+
+% \smallskip
+% \noindent \textbf{Scope.}
+% To represent the first aspect, we propose the \texttt{Scope} generalization.
+% % We define three types of scopes so that there is a greater granularity at where the policy is applied: 
+% We envisioned a three-layered structure consisting of the:
+% (1) \texttt{Project} metaclass representing the whole system; % "system" to not say again project
+% (2) \texttt{Activity} metaclass representing a subset of a project (e.g., development activities);
+% and (3) \texttt{Task} metaclass representing the atomic part of a project (e.g., a pull request in the context of OSS projects).
+% This structure allows the extension of the metamodel to include other scopes in the future. % Maybe mention this in a more general way (since we also do it in the other blocks)
+% Each metaclass represents one level in the atomicity of the scope, thus they can be associated with each other.
+% We also defined a \texttt{StatusEnum} enumeration to represent the state, which can be accepted, meaning the policy instance itself is accepted for application; partial, meaning the process is ongoing; or completed, meaning the process is finished.
+% This attribute is optional, but it can be useful to define the status of the scope in the decision engine.
+
+% \smallskip
+% \noindent \textbf{Participants.}
+% We define the \texttt{Participant} abstract metaclass, which is a generalization of the \texttt{Role} and \texttt{Individual} metaclasses.
+% The former is intended to represent a group of individuals that share a common role in the project (e.g., developers, maintainers, etc.), while the latter is intended to represent a specific individual (e.g., an owner).
+% To ensure fair representation we define an attribute to favor contributions from certain individuals in a decision (see \texttt{vote\_value}). 
+% As discussed in Section~\ref{sec:motivation}, we can further identify individuals by their profile, based on their gender or other characteristics.
+% We provided a subset of attributes to represent the profile of an individual (see \texttt{Profile} metaclass), which can be derived from related work~\cite{DBLP:journals/corr/abs-2503-05470}.
+% These attributes are optional, but they can be used to calculate the vote value of an individual and favor certain minorities.
+% To represent agents (see \texttt{Agent} metaclass) in the project, we extend the \texttt{Individual} metaclass.
+% We defined a set of attributes aforementioned discussed (see Section~\ref{sec:motivation}).
+% These quantitative indicators (i.e., \texttt{autonomy\_level}, \texttt{explainability}, and \texttt{confidence}) can be used in the  engine in order to assess properly the participation of agents in the decision-making. 
+% Additionally, we defined a ternary association between the \texttt{Individual}, the \texttt{Scope} and the \texttt{Role} metaclasses (see \texttt{HasRole} metaclass) to represent the particular role an individual might have on a specific scope (e.g., a user might be contributor for development, but reviewer for documentation).
+
+% \adem{might be a bit weird to reference it to ``considerations'', but I refer to ``the metamodel is composed of four main considerations''. We could use subsections for each of them, and present their syntax with examples.}
+% \smallskip
+% \noindent \textbf{Policies.}
+% To define policies, we define the policy hierarchy, which allows defining two kinds of policies: single policies and composed policies, which consist of a set of policies (either single or composed).
+% Depending on the method apply for resolution, the policy can be based on:
+% (1) voting, where each participant selects one (or more) candidates among different possibilities; % where we cover two scenarios, majority (by default is evaluated above 50\% but can be modified with \texttt{ratio} attribute) based on the number of participants involved (see \texttt{Majority} metaclass) or majority based on the number of participants that voted (see \texttt{AbsoluteMajority} metaclass);
+% (2) consensus, which is focused on a cooperative dynamic where all participants work together to make the best possible decision for the group; % we bring support for lazy consensusCITE (see \texttt{LazyConsensus} metaclass);
+% or (3) leader-driven, where one participant (usually the owner) takes the decision. % (note that we can define a fallback policy, see \texttt{default} \textbf{attribute}).
+
+% In our proposal, we generalized the evaluation of voting policies in two kinds: (1) by the number of participants involved in the voting process (see \texttt{AbsoluteMajority} metaclass) or (2) by the number of participants that voted (see \texttt{Majority} metaclass).
+% In a nutshell, the decision is made by assessing whether the most voted option surpasses a certain threshold based on the number of potential voters or the number of actual voters.
+% For instance, in a voting policy with 10 participants, with a threshold of 50\%, if 4 of them vote for approval and 2 for rejection, the voting policy will be approved if we defined a majority policy, but it will not be approved if we follow an absolute majority policy.
+% The threshold by default is set to 50\%, but it can be modified with the \texttt{ratio} attribute.
+
+% Consensus policies are based on the idea that all participants should agree on a decision before it is made~\cite{butler1991conflict}. \adem{This book is not from a conference/journal, can we add it?}
+% This is particularly useful in situations where the decision has a significant impact on the project or the community.
+% We provided support for lazy consensus~\footnote{\url{https://www.apache.org/foundation/glossary.html#LazyConsensus}}, which is a form of consensus where a decision is made if no one objects.
+% It is, as mentioned in the \textsc{Apache} Foundation, one of the most preferred consensus methods.
+
+% Leader-driven policies represent the case where a participant, playing the role of a leader, makes the decision for the group.
+% Because of this decision-making process relies on a single individual, the leader can define a fallback policy (see \texttt{default} attribute) in case the decision is not made by the deadline.
+
+% In order to express what the policy are selecting, we defined a set of decision types (see \texttt{DecisionType} hierarchy).
+% A policy must have one decision type.
+% Policies looking for an acceptance or rejection of a proposal can be represented as a \texttt{BooleanDecision} (e.g., a pull request review).
+% Policies looking for a selection among a set of options can be represented as a \texttt{CandidateChoice} (e.g., who will become the new leader of a community).
+% Thus, the set of options can be represented as a list of elements of our metamodel (see \texttt{ElementList} metaclass) or as a set of strings (see \texttt{StringList} metaclass).
+
+% These policies can be combined to create more complex policies.
+% Composed policies (see \texttt{ComposedPolicy} metaclass) are defined by a set of policies (either single or composed).
+% The evaluation of the composed policy is based on the evaluation of its sub-policies.
+% For this, we propose a set of boolean attributes to define the relationship between the sub-policies: 
+% (1) \texttt{sequential}, sub-policies are evaluated by order of declaration;
+% (2) \texttt{require\_all}, all policies must be satisfied;
+% and (3) \texttt{carry\_over}, the outcome of the first policy is used as input for the next one (this requires \texttt{sequential} attribute to be true).
+
+% \smallskip
+% \noindent \textbf{Conditions.}
+% we defined the condition hierarchy (see \texttt{Condition} metaclass) to express the determinants of the policy (e.g., a policy to be resolved before two weeks) and the policy hierarchy (\texttt{Policy} metaclass) to define the method in which to resolve the policy (e.g., absolute majority).
+% The condition hierarchy is composed of several conditionals, and structural properties that define the policy (see, for instance, \texttt{ParticipantExclusion} metaclass).
+% Conditionals are evaluated before or after the policy is executed (see \texttt{pre} and \texttt{post} attributes).
+% If they are fulfilled, the engine calculates the outcome.
+% For instance, in a policy that requires three participants (see \texttt{MinimumParticipant} metaclass), it will not be evaluated until this condition is fulfilled (which means that by the end of the deadline, if exists, the policy will be rejected).
+% Structural properties are considerations that will be taken in the evaluation of the policy.
+% For instance, in a voting policy, we can define an exclusion of certain participants (see \texttt{ParticipantExclusion}) to avoid biases in their approval (e.g., excluding the one proposing the change).
+% Similarly, a policy can have a deadline (see \texttt{Deadline} metaclass), defined by a fixed date or an offset (e.g., two weeks).
+
+\subsection{Concrete Syntax}
+\label{sec:our-dsl:concrete-syntax}
+
+As concrete syntax, we use a textual notation following a typical block-based structure (see Listing~\ref{lst:example}).
+The syntax is therefore formally defined by a grammar. % that specifies the valid language constructs and their composition rules.
+Each instance of the metaclass is textually represented by its keyword and a block that contains the properties of the instance.
+Containment references are represented as nested blocks while non-containment references use an identifier to refer to the target element.\looseness-1
+
+% To define an instance of a governance policy, we need to define the scope of the policy, the participants involved, the conditions that must be fulfilled, and the method in which to resolve the policy.
+% Listing~\ref{lst:example} shows a simple governance policy evaluated following the majority method as a \texttt{BooleanDecision} requiring 40\% positive votes, and it has a deadline of ten days and excludes one participant.
+
+% \adem{If space is needed, we can shorten/remove this paragraph explaining the listing.}
+% As we see, we first define the scopes and their relationships.
+% % An alternative would be to just define one scope without their containments, but this would lack information for the decision engine. 
+% % \adem{This sentence is to say, we can define a Task, but how will we know to where it pertains so that we can execute the engine? Maybe, since we later focus on GH, this is not that relevant to say}
+% Next, we declare the possible participants, in our case a \texttt{Maintainer} role and two individuals, \texttt{Joe} and \texttt{Mike} with their attributes. 
+% We can also define further the profile of the individuals. 
+% % We define the gender of \texttt{Joe} as \texttt{male}.
+% In the third block we define the policy object.
+% The first keyword is the policy type, in this case it is a \texttt{MajorityPolicy}, followed by its name.
+% Inside the policy block, we declare the relationships to the scope and the participants as a list.
+% Note that inside the participant list we can define the role an individual might have inside a policy with the \texttt{as} keyword followed by the role defined before.
+% A policy might have certain conditions, these are defined with the \texttt{Conditions} keyword.
+% % In our example, we define the deadline of ten days, we exclude \texttt{Mike} of the voting count with the \texttt{ParticipantExclusion} keyword, and we require at least three voters, defined with the \texttt{MinParticipants} keyword.
+% At last, any parameter the policy might have, we declare it in the \texttt{Parameters} attribute, followed by the set of parameters, which in our case is the \texttt{ratio} set at 40\%.
+
+\begin{lstlisting}[caption=Simple governance policy evaluated following a majority strategy as a \texttt{BooleanDecision} requiring 40\% positive votes with a deadline of ten days., 
+                    label=lst:example, 
+                    basicstyle=\ttfamily\fontsize{8pt}{8.5pt}\selectfont,
+                    breaklines=true,
+                    float=t,
+                    captionpos=b]
+Scopes: 
+    Project myProject {
+        activities : myActivity {
+            tasks : myTask
+        }
+    }
+Participants:
+    Profiles : 
+        profile1 {
+            gender : male
+            race : hispanic
+        }
+    Roles : Maintainer
+    Individuals : 
+        Joe {
+            vote value : 0.7
+            profile : profile1
+            role: Maintainer
+        }, 
+        (Agent) Mike {
+            confidence : 0.8
+            role: Maintainer
+        },
+        Paul {
+            role: Maintainer
+        }
+MajorityPolicy TestPolicy {
+    Scope: myTask
+    DecisionType as BooleanDecision
+    Participant list : Maintainer
+    Conditions:
+        Deadline : 10 days
+        ParticipantExclusion : Paul
+    Parameters:
+        ratio : 0.4
+}
+\end{lstlisting}

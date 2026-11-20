@@ -1,0 +1,1246 @@
+@inproceedings{
+song2025measuring,
+title={Measuring and Enhancing Trustworthiness of {LLM}s in {RAG} through Grounded Attributions and Learning to Refuse},
+author={Maojia Song and Shang Hong Sim and Rishabh Bhardwaj and Hai Leong Chieu and Navonil Majumder and Soujanya Poria},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=Iyrtb9EJBp}
+}
+
+@inproceedings{honovich-etal-2022-true-evaluating,
+    title = "{TRUE}: Re-evaluating Factual Consistency Evaluation",
+    author = "Honovich, Or  and
+      Aharoni, Roee  and
+      Herzig, Jonathan  and
+      Taitelbaum, Hagai  and
+      Kukliansy, Doron  and
+      Cohen, Vered  and
+      Scialom, Thomas  and
+      Szpektor, Idan  and
+      Hassidim, Avinatan  and
+      Matias, Yossi",
+    editor = "Carpuat, Marine  and
+      de Marneffe, Marie-Catherine  and
+      Meza Ruiz, Ivan Vladimir",
+    booktitle = "Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jul,
+    year = "2022",
+    address = "Seattle, United States",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.naacl-main.287/",
+    doi = "10.18653/v1/2022.naacl-main.287",
+    pages = "3905--3920",
+    abstract = "Grounded text generation systems often generate text that contains factual inconsistencies, hindering their real-world applicability. Automatic factual consistency evaluation may help alleviate this limitation by accelerating evaluation cycles, filtering inconsistent outputs and augmenting training data. While attracting increasing attention, such evaluation metrics are usually developed and evaluated in silo for a single task or dataset, slowing their adoption. Moreover, previous meta-evaluation protocols focused on system-level correlations with human annotations, which leave the example-level accuracy of such metrics unclear. In this work, we introduce TRUE: a comprehensive survey and assessment of factual consistency metrics on a standardized collection of existing texts from diverse tasks, manually annotated for factual consistency. Our standardization enables an example-level meta-evaluation protocol that is more actionable and interpretable than previously reported correlations, yielding clearer quality measures. Across diverse state-of-the-art metrics and 11 datasets we find that large-scale NLI and question generation-and-answering-based approaches achieve strong and complementary results. We recommend those methods as a starting point for model and metric developers, and hope TRUE will foster progress towards even better evaluation methods."
+}
+
+@inproceedings{nie-etal-2020-adversarial,
+    title = "Adversarial {NLI}: A New Benchmark for Natural Language Understanding",
+    author = "Nie, Yixin  and
+      Williams, Adina  and
+      Dinan, Emily  and
+      Bansal, Mohit  and
+      Weston, Jason  and
+      Kiela, Douwe",
+    editor = "Jurafsky, Dan  and
+      Chai, Joyce  and
+      Schluter, Natalie  and
+      Tetreault, Joel",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.acl-main.441/",
+    doi = "10.18653/v1/2020.acl-main.441",
+    pages = "4885--4901",
+    abstract = "We introduce a new large-scale NLI benchmark dataset, collected via an iterative, adversarial human-and-model-in-the-loop procedure. We show that training models on this new dataset leads to state-of-the-art performance on a variety of popular NLI benchmarks, while posing a more difficult challenge with its new test set. Our analysis sheds light on the shortcomings of current state-of-the-art models, and shows that non-expert annotators are successful at finding their weaknesses. The data collection method can be applied in a never-ending learning scenario, becoming a moving target for NLU, rather than a static benchmark that will quickly saturate."
+}
+
+@article{raffel2020exploring,
+  title={Exploring the limits of transfer learning with a unified text-to-text transformer},
+  author={Raffel, Colin and Shazeer, Noam and Roberts, Adam and Lee, Katherine and Narang, Sharan and Matena, Michael and Zhou, Yanqi and Li, Wei and Liu, Peter J},
+  journal={Journal of machine learning research},
+  volume={21},
+  number={140},
+  pages={1--67},
+  year={2020}
+}
+
+@article{rashkin-etal-2023-measuring,
+    title = "Measuring Attribution in Natural Language Generation Models",
+    author = "Rashkin, Hannah  and
+      Nikolaev, Vitaly  and
+      Lamm, Matthew  and
+      Aroyo, Lora  and
+      Collins, Michael  and
+      Das, Dipanjan  and
+      Petrov, Slav  and
+      Tomar, Gaurav Singh  and
+      Turc, Iulia  and
+      Reitter, David",
+    journal = "Computational Linguistics",
+    volume = "49",
+    number = "4",
+    month = dec,
+    year = "2023",
+    address = "Cambridge, MA",
+    publisher = "MIT Press",
+    url = "https://aclanthology.org/2023.cl-4.2/",
+    doi = "10.1162/coli_a_00486",
+    pages = "777--840",
+    abstract = "Large neural models have brought a new challenge to natural language generation (NLG): It has become imperative to ensure the safety and reliability of the output of models that generate freely. To this end, we present an evaluation framework, Attributable to Identified Sources (AIS), stipulating that NLG output pertaining to the external world is to be verified against an independent, provided source. We define AIS and a two-stage annotation pipeline for allowing annotators to evaluate model output according to annotation guidelines. We successfully validate this approach on generation datasets spanning three tasks (two conversational QA datasets, a summarization dataset, and a table-to-text dataset). We provide full annotation guidelines in the appendices and publicly release the annotated data at https://github.com/google-research-datasets/AIS."
+}
+
+@article{bohnet2022attributed,
+  title={Attributed question answering: Evaluation and modeling for attributed large language models},
+  author={Bohnet, Bernd and Tran, Vinh Q and Verga, Pat and Aharoni, Roee and Andor, Daniel and Soares, Livio Baldini and Ciaramita, Massimiliano and Eisenstein, Jacob and Ganchev, Kuzman and Herzig, Jonathan and others},
+  journal={arXiv preprint arXiv:2212.08037},
+  year={2022}
+}
+
+@inproceedings{huang-etal-2024-learning,
+    title = "Learning Fine-Grained Grounded Citations for Attributed Large Language Models",
+    author = "Huang, Lei  and
+      Feng, Xiaocheng  and
+      Ma, Weitao  and
+      Gu, Yuxuan  and
+      Zhong, Weihong  and
+      Feng, Xiachong  and
+      Yu, Weijiang  and
+      Peng, Weihua  and
+      Tang, Duyu  and
+      Tu, Dandan  and
+      Qin, Bing",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2024",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-acl.838/",
+    doi = "10.18653/v1/2024.findings-acl.838",
+    pages = "14095--14113",
+    abstract = "Despite the impressive performance on information-seeking tasks, large language models (LLMs) still struggle with hallucinations. Attributed LLMs, which augment generated text with in-line citations, demonstrate potential in mitigating hallucinations and improving verifiability. However, current approaches suffer from suboptimal citation quality due to their reliance on in-context learning. Furthermore, the practice of merely citing document identifiers complicates the process for users to pinpoint specific supporting evidence. In this work, we introduce FRONT, a training framework that teaches LLMs to generate Fine-grained grounded citations. By initially grounding fine-grained supporting quotes, which then guide the generation process, these quotes not only provide supervision signals to improve citation quality but also serve as fine-grained attributions. Experiments on the ALCE benchmark demonstrate the efficacy of FRONT in generating superior grounded responses and highly supportive citations. With LLaMA-2-7B, the framework significantly outperforms all the baselines, achieving an average of 14.21{\%} improvement in citation quality across all datasets, even surpassing ChatGPT."
+}
+
+
+@inproceedings{gao-etal-2023-rarr,
+    title = "{RARR}: Researching and Revising What Language Models Say, Using Language Models",
+    author = "Gao, Luyu  and
+      Dai, Zhuyun  and
+      Pasupat, Panupong  and
+      Chen, Anthony  and
+      Chaganty, Arun Tejasvi  and
+      Fan, Yicheng  and
+      Zhao, Vincent  and
+      Lao, Ni  and
+      Lee, Hongrae  and
+      Juan, Da-Cheng  and
+      Guu, Kelvin",
+    editor = "Rogers, Anna  and
+      Boyd-Graber, Jordan  and
+      Okazaki, Naoaki",
+    booktitle = "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2023",
+    address = "Toronto, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.acl-long.910/",
+    doi = "10.18653/v1/2023.acl-long.910",
+    pages = "16477--16508",
+    abstract = "Language models (LMs) now excel at many tasks such as question answering, reasoning, and dialog. However, they sometimes generate unsupported or misleading content. A user cannot easily determine whether their outputs are trustworthy or not, because most LMs do not have any built-in mechanism for attribution to external evidence. To enable attribution while still preserving all the powerful advantages of recent generation models, we propose RARR (Retrofit Attribution using Research and Revision), a system that 1) automatically finds attribution for the output of any text generation model, and 2) post-edits the output to fix unsupported content while preserving the original output as much as possible. When applied to the output of several state-of-the-art LMs on a diverse set of generation tasks, we find that RARR significantly improves attribution while otherwise preserving the original input to a much greater degree than previously explored edit models. Furthermore, the implementation of RARR requires only a handful of training examples, a large language model, and standard web search."
+}
+
+@inproceedings{gao-etal-2023-enabling,
+    title = "Enabling Large Language Models to Generate Text with Citations",
+    author = "Gao, Tianyu  and
+      Yen, Howard  and
+      Yu, Jiatong  and
+      Chen, Danqi",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-main.398/",
+    doi = "10.18653/v1/2023.emnlp-main.398",
+    pages = "6465--6488",
+    abstract = "Large language models (LLMs) have emerged as a widely-used tool for information seeking, but their generated outputs are prone to hallucination. In this work, our aim is to allow LLMs to generate text with citations, improving their factual correctness and verifiability. Existing work mainly relies on commercial search engines and human evaluation, making it challenging to reproduce and compare different modeling approaches. We propose ALCE, the first benchmark for Automatic LLMs' Citation Evaluation. ALCE collects a diverse set of questions and retrieval corpora and requires building end-to-end systems to retrieve supporting evidence and generate answers with citations. We develop automatic metrics along three dimensions{---}fluency, correctness, and citation quality{---}and demonstrate their strong correlation with human judgements. Our experiments with state-of-the-art LLMs and novel prompting strategies show that current systems have considerable room for improvement{---}For example, on the ELI5 dataset, even the best models lack complete citation support 50{\%} of the time. Our analyses further highlight promising future directions, including developing better retrievers, advancing long-context LLMs, and improving the ability to synthesize information from multiple sources."
+}
+
+@article{guo2023modality,
+  title={On modality bias recognition and reduction},
+  author={Guo, Yangyang and Nie, Liqiang and Cheng, Harry and Cheng, Zhiyong and Kankanhalli, Mohan and Del Bimbo, Alberto},
+  journal={ACM Transactions on Multimedia Computing, Communications and Applications},
+  volume={19},
+  number={3},
+  pages={1--22},
+  year={2023},
+  publisher={ACM New York, NY}
+}
+
+@article{choi2025trustworthy,
+  title={Trustworthy Answers, Messier Data: Bridging the Gap in Low-Resource Retrieval-Augmented Generation for Domain Expert Systems},
+  author={Choi, Nayoung and Byun, Grace and Chung, Andrew and Paek, Ellie S and Lee, Shinsun and Choi, Jinho D},
+  journal={arXiv preprint arXiv:2502.19596},
+  year={2025}
+}
+
+@article{adhikari2024comparative,
+  title={A Comparative Study of PDF Parsing Tools Across Diverse Document Categories},
+  author={Adhikari, Narayan S and Agarwal, Shradha},
+  journal={arXiv preprint arXiv:2410.09871},
+  year={2024}
+}
+
+@software{Pang_Faster_LayoutReader_based_2024,
+  author = {Pang, Hantian},
+  month = feb,
+  title = {{Faster LayoutReader based on LayoutLMv3}},
+  url = {https://github.com/ppaanngggg/layoutreader},
+  version = {1.0.0},
+  year = {2024}
+}
+
+@misc{wang2024mineruopensourcesolutionprecise,
+      title={MinerU: An Open-Source Solution for Precise Document Content Extraction}, 
+      author={Bin Wang and Chao Xu and Xiaomeng Zhao and Linke Ouyang and Fan Wu and Zhiyuan Zhao and Rui Xu and Kaiwen Liu and Yuan Qu and Fukai Shang and Bo Zhang and Liqun Wei and Zhihao Sui and Wei Li and Botian Shi and Yu Qiao and Dahua Lin and Conghui He},
+      year={2024},
+      eprint={2409.18839},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2409.18839}, 
+}
+
+@misc{PyMuPDF,
+  author = {Jorj X. McKie},
+  title = {PyMuPDF},
+  year = {2015},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/pymupdf/PyMuPDF}},
+  commit = {312e4a7820739b6506555987f1b996879ab303eb}
+}
+
+@article{ma2025mmlongbench,
+  title={Mmlongbench-doc: Benchmarking long-context document understanding with visualizations},
+  author={Ma, Yubo and Zang, Yuhang and Chen, Liangyu and Chen, Meiqi and Jiao, Yizhu and Li, Xinze and Lu, Xinyuan and Liu, Ziyu and Ma, Yan and Dong, Xiaoyi and others},
+  journal={Advances in Neural Information Processing Systems},
+  volume={37},
+  pages={95963--96010},
+  year={2025}
+}
+
+@inproceedings{chang2022webqa,
+  title={Webqa: Multihop and multimodal qa},
+  author={Chang, Yingshan and Narang, Mridu and Suzuki, Hisami and Cao, Guihong and Gao, Jianfeng and Bisk, Yonatan},
+  booktitle={Proceedings of the IEEE/CVF conference on computer vision and pattern recognition},
+  pages={16495--16504},
+  year={2022}
+}
+
+@inproceedings{
+talmor2021multimodalqa,
+title={MultiModal{QA}: Complex Question Answering over Text, Tables and Images},
+author={Alon Talmor and Ori Yoran and Amnon Catav and Dan Lahav and Yizhong Wang and Akari Asai and Gabriel Ilharco and Hannaneh Hajishirzi and Jonathan Berant},
+booktitle={International Conference on Learning Representations},
+year={2021},
+url={https://openreview.net/forum?id=ee6W5UgQLa}
+}
+
+@inproceedings{hsu-etal-2024-chime,
+    title = "{CHIME}: {LLM}-Assisted Hierarchical Organization of Scientific Studies for Literature Review Support",
+    author = "Hsu, Chao-Chun  and
+      Bransom, Erin  and
+      Sparks, Jenna  and
+      Kuehl, Bailey  and
+      Tan, Chenhao  and
+      Wadden, David  and
+      Wang, Lucy  and
+      Naik, Aakanksha",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2024",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-acl.8/",
+    doi = "10.18653/v1/2024.findings-acl.8",
+    pages = "118--132",
+    abstract = "Literature review requires researchers to synthesize a large amount of information and is increasingly challenging as the scientific literature expands. In this work, we investigate the potential of LLMs for producing hierarchical organizations of scientific studies to assist researchers with literature review. We define hierarchical organizations as tree structures where nodes refer to topical categories and every node is linked to the studies assigned to that category. Our naive LLM-based pipeline for hierarchy generation from a set of studies produces promising yet imperfect hierarchies, motivating us to collect CHIME, an expert-curated dataset for this task focused on biomedicine. Given the challenging and time-consuming nature of building hierarchies from scratch, we use a human-in-the-loop process in which experts correct errors (both links between categories and study assignment) in LLM-generated hierarchies. CHIME contains 2,174 LLM-generated hierarchies covering 472 topics, and expert-corrected hierarchies for a subset of 100 topics. Expert corrections allow us to quantify LLM performance, and we find that while they are quite good at generating and organizing categories, their assignment of studies to categories could be improved. We attempt to train a corrector model with human feedback which improves study assignment by 12.6 F1 points. We release our dataset and models to encourage research on developing better assistive tools for literature review."
+}
+
+@inproceedings{pham-etal-2024-topicgpt,
+    title = "{T}opic{GPT}: A Prompt-based Topic Modeling Framework",
+    author = "Pham, Chau Minh  and
+      Hoyle, Alexander  and
+      Sun, Simeng  and
+      Resnik, Philip  and
+      Iyyer, Mohit",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.naacl-long.164/",
+    doi = "10.18653/v1/2024.naacl-long.164",
+    pages = "2956--2984",
+    abstract = "Topic modeling is a well-established technique for exploring text corpora. Conventional topic models (e.g., LDA) represent topics as bags of words that often require {\textquotedblleft}reading the tea leaves{\textquotedblright} to interpret; additionally, they offer users minimal control over the formatting and specificity of resulting topics. To tackle these issues, we introduce TopicGPT, a prompt-based framework that uses large language models (LLMs) to uncover latent topics in a text collection. TopicGPT produces topics that align better with human categorizations compared to competing methods: it achieves a harmonic mean purity of 0.74 against human-annotated Wikipedia topics compared to 0.64 for the strongest baseline. Its topics are also more interpretable, dispensing with ambiguous bags of words in favor of topics with natural language labels and associated free-form descriptions. Moreover, the framework is highly adaptable, allowing users to specify constraints and modify topics without the need for model retraining. By streamlining access to high-quality and interpretable topics, TopicGPT represents a compelling, human-centered approach to topic modeling."
+}
+
+@inproceedings{wang-etal-2023-goal,
+    title = "Goal-Driven Explainable Clustering via Language Descriptions",
+    author = "Wang, Zihan  and
+      Shang, Jingbo  and
+      Zhong, Ruiqi",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-main.657/",
+    doi = "10.18653/v1/2023.emnlp-main.657",
+    pages = "10626--10649",
+    abstract = "Unsupervised clustering is widely used to explore large corpora, but existing formulations neither consider the users' goals nor explain clusters' meanings. We propose a new task formulation, {\textquotedblleft}Goal-Driven Clustering with Explanations{\textquotedblright} (GoalEx), which represents both the goal and the explanations as free-form language descriptions. For example, to categorize the errors made by a summarization system, the input to GoalEx is a corpus of annotator-written comments for system-generated summaries and a goal description {\textquotedblleft}cluster the comments based on why the annotators think the summary is imperfect.{\textquotedblright}; the outputs are text clusters each with an explanation ({\textquotedblleft}this cluster mentions that the summary misses important context information.{\textquotedblright}), which relates to the goal and accurately explains which comments should (not) belong to a cluster. To tackle GoalEx, we prompt a language model with {\textquotedblleft}[corpus subset] + [goal] + Brainstorm a list of explanations each representing a cluster.{\textquotedblright}; then we classify whether each sample belongs to a cluster based on its explanation; finally, we use integer linear programming to select a subset of candidate clusters to cover most samples while minimizing overlaps. Under both automatic and human evaluation on corpora with or without labels, our method produces more accurate and goal-related explanations than prior methods."
+}
+
+@inproceedings{zhang-etal-2023-clusterllm,
+    title = "{C}luster{LLM}: Large Language Models as a Guide for Text Clustering",
+    author = "Zhang, Yuwei  and
+      Wang, Zihan  and
+      Shang, Jingbo",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-main.858/",
+    doi = "10.18653/v1/2023.emnlp-main.858",
+    pages = "13903--13920",
+    abstract = "We introduce ClusterLLM, a novel text clustering framework that leverages feedback from an instruction-tuned large language model, such as ChatGPT. Compared with traditional unsupervised methods that builds upon {\textquotedblleft}small{\textquotedblright} embedders, ClusterLLM exhibits two intriguing advantages: (1) it enjoys the emergent capability of LLM even if its embeddings are inaccessible; and (2) it understands the user`s preference on clustering through textual instruction and/or a few annotated data. First, we prompt ChatGPT for insights on clustering perspective by constructing hard triplet questions $<$does A better correspond to B than C$>$, where A, B and C are similar data points that belong to different clusters according to small embedder. We empirically show that this strategy is both effective for fine-tuning small embedder and cost-efficient to query ChatGPT. Second, we prompt ChatGPT for helps on clustering granularity by carefully designed pairwise questions $<$do A and B belong to the same category$>$, and tune the granularity from cluster hierarchies that is the most consistent with the ChatGPT answers. Extensive experiments on 14 datasets show that ClusterLLM consistently improves clustering quality, at an average cost of {\textasciitilde}{\$}0.6 per dataset."
+}
+
+@article{viswanathan-etal-2024-large,
+    title = "Large Language Models Enable Few-Shot Clustering",
+    author = "Viswanathan, Vijay  and
+      Gashteovski, Kiril  and
+      Gashteovski, Kiril  and
+      Lawrence, Carolin  and
+      Wu, Tongshuang  and
+      Neubig, Graham",
+    journal = "Transactions of the Association for Computational Linguistics",
+    volume = "12",
+    year = "2024",
+    address = "Cambridge, MA",
+    publisher = "MIT Press",
+    url = "https://aclanthology.org/2024.tacl-1.18/",
+    doi = "10.1162/tacl_a_00648",
+    pages = "321--333",
+    abstract = "Unlike traditional unsupervised clustering, semi-supervised clustering allows users to provide meaningful structure to the data, which helps the clustering algorithm to match the user`s intent. Existing approaches to semi-supervised clustering require a significant amount of feedback from an expert to improve the clusters. In this paper, we ask whether a large language model (LLM) can amplify an expert`s guidance to enable query-efficient, few-shot semi-supervised text clustering. We show that LLMs are surprisingly effective at improving clustering. We explore three stages where LLMs can be incorporated into clustering: before clustering (improving input features), during clustering (by providing constraints to the clusterer), and after clustering (using LLMs post-correction). We find that incorporating LLMs in the first two stages routinely provides significant improvements in cluster quality, and that LLMs enable a user to make trade-offs between cost and accuracy to produce desired clusters. We release our code and LLM prompts for the public to use.1"
+}
+
+@article{mavi2024multi,
+  title={Multi-hop question answering},
+  author={Mavi, Vaibhav and Jangra, Anubhav and Jatowt, Adam and others},
+  journal={Foundations and Trends{\textregistered} in Information Retrieval},
+  volume={17},
+  number={5},
+  pages={457--586},
+  year={2024},
+  publisher={Now Publishers, Inc.}
+}
+
+@article{ho2020constructing,
+  title={Constructing a multi-hop qa dataset for comprehensive evaluation of reasoning steps},
+  author={Ho, Xanh and Nguyen, Anh-Khoa Duong and Sugawara, Saku and Aizawa, Akiko},
+  journal={arXiv preprint arXiv:2011.01060},
+  year={2020}
+}
+
+@inproceedings{qian-etal-2024-grounding,
+    title = "Grounding Language Model with Chunking-Free In-Context Retrieval",
+    author = "Qian, Hongjin  and
+      Liu, Zheng  and
+      Mao, Kelong  and
+      Zhou, Yujia  and
+      Dou, Zhicheng",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.acl-long.71/",
+    doi = "10.18653/v1/2024.acl-long.71",
+    pages = "1298--1311",
+    abstract = "This paper presents a novel Chunking-Free In-Context (CFIC) retrieval approach, specifically tailored for Retrieval-Augmented Generation (RAG) systems. Traditional RAG systems often struggle with grounding responses using precise evidence text due to the challenges of processing lengthy documents and filtering out irrelevant content. Commonly employed solutions, such as document chunking and adapting language models to handle longer contexts, have their limitations. These methods either disrupt the semantic coherence of the text or fail to effectively address the issues of noise and inaccuracy in evidence retrieval.The CFIC approach addresses these challenges by circumventing the conventional chunking process. It utilizes the encoded hidden states of documents for in-context retrieval, employing auto-aggressive decoding to accurately identify the specific evidence text required for user queries, eliminating the need for chunking. CFIC is further enhanced by incorporating two innovative decoding strategies, namely Constrained Sentence Prefix Decoding and Skip Decoding. These strategies not only improve the efficiency of the retrieval process but also ensure that the fidelity of the generated grounding text evidence is maintained.Our evaluations of CFIC on a range of open question answering datasets demonstrate its superiority in retrieving relevant and accurate information, offering a significant improvement over traditional methods. By doing away with the need for document chunking, CFIC presents a more streamlined, effective, and efficient retrieval solution, making it a valuable advancement in the field of RAG systems."
+}
+
+@misc{hu2025mcitebenchbenchmarkmultimodalcitation,
+      title={MCiteBench: A Benchmark for Multimodal Citation Text Generation in MLLMs}, 
+      author={Caiyu Hu and Yikai Zhang and Tinghui Zhu and Yiwei Ye and Yanghua Xiao},
+      year={2025},
+      eprint={2503.02589},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2503.02589}, 
+}
+
+@inproceedings{zhe2019community,
+  title={Community detection on large complex attribute network},
+  author={Zhe, Chen and Sun, Aixin and Xiao, Xiaokui},
+  booktitle={Proceedings of the 25th ACM SIGKDD international conference on knowledge discovery \& data mining},
+  pages={2041--2049},
+  year={2019}
+}
+
+@inproceedings{bai-etal-2025-ramqa,
+    title = "{RAMQA}: A Unified Framework for Retrieval-Augmented Multi-Modal Question Answering",
+    author = "Bai, Yang  and
+      Grant, Christan  and
+      Wang, Daisy Zhe",
+    editor = "Chiruzzo, Luis  and
+      Ritter, Alan  and
+      Wang, Lu",
+    booktitle = "Findings of the Association for Computational Linguistics: NAACL 2025",
+    month = apr,
+    year = "2025",
+    address = "Albuquerque, New Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.findings-naacl.60/",
+    pages = "1061--1076",
+    ISBN = "979-8-89176-195-7",
+    abstract = "Multi-modal retrieval-augmented Question Answering (MRAQA), integrating text and images, has gained significant attention in information retrieval (IR) and natural language processing (NLP). Traditional ranking methods rely on small encoder-based language models, which are incompatible with modern decoder-based generative large language models (LLMs) that have advanced various NLP tasks. To bridge this gap, we propose RAMQA, a unified framework combining learning-to-rank methods with generative permutation-enhanced ranking techniques. We first train a pointwise multi-modal ranker using LLaVA as the backbone. Then, we apply instruction tuning to train a LLaMA model for re-ranking the top-k documents using an innovative autoregressive multi-task learning approach. Our generative ranking model generates re-ranked document IDs and specific answers from document candidates in various permutations. Experiments on two MRAQA benchmarks, WebQA and MultiModalQA, show significant improvements over strong baselines, highlighting the effectiveness of our approach. Data and code will be made public once the paper is accepted."
+}
+
+@misc{chen2024mllmstrongrerankeradvancing,
+      title={MLLM Is a Strong Reranker: Advancing Multimodal Retrieval-augmented Generation via Knowledge-enhanced Reranking and Noise-injected Training}, 
+      author={Zhanpeng Chen and Chengjin Xu and Yiyan Qi and Jian Guo},
+      year={2024},
+      eprint={2407.21439},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2407.21439}, 
+}
+
+@inproceedings{kwon2023efficient,
+  title={Efficient Memory Management for Large Language Model Serving with PagedAttention},
+  author={Woosuk Kwon and Zhuohan Li and Siyuan Zhuang and Ying Sheng and Lianmin Zheng and Cody Hao Yu and Joseph E. Gonzalez and Hao Zhang and Ion Stoica},
+  booktitle={Proceedings of the ACM SIGOPS 29th Symposium on Operating Systems Principles},
+  year={2023}
+}
+
+@inproceedings{yang2023enhancing,
+  title={Enhancing multi-modal multi-hop question answering via structured knowledge and unified retrieval-generation},
+  author={Yang, Qian and Chen, Qian and Wang, Wen and Hu, Baotian and Zhang, Min},
+  booktitle={Proceedings of the 31st ACM International Conference on Multimedia},
+  pages={5223--5234},
+  year={2023}
+}
+
+@inproceedings{
+zhu2025accelerating,
+title={Accelerating Inference of Retrieval-Augmented Generation via Sparse Context Selection},
+author={Yun Zhu and Jia-Chen Gu and Caitlin Sikora and Ho Ko and Yinxiao Liu and Chu-Cheng Lin and Lei Shu and Liangchen Luo and Lei Meng and Bang Liu and Jindong Chen},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=HE6pJoNnFp}
+}
+
+
+@InProceedings{pmlr-v139-radford21a,
+  title = 	 {Learning Transferable Visual Models From Natural Language Supervision},
+  author =       {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and Krueger, Gretchen and Sutskever, Ilya},
+  booktitle = 	 {Proceedings of the 38th International Conference on Machine Learning},
+  pages = 	 {8748--8763},
+  year = 	 {2021},
+  editor = 	 {Meila, Marina and Zhang, Tong},
+  volume = 	 {139},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {18--24 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {http://proceedings.mlr.press/v139/radford21a/radford21a.pdf},
+  url = 	 {https://proceedings.mlr.press/v139/radford21a.html},
+  abstract = 	 {State-of-the-art computer vision systems are trained to predict a fixed set of predetermined object categories. This restricted form of supervision limits their generality and usability since additional labeled data is needed to specify any other visual concept. Learning directly from raw text about images is a promising alternative which leverages a much broader source of supervision. We demonstrate that the simple pre-training task of predicting which caption goes with which image is an efficient and scalable way to learn SOTA image representations from scratch on a dataset of 400 million (image, text) pairs collected from the internet. After pre-training, natural language is used to reference learned visual concepts (or describe new ones) enabling zero-shot transfer of the model to downstream tasks. We study the performance of this approach by benchmarking on over 30 different existing computer vision datasets, spanning tasks such as OCR, action recognition in videos, geo-localization, and many types of fine-grained object classification. The model transfers non-trivially to most tasks and is often competitive with a fully supervised baseline without the need for any dataset specific training. For instance, we match the accuracy of the original ResNet-50 on ImageNet zero-shot without needing to use any of the 1.28 million training examples it was trained on.}
+}
+
+@inproceedings{liu2021image,
+  title={Image Retrieval on Real-life Images with Pre-trained Vision-and-Language Models},
+  author={Liu, Zheyuan and Rodriguez-Opazo, Cristian and Teney, Damien and Gould, Stephen},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={2125--2134},
+  year={2021}
+}
+
+@inproceedings{baldrati2023zero,
+  title={Zero-shot Composed Image Retrieval with Textual Inversion},
+  author={Baldrati, Alberto and Agnolucci, Lorenzo and Bertini, Marco and Del Bimbo, Alberto},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={15338--15347},
+  year={2023}
+}
+
+@article{hu2025mcitebench,
+  title={MCiteBench: A Benchmark for Multimodal Citation Text Generation in MLLMs},
+  author={Hu, Caiyu and Zhang, Yikai and Zhu, Tinghui and Ye, Yiwei and Xiao, Yanghua},
+  journal={arXiv preprint arXiv:2503.02589},
+  year={2025}
+}
+
+@article{Chang2021WebQAMA,
+  title={WebQA: Multihop and Multimodal QA},
+  author={Yingshan Chang and Mridu Baldevraj Narang and Hisami Suzuki and Guihong Cao and Jianfeng Gao and Yonatan Bisk},
+  journal={2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2021},
+  pages={16474-16483},
+  url={https://api.semanticscholar.org/CorpusID:237385768}
+}
+
+@inproceedings{
+yuan2021bartscore,
+title={{BARTS}core: Evaluating Generated Text as Text Generation},
+author={Weizhe Yuan and Graham Neubig and Pengfei Liu},
+booktitle={Advances in Neural Information Processing Systems},
+editor={A. Beygelzimer and Y. Dauphin and P. Liang and J. Wortman Vaughan},
+year={2021},
+url={https://openreview.net/forum?id=5Ya8PbvpZ9}
+}
+
+@inproceedings{
+lin2025mmembed,
+title={{MM}-{E}mbed: {U}niversal Multimodal Retrieval With Multimodal {LLM}s},
+author={Sheng-Chieh Lin and Chankyu Lee and Mohammad Shoeybi and Jimmy Lin and Bryan Catanzaro and Wei Ping},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=i45NQb2iKO}
+}
+
+@article{qwen2.5-VL,
+  title={Qwen2.5-VL Technical Teport},
+  author={Bai, Shuai and Chen, Keqin and Liu, Xuejing and Wang, Jialin and Ge, Wenbin and Song, Sibo and Dang, Kai and Wang, Peng and Wang, Shijie and Tang, Jun and others},
+  journal={arXiv preprint arXiv:2502.13923},
+  year={2025}
+}
+
+@article{guo2025deepseek,
+  title={Deepseek-R1: Incentivizing reasoning capability in llms via reinforcement learning},
+  author={Guo, Daya and Yang, Dejian and Zhang, Haowei and Song, Junxiao and Zhang, Ruoyu and Xu, Runxin and Zhu, Qihao and Ma, Shirong and Wang, Peiyi and Bi, Xiao and others},
+  journal={arXiv preprint arXiv:2501.12948},
+  year={2025}
+}
+
+@article{trivedi2022musique,
+  title={MuSiQue: Multihop Questions via Single-hop Question Composition},
+  author={Trivedi, Harsh and Balasubramanian, Niranjan and Khot, Tushar and Sabharwal, Ashish},
+  journal={Transactions of the Association for Computational Linguistics},
+  volume={10},
+  pages={539--554},
+  year={2022},
+  publisher={MIT Press One Broadway, 12th Floor, Cambridge, Massachusetts 02142, USA~…}
+}
+
+@inproceedings{nogueira-etal-2020-document,
+    title = "Document Ranking with a Pretrained Sequence-to-Sequence Model",
+    author = "Nogueira, Rodrigo  and
+      Jiang, Zhiying  and
+      Pradeep, Ronak  and
+      Lin, Jimmy",
+    editor = "Cohn, Trevor  and
+      He, Yulan  and
+      Liu, Yang",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2020",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.findings-emnlp.63/",
+    doi = "10.18653/v1/2020.findings-emnlp.63",
+    pages = "708--718",
+    abstract = "This work proposes the use of a pretrained sequence-to-sequence model for document ranking. Our approach is fundamentally different from a commonly adopted classification-based formulation based on encoder-only pretrained transformer architectures such as BERT. We show how a sequence-to-sequence model can be trained to generate relevance labels as ``target tokens'', and how the underlying logits of these target tokens can be interpreted as relevance probabilities for ranking. Experimental results on the MS MARCO passage ranking task show that our ranking approach is superior to strong encoder-only models. On three other document retrieval test collections, we demonstrate a zero-shot transfer-based approach that outperforms previous state-of-the-art models requiring in-domain cross-validation. Furthermore, we find that our approach significantly outperforms an encoder-only architecture in a data-poor setting. We investigate this observation in more detail by varying target tokens to probe the model{'}s use of latent knowledge. Surprisingly, we find that the choice of target tokens impacts effectiveness, even for words that are closely related semantically. This finding sheds some light on why our sequence-to-sequence formulation for document ranking is effective. Code and models are available at pygaggle.ai."
+}
+
+@inproceedings{sun-etal-2023-chatgpt,
+    title = "Is {C}hat{GPT} Good at Search? Investigating Large Language Models as Re-Ranking Agents",
+    author = "Sun, Weiwei  and
+      Yan, Lingyong  and
+      Ma, Xinyu  and
+      Wang, Shuaiqiang  and
+      Ren, Pengjie  and
+      Chen, Zhumin  and
+      Yin, Dawei  and
+      Ren, Zhaochun",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-main.923/",
+    doi = "10.18653/v1/2023.emnlp-main.923",
+    pages = "14918--14937",
+    abstract = "Large Language Models (LLMs) have demonstrated remarkable zero-shot generalization across various language-related tasks, including search engines. However, existing work utilizes the generative ability of LLMs for Information Retrieval (IR) rather than direct passage ranking. The discrepancy between the pre-training objectives of LLMs and the ranking objective poses another challenge. In this paper, we first investigate generative LLMs such as ChatGPT and GPT-4 for relevance ranking in IR. Surprisingly, our experiments reveal that properly instructed LLMs can deliver competitive, even superior results to state-of-the-art supervised methods on popular IR benchmarks. Furthermore, to address concerns about data contamination of LLMs, we collect a new test set called NovelEval, based on the latest knowledge and aiming to verify the model{'}s ability to rank unknown knowledge. Finally, to improve efficiency in real-world applications, we delve into the potential for distilling the ranking capabilities of ChatGPT into small specialized models using a permutation distillation scheme. Our evaluation results turn out that a distilled 440M model outperforms a 3B supervised model on the BEIR benchmark. The code to reproduce our results is available at www.github.com/sunnweiwei/RankGPT."
+}
+
+@inproceedings{qin-etal-2024-large,
+    title = "Large Language Models are Effective Text Rankers with Pairwise Ranking Prompting",
+    author = "Qin, Zhen  and
+      Jagerman, Rolf  and
+      Hui, Kai  and
+      Zhuang, Honglei  and
+      Wu, Junru  and
+      Yan, Le  and
+      Shen, Jiaming  and
+      Liu, Tianqi  and
+      Liu, Jialu  and
+      Metzler, Donald  and
+      Wang, Xuanhui  and
+      Bendersky, Michael",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Findings of the Association for Computational Linguistics: NAACL 2024",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-naacl.97/",
+    doi = "10.18653/v1/2024.findings-naacl.97",
+    pages = "1504--1518",
+    abstract = "Ranking documents using Large Language Models (LLMs) by directly feeding the query and candidate documents into the prompt is an interesting and practical problem. However, researchers have found it difficult to outperform fine-tuned baseline rankers on benchmark datasets.We analyze pointwise and listwise ranking prompts used by existing methods and argue that off-the-shelf LLMs do not fully understand these challenging ranking formulations. In this paper, we propose to significantly reduce the burden on LLMs by using a new technique called Pairwise Ranking Prompting (PRP).Our results are the first in the literature to achieve state-of-the-art ranking performance on standard benchmarks using moderate-sized open-sourced LLMs. On TREC-DL 2019{\&}2020, PRP based on the Flan-UL2 model with 20B parameters performs favorably with the previous best approach in the literature, which is based on the blackbox commercial GPT-4 that has 50x (estimated) model size, while outperforming other LLM-based solutions, such as InstructGPT which has 175B parameters, by over 10{\%} for all ranking metrics. By using the same prompt template on seven BEIR tasks, PRP outperforms supervised baselines and outperforms the blackbox commercial ChatGPT solution by 4.2{\%} and pointwise LLM-based solutions by more than 10{\%} on average NDCG@10.Furthermore, we propose several variants of PRP to improve efficiency and show that it is possible to achieve competitive results even with linear complexity."
+}
+
+@inproceedings{10.1145/3626772.3657813,
+author = {Zhuang, Shengyao and Zhuang, Honglei and Koopman, Bevan and Zuccon, Guido},
+title = {A Setwise Approach for Effective and Highly Efficient Zero-shot Ranking with Large Language Models},
+year = {2024},
+isbn = {9798400704314},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3626772.3657813},
+doi = {10.1145/3626772.3657813},
+abstract = {We propose a novel zero-shot document ranking approach based on Large Language Models (LLMs): the Setwise prompting approach. Our approach complements existing prompting approaches for LLM-based zero-shot ranking: Pointwise, Pairwise, and Listwise. Through the first-of-its-kind comparative evaluation within a consistent experimental framework and considering factors like model size, token consumption, latency, among others, we show that existing approaches are inherently characterised by trade-offs between effectiveness and efficiency. We find that while Pointwise approaches score high on efficiency, they suffer from poor effectiveness. Conversely, Pairwise approaches demonstrate superior effectiveness but incur high computational overhead. Our Setwise approach, instead, reduces the number of LLM inferences and the amount of prompt token consumption during the ranking procedure, compared to previous methods. This significantly improves the efficiency of LLM-based zero-shot ranking, while also retaining high zero-shot ranking effectiveness. We make our code and results publicly available at https://github.com/ielab/llm-rankers.},
+booktitle = {Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+pages = {38–47},
+numpages = {10},
+keywords = {large language model for zero-shot ranking, setwise prompting, sorting algorithm},
+location = {Washington DC, USA},
+series = {SIGIR '24}
+}
+
+@article{yu2024rankrag,
+  title={Rank{RAG}: Unifying Context Ranking with Retrieval-Augmented Generation in {LLM}s},
+  author={Yu, Yue and Ping, Wei and Liu, Zihan and Wang, Boxin and You, Jiaxuan and Zhang, Chao and Shoeybi, Mohammad and Catanzaro, Bryan},
+  journal={Advances in Neural Information Processing Systems},
+  volume={37},
+  pages={121156--121184},
+  year={2024}
+}
+
+@article{wei2022chain,
+  title={Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},
+  author={Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and Bosma, Maarten and Xia, Fei and Chi, Ed and Le, Quoc V and Zhou, Denny and others},
+  journal={Advances in neural information processing systems},
+  volume={35},
+  pages={24824--24837},
+  year={2022}
+}
+
+@inproceedings{press-etal-2023-measuring,
+    title = "Measuring and Narrowing the Compositionality Gap in Language Models",
+    author = "Press, Ofir  and
+      Zhang, Muru  and
+      Min, Sewon  and
+      Schmidt, Ludwig  and
+      Smith, Noah  and
+      Lewis, Mike",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2023",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.findings-emnlp.378",
+    doi = "10.18653/v1/2023.findings-emnlp.378",
+    pages = "5687--5711",
+}
+
+@inproceedings{DBLP:conf/iclr/ZhouSHWS0SCBLC23,
+  author       = {Denny Zhou and
+                  Nathanael Sch{\"{a}}rli and
+                  Le Hou and
+                  Jason Wei and
+                  Nathan Scales and
+                  Xuezhi Wang and
+                  Dale Schuurmans and
+                  Claire Cui and
+                  Olivier Bousquet and
+                  Quoc V. Le and
+                  Ed H. Chi},
+  title        = {Least-to-Most Prompting Enables Complex Reasoning in Large Language
+                  Models},
+  booktitle    = {The Eleventh International Conference on Learning Representations,
+                  {ICLR} 2023, Kigali, Rwanda, May 1-5, 2023},
+  publisher    = {OpenReview.net},
+  year         = {2023},
+  url          = {https://openreview.net/forum?id=WZH7099tgfM},
+  timestamp    = {Wed, 24 Jul 2024 16:50:34 +0200},
+  biburl       = {https://dblp.org/rec/conf/iclr/ZhouSHWS0SCBLC23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/emnlp/DuaG0G22,
+  author       = {Dheeru Dua and
+                  Shivanshu Gupta and
+                  Sameer Singh and
+                  Matt Gardner},
+  editor       = {Yoav Goldberg and
+                  Zornitsa Kozareva and
+                  Yue Zhang},
+  title        = {Successive Prompting for Decomposing Complex Questions},
+  booktitle    = {Proceedings of the 2022 Conference on Empirical Methods in Natural
+                  Language Processing, {EMNLP} 2022, Abu Dhabi, United Arab Emirates,
+                  December 7-11, 2022},
+  pages        = {1251--1265},
+  publisher    = {Association for Computational Linguistics},
+  year         = {2022},
+  url          = {https://doi.org/10.18653/v1/2022.emnlp-main.81},
+  doi          = {10.18653/V1/2022.EMNLP-MAIN.81},
+  timestamp    = {Thu, 10 Aug 2023 12:35:32 +0200},
+  biburl       = {https://dblp.org/rec/conf/emnlp/DuaG0G22.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{xu2024search,
+  title={Search-in-the-Chain: Interactively Enhancing Large Language Models with Search for Knowledge-Intensive Tasks},
+  author={Xu, Shicheng and Pang, Liang and Shen, Huawei and Cheng, Xueqi and Chua, Tat-Seng},
+  booktitle={Proceedings of the ACM Web Conference 2024},
+  pages={1362--1373},
+  year={2024}
+}
+
+@inproceedings{chen-etal-2022-murag,
+    title = "{M}u{RAG}: Multimodal Retrieval-Augmented Generator for Open Question Answering over Images and Text",
+    author = "Chen, Wenhu  and
+      Hu, Hexiang  and
+      Chen, Xi  and
+      Verga, Pat  and
+      Cohen, William",
+    editor = "Goldberg, Yoav  and
+      Kozareva, Zornitsa  and
+      Zhang, Yue",
+    booktitle = "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2022",
+    address = "Abu Dhabi, United Arab Emirates",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.emnlp-main.375/",
+    doi = "10.18653/v1/2022.emnlp-main.375",
+    pages = "5558--5570",
+    abstract = "While language Models store a massive amount of world knowledge implicitly in their parameters, even very large models often fail to encode information about rare entities and events, while incurring huge computational costs. Recently, retrieval-augmented models, such as REALM, RAG, and RETRO, have incorporated world knowledge into language generation by leveraging an external non-parametric index and have demonstrated impressive performance with constrained model sizes. However, these methods are restricted to retrieving only textual knowledge, neglecting the ubiquitous amount of knowledge in other modalities like images {--} much of which contains information not covered by any text. To address this limitation, we propose the first Multimodal Retrieval-Augmented Transformer (MuRAG), which accesses an external non-parametric multimodal memory to augment language generation. MuRAG is pre-trained with a mixture of large-scale image-text and text-only corpora using a joint contrastive and generative loss. We perform experiments on two different datasets that require retrieving and reasoning over both images and text to answer a given query: WebQA, and MultimodalQA. Our results show that MuRAG achieves state-of-the-art accuracy, outperforming existing models by 10-20{\%} absolute on both datasets and under both distractor and full-wiki settings."
+}
+
+@article{abootorabi2025ask,
+  title={Ask in Any Modality: A Comprehensive Survey on Multimodal Retrieval-Augmented Generation},
+  author={Abootorabi, Mohammad Mahdi and Zobeiri, Amirhosein and Dehghani, Mahdi and Mohammadkhani, Mohammadali and Mohammadi, Bardia and Ghahroodi, Omid and Baghshah, Mahdieh Soleymani and Asgari, Ehsaneddin},
+  journal={arXiv preprint arXiv:2502.08826},
+  year={2025}
+}
+
+@article{mei2025survey,
+  title={A survey of multimodal retrieval-augmented generation},
+  author={Mei, Lang and Mo, Siyu and Yang, Zhihan and Chen, Chong},
+  journal={arXiv preprint arXiv:2504.08748},
+  year={2025}
+}
+
+@article{zhou2024megapairs,
+  title={Megapairs: Massive data synthesis for universal multimodal retrieval},
+  author={Zhou, Junjie and Liu, Zheng and Liu, Ze and Xiao, Shitao and Wang, Yueze and Zhao, Bo and Zhang, Chen Jason and Lian, Defu and Xiong, Yongping},
+  journal={arXiv preprint arXiv:2412.14475},
+  year={2024}
+}
+
+@misc{koukounas2024jinaclipv2multilingualmultimodalembeddings,
+      title={jina-clip-v2: Multilingual Multimodal Embeddings for Text and Images}, 
+      author={Andreas Koukounas and Georgios Mastrapas and Bo Wang and Mohammad Kalim Akram and Sedigheh Eslami and Michael Günther and Isabelle Mohr and Saba Sturua and Scott Martens and Nan Wang and Han Xiao},
+      year={2024},
+      eprint={2412.08802},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2412.08802}, 
+}
+
+@inproceedings{zhai2023sigmoid,
+  title={Sigmoid loss for language image pre-training},
+  author={Zhai, Xiaohua and Mustafa, Basil and Kolesnikov, Alexander and Beyer, Lucas},
+  booktitle={Proceedings of the IEEE/CVF international conference on computer vision},
+  pages={11975--11986},
+  year={2023}
+}
+
+@article{beyer2024paligemma,
+  title={Paligemma: A versatile 3b vlm for transfer},
+  author={Beyer, Lucas and Steiner, Andreas and Pinto, Andr{\'e} Susano and Kolesnikov, Alexander and Wang, Xiao and Salz, Daniel and Neumann, Maxim and Alabdulmohsin, Ibrahim and Tschannen, Michael and Bugliarello, Emanuele and others},
+  journal={arXiv preprint arXiv:2407.07726},
+  year={2024}
+}
+
+@inproceedings{FaysseSWOVHC25,
+  author={Manuel Faysse and Hugues Sibille and Tony Wu and Bilel Omrani and Gautier Viaud and Céline Hudelot and Pierre Colombo},
+  title={ColPali: Efficient Document Retrieval with Vision Language Models},
+  year={2025},
+  cdate={1735689600000},
+  url={https://openreview.net/forum?id=ogjBpZ8uSi},
+  booktitle={ICLR},
+}
+
+@misc{liu2024llavanext,
+    title={LLaVA-NeXT: Improved reasoning, OCR, and world knowledge},
+    url={https://llava-vl.github.io/blog/2024-01-30-llava-next/},
+    author={Liu, Haotian and Li, Chunyuan and Li, Yuheng and Li, Bo and Zhang, Yuanhan and Shen, Sheng and Lee, Yong Jae},
+    month={January},
+    year={2024}
+}
+
+@inproceedings{chen2024image,
+  title={An image is worth 1/2 tokens after layer 2: Plug-and-play inference acceleration for large vision-language models},
+  author={Chen, Liang and Zhao, Haozhe and Liu, Tianyu and Bai, Shuai and Lin, Junyang and Zhou, Chang and Chang, Baobao},
+  booktitle={European Conference on Computer Vision},
+  pages={19--35},
+  year={2024},
+  organization={Springer}
+}
+
+@inproceedings{arif2025hired,
+  title={HiRED: Attention-Guided Token Dropping for Efficient Inference of High-Resolution Vision-Language Models},
+  author={Arif, Kazi Hasan Ibn and Yoon, JinYi and Nikolopoulos, Dimitrios S and Vandierendonck, Hans and John, Deepu and Ji, Bo},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={39},
+  pages={1773--1781},
+  year={2025}
+}
+
+@article{achiam2023gpt,
+  title={Gpt-4 technical report},
+  author={Achiam, Josh and Adler, Steven and Agarwal, Sandhini and Ahmad, Lama and Akkaya, Ilge and Aleman, Florencia Leoni and Almeida, Diogo and Altenschmidt, Janko and Altman, Sam and Anadkat, Shyamal and others},
+  journal={arXiv preprint arXiv:2303.08774},
+  year={2023}
+}
+
+@article{team2023gemini,
+  title={Gemini: a family of highly capable multimodal models},
+  author={Team, Gemini and Anil, Rohan and Borgeaud, Sebastian and Alayrac, Jean-Baptiste and Yu, Jiahui and Soricut, Radu and Schalkwyk, Johan and Dai, Andrew M and Hauth, Anja and Millican, Katie and others},
+  journal={arXiv preprint arXiv:2312.11805},
+  year={2023}
+}
+
+@article{zhu2025internvl3,
+  title={Intern{VL}3: Exploring Advanced Training and Test-Time Recipes for Open-Source Multimodal Models},
+  author={Zhu, Jinguo and Wang, Weiyun and Chen, Zhe and Liu, Zhaoyang and Ye, Shenglong and Gu, Lixin and Tian, Hao and Duan, Yuchen and Su, Weijie and Shao, Jie and others},
+  journal={arXiv preprint arXiv:2504.10479},
+  year={2025}
+}
+
+@inproceedings{chen-etal-2023-pre-trained,
+    title = "Can Pre-trained Vision and Language Models Answer Visual Information-Seeking Questions?",
+    author = "Chen, Yang  and
+      Hu, Hexiang  and
+      Luan, Yi  and
+      Sun, Haitian  and
+      Changpinyo, Soravit  and
+      Ritter, Alan  and
+      Chang, Ming-Wei",
+    editor = "Bouamor, Houda  and
+      Pino, Juan  and
+      Bali, Kalika",
+    booktitle = "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2023",
+    address = "Singapore",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.emnlp-main.925/",
+    doi = "10.18653/v1/2023.emnlp-main.925",
+    pages = "14948--14968",
+    abstract = "Pre-trained vision and language models have demonstrated state-of-the-art capabilities over existing tasks involving images and texts, including visual question answering. However, it remains unclear whether these models possess the capability to answer questions that are not only querying visual content but knowledge-intensive and information-seeking. In this study, we introduce InfoSeek, a visual question answering dataset tailored for information-seeking questions that cannot be answered with only common sense knowledge. Using InfoSeek, we analyze various pre-trained visual question answering models and gain insights into their characteristics. Our findings reveal that state-of-the-art pre-trained multi-modal models (e.g., PaLI-X, BLIP2, InstructBLIP) face challenges in answering visual information-seeking questions, but fine-tuning on the InfoSeek dataset elicits models to use fine-grained knowledge that was learned during pre-training. Furthermore, we show that accurate visual entity recognition can be used to improve performance on InfoSeek by retrieving relevant documents, showing a significant space for improvement."
+}
+
+@inproceedings{mensink2023encyclopedic,
+  title={Encyclopedic {VQA}: Visual Questions about Detailed Properties of Fine-grained Categories},
+  author={Mensink, Thomas and Uijlings, Jasper and Castrejon, Lluis and Goel, Arushi and Cadar, Felipe and Zhou, Howard and Sha, Fei and Araujo, Andr{\'e} and Ferrari, Vittorio},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={3113--3124},
+  year={2023}
+}
+
+@inproceedings{hu2023open,
+  title={Open-domain visual entity recognition: Towards recognizing millions of wikipedia entities},
+  author={Hu, Hexiang and Luan, Yi and Chen, Yang and Khandelwal, Urvashi and Joshi, Mandar and Lee, Kenton and Toutanova, Kristina and Chang, Ming-Wei},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={12065--12075},
+  year={2023}
+}
+
+@inproceedings{trivedi-etal-2023-interleaving,
+    title = "Interleaving Retrieval with Chain-of-Thought Reasoning for Knowledge-Intensive Multi-Step Questions",
+    author = "Trivedi, Harsh  and
+      Balasubramanian, Niranjan  and
+      Khot, Tushar  and
+      Sabharwal, Ashish",
+    editor = "Rogers, Anna  and
+      Boyd-Graber, Jordan  and
+      Okazaki, Naoaki",
+    booktitle = "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2023",
+    address = "Toronto, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.acl-long.557/",
+    doi = "10.18653/v1/2023.acl-long.557",
+    pages = "10014--10037",
+    abstract = "Prompting-based large language models (LLMs) are surprisingly powerful at generating natural language reasoning steps or Chains-of-Thoughts (CoT) for multi-step question answering (QA). They struggle, however, when the necessary knowledge is either unavailable to the LLM or not up-to-date within its parameters. While using the question to retrieve relevant text from an external knowledge source helps LLMs, we observe that this one-step retrieve-and-read approach is insufficient for multi-step QA. Here, \textit{what to retrieve} depends on \textit{what has already been derived}, which in turn may depend on \textit{what was previously retrieved}. To address this, we propose IRCoT, a new approach for multi-step QA that interleaves retrieval with steps (sentences) in a CoT, guiding the retrieval with CoT and in turn using retrieved results to improve CoT. Using IRCoT with GPT3 substantially improves retrieval (up to 21 points) as well as downstream QA (up to 15 points) on four datasets: HotpotQA, 2WikiMultihopQA, MuSiQue, and IIRC. We observe similar substantial gains in out-of-distribution (OOD) settings as well as with much smaller models such as Flan-T5-large without additional training. IRCoT reduces model hallucination, resulting in factually more accurate CoT reasoning."
+}
+
+@inproceedings{mao-etal-2024-rafe,
+    title = "{R}a{F}e: Ranking Feedback Improves Query Rewriting for {RAG}",
+    author = "Mao, Shengyu  and
+      Jiang, Yong  and
+      Chen, Boli  and
+      Li, Xiao  and
+      Wang, Peng  and
+      Wang, Xinyu  and
+      Xie, Pengjun  and
+      Huang, Fei  and
+      Chen, Huajun  and
+      Zhang, Ningyu",
+    editor = "Al-Onaizan, Yaser  and
+      Bansal, Mohit  and
+      Chen, Yun-Nung",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2024",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-emnlp.49/",
+    doi = "10.18653/v1/2024.findings-emnlp.49",
+    pages = "884--901",
+    abstract = "As Large Language Models (LLMs) and Retrieval Augmentation Generation (RAG) techniques have evolved, query rewriting has been widely incorporated into the RAG system for downstream tasks like open-domain QA to enhance document retrieval by reformulating queries. Many works have attempted to improve query rewriting in smaller models to avoid rewriting with costly LLMs, and the most common method is to employ reinforcement learning for feedback training. However, current methods require annotations (labeled relevant documents or downstream answers) or predesigned rewards for feedback, lack generalization, and fail to utilize signals tailored for query rewriting. In this paper, we propose RaFe, a framework for training query rewriting models. By leveraging reranker, RaFe provides ranking feedback aligned well with the rewriting objectives without needing signals from annotations and supports both online and offline training models. Experimental results demonstrate that with a general and publicly available reranker, RaFe can effectively steer the training for rewrite models."
+}
+
+@online{gemini,
+  author = {Koray Kavukcuoglu},
+  title = {Gemini 2.5: Our Most Intelligent {AI} Model},
+  year = 2025,
+  url = {https://blog.google/technology/google-deepmind/gemini-model-thinking-updates-march-2025/#gemini-2-5-thinking},
+  note = {Accessed: 2025-07-21}
+}
+
+@article{lu2024ovis,
+  title={Ovis: Structural embedding alignment for multimodal large language model},
+  author={Lu, Shiyin and Li, Yang and Chen, Qing-Guo and Xu, Zhao and Luo, Weihua and Zhang, Kaifu and Ye, Han-Jia},
+  journal={arXiv preprint arXiv:2405.20797},
+  year={2024}
+}
+
+@article{team2025kimi,
+  title={Kimi-vl technical report},
+  author={Team, Kimi and Du, Angang and Yin, Bohong and Xing, Bowei and Qu, Bowen and Wang, Bowen and Chen, Cheng and Zhang, Chenlin and Du, Chenzhuang and Wei, Chu and others},
+  journal={arXiv preprint arXiv:2504.07491},
+  year={2025}
+}
+
+@article{bi2024context,
+  title={Context-DPO: Aligning Language Models for Context-Faithfulness},
+  author={Bi, Baolong and Huang, Shaohan and Wang, Yiwei and Yang, Tianchi and Zhang, Zihan and Huang, Haizhen and Mei, Lingrui and Fang, Junfeng and Li, Zehao and Wei, Furu and others},
+  journal={arXiv preprint arXiv:2412.15280},
+  year={2024}
+}
+
+@inproceedings{
+zhou2023leasttomost,
+title={Least-to-Most Prompting Enables Complex Reasoning in Large Language Models},
+author={Denny Zhou and Nathanael Sch{\"a}rli and Le Hou and Jason Wei and Nathan Scales and Xuezhi Wang and Dale Schuurmans and Claire Cui and Olivier Bousquet and Quoc V Le and Ed H. Chi},
+booktitle={The Eleventh International Conference on Learning Representations },
+year={2023},
+url={https://openreview.net/forum?id=WZH7099tgfM}
+}
+
+@inproceedings{
+khot2023decomposed,
+title={Decomposed Prompting: A Modular Approach for Solving Complex Tasks},
+author={Tushar Khot and Harsh Trivedi and Matthew Finlayson and Yao Fu and Kyle Richardson and Peter Clark and Ashish Sabharwal},
+booktitle={The Eleventh International Conference on Learning Representations },
+year={2023},
+url={https://openreview.net/forum?id=_nGgzQjzaRy}
+}
+
+@article{douze2024faiss,
+      title={The Faiss library},
+      author={Matthijs Douze and Alexandr Guzhva and Chengqi Deng and Jeff Johnson and Gergely Szilvasy and Pierre-Emmanuel Mazaré and Maria Lomeli and Lucas Hosseini and Hervé Jégou},
+      year={2024},
+      eprint={2401.08281},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+
+@software{Liu_LlamaIndex_2022,
+author = {Liu, Jerry},
+doi = {10.5281/zenodo.1234},
+month = {11},
+title = {{LlamaIndex}},
+url = {https://github.com/jerryjliu/llama_index},
+year = {2022}
+}
+
+@inproceedings{
+hu2022lora,
+title={Lo{RA}: Low-Rank Adaptation of Large Language Models},
+author={Edward J Hu and yelong shen and Phillip Wallis and Zeyuan Allen-Zhu and Yuanzhi Li and Shean Wang and Lu Wang and Weizhu Chen},
+booktitle={International Conference on Learning Representations},
+year={2022},
+url={https://openreview.net/forum?id=nZeVKeeFYf9}
+}
+
+@inproceedings{ji2024chain,
+  title={Chain-of-Thought Improves Text Generation with Citations in Large Language Models},
+  author={Ji, Bin and Liu, Huijun and Du, Mingzhe and Ng, See-Kiong},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={38},
+  number={16},
+  pages={18345--18353},
+  year={2024}
+}
+
+@inproceedings{
+asai2024selfrag,
+title={Self-{RAG}: Learning to Retrieve, Generate, and Critique through Self-Reflection},
+author={Akari Asai and Zeqiu Wu and Yizhong Wang and Avirup Sil and Hannaneh Hajishirzi},
+booktitle={The Twelfth International Conference on Learning Representations},
+year={2024},
+url={https://openreview.net/forum?id=hSyW5go0v8}
+}
+
+@inproceedings{slobodkin-etal-2024-attribute,
+    title = "Attribute First, then Generate: Locally-attributable Grounded Text Generation",
+    author = "Slobodkin, Aviv  and
+      Hirsch, Eran  and
+      Cattan, Arie  and
+      Schuster, Tal  and
+      Dagan, Ido",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.acl-long.182/",
+    doi = "10.18653/v1/2024.acl-long.182",
+    pages = "3309--3344",
+    abstract = "Recent efforts to address hallucinations in Large Language Models (LLMs) have focused on attributed text generation, which supplements generated texts with citations of supporting sources for post-generation fact-checking and corrections. Yet, these citations often point to entire documents or paragraphs, burdening users with extensive verification work. In this paper, we introduce a locally-attributable text generation approach, prioritizing concise attributions. Our method, named ``Attribute First, then Generate{``}, breaks down the conventional end-to-end generation process into three intuitive steps: content selection, sentence planning, and sequential sentence generation. By initially identifying relevant source segments ({``}select first{``}) and then conditioning the generation process on them ({``}then generate{``}), we ensure these segments also act as the output{'}s fine-grained attributions ({``}select{``} becomes ``attribute{``}). Tested on Multi-document Summarization and Long-form Question-answering, our method not only yields more concise citations than the baselines but also maintains - and in some cases enhances - both generation quality and attribution accuracy. Furthermore, it significantly reduces the time required for fact verification by human assessors."
+}
+
+@inproceedings{xia-etal-2025-ground,
+    title = "Ground Every Sentence: Improving Retrieval-Augmented {LLM}s with Interleaved Reference-Claim Generation",
+    author = "Xia, Sirui  and
+      Wang, Xintao  and
+      Liang, Jiaqing  and
+      Zhang, Yifei  and
+      Zhou, Weikang  and
+      Deng, Jiaji  and
+      Yu, Fei  and
+      Xiao, Yanghua",
+    editor = "Chiruzzo, Luis  and
+      Ritter, Alan  and
+      Wang, Lu",
+    booktitle = "Findings of the Association for Computational Linguistics: NAACL 2025",
+    month = apr,
+    year = "2025",
+    address = "Albuquerque, New Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.findings-naacl.55/",
+    doi = "10.18653/v1/2025.findings-naacl.55",
+    pages = "969--988",
+    ISBN = "979-8-89176-195-7",
+    abstract = "Retrieval-Augmented Generation (RAG) has been widely adopted to enhance Large Language Models (LLMs) in knowledge-intensive tasks. To enhance credibility and verifiability in RAG systems, Attributed Text Generation (ATG) is proposed, which provides citations to retrieval knowledge in LLM-generated responses. Prior methods mainly adopt coarse-grained attributions, with passage-level or paragraph-level references or citations, which fall short in verifiability. This paper proposes ReClaim(Refer {\&} Claim), a fine-grained ATG method that alternates the generation of references and answers step by step. Different from previous coarse-grained attribution, ReClaim provides sentence-level citations in long-form question-answering tasks. With extensive experiments, we verify the effectiveness of ReClaim in extensive settings, achieving a citation accuracy rate of 90{\%}."
+}
+
+@inproceedings{ye-etal-2024-effective,
+    title = "Effective Large Language Model Adaptation for Improved Grounding and Citation Generation",
+    author = "Ye, Xi  and
+      Sun, Ruoxi  and
+      Arik, Sercan  and
+      Pfister, Tomas",
+    editor = "Duh, Kevin  and
+      Gomez, Helena  and
+      Bethard, Steven",
+    booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
+    month = jun,
+    year = "2024",
+    address = "Mexico City, Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.naacl-long.346/",
+    doi = "10.18653/v1/2024.naacl-long.346",
+    pages = "6237--6251",
+    abstract = "Large language models (LLMs) have achieved remarkable advancements in natural language understanding and generation. However, one major issue towards their widespread deployment in the real world is that they can generate ``hallucinated'' answers that are not factual.Towards this end, this paper focuses on improving LLMs by grounding their responses in retrieved passages and by providing citations. We propose a new framework, AGREE, Adaptation for GRounding EnhancEment, that improves the grounding from a holistic perspective. Our framework tunes LLMs to self-ground the claims in their responses and provide accurate citations to retrieved documents. This tuning on top of the pre-trained LLMs requires well-grounded responses (with citations) for paired queries, for which we introduce a method that can automatically construct such data from unlabeled queries. The self-grounding capability of tuned LLMs further grants them a test-time adaptation (TTA) capability that can actively retrieve passages to support the claims that have not been grounded, which iteratively improves the responses of LLMs. Across five datasets and two LLMs, our results show that the proposed tuning-based framework generates superior grounded responses with more accurate citations compared to prompting-based approaches and post-hoc citing-based approaches."
+}
+
+@inproceedings{huang-etal-2024-training,
+    title = "Training Language Models to Generate Text with Citations via Fine-grained Rewards",
+    author = "Huang, Chengyu  and
+      Wu, Zeqiu  and
+      Hu, Yushi  and
+      Wang, Wenya",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.acl-long.161/",
+    doi = "10.18653/v1/2024.acl-long.161",
+    pages = "2926--2949",
+    abstract = "While recent Large Language Models (LLMs) have proven useful in answering user queries, they are prone to hallucination, and their responses often lack credibility due to missing references to reliable sources. An intuitive solution to these issues would be to include in-text citations referring to external documents as evidence. While previous works have directly prompted LLMs to generate in-text citations, their performances are far from satisfactory, especially when it comes to smaller LLMs. In this work, we propose an effective training framework using fine-grained rewards to teach LLMs to generate highly supportive and relevant citations, while ensuring the correctness of their responses. We also conduct a systematic analysis of applying these fine-grained rewards to common LLM training strategies, demonstrating its advantage over conventional practices. We conduct extensive experiments on Question Answering (QA) datasets taken from the ALCE benchmark and validate the model{'}s generalizability using EXPERTQA. On LLaMA-2-7B, the incorporation of fine-grained rewards achieves the best performance among the baselines, even surpassing that of GPT-3.5-turbo."
+}
+
+@inproceedings{li-etal-2024-improving-attributed,
+    title = "Improving Attributed Text Generation of Large Language Models via Preference Learning",
+    author = "Li, Dongfang  and
+      Sun, Zetian  and
+      Hu, Baotian  and
+      Liu, Zhenyu  and
+      Hu, Xinshuo  and
+      Liu, Xuebo  and
+      Zhang, Min",
+    editor = "Ku, Lun-Wei  and
+      Martins, Andre  and
+      Srikumar, Vivek",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2024",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-acl.301/",
+    doi = "10.18653/v1/2024.findings-acl.301",
+    pages = "5079--5101",
+    abstract = "Large language models have been widely adopted in natural language processing, yet they face the challenge of generating unreliable content. Recent works aim to reduce misinformation and hallucinations by resorting to attribution as a means to provide evidence (i.e., citations). However, current attribution methods usually focus on the retrieval stage and automatic evaluation that neglect mirroring the citation mechanisms in human scholarly writing to bolster credibility. In this paper, we address these challenges by modelling the attribution task as preference learning and introducing an Automatic Preference Optimization (APO) framework. First, we create a curated collection for post-training with 6,330 examples by collecting and filtering from existing datasets. Second, considering the high cost of labelling preference data, we further propose an automatic method to synthesize attribution preference data resulting in 95,263 pairs. Moreover, inspired by the human citation process, we further propose a progressive preference optimization method by leveraging fine-grained information. Extensive experiments on three datasets (i.e., ASQA, StrategyQA, and ELI5) demonstrate that APO achieves state-of-the-art citation F1 with higher answer quality."
+}
+
+@inproceedings{zhu-etal-2025-mitigating,
+    title = "Mitigating Lost-in-Retrieval Problems in Retrieval Augmented Multi-Hop Question Answering",
+    author = "Zhu, Rongzhi  and
+      Liu, Xiangyu  and
+      Sun, Zequn  and
+      Wang, Yiwei  and
+      Hu, Wei",
+    editor = "Che, Wanxiang  and
+      Nabende, Joyce  and
+      Shutova, Ekaterina  and
+      Pilehvar, Mohammad Taher",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-long.1089/",
+    pages = "22362--22375",
+    ISBN = "979-8-89176-251-0",
+    abstract = "In this paper, we identify a critical problem, ``lost-in-retrieval'', in retrieval-augmented multi-hop question answering (QA): the key entities are missed in LLMs' sub-question decomposition. ``Lost-in-retrieval'' significantly degrades the retrieval performance, which disrupts the reasoning chain and leads to the incorrect answers. To resolve this problem, we propose a progressive retrieval and rewriting method, namely ChainRAG, which sequentially handles each sub-question by completing missing key entities and retrieving relevant sentences from a sentence graph for answer generation. Each step in our retrieval and rewriting process builds upon the previous one, creating a seamless chain that leads to accurate retrieval and answers. Finally, all retrieved sentences and sub-question answers are integrated to generate a comprehensive answer to the original question. We evaluate ChainRAG on three multi-hop QA datasets{---}MuSiQue, 2Wiki, and HotpotQA{---}using three large language models: GPT4o-mini, Qwen2.5-72B, and GLM-4-Plus. Empirical results demonstrate that ChainRAG consistently outperforms baselines in both effectiveness and efficiency."
+}
+
+@inproceedings{ammann-etal-2025-question,
+    title = "Question Decomposition for Retrieval-Augmented Generation",
+    author = "Ammann, Paul J. L.  and
+      Golde, Jonas  and
+      Akbik, Alan",
+    editor = "Zhao, Jin  and
+      Wang, Mingyang  and
+      Liu, Zhu",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 4: Student Research Workshop)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-srw.32/",
+    pages = "497--507",
+    ISBN = "979-8-89176-254-1",
+    abstract = "Grounding large language models (LLMs) in verifiable external sources is a well-established strategy for generating reliable answers. Retrieval-augmented generation (RAG) is one such approach, particularly effective for tasks like question answering: it retrieves passages that are semantically related to the question and then conditions the model on this evidence. However, multi-hop questions, such as \textit{{``}Which company among NVIDIA, Apple, and Google made the biggest profit in 2023?,''} challenge RAG because relevant facts are often distributed across multiple documents rather than co-occurring in one source, making it difficult for standard RAG to retrieve sufficient information. To address this, we propose a RAG pipeline that incorporates question decomposition: (i) an LLM decomposes the original query into sub-questions, (ii) passages are retrieved for each sub-question, and (iii) the merged candidate pool is reranked to improve the coverage and precision of the retrieved evidence. We show that question decomposition effectively assembles complementary documents, while reranking reduces noise and promotes the most relevant passages before answer generation. We evaluate our approach on the MultiHop-RAG and HotpotQA, showing gains in retrieval ($MRR@10: +36.7\%$) and answer accuracy ($F1: +11.6\%$) over standard RAG baselines. The pipeline is a practical, drop-in enhancement requiring no task-specific training or specialized indexing."
+}
+
+@inproceedings{chuang2025selfcite,
+    title={SelfCite: Self-Supervised Alignment for Context Attribution in Large Language Models},
+    author={Yung-Sung Chuang and Benjamin Cohen-Wang and Zejiang Shen and Zhaofeng Wu and Hu Xu and Xi Victoria Lin and James R. Glass and Shang-Wen Li and Wen-tau Yih},
+    booktitle={Forty-second International Conference on Machine Learning},
+    year={2025},
+    url={https://openreview.net/forum?id=rKi8eyJBoB}
+}
+
+@inproceedings{DBLP:conf/iclr/DrozdovSASSCBZ23,
+  author       = {Andrew Drozdov and
+                  Nathanael Sch{\"{a}}rli and
+                  Ekin Aky{\"{u}}rek and
+                  Nathan Scales and
+                  Xinying Song and
+                  Xinyun Chen and
+                  Olivier Bousquet and
+                  Denny Zhou},
+  title        = {Compositional Semantic Parsing with Large Language Models},
+  booktitle    = {The Eleventh International Conference on Learning Representations,
+                  {ICLR} 2023, Kigali, Rwanda, May 1-5, 2023},
+  publisher    = {OpenReview.net},
+  year         = {2023},
+  url          = {https://openreview.net/forum?id=gJW8hSGBys8},
+  timestamp    = {Wed, 24 Jul 2024 16:50:33 +0200},
+  biburl       = {https://dblp.org/rec/conf/iclr/DrozdovSASSCBZ23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/acl/WangXLHLLL23,
+  author       = {Lei Wang and
+                  Wanyu Xu and
+                  Yihuai Lan and
+                  Zhiqiang Hu and
+                  Yunshi Lan and
+                  Roy Ka{-}Wei Lee and
+                  Ee{-}Peng Lim},
+  editor       = {Anna Rogers and
+                  Jordan L. Boyd{-}Graber and
+                  Naoaki Okazaki},
+  title        = {Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning
+                  by Large Language Models},
+  booktitle    = {Proceedings of the 61st Annual Meeting of the Association for Computational
+                  Linguistics (Volume 1: Long Papers), {ACL} 2023, Toronto, Canada,
+                  July 9-14, 2023},
+  pages        = {2609--2634},
+  publisher    = {Association for Computational Linguistics},
+  year         = {2023},
+  url          = {https://doi.org/10.18653/v1/2023.acl-long.147},
+  doi          = {10.18653/V1/2023.ACL-LONG.147},
+  timestamp    = {Tue, 07 May 2024 20:08:12 +0200},
+  biburl       = {https://dblp.org/rec/conf/acl/WangXLHLLL23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}

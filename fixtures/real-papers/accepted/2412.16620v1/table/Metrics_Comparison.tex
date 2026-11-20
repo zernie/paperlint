@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Comparison of LLMs across different metrics on Defects4J and $Methods2Test_{filter}$ benchmarks.}
+    \label{tab:metrics_compirason}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{lcccccccccc}
+    \toprule
+    \multirow{2}{*}{\textbf{LLMs}}
+    & \multicolumn{5}{c}{\textbf{Defects4J}} & \multicolumn{4}{c}{\textbf{Methods2Test$_{\textbf{filter}}$}} \\
+    \cmidrule(lr){2-6} \cmidrule(lr){7-10}
+     & \textbf{Correct} & \textbf{Passing} & \textbf{Failing} & \textbf{Build Error} & \textbf{Syntax Error} & \textbf{EM} & \textbf{BLEU} & \textbf{CodeBLEU} & \textbf{Syntax Error} \\
+
+    \midrule
+    CodeBERT & 5.56\% & 8.41\% & 5.99\% & 78.90\% & 6.70\% & 0.21\% & 11.96\% & 18.23\% & 9.57\% \\
+    GraphCodeBERT & 11.77\% & 14.02\% & 11.19\% & 65.89\% & 8.89\% & 0.55\% & 12.65\% & 18.51\% & 10.99\% \\
+    UniXcoder & 6.42\% & 8.12\% & 10.48\% & 69.02\% & 12.37\% & 0.46\% & 12.41\% & 18.82\% & 10.23\% \\
+    CodeT5-base & 15.91\% & 18.76\% & 14.90\% & 61.36\% & 4.98\% & 0.29\% & 6.11\% & 23.89\% & 10.09\% \\
+    CodeT5p-220m & 17.75\% & 19.79\% & 27.07\% & 50.26\% & 2.88\% & 0.30\% & 12.11\% & 23.00\% & 3.73\% \\
+    PLBART-large & 17.50\% & 20.25\% & 20.63\% & 52.96\% & 6.16\% & 0.05\% & 9.43\% & 22.16\% & 6.47\% \\
+    CodeGPT & 7.66\% & 9.64\% & 9.81\% & 39.67\% & 40.88\% & 0.09\% & 8.28\% & 21.50\% & 15.47\% \\
+    StarCoder2-7b & 20.78\% & 23.10\% & 23.16\% & 41.45\% & 12.30\% & 0.27\% & 5.56\% & 22.34\% & 5.92\% \\
+    CodeLlama-7b & 29.50\% & 32.14\% & 7.86\% & 30.87\% & 29.13\% & 0.37\% & 9.26\% & 25.11\% & 4.96\% \\
+    DeepSeek-Coder-6b & 33.68\% & 36.02\% & 9.00\% & 21.36\% & 33.62\% & 0.43\% & 8.61\% & 24.96\% & 5.18\% \\
+    \bottomrule
+    \end{tabular}
+    }
+\end{table}

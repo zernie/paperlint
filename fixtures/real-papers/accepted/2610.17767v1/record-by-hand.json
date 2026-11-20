@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "ACL2026/manuscripts/01_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/manuscripts/02_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/manuscripts/03_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/manuscripts/04_experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/manuscripts/05_analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/manuscripts/06_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "ACL2026/appendix/app.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "0bb28b750d76ebc14ee7be16d93ccb48d9fb2ee86be810d617bf3ab022e44901",
+    "acl.sty": "ed5b0d5693ed6d833b888ff6caf56c05a2b35e699cc48c178ff8e26c0d47416b",
+    "ACL2026/manuscripts/01_introduction.tex": "340a3c49ab7da2112756bfa34da1414e31f76e73219eaf206baf97278d54341c",
+    "ACL2026/manuscripts/02_related_work.tex": "2f17e81a2fdcb07756696025e24318b41ffe6be57f1635cc7b24a3dbfc5a65ff",
+    "ACL2026/manuscripts/03_method.tex": "47e6f8f82c37104c932bf3a475acc1f2a3bf0614246ed35897edea06b05e4d13",
+    "ACL2026/manuscripts/04_experiment.tex": "074bb2500061ef05a3fc8435fe7ad7a23310198642ef24788f5bf9dcce2f9fa4",
+    "ACL2026/manuscripts/05_analysis.tex": "105293f930aa03de000487695a774ba0a18e75652c3b2738dbfbd648e70143e5",
+    "ACL2026/manuscripts/06_conclusion.tex": "f0b20e3292b49d28f02efbd11479e6a9201e657d52ae16e55a8432743d4c1c8b",
+    "ACL2026/appendix/app.tex": "9f99455db8f59e550f461065894b8a5ddf7ad1db15293ac0ccdc16bf6f3fbeff"
+  }
+}

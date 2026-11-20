@@ -1,0 +1,33 @@
+
+
+\begin{table*}[htbp!]
+\small
+    \centering
+    \begin{tabular}{lcccccccc} 
+    \toprule
+     & \multicolumn{1}{c}{} & \multicolumn{4}{c}{\textbf{Domain Specific Simulators}} & \multicolumn{3}{c}{\textbf{Analytical Models}} \\ 
+    \cmidrule(l{2pt}r{2pt}){3-6}\cmidrule(l{2pt}r{2pt}){7-9}
+    & \textbf{\sysname} & Proteus & vTrain & DistSim & Daydream & Calculon & AMPed & DistIR \\
+    \noalign{\hrule height 0.5pt}
+    \rowcolor{gray!15}
+         \multicolumn{9}{c}{\textit{System Properties}}\\\hline Deployment-Free Prediction  & \greencheck & \greencheck & \redcross & \redcross & \redcross & \greencheck & \greencheck & \greencheck \\
+Transparent -- \textit{No Code Modifications} & \greencheck & \redcross & \redcross & \redcross & \redcross & \redcross & \redcross & \redcross \\
+Workload Agnostic & \greencheck & \greencheck & \redcross & \greencheck & \greencheck & \redcross & \redcross & \greencheck \\
+\noalign{\hrule height 0.5pt}
+    \rowcolor{gray!15}
+         \multicolumn{9}{c}{\textit{Modeling Domain}}\\\hline
+    Data Parallel & \greencheck & \greencheck & \greencheck & \greencheck & \greencheck & \greencheck & \greencheck & \greencheck \\
+    Tensor Parallel & \greencheck & \greencheck & \greencheck & \greencheck & \redcross & \greencheck & \greencheck & \greencheck \\
+     Pipeline Parallel & \greencheck & \greencheck & \greencheck & \greencheck & \redcross & \greencheck & \greencheck & \greencheck \\
+    Sequence Parallel & \greencheck & \redcross & \redcross & \redcross & \redcross & \greencheck & \redcross & \redcross \\
+    Pipeline Interleaving & \greencheck & \greencheck & \redcross & \redcross & \redcross & \greencheck & \redcross & \greencheck \\
+    Distributed Optimizer & \greencheck & \greencheck & \redcross & \redcross & \redcross & \greencheck & \redcross & \greencheck \\
+    Activation Recomputation & \greencheck & \greencheck & \redcross & \redcross & \redcross & \greencheck & \redcross & \redcross \\
+    Gradient Accumulation & \greencheck & \redcross & \redcross & \redcross & \redcross & \greencheck & \redcross & \greencheck \\
+
+    \bottomrule
+    \end{tabular}
+    \caption{
+    Comparison of \sysname with existing performance modeling approaches. \sysname uniquely combines deployment-free prediction, transparency, and workload agnosticism, supporting a broad range of parallelism and optimization strategies across training configurations. Competing systems are limited in either coverage and often require code modifications.}
+    \label{tab:features_systems}
+\end{table*}

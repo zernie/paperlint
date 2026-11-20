@@ -1,0 +1,367 @@
+\begin{thebibliography}{72}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abid et~al.(2019)Abid, Abdalla, Abid, Khan, Alfozan, and Zou]{abid2019gradio}
+Abubakar Abid, Ali Abdalla, Ali Abid, Dawood Khan, Abdulrahman Alfozan, and James Zou.
+\newblock Gradio: Hassle-free sharing and testing of ml models in the wild.
+\newblock \emph{arXiv preprint arXiv:1906.02569}, 2019.
+
+\bibitem[Agustsson and Timofte(2017)]{Agustsson_2017_CVPR_Workshops}
+Eirikur Agustsson and Radu Timofte.
+\newblock Ntire 2017 challenge on single image super-resolution: Dataset and study.
+\newblock In \emph{The IEEE Conference on Computer Vision and Pattern Recognition (CVPR) Workshops}, 2017.
+
+\bibitem[Blattmann et~al.(2023)Blattmann, Dockhorn, Kulal, Mendelevitch, Kilian, Lorenz, Levi, English, Voleti, Letts, et~al.]{blattmann2023stable}
+Andreas Blattmann, Tim Dockhorn, Sumith Kulal, Daniel Mendelevitch, Maciej Kilian, Dominik Lorenz, Yam Levi, Zion English, Vikram Voleti, Adam Letts, et~al.
+\newblock Stable video diffusion: Scaling latent video diffusion models to large datasets.
+\newblock \emph{arXiv preprint arXiv:2311.15127}, 2023.
+
+\bibitem[Brooks et~al.(2023)Brooks, Holynski, and Efros]{brooks2023instructpix2pix}
+Tim Brooks, Aleksander Holynski, and Alexei~A Efros.
+\newblock Instructpix2pix: Learning to follow image editing instructions.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 18392--18402, 2023.
+
+\bibitem[Cao et~al.(2023)Cao, Dong, and Fu]{cao2023zits}
+Chenjie Cao, Qiaole Dong, and Yanwei Fu.
+\newblock Zits++: Image inpainting by improving the incremental transformer on structural priors.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 45\penalty0 (10):\penalty0 12667--12684, 2023.
+
+\bibitem[Criminisi et~al.(2004)Criminisi, P{\'e}rez, and Toyama]{criminisi2004region}
+Antonio Criminisi, Patrick P{\'e}rez, and Kentaro Toyama.
+\newblock Region filling and object removal by exemplar-based image inpainting.
+\newblock \emph{IEEE Transactions on image processing}, 13\penalty0 (9):\penalty0 1200--1212, 2004.
+
+\bibitem[Dong et~al.(2022)Dong, Cao, and Fu]{dong2022incremental}
+Qiaole Dong, Chenjie Cao, and Yanwei Fu.
+\newblock Incremental transformer structure enhanced image inpainting with masking positional encoding.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 11358--11368, 2022.
+
+\bibitem[Ekin et~al.(2024)Ekin, Yildirim, Caglar, Erdem, Erdem, and Dundar]{ekin2024clipaway}
+Yigit Ekin, Ahmet~Burak Yildirim, Erdem~Eren Caglar, Aykut Erdem, Erkut Erdem, and Aysegul Dundar.
+\newblock Clipaway: Harmonizing focused embeddings for removing objects via diffusion models.
+\newblock \emph{arXiv preprint arXiv:2406.09368}, 2024.
+
+\bibitem[Esser et~al.(2024)Esser, Kulal, Blattmann, Entezari, M{\"u}ller, Saini, Levi, Lorenz, Sauer, Boesel, et~al.]{esser2024scaling}
+Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas M{\"u}ller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et~al.
+\newblock Scaling rectified flow transformers for high-resolution image synthesis.
+\newblock In \emph{Forty-first International Conference on Machine Learning}, 2024.
+
+\bibitem[Geng et~al.(2024)Geng, Yang, Hang, Li, Gu, Zhang, Bao, Zhang, Li, Hu, et~al.]{geng2024instructdiffusion}
+Zigang Geng, Binxin Yang, Tiankai Hang, Chen Li, Shuyang Gu, Ting Zhang, Jianmin Bao, Zheng Zhang, Houqiang Li, Han Hu, et~al.
+\newblock Instructdiffusion: A generalist modeling interface for vision tasks.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 12709--12720, 2024.
+
+\bibitem[Goodfellow et~al.(2020)Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, and Bengio]{goodfellow2020generative}
+Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
+\newblock Generative adversarial networks.
+\newblock \emph{Communications of the ACM}, 63\penalty0 (11):\penalty0 139--144, 2020.
+
+\bibitem[Guo et~al.(2023)Guo, Wang, Yang, Huang, Wang, Pfister, and Wen]{guo2023shadowdiffusion}
+Lanqing Guo, Chong Wang, Wenhan Yang, Siyu Huang, Yufei Wang, Hanspeter Pfister, and Bihan Wen.
+\newblock Shadowdiffusion: When degradation prior meets diffusion model for shadow removal.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 14049--14058, 2023.
+
+\bibitem[Han et~al.(2024)Han, Wen, Chen, Zhang, Song, Ren, Gao, Stathopoulos, He, Chen, et~al.]{han2024proxedit}
+Ligong Han, Song Wen, Qi Chen, Zhixing Zhang, Kunpeng Song, Mengwei Ren, Ruijiang Gao, Anastasis Stathopoulos, Xiaoxiao He, Yuxiao Chen, et~al.
+\newblock Proxedit: Improving tuning-free real image editing with proximal guidance.
+\newblock In \emph{Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision}, pages 4291--4301, 2024.
+
+\bibitem[Hertz et~al.(2022)Hertz, Mokady, Tenenbaum, Aberman, Pritch, and Cohen-Or]{hertz2022prompt}
+Amir Hertz, Ron Mokady, Jay Tenenbaum, Kfir Aberman, Yael Pritch, and Daniel Cohen-Or.
+\newblock Prompt-to-prompt image editing with cross attention control.
+\newblock \emph{arXiv preprint arXiv:2208.01626}, 2022.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ho2020denoising}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock \emph{Advances in neural information processing systems}, 33:\penalty0 6840--6851, 2020.
+
+\bibitem[Hu et~al.(2021)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and Chen]{hu2021lora}
+Edward~J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock \emph{arXiv preprint arXiv:2106.09685}, 2021.
+
+\bibitem[Jia et~al.(2024)Jia, Yuan, Cheng, Wang, Li, Jia, and Zhang]{jia2024designedit}
+Yueru Jia, Yuhui Yuan, Aosong Cheng, Chuke Wang, Ji Li, Huizhu Jia, and Shanghang Zhang.
+\newblock Designedit: Multi-layered latent decomposition and fusion for unified \& accurate image editing.
+\newblock \emph{arXiv preprint arXiv:2403.14487}, 2024.
+
+\bibitem[Kirillov et~al.(2023)Kirillov, Mintun, Ravi, Mao, Rolland, Gustafson, Xiao, Whitehead, Berg, Lo, et~al.]{kirillov2023segment}
+Alexander Kirillov, Eric Mintun, Nikhila Ravi, Hanzi Mao, Chloe Rolland, Laura Gustafson, Tete Xiao, Spencer Whitehead, Alexander~C Berg, Wan-Yen Lo, et~al.
+\newblock Segment anything.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 4015--4026, 2023.
+
+\bibitem[Ko and Kim(2023)]{ko2023continuously}
+Keunsoo Ko and Chang-Su Kim.
+\newblock Continuously masked transformer for image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 13169--13178, 2023.
+
+\bibitem[Kuznetsova et~al.(2020)Kuznetsova, Rom, Alldrin, Uijlings, Krasin, Pont-Tuset, Kamali, Popov, Malloci, Kolesnikov, et~al.]{kuznetsova2020open}
+Alina Kuznetsova, Hassan Rom, Neil Alldrin, Jasper Uijlings, Ivan Krasin, Jordi Pont-Tuset, Shahab Kamali, Stefan Popov, Matteo Malloci, Alexander Kolesnikov, et~al.
+\newblock The open images dataset v4: Unified image classification, object detection, and visual relationship detection at scale.
+\newblock \emph{International journal of computer vision}, 128\penalty0 (7):\penalty0 1956--1981, 2020.
+
+\bibitem[Lahiri et~al.(2020)Lahiri, Jain, Agrawal, Mitra, and Biswas]{lahiri2020prior}
+Avisek Lahiri, Arnav~Kumar Jain, Sanskar Agrawal, Pabitra Mitra, and Prabir~Kumar Biswas.
+\newblock Prior guided gan based semantic inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 13696--13705, 2020.
+
+\bibitem[Lei et~al.(2023)Lei, Tang, and Jia]{lei2023rgbd2}
+Jiabao Lei, Jiapeng Tang, and Kui Jia.
+\newblock Rgbd2: Generative scene synthesis via incremental view inpainting using rgbd diffusion models.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 8422--8434, 2023.
+
+\bibitem[Li et~al.(2020)Li, Wang, Zhang, Du, and Tao]{li2020recurrent}
+Jingyuan Li, Ning Wang, Lefei Zhang, Bo Du, and Dacheng Tao.
+\newblock Recurrent feature reasoning for image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 7760--7768, 2020.
+
+\bibitem[Li et~al.(2023)Li, Guo, Guo, Zhou, and Zhang]{Harmonization2024}
+Ruibin Li, Jingcai Guo, Song Guo, Qihua Zhou, and Jie Zhang.
+\newblock Freepih: Training-free painterly image harmonization with diffusion model.
+\newblock \emph{CoRR}, abs/2311.14926, 2023.
+
+\bibitem[Li et~al.(2024)Li, Li, Guo, and Zhang]{li2024source}
+Ruibin Li, Ruihuang Li, Song Guo, and Lei Zhang.
+\newblock Source prompt disentangled inversion for boosting image editability with diffusion models.
+\newblock In \emph{European Conference on Computer Vision}, 2024.
+
+\bibitem[Li et~al.(2022)Li, Lin, Zhou, Qi, Wang, and Jia]{li2022mat}
+Wenbo Li, Zhe Lin, Kun Zhou, Lu Qi, Yi Wang, and Jiaya Jia.
+\newblock Mat: Mask-aware transformer for large hole image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 10758--10768, 2022.
+
+\bibitem[Library(2024)]{opencv}
+Open Computer~Vision Library.
+\newblock Cv2 dilate function, 2024.
+
+\bibitem[Lin et~al.(2014)Lin, Maire, Belongie, Hays, Perona, Ramanan, Doll{\'a}r, and Zitnick]{lin2014microsoft}
+Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll{\'a}r, and C~Lawrence Zitnick.
+\newblock Microsoft coco: Common objects in context.
+\newblock In \emph{Computer Vision--ECCV 2014: 13th European Conference, Zurich, Switzerland, September 6-12, 2014, Proceedings, Part V 13}, pages 740--755. Springer, 2014.
+
+\bibitem[Liu et~al.(2018)Liu, Reda, Shih, Wang, Tao, and Catanzaro]{liu2018image}
+Guilin Liu, Fitsum~A Reda, Kevin~J Shih, Ting-Chun Wang, Andrew Tao, and Bryan Catanzaro.
+\newblock Image inpainting for irregular holes using partial convolutions.
+\newblock In \emph{Proceedings of the European conference on computer vision (ECCV)}, pages 85--100, 2018.
+
+\bibitem[Liu et~al.(2019)Liu, Jiang, Xiao, and Yang]{liu2019coherent}
+Hongyu Liu, Bin Jiang, Yi Xiao, and Chao Yang.
+\newblock Coherent semantic attention for image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF international conference on computer vision}, pages 4170--4179, 2019.
+
+\bibitem[Liu et~al.(2020)Liu, Jiang, Song, Huang, and Yang]{liu2020rethinking}
+Hongyu Liu, Bin Jiang, Yibing Song, Wei Huang, and Chao Yang.
+\newblock Rethinking image inpainting via a mutual encoder-decoder with feature equalizations.
+\newblock In \emph{Computer Vision--ECCV 2020: 16th European Conference, Glasgow, UK, August 23--28, 2020, Proceedings, Part II 16}, pages 725--741. Springer, 2020.
+
+\bibitem[Liu et~al.(2021)Liu, Wan, Huang, Song, Han, and Liao]{liu2021pd}
+Hongyu Liu, Ziyu Wan, Wei Huang, Yibing Song, Xintong Han, and Jing Liao.
+\newblock Pd-gan: Probabilistic diverse gan for image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 9371--9381, 2021.
+
+\bibitem[Liu et~al.(2024)Liu, Li, Wu, and Lee]{liu2024visual}
+Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong~Jae Lee.
+\newblock Visual instruction tuning.
+\newblock \emph{Advances in neural information processing systems}, 36, 2024.
+
+\bibitem[Loshchilov(2017)]{loshchilov2017decoupled}
+I Loshchilov.
+\newblock Decoupled weight decay regularization.
+\newblock \emph{arXiv preprint arXiv:1711.05101}, 2017.
+
+\bibitem[Lugmayr et~al.(2022)Lugmayr, Danelljan, Romero, Yu, Timofte, and Van~Gool]{lugmayr2022repaint}
+Andreas Lugmayr, Martin Danelljan, Andres Romero, Fisher Yu, Radu Timofte, and Luc Van~Gool.
+\newblock Repaint: Inpainting using denoising diffusion probabilistic models.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 11461--11471, 2022.
+
+\bibitem[Luo et~al.(2023)Luo, Tan, Huang, Li, and Zhao]{luo2023latent}
+Simian Luo, Yiqin Tan, Longbo Huang, Jian Li, and Hang Zhao.
+\newblock Latent consistency models: Synthesizing high-resolution images with few-step inference.
+\newblock \emph{arXiv preprint arXiv:2310.04378}, 2023.
+
+\bibitem[Ma et~al.(2022)Ma, Liu, Bai, Wang, Liu, Tao, and Hancock]{ma2022regionwise}
+Yuqing Ma, Xianglong Liu, Shihao Bai, Lei Wang, Aishan Liu, Dacheng Tao, and Edwin~R Hancock.
+\newblock Regionwise generative adversarial image inpainting for large missing areas.
+\newblock \emph{IEEE transactions on cybernetics}, 53\penalty0 (8):\penalty0 5226--5239, 2022.
+
+\bibitem[Mahfoudi et~al.(2019)Mahfoudi, Tajini, Retraint, Morain-Nicolier, Dugelay, and Marc]{mahfoudi2019defacto}
+Ga{\"e}l Mahfoudi, Badr Tajini, Florent Retraint, Frederic Morain-Nicolier, Jean~Luc Dugelay, and PIC Marc.
+\newblock Defacto: Image and face manipulation dataset.
+\newblock In \emph{2019 27Th european signal processing conference (EUSIPCO)}, pages 1--5. IEEE, 2019.
+
+\bibitem[Mokady et~al.(2022)Mokady, Hertz, Aberman, Pritch, and Cohen-Or]{mokady2022null}
+Ron Mokady, Amir Hertz, Kfir Aberman, Yael Pritch, and Daniel Cohen-Or.
+\newblock Null-text inversion for editing real images using guided diffusion models.
+\newblock \emph{arXiv preprint arXiv:2211.09794}, 2022.
+
+\bibitem[Oquab et~al.(2023)Oquab, Darcet, Moutakanni, Vo, Szafraniec, Khalidov, Fernandez, Haziza, Massa, El-Nouby, et~al.]{oquab2023dinov2}
+Maxime Oquab, Timoth{\'e}e Darcet, Th{\'e}o Moutakanni, Huy Vo, Marc Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel Haziza, Francisco Massa, Alaaeldin El-Nouby, et~al.
+\newblock Dinov2: Learning robust visual features without supervision.
+\newblock \emph{arXiv preprint arXiv:2304.07193}, 2023.
+
+\bibitem[Pathak et~al.(2016)Pathak, Krahenbuhl, Donahue, Darrell, and Efros]{pathak2016context}
+Deepak Pathak, Philipp Krahenbuhl, Jeff Donahue, Trevor Darrell, and Alexei~A Efros.
+\newblock Context encoders: Feature learning by inpainting.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 2536--2544, 2016.
+
+\bibitem[Podell et~al.(2023)Podell, English, Lacey, Blattmann, Dockhorn, M{\"u}ller, Penna, and Rombach]{podell2023sdxl}
+Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas M{\"u}ller, Joe Penna, and Robin Rombach.
+\newblock Sdxl: Improving latent diffusion models for high-resolution image synthesis.
+\newblock \emph{arXiv preprint arXiv:2307.01952}, 2023.
+
+\bibitem[Quan et~al.(2024)Quan, Chen, Liu, Yan, and Wonka]{quan2024deep}
+Weize Quan, Jiaxi Chen, Yanli Liu, Dong-Ming Yan, and Peter Wonka.
+\newblock Deep learning-based image and video inpainting: A survey.
+\newblock \emph{International Journal of Computer Vision}, 132\penalty0 (7):\penalty0 2367--2400, 2024.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, et~al.]{radford2021learning}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et~al.
+\newblock Learning transferable visual models from natural language supervision.
+\newblock In \emph{International conference on machine learning}, pages 8748--8763. PMLR, 2021.
+
+\bibitem[Rombach et~al.(2022)Rombach, Blattmann, Lorenz, Esser, and Ommer]{rombach2022high}
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj{\"o}rn Ommer.
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 10684--10695, 2022.
+
+\bibitem[Ronneberger et~al.(2015)Ronneberger, Fischer, and Brox]{ronneberger2015u}
+Olaf Ronneberger, Philipp Fischer, and Thomas Brox.
+\newblock U-net: Convolutional networks for biomedical image segmentation.
+\newblock In \emph{Medical image computing and computer-assisted intervention--MICCAI 2015: 18th international conference, Munich, Germany, October 5-9, 2015, proceedings, part III 18}, pages 234--241. Springer, 2015.
+
+\bibitem[Sagong et~al.(2022)Sagong, Yeo, Jung, and Ko]{sagong2022rord}
+Min-Cheol Sagong, Yoon-Jae Yeo, Seung-Won Jung, and Sung-Jea Ko.
+\newblock Rord: A real-world object removal dataset.
+\newblock In \emph{BMVC}, page 542, 2022.
+
+\bibitem[Saharia et~al.(2022)Saharia, Chan, Chang, Lee, Ho, Salimans, Fleet, and Norouzi]{saharia2022palette}
+Chitwan Saharia, William Chan, Huiwen Chang, Chris Lee, Jonathan Ho, Tim Salimans, David Fleet, and Mohammad Norouzi.
+\newblock Palette: Image-to-image diffusion models.
+\newblock In \emph{ACM SIGGRAPH 2022 conference proceedings}, pages 1--10, 2022.
+
+\bibitem[Schuhmann et~al.(2022)Schuhmann, Beaumont, Vencu, Gordon, Wightman, Cherti, Coombes, Katta, Mullis, Wortsman, et~al.]{schuhmann2022laion}
+Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, et~al.
+\newblock Laion-5b: An open large-scale dataset for training next generation image-text models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 35:\penalty0 25278--25294, 2022.
+
+\bibitem[Shamsolmoali et~al.(2023)Shamsolmoali, Zareapoor, and Granger]{shamsolmoali2023transinpaint}
+Pourya Shamsolmoali, Masoumeh Zareapoor, and Eric Granger.
+\newblock Transinpaint: Transformer-based image inpainting with context adaptation.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 849--858, 2023.
+
+\bibitem[Sheynin et~al.(2024)Sheynin, Polyak, Singer, Kirstain, Zohar, Ashual, Parikh, and Taigman]{sheynin2024emu}
+Shelly Sheynin, Adam Polyak, Uriel Singer, Yuval Kirstain, Amit Zohar, Oron Ashual, Devi Parikh, and Yaniv Taigman.
+\newblock Emu edit: Precise image editing via recognition and generation tasks.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 8871--8879, 2024.
+
+\bibitem[Song et~al.(2020)Song, Meng, and Ermon]{song2020denoising}
+Jiaming Song, Chenlin Meng, and Stefano Ermon.
+\newblock Denoising diffusion implicit models.
+\newblock \emph{arXiv preprint arXiv:2010.02502}, 2020.
+
+\bibitem[Song et~al.(2018)Song, Yang, Lin, Liu, Huang, Li, and Kuo]{song2018contextual}
+Yuhang Song, Chao Yang, Zhe Lin, Xiaofeng Liu, Qin Huang, Hao Li, and C-C~Jay Kuo.
+\newblock Contextual-based image inpainting: Infer, match, and translate.
+\newblock In \emph{Proceedings of the European conference on computer vision (ECCV)}, pages 3--19, 2018.
+
+\bibitem[Suvorov et~al.(2022)Suvorov, Logacheva, Mashikhin, Remizova, Ashukha, Silvestrov, Kong, Goka, Park, and Lempitsky]{suvorov2022resolution}
+Roman Suvorov, Elizaveta Logacheva, Anton Mashikhin, Anastasia Remizova, Arsenii Ashukha, Aleksei Silvestrov, Naejin Kong, Harshith Goka, Kiwoong Park, and Victor Lempitsky.
+\newblock Resolution-robust large mask inpainting with fourier convolutions.
+\newblock In \emph{Proceedings of the IEEE/CVF winter conference on applications of computer vision}, pages 2149--2159, 2022.
+
+\bibitem[Timofte et~al.(2017)Timofte, Agustsson, Van~Gool, Yang, and Zhang]{timofte2017ntire}
+Radu Timofte, Eirikur Agustsson, Luc Van~Gool, Ming-Hsuan Yang, and Lei Zhang.
+\newblock Ntire 2017 challenge on single image super-resolution: Methods and results.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition workshops}, pages 114--125, 2017.
+
+\bibitem[Tudosiu et~al.(2024)Tudosiu, Yang, Zhang, Chen, McDonagh, Lampouras, Iacobacci, and Parisot]{tudosiu2024mulan}
+Petru-Daniel Tudosiu, Yongxin Yang, Shifeng Zhang, Fei Chen, Steven McDonagh, Gerasimos Lampouras, Ignacio Iacobacci, and Sarah Parisot.
+\newblock Mulan: A multi layer annotated dataset for controllable text-to-image generation.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 22413--22422, 2024.
+
+\bibitem[Wang et~al.(2018)Wang, Xu, Wang, and Tao]{wang2018perceptual}
+Chaoyue Wang, Chang Xu, Chaohui Wang, and Dacheng Tao.
+\newblock Perceptual adversarial networks for image-to-image transformation.
+\newblock \emph{IEEE Transactions on Image Processing}, 27\penalty0 (8):\penalty0 4066--4079, 2018.
+
+\bibitem[Wang et~al.(2023)Wang, Saharia, Montgomery, Pont-Tuset, Noy, Pellegrini, Onoe, Laszlo, Fleet, Soricut, et~al.]{wang2023imagen}
+Su Wang, Chitwan Saharia, Ceslee Montgomery, Jordi Pont-Tuset, Shai Noy, Stefano Pellegrini, Yasumasa Onoe, Sarah Laszlo, David~J Fleet, Radu Soricut, et~al.
+\newblock Imagen editor and editbench: Advancing and evaluating text-guided image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 18359--18369, 2023.
+
+\bibitem[Winter et~al.(2024)Winter, Cohen, Fruchter, Pritch, Rav-Acha, and Hoshen]{winter2024objectdrop}
+Daniel Winter, Matan Cohen, Shlomi Fruchter, Yael Pritch, Alex Rav-Acha, and Yedid Hoshen.
+\newblock Objectdrop: Bootstrapping counterfactuals for photorealistic object removal and insertion.
+\newblock \emph{arXiv preprint arXiv:2403.18818}, 2024.
+
+\bibitem[Xie et~al.(2023)Xie, Zhang, Lin, Hinz, and Zhang]{xie2023smartbrush}
+Shaoan Xie, Zhifei Zhang, Zhe Lin, Tobias Hinz, and Kun Zhang.
+\newblock Smartbrush: Text and shape guided object inpainting with diffusion model.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 22428--22437, 2023.
+
+\bibitem[Yan et~al.(2018)Yan, Li, Li, Zuo, and Shan]{yan2018shift}
+Zhaoyi Yan, Xiaoming Li, Mu Li, Wangmeng Zuo, and Shiguang Shan.
+\newblock Shift-net: Image inpainting via deep feature rearrangement.
+\newblock In \emph{Proceedings of the European conference on computer vision (ECCV)}, pages 1--17, 2018.
+
+\bibitem[Yang et~al.(2017)Yang, Lu, Lin, Shechtman, Wang, and Li]{yang2017high}
+Chao Yang, Xin Lu, Zhe Lin, Eli Shechtman, Oliver Wang, and Hao Li.
+\newblock High-resolution image inpainting using multi-scale neural patch synthesis.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 6721--6729, 2017.
+
+\bibitem[Yeh et~al.(2017)Yeh, Chen, Yian~Lim, Schwing, Hasegawa-Johnson, and Do]{yeh2017semantic}
+Raymond~A Yeh, Chen Chen, Teck Yian~Lim, Alexander~G Schwing, Mark Hasegawa-Johnson, and Minh~N Do.
+\newblock Semantic image inpainting with deep generative models.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 5485--5493, 2017.
+
+\bibitem[Yildirim et~al.(2023)Yildirim, Baday, Erdem, Erdem, and Dundar]{yildirim2023inst}
+Ahmet~Burak Yildirim, Vedat Baday, Erkut Erdem, Aykut Erdem, and Aysegul Dundar.
+\newblock Inst-inpaint: Instructing to remove objects with diffusion models.
+\newblock \emph{arXiv preprint arXiv:2304.03246}, 2023.
+
+\bibitem[Yu et~al.(2018)Yu, Lin, Yang, Shen, Lu, and Huang]{yu2018generative}
+Jiahui Yu, Zhe Lin, Jimei Yang, Xiaohui Shen, Xin Lu, and Thomas~S Huang.
+\newblock Generative image inpainting with contextual attention.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 5505--5514, 2018.
+
+\bibitem[Yu et~al.(2021)Yu, Zhan, Wu, Pan, Cui, Lu, Ma, Xie, and Miao]{yu2021diverse}
+Yingchen Yu, Fangneng Zhan, Rongliang Wu, Jianxiong Pan, Kaiwen Cui, Shijian Lu, Feiying Ma, Xuansong Xie, and Chunyan Miao.
+\newblock Diverse image inpainting with bidirectional and autoregressive transformers.
+\newblock In \emph{Proceedings of the 29th ACM International Conference on Multimedia}, pages 69--78, 2021.
+
+\bibitem[Zeng et~al.(2019)Zeng, Fu, Chao, and Guo]{zeng2019learning}
+Yanhong Zeng, Jianlong Fu, Hongyang Chao, and Baining Guo.
+\newblock Learning pyramid-context encoder network for high-quality image inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 1486--1494, 2019.
+
+\bibitem[Zeng et~al.(2020)Zeng, Fu, and Chao]{zeng2020learning}
+Yanhong Zeng, Jianlong Fu, and Hongyang Chao.
+\newblock Learning joint spatial-temporal transformations for video inpainting.
+\newblock In \emph{Computer Vision--ECCV 2020: 16th European Conference, Glasgow, UK, August 23--28, 2020, Proceedings, Part XVI 16}, pages 528--543. Springer, 2020.
+
+\bibitem[Zhang et~al.(2018)Zhang, Isola, Efros, Shechtman, and Wang]{zhang2018unreasonable}
+Richard Zhang, Phillip Isola, Alexei~A Efros, Eli Shechtman, and Oliver Wang.
+\newblock The unreasonable effectiveness of deep features as a perceptual metric.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 586--595, 2018.
+
+\bibitem[Zhang et~al.(2024)Zhang, Yang, Feng, Qin, Chen, Yu, Chen, Wang, Savarese, Ermon, et~al.]{zhang2024hive}
+Shu Zhang, Xinyi Yang, Yihao Feng, Can Qin, Chia-Chih Chen, Ning Yu, Zeyuan Chen, Huan Wang, Silvio Savarese, Stefano Ermon, et~al.
+\newblock Hive: Harnessing human feedback for instructional visual editing.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 9026--9036, 2024.
+
+\bibitem[Zhou et~al.(2023)Zhou, Li, Chan, and Loy]{zhou2023propainter}
+Shangchen Zhou, Chongyi Li, Kelvin~CK Chan, and Chen~Change Loy.
+\newblock Propainter: Improving propagation and transformer for video inpainting.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 10477--10486, 2023.
+
+\bibitem[Zhuang et~al.(2023)Zhuang, Zeng, Liu, Yuan, and Chen]{zhuang2023task}
+Junhao Zhuang, Yanhong Zeng, Wenran Liu, Chun Yuan, and Kai Chen.
+\newblock A task is worth one word: Learning with task prompts for high-quality versatile image inpainting.
+\newblock \emph{arXiv preprint arXiv:2312.03594}, 2023.
+
+\end{thebibliography}

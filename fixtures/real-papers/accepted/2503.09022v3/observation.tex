@@ -1,0 +1,185 @@
+\section{Observations and Insights}%\label{revisiting}
+\label{sec:revisit}
+%\jiaheng{I still suggest changing the section title. }
+
+%\jiaheng{Introdcution first. }
+%In general, PIA of LLMs is related to many previous works on model inversion attacks. These methods fall into two main categories: generation-based~\cite{yang2019neural,yin2023ginver,tan2021many,khosravy2022model,Generative-embedding-inversion-attack,Sentence_inference_attack}, and optimization-based~\cite{song2020information,mahendran2015understanding,he2019model,attacking-and-protect-data-privacy,zhang2020secret,struppek2022plug,wang2021variational}.  
+%\jiaheng{Do not say given the challenge directly, rephrase the challenge again here. }
+%\yuguang{Generation-based attacks~\cite{yang2019neural,tan2021many,khosravy2022model,yin2023ginver} suffered from the vanishing dependence between recovered tokens when the length of input text increases. }
+Given the limitations of  generation-based attacks, we favor optimization-based ones for our design. %\yuguang{because of their balanced attention on all of the tokens in input text.} \jiaheng{becasue...}. 
+In this section, we revisit two representative optimization-based attacks: He et al.~\cite{he2019model} in the image domain and Song et al.~\cite{song2020information} in the language domain. We have the following two findings:  
+
+\noindent
+\textbf{(1)} 
+\cite{he2019model} inspires us to exploit prior knowledge on input distribution. It improves inversion by increasing the probability of the optimized result being close to the ground truth.
+
+\noindent
+\textbf{(2)} A major reason why~\cite{song2020information} does not perform well on LLM activation inversion is gradient vanishing. We theoretically prove that the vanishing phenomenon is intrinsic due to the adoption of softmax attention mechanism in its optimization. 
+
+%\noindent
+%\textbf{(3)} The discretization result of \cite{song2020information} often has large distance with its optimization result in the activation space, due to greedily choosing discretized tokens at each position based on input space similarity.
+
+
+%'s limited performance is not leveraging information from activation during discretization. %\wenjie{not like findings, more like conclusion}
+
+%Finding \textbf{(1)} and \textbf{(2)} motivate our design of \textit{constrained optimization}.
+
+%, Finding \textbf{(3)} motivates our design of  \textit{adaptive discretization}.
+
+%\jiaheng{What we have achieved/improved based on the observation?}\yuguang{Inspired by these observations, we improved our prompt inversion attack by \textit{Constraint Optimization} and \textit{Adaptive Discretization}, which will be illustrated in section~\ref{sec:method}}
+
+%\subsection{Revisiting Inversion Attacks on Images}
+We firstly revisit an optimization-based inversion attack on image domain~\cite{he2019model}. Denote the model layers as $f$ and the ground-truth input as $x_0$. Given the activation $f(x_0)$, attackers intend to find an image sample $x^*$ satisfying two requirements: \textbf{(1)} its activation $f(x^*)$ is similar with $f(x_0)$; \textbf{(2)} $x^*$ follows the distribution of natural images.
+
+
+For the first requirement, \cite{he2019model} used the Euclidean distance to measure the similarity between $f(x)$ and $f(x_0)$. For the second requirement, \cite{he2019model} exploited the total variation (TV)~\cite{rudin1992nonlinear} to represent natural image prior. 
+%The TV of 2D image $x$ is defined in Equation~(\ref{eq:he_tv}). 
+Minimizing TV encourages  $x$ to be piece-wise smooth, therefore looking realistic. \cite{he2019model} designed their optimization function by linearly combining the two goals of maximizing similarity between $f(x),f(x_0)$ and minimizing $TV(x)$. 
+
+The goal of minimizing TV is crucial for image recovery in~\cite{he2019model} because, non-linearity of neural networks may result in many local minima of $\|f(x)-f(x_0)\|_2$, which satisfy $f(x)\approx f(x_0)$. However, most local minima are garbled images far from $x_0$. Without this constraint on TV, 
+starting optimization with randomly initialized points is very likely to obtain $x$ that corresponds to garbled images.  Adding this constraint mitigates the non-linearity problem by limiting the search space of $x$ within low TV (look realistic). The TV constraint filters out the most of these meaningless local minima, thereby increasing the likelihood that  $x$ will be close to $x_0$. 
+
+
+
+
+We can learn from~\cite{he2019model} that \emph{enforcing the prior on input data distribution is critical for improving inversion}. This is because the input prior can increase the likelihood of the inversion result being close to the ground-truth input.
+
+%However, due to the domain difference between \cite{he2019model} and ours, it is not applicable to design our prompt inversion attack based on \cite{he2019model}. 
+
+%Specifically, in the natural language domain, similar to piece-wise smoothness in image domain, we should consider the prior that \emph{tokens that are located near each other should satisfy semantic coherence}. 
+
+%Input data of the image domain could be directly optimized in continuous space, while optimization in the text domain is more challenging due to its discrete nature.  
+%Thirdly, \cite{song2020information} independently discretizes each token without considering information from preceding recovered tokens. However, for natural language, tokens that are located near each other should satisfy semantic coherence. \emph{It harms inversion accuracy and also the readability of recovered texts}.
+
+%The overall optimization problem is as follows.
+%, i.e. avoiding drastic variations inside regions but allowing large changes along the region boundaries.
+%\begin{align}
+%& E D\left(x, x_0\right)=\|f(x)-f(x_0)\|_2^2 .\label{eq:he_ed} \\
+%& T V(x)=\sum_{i, j}\left(\left|x_{i+1, j}-x_{i, j}\right|^2+\left|x_{i, j+1}-x_{i, j}\right|^2\right)^{\beta / 2}. \label{eq:he_tv} \\
+%& x^*=\operatorname{argmin}_x E D\left(x, x_0\right)+\lambda T V(x).  \label{eq:he_find}
+%\end{align}
+
+%The overall objective function combines activation similarity and natural input prior, where $\lambda$ is a hyper-parameter controlling the balance between two terms. Exploiting TV as an \emph{image prior is vital} because only optimization on activation similarity goal may lead to images that do not look realistic due to the non-linearity of $f$ \cite{he2019model}.
+
+
+
+
+
+
+Secondly, we revisit~\cite{song2020information}, the only recent work studying optimization-based inversion attacks for language models, to the best of our knowledge. While their techniques appear compatible with our setting, substantial modifications are required for accuracy. 
+
+Denote the language model transformer layers as $\Phi(\cdot)$, embedding layer as $E$. \cite{song2020information} formulated the white-box inversion as the following optimization problem:
+\begin{align}
+\label{eq:song_formulate}
+\min _{\hat{x} \in \mathcal{X}(\mathcal{V})}\left\|\Phi(E(\hat{x}))-\Phi(E(x))\right\|_2^2,
+\end{align}
+ where $x$ is the ground-truth input embedding, $\Phi(E(x))$ represents the target activation, $\hat{x}$ denotes inverted text, and $\mathcal{X}(\mathcal{V})$ denotes all possible sequences using vocabulary $\mathcal{V}$.
+
+To bridge the gap between discrete space and continuous space, they relax the word selection at each position  with a continuous variable $z_i \in \mathbb{R}^{|\mathcal{V}|}$.  Input embedding  $\hat{v}_i$ is computed by $z_i$ using the softmax function on the embedding matrix $V$:
+\begin{align}
+\label{eq:softmax_attn}
+\hat{\boldsymbol{v}}_i=V^{\top} \cdot \operatorname{softmax}\left(z_i / T\right), \text { for } i=1, \ldots, \ell,
+\end{align}
+where $T$ is a temperature parameter. The softmax function approximates hard argmax selection for $T\le1$. Let $z=\left[z_1, \ldots, z_{\ell}\right] \in \mathbb{R}^{\ell \times|\mathcal{V}|}$. The relaxed problem is:
+\begin{align}
+\label{eq:relaxed_problem}
+\min _z\left\|\Phi([\hat{\boldsymbol{v}}_1, \ldots, \hat{\boldsymbol{v}}_{\ell}])-\Phi(x)\right\|_2^2.
+\end{align}
+
+With white-box access to $\Phi$, the optimization problem is solved by gradient descent. After optimization, the optimized embedding $\hat{\boldsymbol{v}}$ and corresponding score vector $z$ are obtained. For text, it is necessary to discretize the optimized embedding back into token space. To recover the discrete tokens from embedding space, we compute $\hat{x}=\left\{w_i \mid i=\arg \max z_j\right\}_{i=1}^{\ell}$, selecting each position's word based on the similarity in the input embedding space.
+
+
+However, we have empirically found that \emph{its performance significantly decreases with large models}, rendering it ineffective for solving our problem.  %For example, the inversion accuracy of \cite{song2020information} drops to lower than $10\%$ for 12 BERT layers. Under our setting, LLMs are deeper and have more parameters per layer. To further verify it, 
+For instance, we evaluate it on inverting a Llama-7B model. Results in Table~\ref{tab:ccs20_Llama_7b} show that \cite{song2020information} can barely recover tokens based on the activations of the Llama model. 
+
+
+
+We further investigate the reason of \cite{song2020information}'s  limited performance and discover that \emph{gradient vanishing caused by the softmax attention mechanism is a crucial reason}. Denote the optimization goal in Equation (\ref{eq:relaxed_problem}) as $L$, we visualize the value distribution of $\frac{\partial L}{\partial \hat{v}}$ and $\frac{\partial L}{\partial z}$ for Llama-7B model in Figure~\ref{fig:z_vhat_grad}.  Figure~\ref{fig:zgrad} shows that $z$'s gradient vanishes, and most gradient values are almost zero. In contrast, Figure~\ref{fig:vgrad} shows that the gradient of $\hat{v}$ does not vanish. Recall that $\hat{v}$ is computed by $z$ with  softmax in Equation (\ref{eq:softmax_attn}), it can be inferred that the softmax attention mechanism causes gradient vanishing. %Several previous research~\cite{liu2016large,wang2021escaping,chen2017noisy,lerma2023pre} also observed softmax causing gradient vanishing. 
+
+In particular, we prove that \emph{the previous vanishing phenomenon is intrinsic} rather than accidental, as follows.
+
+%\jiaheng{Do we have a contribution here? If yes, add one or two sentences.} 
+
+\begin{theorem}
+\label{thm:vanish}
+For vocabulary set $V$, embedding hidden dimension $h$, token embedding matrix $W:\mathbb{R}^{|V|\times h}$, embedding vector $v:  \mathbb{R}^{h}$ , word selection weight $z:\mathbb{R}^{|V|}$, optimization target value $L$, $v=W^\top softmax(z)$. Let $s=softmax(z)$. Assume $W_{ij} \sim \mathcal {N}(0,\sigma^2)$ for $i\in \{1,2,\cdots,|V|]\}, j \in \{1,2,\cdots,h\}$. With high probability, the following inequality holds:\\
+\begin{align}
+    ||\frac{\partial L}{\partial z} ||_1\le 4  \sigma \sqrt{\sum_{j=1}^h (\frac{\partial L}{\partial v_j})^2}
+\end{align}
+
+\end{theorem}
+%\begin{proposition}  \label{proposition} Under the same assumption, with %high probability, $$.\\
+%\end{proposition}
+
+
+In general, Theorem~\ref{thm:vanish} indicates that the $L_1$ norm of the gradient is upper-bounded by a small value ($\sigma$ is small in practice) with high probability, which proves the vanishing phenomenon. %Theorem~\ref{thm:vanish} indicates that the absolute value of most values in the gradient has a (small) upper bound. 
+The proof of Theorem \ref{thm:vanish} and more numerical analysis can be found in Appendix~\ref{appendix:ccs20_vanish_theory}.
+
+%
+
+%We also observe another problem of \cite{song2020information}: the activation obtained after discretization has large gap with the activation obtained after optimization. 
+%The major reason is that, \cite{song2020information} adopts the strategy of greedily choosing discretization tokens based on input space similarity at each position. However, \emph{a token closest to the optimized input embedding  may not  minimize the distance in activation space}, due to non-linearity of the LLM.  Thus at each step of  discretization, the gap between the discretization result and optimization result in the activation space accumulates. This results in significant gap between the discretization result and optimization result in the activation space, leading to poor recover accuracy.
+
+%only achieves limited performance is that its discretization procedure only relies on the optimized result without leveraging the ground-truth activation. Intuitively, \emph{a token closest to the optimized result may not be nearest to the ground-truth one} due to non-linearity after mapping to activation space. 
+
+
+
+Drawing from these observations, we gain critical insights that lead us to impose constraints on input during optimization attacks in the text domain, eliminating the softmax attention mechanism in~\cite{song2020information}. These strategic adjustments effectively tackle the challenges identified in~\cite{song2020information}.  Technical details of our method are presented in the following section. 
+
+%It would potentially lead to suboptimal discretization results without calibration with the ground-truth result.
+
+
+%\definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
+%\begin{shaded}
+%{\noindent \textbf{Findings:} The softmax mechanism in \cite{song2020information} leads to gradient vanishing, which limits the performance of inversion attacks.}   
+%\end{shaded}
+%\jiaheng{Again, we can roughly summarize our new methods, and contributions based on the observations. Then we move to the next section for a detailed approach. }
+%\yuguang{Based on these observations, we devised a novel attack pipeline where input embedding is directly inverted and the discretization process takes more semantic information into consideration, which achieved impressive results on state-of-the-art 65B large language models.}
+
+
+\begin{table}[t]
+\centering
+\scalebox{1.4}{
+\begin{tabular}{|c|c|c|c|}
+\hline
+Layer number   & 4   & 8 & 16 \\ \hline
+Token accuracy(\%) & 0.4 & 0 & 0  \\ \hline
+\end{tabular}
+}
+\caption{Token accuracy of \cite{song2020information} for inverting Llama-7B on Skytrax~\cite{skytrax} dataset.}
+\label{tab:ccs20_Llama_7b}
+ \vspace{-1em}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\subfloat[$|\frac{\partial L}{\partial z}|$ \label{fig:zgrad}]{\includegraphics[width=0.25\textwidth]{fig/z_grad.pdf}}
+\subfloat[$|\frac{\partial L}{\partial \hat{v}}|$ \label{fig:vgrad}]{\includegraphics[width=0.25\textwidth]{fig/vhat_grad.pdf}}
+ \vspace{-0.5em}
+\caption{The distribution of $|\frac{\partial L}{\partial z}|$ and $|\frac{\partial L}{\partial \hat{v}}|$.}
+%\caption{The weight distribution of $|\frac{\partial L}{\partial z}|$ and $|\frac{\partial L}{\partial \hat{v}}|$ across optimization iterations.}
+\label{fig:z_vhat_grad}
+ \vspace{-1em}
+\end{figure}
+
+
+
+%(3).The mapping back from continous space back to discrete space using argmax maybe sub-optimal
+%argmax may not recover the token that is closest to $\hat{v}_i$ 
+
+%example: 
+%softmax score: [0.55,0.4,0.05]
+
+%V:[(0,0),(1,1),(0.5,0.5)]
+%v:[(0.425,0.425)]
+
+%by argmax: (1,1)
+
+%closest: (0.5,0.5)
+
+
+
+
+% [38] discretizes each token independently, 
+% 1. neglected the correlation of multiple tokens with activation computation
+% 2. neglected semantic coherence across tokens, harms readability

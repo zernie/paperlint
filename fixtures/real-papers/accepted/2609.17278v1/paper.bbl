@@ -1,0 +1,1476 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{89}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Adar and Lee(2021)]%
+        {adar2021communicative}
+\bibfield{author}{\bibinfo{person}{Eytan Adar} {and} \bibinfo{person}{Elsie
+  Lee}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Communicative Visualizations as a Learning
+  Problem}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{27}, \bibinfo{number}{2}
+  (\bibinfo{date}{Feb} \bibinfo{year}{2021}), \bibinfo{pages}{946--956}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2020.3030375}
+\showDOI{\tempurl}
+
+
+\bibitem[Amini et~al\mbox{.}(2018)]%
+        {fereshteh2018evaluating}
+\bibfield{author}{\bibinfo{person}{Fereshteh Amini}, \bibinfo{person}{Matthew
+  Brehmer}, \bibinfo{person}{Gordon Bolduan}, \bibinfo{person}{Christina
+  Elmer}, \bibinfo{person}{Benjamin Wiederkehr},
+  \bibinfo{person}{Nathalie~Henry Riche}, \bibinfo{person}{Sheelagh
+  Carpendale}, \bibinfo{person}{Christophe Hurter}, \bibinfo{person}{Nicholas
+  Diakopoulos}, \bibinfo{person}{Nathalie~Henry Riche},
+  \bibinfo{person}{Sheelagh Carpendale}, \bibinfo{person}{Christophe Hurter},
+  {and} \bibinfo{person}{Nicholas Diakopoulos}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Evaluating Data-Driven Stories and Storytelling
+  Tools}.
+\newblock In \bibinfo{booktitle}{\emph{Data-Driven Storytelling}
+  (\bibinfo{edition}{1} ed.)}. Vol.~\bibinfo{volume}{1}.
+  \bibinfo{publisher}{CRC Press}, \bibinfo{address}{United Kingdom},
+  \bibinfo{pages}{249--286}.
+\newblock
+\showISBNx{9781138482258}
+
+
+\bibitem[Amini et~al\mbox{.}(2015)]%
+        {amini2015datavideos}
+\bibfield{author}{\bibinfo{person}{Fereshteh Amini}, \bibinfo{person}{Nathalie
+  Henry~Riche}, \bibinfo{person}{Bongshin Lee}, \bibinfo{person}{Christophe
+  Hurter}, {and} \bibinfo{person}{Pourang Irani}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Understanding Data Videos: Looking at Narrative
+  Visualization through the Cinematography Lens}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 33rd Annual ACM Conference on
+  Human Factors in Computing Systems}} (Seoul, Republic of Korea)
+  \emph{(\bibinfo{series}{CHI '15})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1459–1468}.
+\newblock
+\showISBNx{9781450331456}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2702123.2702431}
+\showDOI{\tempurl}
+
+
+\bibitem[Attali et~al\mbox{.}(2022)]%
+        {attali2022interactive}
+\bibfield{author}{\bibinfo{person}{Yigal Attali}, \bibinfo{person}{Andrew
+  Runge}, \bibinfo{person}{Geoffrey~T LaFlair}, \bibinfo{person}{Kevin Yancey},
+  \bibinfo{person}{Sarah Goodwin}, \bibinfo{person}{Yena Park}, {and}
+  \bibinfo{person}{Alina~A Von~Davier}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The interactive reading task: Transformer-based
+  automatic item generation}.
+\newblock \bibinfo{journal}{\emph{Frontiers in Artificial Intelligence}}
+  \bibinfo{volume}{5} (\bibinfo{year}{2022}), \bibinfo{pages}{903077}.
+\newblock
+
+
+\bibitem[Bach et~al\mbox{.}(2017)]%
+        {bach2017emerging}
+\bibfield{author}{\bibinfo{person}{Benjamin Bach},
+  \bibinfo{person}{Nathalie~Henry Riche}, \bibinfo{person}{Sheelagh
+  Carpendale}, {and} \bibinfo{person}{Hanspeter Pfister}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{The Emerging Genre of Data Comics}.
+\newblock \bibinfo{journal}{\emph{IEEE Computer Graphics and Applications}}
+  \bibinfo{volume}{37}, \bibinfo{number}{3} (\bibinfo{date}{May}
+  \bibinfo{year}{2017}), \bibinfo{pages}{6--13}.
+\newblock
+\showISSN{1558-1756}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/MCG.2017.33}
+\showDOI{\tempurl}
+
+
+\bibitem[Bach et~al\mbox{.}(2018)]%
+        {bach2018designpatterns}
+\bibfield{author}{\bibinfo{person}{Benjamin Bach}, \bibinfo{person}{Zezhong
+  Wang}, \bibinfo{person}{Matteo Farinella}, \bibinfo{person}{Dave
+  Murray-Rust}, {and} \bibinfo{person}{Nathalie Henry~Riche}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Design Patterns for Data Comics}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2018 CHI Conference on Human
+  Factors in Computing Systems}} (Montreal QC, Canada)
+  \emph{(\bibinfo{series}{CHI '18})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–12}.
+\newblock
+\showISBNx{9781450356206}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3173574.3173612}
+\showDOI{\tempurl}
+
+
+\bibitem[Bateman et~al\mbox{.}(2010)]%
+        {bateman2010}
+\bibfield{author}{\bibinfo{person}{Scott Bateman}, \bibinfo{person}{Regan~L.
+  Mandryk}, \bibinfo{person}{Carl Gutwin}, \bibinfo{person}{Aaron Genest},
+  \bibinfo{person}{David McDine}, {and} \bibinfo{person}{Christopher Brooks}.}
+  \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Useful junk? the effects of visual embellishment on
+  comprehension and memorability of charts}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the SIGCHI Conference on Human
+  Factors in Computing Systems}} (Atlanta, Georgia, USA)
+  \emph{(\bibinfo{series}{CHI '10})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{2573–2582}.
+\newblock
+\showISBNx{9781605589299}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1753326.1753716}
+\showDOI{\tempurl}
+
+
+\bibitem[Bloom(1956)]%
+        {bloom1956}
+\bibfield{author}{\bibinfo{person}{Benjamin~S. Bloom}.}
+  \bibinfo{year}{1956}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Taxonomy of Educational Objectives: The
+  Classification of Educational Goals}}. Vol.~\bibinfo{volume}{Handbook 1:
+  Cognitive Domain}.
+\newblock \bibinfo{publisher}{Longmans, Green and Co.},
+  \bibinfo{address}{London}.
+\newblock
+
+
+\bibitem[Borkin et~al\mbox{.}(2016)]%
+        {borkin2016beyond}
+\bibfield{author}{\bibinfo{person}{M.~A. Borkin}, \bibinfo{person}{Z.
+  Bylinskii}, \bibinfo{person}{N.~W. Kim}, \bibinfo{person}{C.~M. Bainbridge},
+  \bibinfo{person}{C.~S. Yeh}, \bibinfo{person}{D. Borkin}, \bibinfo{person}{H.
+  Pfister}, {and} \bibinfo{person}{A. Oliva}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Beyond Memorability: Visualization Recognition and
+  Recall}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{22}, \bibinfo{number}{1}
+  (\bibinfo{year}{2016}), \bibinfo{pages}{519--528}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2015.2467732}
+\showDOI{\tempurl}
+
+
+\bibitem[Boy et~al\mbox{.}(2015)]%
+        {boy2015storytelling}
+\bibfield{author}{\bibinfo{person}{Jeremy Boy}, \bibinfo{person}{Francoise
+  Detienne}, {and} \bibinfo{person}{Jean-Daniel Fekete}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Storytelling in Information Visualizations: Does it
+  Engage Users to Explore Data?}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the 33rd Annual ACM Conference on Human Factors in Computing Systems}}
+  (Seoul, Republic of Korea) \emph{(\bibinfo{series}{CHI '15})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1449–1458}.
+\newblock
+\showISBNx{9781450331456}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2702123.2702452}
+\showDOI{\tempurl}
+
+
+\bibitem[Boy et~al\mbox{.}(2017)]%
+        {boy2017showing}
+\bibfield{author}{\bibinfo{person}{Jeremy Boy}, \bibinfo{person}{Anshul~Vikram
+  Pandey}, \bibinfo{person}{John Emerson}, \bibinfo{person}{Margaret
+  Satterthwaite}, \bibinfo{person}{Oded Nov}, {and} \bibinfo{person}{Enrico
+  Bertini}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Showing People Behind Data: Does Anthropomorphizing
+  Visualizations Elicit More Empathy for Human Rights Data?}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2017 CHI Conference on Human
+  Factors in Computing Systems}} (Denver, Colorado, USA)
+  \emph{(\bibinfo{series}{CHI '17})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{5462–5474}.
+\newblock
+\showISBNx{9781450346559}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3025453.3025512}
+\showDOI{\tempurl}
+
+
+\bibitem[Bravo and Maier(2020)]%
+        {bravo2020immersive}
+\bibfield{author}{\bibinfo{person}{Andrea Bravo} {and} \bibinfo{person}{Anja~M
+  Maier}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Immersive visualisations in design: Using augmented
+  reality (AR) for information presentation}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the Design Society: DESIGN
+  Conference}}, Vol.~\bibinfo{volume}{1}. Cambridge University Press,
+  \bibinfo{publisher}{Cambridge University Press}, \bibinfo{pages}{1215--1224}.
+\newblock
+\showISSN{26337762}
+\urldef\tempurl%
+\url{https://doi.org/10.1017/dsd.2020.33}
+\showDOI{\tempurl}
+
+
+\bibitem[Burns et~al\mbox{.}(2020)]%
+        {burns2020evaluate}
+\bibfield{author}{\bibinfo{person}{Alyxander Burns}, \bibinfo{person}{Cindy
+  Xiong}, \bibinfo{person}{Steven Franconeri}, \bibinfo{person}{Alberto Cairo},
+  {and} \bibinfo{person}{Narges Mahyar}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{How to evaluate data visualizations across
+  different levels of understanding}. In \bibinfo{booktitle}{\emph{2020 IEEE
+  Workshop on Evaluation and Beyond - Methodological Approaches to
+  Visualization (BELIV)}}. \bibinfo{pages}{19--28}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/BELIV51497.2020.00010}
+\showDOI{\tempurl}
+
+
+\bibitem[Burstein et~al\mbox{.}(2003)]%
+        {burstein2003finding}
+\bibfield{author}{\bibinfo{person}{Jill Burstein}, \bibinfo{person}{Daniel
+  Marcu}, {and} \bibinfo{person}{Kevin Knight}.}
+  \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Finding the WRITE stuff: Automatic identification
+  of discourse structure in student essays}.
+\newblock \bibinfo{journal}{\emph{IEEE Intelligent Systems}}
+  \bibinfo{volume}{18}, \bibinfo{number}{1} (\bibinfo{year}{2003}),
+  \bibinfo{pages}{32--39}.
+\newblock
+
+
+\bibitem[Campos et~al\mbox{.}(2021)]%
+        {campos2021makingsense}
+\bibfield{author}{\bibinfo{person}{Fabio~C. Campos}, \bibinfo{person}{June
+  Ahn}, \bibinfo{person}{Daniela~K. DiGiacomo}, \bibinfo{person}{Ha Nguyen},
+  {and} \bibinfo{person}{Maria Hays}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Making Sense of Sensemaking: Understanding How
+  K–12 Teachers and Coaches React to Visual Analytics}.
+\newblock \bibinfo{journal}{\emph{Journal of Learning Analytics}}
+  \bibinfo{volume}{8}, \bibinfo{number}{3} (\bibinfo{year}{2021}),
+  \bibinfo{pages}{60--80}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.18608/jla.2021.7113}
+\showDOI{\tempurl}
+
+
+\bibitem[Carenini et~al\mbox{.}(2014)]%
+        {carenini2014highlighting}
+\bibfield{author}{\bibinfo{person}{Giuseppe Carenini},
+  \bibinfo{person}{Cristina Conati}, \bibinfo{person}{Enamul Hoque},
+  \bibinfo{person}{Ben Steichen}, \bibinfo{person}{Dereck Toker}, {and}
+  \bibinfo{person}{James Enns}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Highlighting interventions and user differences:
+  informing adaptive information visualization support}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the SIGCHI Conference on Human
+  Factors in Computing Systems}} (Toronto, Ontario, Canada)
+  \emph{(\bibinfo{series}{CHI '14})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1835–1844}.
+\newblock
+\showISBNx{9781450324731}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2556288.2557141}
+\showDOI{\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2019)]%
+        {chen2019designing}
+\bibfield{author}{\bibinfo{person}{Qing Chen}, \bibinfo{person}{Zhen Li},
+  \bibinfo{person}{Ting-Chuen Pong}, {and} \bibinfo{person}{Huamin Qu}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Designing Narrative Slideshows for Learning
+  Analytics}. In \bibinfo{booktitle}{\emph{2019 IEEE Pacific Visualization
+  Symposium (PacificVis)}}. \bibinfo{publisher}{Institute of Electrical and
+  Electronics Engineers}, \bibinfo{address}{Bangkok, Thailand},
+  \bibinfo{pages}{237--246}.
+\newblock
+\showISSN{2165-8773}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/PacificVis.2019.00036}
+\showDOI{\tempurl}
+
+
+\bibitem[Daradkeh(2021)]%
+        {Daradkeh2021}
+\bibfield{author}{\bibinfo{person}{Mohammad~Kamel Daradkeh}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{An empirical examination of the relationship
+  between data storytelling competency and business performance: The mediating
+  role of decision-making quality}.
+\newblock \bibinfo{journal}{\emph{Journal of Organizational and End User
+  Computing}}  \bibinfo{volume}{33} (\bibinfo{year}{2021}).
+\newblock
+Issue 5.
+\showISSN{15465012}
+\urldef\tempurl%
+\url{https://doi.org/10.4018/JOEUC.20210901.oa3}
+\showDOI{\tempurl}
+
+
+\bibitem[De~Simone et~al\mbox{.}(2014)]%
+        {de2014evaluating}
+\bibfield{author}{\bibinfo{person}{Flavia De~Simone}, \bibinfo{person}{Roberta
+  Presta}, \bibinfo{person}{Federica Protti}, {et~al\mbox{.}}}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Evaluating data storytelling strategies: A case
+  study on urban changes}.
+\newblock \bibinfo{journal}{\emph{IARIA Cognitive}} (\bibinfo{year}{2014}),
+  \bibinfo{pages}{250--255}.
+\newblock
+
+
+\bibitem[Dhakal et~al\mbox{.}(2018)]%
+        {dhakal2018observations}
+\bibfield{author}{\bibinfo{person}{Vivek Dhakal}, \bibinfo{person}{Anna~Maria
+  Feit}, \bibinfo{person}{Per~Ola Kristensson}, {and} \bibinfo{person}{Antti
+  Oulasvirta}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Observations on Typing from 136 Million
+  Keystrokes}. In \bibinfo{booktitle}{\emph{Proceedings of the 2018 CHI
+  Conference on Human Factors in Computing Systems}} (Montreal QC, Canada)
+  \emph{(\bibinfo{series}{CHI '18})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–12}.
+\newblock
+\showISBNx{9781450356206}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3173574.3174220}
+\showDOI{\tempurl}
+
+
+\bibitem[Dykes(2020)]%
+        {dykes2020effective}
+\bibfield{author}{\bibinfo{person}{Brent Dykes}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Effective Data Storytelling: How to Drive
+  Change with Data, Narrative, and Visuals} (\bibinfo{edition}{1st edition}
+  ed.)}.
+\newblock \bibinfo{publisher}{Wiley}, \bibinfo{address}{Hoboken, New Jersey}.
+\newblock
+\showISBNx{1-5231-3295-7}
+
+
+\bibitem[Echeverria et~al\mbox{.}(2018)]%
+        {echeverria2018exploratory}
+\bibfield{author}{\bibinfo{person}{Vanessa Echeverria},
+  \bibinfo{person}{Roberto Martinez-Maldonado}, \bibinfo{person}{Simon
+  Buckingham~Shum}, \bibinfo{person}{Katherine Chiluiza},
+  \bibinfo{person}{Roger Granda}, {and} \bibinfo{person}{Cristina Conati}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Exploratory versus Explanatory Visual Learning
+  Analytics: Driving Teachers’ Attention through Educational Data
+  Storytelling}.
+\newblock \bibinfo{journal}{\emph{Journal of Learning Analytics}}
+  \bibinfo{volume}{5}, \bibinfo{number}{3} (\bibinfo{year}{2018}),
+  \bibinfo{pages}{73—97}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.18608/jla.2018.53.6}
+\showDOI{\tempurl}
+
+
+\bibitem[Elias et~al\mbox{.}(2013)]%
+        {elias2013storytelling}
+\bibfield{author}{\bibinfo{person}{Micheline Elias},
+  \bibinfo{person}{Marie-Aude Aufaure}, {and} \bibinfo{person}{Anastasia
+  Bezerianos}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Storytelling in Visual Analytics Tools for Business
+  Intelligence}. In \bibinfo{booktitle}{\emph{Human-Computer Interaction --
+  INTERACT 2013}}, \bibfield{editor}{\bibinfo{person}{Paula Kotzé},
+  \bibinfo{person}{Gary Marsden}, \bibinfo{person}{Gitte Lindgaard},
+  \bibinfo{person}{Janet Wesson}, {and} \bibinfo{person}{Marco Winckler}}
+  (Eds.). \bibinfo{publisher}{Springer Berlin Heidelberg},
+  \bibinfo{address}{Berlin, Heidelberg}, \bibinfo{pages}{280--297}.
+\newblock
+\showISBNx{978-3-642-40477-1}
+
+
+\bibitem[Evergreen(2020)]%
+        {evergreen2020effective}
+\bibfield{author}{\bibinfo{person}{Stephanie D.~H. Evergreen}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Effective Data Visualization: The Right
+  Chart for the Right Data} (\bibinfo{edition}{2} ed.)}.
+\newblock \bibinfo{publisher}{SAGE Publications, Inc.},
+  \bibinfo{address}{Thousand Oaks, California}.
+\newblock
+\showISBNx{9781544350882}
+\showLCCN{2015045992}
+
+
+\bibitem[Fernandez-Nieto et~al\mbox{.}(2024)]%
+        {fernandeznieto2024editor}
+\bibfield{author}{\bibinfo{person}{Gloria~Milena Fernandez-Nieto},
+  \bibinfo{person}{Roberto Martinez-Maldonado}, \bibinfo{person}{Vanessa
+  Echeverria}, \bibinfo{person}{Kirsty Kitto}, \bibinfo{person}{Dragan
+  Gašević}, {and} \bibinfo{person}{Simon Buckingham~Shum}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Data Storytelling Editor: A Teacher-Centred Tool
+  for Customising Learning Analytics Dashboard Narratives}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 14th Learning Analytics and
+  Knowledge Conference}} (Kyoto, Japan) \emph{(\bibinfo{series}{LAK '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{678–689}.
+\newblock
+\showISBNx{9798400716188}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3636555.3636930}
+\showDOI{\tempurl}
+
+
+\bibitem[Ferreira et~al\mbox{.}(2021)]%
+        {Ferreira2021climate}
+\bibfield{author}{\bibinfo{person}{Marta Ferreira}, \bibinfo{person}{Miguel
+  Coelho}, \bibinfo{person}{Valentina Nisi}, {and} \bibinfo{person}{Nuno
+  Jardim~Nunes}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Climate Change Communication in HCI: a Visual
+  Analysis of the Past Decade}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  13th Conference on Creativity and Cognition}} (Virtual Event, Italy).
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{5},
+  \bibinfo{numpages}{16}~pages.
+\newblock
+\showISBNx{9781450383769}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3450741.3466774}
+\showDOI{\tempurl}
+
+
+\bibitem[Figueiras(2014)]%
+        {figueiras2014narrative}
+\bibfield{author}{\bibinfo{person}{Ana Figueiras}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Narrative Visualization: A Case Study of How to
+  Incorporate Narrative Elements in Existing Visualizations}. In
+  \bibinfo{booktitle}{\emph{2014 18th International Conference on Information
+  Visualisation}}. \bibinfo{pages}{46--52}.
+\newblock
+\showISSN{2375-0138}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/IV.2014.79}
+\showDOI{\tempurl}
+
+
+\bibitem[Galati et~al\mbox{.}(2021)]%
+        {galati2021}
+\bibfield{author}{\bibinfo{person}{Alexia Galati}, \bibinfo{person}{Riley
+  Schoppa}, {and} \bibinfo{person}{Aidong Lu}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Exploring the SenseMaking Process through
+  Interactions and fNIRS in Immersive Visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{27}, \bibinfo{number}{5}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{2714--2724}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2021.3067693}
+\showDOI{\tempurl}
+
+
+\bibitem[Garretón et~al\mbox{.}(2024)]%
+        {garreton2024attitudinal}
+\bibfield{author}{\bibinfo{person}{Manuela Garretón},
+  \bibinfo{person}{Francesca Morini}, \bibinfo{person}{Pablo Celhay},
+  \bibinfo{person}{Marian Dörk}, {and} \bibinfo{person}{Denis Parra}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Attitudinal Effects of Data Visualizations and
+  Illustrations in Data Stories}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{30}, \bibinfo{number}{7}
+  (\bibinfo{date}{July} \bibinfo{year}{2024}), \bibinfo{pages}{4039--4054}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2023.3248319}
+\showDOI{\tempurl}
+
+
+\bibitem[Ge et~al\mbox{.}(2024)]%
+        {ge2024}
+\bibfield{author}{\bibinfo{person}{Lily~W. Ge}, \bibinfo{person}{Maryam
+  Hedayati}, \bibinfo{person}{Yuan Cui}, \bibinfo{person}{Yiren Ding},
+  \bibinfo{person}{Karen Bonilla}, \bibinfo{person}{Alark Joshi},
+  \bibinfo{person}{Alvitta Ottley}, \bibinfo{person}{Benjamin Bach},
+  \bibinfo{person}{Bum~Chul Kwon}, \bibinfo{person}{David~N. Rapp},
+  \bibinfo{person}{Evan Peck}, \bibinfo{person}{Lace~M. Padilla},
+  \bibinfo{person}{Michael Correll}, \bibinfo{person}{Michelle~A. Borkin},
+  \bibinfo{person}{Lane Harrison}, {and} \bibinfo{person}{Matthew Kay}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Toward a More Comprehensive Understanding of
+  Visualization Literacy}. In \bibinfo{booktitle}{\emph{Extended Abstracts of
+  the 2024 CHI Conference on Human Factors in Computing Systems}}
+  \emph{(\bibinfo{series}{CHI EA '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{494}, \bibinfo{numpages}{7}~pages.
+\newblock
+\showISBNx{9798400703317}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613905.3636289}
+\showDOI{\tempurl}
+
+
+\bibitem[Gershon and Page(2001)]%
+        {gershon2001}
+\bibfield{author}{\bibinfo{person}{Nahum Gershon} {and} \bibinfo{person}{Ward
+  Page}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{What storytelling can do for information
+  visualization}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{44},
+  \bibinfo{number}{8} (\bibinfo{date}{aug} \bibinfo{year}{2001}),
+  \bibinfo{pages}{31–37}.
+\newblock
+\showISSN{0001-0782}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/381641.381653}
+\showDOI{\tempurl}
+
+
+\bibitem[Hao et~al\mbox{.}(2024)]%
+        {hao2024transforming}
+\bibfield{author}{\bibinfo{person}{Jiangang Hao}, \bibinfo{person}{Alina~A von
+  Davier}, \bibinfo{person}{Victoria Yaneva}, \bibinfo{person}{Susan
+  Lottridge}, \bibinfo{person}{Matthias von Davier}, {and}
+  \bibinfo{person}{Deborah~J Harris}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Transforming assessment: The impacts and
+  implications of large language models and generative ai}.
+\newblock \bibinfo{journal}{\emph{Educational Measurement: Issues and
+  Practice}} \bibinfo{volume}{43}, \bibinfo{number}{2} (\bibinfo{year}{2024}),
+  \bibinfo{pages}{16--29}.
+\newblock
+
+
+\bibitem[Herre et~al\mbox{.}(2023)]%
+        {herre2023statecap}
+\bibfield{author}{\bibinfo{person}{Bastian Herre}, \bibinfo{person}{Pablo
+  Arriagada}, {and} \bibinfo{person}{Max Roser}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{State Capacity}.
+\newblock \bibinfo{journal}{\emph{Our World in Data}} (\bibinfo{year}{2023}).
+\newblock
+\newblock
+\shownote{https://ourworldindata.org/state-capacity}.
+
+
+\bibitem[Hicks(2009)]%
+        {Hicks2009perceptual}
+\bibfield{author}{\bibinfo{person}{Martin Hicks}.}
+  \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Perceptual and Design Principles for
+  Effective Interactive Visualisations}}.
+\newblock \bibinfo{publisher}{Springer London}, \bibinfo{address}{London},
+  \bibinfo{pages}{155--174}.
+\newblock
+\showISBNx{978-1-84800-269-2}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-1-84800-269-2_7}
+\showDOI{\tempurl}
+
+
+\bibitem[Hullman and Diakopoulos(2011)]%
+        {hullman2011visualization}
+\bibfield{author}{\bibinfo{person}{Jessica Hullman} {and} \bibinfo{person}{Nick
+  Diakopoulos}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Visualization Rhetoric: Framing Effects in
+  Narrative Visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{17}, \bibinfo{number}{12}
+  (\bibinfo{date}{Dec} \bibinfo{year}{2011}), \bibinfo{pages}{2231--2240}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2011.255}
+\showDOI{\tempurl}
+
+
+\bibitem[Hullman et~al\mbox{.}(2013)]%
+        {hullman2013deeper}
+\bibfield{author}{\bibinfo{person}{Jessica Hullman}, \bibinfo{person}{Steven
+  Drucker}, \bibinfo{person}{Nathalie Henry~Riche}, \bibinfo{person}{Bongshin
+  Lee}, \bibinfo{person}{Danyel Fisher}, {and} \bibinfo{person}{Eytan Adar}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{A Deeper Understanding of Sequence in Narrative
+  Visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{19}, \bibinfo{number}{12}
+  (\bibinfo{date}{Dec} \bibinfo{year}{2013}), \bibinfo{pages}{2406--2415}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2013.119}
+\showDOI{\tempurl}
+
+
+\bibitem[Iliinsky and Steele(2011)]%
+        {iliinsky2011designing}
+\bibfield{author}{\bibinfo{person}{Noah Iliinsky} {and} \bibinfo{person}{Julie
+  Steele}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Designing data visualizations: Representing
+  informational Relationships}}.
+\newblock \bibinfo{publisher}{O'Reilly Media, Inc.}
+\newblock
+
+
+\bibitem[Iqbal et~al\mbox{.}(2024)]%
+        {iqbal2024towards}
+\bibfield{author}{\bibinfo{person}{Sehrish Iqbal}, \bibinfo{person}{Mladen
+  Rakovic}, \bibinfo{person}{Guanliang Chen}, \bibinfo{person}{Tongguang Li},
+  \bibinfo{person}{Jasmine Bajaj}, \bibinfo{person}{Rafael~Ferreira Mello},
+  \bibinfo{person}{Yizhou Fan}, \bibinfo{person}{Naif~Radi Aljohani}, {and}
+  \bibinfo{person}{Dragan Gasevic}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Towards Improving Rhetorical Categories
+  Classification and Unveiling Sequential Patterns in Students' Writing}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 14th Learning Analytics and
+  Knowledge Conference}} (Kyoto, Japan) \emph{(\bibinfo{series}{LAK '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{656–666}.
+\newblock
+\showISBNx{9798400716188}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3636555.3636927}
+\showDOI{\tempurl}
+
+
+\bibitem[Iqbal et~al\mbox{.}(2023)]%
+        {iqbal2023towards}
+\bibfield{author}{\bibinfo{person}{Sehrish Iqbal}, \bibinfo{person}{Mladen
+  Rakovic}, \bibinfo{person}{Guanliang Chen}, \bibinfo{person}{Tongguang Li},
+  \bibinfo{person}{Rafael Ferreira~Mello}, \bibinfo{person}{Yizhou Fan},
+  \bibinfo{person}{Giuseppe Fiorentino}, \bibinfo{person}{Naif Radi~Aljohani},
+  {and} \bibinfo{person}{Dragan Gasevic}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Towards automated analysis of rhetorical categories
+  in students essay writings using Bloom’s taxonomy}. In
+  \bibinfo{booktitle}{\emph{LAK23: 13th International Learning Analytics and
+  Knowledge Conference}}. \bibinfo{pages}{418--429}.
+\newblock
+
+
+\bibitem[Kabir et~al\mbox{.}(2024)]%
+        {kabir2024stack}
+\bibfield{author}{\bibinfo{person}{Samia Kabir}, \bibinfo{person}{David~N.
+  Udo-Imeh}, \bibinfo{person}{Bonan Kou}, {and} \bibinfo{person}{Tianyi
+  Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Is Stack Overflow Obsolete? An Empirical Study of
+  the Characteristics of ChatGPT Answers to Stack Overflow Questions}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors
+  in Computing Systems}} (Honolulu, HI, USA) \emph{(\bibinfo{series}{CHI
+  '24})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{935},
+  \bibinfo{numpages}{17}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642596}
+\showDOI{\tempurl}
+
+
+\bibitem[Kerby(2014)]%
+        {kerby2014simple}
+\bibfield{author}{\bibinfo{person}{Dave~S Kerby}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{The simple difference formula: An approach to
+  teaching nonparametric correlation}.
+\newblock \bibinfo{journal}{\emph{Comprehensive Psychology}}
+  \bibinfo{volume}{3} (\bibinfo{year}{2014}), \bibinfo{pages}{11--IT}.
+\newblock
+
+
+\bibitem[Kim et~al\mbox{.}(2021b)]%
+        {kim2021towards}
+\bibfield{author}{\bibinfo{person}{Dae~Hyun Kim}, \bibinfo{person}{Vidya
+  Setlur}, {and} \bibinfo{person}{Maneesh Agrawala}.}
+  \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{Towards Understanding How Readers Integrate Charts
+  and Captions: A Case Study with Line Charts}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2021 CHI Conference on Human
+  Factors in Computing Systems}} (Yokohama, Japan) \emph{(\bibinfo{series}{CHI
+  '21})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{610},
+  \bibinfo{numpages}{11}~pages.
+\newblock
+\showISBNx{9781450380966}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445443}
+\showDOI{\tempurl}
+
+
+\bibitem[Kim et~al\mbox{.}(2021a)]%
+        {Young-Ho2021}
+\bibfield{author}{\bibinfo{person}{Young-Ho Kim}, \bibinfo{person}{Bongshin
+  Lee}, \bibinfo{person}{Arjun Srinivasan}, {and} \bibinfo{person}{Eun~Kyoung
+  Choe}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{Data@Hand: Fostering Visual Exploration of Personal
+  Data on Smartphones Leveraging Speech and Touch Interaction}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2021 CHI Conference on Human
+  Factors in Computing Systems}} (Yokohama, Japan) \emph{(\bibinfo{series}{CHI
+  '21})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{462},
+  \bibinfo{numpages}{17}~pages.
+\newblock
+\showISBNx{9781450380966}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445421}
+\showDOI{\tempurl}
+
+
+\bibitem[Klein et~al\mbox{.}(2007)]%
+        {klein2007data}
+\bibfield{author}{\bibinfo{person}{Gary Klein}, \bibinfo{person}{Jennifer~K
+  Phillips}, \bibinfo{person}{Erica~L Rall}, {and} \bibinfo{person}{Deborah~A
+  Peluso}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{A data--frame theory of sensemaking}.
+\newblock In \bibinfo{booktitle}{\emph{Expertise out of context}}.
+  \bibinfo{publisher}{Psychology Press}, \bibinfo{pages}{118--160}.
+\newblock
+
+
+\bibitem[Knaflic(2015)]%
+        {knaflic2015storytelling}
+\bibfield{author}{\bibinfo{person}{Cole~Nussbaumer Knaflic}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Storytelling with Data: A Data
+  Visualization Guide for Business Professionals}}.
+\newblock \bibinfo{publisher}{John Wiley \& Sons, Inc.},
+  \bibinfo{address}{Hoboken, New Jersey}.
+\newblock
+
+
+\bibitem[Kong et~al\mbox{.}(2018)]%
+        {kong2018}
+\bibfield{author}{\bibinfo{person}{Ha-Kyung Kong}, \bibinfo{person}{Zhicheng
+  Liu}, {and} \bibinfo{person}{Karrie Karahalios}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Frames and Slants in Titles of Visualizations on
+  Controversial Topics}. In \bibinfo{booktitle}{\emph{Proceedings of the 2018
+  CHI Conference on Human Factors in Computing Systems}} (Montreal QC, Canada)
+  \emph{(\bibinfo{series}{CHI '18})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–12}.
+\newblock
+\showISBNx{9781450356206}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3173574.3174012}
+\showDOI{\tempurl}
+
+
+\bibitem[Kosara and Mackinlay(2013)]%
+        {Kosara2013}
+\bibfield{author}{\bibinfo{person}{Robert Kosara} {and} \bibinfo{person}{Jock
+  Mackinlay}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Storytelling: The Next Step for Visualization}.
+\newblock \bibinfo{journal}{\emph{Computer}} \bibinfo{volume}{46},
+  \bibinfo{number}{5} (\bibinfo{date}{May} \bibinfo{year}{2013}),
+  \bibinfo{pages}{44–50}.
+\newblock
+\showISSN{0018-9162}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/MC.2013.36}
+\showDOI{\tempurl}
+
+
+\bibitem[Krathwohl(2002)]%
+        {krathwohl2002revision}
+\bibfield{author}{\bibinfo{person}{David~R. Krathwohl}.}
+  \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{A Revision of Bloom's Taxonomy: An Overview}.
+\newblock \bibinfo{journal}{\emph{Theory Into Practice}} \bibinfo{volume}{41},
+  \bibinfo{number}{4} (\bibinfo{year}{2002}), \bibinfo{pages}{212--218}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1207/s15430421tip4104\_2}
+\showDOI{\tempurl}
+
+
+\bibitem[Krum(2013)]%
+        {krum2013cool}
+\bibfield{author}{\bibinfo{person}{Randy Krum}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Cool infographics: Effective communication
+  with data visualization and design}}.
+\newblock \bibinfo{publisher}{John Wiley \& Sons}.
+\newblock
+
+
+\bibitem[Lau(2023)]%
+        {BloomBERT}
+\bibfield{author}{\bibinfo{person}{Ryan Lau}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{BloomBERT: A Task Complexity Classifier}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/RyanLauQF/BloomBERT}}.
+\newblock
+
+
+\bibitem[Lee-Robbins et~al\mbox{.}(2022)]%
+        {leerobbins2022learning}
+\bibfield{author}{\bibinfo{person}{Elsie Lee-Robbins}, \bibinfo{person}{Shiqing
+  He}, {and} \bibinfo{person}{Eytan Adar}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Learning Objectives, Insights, and Assessments: How
+  Specification Formats Impact Design}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{28}, \bibinfo{number}{1}
+  (\bibinfo{date}{Jan} \bibinfo{year}{2022}), \bibinfo{pages}{676--685}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2021.3114811}
+\showDOI{\tempurl}
+
+
+\bibitem[Liu et~al\mbox{.}(2020)]%
+        {liu2020survey}
+\bibfield{author}{\bibinfo{person}{Zhengliang Liu}, \bibinfo{person}{R.~Jordan
+  Crouser}, {and} \bibinfo{person}{Alvitta Ottley}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Survey on Individual Differences in Visualization}.
+\newblock \bibinfo{journal}{\emph{Computer Graphics Forum}}
+  \bibinfo{volume}{39}, \bibinfo{number}{3} (\bibinfo{year}{2020}),
+  \bibinfo{pages}{693--712}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1111/cgf.14033}
+\showDOI{\tempurl}
+\showeprint{https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.14033}
+
+
+\bibitem[Liu and Stasko(2010)]%
+        {liu2010mental}
+\bibfield{author}{\bibinfo{person}{Zhicheng Liu} {and} \bibinfo{person}{John
+  Stasko}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Mental Models, Visual Reasoning and Interaction in
+  Information Visualization: A Top-down Perspective}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{16}, \bibinfo{number}{6}
+  (\bibinfo{date}{Nov} \bibinfo{year}{2010}), \bibinfo{pages}{999--1008}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2010.177}
+\showDOI{\tempurl}
+
+
+\bibitem[Loerakker et~al\mbox{.}(2024)]%
+        {Loerakker2024}
+\bibfield{author}{\bibinfo{person}{Meagan~B. Loerakker},
+  \bibinfo{person}{Jasmin Niess}, \bibinfo{person}{Marit Bentvelzen}, {and}
+  \bibinfo{person}{Pawe\l{}~W. Wo\'{z}niak}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Designing Data Visualisations for Self-Compassion
+  in Personal Informatics}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Interact. Mob. Wearable Ubiquitous
+  Technol.}} \bibinfo{volume}{7}, \bibinfo{number}{4}, Article
+  \bibinfo{articleno}{169} (\bibinfo{date}{jan} \bibinfo{year}{2024}),
+  \bibinfo{numpages}{22}~pages.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3631448}
+\showDOI{\tempurl}
+
+
+\bibitem[Lowe and Matthee(2020)]%
+        {lowe2020requirements}
+\bibfield{author}{\bibinfo{person}{Joy Lowe} {and} \bibinfo{person}{Machdel
+  Matthee}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Requirements of Data Visualisation Tools to Analyse
+  Big Data: A Structured Literature Review}. In
+  \bibinfo{booktitle}{\emph{Responsible Design, Implementation and Use of
+  Information and Communication Technology}},
+  \bibfield{editor}{\bibinfo{person}{Mari{\'e} Hattingh},
+  \bibinfo{person}{Machdel Matthee}, \bibinfo{person}{Hanlie Smuts},
+  \bibinfo{person}{Ilias Pappas}, \bibinfo{person}{Yogesh~K. Dwivedi}, {and}
+  \bibinfo{person}{Matti M{\"a}ntym{\"a}ki}} (Eds.).
+  \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}, \bibinfo{pages}{469--480}.
+\newblock
+\showISBNx{978-3-030-44999-5}
+
+
+\bibitem[Lundgard and Satyanarayan(2022)]%
+        {lundgard2022accessible}
+\bibfield{author}{\bibinfo{person}{Alan Lundgard} {and} \bibinfo{person}{Arvind
+  Satyanarayan}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Accessible Visualization via Natural Language
+  Descriptions: A Four-Level Model of Semantic Content}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{28}, \bibinfo{number}{1}
+  (\bibinfo{date}{Jan} \bibinfo{year}{2022}), \bibinfo{pages}{1073--1083}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2021.3114770}
+\showDOI{\tempurl}
+
+
+\bibitem[Mann and Thompson(1987)]%
+        {mann1987rhetorical}
+\bibfield{author}{\bibinfo{person}{William~C Mann} {and}
+  \bibinfo{person}{Sandra~A Thompson}.} \bibinfo{year}{1987}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Rhetorical structure theory: A theory of
+  text organization}}.
+\newblock \bibinfo{publisher}{University of Southern California, Information
+  Sciences Institute Los Angeles}.
+\newblock
+
+
+\bibitem[Marriott et~al\mbox{.}(2018)]%
+        {marriott2018immersive}
+\bibfield{author}{\bibinfo{person}{Kim. Marriott}, \bibinfo{person}{Falk.
+  Schreiber}, \bibinfo{person}{Tim. Dwyer}, \bibinfo{person}{Karsten. Klein},
+  \bibinfo{person}{Nathalie~Henry. Riche}, \bibinfo{person}{Takayuki. Itoh},
+  \bibinfo{person}{Wolfgang. Stuerzlinger}, {and} \bibinfo{person}{Bruce~H.
+  Thomas}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Immersive Analytics} (\bibinfo{edition}{1st
+  ed. 2018.} ed.)}.
+\newblock \bibinfo{publisher}{Springer International Publishing},
+  \bibinfo{address}{Cham}.
+\newblock
+\showISBNx{3-030-01388-X}
+
+
+\bibitem[Martinez-Maldonado et~al\mbox{.}(2020)]%
+        {martinezmaldonado2020layeredstorytelling}
+\bibfield{author}{\bibinfo{person}{Roberto Martinez-Maldonado},
+  \bibinfo{person}{Vanessa Echeverria}, \bibinfo{person}{Gloria
+  Fernandez~Nieto}, {and} \bibinfo{person}{Simon Buckingham~Shum}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{From Data to Insights: A Layered Storytelling
+  Approach for Multimodal Learning Analytics}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2020 CHI Conference on Human
+  Factors in Computing Systems}} (Honolulu, HI, USA)
+  \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–15}.
+\newblock
+\showISBNx{9781450367080}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376148}
+\showDOI{\tempurl}
+
+
+\bibitem[McKenna et~al\mbox{.}(2017)]%
+        {mckenna2017visual}
+\bibfield{author}{\bibinfo{person}{S. McKenna}, \bibinfo{person}{N.
+  Henry~Riche}, \bibinfo{person}{B. Lee}, \bibinfo{person}{J. Boy}, {and}
+  \bibinfo{person}{M. Meyer}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Visual Narrative Flow: Exploring Factors Shaping
+  Data Visualization Story Reading Experiences}.
+\newblock \bibinfo{journal}{\emph{Computer Graphics Forum}}
+  \bibinfo{volume}{36}, \bibinfo{number}{3} (\bibinfo{year}{2017}),
+  \bibinfo{pages}{377--387}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1111/cgf.13195}
+\showDOI{\tempurl}
+\showeprint{https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.13195}
+
+
+\bibitem[Mejia-Domenzain et~al\mbox{.}(2023)]%
+        {mejia2023dashboards}
+\bibfield{author}{\bibinfo{person}{Paola Mejia-Domenzain}, \bibinfo{person}{Eva
+  Laini}, \bibinfo{person}{Seyed~Parsa Neshaei}, \bibinfo{person}{Thiemo
+  Wambsganss}, {and} \bibinfo{person}{Tanja K{\"a}ser}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Visualizing Self-Regulated Learner Profiles in
+  Dashboards: Design Insights from Teachers}. In
+  \bibinfo{booktitle}{\emph{Artificial Intelligence in Education. Posters and
+  Late Breaking Results, Workshops and Tutorials, Industry and Innovation
+  Tracks, Practitioners, Doctoral Consortium and Blue Sky}}.
+  \bibinfo{publisher}{Springer Nature Switzerland}, \bibinfo{address}{Cham},
+  \bibinfo{pages}{619--624}.
+\newblock
+\showISBNx{978-3-031-36336-8}
+
+
+\bibitem[Milesi et~al\mbox{.}(2024)]%
+        {milesi2024comics}
+\bibfield{author}{\bibinfo{person}{Mikaela~E Milesi}, \bibinfo{person}{Riordan
+  Alfredo}, \bibinfo{person}{Vanessa Echeverria}, \bibinfo{person}{Lixiang
+  Yan}, \bibinfo{person}{Linxuan Zhao}, \bibinfo{person}{Yi-Shan Tsai}, {and}
+  \bibinfo{person}{Roberto Martinez-Maldonado}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{"It's Really Enjoyable to See Me Solve the Problem
+  like a Hero": GenAI-enhanced Data Comics as a Learning Analytics Tool}. In
+  \bibinfo{booktitle}{\emph{Extended Abstracts of the 2024 CHI Conference on
+  Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI EA '24})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{4},
+  \bibinfo{numpages}{7}~pages.
+\newblock
+\showISBNx{9798400703317}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613905.3651111}
+\showDOI{\tempurl}
+
+
+\bibitem[Milesi and Martinez-Maldonado(2024)]%
+        {milesi2024storytelling}
+\bibfield{author}{\bibinfo{person}{Mikaela~Elizabeth Milesi} {and}
+  \bibinfo{person}{Roberto Martinez-Maldonado}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Data Storytelling in Learning Analytics? A
+  Qualitative Investigation into Educators’ Perceptions of Benefits and
+  Risks}. In \bibinfo{booktitle}{\emph{Proceedings of the 14th Learning
+  Analytics and Knowledge Conference}} (Kyoto, Japan)
+  \emph{(\bibinfo{series}{LAK '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{167–177}.
+\newblock
+\showISBNx{9798400716188}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3636555.3636865}
+\showDOI{\tempurl}
+
+
+\bibitem[Mörth et~al\mbox{.}(2023)]%
+        {morth2023scrollyvis}
+\bibfield{author}{\bibinfo{person}{Eric Mörth}, \bibinfo{person}{Stefan
+  Bruckner}, {and} \bibinfo{person}{Noeska~N. Smit}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{ScrollyVis: Interactive Visual Authoring of Guided
+  Dynamic Narratives for Scientific Scrollytelling}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{29}, \bibinfo{number}{12}
+  (\bibinfo{date}{Dec} \bibinfo{year}{2023}), \bibinfo{pages}{5165--5177}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2022.3205769}
+\showDOI{\tempurl}
+
+
+\bibitem[Ndukwe and Daniel(2020)]%
+        {ndukwe2020teaching}
+\bibfield{author}{\bibinfo{person}{Ifeanyi~Glory Ndukwe} {and}
+  \bibinfo{person}{Ben~Kei Daniel}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Teaching analytics, value and tools for teacher
+  data literacy: A systematic and tripartite approach}.
+\newblock \bibinfo{journal}{\emph{International Journal of Educational
+  Technology in Higher Education}} \bibinfo{volume}{17}, \bibinfo{number}{1}
+  (\bibinfo{year}{2020}), \bibinfo{pages}{1--31}.
+\newblock
+
+
+\bibitem[Nobre et~al\mbox{.}(2024)]%
+        {nobre2024}
+\bibfield{author}{\bibinfo{person}{Carolina Nobre}, \bibinfo{person}{Kehang
+  Zhu}, \bibinfo{person}{Eric M\"{o}rth}, \bibinfo{person}{Hanspeter Pfister},
+  {and} \bibinfo{person}{Johanna Beyer}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Reading Between the Pixels: Investigating the
+  Barriers to Visualization Literacy}. In \bibinfo{booktitle}{\emph{Proceedings
+  of the CHI Conference on Human Factors in Computing Systems}} (Honolulu, HI,
+  USA) \emph{(\bibinfo{series}{CHI '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{197}, \bibinfo{numpages}{17}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642760}
+\showDOI{\tempurl}
+
+
+\bibitem[Pirolli and Card(2005)]%
+        {pirolli2005sensemaking}
+\bibfield{author}{\bibinfo{person}{Peter Pirolli} {and} \bibinfo{person}{Stuart
+  Card}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{The sensemaking process and leverage points for
+  analyst technology as identified through cognitive task analysis}. In
+  \bibinfo{booktitle}{\emph{Proceedings of international conference on
+  intelligence analysis}}, Vol.~\bibinfo{volume}{5}. McLean, VA, USA,
+  \bibinfo{pages}{2--4}.
+\newblock
+
+
+\bibitem[Pozdniakov et~al\mbox{.}(2023)]%
+        {Pozdniakov2023how}
+\bibfield{author}{\bibinfo{person}{Stanislav Pozdniakov},
+  \bibinfo{person}{Roberto Martinez-Maldonado}, \bibinfo{person}{Yi-Shan Tsai},
+  \bibinfo{person}{Vanessa Echeverria}, \bibinfo{person}{Namrata Srivastava},
+  {and} \bibinfo{person}{Dragan Gasevic}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{How Do Teachers Use Dashboards Enhanced with Data
+  Storytelling Elements According to Their Data Visualisation Literacy
+  Skills?}. In \bibinfo{booktitle}{\emph{LAK23: 13th International Learning
+  Analytics and Knowledge Conference}} (Arlington, TX, USA)
+  \emph{(\bibinfo{series}{LAK2023})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{89–99}.
+\newblock
+\showISBNx{9781450398657}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3576050.3576063}
+\showDOI{\tempurl}
+
+
+\bibitem[Rogha et~al\mbox{.}(2024)]%
+        {rogha2024impact}
+\bibfield{author}{\bibinfo{person}{Milad Rogha}, \bibinfo{person}{Subham Sah},
+  \bibinfo{person}{Alireza Karduni}, \bibinfo{person}{Douglas Markant}, {and}
+  \bibinfo{person}{Wenwen Dou}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{The Impact of Elicitation and Contrasting
+  Narratives on Engagement, Recall and Attitude Change With News Articles
+  Containing Data Visualization}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{30}, \bibinfo{number}{7}
+  (\bibinfo{date}{July} \bibinfo{year}{2024}), \bibinfo{pages}{4375--4389}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2024.3355884}
+\showDOI{\tempurl}
+
+
+\bibitem[Ryan(2016)]%
+        {ryan2016visual}
+\bibfield{author}{\bibinfo{person}{Lindy Ryan}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The Visual Imperative: Creating a Visual
+  Culture of Data Discovery}}.
+\newblock \bibinfo{publisher}{Elsevier Inc.}, \bibinfo{address}{Cambridge, MA}.
+\newblock
+
+
+\bibitem[Segel and Heer(2010)]%
+        {segel2010narrative}
+\bibfield{author}{\bibinfo{person}{E. Segel} {and} \bibinfo{person}{J. Heer}.}
+  \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Narrative Visualization: Telling Stories with
+  Data}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{16}, \bibinfo{number}{6}
+  (\bibinfo{year}{2010}), \bibinfo{pages}{1139--1148}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2010.179}
+\showDOI{\tempurl}
+
+
+\bibitem[Seyser and Zeiller(2018)]%
+        {seyser2018scrollytelling}
+\bibfield{author}{\bibinfo{person}{Doris Seyser} {and} \bibinfo{person}{Michael
+  Zeiller}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{{ Scrollytelling – An Analysis of Visual
+  Storytelling in Online Journalism }}. In \bibinfo{booktitle}{\emph{2018 22nd
+  International Conference Information Visualisation (IV)}}.
+  \bibinfo{publisher}{IEEE Computer Society}, \bibinfo{address}{Los Alamitos,
+  CA, USA}, \bibinfo{pages}{401--406}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/iV.2018.00075}
+\showDOI{\tempurl}
+
+
+\bibitem[Shao et~al\mbox{.}(2024)]%
+        {shao2024datastorytelling}
+\bibfield{author}{\bibinfo{person}{Hongbo Shao}, \bibinfo{person}{Roberto
+  Martinez-Maldonado}, \bibinfo{person}{Vanessa Echeverria},
+  \bibinfo{person}{Lixiang Yan}, {and} \bibinfo{person}{Dragan Gasevic}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Data Storytelling in Data Visualisation: Does it
+  Enhance the Efficiency and Effectiveness of Information Retrieval and
+  Insights Comprehension?}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI
+  Conference on Human Factors in Computing Systems}} (Honolulu, HI, USA)
+  \emph{(\bibinfo{series}{CHI '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{195}, \bibinfo{numpages}{21}~pages.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3643022}
+\showDOI{\tempurl}
+
+
+\bibitem[Shi et~al\mbox{.}(2023)]%
+        {shi2023breaking}
+\bibfield{author}{\bibinfo{person}{Yang Shi}, \bibinfo{person}{Tian Gao},
+  \bibinfo{person}{Xiaohan Jiao}, {and} \bibinfo{person}{Nan Cao}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Breaking the Fourth Wall of Data Stories through
+  Interaction}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{29}, \bibinfo{number}{1}
+  (\bibinfo{date}{Jan} \bibinfo{year}{2023}), \bibinfo{pages}{972--982}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2022.3209409}
+\showDOI{\tempurl}
+
+
+\bibitem[Srinivasan et~al\mbox{.}(2019)]%
+        {srinivasan2019augmenting}
+\bibfield{author}{\bibinfo{person}{Arjun Srinivasan},
+  \bibinfo{person}{Steven~M. Drucker}, \bibinfo{person}{Alex Endert}, {and}
+  \bibinfo{person}{John Stasko}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Augmenting Visualizations with Interactive Data
+  Facts to Facilitate Interpretation and Communication}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{25}, \bibinfo{number}{1}
+  (\bibinfo{date}{Jan} \bibinfo{year}{2019}), \bibinfo{pages}{672--681}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2018.2865145}
+\showDOI{\tempurl}
+
+
+\bibitem[Stokes and Hearst(2022)]%
+        {stokes2022text}
+\bibfield{author}{\bibinfo{person}{Chase Stokes} {and} \bibinfo{person}{Marti
+  Hearst}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{Why More Text is (Often) Better: Themes from Reader
+  Preferences for Integration of Charts and Text}.
+\newblock
+\newblock
+\showeprint[arxiv]{2209.10789}~[cs.HC]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2209.10789}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Stokes et~al\mbox{.}(2023)]%
+        {stokes2023striking}
+\bibfield{author}{\bibinfo{person}{Chase Stokes}, \bibinfo{person}{Vidya
+  Setlur}, \bibinfo{person}{Bridget Cogley}, \bibinfo{person}{Arvind
+  Satyanarayan}, {and} \bibinfo{person}{Marti~A. Hearst}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Striking a Balance: Reader Takeaways and
+  Preferences when Integrating Text and Charts}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Visualization and
+  Computer Graphics}} \bibinfo{volume}{29}, \bibinfo{number}{1}
+  (\bibinfo{date}{Jan} \bibinfo{year}{2023}), \bibinfo{pages}{1233--1243}.
+\newblock
+\showISSN{1941-0506}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TVCG.2022.3209383}
+\showDOI{\tempurl}
+
+
+\bibitem[Sungsoo~Hwang and Ha(2021)]%
+        {hwang2021evidence}
+\bibfield{author}{\bibinfo{person}{Taewoo~Nam Sungsoo~Hwang} {and}
+  \bibinfo{person}{Hyunsang Ha}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{From evidence-based policy making to data-driven
+  administration: proposing the data vs. value framework}.
+\newblock \bibinfo{journal}{\emph{International Review of Public
+  Administration}} \bibinfo{volume}{26}, \bibinfo{number}{3}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{291--307}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1080/12294659.2021.1974176}
+\showDOI{\tempurl}
+\showeprint{https://doi.org/10.1080/12294659.2021.1974176}
+
+
+\bibitem[Tufte(2001)]%
+        {tufte2001visual}
+\bibfield{author}{\bibinfo{person}{Edward~R Tufte}.}
+  \bibinfo{year}{2001}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The visual display of quantitative
+  information}}. Vol.~\bibinfo{volume}{2}.
+\newblock \bibinfo{publisher}{Graphics press Cheshire, CT}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.4135/9781071812082.n670}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2020)]%
+        {Wang2020cheat}
+\bibfield{author}{\bibinfo{person}{Zezhong Wang}, \bibinfo{person}{Lovisa
+  Sundin}, \bibinfo{person}{Dave Murray-Rust}, {and} \bibinfo{person}{Benjamin
+  Bach}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Cheat Sheets for Data Visualization Techniques}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2020 CHI Conference on Human
+  Factors in Computing Systems}} (Honolulu, HI, USA)
+  \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–13}.
+\newblock
+\showISBNx{9781450367080}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376271}
+\showDOI{\tempurl}
+
+
+\bibitem[Xu et~al\mbox{.}(2023)]%
+        {xian2023datavideos}
+\bibfield{author}{\bibinfo{person}{Xian Xu}, \bibinfo{person}{Aoyu Wu},
+  \bibinfo{person}{Leni Yang}, \bibinfo{person}{Zheng Wei},
+  \bibinfo{person}{Rong Huang}, \bibinfo{person}{David Yip}, {and}
+  \bibinfo{person}{Huamin Qu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Is It the End? Guidelines for Cinematic Endings in
+  Data Videos}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 CHI
+  Conference on Human Factors in Computing Systems}} (Hamburg, Germany)
+  \emph{(\bibinfo{series}{CHI '23})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{171}, \bibinfo{numpages}{16}~pages.
+\newblock
+\showISBNx{9781450394215}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3544548.3580701}
+\showDOI{\tempurl}
+
+
+\bibitem[Yan et~al\mbox{.}(2024a)]%
+        {yan2024data}
+\bibfield{author}{\bibinfo{person}{Lixiang Yan}, \bibinfo{person}{Roberto
+  Martinez-Maldonado}, \bibinfo{person}{Yueqiao Jin}, \bibinfo{person}{Vanessa
+  Echeverria}, \bibinfo{person}{Mikaela Milesi}, \bibinfo{person}{Jie Fan},
+  \bibinfo{person}{Linxuan Zhao}, \bibinfo{person}{Riordan Alfredo},
+  \bibinfo{person}{Xinyu Li}, {and} \bibinfo{person}{Dragan
+  Ga{\v{s}}evi{\'c}}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{From Data Stories to Dialogues: A Randomised
+  Controlled Trial of Generative AI Agents and Data Storytelling in Enhancing
+  Data Visualisation Comprehension}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2409.11645}}
+  (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Yan et~al\mbox{.}(2024b)]%
+        {yan2024vizchat}
+\bibfield{author}{\bibinfo{person}{Lixiang Yan}, \bibinfo{person}{Linxuan
+  Zhao}, \bibinfo{person}{Vanessa Echeverria}, \bibinfo{person}{Yueqiao Jin},
+  \bibinfo{person}{Riordan Alfredo}, \bibinfo{person}{Xinyu Li},
+  \bibinfo{person}{Dragan Ga{\v{s}}evi’c}, {and} \bibinfo{person}{Roberto
+  Martinez-Maldonado}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{VizChat: enhancing learning analytics dashboards
+  with contextualised explanations using multimodal generative AI chatbots}. In
+  \bibinfo{booktitle}{\emph{International Conference on Artificial Intelligence
+  in Education}}. Springer, \bibinfo{pages}{180--193}.
+\newblock
+
+
+\bibitem[Yang et~al\mbox{.}(2022)]%
+        {yang2022}
+\bibfield{author}{\bibinfo{person}{Yalong Yang}, \bibinfo{person}{Wenyu Xia},
+  \bibinfo{person}{Fritz Lekschas}, \bibinfo{person}{Carolina Nobre},
+  \bibinfo{person}{Robert Kr\"{u}ger}, {and} \bibinfo{person}{Hanspeter
+  Pfister}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The Pattern is in the Details: An Evaluation of
+  Interaction Techniques for Locating, Searching, and Contextualizing Details
+  in Multivariate Matrix Visualizations}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2022 CHI Conference on Human
+  Factors in Computing Systems}} (New Orleans, LA, USA)
+  \emph{(\bibinfo{series}{CHI '22})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{84}, \bibinfo{numpages}{15}~pages.
+\newblock
+\showISBNx{9781450391573}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3491102.3517673}
+\showDOI{\tempurl}
+
+
+\bibitem[Yau(2013)]%
+        {yau2013datapoints}
+\bibfield{author}{\bibinfo{person}{Nathan Yau}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Data Points: Visualization That Means
+  Something} (\bibinfo{edition}{1} ed.)}.
+\newblock \bibinfo{publisher}{Wiley}, \bibinfo{address}{Newark}.
+\newblock
+\showISBNx{111846219X}
+
+
+\bibitem[Yen et~al\mbox{.}(2020)]%
+        {yen2020}
+\bibfield{author}{\bibinfo{person}{Yu-Chun~Grace Yen}, \bibinfo{person}{Joy~O.
+  Kim}, {and} \bibinfo{person}{Brian~P. Bailey}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Decipher: An Interactive Visualization Tool for
+  Interpreting Unstructured Design Feedback from Multiple Providers}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2020 CHI Conference on Human
+  Factors in Computing Systems}} (Honolulu, HI, USA)
+  \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–13}.
+\newblock
+\showISBNx{9781450367080}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376380}
+\showDOI{\tempurl}
+
+
+\bibitem[Zdanovic et~al\mbox{.}(2022)]%
+        {zdanovic2022influence}
+\bibfield{author}{\bibinfo{person}{Dominyk Zdanovic},
+  \bibinfo{person}{Tanja~Julie Lembcke}, {and} \bibinfo{person}{Toine Bogers}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The Influence of Data Storytelling on the Ability
+  to Recall Information}. In \bibinfo{booktitle}{\emph{Proceedings of the 2022
+  Conference on Human Information Interaction and Retrieval}} (Regensburg,
+  Germany) \emph{(\bibinfo{series}{CHIIR '22})}. \bibinfo{publisher}{ACM},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{67–77}.
+\newblock
+\showISBNx{9781450391863}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3498366.3505755}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2020)]%
+        {Zhang2020dataquilt}
+\bibfield{author}{\bibinfo{person}{Jiayi~Eris Zhang}, \bibinfo{person}{Nicole
+  Sultanum}, \bibinfo{person}{Anastasia Bezerianos}, {and}
+  \bibinfo{person}{Fanny Chevalier}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{DataQuilt: Extracting Visual Elements from Images
+  to Craft Pictorial Visualizations}. In \bibinfo{booktitle}{\emph{Proceedings
+  of the 2020 CHI Conference on Human Factors in Computing Systems}} (Honolulu,
+  HI, USA) \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–13}.
+\newblock
+\showISBNx{9781450367080}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376172}
+\showDOI{\tempurl}
+
+
+\bibitem[Zu et~al\mbox{.}(2023)]%
+        {zu2023automated}
+\bibfield{author}{\bibinfo{person}{Jiyun Zu}, \bibinfo{person}{Ikkyu Choi},
+  {and} \bibinfo{person}{Jiangang Hao}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Automated distractor generation for
+  fill-in-the-blank items using a prompt-based learning approach}.
+\newblock \bibinfo{journal}{\emph{Psychological Testing and Assessment
+  Modeling}} \bibinfo{volume}{65}, \bibinfo{number}{2} (\bibinfo{year}{2023}),
+  \bibinfo{pages}{55--75}.
+\newblock
+
+
+\end{thebibliography}

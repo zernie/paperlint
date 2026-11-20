@@ -1,0 +1,34 @@
+% 필요한 패키지를 문서의 preamble에 추가하세요
+\begin{table}[th]
+    \centering
+    % 표의 크기를 조정하여 가독성을 높입니다
+    \resizebox{\columnwidth}{!}{%
+        \begin{tabular}{l}
+            \hline
+            \begin{tabular}[c]{@{}l@{}}
+                **Instruction**\\
+                You are a professional OCR comparison judge. \\\\
+                An original image and two documents (doc1 and doc2) are provided.\\
+                Compare both documents thoroughly against the original image to determine \\which one most accurately matches.\\\\
+                State only the final choice, with no explanation.
+                Evaluate them based on:\\
+                - Column order \\
+                - Insertion \\
+                - Deletion \\
+                - Substitution \\
+                - Segmentation  \\
+                - Transposition \\
+                \\
+                \\\{Image\}\\\\
+
+                Doc1: \{document1\}\\
+                Doc2: \{document2\}\\
+
+                                
+            \end{tabular} \\
+            \hline
+        \end{tabular}%
+    }
+    \caption{Prompt for qualitative evaluation of OCRed and revised text}
+    \label{tab:qual_prompt}
+\end{table}

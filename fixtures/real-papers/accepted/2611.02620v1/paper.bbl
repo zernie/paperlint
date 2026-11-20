@@ -1,0 +1,393 @@
+\begin{thebibliography}{49}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Blanco{-}Justicia et~al.(2024)Blanco{-}Justicia, Jebreel,
+  Manzanares{-}Salor, S{\'{a}}nchez, Domingo{-}Ferrer, Collell, and
+  Tan]{DBLP:journals/corr/abs-2404-02062}
+Blanco{-}Justicia, A., Jebreel, N., Manzanares{-}Salor, B., S{\'{a}}nchez, D.,
+  Domingo{-}Ferrer, J., Collell, G., and Tan, K.~E.
+\newblock Digital forgetting in large language models: {A} survey of unlearning
+  methods.
+\newblock \emph{CoRR}, abs/2404.02062, 2024.
+
+\bibitem[Brophy \& Lowd(2021)Brophy and Lowd]{DBLP:conf/icml/BrophyL21}
+Brophy, J. and Lowd, D.
+\newblock Machine unlearning for random forests.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning, {ICML} 2021, 18-24 July 2021, Virtual Event}, volume 139 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  1092--1104. {PMLR},
+  2021.
+
+\bibitem[Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell, Agarwal, Herbert{-}Voss, Krueger,
+  Henighan, Child, Ramesh, Ziegler, Wu, Winter, Hesse, Chen, Sigler, Litwin,
+  Gray, Chess, Clark, Berner, McCandlish, Radford, Sutskever, and
+  Amodei]{DBLP:conf/nips/BrownMRSKDNSSAA20}
+Brown, T.~B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P.,
+  Neelakantan, A., Shyam, P., Sastry, G., Askell, A., Agarwal, S.,
+  Herbert{-}Voss, A., Krueger, G., Henighan, T., Child, R., Ramesh, A.,
+  Ziegler, D.~M., Wu, J., Winter, C., Hesse, C., Chen, M., Sigler, E., Litwin,
+  M., Gray, S., Chess, B., Clark, J., Berner, C., McCandlish, S., Radford, A.,
+  Sutskever, I., and Amodei, D.
+\newblock Language models are few-shot learners.
+\newblock In \emph{Advances in Neural Information Processing Systems 33: Annual
+  Conference on Neural Information Processing Systems 2020, NeurIPS 2020,
+  December 6-12, 2020, virtual}, 2020.
+
+\bibitem[Cao \& Yang(2015)Cao and Yang]{DBLP:conf/sp/CaoY15}
+Cao, Y. and Yang, J.
+\newblock Towards making systems forget with machine unlearning.
+\newblock In \emph{2015 {IEEE} Symposium on Security and Privacy, {SP} 2015,
+  San Jose, CA, USA, May 17-21, 2015}, pp.\  463--480. {IEEE} Computer Society,
+  2015.
+
+\bibitem[Carlini et~al.(2021)Carlini, Tram{\`{e}}r, Wallace, Jagielski,
+  Herbert{-}Voss, Lee, Roberts, Brown, Song, Erlingsson, Oprea, and
+  Raffel]{DBLP:conf/uss/CarliniTWJHLRBS21}
+Carlini, N., Tram{\`{e}}r, F., Wallace, E., Jagielski, M., Herbert{-}Voss, A.,
+  Lee, K., Roberts, A., Brown, T.~B., Song, D., Erlingsson, {\'{U}}., Oprea,
+  A., and Raffel, C.
+\newblock Extracting training data from large language models.
+\newblock In \emph{30th {USENIX} Security Symposium, {USENIX} Security 2021,
+  August 11-13, 2021}, pp.\  2633--2650. {USENIX} Association, 2021.
+
+\bibitem[Chen \& Yang(2023)Chen and Yang]{DBLP:conf/emnlp/ChenY23}
+Chen, J. and Yang, D.
+\newblock Unlearn what you want to forget: Efficient unlearning for llms.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2023, Singapore, December 6-10, 2023},
+  pp.\  12041--12052. Association for Computational Linguistics, 2023.
+
+\bibitem[Eldan \& Russinovich(2023)Eldan and
+  Russinovich]{DBLP:journals/corr/abs-2310-02238}
+Eldan, R. and Russinovich, M.
+\newblock Who's harry potter? approximate unlearning in llms.
+\newblock \emph{CoRR}, abs/2310.02238, 2023.
+
+\bibitem[Golatkar et~al.(2020)Golatkar, Achille, and
+  Soatto]{DBLP:conf/eccv/GolatkarAS20}
+Golatkar, A., Achille, A., and Soatto, S.
+\newblock Forgetting outside the box: Scrubbing deep networks of information
+  accessible from input-output observations.
+\newblock In \emph{Computer Vision - {ECCV} 2020 - 16th European Conference,
+  Glasgow, UK, August 23-28, 2020, Proceedings, Part {XXIX}}, volume 12374 of
+  \emph{Lecture Notes in Computer Science}, pp.\  383--398. Springer, 2020.
+
+\bibitem[Golatkar et~al.(2021)Golatkar, Achille, Ravichandran, Polito, and
+  Soatto]{DBLP:conf/cvpr/GolatkarARPS21}
+Golatkar, A., Achille, A., Ravichandran, A., Polito, M., and Soatto, S.
+\newblock Mixed-privacy forgetting in deep networks.
+\newblock In \emph{{IEEE} Conference on Computer Vision and Pattern
+  Recognition, {CVPR} 2021, virtual, June 19-25, 2021}, pp.\  792--801.
+  Computer Vision Foundation / {IEEE}, 2021.
+
+\bibitem[Graves et~al.(2021)Graves, Nagisetty, and
+  Ganesh]{DBLP:conf/aaai/GravesNG21}
+Graves, L., Nagisetty, V., and Ganesh, V.
+\newblock Amnesiac machine learning.
+\newblock In \emph{Thirty-Fifth {AAAI} Conference on Artificial Intelligence,
+  {AAAI} 2021, Thirty-Third Conference on Innovative Applications of Artificial
+  Intelligence, {IAAI} 2021, The Eleventh Symposium on Educational Advances in
+  Artificial Intelligence, {EAAI} 2021, Virtual Event, February 2-9, 2021},
+  pp.\  11516--11524. {AAAI} Press, 2021.
+
+\bibitem[Guo et~al.(2019)Guo, Goldstein, Hannun, and Van
+  Der~Maaten]{guo2019certified}
+Guo, C., Goldstein, T., Hannun, A., and Van Der~Maaten, L.
+\newblock Certified data removal from machine learning models.
+\newblock \emph{arXiv preprint arXiv:1911.03030}, 2019.
+
+\bibitem[Han et~al.(2020)Han, Niu, Yu, Yao, Xu, Tsang, and
+  Sugiyama]{DBLP:conf/icml/00030YYXTS20}
+Han, B., Niu, G., Yu, X., Yao, Q., Xu, M., Tsang, I.~W., and Sugiyama, M.
+\newblock {SIGUA:} forgetting may make learning with noisy labels more robust.
+\newblock In \emph{Proceedings of the 37th International Conference on Machine
+  Learning, {ICML} 2020, 13-18 July 2020, Virtual Event}, volume 119 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  4006--4016. {PMLR},
+  2020.
+
+\bibitem[Hong et~al.(2024{\natexlab{a}})Hong, Yu, Ravfogel, Yang, and
+  Geva]{DBLP:journals/corr/abs-2406-11614}
+Hong, Y., Yu, L., Ravfogel, S., Yang, H., and Geva, M.
+\newblock Intrinsic evaluation of unlearning using parametric knowledge traces.
+\newblock \emph{CoRR}, abs/2406.11614, 2024{\natexlab{a}}.
+
+\bibitem[Hong et~al.(2024{\natexlab{b}})Hong, Zou, Hu, Zeng, Wang, and
+  Yang]{DBLP:conf/emnlp/HongZHZ0Y24}
+Hong, Y., Zou, Y., Hu, L., Zeng, Z., Wang, D., and Yang, H.
+\newblock Dissecting fine-tuning unlearning in large language models.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2024, Miami, FL, USA, November 12-16,
+  2024}, pp.\  3933--3941. Association for Computational Linguistics,
+  2024{\natexlab{b}}.
+
+\bibitem[Ilharco et~al.(2023)Ilharco, Ribeiro, Wortsman, Schmidt, Hajishirzi,
+  and Farhadi]{DBLP:conf/iclr/IlharcoRWSHF23}
+Ilharco, G., Ribeiro, M.~T., Wortsman, M., Schmidt, L., Hajishirzi, H., and
+  Farhadi, A.
+\newblock Editing models with task arithmetic.
+\newblock In \emph{The Eleventh International Conference on Learning
+  Representations, {ICLR} 2023, Kigali, Rwanda, May 1-5, 2023}. OpenReview.net,
+  2023.
+
+\bibitem[Izzo et~al.(2021)Izzo, Smart, Chaudhuri, and
+  Zou]{DBLP:conf/aistats/IzzoSCZ21}
+Izzo, Z., Smart, M.~A., Chaudhuri, K., and Zou, J.
+\newblock Approximate data deletion from machine learning models.
+\newblock In \emph{The 24th International Conference on Artificial Intelligence
+  and Statistics, {AISTATS} 2021, April 13-15, 2021, Virtual Event}, volume 130
+  of \emph{Proceedings of Machine Learning Research}, pp.\  2008--2016. {PMLR},
+  2021.
+
+\bibitem[Ji et~al.(2024)Ji, Liu, Zhang, Liu, Kompella, Liu, and
+  Chang]{DBLP:journals/corr/abs-2406-08607}
+Ji, J., Liu, Y., Zhang, Y., Liu, G., Kompella, R.~R., Liu, S., and Chang, S.
+\newblock Reversing the forget-retain objectives: An efficient {LLM} unlearning
+  framework from logit difference.
+\newblock \emph{CoRR}, abs/2406.08607, 2024.
+
+\bibitem[Jia et~al.(2024{\natexlab{a}})Jia, Liu, Zhang, Ram, Baracaldo, and
+  Liu]{DBLP:journals/corr/abs-2410-17509}
+Jia, J., Liu, J., Zhang, Y., Ram, P., Baracaldo, N., and Liu, S.
+\newblock {WAGLE:} strategic weight attribution for effective and modular
+  unlearning in large language models.
+\newblock \emph{CoRR}, abs/2410.17509, 2024{\natexlab{a}}.
+
+\bibitem[Jia et~al.(2024{\natexlab{b}})Jia, Zhang, Zhang, Liu, Runwal,
+  Diffenderfer, Kailkhura, and Liu]{DBLP:conf/emnlp/JiaZZLRDK024}
+Jia, J., Zhang, Y., Zhang, Y., Liu, J., Runwal, B., Diffenderfer, J.,
+  Kailkhura, B., and Liu, S.
+\newblock {SOUL:} unlocking the power of second-order optimization for {LLM}
+  unlearning.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in
+  Natural Language Processing, {EMNLP} 2024, Miami, FL, USA, November 12-16,
+  2024}, pp.\  4276--4292. Association for Computational Linguistics,
+  2024{\natexlab{b}}.
+
+\bibitem[Koh \& Liang(2017)Koh and Liang]{koh2017understanding}
+Koh, P.~W. and Liang, P.
+\newblock Understanding black-box predictions via influence functions.
+\newblock In \emph{International conference on machine learning}, pp.\
+  1885--1894. PMLR, 2017.
+
+\bibitem[Langley(2000)]{langley00}
+Langley, P.
+\newblock Crafting papers on machine learning.
+\newblock In Langley, P. (ed.), \emph{Proceedings of the 17th International
+  Conference on Machine Learning (ICML 2000)}, pp.\  1207--1216, Stanford, CA,
+  2000. Morgan Kaufmann.
+
+\bibitem[Liu et~al.(2024{\natexlab{a}})Liu, Yao, Jia, Casper, Baracaldo, Hase,
+  Xu, Yao, Li, Varshney, Bansal, Koyejo, and
+  Liu]{DBLP:journals/corr/abs-2402-08787}
+Liu, S., Yao, Y., Jia, J., Casper, S., Baracaldo, N., Hase, P., Xu, X., Yao,
+  Y., Li, H., Varshney, K.~R., Bansal, M., Koyejo, S., and Liu, Y.
+\newblock Rethinking machine unlearning for large language models.
+\newblock \emph{CoRR}, abs/2402.08787, 2024{\natexlab{a}}.
+
+\bibitem[Liu et~al.(2024{\natexlab{b}})Liu, Dou, Tan, Tian, and
+  Jiang]{DBLP:conf/acl/0010DT0024}
+Liu, Z., Dou, G., Tan, Z., Tian, Y., and Jiang, M.
+\newblock Towards safer large language models through machine unlearning.
+\newblock In \emph{Findings of the Association for Computational Linguistics,
+  {ACL} 2024, Bangkok, Thailand and virtual meeting, August 11-16, 2024}, pp.\
+  1817--1829. Association for Computational Linguistics, 2024{\natexlab{b}}.
+
+\bibitem[Lynch et~al.(2024)Lynch, Guo, Ewart, Casper, and
+  Hadfield{-}Menell]{DBLP:journals/corr/abs-2402-16835}
+Lynch, A., Guo, P., Ewart, A., Casper, S., and Hadfield{-}Menell, D.
+\newblock Eight methods to evaluate robust unlearning in llms.
+\newblock \emph{CoRR}, abs/2402.16835, 2024.
+
+\bibitem[Maini et~al.(2024)Maini, Feng, Schwarzschild, Lipton, and
+  Kolter]{DBLP:journals/corr/abs-2401-06121}
+Maini, P., Feng, Z., Schwarzschild, A., Lipton, Z.~C., and Kolter, J.~Z.
+\newblock {TOFU:} {A} task of fictitious unlearning for llms.
+\newblock \emph{CoRR}, abs/2401.06121, 2024.
+
+\bibitem[Niu et~al.(2016)Niu, du~Plessis, Sakai, Ma, and
+  Sugiyama]{DBLP:conf/nips/NiuPSMS16}
+Niu, G., du~Plessis, M.~C., Sakai, T., Ma, Y., and Sugiyama, M.
+\newblock Theoretical comparisons of positive-unlabeled learning against
+  positive-negative learning.
+\newblock In \emph{Advances in Neural Information Processing Systems 29: Annual
+  Conference on Neural Information Processing Systems 2016, December 5-10,
+  2016, Barcelona, Spain}, pp.\  1199--1207, 2016.
+
+\bibitem[Rozi{\`{e}}re et~al.(2023)Rozi{\`{e}}re, Gehring, Gloeckle, Sootla,
+  Gat, Tan, Adi, Liu, Remez, Rapin, Kozhevnikov, Evtimov, Bitton, Bhatt,
+  Canton{-}Ferrer, Grattafiori, Xiong, D{\'{e}}fossez, Copet, Azhar, Touvron,
+  Martin, Usunier, Scialom, and Synnaeve]{DBLP:journals/corr/abs-2308-12950}
+Rozi{\`{e}}re, B., Gehring, J., Gloeckle, F., Sootla, S., Gat, I., Tan, X.~E.,
+  Adi, Y., Liu, J., Remez, T., Rapin, J., Kozhevnikov, A., Evtimov, I., Bitton,
+  J., Bhatt, M., Canton{-}Ferrer, C., Grattafiori, A., Xiong, W.,
+  D{\'{e}}fossez, A., Copet, J., Azhar, F., Touvron, H., Martin, L., Usunier,
+  N., Scialom, T., and Synnaeve, G.
+\newblock Code llama: Open foundation models for code.
+\newblock \emph{CoRR}, abs/2308.12950, 2023.
+
+\bibitem[Schmidt(2017)]{schmidt2017cpsc}
+Schmidt, M.
+\newblock Cpsc 540: Machine learning.
+\newblock \emph{Convergence of Gradient Descent}, 2017.
+
+\bibitem[Scholten et~al.(2024)Scholten, G{\"{u}}nnemann, and
+  Schwinn]{DBLP:journals/corr/abs-2410-03523}
+Scholten, Y., G{\"{u}}nnemann, S., and Schwinn, L.
+\newblock A probabilistic perspective on unlearning and alignment for large
+  language models.
+\newblock \emph{CoRR}, abs/2410.03523, 2024.
+
+\bibitem[Shi et~al.(2024{\natexlab{a}})Shi, Ajith, Xia, Huang, Liu, Blevins,
+  Chen, and Zettlemoyer]{DBLP:conf/iclr/ShiAXHLB0Z24}
+Shi, W., Ajith, A., Xia, M., Huang, Y., Liu, D., Blevins, T., Chen, D., and
+  Zettlemoyer, L.
+\newblock Detecting pretraining data from large language models.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations, {ICLR} 2024, Vienna, Austria, May 7-11, 2024}.
+  OpenReview.net, 2024{\natexlab{a}}.
+
+\bibitem[Shi et~al.(2024{\natexlab{b}})Shi, Lee, Huang, Malladi, Zhao,
+  Holtzman, Liu, Zettlemoyer, Smith, and
+  Zhang]{DBLP:journals/corr/abs-2407-06460}
+Shi, W., Lee, J., Huang, Y., Malladi, S., Zhao, J., Holtzman, A., Liu, D.,
+  Zettlemoyer, L., Smith, N.~A., and Zhang, C.
+\newblock {MUSE:} machine unlearning six-way evaluation for language models.
+\newblock \emph{CoRR}, abs/2407.06460, 2024{\natexlab{b}}.
+
+\bibitem[Thaker et~al.(2024)Thaker, Hu, Kale, Maurya, Wu, and
+  Smith]{DBLP:journals/corr/abs-2410-02879}
+Thaker, P., Hu, S., Kale, N., Maurya, Y., Wu, Z.~S., and Smith, V.
+\newblock Position: {LLM} unlearning benchmarks are weak measures of progress.
+\newblock \emph{CoRR}, abs/2410.02879, 2024.
+
+\bibitem[Ullah et~al.(2021)Ullah, Mai, Rao, Rossi, and
+  Arora]{DBLP:conf/colt/UllahM0RA21}
+Ullah, E., Mai, T., Rao, A., Rossi, R.~A., and Arora, R.
+\newblock Machine unlearning via algorithmic stability.
+\newblock In \emph{Conference on Learning Theory, {COLT} 2021, 15-19 August
+  2021, Boulder, Colorado, {USA}}, volume 134 of \emph{Proceedings of Machine
+  Learning Research}, pp.\  4126--4142. {PMLR}, 2021.
+
+\bibitem[von Oswald et~al.(2021)von Oswald, Zhao, Kobayashi, Schug, Caccia,
+  Zucchet, and Sacramento]{DBLP:conf/nips/OswaldZKSCZS21}
+von Oswald, J., Zhao, D., Kobayashi, S., Schug, S., Caccia, M., Zucchet, N.,
+  and Sacramento, J.
+\newblock Learning where to learn: Gradient sparsity in meta and continual
+  learning.
+\newblock In \emph{Advances in Neural Information Processing Systems 34: Annual
+  Conference on Neural Information Processing Systems 2021, NeurIPS 2021,
+  December 6-14, 2021, virtual}, pp.\  5250--5263, 2021.
+
+\bibitem[Wang et~al.(2024{\natexlab{a}})Wang, Han, Yang, Zhu, Liu, and
+  Sugiyama]{DBLP:journals/corr/abs-2406-09179}
+Wang, Q., Han, B., Yang, P., Zhu, J., Liu, T., and Sugiyama, M.
+\newblock Unlearning with control: Assessing real-world utility for large
+  language model unlearning.
+\newblock \emph{CoRR}, abs/2406.09179, 2024{\natexlab{a}}.
+
+\bibitem[Wang et~al.(2024{\natexlab{b}})Wang, Lin, Chen, Schmidt, Han, and
+  Zhang]{wang2024clips}
+Wang, Q., Lin, Y., Chen, Y., Schmidt, L., Han, B., and Zhang, T.
+\newblock A sober look at the robustness of clips to spurious features.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  2024{\natexlab{b}}.
+
+\bibitem[Wang et~al.(2025{\natexlab{a}})Wang, Han, Yang, Zhu, Liu, and
+  Sugiyama]{wang2025towards}
+Wang, Q., Han, B., Yang, P., Zhu, J., Liu, T., and Sugiyama, M.
+\newblock Towards effective evaluations and comparison for llm unlearning
+  methods.
+\newblock In \emph{International Conference on Learning Representations},
+  2025{\natexlab{a}}.
+
+\bibitem[Wang et~al.(2025{\natexlab{b}})Wang, Zhou, Zhou, Shin, Han, and
+  Weinberger]{wang2025rethinking}
+Wang, Q., Zhou, J.~P., Zhou, Z., Shin, S., Han, B., and Weinberger, K.~Q.
+\newblock Rethinking llm unlearning objectives: A gradient perspective and go
+  beyond.
+\newblock In \emph{International Conference on Learning Representations},
+  2025{\natexlab{b}}.
+
+\bibitem[Wang et~al.(2025{\natexlab{c}})Wang, Wang, Liu, Huang, Du, Du, and
+  Han]{wang2025gru}
+Wang, Y., Wang, Q., Liu, F., Huang, W., Du, Y., Du, X., and Han, B.
+\newblock Gru: Mitigating the trade-off between unlearning and retention for
+  large language models.
+\newblock In \emph{International Conference on Machine Learning},
+  2025{\natexlab{c}}.
+
+\bibitem[Wu et~al.(2024)Wu, Yadav, Salakhutdinov, and
+  Chaudhuri]{DBLP:journals/corr/abs-2410-15153}
+Wu, R., Yadav, C., Salakhutdinov, R., and Chaudhuri, K.
+\newblock Evaluating deep unlearning in large language models.
+\newblock \emph{CoRR}, abs/2410.15153, 2024.
+
+\bibitem[Wu et~al.(2020)Wu, Dobriban, and Davidson]{DBLP:conf/icml/WuDD20}
+Wu, Y., Dobriban, E., and Davidson, S.~B.
+\newblock Deltagrad: Rapid retraining of machine learning models.
+\newblock In \emph{Proceedings of the 37th International Conference on Machine
+  Learning, {ICML} 2020, 13-18 July 2020, Virtual Event}, volume 119 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  10355--10366. {PMLR},
+  2020.
+
+\bibitem[Yang et~al.(2025)Yang, Wang, Huang, Liu, Zhang, and
+  Han]{yang2025exploring}
+Yang, P., Wang, Q., Huang, Z., Liu, T., Zhang, C., and Han, B.
+\newblock Exploring criteria of loss reweighting to enhance llm unlearning.
+\newblock In \emph{International Conference on Machine Learning}, 2025.
+
+\bibitem[Yao et~al.(2023)Yao, Xu, and Liu]{DBLP:journals/corr/abs-2310-10683}
+Yao, Y., Xu, X., and Liu, Y.
+\newblock Large language model unlearning.
+\newblock \emph{CoRR}, abs/2310.10683, 2023.
+
+\bibitem[Yeom et~al.(2018)Yeom, Giacomelli, Fredrikson, and
+  Jha]{DBLP:conf/csfw/YeomGFJ18}
+Yeom, S., Giacomelli, I., Fredrikson, M., and Jha, S.
+\newblock Privacy risk in machine learning: Analyzing the connection to
+  overfitting.
+\newblock In \emph{31st {IEEE} Computer Security Foundations Symposium, {CSF}
+  2018, Oxford, United Kingdom, July 9-12, 2018}, pp.\  268--282. {IEEE}
+  Computer Society, 2018.
+
+\bibitem[Yuan et~al.(2024)Yuan, Pang, Du, Chen, Zhang, and
+  Lin]{DBLP:journals/corr/abs-2410-08109}
+Yuan, X., Pang, T., Du, C., Chen, K., Zhang, W., and Lin, M.
+\newblock A closer look at machine unlearning for large language models.
+\newblock \emph{CoRR}, abs/2410.08109, 2024.
+
+\bibitem[Zhang et~al.(2023)Zhang, Nakamura, Isohara, and
+  Sakurai]{DBLP:journals/sncs/ZhangNIS23}
+Zhang, H., Nakamura, T., Isohara, T., and Sakurai, K.
+\newblock A review on machine unlearning.
+\newblock \emph{{SN} Comput. Sci.}, 4\penalty0 (4):\penalty0 337, 2023.
+
+\bibitem[Zhang et~al.(2024{\natexlab{a}})Zhang, Lin, Bai, and
+  Mei]{DBLP:journals/corr/abs-2404-05868}
+Zhang, R., Lin, L., Bai, Y., and Mei, S.
+\newblock Negative preference optimization: From catastrophic collapse to
+  effective unlearning.
+\newblock \emph{CoRR}, abs/2404.05868, 2024{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2024{\natexlab{b}})Zhang, Zhang, Yao, Niu, and
+  Sugiyama]{DBLP:journals/corr/abs-2410-03124}
+Zhang, Z., Zhang, J., Yao, H., Niu, G., and Sugiyama, M.
+\newblock On unsupervised prompt learning for classification with black-box
+  language models.
+\newblock \emph{CoRR}, abs/2410.03124, 2024{\natexlab{b}}.
+
+\bibitem[Zhao et~al.(2023)Zhao, Zhou, Li, Tang, Wang, Hou, Min, Zhang, Zhang,
+  Dong, Du, Yang, Chen, Chen, Jiang, Ren, Li, Tang, Liu, Liu, Nie, and
+  Wen]{DBLP:journals/corr/abs-2303-18223}
+Zhao, W.~X., Zhou, K., Li, J., Tang, T., Wang, X., Hou, Y., Min, Y., Zhang, B.,
+  Zhang, J., Dong, Z., Du, Y., Yang, C., Chen, Y., Chen, Z., Jiang, J., Ren,
+  R., Li, Y., Tang, X., Liu, Z., Liu, P., Nie, J., and Wen, J.
+\newblock A survey of large language models.
+\newblock \emph{CoRR}, abs/2303.18223, 2023.
+
+\end{thebibliography}

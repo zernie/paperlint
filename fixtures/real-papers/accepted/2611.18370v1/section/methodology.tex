@@ -1,0 +1,177 @@
+\section{Methodology} \label{3:methodology}
+
+In LLM-based anomaly detection, AnoLLM~\citep{tsai2025anollm} fine-tunes an LLM to maximize likelihood of serialized normal samples, learning a generative description of normality. However, this one-shot fine-tuning operates solely on normal instances without abnormal examples. Consequently, the learned decision boundary tends to be loose, lacking discriminative signal to tightly delineate normality. Prior work has shown that incorporating abnormal samples or limited label information during training yields a tighter description of normal data~\citep{le2010optimal, le2013fuzzy, ruff2019deep, pang2019deep, ding2022catching}. In settings where true anomalies are unavailable, we propose a self-play mechanism that synthetically generates pseudo-abnormal examples to address this limitation. Specifically, at each iteration, model-generated samples $\boldsymbol{y}'$ from earlier policies deviate from real normal continuations $\boldsymbol{y}$ and therefore serve as pseudo-abnormal, or more precisely, \emph{not-normal}, references. A critic contrasts these samples with real normal data, providing a discriminative signal that sharpens the model's description of normality without requiring actual anomaly labels. As self-play progresses and $\boldsymbol{y}'$ moves closer to $\boldsymbol{y}$, the model is forced to make increasingly fine-grained distinctions near the normal data manifold, leading to a progressively tighter boundary of normality. Importantly, we do not assume that these synthetic samples approximate the unknown anomaly distribution. Their role is not to model anomalies, but to provide progressively harder not-normal references that tighten the normality boundary. This viewpoint is consistent with one-class learning: OCSVM~\citep{scholkopf2001estimating} separates normal data from a single origin in feature space, even though that origin does not resemble any real anomaly. DiSPaT follows the same principle, but replaces a fixed origin with model-generated non-normal samples that evolve across iterations, yielding a richer signal for boundary refinement. 
+
+Let $\mathbb{P}_d$ denote the distribution over ground-truth normal sequences $(\boldsymbol{x}, \boldsymbol{y})$, where $\boldsymbol{x}$ is a context and $\boldsymbol{y} \sim \mathbb{P}_d(\cdot \mid \boldsymbol{x})$ is real continuation. Correspondingly, $\mathbb{P}_{\boldsymbol{\theta}}$ represents model-induced distribution with synthetic continuations $\boldsymbol{y}' \sim \pi_{\boldsymbol{\theta}}(\cdot \mid \boldsymbol{x})$. Our goal is to learn $\mathbb{P}_{\boldsymbol{\theta}}$ that closely aligns with $\mathbb{P}_d$ through iterative self-play. At each iteration, one can view a critic $T$ as distinguishing real sequences $\boldsymbol{y}$ from model-generated sequences $\boldsymbol{y}' \sim \pi_{\boldsymbol{\theta}_k}$. The policy $\pi_{\boldsymbol{\theta}}$ is then updated to maximize scores under this critic, thereby pushing $\boldsymbol{y}'$ toward $\boldsymbol{y}$ and the distribution $\mathbb{P}_{\boldsymbol{\theta}}$ toward $\mathbb{P}_d$. As we show below, this critic admits an implicit log-ratio parameterization, so the conceptual critic step and the policy step can be unified into a single optimization. This adversarial mechanism provides the discriminative learning signal absent in likelihood-only training, 
+enabling the model to learn a tighter description of normality. This motivates our objective of minimizing the $f$-divergence:
+\begin{equation}
+\min_{\boldsymbol{\theta}}\,D_{f}\left( \mathbb{P}_{d}, \mathbb{P}_{\boldsymbol{\theta}}\right)
+\label{eq:main_op}
+\end{equation}
+Minimizing this divergence aims to align the model's synthetic data distribution with the true data distribution. In what follows, we present a theory to tightly approximate $D_f(\mathbb{P}_d, \mathbb{P}_{\boldsymbol{\theta}})$ in Theorem 
+\ref{thm:f_div}.
+
+\begin{theorem} \label{thm:f_div}
+Given a lower semi-continuous convex function $f$ that is differentiable and strictly convex on the interior of its domain with Fenchel conjugate $f^*$, and assuming $\mathbb{P}_d \ll \mathbb{P}_{\boldsymbol{\theta}}$ with $T^*$ and $f^*\!\circ T^*$ bounded on the support, then for any function family $\mathcal{T}$ we have the following inequalities:
+\begin{itemize}
+    \item[(i)]
+    $\begin{aligned}[t]
+        D_{f}(\mathbb{P}_d,\mathbb{P}_{\boldsymbol{\theta}}) \geq & \max_{T\in\mathcal{T}} \Big\{ \mathbb{E}_{\mathbb{P}_d}[T(\boldsymbol{x},\boldsymbol{y})] \\
+        & - \mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}[f^{*}(T(\boldsymbol{x},\boldsymbol{y}'))] \Big\}
+    \end{aligned}$
+
+    \item[(ii)]
+    $\begin{aligned}[t]
+        D_{f}(\mathbb{P}_d,\mathbb{P}_{\boldsymbol{\theta}}) \leq & \max_{T\in\mathcal{T}} \Big\{ \mathbb{E}_{\mathbb{P}_d}[T(\boldsymbol{x},\boldsymbol{y})] \\
+        & - \mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}[f^{*}(T(\boldsymbol{x},\boldsymbol{y}'))] \Big\} + d(T^*,\mathcal{T})
+    \end{aligned}$
+\end{itemize}
+where $T^{*}(\boldsymbol{x},\boldsymbol{y})=\nabla f \big( \frac{ p_{d}(\boldsymbol{x},\boldsymbol{y})}{p_{\boldsymbol{\theta}}(\boldsymbol{x}, \boldsymbol{y})} \big)$ and the distance $d(T^{*},\mathcal{T})$ between $T^*$ and family $\mathcal{T}$ is defined as:
+\begin{equation*}
+\begin{split}
+    % d(T^{*},\mathcal{T}) := \min_{T\in\mathcal{T}}\left\{ \Vert T-T^{*}\Vert_{\infty}+\Vert f\circ T-f\circ T^{*}\Vert_{\infty}\right\} 
+d(T^{*},\mathcal{T}) := \min_{T\in\mathcal{T}}\left\{ \Vert T-T^{*}\Vert_{\infty}+\Vert f^{*}\circ T-f^{*}\circ T^{*}\Vert_{\infty}\right\}
+\end{split}
+\end{equation*}
+in which we define $\Vert G\Vert_{\infty}=\max_{\left(\boldsymbol{x},\boldsymbol{y}\right)}\left|G\left(\boldsymbol{x},\boldsymbol{y}\right)\right|$.
+\end{theorem}
+
+From Theorem \ref{thm:f_div} (proof in Appendix \ref{appendix:theory}), the gap between $D_{f}\left(\mathbb{P}_d,\mathbb{P}_{\boldsymbol{\theta}}\right)$ and the variational term $\max_{T\in\mathcal{T}}\left\{ \mathbb{E}_{\mathbb{P}_d}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}'\right)\right)\right]\right\}$ is controlled by $d(T^*, \mathcal{T})$. Since $\mathcal{T}$ is parameterized by an expressive LLM, $d(T^*, \mathcal{T})$ is small and the variational term closely matches $D_{f}\left(\mathbb{P}_d,\mathbb{P}_{\boldsymbol{\theta}}\right)$. We therefore use it as a tractable proxy:
+\begin{equation}
+\label{eq:D_f}
+\begin{split}
+D_{f}(\mathbb{P}_d,\mathbb{P}_{\boldsymbol{\theta}}) \approx  & \max_{T\in\mathcal{T}} \bigg\{ \mathbb{E}_{\mathbb{P}_d}\big[T(\boldsymbol{x},\boldsymbol{y})\big] \\
+& - \mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}\big[f^{*}(T(\boldsymbol{x},\boldsymbol{y}'))\big] \bigg\}
+\end{split}
+\end{equation}
+
+Going back to our main problem, the main OP in (\ref{eq:main_op}) can be rewritten as:
+\begin{equation}
+\min_{\boldsymbol{\theta}}\max_{T\in\mathcal{T}}\left\{ \mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}'\right)\right)\right]\right\}\label{eq:derived_op}
+\end{equation}
+
+To further develop our theoretical framework, we consider a specific family of convex functions $f$ whose Fenchel conjugate $f^*$ is non-decreasing. This choice lets the monotone $f^*$ preserve the maximizer when passing from $f^*(T_k(\boldsymbol{x},\boldsymbol{y}'))$ to $T_k(\boldsymbol{x},\boldsymbol{y}')$ in the policy step, leading to more tractable formulations as detailed in the following derivations.
+
+\begin{theorem} \label{thm:fenchel_form}
+Consider convex functions of the form:
+\begin{equation}
+f(u) = \begin{cases}
+g(u), & u \geq 0, \\
++\infty, & u < 0,
+\end{cases}
+\end{equation}
+where $g: [0, +\infty) \to \mathbb{R} \cup \{+\infty\}$ is proper and lower semi-continuous, and differentiable and strictly convex on $(0, +\infty)$. Let $g'_+(0) = \lim_{u \to 0^+} g'(u)$ and $g'_\infty = \lim_{u \to +\infty} g'(u)$. For $g'_+(0) < v < g'_\infty$, define $g^*(v) = u^* v - g(u^*)$, where $u^* > 0$ is the unique solution of $g'(u^*) = v$. Then the Fenchel conjugate of $f$ is given by:
+\begin{equation}
+f^*(v) = \begin{cases}
+-g(0), & v \leq g'_+(0), \\
+g^*(v), & g'_+(0) < v < g'_\infty, \\
++\infty, & v > g'_\infty,
+\end{cases}
+\end{equation}
+where $\partial g(0)$ denotes the subdifferential of $g$ at $0$, so $g'_+(0)=\sup \partial g(0)$ (with the convention $\sup \varnothing = -\infty$). The boundary case $v = g'_\infty$ is discussed in Appendix~\ref{appendix:theory}. In particular, $f^*$ is non-decreasing.
+\end{theorem}
+
+In the remainder of this section, we consider only convex functions $f$ of the form defined in Theorem~\ref{thm:fenchel_form} (proof in Appendix \ref{appendix:theory}), ensuring $f^*$ is non-decreasing. To handle min-max problem in (\ref{eq:derived_op}), similar to GAN and $f$-GAN, we conceptually alternate between critic $T$ and LLM policy $\pi_{\boldsymbol{\theta}}$ as follows:
+
+\noindent\textbf{(1) Critic Update.} Assume that at the current iteration $k$, we have current LLM model $\pi_{\boldsymbol{\theta}_k}$, and we update critic $T_k$ to maximize:
+
+\begin{equation}
+\mathbb{E}_{\mathbb{P}_{d}}\left[T\left(\boldsymbol{x},\boldsymbol{y}\right)\right]-\mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}_{k}}}\left[f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}'\right)\right)\right]
+\end{equation}
+
+
+In other words, we learn the critic function to optimize:
+\begin{equation}
+\label{eq:critic_learning}
+\begin{split}
+&\max_{T\in\mathcal{T}} \Big\{ \mathbb{E}_{\mathbb{P}_{d}}\big[T(\boldsymbol{x},\boldsymbol{y})\big] - \mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}_{k}}}\big[f^{*}(T(\boldsymbol{x},\boldsymbol{y}'))\big] \Big\} \\
+& = \max_{T\in\mathcal{T}} \Big\{ \mathbb{E}_{\boldsymbol{x}}\big[T(\boldsymbol{x},\boldsymbol{y})-f^{*}(T(\boldsymbol{x},\boldsymbol{y}'))\big] \Big\}
+\end{split}
+\end{equation}
+where $\boldsymbol{y} \sim \mathbb{P}_d(\cdot\mid \boldsymbol{x})$ and $\boldsymbol{y}' \sim \pi_{\boldsymbol{\theta}_k}(\cdot\mid \boldsymbol{x})$. Instead of maximizing (\ref{eq:critic_learning}), we propose to minimize:
+\begin{equation}
+\min_{T\in\mathcal{T}}\left\{ \mathbb{E}_{\boldsymbol{x}}\left[\ell\left(T\left(\boldsymbol{x},\boldsymbol{y}\right)-f^{*}\left(T\left(\boldsymbol{x},\boldsymbol{y}'\right)\right)\right)\right]\right\},\label{eq:critic_learning_general}
+\end{equation}
+where $\ell$ is a non-linear and decreasing function (e.g., $\ell(t) = \log(1 + e^{-t})$).
+First, this stabilizes the critic loss, as logistic loss is smooth and non-negative, preventing excessive growth in critic values during training. In addition, the resulting objective resembles those used in preference-optimization methods~\citep{rafailov2024directpreferenceoptimizationlanguage, chen2024self}, which have proven effective and offer tractability with stable gradient properties.
+
+\noindent\textbf{(2) Policy Update.} Subsequently, we update LLM model $\pi_{\boldsymbol{\theta}}$ to move $\mathbb{P}_{\boldsymbol{\theta}}$ closer to $\mathbb{P}_d$ by performing the outer minimization, leading to:
+\begin{equation}
+\max_{\boldsymbol{\theta}}\,\mathbb{E}_{\mathbb{P}_{\boldsymbol{\theta}}}\left[f^{*}\left(T_{k}\left(\boldsymbol{x},\boldsymbol{y}'\right)\right)\right]
+\label{eq:update_theta}
+\end{equation}
+
+This updates the model to maximize $f^{*}(T_{k}(\boldsymbol{x},\boldsymbol{y}'))$ for $\boldsymbol{y}' \sim \pi_{\boldsymbol{\theta}}(\cdot \mid \boldsymbol{x})$, thereby pushing synthetic samples $(\boldsymbol{x}, \boldsymbol{y}')$ into high-score regions defined by the critic, effectively making $\mathbb{P}_{\boldsymbol{\theta}}$ converge toward $\mathbb{P}_d$. Because $f^*$ is non-decreasing, raising the critic score $T_k(\boldsymbol{x},\boldsymbol{y}')$ also raises $f^*(T_k(\boldsymbol{x},\boldsymbol{y}'))$. This motivates replacing (\ref{eq:update_theta}) with the KL-regularized surrogate below, whose optimum has a closed form:
+\begin{equation}
+\label{eq:kl_reg}
+\begin{split}
+\max_{\pi} \bigg\{ & \mathbb{E}_{\boldsymbol{x},\boldsymbol{y}'\sim\pi(\cdot\mid \boldsymbol{x})} \big[T_{k}(\boldsymbol{x},\boldsymbol{y}')\big] \\
+& - \beta\mathbb{E}_{\boldsymbol{x}}\big[D_{KL}(\pi(\cdot\mid \boldsymbol{x}) \Vert \pi_{\boldsymbol{\theta}_{k}}(\cdot\mid \boldsymbol{x}))\big] \bigg\}
+\end{split}
+\end{equation}
+whose optimal solution is:
+\begin{equation}
+\pi^{*}\left(\boldsymbol{y}'\mid \boldsymbol{x}\right)=\frac{1}{Z\left(\boldsymbol{x}\right)}\pi_{\boldsymbol{\theta}_{k}}\left(\boldsymbol{y}'\mid \boldsymbol{x}\right)\exp\left\{ \beta^{-1}T_{k}\left(\boldsymbol{x},\boldsymbol{y}'\right)\right\}\label{eq:optimal_pi}
+\end{equation}
+where $Z(\boldsymbol{x})$ is the partition function. From (\ref{eq:optimal_pi}), it follows that for each policy $\pi_{\boldsymbol{\theta}}$, there exists $T_{k}\left(\boldsymbol{x},\boldsymbol{y}' \mid \boldsymbol{\theta} \right)=\beta\log\frac{\pi_{\boldsymbol{\theta}}\left(\boldsymbol{y}'\mid \boldsymbol{x}\right)}{\pi_{\boldsymbol{\theta}_{k}}\left(\boldsymbol{y}'\mid \boldsymbol{x}\right)}+ \beta\log Z\left(\boldsymbol{x}\right)$
+such that $T_{k}(\boldsymbol{x},\boldsymbol{y}'\mid\boldsymbol{\theta})$ and $\pi_{\boldsymbol{\theta}}$ form the solution pair of the OP in (\ref{eq:kl_reg}). We have the following proposition.
+
+\begin{proposition} \label{prop:surrogate}
+Consider the following OP, obtained by substituting the implicit-critic parameterization induced by (\ref{eq:optimal_pi}) into the critic objective (\ref{eq:critic_learning_general}):
+\begin{equation}
+\label{eq:final_1}
+\begin{split}
+\min_{\boldsymbol{\theta}} \mathbb{E}_{\boldsymbol{x}} \Bigg[ \ell \Bigg( & \beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}\mid \boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}\mid \boldsymbol{x})} + \beta \log Z(\boldsymbol{x}) \\
+& - f^{*}\left( \beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'\mid \boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid \boldsymbol{x})} + \beta \log Z(\boldsymbol{x}) \right) \Bigg) \Bigg]
+\end{split}
+\end{equation}
+\end{proposition}
+
+The partition function $Z(\boldsymbol{x})$ sums over the entire space of generated sequences and is therefore intractable to compute exactly. We thus replace (\ref{eq:final_1}) with the surrogate in (\ref{eq:final_objective}), which omits $\beta\log Z(\boldsymbol{x})$ from \emph{both} chosen and rejected scores:
+\begin{equation}
+\label{eq:final_objective}
+\begin{split}
+\min_{\boldsymbol{\theta}} \mathbb{E}_{\boldsymbol{x}}  \Bigg[ \ell \Bigg( &\beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}\mid \boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}\mid \boldsymbol{x})} \\
+& - f^{*}\left( \beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'\mid \boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid \boldsymbol{x})} \right) \Bigg) \Bigg]
+\end{split}
+\end{equation}
+This objective encourages the model to increase the likelihood of real normal samples $\boldsymbol{y}$ while maintaining or improving upon the reference model's generation of $\boldsymbol{y}'$, progressively refining the model's understanding of the normal data distribution.
+
+\noindent\textbf{Implicit Critic Implementation.} Although the derivation is presented as a critic step followed by a policy step, the final training algorithm does not require a separate inner-loop optimization for $T$. Following the same principle as DPO~\citep{rafailov2024directpreferenceoptimizationlanguage} and SPIN~\citep{chen2024self}, the KL-regularized policy problem in (\ref{eq:kl_reg}) yields the closed-form solution in (\ref{eq:optimal_pi}), which implies:
+\begin{equation*}
+T_k(\boldsymbol{x},\boldsymbol{y}'\mid\boldsymbol{\theta})=\beta\log\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'\mid \boldsymbol{x})}{\pi_{\boldsymbol{\theta}_{k}}(\boldsymbol{y}'\mid \boldsymbol{x})}+\beta \log Z(\boldsymbol{x}).
+\end{equation*}
+Hence the critic is an implicit function of the policy parameters. Substituting this parameterization back into the critic objective (\ref{eq:critic_learning_general}) yields (\ref{eq:final_1}), and omitting the partition term $\beta\log Z(\boldsymbol{x})$ gives the implementable surrogate (\ref{eq:final_objective}). A single optimization over $\boldsymbol{\theta}$ thus realizes both the conceptual critic and policy updates, and Algorithm~\ref{alg:dispat} accordingly performs one parameter update per iteration.
+
+In practice, the model at iteration $k$ may occasionally generate synthetic samples $\boldsymbol{y}'$ that closely resemble true normal data. When this occurs, the probability ratio $\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'|\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_k}(\boldsymbol{y}'|\boldsymbol{x})}$ approaches 1, indicating that both the current and reference policies assign similar likelihoods to $\boldsymbol{y}'$. Penalizing such samples as pseudo-anomalies would be counterproductive, as they already lie close to the normal data manifold. To address this, we apply a clamping operation:
+\begin{equation}
+\label{eq:clamping}
+\tilde{\rho}^l = \beta \log \min\left\{\frac{\pi_{\boldsymbol{\theta}}(\boldsymbol{y}'|\boldsymbol{x})}{\pi_{\boldsymbol{\theta}_k}(\boldsymbol{y}'|\boldsymbol{x})}, 1 - \epsilon\right\}
+\end{equation}
+where $\epsilon > 0$ is a small threshold. This clamping effectively treats synthetic samples that are already similar to normal data as normal, avoiding over-penalization of such ``good attempts'' and ensuring stable optimization. The algorithm is presented in Algorithm~\ref{alg:dispat}. \textbf{Examples of generated samples across iterations are shown in Appendix~\ref{sec:app:examples}.}
+
+
+\begin{algorithm}[t]
+\caption{DiSPaT}
+\label{alg:dispat}
+\textbf{Input:} Tabular dataset $\mathrm{X} = \{\mathbf{x}_i\}_{i=1}^{n}$, SFT-initialized LLM $\pi_{\boldsymbol{\theta}_0}$, iterations $T$, non-decreasing Fenchel conjugate $f^*$, regularization $\beta$, clamping threshold $\epsilon$
+
+\begin{algorithmic}[1]
+\FOR{$i = 1, \ldots, n$}
+    \STATE Sample permutation $\pi \sim S_d$
+    \STATE Serialize row $\mathbf{x}_i$ into context-continuation pair $(\mathbf{x}_i, \mathbf{y}_i) = \mathbf{S}(\pi, \mathbf{x}_i)$
+\ENDFOR
+\FOR{$t = 0, \ldots, T-1$}
+    \STATE \textit{// Generate synthetic samples to serve as pseudo-abnormal}
+    \FOR{$i = 1, \ldots, n$}
+        \STATE Sample synthetic continuation $\mathbf{y}'_i \sim \pi_{\boldsymbol{\theta}_t}(\cdot \mid \mathbf{x}_i)$
+    \ENDFOR
+    \STATE \textit{// Single implicit-critic update to minimize $f$-divergence}
+    \STATE Compute chosen reward: $\rho^{w}_i \gets \beta \log \frac{\pi_{\boldsymbol{\theta}}(\mathbf{y}_i \mid \mathbf{x}_i)}{\pi_{\boldsymbol{\theta}_t}(\mathbf{y}_i \mid \mathbf{x}_i)}$
+    \STATE Compute rejected reward with clamping:
+    \item[] $\quad \quad \displaystyle \tilde{\rho}^{l}_i \gets \beta \log \min\left\{\frac{\pi_{\boldsymbol{\theta}}(\mathbf{y}'_i \mid \mathbf{x}_i)}{\pi_{\boldsymbol{\theta}_t}(\mathbf{y}'_i \mid \mathbf{x}_i)}, 1 - \epsilon\right\}$
+    \STATE Update: $\boldsymbol{\theta}_{t+1} \gets \operatorname*{argmin}_{\boldsymbol{\theta}} \sum_{i=1}^{n} \ell \left( \rho_i^w - f^*(\tilde{\rho}_i^l) \right)$
+\ENDFOR
+\end{algorithmic}
+\textbf{Output:} Trained model $\boldsymbol{\theta}_T$
+\end{algorithm}

@@ -1,0 +1,14 @@
+\section{Implementation}
+
+\sysname's CUDA emulator is implemented as a shared library ($\sim$2,500 lines in C++) that intercepts GPU-related API calls through dynamic linking. We use \texttt{LD\_PRELOAD} to inject our library at runtime, replacing symbols for the CUDA runtime API, driver API, and related libraries (cuBLAS, cuDNN, NCCL) with our implementations. This is similar to prior work on GPU virtualization \cite{singularity}. The event-driven simulator is implemented in Python ($\sim$3,000 lines) using a priority queue to process operation timings. The simulator includes specialized handlers for different operation types (compute, memory transfers, synchronization) and a topology-aware network model for accurate collective operation simulation. The configuration search system extends Ray Tune \cite{ray-tune} with domain-specific optimizations. The system exposes a simple Python API to integrate \syssearchname in less than 15 lines of code changes and  abstracts the complexity of emulation and trial management.
+
+
+
+
+
+
+
+
+
+
+

@@ -182,7 +182,7 @@ export const GATES: readonly Gate[] = [
   {
     // Every real paper (the accepted ones and the arXiv preprints) in one run of the CLI, against its
     // baseline. Its own vitest project, outside `unit`, so the macOS shards and coverage do not repeat
-    // it; no npm script, one more step of e2e-node (fixtures/arxiv-papers/README.md).
+    // it; no npm script, one more step of e2e-node (fixtures/real-papers/preprints/README.md).
     name: "real papers — every rule over every real paper in one run, against its baseline",
     job: "e2e-node",
     run: ["vitest", "run", "--project", "real-papers"],

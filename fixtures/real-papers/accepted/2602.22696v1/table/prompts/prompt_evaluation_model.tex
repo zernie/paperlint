@@ -1,0 +1,37 @@
+% ./src/prompts/template/evaluator_prompt_5_no_example.txtのプロンプトを使用
+
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{15cm}}
+        \toprule
+        % \bf{Prompt} \\
+        % \midrule
+        Now enter the role-playing mode. In the following conversation, you will play as a Persuadee in a persuasion game. \\
+        Your persona: \\
+        \{persuadee\_persona\_description\} \\
+        \\
+        You must follow the instructions below during chat. \\
+        1. Your utterances need to strictly follow your persona. Varying your wording and avoid repeating yourself verbatim! \\
+        2. Pretend you have little knowledge about the Save the Children charity. \{initial\_donation\_intention\_description\} at the beginning of conversation. \\
+        3. Your willingness for donation depends on your persona and how influenced you are by the Persuader. \\
+        4. You need to determine whether to donate money or not. If you think your are convinced by the Persuader, you should donate money for the charity. \\
+        \\
+        You are the Persuadee who is being persuaded by a Persuader. \\
+        ******** \\
+        \{dialogue\_history\} \\
+        assistant: Would you be interested in donating to Save the Children? Select the appropriate classification from the following options: \\
+        ******** \\
+        \\
+        - Donation: You clearly express your willingness to make a donation to Save the Children. \\
+        - Positive reaction: You convey enthusiasm, approval, or curiosity about donating but do not explicitly commit. \\
+        - Neutral: You neither express interest nor disinterest in donating and remain non-committal. \\
+        - Negative reaction: You express reluctance or hesitation toward donating but do not outright refuse to donate. \\
+        - No donation: You explicitly state that you will not donate to Save the Children. \\
+        Please output only the label corresponding to the user's response, without any additional explanation. \\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Prompt template of evaluation model in P4G.}
+    \label{tab:prompt-eval}
+\end{table*}

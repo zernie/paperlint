@@ -1,0 +1,259 @@
+\begin{thebibliography}{45}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Wu et~al.(2024)Wu, Bansal, Zhang, Wu, Li, Zhu, Jiang, Zhang, Zhang, Liu, Awadallah, White, Burger, and Wang]{wu2023autogen}
+Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li~Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, Ahmed~Hassan Awadallah, Ryen~W White, Doug Burger, and Chi Wang.
+\newblock Autogen: Enabling next-gen {LLM} applications via multi-agent conversations.
+\newblock In \emph{First Conference on Language Modeling}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=BAakY1hNKS}.
+
+\bibitem[Li et~al.(2023)Li, Hammoud, Itani, Khizbullin, and Ghanem]{li2023camel}
+Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem.
+\newblock Camel: Communicative agents for mind exploration of large language model society.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 51991--52008, 2023.
+
+\bibitem[Hong et~al.(2024)Hong, Zhuge, Chen, Zheng, Cheng, Wang, Zhang, Wang, Yau, Lin, Zhou, Ran, Xiao, Wu, and Schmidhuber]{hong2023metagpt}
+Sirui Hong, Mingchen Zhuge, Jonathan Chen, Xiawu Zheng, Yuheng Cheng, Jinlin Wang, Ceyao Zhang, Zili Wang, Steven Ka~Shing Yau, Zijuan Lin, Liyang Zhou, Chenyu Ran, Lingfeng Xiao, Chenglin Wu, and J{\"u}rgen Schmidhuber.
+\newblock Meta{GPT}: Meta programming for a multi-agent collaborative framework.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=VtmBAGCN7o}.
+
+\bibitem[Khattab et~al.(2024)Khattab, Singhvi, Maheshwari, Zhang, Santhanam, A, Haq, Sharma, Joshi, Moazam, Miller, Zaharia, and Potts]{khattab2023dspy}
+Omar Khattab, Arnav Singhvi, Paridhi Maheshwari, Zhiyuan Zhang, Keshav Santhanam, Sri~Vardhamanan A, Saiful Haq, Ashutosh Sharma, Thomas~T. Joshi, Hanna Moazam, Heather Miller, Matei Zaharia, and Christopher Potts.
+\newblock {DSP}y: Compiling declarative language model calls into state-of-the-art pipelines.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=sY5N0zY5Od}.
+
+\bibitem[Yuksekgonul et~al.(2025)Yuksekgonul, Bianchi, Boen, Liu, Huang, Guestrin, and Zou]{yuksekgonul2024textgrad}
+Mert Yuksekgonul, Federico Bianchi, Joseph Boen, Sheng Liu, Zhi Huang, Carlos Guestrin, and James Zou.
+\newblock Textgrad: Automatic" differentiation" via text.
+\newblock \emph{Nature}, 639\penalty0 (7985):\penalty0 609--616, March 2025.
+\newblock \doi{10.1038/s41586-025-08661-4}.
+
+\bibitem[Yang et~al.(2024)Yang, Wang, Lu, Liu, Le, Zhou, and Chen]{yang2023large}
+Chengrun Yang, Xuezhi Wang, Yifeng Lu, Hanxiao Liu, Quoc~V Le, Denny Zhou, and Xinyun Chen.
+\newblock Large language models as optimizers.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=Bb4VGOWELI}.
+
+\bibitem[Zhuge et~al.(2024)Zhuge, Wang, Kirsch, Faccio, Khizbullin, and Schmidhuber]{zhuge2024gptswarm}
+Mingchen Zhuge, Wenyi Wang, Louis Kirsch, Francesco Faccio, Dmitrii Khizbullin, and J{\"u}rgen Schmidhuber.
+\newblock {GPTS}warm: Language agents as optimizable graphs.
+\newblock In \emph{Forty-first International Conference on Machine Learning}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=uTC9AFXIhg}.
+
+\bibitem[Liu et~al.(2024)Liu, Zhang, Li, Liu, and Yang]{liu2023dynamic}
+Zijun Liu, Yanzhe Zhang, Peng Li, Yang Liu, and Diyi Yang.
+\newblock Dynamic llm-agent network: An llm-agent collaboration framework with agent team optimization.
+\newblock \emph{Conference on Language Modeling}, 2024.
+
+\bibitem[Zhang et~al.(2025{\natexlab{a}})Zhang, Yue, Sun, Wan, Yu, Fang, Wang, Chen, and Cheng]{zhang2024gdesigner}
+Guibin Zhang, Yanwei Yue, Xiangguo Sun, Guancheng Wan, Miao Yu, Junfeng Fang, Kun Wang, Tianlong Chen, and Dawei Cheng.
+\newblock G-designer: Architecting multi-agent communication topologies via graph neural networks.
+\newblock In \emph{Forty-second International Conference on Machine Learning}, 2025{\natexlab{a}}.
+\newblock URL \url{https://openreview.net/forum?id=LpE54NUnmO}.
+
+\bibitem[Elsken et~al.(2019)Elsken, Metzen, and Hutter]{elsken2019neural}
+Thomas Elsken, Jan~Hendrik Metzen, and Frank Hutter.
+\newblock Neural architecture search: A survey.
+\newblock \emph{Journal of Machine Learning Research}, 20\penalty0 (55):\penalty0 1--21, 2019.
+
+\bibitem[Hu et~al.(2025)Hu, Lu, and Clune]{hu2024automated}
+Shengran Hu, Cong Lu, and Jeff Clune.
+\newblock Automated design of agentic systems.
+\newblock In \emph{The Thirteenth International Conference on Learning Representations}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=t9U3LW7JVX}.
+
+\bibitem[Zhang et~al.(2025{\natexlab{b}})Zhang, Xiang, Yu, Teng, Chen, Chen, Zhuge, Cheng, Hong, Wang, Zheng, Liu, Luo, and Wu]{zhang2024aflow}
+Jiayi Zhang, Jinyu Xiang, Zhaoyang Yu, Fengwei Teng, Xiong-Hui Chen, Jiaqi Chen, Mingchen Zhuge, Xin Cheng, Sirui Hong, Jinlin Wang, Bingnan Zheng, Bang Liu, Yuyu Luo, and Chenglin Wu.
+\newblock {AF}low: Automating agentic workflow generation.
+\newblock In \emph{The Thirteenth International Conference on Learning Representations}, 2025{\natexlab{b}}.
+\newblock URL \url{https://openreview.net/forum?id=z5uVAKwmjf}.
+
+\bibitem[Shang et~al.(2025)Shang, Li, Zhao, Ma, Liu, Xu, and Li]{shang2024agentsquare}
+Yu~Shang, Yu~Li, Keyu Zhao, Likai Ma, Jiahe Liu, Fengli Xu, and Yong Li.
+\newblock Agentsquare: Automatic {LLM} agent search in modular design space.
+\newblock In \emph{The Thirteenth International Conference on Learning Representations}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=mPdmDYIQ7f}.
+
+\bibitem[Zhang et~al.(2025{\natexlab{c}})Zhang, Niu, Fang, Wang, BAI, and Wang]{zhang2025multi}
+Guibin Zhang, Luyang Niu, Junfeng Fang, Kun Wang, LEI BAI, and Xiang Wang.
+\newblock Multi-agent architecture search via agentic supernet.
+\newblock In \emph{Forty-second International Conference on Machine Learning}, 2025{\natexlab{c}}.
+\newblock URL \url{https://openreview.net/forum?id=imcyVlzpXh}.
+
+\bibitem[Gao et~al.(2025)Gao, Liu, He, Dou, Du, Deng, Hooi, Lin, and Pang]{gao2025flowreasoner}
+Hongcheng Gao, Yue Liu, Yufei He, Longxu Dou, Chao Du, Zhijie Deng, Bryan Hooi, Min Lin, and Tianyu Pang.
+\newblock Flowreasoner: Reinforcing query-level meta-agents, 2025.
+\newblock URL \url{https://arxiv.org/abs/2504.15257}.
+
+\bibitem[Wang et~al.(2025)Wang, Yang, Li, Wang, and Aragam]{wang2025scoreflow}
+Yinjie Wang, Ling Yang, Guohao Li, Mengdi Wang, and Bryon Aragam.
+\newblock Scoreflow: Mastering llm agent workflows via score-based preference optimization.
+\newblock \emph{arXiv preprint arXiv:2502.04306}, 2025.
+
+\bibitem[Ye et~al.(2025)Ye, Tang, Ge, Du, Yin, Chen, and Shao]{ye2025masgpt}
+Rui Ye, Shuo Tang, Rui Ge, Yaxin Du, Zhenfei Yin, Siheng Chen, and Jing Shao.
+\newblock {MAS}-{GPT}: Training {LLM}s to build {LLM}-based multi-agent systems.
+\newblock In \emph{Forty-second International Conference on Machine Learning}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=3CiSpY3QdZ}.
+
+\bibitem[Ke et~al.(2025)Ke, Xu, Ming, Nguyen, Xiong, and Joty]{ke2025maszero}
+Zixuan Ke, Austin Xu, Yifei Ming, Xuan-Phi Nguyen, Caiming Xiong, and Shafiq Joty.
+\newblock Mas-zero: Designing multi-agent systems with zero supervision, 2025.
+\newblock URL \url{https://arxiv.org/abs/2505.14996}.
+
+\bibitem[Xu et~al.(2025)Xu, Yang, Lin, Wang, Zhou, Zhang, and Mao]{xu2023expertprompting}
+Benfeng Xu, An~Yang, Junyang Lin, Quan Wang, Chang Zhou, Yongdong Zhang, and Zhendong Mao.
+\newblock Expertprompting: Instructing large language models to be distinguished experts, 2025.
+\newblock URL \url{https://arxiv.org/abs/2305.14688}.
+
+\bibitem[Fernando et~al.(2023)Fernando, Banarse, Michalewski, Osindero, and Rocktäschel]{fernando2023promptbreeder}
+Chrisantha Fernando, Dylan Banarse, Henryk Michalewski, Simon Osindero, and Tim Rocktäschel.
+\newblock Promptbreeder: Self-referential self-improvement via prompt evolution, 2023.
+\newblock URL \url{https://arxiv.org/abs/2309.16797}.
+
+\bibitem[Wang et~al.(2024{\natexlab{a}})Wang, Li, Wang, Bai, Luo, Zhang, Jojic, Xing, and Hu]{wang2023promptagent}
+Xinyuan Wang, Chenxi Li, Zhen Wang, Fan Bai, Haotian Luo, Jiayou Zhang, Nebojsa Jojic, Eric Xing, and Zhiting Hu.
+\newblock Promptagent: Strategic planning with language models enables expert-level prompt optimization.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024{\natexlab{a}}.
+\newblock URL \url{https://openreview.net/forum?id=22pyNMuIoa}.
+
+\bibitem[Yuan et~al.(2025)Yuan, Song, Chen, Tan, Li, and Yang]{yuan2024evoagent}
+Siyu Yuan, Kaitao Song, Jiangjie Chen, Xu~Tan, Dongsheng Li, and Deqing Yang.
+\newblock {E}vo{A}gent: Towards automatic multi-agent generation via evolutionary algorithms.
+\newblock In Luis Chiruzzo, Alan Ritter, and Lu~Wang, editors, \emph{Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)}, pages 6192--6217, Albuquerque, New Mexico, April 2025. Association for Computational Linguistics.
+\newblock ISBN 979-8-89176-189-6.
+\newblock \doi{10.18653/v1/2025.naacl-long.315}.
+\newblock URL \url{https://aclanthology.org/2025.naacl-long.315/}.
+
+\bibitem[Zhou et~al.(2025)Zhou, Wan, Sun, Palangi, Iqbal, Vulić, Korhonen, and Arık]{zhou2025mass}
+Han Zhou, Xingchen Wan, Ruoxi Sun, Hamid Palangi, Shariq Iqbal, Ivan Vulić, Anna Korhonen, and Sercan~Ö. Arık.
+\newblock Multi-agent design: Optimizing agents with better prompts and topologies, 2025.
+\newblock URL \url{https://arxiv.org/abs/2502.02533}.
+
+\bibitem[Chen et~al.(2024{\natexlab{a}})Chen, Su, Zuo, Yang, Yuan, Chan, Yu, Lu, Hung, Qian, Qin, Cong, Xie, Liu, Sun, and Zhou]{chen2023agentverse}
+Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chi-Min Chan, Heyang Yu, Yaxi Lu, Yi-Hsin Hung, Chen Qian, Yujia Qin, Xin Cong, Ruobing Xie, Zhiyuan Liu, Maosong Sun, and Jie Zhou.
+\newblock Agentverse: Facilitating multi-agent collaboration and exploring emergent behaviors.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024{\natexlab{a}}.
+\newblock URL \url{https://openreview.net/forum?id=EHg5GDnyq1}.
+
+\bibitem[Chen et~al.(2024{\natexlab{b}})Chen, Dong, Shu, Zhang, Sesay, Karlsson, Fu, and Shi]{chen2023autoagents}
+Guangyao Chen, Siwei Dong, Yu~Shu, Ge~Zhang, Jaward Sesay, B{\"o}rje~F Karlsson, Jie Fu, and Yemin Shi.
+\newblock Autoagents: A framework for automatic agent generation.
+\newblock \emph{International Joint Conference on Artificial Intelligence}, 2024{\natexlab{b}}.
+
+\bibitem[Shinn et~al.(2023)Shinn, Cassano, Gopinath, Narasimhan, and Yao]{shinn2023reflexion}
+Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao.
+\newblock Reflexion: Language agents with verbal reinforcement learning.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 8634--8652, 2023.
+
+\bibitem[Madaan et~al.(2023)Madaan, Tandon, Gupta, Hallinan, Gao, Wiegreffe, Alon, Dziri, Prabhumoye, Yang, et~al.]{madaan2023self}
+Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, et~al.
+\newblock Self-refine: Iterative refinement with self-feedback.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 46534--46594, 2023.
+
+\bibitem[Zhao et~al.(2024)Zhao, Huang, Xu, Lin, Liu, and Huang]{zhao2024expel}
+Andrew Zhao, Daniel Huang, Quentin Xu, Matthieu Lin, Yong-Jin Liu, and Gao Huang.
+\newblock Expel: Llm agents are experiential learners.
+\newblock In \emph{Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence and Thirty-Sixth Conference on Innovative Applications of Artificial Intelligence and Fourteenth Symposium on Educational Advances in Artificial Intelligence}, AAAI'24/IAAI'24/EAAI'24. AAAI Press, 2024.
+\newblock ISBN 978-1-57735-887-9.
+\newblock \doi{10.1609/aaai.v38i17.29936}.
+\newblock URL \url{https://doi.org/10.1609/aaai.v38i17.29936}.
+
+\bibitem[Fu et~al.(2024)Fu, Kim, Kim, Sohn, Logeswaran, Bae, and Lee]{fu2024autoguide}
+Yao Fu, Dong-Ki Kim, Jaekyeom Kim, Sungryull Sohn, Lajanugen Logeswaran, Kyunghoon Bae, and Honglak Lee.
+\newblock Autoguide: Automated generation and selection of context-aware guidelines for large language model agents.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37:\penalty0 119919--119948, 2024.
+
+\bibitem[Wang et~al.(2024{\natexlab{b}})Wang, Mao, Fried, and Neubig]{wang2024agentworkflowmem}
+Zora~Zhiruo Wang, Jiayuan Mao, Daniel Fried, and Graham Neubig.
+\newblock Agent workflow memory, 2024{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2409.07429}.
+
+\bibitem[Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Xia, Chi, Le, Zhou, et~al.]{wei2022chain}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed~Chi, Quoc~V Le, Denny Zhou, et~al.
+\newblock Chain-of-thought prompting elicits reasoning in large language models.
+\newblock \emph{Advances in neural information processing systems}, 35:\penalty0 24824--24837, 2022.
+
+\bibitem[Du et~al.(2024{\natexlab{a}})Du, Li, Torralba, Tenenbaum, and Mordatch]{du2023improving}
+Yilun Du, Shuang Li, Antonio Torralba, Joshua~B. Tenenbaum, and Igor Mordatch.
+\newblock Improving factuality and reasoning in language models through multiagent debate.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine Learning}, ICML'24. JMLR.org, 2024{\natexlab{a}}.
+
+\bibitem[Naik et~al.(2024)Naik, Chandrasekaran, Yuksekgonul, Palangi, and Nushi]{naik2023diversity}
+Ranjita Naik, Varun Chandrasekaran, Mert Yuksekgonul, Hamid Palangi, and Besmira Nushi.
+\newblock Diversity of thought improves reasoning abilities of llms, 2024.
+\newblock URL \url{https://arxiv.org/abs/2310.07088}.
+
+\bibitem[Wang et~al.(2020)Wang, Wei, Dong, Bao, Yang, and Zhou]{wang2020minilm}
+Wenhui Wang, Furu Wei, Li~Dong, Hangbo Bao, Nan Yang, and Ming Zhou.
+\newblock Minilm: Deep self-attention distillation for task-agnostic compression of pre-trained transformers.
+\newblock \emph{Advances in neural information processing systems}, 33:\penalty0 5776--5788, 2020.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock \emph{Advances in neural information processing systems}, 30, 2017.
+
+\bibitem[Lewis et~al.(2020)Lewis, Perez, Piktus, Petroni, Karpukhin, Goyal, K{\"u}ttler, Lewis, Yih, Rockt{\"a}schel, et~al.]{lewis2020retrieval}
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich K{\"u}ttler, Mike Lewis, Wen-tau Yih, Tim Rockt{\"a}schel, et~al.
+\newblock Retrieval-augmented generation for knowledge-intensive nlp tasks.
+\newblock \emph{Advances in neural information processing systems}, 33:\penalty0 9459--9474, 2020.
+
+\bibitem[Hendrycks et~al.(2021)Hendrycks, Burns, Kadavath, Arora, Basart, Tang, Song, and Steinhardt]{hendrycks2021measuring}
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring mathematical problem solving with the math dataset.
+\newblock \emph{Advances in Neural Information Processing Systems}, 2021.
+
+\bibitem[Rein et~al.(2024)Rein, Hou, Stickland, Petty, Pang, Dirani, Michael, and Bowman]{rein2024gpqa}
+David Rein, Betty~Li Hou, Asa~Cooper Stickland, Jackson Petty, Richard~Yuanzhe Pang, Julien Dirani, Julian Michael, and Samuel~R Bowman.
+\newblock Gpqa: A graduate-level google-proof q\&a benchmark.
+\newblock In \emph{First Conference on Language Modeling}, 2024.
+
+\bibitem[Du et~al.(2024{\natexlab{b}})Du, Liu, Wang, Wang, Liu, Chen, Feng, Sha, Peng, and Lou]{chen2021evaluating}
+Xueying Du, Mingwei Liu, Kaixin Wang, Hanlin Wang, Junwei Liu, Yixuan Chen, Jiayi Feng, Chaofeng Sha, Xin Peng, and Yiling Lou.
+\newblock Evaluating large language models in class-level code generation.
+\newblock In \emph{Proceedings of the IEEE/ACM 46th International Conference on Software Engineering}, ICSE '24, New York, NY, USA, 2024{\natexlab{b}}. Association for Computing Machinery.
+\newblock ISBN 9798400702174.
+\newblock \doi{10.1145/3597503.3639219}.
+\newblock URL \url{https://doi.org/10.1145/3597503.3639219}.
+
+\bibitem[Tian et~al.(2024)Tian, Gao, Zhang, Chen, Fan, Guo, Haas, Ji, Krongchon, Li, et~al.]{tian2024scicode}
+Minyang Tian, Luyu Gao, Shizhuo Zhang, Xinan Chen, Cunwei Fan, Xuefei Guo, Roland Haas, Pan Ji, Kittithat Krongchon, Yao Li, et~al.
+\newblock Scicode: A research coding benchmark curated by scientists.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37:\penalty0 30624--30650, 2024.
+
+\bibitem[Wang et~al.(2023)Wang, Wei, Schuurmans, Le, Chi, Narang, Chowdhery, and Zhou]{wang2022self}
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc~V Le, Ed~H. Chi, Sharan Narang, Aakanksha Chowdhery, and Denny Zhou.
+\newblock Self-consistency improves chain of thought reasoning in language models.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+\newblock URL \url{https://openreview.net/forum?id=1PL1NIMMrw}.
+
+\bibitem[Jimenez et~al.(2023)Jimenez, Yang, Wettig, Yao, Pei, Press, and Narasimhan]{jimenez2023swe}
+Carlos~E Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik Narasimhan.
+\newblock Swe-bench: Can language models resolve real-world github issues?
+\newblock \emph{arXiv preprint arXiv:2310.06770}, 2023.
+
+\bibitem[Yao et~al.(2023)Yao, Zhao, Yu, Du, Shafran, Narasimhan, and Cao]{yao2023react}
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao.
+\newblock React: Synergizing reasoning and acting in language models, 2023.
+\newblock URL \url{https://arxiv.org/abs/2210.03629}.
+
+\bibitem[Jiang et~al.(2023)Jiang, Ren, and Lin]{jiang2023llm}
+Dongfu Jiang, Xiang Ren, and Bill~Yuchen Lin.
+\newblock {LLM}-blender: Ensembling large language models with pairwise ranking and generative fusion.
+\newblock In Anna Rogers, Jordan Boyd-Graber, and Naoaki Okazaki, editors, \emph{Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}, pages 14165--14178, Toronto, Canada, July 2023. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2023.acl-long.792}.
+\newblock URL \url{https://aclanthology.org/2023.acl-long.792/}.
+
+\bibitem[Huang et~al.(2024)Huang, Zhang, Luck, Bu, Qing, and Cui]{huang2023agentcoder}
+Dong Huang, Jie~M. Zhang, Michael Luck, Qingwen Bu, Yuhao Qing, and Heming Cui.
+\newblock Agentcoder: Multi-agent-based code generation with iterative testing and optimisation, 2024.
+\newblock URL \url{https://arxiv.org/abs/2312.13010}.
+
+\end{thebibliography}

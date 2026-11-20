@@ -1,0 +1,789 @@
+@inproceedings{berchansky2023optimizing,
+  title = {Optimizing {{Retrieval-augmented Reader Models}} via {{Token Elimination}}},
+  booktitle = {Proceedings of the 2023 {{Conference}} on {{Empirical Methods}} in {{Natural Language Processing}}},
+  author = {Berchansky, Moshe and Izsak, Peter and Caciularu, Avi and Dagan, Ido and Wasserblat, Moshe},
+  editor = {Bouamor, Houda and Pino, Juan and Bali, Kalika},
+  year = {2023},
+  month = dec,
+  pages = {1506--1524},
+  publisher = {Association for Computational Linguistics},
+  address = {Singapore},
+  doi = {10.18653/v1/2023.emnlp-main.93},
+  urldate = {2024-12-26},
+  abstract = {Fusion-in-Decoder (FiD) is an effective retrieval-augmented language model applied across a variety of open-domain tasks, such as question answering, fact checking, etc. In FiD, supporting passages are first retrieved and then processed using a generative model (Reader), which can cause a significant bottleneck in decoding time, particularly with long outputs. In this work, we analyze the contribution and necessity of all the retrieved passages to the performance of reader models, and propose eliminating some of the retrieved information, at the token level, that might not contribute essential information to the answer generation process. We demonstrate that our method can reduce run-time by up to 62.2\%, with only a 2\% reduction in performance, and in some cases, even improve the performance results.},
+  keywords = {,Abs,Brief},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Berchansky et al. - 2023 - Optimizing Retrieval-augmented Reader Models via Token Elimination 1.pdf}
+}
+
+@misc{cheng2024xrag,
+  title = {{{xRAG}}: {{Extreme Context Compression}} for {{Retrieval-augmented Generation}} with {{One Token}}},
+  shorttitle = {{{xRAG}}},
+  author = {Cheng, Xin and Wang, Xun and Zhang, Xingxing and Ge, Tao and Chen, Si-Qing and Wei, Furu and Zhang, Huishuai and Zhao, Dongyan},
+  year = {2024},
+  month = may,
+  urldate = {2024-11-02},
+  abstract = {This paper introduces xRAG, an innovative context compression method tailored for retrieval-augmented generation. xRAG reinterprets document embeddings in dense retrieval--traditionally used solely for retrieval--as features from the retrieval modality. By employing a modality fusion methodology, xRAG seamlessly integrates these embeddings into the language model representation space, effectively eliminating the need for their textual counterparts and achieving an extreme compression rate. In xRAG, the only trainable component is the modality bridge, while both the retriever and the language model remain frozen. This design choice allows for the reuse of offline-constructed document embeddings and preserves the plug-and-play nature of retrieval augmentation. Experimental results demonstrate that xRAG achieves an average improvement of over 10\% across six knowledge-intensive tasks, adaptable to various language model backbones, ranging from a dense 7B model to an 8x7B Mixture of Experts configuration. xRAG not only significantly outperforms previous context compression methods but also matches the performance of uncompressed models on several datasets, while reducing overall FLOPs by a factor of 3.53. Our work pioneers new directions in retrieval-augmented generation from the perspective of multimodality fusion, and we hope it lays the foundation for future efficient and scalable retrieval-augmented systems},
+  langid = {english},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/xRAG-2024/Cheng et al. - 2024 - xRAG Extreme Context Compression for Retrieval-au.pdf}
+}
+
+@inproceedings{jiang2023llmlingua,
+  title = {{{LLMLingua}}: {{Compressing Prompts}} for {{Accelerated Inference}} of {{Large Language Models}}},
+  shorttitle = {{{LLMLingua}}},
+  booktitle = {Proceedings of the 2023 {{Conference}} on {{Empirical Methods}} in {{Natural Language Processing}}},
+  author = {Jiang, Huiqiang and Wu, Qianhui and Lin, Chin-Yew and Yang, Yuqing and Qiu, Lili},
+  editor = {Bouamor, Houda and Pino, Juan and Bali, Kalika},
+  year = {2023},
+  month = dec,
+  pages = {13358--13376},
+  publisher = {Association for Computational Linguistics},
+  address = {Singapore},
+  doi = {10.18653/v1/2023.emnlp-main.825},
+  urldate = {2023-12-17},
+  abstract = {Large language models (LLMs) have been applied in various applications due to their astonishing capabilities. With advancements in technologies such as chain-of-thought (CoT) prompting and in-context learning (ICL), the prompts fed to LLMs are becoming increasingly lengthy, even exceeding tens of thousands of tokens. To accelerate model inference and reduce cost, this paper presents LLMLingua, a coarse-to-fine prompt compression method that involves a budget controller to maintain semantic integrity under high compression ratios, a token-level iterative compression algorithm to better model the interdependence between compressed contents, and an instruction tuning based method for distribution alignment between language models. We conduct experiments and analysis over four datasets from different scenarios, i.e., GSM8K, BBH, ShareGPT, and Arxiv-March23; showing that the proposed approach yields state-of-the-art performance and allows for up to 20x compression with little performance loss.},
+  keywords = {Abs},
+  annotation = {ZSCC:00013\\
+rate: 3},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/LLMLingua-2023/Jiang et al. - 2023 - LLMLingua Compressing Prompts for Accelerated Inf.pdf}
+}
+
+@inproceedings{jiang2024longllmlingua,
+  title = {{{LongLLMLingua}}: {{Accelerating}} and {{Enhancing LLMs}} in {{Long Context Scenarios}} via {{Prompt Compression}}},
+  shorttitle = {{{LongLLMLingua}}},
+  booktitle = {Proceedings of the 62nd {{Annual Meeting}} of the {{Association}} for {{Computational Linguistics}} ({{Volume}} 1: {{Long Papers}})},
+  author = {Jiang, Huiqiang and Wu, Qianhui and Luo, Xufang and Li, Dongsheng and Lin, Chin-Yew and Yang, Yuqing and Qiu, Lili},
+  editor = {Ku, Lun-Wei and Martins, Andre and Srikumar, Vivek},
+  year = {2024},
+  month = aug,
+  pages = {1658--1677},
+  publisher = {Association for Computational Linguistics},
+  address = {Bangkok, Thailand},
+  doi = {10.18653/v1/2024.acl-long.91},
+  urldate = {2024-11-02},
+  abstract = {In long context scenarios, large language models (LLMs) face three main challenges: higher computational cost, performance reduction, and position bias. Research indicates that LLM performance hinges on the density and position of key information in the input prompt. Inspired by these findings, we propose LongLLMLingua for prompt compression towards improving LLMs' perception of the key information to simultaneously address the three challenges. Our extensive evaluation across various long context scenarios demonstrates that LongLLMLingua not only enhances performance but also significantly reduces costs and latency. For instance, in the NaturalQuestions benchmark, LongLLMLingua boosts performance by up to 21.4\% with around 4x fewer tokens in GPT-3.5-Turbo, leading to substantial cost savings. It achieves a 94.0\% cost reduction in the LooGLE benchmark. Moreover, when compressing prompts of about 10k tokens at ratios of 2x-6x, LongLLMLingua can accelerate end-to-end latency by 1.4x-2.6x.},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/LongLLMLingua-2024/Jiang et al. - 2024 - LongLLMLingua Accelerating and Enhancing LLMs in .pdf}
+}
+
+@inproceedings{li2023compressing,
+  title = {Compressing {{Context}} to {{Enhance Inference Efficiency}} of {{Large Language Models}}},
+  booktitle = {Proceedings of the 2023 {{Conference}} on {{Empirical Methods}} in {{Natural Language Processing}}},
+  author = {Li, Yucheng and Dong, Bo and Guerin, Frank and Lin, Chenghua},
+  editor = {Bouamor, Houda and Pino, Juan and Bali, Kalika},
+  year = {2023},
+  month = dec,
+  pages = {6342--6353},
+  publisher = {Association for Computational Linguistics},
+  address = {Singapore},
+  doi = {10.18653/v1/2023.emnlp-main.391},
+  urldate = {2024-11-08},
+  abstract = {Large language models (LLMs) achieved remarkable performance across various tasks. However, they face challenges in managing long documents and extended conversations, due to significantly increased computational requirements, both in memory and inference time, and potential context truncation when the input exceeds the LLM's fixed context length. This paper proposes a method called Selective Context that enhances the inference efficiency of LLMs by identifying and pruning redundancy in the input context to make the input more compact. We test our approach using common data sources requiring long context processing: arXiv papers, news articles, and long conversations, on tasks of summarisation, question answering, and response generation. Experimental results show that Selective Context significantly reduces memory cost and decreases generation latency while maintaining comparable performance compared to that achieved when full context is used. Specifically, we achieve a 50\% reduction in context cost, resulting in a 36\% reduction in inference memory usage and a 32\% reduction in inference time, while observing only a minor drop of .023 in BERTscore and .038 in faithfulness on four downstream applications, indicating that our method strikes a good balance between efficiency and performance.},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Compressing Context to Enhance Inference Efficiency of Large Language Models-2023/Li et al. - 2023 - Compressing Context to Enhance Inference Efficienc.pdf}
+}
+
+@misc{li2024500xcompressor,
+  title = {{{500xCompressor}}: {{Generalized Prompt Compression}} for {{Large Language Models}}},
+  shorttitle = {{{500xCompressor}}},
+  author = {Li, Zongqian and Su, Yixuan and Collier, Nigel},
+  year = {2024},
+  month = aug,
+  number = {arXiv:2408.03094},
+  eprint = {2408.03094},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  urldate = {2024-10-11},
+  abstract = {Prompt compression is crucial for enhancing inference speed, reducing costs, and improving user experience. However, current methods face challenges such as low compression ratios and potential data leakage during evaluation. To address these issues, we propose 500xCompressor, a method that compresses extensive natural language contexts into a minimum of one single special token. The 500xCompressor introduces approximately 0.25\% additional parameters and achieves compression ratios ranging from 6x to 480x. It is designed to compress any text, answer various types of questions, and could be utilized by the original large language model (LLM) without requiring fine-tuning. Initially, 500xCompressor was pretrained on the Arxiv Corpus, followed by fine-tuning on the ArxivQA dataset, and subsequently evaluated on strictly unseen and classical question answering (QA) datasets. The results demonstrate that the LLM retained 62.26-72.89\% of its capabilities compared to using non-compressed prompts. This study also shows that not all the compressed tokens are equally utilized and that K V values have significant advantages over embeddings in preserving information at high compression ratios. The highly compressive nature of natural language prompts, even for finegrained complex information, suggests promising potential for future applications and further research into developing a new LLM language.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/500xCompressor-2024/Li et al. - 2024 - 500xCompressor Generalized Prompt Compression for.pdf}
+}
+
+@misc{liang2024repofuse,
+  title = {{{REPOFUSE}}: {{Repository-Level Code Completion}} with {{Fused Dual Context}}},
+  shorttitle = {{{REPOFUSE}}},
+  author = {Liang, Ming and Xie, Xiaoheng and Zhang, Gehao and Zheng, Xunjin and Di, Peng and {jiang}, wei and Chen, Hongwei and Wang, Chengpeng and Fan, Gang},
+  year = {2024},
+  month = feb,
+  number = {arXiv:2402.14323},
+  eprint = {2402.14323},
+  publisher = {arXiv},
+  urldate = {2024-03-03},
+  abstract = {The success of language models in code assistance has spurred the proposal of repository-level code completion as a means to enhance prediction accuracy, utilizing the context from the entire codebase. However, this amplified context can inadvertently increase inference latency, potentially undermining the developer experience and deterring tool adoption - a challenge we termed the Context-Latency Conundrum. This paper introduces REPOFUSE, a pioneering solution designed to enhance repository-level code completion without the latency trade-off. REPOFUSE uniquely fuses two types of context: the analogy context, rooted in code analogies, and the rationale context, which encompasses in-depth semantic relationships. We propose a novel rank truncated generation (RTG) technique that efficiently condenses these contexts into prompts with restricted size. This enables REPOFUSE to deliver precise code completions while maintaining inference efficiency. Through testing with the CrossCodeEval suite, REPOFUSE has demonstrated a significant leap over existing models, achieving a 40.90\% to 59.75\% increase in exact match (EM) accuracy for code completions and a 26.8\% enhancement in inference speed. Beyond experimental validation, REPOFUSE has been integrated into the workflow of a large enterprise, where it actively supports various coding tasks.},
+  archiveprefix = {arXiv},
+  keywords = {Abs,Brief},
+  annotation = {ZSCC:00000\\
+rate: 3},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/REPOFUSE-2024/Liang et al. - 2024 - REPOFUSE Repository-Level Code Completion with Fu.pdf}
+}
+
+@misc{tian2024selective,
+  title = {Selective {{Prompt Anchoring}} for {{Code Generation}}},
+  author = {Tian, Yuan and Zhang, Tianyi},
+  year = {2024},
+  month = aug,
+  number = {arXiv:2408.09121},
+  eprint = {2408.09121},
+  publisher = {arXiv},
+  urldate = {2024-10-09},
+  abstract = {Recent advances in large language models (LLMs) such as Copilot and ChatGPT have transformed software development by automating coding tasks. Despite these advancements, challenges remain in reducing error rates and fully meeting user expectations. Our empirical study reveals LLMs tend to dilute their self-attention on the initial prompt as more code tokens are generated. We hypothesize this selfattention dilution issue is one of the root causes of inaccuracies in LLM-generated code. To mitigate this issue, we propose Selective Prompt Anchoring (SPA). SPA amplifies the influence of the selected parts in the initial prompt, which we refer to as ``anchored text'', during code generation. Specifically, SPA calculates the logit distribution difference with and without the anchored text. We prove this difference approximates the anchored text's contextual contribution to the output logits. SPA creates an augmented logit distribution by linearly combining the original logit distribution and the logit difference. We evaluate SPA with five LLMs on four benchmarks. Our results demonstrate that using SPA can consistently improve Pass@1 rates by up to 9.7\% in all settings. Notably, with selective text anchoring, a small version of DeepSeek-Coder (6.7B) can achieve better performance than an original much larger version (33B). Our code is available at https://github.com/magic-YuanTian/Selective-Prompt-Anchoring.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Selective Prompt Anchoring for Code Generation-2024/Tian and Zhang - 2024 - Selective Prompt Anchoring for Code Generation.pdf}
+}
+
+@article{wang2024repotransbench,
+  title={Repotransbench: A real-world benchmark for repository-level code translation},
+  author={Wang, Yanli and Wang, Yanlin and Wang, Suiquan and Guo, Daya and Chen, Jiachi and Grundy, John and Liu, Xilin and Ma, Yuchi and Mao, Mingzhi and Zhang, Hongyu and others},
+  journal={arXiv preprint arXiv:2412.17744},
+  year={2024}
+}
+
+@article{wang2025context,
+  title={Context-aware code summarization with multi-relational graph neural network},
+  author={Wang, Yanlin and Shi, Ensheng and Du, Lun and Yang, Xiaodi and Hu, Yuxuan and Wang, Yanli and Guo, Daya and Han, Shi and Zhang, Hongyu and Zhang, Dongmei},
+  journal={Automated Software Engineering},
+  volume={32},
+  number={1},
+  pages={1--26},
+  year={2025},
+  publisher={Springer}
+}
+
+
+@misc{wang2025understandinga,
+  title = {Towards an {{Understanding}} of {{Context Utilization}} in {{Code Intelligence}}},
+  author = {Wang, Yanlin and Duan, Kefeng and Zheng, Dewu and Shi, Ensheng and Zhang, Fengji and Wang, Yanli and Chen, Jiachi and Liu, Xilin and Ma, Yuchi and Zhang, Hongyu and Wang, Qianxiang and Zheng, Zibin},
+  year = {2025},
+  month = apr,
+  number = {arXiv:2504.08734},
+  eprint = {2504.08734},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2504.08734},
+  urldate = {2025-04-24},
+  abstract = {Code intelligence is an emerging domain in software engineering, aiming to improve the effectiveness and efficiency of various coderelated tasks. Recent research suggests that incorporating contextual information beyond the basic original task inputs (i.e., source code) can substantially enhance model performance. Such contextual signals may be obtained directly or indirectly from sources such as API documentation or intermediate representations like abstract syntax trees can significantly improve the effectiveness of code intelligence. Despite growing academic interest, there is a lack of systematic analysis of context in code intelligence. To address this gap, we conduct an extensive literature review of 146 relevant studies published between September 2007 and August 2024. Our investigation yields four main contributions. (1) A quantitative analysis of the research landscape, including publication trends, venues, and the explored domains; (2) A novel taxonomy of context types used in code intelligence; (3) A task-oriented analysis investigating context integration strategies across diverse code intelligence tasks; (4) A critical evaluation of evaluation methodologies for context-aware methods. Based on these findings, we identify fundamental challenges in context utilization in current code intelligence systems and propose a research roadmap that outlines key opportunities for future research. CCS Concepts: {$\bullet$} Software and its engineering {$\rightarrow$} Automatic programming.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Wang et al. - 2025 - Towards an Understanding of Context Utilization in Code Intelligence.pdf}
+}
+
+@misc{wu2025human,
+  title = {From {{Human Memory}} to {{AI Memory}}: {{A Survey}} on {{Memory Mechanisms}} in the {{Era}} of {{LLMs}}},
+  shorttitle = {From {{Human Memory}} to {{AI Memory}}},
+  author = {Wu, Yaxiong and Liang, Sheng and Zhang, Chen and Wang, Yichao and Zhang, Yongyue and Guo, Huifeng and Tang, Ruiming and Liu, Yong},
+  year = {2025},
+  month = apr,
+  number = {arXiv:2504.15965},
+  eprint = {2504.15965},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2504.15965},
+  urldate = {2025-04-24},
+  abstract = {Memory is the process of encoding, storing, and retrieving information, allowing humans to retain experiences, knowledge, skills, and facts over time, and serving as the foundation for growth and effective interaction with the world. It plays a crucial role in shaping our identity, making decisions, learning from past experiences, building relationships, and adapting to changes. In the era of large language models (LLMs), memory refers to the ability of an AI system to retain, recall, and use information from past interactions to improve future responses and interactions. Although previous research and reviews have provided detailed descriptions of memory mechanisms, there is still a lack of a systematic review that summarizes and analyzes the relationship between the memory of LLM-driven AI systems and human memory, as well as how we can be inspired by human memory to construct more powerful memory systems. To achieve this, in this paper, we propose a comprehensive survey on the memory of LLM-driven AI systems. In particular, we first conduct a detailed analysis of the categories of human memory and relate them to the memory of AI systems. Second, we systematically organize existing memory-related work and propose a categorization method based on three dimensions (object, form, and time) and eight quadrants. Finally, we illustrate some open problems regarding the memory of current AI systems and outline possible future directions for memory in the era of large language models.},
+  archiveprefix = {arXiv},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Wu et al. - 2025 - From Human Memory to AI Memory A Survey on Memory Mechanisms in the Era of LLMs.pdf;/Users/yuling/Zotero/storage/JK333UAJ/2504.html}
+}
+
+@misc{yang2024less,
+  title = {Less Is {{More}}: {{DocString Compression}} in {{Code Generation}}},
+  shorttitle = {Less Is {{More}}},
+  author = {Yang, Guang and Zhou, Yu and Cheng, Wei and Zhang, Xiangyu and Chen, Xiang and Zhuo, Terry Yue and Liu, Ke and Zhou, Xin and Lo, David and Chen, Taolue},
+  year = {2024},
+  month = oct,
+  number = {arXiv:2410.22793},
+  eprint = {2410.22793},
+  publisher = {arXiv},
+  urldate = {2024-11-04},
+  abstract = {The widespread use of Large Language Models (LLMs) in software engineering has intensified the need for improved model and resource efficiency. In particular, for neural code generation, LLMs are used to translate function/method signature and DocString to executable code. DocStrings which capture user re quirements for the code and used as the prompt for LLMs, often contains redundant information. Recent advancements in prompt compression have shown promising results in Natural Language Processing (NLP), but their applicability to code generation remains uncertain. Our empirical study show that the state-of-the-art prompt compression methods achieve only about 10\% reduction, as further reductions would cause significant performance degradation. In our study, we propose a novel compression method, ShortenDoc, dedicated to DocString compression for code generation. Our extensive experiments on six code generation datasets, five open-source LLMs (1B to 10B parameters), and one closed-source LLM GPT-4o confirm that ShortenDoc achieves 25-40\% compression while preserving the quality of generated code, outperforming other baseline methods at similar compression levels. The benefit of this research is to improve efficiency and reduce the cost while maintaining the quality of the generated code, especially when calling third-party APIs, and is able to reduce the token processing cost by 25-40\%.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Less is More-2024/Yang et al. - 2024 - Less is More DocString Compression in Code Genera.pdf}
+}
+
+@inproceedings{zhang2022diet,
+  title = {Diet Code Is Healthy: Simplifying Programs for Pre-Trained Models of Code},
+  shorttitle = {Diet Code Is Healthy},
+  booktitle = {Proceedings of the 30th {{ACM Joint European Software Engineering Conference}} and {{Symposium}} on the {{Foundations}} of {{Software Engineering}}},
+  author = {Zhang, Zhaowei and Zhang, Hongyu and Shen, Beijun and Gu, Xiaodong},
+  year = {2022},
+  month = nov,
+  series = {{{ESEC}}/{{FSE}} 2022},
+  pages = {1073--1084},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/3540250.3549094},
+  urldate = {2025-05-08},
+  abstract = {Pre-trained code representation models such as CodeBERT have demonstrated superior performance in a variety of software engineering tasks, yet they are often heavy in complexity, quadratically with the length of the input sequence. Our empirical analysis of CodeBERT's attention reveals that CodeBERT pays more attention to certain types of tokens and statements such as keywords and data-relevant statements. Based on these findings, we propose DietCode, which aims at lightweight leverage of large pre-trained models for source code. DietCode simplifies the input program of CodeBERT with three strategies, namely, word dropout, frequency filtering, and an attention-based strategy that selects statements and tokens that receive the most attention weights during pre-training. Hence, it gives a substantial reduction in the computational cost without hampering the model performance. Experimental results on two downstream tasks show that DietCode provides comparable results to CodeBERT with 40\% less computational cost in fine-tuning and testing.},
+  isbn = {978-1-4503-9413-0},
+  annotation = {TLDR: DietCode simplifies the input program of CodeBERT with three strategies, namely, word dropout, frequency filtering, and an attention-based strategy that selects statements and tokens that receive the most attention weights during pre-training.},
+  file = {/Users/yuling/Zotero/storage/EW6KCHCL/Zhang et al. - 2022 - Diet code is healthy simplifying programs for pre-trained models of code.pdf}
+}
+
+@article{shi2024code,
+  title={From code to correctness: Closing the last mile of code generation with hierarchical debugging},
+  author={Shi, Yuling and Wang, Songsong and Wan, Chengcheng and Gu, Xiaodong},
+  journal={arXiv preprint arXiv:2410.01215},
+  year={2024}
+}
+
+
+@misc{zhang2024hierarchical,
+  title = {Hierarchical {{Context Pruning}}: {{Optimizing Real-World Code Completion}} with {{Repository-Level Pretrained Code LLMs}}},
+  shorttitle = {Hierarchical {{Context Pruning}}},
+  author = {Zhang, Lei and Li, Yunshui and Li, Jiaming and Xia, Xiaobo and Yang, Jiaxi and Luo, Run and Wang, Minzheng and Chen, Longze and Liu, Junhao and Yang, Min},
+  year = {2024},
+  month = jun,
+  number = {arXiv:2406.18294},
+  eprint = {2406.18294},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2406.18294},
+  urldate = {2024-10-15},
+  abstract = {Some recently developed code large language models (Code LLMs) have been pre-trained on repository-level code data (Repo-Code LLMs), enabling these models to recognize repository structures and utilize cross-file information for code completion. However, in real-world development scenarios, simply concatenating the entire code repository often exceeds the context window limits of these Repo-Code LLMs, leading to significant performance degradation. In this study, we conducted extensive preliminary experiments and analyses on six Repo-Code LLMs. The results indicate that maintaining the topological dependencies of files and increasing the code file content in the completion prompts can improve completion accuracy; pruning the specific implementations of functions in all dependent files does not significantly reduce the accuracy of completions. Based on these findings, we proposed a strategy named Hierarchical Context Pruning (HCP) to construct completion prompts with high informational code content. The HCP models the code repository at the function level, maintaining the topological dependencies between code files while removing a large amount of irrelevant code content, significantly reduces the input length for repository-level code completion. We applied the HCP strategy in experiments with six Repo-Code LLMs, and the results demonstrate that our proposed method can significantly enhance completion accuracy while substantially reducing the length of input. Our code and data are available at https://github.com/Hambaobao/HCP-Coder.},
+  archiveprefix = {arXiv},
+  keywords = {Abs,Brief},
+  annotation = {rate: 4\\
+TLDR: The HCP models the code repository at the function level, maintaining the topological dependencies between code files while removing a large amount of irrelevant code content, significantly reduces the input length for repository-level code completion.},
+  file = {/Users/yuling/Library/CloudStorage/OneDrive-sjtu.edu.cn/Papers/Hierarchical Context Pruning-2024/Zhang et al. - 2024 - Hierarchical Context Pruning Optimizing Real-Worl.pdf}
+}
+
+% Ref added by Yichun %
+@article{achiam2023gpt,
+  title={Gpt-4 technical report},
+  author={Achiam, Josh and Adler, Steven and Agarwal, Sandhini and Ahmad, Lama and Akkaya, Ilge and Aleman, Florencia Leoni and Almeida, Diogo and Altenschmidt, Janko and Altman, Sam and Anadkat, Shyamal and others},
+  journal={arXiv preprint arXiv:2303.08774},
+  year={2023}
+}
+@article{team2023gemini,
+  title={Gemini: a family of highly capable multimodal models},
+  author={Team, Gemini and Anil, Rohan and Borgeaud, Sebastian and Alayrac, Jean-Baptiste and Yu, Jiahui and Soricut, Radu and Schalkwyk, Johan and Dai, Andrew M and Hauth, Anja and Millican, Katie and others},
+  journal={arXiv preprint arXiv:2312.11805},
+  year={2023}
+}
+@article{team2024gemini,
+  title={Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context},
+  author={Team, Gemini and Georgiev, Petko and Lei, Ving Ian and Burnell, Ryan and Bai, Libin and Gulati, Anmol and Tanzer, Garrett and Vincent, Damien and Pan, Zhufeng and Wang, Shibo and others},
+  journal={arXiv preprint arXiv:2403.05530},
+  year={2024}
+}
+@article{guo2024deepseek,
+  title={DeepSeek-Coder: When the Large Language Model Meets Programming--The Rise of Code Intelligence},
+  author={Guo, Daya and Zhu, Qihao and Yang, Dejian and Xie, Zhenda and Dong, Kai and Zhang, Wentao and Chen, Guanting and Bi, Xiao and Wu, Yu and Li, YK and others},
+  journal={arXiv preprint arXiv:2401.14196},
+  year={2024}
+}
+@inproceedings{guo2023longcoder,
+  title={Longcoder: A long-range pre-trained language model for code completion},
+  author={Guo, Daya and Xu, Canwen and Duan, Nan and Yin, Jian and McAuley, Julian},
+  booktitle={International Conference on Machine Learning},
+  pages={12098--12107},
+  year={2023},
+  organization={PMLR}
+}
+@article{bogomolov2024long,
+  title={Long code arena: a set of benchmarks for long-context code models},
+  author={Bogomolov, Egor and Eliseeva, Aleksandra and Galimzyanov, Timur and Glukhov, Evgeniy and Shapkin, Anton and Tigina, Maria and Golubev, Yaroslav and Kovrigin, Alexander and van Deursen, Arie and Izadi, Maliheh and others},
+  journal={arXiv preprint arXiv:2406.11612},
+  year={2024}
+}
+
+@inproceedings{gu2018deep,
+  title={Deep code search},
+  author={Gu, Xiaodong and Zhang, Hongyu and Kim, Sunghun},
+  booktitle={Proceedings of the 40th international conference on software engineering},
+  pages={933--944},
+  year={2018}
+}
+@article{bai2023qwen,
+  title={Qwen technical report},
+  author={Bai, Jinze and Bai, Shuai and Chu, Yunfei and Cui, Zeyu and Dang, Kai and Deng, Xiaodong and Fan, Yang and Ge, Wenbin and Han, Yu and Huang, Fei and others},
+  journal={arXiv preprint arXiv:2309.16609},
+  year={2023}
+}
+@article{yang2024qwen2,
+  title={Qwen2. 5 technical report},
+  author={Yang, An and Yang, Baosong and Zhang, Beichen and Hui, Binyuan and Zheng, Bo and Yu, Bowen and Li, Chengyuan and Liu, Dayiheng and Huang, Fei and Wei, Haoran and others},
+  journal={arXiv preprint arXiv:2412.15115},
+  year={2024}
+}
+
+@inproceedings{pan2024llmlingua,
+  title={LLMLingua-2: Data Distillation for Efficient and Faithful Task-Agnostic Prompt Compression},
+  author={Pan, Zhuoshi and Wu, Qianhui and Jiang, Huiqiang and Xia, Menglin and Luo, Xufang and Zhang, Jue and Lin, Qingwei and R{\"u}hle, Victor and Yang, Yuqing and Lin, Chin-Yew and others},
+  booktitle={Findings of the Association for Computational Linguistics ACL 2024},
+  pages={963--981},
+  year={2024}
+}
+@article{li2023starcoder,
+  title={Starcoder: may the source be with you!},
+  author={Li, Raymond and Allal, Loubna Ben and Zi, Yangtian and Muennighoff, Niklas and Kocetkov, Denis and Mou, Chenghao and Marone, Marc and Akiki, Christopher and Li, Jia and Chim, Jenny and others},
+  journal={arXiv preprint arXiv:2305.06161},
+  year={2023}
+}
+@article{chen2021evaluating,
+  title={Evaluating large language models trained on code},
+  author={Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and Pinto, Henrique Ponde De Oliveira and Kaplan, Jared and Edwards, Harri and Burda, Yuri and Joseph, Nicholas and Brockman, Greg and others},
+  journal={arXiv preprint arXiv:2107.03374},
+  year={2021}
+}
+@article{roziere2023code,
+  title={Code llama: Open foundation models for code},
+  author={Roziere, Baptiste and Gehring, Jonas and Gloeckle, Fabian and Sootla, Sten and Gat, Itai and Tan, Xiaoqing Ellen and Adi, Yossi and Liu, Jingyu and Sauvestre, Romain and Remez, Tal and others},
+  journal={arXiv preprint arXiv:2308.12950},
+  year={2023}
+}
+@article{touvron2023llama,
+  title={Llama: Open and efficient foundation language models},
+  author={Touvron, Hugo and Lavril, Thibaut and Izacard, Gautier and Martinet, Xavier and Lachaux, Marie-Anne and Lacroix, Timoth{\'e}e and Rozi{\`e}re, Baptiste and Goyal, Naman and Hambro, Eric and Azhar, Faisal and others},
+  journal={arXiv preprint arXiv:2302.13971},
+  year={2023}
+}
+@article{nijkamp2022codegen,
+  title={Codegen: An open large language model for code with multi-turn program synthesis},
+  author={Nijkamp, Erik and Pang, Bo and Hayashi, Hiroaki and Tu, Lifu and Wang, Huan and Zhou, Yingbo and Savarese, Silvio and Xiong, Caiming},
+  journal={arXiv preprint arXiv:2203.13474},
+  year={2022}
+}
+@article{wang2021codet5,
+  title={Codet5: Identifier-aware unified pre-trained encoder-decoder models for code understanding and generation},
+  author={Wang, Yue and Wang, Weishi and Joty, Shafiq and Hoi, Steven CH},
+  journal={arXiv preprint arXiv:2109.00859},
+  year={2021}
+}
+@article{wang2023codet5+,
+  title={Codet5+: Open code large language models for code understanding and generation},
+  author={Wang, Yue and Le, Hung and Gotmare, Akhilesh Deepak and Bui, Nghi DQ and Li, Junnan and Hoi, Steven CH},
+  journal={arXiv preprint arXiv:2305.07922},
+  year={2023}
+}
+@article{hui2024qwen2,
+  title={Qwen2. 5-coder technical report},
+  author={Hui, Binyuan and Yang, Jian and Cui, Zeyu and Yang, Jiaxi and Liu, Dayiheng and Zhang, Lei and Liu, Tianyu and Zhang, Jiajun and Yu, Bowen and Lu, Keming and others},
+  journal={arXiv preprint arXiv:2409.12186},
+  year={2024}
+}
+@article{luo2023wizardcoder,
+  title={Wizardcoder: Empowering code large language models with evol-instruct},
+  author={Luo, Ziyang and Xu, Can and Zhao, Pu and Sun, Qingfeng and Geng, Xiubo and Hu, Wenxiang and Tao, Chongyang and Ma, Jing and Lin, Qingwei and Jiang, Daxin},
+  journal={arXiv preprint arXiv:2306.08568},
+  year={2023}
+}
+@misc{openai2022chatgpt,
+  author       = {{OpenAI}},
+  title        = {{ChatGPT}},
+  howpublished = {\url{https://openai.com/blog/chatgpt}},
+  year         = {2022},
+  note         = {Accessed: 2025-05-11}
+}
+@article{zhu2024deepseek,
+  title={Deepseek-coder-v2: Breaking the barrier of closed-source models in code intelligence},
+  author={Zhu, Qihao and Guo, Daya and Shao, Zhihong and Yang, Dejian and Wang, Peiyi and Xu, Runxin and Wu, Y and Li, Yukun and Gao, Huazuo and Ma, Shirong and others},
+  journal={arXiv preprint arXiv:2406.11931},
+  year={2024}
+}
+@article{guo2025deepseek,
+  title={Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning},
+  author={Guo, Daya and Yang, Dejian and Zhang, Haowei and Song, Junxiao and Zhang, Ruoyu and Xu, Runxin and Zhu, Qihao and Ma, Shirong and Wang, Peiyi and Bi, Xiao and others},
+  journal={arXiv preprint arXiv:2501.12948},
+  year={2025}
+}
+@article{ahmad2020transformer,
+  title={A transformer-based approach for source code summarization},
+  author={Ahmad, Wasi Uddin and Chakraborty, Saikat and Ray, Baishakhi and Chang, Kai-Wei},
+  journal={arXiv preprint arXiv:2005.00653},
+  year={2020}
+}
+@article{liu2023your,
+  title={Is your code generated by chatgpt really correct? rigorous evaluation of large language models for code generation},
+  author={Liu, Jiawei and Xia, Chunqiu Steven and Wang, Yuyao and Zhang, Lingming},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  pages={21558--21572},
+  year={2023}
+}
+@article{liu2023lost,
+  title={Lost in the middle: How language models use long contexts},
+  author={Liu, Nelson F and Lin, Kevin and Hewitt, John and Paranjape, Ashwin and Bevilacqua, Michele and Petroni, Fabio and Liang, Percy},
+  journal={arXiv preprint arXiv:2307.03172},
+  year={2023}
+}
+@article{li2023loogle,
+  title={Loogle: Can long-context language models understand long contexts?},
+  author={Li, Jiaqi and Wang, Mengmeng and Zheng, Zilong and Zhang, Muhan},
+  journal={arXiv preprint arXiv:2311.04939},
+  year={2023}
+}
+@inproceedings{yu2024codereval,
+  title={Codereval: A benchmark of pragmatic code generation with generative pre-trained models},
+  author={Yu, Hao and Shen, Bo and Ran, Dezhi and Zhang, Jiaxin and Zhang, Qi and Ma, Yuchi and Liang, Guangtai and Li, Ying and Wang, Qianxiang and Xie, Tao},
+  booktitle={Proceedings of the 46th IEEE/ACM International Conference on Software Engineering},
+  pages={1--12},
+  year={2024}
+}
+@article{zhang2024hirope,
+  title={HiRoPE: Length Extrapolation for Code Models Using Hierarchical Position},
+  author={Zhang, Kechi and Li, Ge and Zhang, Huangzhao and Jin, Zhi},
+  journal={arXiv preprint arXiv:2403.19115},
+  year={2024}
+}
+@article{li2025aixcoder,
+  title={aiXcoder-7B-v2: Training LLMs to Fully Utilize the Long Context in Repository-level Code Completion},
+  author={Li, Jia and Zhu, Hao and Liu, Huanyu and Shi, Xianjie and Zong, He and Dong, Yihong and Zhang, Kechi and Jiang, Siyuan and Jin, Zhi and Li, Ge},
+  journal={arXiv preprint arXiv:2503.15301},
+  year={2025}
+}
+@article{li2024prompt,
+  title={Prompt compression for large language models: A survey},
+  author={Li, Zongqian and Liu, Yinhong and Su, Yixuan and Collier, Nigel},
+  journal={arXiv preprint arXiv:2410.12388},
+  year={2024}
+}
+
+@article{fang2025attentionrag,
+  title={ATTENTIONRAG: Attention-Guided Context Pruning in Retrieval-Augmented Generation},
+  author={Fang, Yixiong and Sun, Tianran and Shi, Yuling and Gu, Xiaodong},
+  journal={arXiv preprint arXiv:2503.10720},
+  year={2025}
+}
+@article{mu2023learning,
+  title={Learning to compress prompts with gist tokens},
+  author={Mu, Jesse and Li, Xiang and Goodman, Noah},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  pages={19327--19352},
+  year={2023}
+}
+
+@inproceedings{wang2024adapting,
+  title={Adapting llms for efficient context processing through soft prompt compression},
+  author={Wang, Cangqing and Yang, Yutian and Li, Ruisi and Sun, Dan and Cai, Ruicong and Zhang, Yuzhu and Fu, Chengqian},
+  booktitle={Proceedings of the International Conference on Modeling, Natural Language Processing and Machine Learning},
+  pages={91--97},
+  year={2024}
+}
+@article{xu2023recomp,
+  title={Recomp: Improving retrieval-augmented lms with compression and selective augmentation},
+  author={Xu, Fangyuan and Shi, Weijia and Choi, Eunsol},
+  journal={arXiv preprint arXiv:2310.04408},
+  year={2023}
+}
+@article{he2025codepromptzip,
+  title={CODEPROMPTZIP: Code-specific Prompt Compression for Retrieval-Augmented Generation in Coding Tasks with LMs},
+  author={He, Pengfei and Wang, Shaowei and Chen, Tse-Hsun},
+  journal={arXiv preprint arXiv:2502.14925},
+  year={2025}
+}
+@article{wang2024natural,
+  title={Natural is the best: Model-agnostic code simplification for pre-trained large language models},
+  author={Wang, Yan and Li, Xiaoning and Nguyen, Tien N and Wang, Shaohua and Ni, Chao and Ding, Ling},
+  journal={Proceedings of the ACM on Software Engineering},
+  volume={1},
+  number={FSE},
+  pages={586--608},
+  year={2024},
+  publisher={ACM New York, NY, USA}
+}
+@inproceedings{zhang2024lpr,
+  title={Lpr: Large language models-aided program reduction},
+  author={Zhang, Mengxiao and Tian, Yongqiang and Xu, Zhenyang and Dong, Yiwen and Tan, Shin Hwei and Sun, Chengnian},
+  booktitle={Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  pages={261--273},
+  year={2024}
+}
+
+@inproceedings{liu2024repoqa,
+  title={RepoQA: Evaluating Long Context Code Understanding},
+  author={Liu, Jiawei and Le Tian, Jia and Daita, Vijay and Wei, Yuxiang and Ding, Yifeng and Wang, Yuhan Katherine and Yang, Jun and Zhang, Lingming},
+  booktitle={First Workshop on Long Context Foundation Models ICML},
+    year={2024}
+}
+
+@article{vaswani2017attention,
+  title={Attention is all you need},
+  author={Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, {\L}ukasz and Polosukhin, Illia},
+  journal={Advances in neural information processing systems},
+  volume={30},
+  year={2017}
+}
+@article{liu2023repobench,
+  title={Repobench: Benchmarking repository-level code auto-completion systems},
+  author={Liu, Tianyang and Xu, Canwen and McAuley, Julian},
+  journal={arXiv preprint arXiv:2306.03091},
+  year={2023}
+}
+@article{sun2024source,
+  title={Source code summarization in the era of large language models},
+  author={Sun, Weisong and Miao, Yun and Li, Yuekang and Zhang, Hongyu and Fang, Chunrong and Liu, Yi and Deng, Gelei and Liu, Yang and Chen, Zhenyu},
+  journal={arXiv preprint arXiv:2407.07959},
+  year={2024}
+}
+@article{haldar2024analyzing,
+  title={Analyzing the performance of large language models on code summarization},
+  author={Haldar, Rajarshi and Hockenmaier, Julia},
+  journal={arXiv preprint arXiv:2404.08018},
+  year={2024}
+}
+@article{hossain2024deep,
+  title={A deep dive into large language models for automated bug localization and repair},
+  author={Hossain, Soneya Binta and Jiang, Nan and Zhou, Qiang and Li, Xiaopeng and Chiang, Wen-Hao and Lyu, Yingjun and Nguyen, Hoan and Tripp, Omer},
+  journal={Proceedings of the ACM on Software Engineering},
+  volume={1},
+  number={FSE},
+  pages={1471--1493},
+  year={2024},
+  publisher={ACM New York, NY, USA}
+}
+@article{li2024enhancing,
+  title={Enhancing static analysis for practical bug detection: An llm-integrated approach},
+  author={Li, Haonan and Hao, Yu and Zhai, Yizhuo and Qian, Zhiyun},
+  journal={Proceedings of the ACM on Programming Languages},
+  volume={8},
+  number={OOPSLA1},
+  pages={474--499},
+  year={2024},
+  publisher={ACM New York, NY, USA}
+}
+@inproceedings{li2024guiding,
+  title={Guiding enumerative program synthesis with large language models},
+  author={Li, Yixuan and Parsert, Julian and Polgreen, Elizabeth},
+  booktitle={International Conference on Computer Aided Verification},
+  pages={280--301},
+  year={2024},
+  organization={Springer}
+}
+@article{zhang2023algo,
+  title={Algo: Synthesizing algorithmic programs with generated oracle verifiers},
+  author={Zhang, Kexun and Wang, Danqing and Xia, Jingtao and Wang, William Yang and Li, Lei},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  pages={54769--54784},
+  year={2023}
+}
+@article{rando2025longcodebench,
+  title={LongCodeBench: Evaluating Coding LLMs at 1M Context Windows},
+  author={Rando, Stefano and Romani, Luca and Sampieri, Alessio and Kyuragi, Yuta and Franco, Luca and Galasso, Fabio and Hashimoto, Tatsunori and Yang, John},
+  journal={arXiv preprint arXiv:2505.07897},
+  year={2025}
+}
+@article{li2025longcodeu,
+  title={LONGCODEU: Benchmarking Long-Context Language Models on Long Code Understanding},
+  author={Li, Jia and Guo, Xuyuan and Li, Lei and Zhang, Kechi and Li, Ge and Tao, Zhengwei and Liu, Fang and Tao, Chongyang and Zhu, Yuqi and Jin, Zhi},
+  journal={arXiv preprint arXiv:2503.04359},
+  year={2025}
+}
+@article{valeev2025yabloco,
+  title={YABLoCo: Yet Another Benchmark for Long Context Code Generation},
+  author={Valeev, Aidar and Garaev, Roman and Lomshakov, Vadim and Piontkovskaya, Irina and Ivanov, Vladimir and Adewuyi, Israel},
+  journal={arXiv preprint arXiv:2505.04406},
+  year={2025}
+}
+@article{guo2022unixcoder,
+  title={Unixcoder: Unified cross-modal pre-training for code representation},
+  author={Guo, Daya and Lu, Shuai and Duan, Nan and Wang, Yanlin and Zhou, Ming and Yin, Jian},
+  journal={arXiv preprint arXiv:2203.03850},
+  year={2022}
+}
+@article{feng2020codebert,
+  title={Codebert: A pre-trained model for programming and natural languages},
+  author={Feng, Zhangyin and Guo, Daya and Tang, Duyu and Duan, Nan and Feng, Xiaocheng and Gong, Ming and Shou, Linjun and Qin, Bing and Liu, Ting and Jiang, Daxin and others},
+  journal={arXiv preprint arXiv:2002.08155},
+  year={2020}
+}
+
+@inproceedings{zhang2023repocoder,
+  title={RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and Generation},
+  author={Zhang, Fengji and Chen, Bei and Zhang, Yue and Keung, Jacky and Liu, Jin and Zan, Daoguang and Mao, Yi and Lou, Jian-Guang and Chen, Weizhu},
+  booktitle={Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  pages={2471--2484},
+  year={2023}
+}
+@article{wang2024rlcoder,
+  title={Rlcoder: Reinforcement learning for repository-level code completion},
+  author={Wang, Yanlin and Wang, Yanli and Guo, Daya and Chen, Jiachi and Zhang, Ruikai and Ma, Yuchi and Zheng, Zibin},
+  journal={arXiv preprint arXiv:2407.19487},
+  year={2024}
+}
+@article{zhao2024meta,
+  title={Meta-chunking: Learning efficient text segmentation via logical perception},
+  author={Zhao, Jihao and Ji, Zhiyuan and Feng, Yuchen and Qi, Pengnian and Niu, Simin and Tang, Bo and Xiong, Feiyu and Li, Zhiyu},
+  journal={arXiv preprint arXiv:2410.12788},
+  year={2024}
+}
+
+@article{zhang2025seed,
+  title={Seed-Coder: Let the Code Model Curate Data for Itself},
+  author={Zhang, Yuyu and Su, Jing and Sun, Yifan and Xi, Chenguang and Xiao, Xia and Zheng, Shen and Zhang, Anxiang and Liu, Kaibo and Zan, Daoguang and Sun, Tao and others},
+  journal={arXiv preprint arXiv:2506.03524},
+  year={2025}
+}
+
+@article{zeng2025pruning,
+  title={Pruning the unsurprising: Efficient code reasoning via first-token surprisal},
+  author={Zeng, Wenhao and Wang, Yaoning and Hu, Chao and Shi, Yuling and Wan, Chengcheng and Zhang, Hongyu and Gu, Xiaodong},
+  journal={arXiv preprint arXiv:2508.05988},
+  year={2025}
+}
+
+@inproceedings{li2024retrieval,
+  title={Retrieval augmented generation or long-context llms? a comprehensive study and hybrid approach},
+  author={Li, Zhuowan and Li, Cheng and Zhang, Mingyang and Mei, Qiaozhu and Bendersky, Michael},
+  booktitle={Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: Industry Track},
+  pages={881--893},
+  year={2024}
+}
+@article{lewis2020retrieval,
+  title={Retrieval-augmented generation for knowledge-intensive nlp tasks},
+  author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt{\"a}schel, Tim and others},
+  journal={Advances in neural information processing systems},
+  volume={33},
+  pages={9459--9474},
+  year={2020}
+}
+
+@inproceedings{frantar2023gptq,
+  title={GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers},
+  author={Frantar, Elias and Ashkboos, Saleh and Hoefler, Torsten and Alistarh, Dan},
+  booktitle={The Eleventh International Conference on Learning Representations},
+  year={2023},
+  organization={OpenReview}
+}
+
+@article{wang2025can,
+  title={Can llms replace human evaluators? an empirical study of llm-as-a-judge in software engineering},
+  author={Wang, Ruiqi and Guo, Jiyu and Gao, Cuiyun and Fan, Guodong and Chong, Chun Yong and Xia, Xin},
+  journal={Proceedings of the ACM on Software Engineering},
+  volume={2},
+  number={ISSTA},
+  pages={1955--1977},
+  year={2025},
+  publisher={ACM New York, NY, USA}
+}
+
+@inproceedings{liu2023g,
+  title={G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment},
+  author={Liu, Yang and Iter, Dan and Xu, Yichong and Wang, Shuohang and Xu, Ruochen and Zhu, Chenguang},
+  booktitle={Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  pages={2511--2522},
+  year={2023}
+}
+
+@inproceedings{song2024finesure,
+  title={FineSurE: Fine-grained Summarization Evaluation using LLMs},
+  author={Song, Hwanjun and Su, Hang and Shalyminov, Igor and Cai, Jason and Mansour, Saab},
+  booktitle={Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={906--922},
+  year={2024}
+}
+
+@article{he2025code,
+  title={From code to courtroom: Llms as the new software judges},
+  author={He, Junda and Shi, Jieke and Zhuo, Terry Yue and Treude, Christoph and Sun, Jiamou and Xing, Zhenchang and Du, Xiaoning and Lo, David},
+  journal={arXiv preprint arXiv:2503.02246},
+  year={2025}
+}
+
+
+@article{liao2024a3codgen,
+  title={A 3-codgen: A repository-level code generation framework for code reuse with local-aware, global-aware, and third-party-library-aware},
+  author={Liao, Dianshu and Pan, Shidong and Sun, Xiaoyu and Ren, Xiaoxue and Huang, Qing and Xing, Zhenchang and Jin, Huan and Li, Qinying},
+  journal={IEEE Transactions on Software Engineering},
+  year={2024},
+  publisher={IEEE}
+}
+
+@article{wang2025evoc2rust,
+  title={EVOC2RUST: A Skeleton-guided Framework for Project-Level C-to-Rust Translation},
+  author={Wang, Chaofan and Yu, Tingrui and Wang, Jie and Chen, Dong and Zhang, Wenrui and Shi, Yuling and Gu, Xiaodong and Shen, Beijun},
+  journal={arXiv preprint arXiv:2508.04295},
+  year={2025}
+}
+
+@misc{zhang2025cast,
+  title = {c{{AST}}: {{Enhancing Code Retrieval-Augmented Generation}} with {{Structural Chunking}} via {{Abstract Syntax Tree}}},
+  shorttitle = {c{{AST}}},
+  author = {Zhang, Yifan and Zhao, Xin and Wang, Zhenzhou and Yang, Chengyu and Wei, Jianxin and Wu, Tianyu},
+  year = {2025},
+  month = jun,
+  number = {arXiv:2506.15655},
+  eprint = {2506.15655},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  archiveprefix = {arXiv}
+}
+
+@article{chen2025swe,
+  title={SWE-Exp: Experience-Driven Software Issue Resolution},
+  author={Chen, Silin and Lin, Shaoxin and Gu, Xiaodong and Shi, Yuling and Lian, Heng and Yun, Longfei and Chen, Dong and Sun, Weiguo and Cao, Lin and Wang, Qianxiang},
+  journal={arXiv preprint arXiv:2507.23361},
+  year={2025}
+}
+
+@article{li2025swe,
+  title={Swe-debate: Competitive multi-agent debate for software issue resolution},
+  author={Li, Han and Shi, Yuling and Lin, Shaoxin and Gu, Xiaodong and Lian, Heng and Wang, Xin and Jia, Yantao and Huang, Tao and Wang, Qianxiang},
+  journal={arXiv preprint arXiv:2507.23348},
+  year={2025}
+}
+
+
+@inproceedings{shi2024between,
+  title={Between Lines of Code: Unraveling the Distinct Patterns of Machine and Human Programmers},
+  author={Shi, Yuling and Zhang, Hongyu and Wan, Chengcheng and Gu, Xiaodong},
+  booktitle={2025 IEEE/ACM 47th International Conference on Software Engineering (ICSE)},
+  pages={51--62},
+  year={2024},
+  organization={IEEE Computer Society}
+}
+
+@article{peng2025swe,
+  title={SWE-QA: Can Language Models Answer Repository-level Code Questions?},
+  author={Peng, Weihan and Shi, Yuling and Wang, Yuhang and Zhang, Xinyun and Shen, Beijun and Gu, Xiaodong},
+  journal={arXiv preprint arXiv:2509.14635},
+  year={2025}
+}
+
+
+@inproceedings{liang2024repogenix,
+  title = {{{RepoGenix}}: {{Dual Context-Aided Repository-Level Code Completion}} with {{Language Models}}},
+  shorttitle = {{{RepoGenix}}},
+  booktitle = {Proceedings of the 39th {{IEEE}}/{{ACM International Conference}} on {{Automated Software Engineering}} ({{ASE}} '24)},
+  author = {Liang, Ming and Xie, Xiaoheng and Zhang, Gehao and Zheng, Xunjin and Di, Peng and Jiang, Wei and Chen, Hongwei and Wang, Chengpeng and Fan, Gang},
+  year = {2024},
+  pages = {2466--2467},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/3691620.3695331}
+}
+
+@inproceedings{zhang2025kabb,
+title={{KABB}: Knowledge-Aware Bayesian Bandits for Dynamic Expert Coordination in Multi-Agent Systems},
+author={Jusheng Zhang and Zimeng Huang and Yijia Fan and Ningyuan Liu and Mingyan Li and Zhuojie Yang and Jiawei Yao and Jian Wang and Keze Wang},
+booktitle={Forty-second International Conference on Machine Learning},
+year={2025},
+url={https://openreview.net/forum?id=AKvy9a4jho}
+}
+
+@article{zhang2025gam,
+  title={GAM-Agent: Game-Theoretic and Uncertainty-Aware Collaboration for Complex Visual Reasoning},
+  author={Zhang, Jusheng and Fan, Yijia and Lin, Wenjun and Chen, Ruiqi and Jiang, Haoyi and Chai, Wenhao and Wang, Jian and Wang, Keze},
+  journal={arXiv preprint arXiv:2505.23399},
+  year={2025}
+}
+
+@misc{zhang2025drdiff,
+      title={DrDiff: Dynamic Routing Diffusion with Hierarchical Attention for Breaking the Efficiency-Quality Trade-off}, 
+      author={Jusheng Zhang and Yijia Fan and Kaitong Cai and Zimeng Huang and Xiaofei Sun and Jian Wang and Chengpei Tang and Keze Wang},
+      year={2025},
+      eprint={2509.02785},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2509.02785}, 
+}

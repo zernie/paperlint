@@ -1,0 +1,101 @@
+\section{Methods}
+
+To understand how scientists are engaging with AI tools in laboratory and field environments, including current use patterns, barriers to adoption, and future speculative design ideas, we conducted situated on-site interviews with 12 \rev{scientific practitioners who work in lab and field settings}. While interviews were planned for 45--60 minutes, many continued longer based on voluntary participant interest. Participants received \$30 USD gift cards, and this protocol was approved by our Institutional Review Board.
+
+\subsection{Participants}
+
+We sought out a range of \rev{scientific practitioners (5 female, 7 male)}, in particular those who worked in settings that required physical presence at the lab bench or in the field (Table~\ref{tab:participants}). Participants were recruited via direct email outreach, word-of-mouth, and snowball sampling. This resulted in 12 participants, spanning R1 university~\cite{wikipedia_r1} labs to industrial research organizations (mostly in the U.S. but a few in the U.K. and Switzerland). Many operated in high-stakes or physically-demanding contexts, such as nuclear science, remote field robotics, applied neuroscience, and ecological fieldwork. Participants \rev{represented a broad range of expertise. Their roles ranged from junior university researchers to senior staff scientists (2 to 28 years of experience in their field).} \rev{In the `Role' column of Table \ref{tab:participants}, the term `Scientist' specifically refers to participants who are formally employed under that job title and often have a doctorate degree. But note in interviews all participants self-identified as `scientists' and were paid practitioners engaged in scientific labor.}
+
+\begin{table*}[h!]
+\centering
+\caption{We interviewed 12 \rev{scientific practitioners} at research institutions across multiple fields about the barriers and opportunities for AI tools in their daily working environment. The `YoE` column indicates how many years of experience they have in their respective field. `R1 Public/Private' refers to U.S. high research output (R1) universities~\cite{wikipedia_r1}. `AI Use' is self-reported frequency of AI usage.}
+
+
+\setlength{\tabcolsep}{3.1pt} % Tighter column spacing
+\renewcommand{\arraystretch}{1.5} % Tighter row spacing
+\footnotesize
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l l l l l l l l l}
+\toprule
+\textbf{ID} & \textbf{YoE} & \textbf{Gender} & \textbf{Field} & \textbf{Institute} & \textbf{Lab Description} & \textbf{Role} & \textbf{AI Use} \\
+\midrule
+P1 & 3 & M & Behavioral Neuroscience & R1 Public & Neural activity of rodent behavior & PhD student & Sporadic \\
+%\midrule
+P2 & 5 & M & Field Robotics & R1 Private & Robot locomotion and navigation dynamics & PhD student & Daily \\
+%\midrule
+P3 & 2 & F & Field Robotics & R1 Private & Robot locomotion and navigation dynamics & Undergrad researcher & Daily \\
+%\midrule
+P4 & 5 & M & Nuclear Fusion & Industry & Inertial fusion materials design and development & Scientist & Sporadic \\
+%\midrule
+P5 & 3 & M & Behavioral Neuroscience & R1 Public & Neural activity of rodent behavior & PhD student & Sporadic \\
+%\midrule
+P6 & 10 & M & Nuclear Fusion & Industry & Inertial fusion materials design and development & Scientist & Sporadic \\
+%\midrule
+P7 & 3 & F & Nuclear Fusion & Industry & Inertial fusion materials design and development & Data Scientist & Sporadic \\
+%\midrule
+P8 & 8 & M & Cognitive Science & R1 Public & Social behavior and cognition of primates & PhD student & Daily \\
+%\midrule
+P9 & 28 & F & Materials Science & Industry & Medical device bioengineering & Staff Scientist & Rarely \\
+%\midrule
+P10 & 5 & M & Neuroengineering & Industry & Biohybrid neural systems, cognitive preservation & Scientist/Entrepreneur & Daily \\
+%\midrule
+P11 & 6 & F & Experimental Psychology & R1 Public & Spatial memory and cognition & PhD student & Daily \\
+%\midrule
+P12 & 4 & F & Biochemistry/Cell Biology & R1 Public & Cellular physiology in cancer and kidney disease & PhD student & Sporadic \\
+%\bottomrule
+
+%\midrule
+
+\end{tabular*}
+\label{tab:participants}
+\end{table*}
+
+\subsection{Design Rationale for Our Situated Interview Protocol}
+
+Our interview study drew on the method of \emph{naturalistic inquiry}~\cite{lincoln1985naturalistic} to guide data collection situated within participants’ real-world scientific environments. Our protocol consisted of having participants walk through how they typically work on-site (e.g., at their lab bench) and mention where AI plays a role, discuss barriers to adopting AI in their workplace, then come up with speculative designs for how future AI tools could help them. Our protocol includes:
+
+\smallskip \noindent \textbf{1)~Situated on-site interviews}:
+We held interviews directly in participants' workspaces when possible, such as at their lab bench. This allowed them to demonstrate workflow components while talking and pointing to surrounding tools, which elicited nuanced qualitative insights.
+%
+In the few cases when in-person access was not feasible (e.g., visitors not permitted inside a clean-room), participants were asked to bring photos of their workspace to `virtually' walk through them. This enabled them to reference concrete tasks, tools, and features of their work environment.
+
+\smallskip \noindent \textbf{2) What does `AI' mean? } An important consideration in this study is defining what the term `AI' means. In accordance with our \emph{naturalistic inquiry}~\cite{lincoln1985naturalistic} approach, we started each interview by asking each participant how they use `AI' without explicitly defining the term for them or showing upfront examples. We adopted an \emph{emic} approach (as opposed to \emph{etic})~\cite{emic_etic} by having participants self-define this term based on their own perceptions. In practice, unsurprisingly, most discussed ChatGPT or other chat-based, text-generating LLMs from the 2020s; but some nuclear scientists talked about 2010-era ML algorithms that had been developed in-house for classifying their bespoke datasets. Nobody mentioned GOFAI (i.e., symbolic or logic-based AI that predated the rise of machine learning in the 2000s)~\cite{gofai}.
+
+
+\smallskip \noindent \textbf{3)~Speculative design activity}: The final part of each interview (15--20 minutes) drew on methods from the field of speculative design~\cite{auger2013speculative, hoffman2022speculative} to elicit system ideas  unconstrained by current technologies or practices. Participants sketched designs for an `ideal' future AI tool to assist their specific workflow.
+%
+To help participants think beyond current practices and familiarize them with modern AI tools, the interviewer first asked guiding questions grounded in the workflows each participant described, then demonstrated relevant modern AI capabilities such as multimodal vision and language models they may not have encountered. This enabled them to expand upon their \emph{emic} self-definition~\cite{emic_etic} of `AI' that they initially provided to us. One scenario we presented was how someone building a custom PC can upload photos of a computer motherboard to ChatGPT’s vision model and ask it to identify a LED pin that they needed to use.\footnote{This scenario was intentionally chosen to be simple and domain-agnostic so as not to bias participants toward coming up with any specific kinds of speculative designs in their own field. It was also presented only \emph{after} participants described the challenges inherent to their own physical environment and workflow.}
+
+While this domain-agnostic scenario helped orient participants unfamiliar with multimodal AI, its primary purpose was to encourage participants to think beyond text-based interfaces. Speculative designs emerged mainly through contextual discussion of the barriers previously surfaced and through physical walkthroughs of their lab spaces, which primed participants to think in terms of their own domain. Participants were prompted to sketch their lab spaces while they came up with ideas, using the physical layout to imagine where and how AI could assist their embodied work.
+
+
+\subsection{Data Analysis}
+
+Interviews were audio-recorded with consent then transcribed by an online service. Two authors reviewed this data independently to familiarize themselves with transcribed content. Transcripts were manually reviewed for errors and analyzed with an inductive approach using thematic analysis~\cite{braun2006using}. Our team iteratively generated and refined codes that reflected emerging patterns across multiple interviews. Codes were grouped by present-day AI use cases, perceptions of current barriers, and speculative design categories. For the speculative design activity, participants' sketches were coded alongside transcript data, which allowed the integration of design ideas into the emerging thematic structure. Throughout the four-month interview and analysis period, the research team met regularly to discuss interpretations and resolve disagreements before finalizing the set of themes presented in Sections~\ref{sec:usecases}-\ref{sec:spec-design}.
+
+Here is a representative example of our iterative analysis process at work: initially, we mapped the raw data of reported use cases and barriers to tasks located in specific lab or field sites. However, the diversity of labs and field sites made this approach too narrow. Thus, we abstracted out to higher-level themes (e.g. `at the desk' versus `beyond the desk') that cut across contexts, which let us capture a wider range of experiences while preserving situational relevance. To analyze speculative designs, we applied a similar procedure. We began by categorizing designs that were tied to discrete physical spaces and types of tasks (e.g. pipetting assistance, surgery protocol assistance). Then, we merged them into broader archetypes, which allowed us to focus on participants' higher-level task rationale. For instance, pipetting assistance would be considered seeking support in `hands-on physical chores.' \rev{See Figure~\ref{fig:methods1} for the thematic mappings that emerged from our analyses. We include two thematic maps to illustrate the structure of analyses across both empirical and speculative components of our study. The top panel summarizes three higher-level barriers that emerged from inductively coding participants’ descriptions of lab and fieldwork. The bottom panel summarizes the five speculative AI assistant archetypes and their mid-level clusters, showing how participants’ design ideas were organized into broader functional groupings.}  
+
+
+
+~\begin{figure*}
+    \centering
+    \includegraphics[width=0.99\linewidth]{figures/thematicmap.png}
+    %\vspace{-1em} % crunch
+    \caption{\textnormal{Thematic maps summarizing (top) the three categories of barriers that discourage lab and field scientific practitioners from adopting AI, and (bottom) five speculative AI assistant archetypes organized into mid-level conceptual clusters.}}
+    \Description{The figure two thematic maps, one titled ``Barriers that Discourage Lab and Field Scientific Practitioners from Adopting AI in their Workflows," and the other titled "Five Speculative Designs for Imagined Future AI Scientific Assistants.'' Each column represents a major theme and includes the relevant codes within.}
+    \label{fig:methods1}
+\end{figure*}
+
+
+
+\subsection{Study Scope and Limitations}
+
+We intentionally scoped our interview protocol and speculative design activity to focus on the day-to-day `on the ground' work of scientific practice. Thus, our study does not cover higher-level considerations such as how organizations set AI policies and cope with systemic risks; see Wagman et al.'s CHI 2025 paper for thoughtful coverage of organizational and social issues around AI adoption at a large U.S. national laboratory (Argonne)~\cite{wagman2025generative}. We also did not cover broader issues such as AI ethics or philosophical objections to AI usage. Note that our participants were likely self-selected to be more open to using AI in their work, so we are lacking the perspectives of those who are strongly opposed to AI use. 
+
+The ethics and norms around AI use in science continues to be debated, especially over challenges related to bias and lack of transparency~\cite{ding2025generative}. Morris previously identified barriers to adoption including scientists' concerns with inaccuracy, hallucination, and falsified results~\cite{morris2023scientists}; other fears include privacy, security vulnerabilities, and plagiarism~\cite{wagman2025generative, nature2025aiwriting}. While some participants mentioned these topics in passing, they were not the focus of our study. 
+
+Although we sampled participants across a range of disciplines (e.g., nuclear science, biochemistry, primate field cognition, neuroscience), we cannot make claims about how universally applicable our findings are across \emph{all} of science. It is likely that we did not cover fields that may be more pro-AI or anti-AI than our sample. \rev{Additionally, while participants represented a range of expertise, our sample skewed towards early-career scientists-in-training and student researchers. Thus, we cannot claim broader generality across \textit{all} scientists (especially professors and lab PIs who may spend more time on grant-writing, advising, and giving talks to academic and broader public audiences). We scoped the focus of our study on \emph{scientific practitioners}--the often-junior staff who do the day-to-day physical labor in lab and field settings. We direct the reader to findings from interviews with professors and industry lab PIs for complementary perspectives from more senior scientists~\cite{wagman2025generative,morris2023scientists}.}
+
+Additionally, all of our participants were based in the U.S. or parts of Western Europe (U.K. and Switzerland). Our findings may not be representative of AI perceptions in geographical regions with different scientific infrastructures, funding models, or cultural norms (See Table~\ref{tab:participants} for participant demographics).
+
+Lastly, while we were allowed to visit and conduct interviews in-situ at lab and field sites, we did not directly observe these scientists doing their tasks live due to the time-sensitive and high-stakes nature of their work (e.g., we could not observe a rodent neural implantation surgery). Instead they walked us through a `simulation' of what they would ordinarily do while they pointed to their physical tools, which limited the fidelity of our observations. And while we showed participants unfamiliar with AI a domain-agnostic multimodal AI example to demonstrate capabilities beyond text-based chatbots, this may have subconsciously anchored some of their speculative designs. Additional illustrative examples may have primed participants to ideate more broadly.
+

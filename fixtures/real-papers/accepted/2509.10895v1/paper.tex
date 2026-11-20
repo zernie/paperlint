@@ -1,0 +1,116 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[sigconf]{acmart}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{% 
+    Bib\TeX}}}
+
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[CCS '25]{Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security}{October 13--17, 2025}{Taipei, Taiwan}
+\acmBooktitle{Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security (CCS '25), October 13--17, 2025, Taipei, Taiwan}
+\acmDOI{10.1145/3719027.3765208}
+\acmISBN{979-8-4007-1525-9/2025/10}
+
+\input{packages}
+\input{commands}
+
+\begin{document}
+
+\title{Finding SSH Strict Key Exchange Violations by State Learning}
+
+\author{Fabian Bäumer}
+\orcid{0009-0006-5569-6625}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{fabian.baeumer@rub.de}
+
+\author{Marcel Maehren}
+\orcid{0009-0002-8964-826X}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{marcel.maehren@rub.de}
+
+\author{Marcus Brinkmann}
+\orcid{0000-0001-5649-6357}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{marcus.brinkmann@rub.de}
+
+\author{Jörg Schwenk}
+\orcid{0000-0001-9315-7354}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{joerg.schwenk@rub.de}
+
+\renewcommand{\shortauthors}{Fabian Bäumer, Marcel Maehren, Marcus Brinkmann, and Jörg Schwenk}
+
+\begin{abstract}
+  SSH is an important protocol for secure remote shell access to servers on the Internet. At USENIX 2024, Bäumer et al. presented the Terrapin attack on SSH~\cite{USENIX:BauBriSch24}, which relies on the attacker injecting optional messages during the key exchange. To mitigate this attack, SSH vendors adopted an extension developed by OpenSSH called \emph{strict key exchange} (``strict KEX''). With strict KEX, optional messages are forbidden during the handshake, preventing the attack. In practice, this should simplify the state machine of an SSH handshake to a linear message flow similar to that of TLS.
+  
+  In this work, we analyze the design, implementation, and security of strict KEX in popular SSH servers, using black-box \emph{state learning}, which can uncover the hidden state machine of an implementation. In practice, it is limited by the number of learned messages and the complexity of the state machine. Thus, learning the \emph{complete} state machine of SSH is infeasible. Previous research on SSH, therefore, excluded optional messages, learning only a partial state machine. However, these messages are a critical part of the Terrapin attack. We propose to instead learn the complete state machine of the handshake phase of an SSH server, but with strict KEX enabled.
+
+  We investigate the security of \nrImplementations SSH implementations supporting strict KEX for up to five key exchange algorithms. In total, we learn \nrStateMachines state machines, revealing significant differences in the implementations. We show that \nrViolatingImplementations implementations violate the strict KEX specification and find two critical security vulnerabilities. One results in a rogue session attack in the proprietary Tectia SSH implementation. Another affects the official SSH implementation of the Erlang Open Telecom Platform, and enables unauthenticated remote code execution in the security context of the SSH server.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10003033.10003039.10003048</concept_id>
+<concept_desc>Networks~Transport protocols</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003039.10003041.10003042</concept_id>
+<concept_desc>Networks~Protocol testing and verification</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10003033.10003083.10003014.10003015</concept_id>
+<concept_desc>Networks~Security protocols</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Networks~Transport protocols}
+\ccsdesc[500]{Networks~Protocol testing and verification}
+\ccsdesc[500]{Networks~Security protocols}
+
+\keywords{SSH, State Learning, Strict Key Exchange, Protocol Violations, Message Injection, Man-in-the-Middle}
+
+\maketitle
+
+\input{sections/10-introduction}
+\input{sections/20-background}
+\input{sections/30-methodology}
+\input{sections/40-eval-ssh}
+\input{sections/50-related-work}
+\input{sections/60-mitigation}
+\input{sections/61-discussion-limitations}
+\input{sections/70-conclusion}
+
+\begin{acks}
+\input{sections/90-ack}
+\end{acks}
+
+\bibliographystyle{ACM-Reference-Format}
+\balance
+\bibliography{bib/abbrev2,bib/crypto,bib/rfc,bib/paper}
+
+\end{document}
+\endinput

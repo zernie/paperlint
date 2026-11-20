@@ -1,0 +1,135 @@
+\section{Background and Related Works} \label{sec:background}
+Although proposed methodologies support both Nvidia and AMD GPUs, we use the ones from Nvidia without any loss of generality unless discussing AMD platform-specific features.
+In the following, we describe the background of GPU compilers and profilers, focusing on their use in AI workloads.
+
+\subsection{GPU Compilers}
+
+The design of AI compilers has progressed significantly, with the introduction of MLIR\cite{lattner2021mlir} marking a pivotal step toward modularity, extensibility, and multi-layered abstraction. 
+MLIR simplifies the complexity of modern computational workloads with a reusable framework that lowers the learning curve for compiler development while enabling custom components and third-party tool integration to drive innovation.
+
+Building on the foundation of MLIR, Triton\cite{tillet2019triton} is a groundbreaking compiler designed to bridge AI workloads and GPU hardware. 
+With dialects specifically tailored for GPU programming, Triton offers high-level abstractions that simplify the development of efficient GPU kernels, addressing the needs of computationally intensive AI applications. 
+Triton leverages MLIR’s modular architecture to achieve reusability, seamless integration, and multi-level optimizations, exemplifying how domain-specific needs can be addressed within a unified framework.
+Triton's Intermediate Representations (IRs) encompass various dialects, including TTIR, TTGIR, Triton, TritonGPU, TritonNvidiaGPU, and TritonAMDGPU, each catering to specific stages of GPU programming. 
+
+
+\begin{table}[]
+    \caption{\R{Comparison of GPU performance tools}}
+    \vspace{0.3em}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lcccc}
+    \toprule
+    Tools                          & Program IR & \makecell{Intra-Kernel\\Profiling} & \makecell{Customized\\Regions} & \makecell{Platform\\Portability} \\ \hline
+    \rowcolor[HTML]{EFEFEF} 
+    NCU\cite{NVIDIANsightCompute}                            &  \Circle          &            \Circle            &      \Circle              &        \Circle              \\ 
+    RocTracer\cite{ROCmROCTracer}                      &   \Circle         &   \Circle                     &     \Circle               &     \Circle                 \\ 
+    \rowcolor[HTML]{EFEFEF} 
+    AMD ATT                        &   \Circle         &      \CIRCLE                  &      \Circle              &    \Circle                  \\ 
+    TorchProfiler\cite{torchprofiler}                  &    \Circle        &   \Circle                     &     \Circle               &    \CIRCLE                  \\ 
+    \rowcolor[HTML]{EFEFEF} 
+    Mosaic Profiler\cite{jax2018github}                &    \Circle        & \CIRCLE                       &    \CIRCLE                &    \Circle                  \\ 
+    TK Profiler\cite{spector2024thunderkittens}                    &  \Circle          &    \CIRCLE                    &     \CIRCLE               &    \Circle                  \\ 
+    \rowcolor[HTML]{EFEFEF} 
+    Tool with \thiswork{} (\S\ref{sec:tool}) &    \CIRCLE        &         \CIRCLE               &      \CIRCLE              &   \CIRCLE                   \\ \bottomrule
+    \end{tabular}
+    }
+    \vspace{-1em}
+    \end{table}
+
+\subsection{GPU Profilers}
+
+GPU performance tools are indispensable for analyzing workload execution characteristics and identifying performance bottlenecks. 
+They enable developers to understand application behavior and hardware utilization, which are critical for achieving optimal performance on GPU platforms. 
+The GPU performance tools can be divided into two major categories.
+
+\R{
+\paragraph{Performance tools} are ready-to-use profilers include NVIDIA’s Nsight Compute (NCU)\cite{NVIDIANsightCompute} and Nsight Systems (NSys)\cite{NVIDIANsightSystems}, as well as AMD’s RocTracer and RocProfiler\cite{ROCmROCProfiler}. NCU provides detailed kernel-level analysis for CUDA applications, offering various metrics and actionable optimization suggestions. NSys delivers a holistic view of system-wide performance, capturing interactions between CPU and GPU to diagnose latency and synchronization issues. Similarly, RocTracer\cite{ROCmROCTracer} supports performance optimization for AMD GPUs by tracing and analyzing applications in heterogeneous environments. An important aspect of these profiling tools is timing start and stop calls (e.g., cudaProfilerStart and cudaProfilerStop), which are implemented as host-side APIs \textit{around} kernel launch calls and not directly within kernel code. 
+}
+
+\R{
+MosaicGPU profiler\cite{jax2018github}, which inserts PTX instructions using high-level Python bindings, represents the closest idea to our approach. However, it operates at the assembly code level rather than on the high-level IRs, restricting its ability to provide comprehensive and reusable profiling capabilities.
+ThunderKitten (TK)\cite{spector2024thunderkittens}, a promising DSL for the Nvidia platform, also developed a custom timing interface recently for region-based tracing.
+However, this tool is coupled with its DSL design and only supports the Nvidia platform.
+}
+
+\paragraph{Profiling infrastructures} like CUPTI\cite{nvidia2023cupti}, NVBit\cite{villa2019nvbit}, RocProfiler offer some level of instrumentation for customization. 
+They allow developers to insert custom instructions at runtime, providing flexible profiling options. 
+However, they are tightly coupled to the program and instrumentation framework\cite{guan2024amanda}.
+This approach lacks portability and fails to integrate seamlessly with compiler workflows, limiting their ability to support cross-platform development.
+
+
+
+
+
+\subsection{GPU Overlapping Techniques}
+
+
+
+To effectively utilize GPU devices' resources and unleash their full potential, GPU kernels have to arrange diverse execution and memory units to overlap their execution to achieve better concurrency.
+With the introduction of dedicated on-chip acceleration units, such as Tensor Core\cite{choquette2018volta} and Tensor Memory Accelerator\cite{choquette2023nvidia}, their overlapping is getting much more significant and difficult.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fig/orchastration.pdf}
+    \vspace{-0.8cm}
+    \caption{GPU overlapping techniques}
+    \vspace{-1em}
+    \label{fig:orchastration}
+\end{figure}
+
+\paragraph{Wave Priority and Instruction Scheduling.} 
+The most straightforward solution for overlapping is to extend the scheduler with explicit priority setting.
+This is implemented as the wave priority technique mainly adopted by the AMD platform through compiler-based intrinsics (e.g., LLVM's \code{\_\_builtin\_amdgcn\_s\_setprio()}), which controls how wavefronts are scheduled and executed on the Compute Units (CUs) at compile-time. The CU will, at runtime, choose the wavefront with the higher priority when scheduling conflicting instruction types. By setting well-suited wave priorities, programmers can fully utilize the execution pipeline by explicit overlapping of memory loads on one wave and compute operations on another \cite{ck}. Overlapping can be further refined through compiler scheduling intrinsics such as \code{\_\_builtin\_amdgcn\_sched\_barrier()} to control the clustering and pipelining of matrix operations.
+
+\paragraph{Software Pipelining (SWP)} transforms the execution of independent loop iteration operations (i.e., memory and compute) into multiple stages to overlap between iterations, as shown in \Fig{\ref{fig:orchastration}}-(b). 
+By using asynchronous instructions for data loading~\cite{bauer_cudadma_2011} and computation, different operations can be executed concurrently to overlap the latency. 
+However, SWP requires extra scratchpad storage and registers in the loaded memory hierarchy to store the intermediate results for each stage.
+Software pipelining is usually adopted at multiple levels, such as global memory to shared memory and shared memory to register files, to hide the latency effectively.
+Besides the use for overlapping data loading and computation, SWP is also used for overlapping different sections of computations executed by separate hardware units.
+VALU, VMEM, and SMEM instructions\cite{ck, amd_isa} can all be scheduled independently - the goal is to have these run entirely in parallel to tensor/matrix core operations.
+Due to its key advantage of enhancing utilization, SWP has gained widespread acceptance in high-performance operator libraries\cite{Thakkar_CUTLASS_2023} and compiler optimizations\cite{huang_alcop_2023}.
+
+\paragraph{Warp Specialization (WS)} is another overlapping technique built with the producer-consumer model\cite{bauer_cudadma_2011,MLSYS2023_d6cde2c1}.
+After splitting execution into stages, WS assigns stages to dedicated warps as producers and consumers.
+Instead of overlapping between different stages of loop iterations, WS overlaps between producer and consumer stages in different warps as depicted in \Fig{\ref{fig:orchastration}}-(c).
+WS was previously proposed as a solution for irregular and large problems to overlap unbalanced workloads and reduce register pressure\cite{crago_wasp_2024}.
+Compared to SWP, where each warp acts as a producer and consumer, WS separates the roles so that registers can be assigned properly.
+For example, the data loading stage consumes much fewer registers compared to the heavy-lifting computation stage.
+However, this feature was not fully utilized due to the lack of hardware warp-level register allocation support.
+Recently, on the Nvidia Hopper architecture\cite{choquette2023nvidia}, novel features like register reallocation and asynchronous transaction barriers make WS achieve superior overlapping performance\cite{shah2024flashattention, Thakkar_CUTLASS_2023}.
+
+\vspace{-0.5cm}
+\section{Motivation} \label{sec:motivation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fig/motivating_examples.pdf}
+    \vspace{-0.8cm}
+    \caption{Motivating examples }
+    \vspace{-1em}
+    \label{fig:motivating_example}
+\end{figure}
+
+In this section, we analyze examples from current operator and compiler development that highlight the need for novel performance tooling, as illustrated in \Fig{\ref{fig:motivating_example}}.
+
+\paragraph{Fine-grained Comprehension.} 
+With the increasing complexity of heterogeneous execution units and asynchronous dataflow programming paradigms, it has become challenging to intuitively understand the execution pipeline. 
+Users may choose SWP or WS to orchestrate data loading and computation for the cases shown in the example. 
+However, to maximize hardware utilization, they must carefully determine stage partitions and the number of stages in SWP or decide execution orders and synchronization barriers in WS.
+Existing profilers provide aggregated results that lack the program semantics needed to correlate profiled metrics. 
+To truly understand overlapping behavior, it is essential to parse the loop structure, analyze cross-warp dependencies, and track fine-grained metrics throughout the execution. 
+Users struggle to identify and address inefficiencies effectively.
+
+\textit{\underline{Takeaway 1:}}  Performance profiling tools require the compiler’s IR to provide fine-grained performance metrics.
+
+
+
+\paragraph{Performance Optimization.} 
+Gaining a comprehensive understanding of execution behavior enables opportunities for manual optimizations. 
+However, the challenge becomes even greater when implementing auto-optimizations within compiler passes. 
+The compiler requires customizable performance feedback tied to the existing IR design to determine the optimal transformations.
+As shown in the example, selecting the appropriate overlapping design of WS and SWP requires stable performance estimations for each method. 
+The compiler pass must rely on precise profiling data to guide its optimization choices effectively. 
+A programmable performance tool embedded within the compiler infrastructure provides the essential first step in enabling this workflow.
+
+\textit{\underline{Takeaway 2:}} Compiler optimization passes need programmable performance profiling tools to effectively guide their optimization decisions.

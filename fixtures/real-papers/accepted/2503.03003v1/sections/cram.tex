@@ -1,0 +1,136 @@
+\newcommand*\BitAnd{\mathbin{\&}}
+\newcommand*\BitOr{\mathbin{|}}
+\newcommand*\BitXor{\mathbin{\hat{}}}
+\newcommand*\ShiftLeft{<<}
+\newcommand*\ShiftRight{>>}
+\newcommand*\BitNeg{\ensuremath{\mathord{\sim}}}
+
+% \vspace{-\baselineskip}
+
+%-------------------------------------------------------------------------------
+\section{The \cram Lens}
+\label{sec:cram}
+%-------------------------------------------------------------------------------
+
+We now formally introduce the \cram model, list eight optimization idioms, and preview the idioms in action. Additionally, we briefly discuss how \cram can be generalized to other hardware architectures, applied to broader network applications, and adapted to algorithmic requirements.
+
+The \cram model abstracts two modern packet processing architectures, RMT~\cite{rmt} and dRMT~\cite{drmt}. Figures depicting both can be found in \cref{subsec:rmt_drmt_overview}. A list of known RMT and dRMT implementations is provided in \cref{subsec:rmt_drmt_implementations}.
+
+{\bf RMT}: RMT is a sequential pipeline architecture of match-action stages. TCAM and SRAM are partitioned among stages such that a stage cannot access the memory of other stages.
+
+{\bf dRMT}: In contrast, dRMT features programmable processors that execute match-action operations in any order. It disaggregates memory from processors by relocating TCAM and SRAM into a shared external pool.
+
+\subsection{The \cram Model} \label{subsec:cram_model}
+
+The \cram model adds two extensions to the RAM model~\cite{ram}: first, the ability to perform an SRAM {\em or} TCAM table lookup; second, an explicit dependency structure between steps (as in RMT compilers~\cite{rmt_compilers}) that models the ability to execute multiple steps in parallel. Our goal is for the memory and run time measures of a \cram model program to be within a small constant factor of the measures for actual hardware implementations.
+
+Thus, a \cram model program is parameterized by:
+
+\begin{itemize}
+  \item A register size $w$, and a set $R$ of ($w$-bit) registers. Let $C$ denote the set of $w$-bit integers in the range $[0, 2^w-1]$.
+  \item Sets of unary ($Uops$) and binary ($Bops$) operators on $w$-bit values, e.g., $Uops = \{ +, -, \BitNeg, ! \}$ and $Bops = \{ +, -, \ShiftLeft, \ShiftRight, ==, \mathrel{\mathtt{!=}}, <, \leq, >, \geq, \BitAnd, \BitOr, \BitXor, \&\&, || \}$, with behavior as defined in languages like Java and P4~\cite{p4_ecosystem}.
+\end{itemize}
+
+A \cram model program consists of a parser $P$, a deparser $D$, and a directed acyclic graph $G$ comprised of {\em steps}. A state $S$ is a function from $R$ to $C$. $P$ is a function from all bit sequences representing packets to an initial state. $D$ is a function from a final state back to all bit sequences representing packets.
+
+A {\em step} may optionally begin with a single table lookup operation. A table $t$ consists of a match kind (exact or ternary), a key selector function $K_t$, a maximum number of entries $n_t$, and a default value $Z_t$. $K_t$'s result is a sequence of $k_t$ bits, each representing a chosen bit position within one register of $R$. An entry $e$ contains a key and associated data, with the $d_t$ bits of associated data stored in a set of $w$-bit registers $A_t$.
+
+For an exact match table, the key is a $k_t$-bit integer. A special case arises for exact match tables with $n_t = 2^{k_t}$, in which the key does not need to be explicitly stored, as it can be used to directly index into the table. For a ternary match table, the key is a pair of $k_t$-bit integers, a value $v_e$ and a mask $m_e$, plus an integer priority $p_e$. All keys in the same table must be distinct.
+
+A step consists of an optional table $t$ followed by a sequence of statements in the form $if (cond): dest = expr$. Here, $dest$ is an element of $R$, $expr$ contains a single unary or binary operator with operands from $R \cup A_t \cup C$, and $cond$ is a potentially nested expression with operands from $R \cup A_t \cup C$. No data dependencies are allowed within this sequence, i.e., for any statement in the sequence that assigns a value to $r \in R$, $r$ may not appear in $cond$ or $expr$ of any later statements. This enables all statements within a step to be executed in parallel.
+
+A step reads register $r$ if any bit of $r$ appears in the output of its key selector function $K_t$, or as part of $cond$ or $expr$ in any of its statements. A step writes register $r$ if $r$ appears as $dest$ in any of its statements.
+
+For all steps $u$ and $v$ in $G$, if $u$ writes $r$ and $v$ reads or writes $r$, then there must be a directed path $(u, v)$ or $(v, u)$. This prevents $u$ and $v$ from being executed in parallel. This condition must hold for all registers. A directed path $(u, v)$ indicates that step $u$ must be executed before step $v$. If there is no directed path between two steps, they may be executed in parallel.
+
+The \cram model introduces a set of higher-order space and time metrics. The memory footprint of a \cram model program is evaluated by calculating the total TCAM and SRAM bits across all tables $t$ in $G$. In a ternary (exact) match table, the memory used for the keys is $n_t k_t$ TCAM (SRAM) bits. For ternary match tables, we only count the $v_e$ component of the key, as these are the logical bits involved in the match. For both types of tables, the memory used for the associated data is $n_t d_t$ SRAM bits. To compute the overall TCAM and SRAM totals, simply sum the bits used across all tables. The latency of a \cram model program is evaluated by determining the number of steps (nodes) in the longest directed path in $G$.
+
+\subsection{Optimization Idioms}\label{subsec:optimization_idioms}
+
+The following idioms can be applied together in various combinations to achieve different space-time trade-offs:
+
+{\em I1. Compress with TCAM}: Entries containing wildcards must be expanded to fit into SRAM. For example, the prefix 1** would be stored as 100, 101, 110, and 111. However, by utilizing TCAM, these four SRAM entries can be compressed into a single TCAM entry (1**), thus saving nine bits.
+
+{\em I2. Expand to SRAM:} In the dual of {\em I1}, replace a TCAM block with SRAM if the expanded forms of its prefixes are less than a small constant factor $c$ of the original TCAM entries. We choose $c=3$ because TCAM requires three times more transistors per bit than SRAM~\cite{transistors}.
+
+{\em I3. Compress with SRAM:} Despite their high memory cost, directly indexed data structures such as next hop arrays are used because they avoid the extra instructions needed for hashing. However, since most RMT and dRMT ASICs are designed with the cost of performing SRAM-based lookups---whether by hashing or direct indexing---being exactly the same, it is often more advantageous to use compressed forms of SRAM storage such as hash tables instead.
+
+{\em I4. Strategic Cutting:} If several entries at a given node share a common prefix, we can save memory by strategically cutting at the bit position where the shared prefix ends, storing only one copy of the repeated bits. While this is how multibit tries~\cite{prefix_expansion} work, we extend the concept to TCAM nodes.
+
+{\em I5. Table Coalescing:} To reduce memory waste, minimally populated logical tables can be coalesced in shared physical TCAM blocks or SRAM pages. They can be differentiated with tag bits~\cite{tag_bits}. Although tagging increases the lookup key width, it minimizes physical TCAM and SRAM fragmentation.
+
+{\em I6. Look-aside TCAM:} IP lookup schemes are often optimized around common cases such as 24-bit IPv4 prefixes. As a result, uncommon entries (e.g., extremely short or long prefixes) tend to require undue computational or storage costs. We address this by moving the special prefixes into a separate look-aside TCAM that can be trivially searched in parallel.
+
+{\em I7. Step Reduction:} A program's number of steps can be reduced by leveraging match-action unit (MAU) parallelism to consolidate data-independent lookups into a single stage.
+
+{\em I8. Memory Fan-out:} In traditional RAM model architectures, a lookup table can be accessed multiple times per packet. However, many RMT and dRMT chips restrict each table to one memory access per packet. To address this limitation, we split the original table by fanning out its contents and storing entries accessed by different lookups in separate tables.
+
+%\footnote{Although it is technically possible in dRMT to access the same table multiple times per packet, doing so greatly reduces the packet processing rate because the memory access rate cannot be exceeded~\cite{drmt}.}
+
+\subsection{Idioms in Action}\label{subsec:idioms_in_action}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.47\textwidth]{figures/sail_to_resail.png}
+    \caption{From SAIL to \resail via \cram idioms}
+    \label{fig:sailtoresail}
+    \vspace{-\baselineskip}
+    \vspace{0.75em}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/dxr_to_bsic.png}
+    \caption{From DXR to BSIC via \cram idioms}
+    \label{fig:dxrtobsic}
+    \vspace{-\baselineskip}
+    \vspace{0.75em}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/multibit_to_mashup.png}
+    \caption{From multibit tries to \mashup via \cram idioms}
+    \label{fig:multibittomashup}
+    \vspace{-\baselineskip}
+\end{figure}
+
+We briefly preview the idioms in action for three fundamental classes of IP lookup: search on prefix {\em lengths}, search on prefix {\em ranges}, and trie-based search.
+
+\textbf{From \sail to \resail:} Search on prefix {\em lengths}~\cite{waldvogel, dharma, sail, binary_search_on_length, dleft} splits IP lookup into two sub-problems: finding the {\em length} of the longest match and retrieving the {\em next hop}. \sail~\cite{sail}, the best performing IPv4 lookup scheme in hardware settings with fast on-chip SRAM and cheap off-chip DRAM, uses a bitmap of length $2^L$ to determine whether there is a matching prefix of length $L$. This works well for prefixes of up to length 24 (the vast majority); for prefixes longer than 24 bits, \sail uses a complex scheme called pivot pushing that requires excessive prefix expansion~\cite{prefix_expansion}. In \cref{fig:sailtoresail}, to obtain \resail~(rethinking \sail), we: {\em I6)} Move the small number of prefixes longer than 24 bits into a separate look-aside TCAM. {\em I3)} Compress all the next hop arrays into a single hash table using a standard encoding trick~\cite{network_algorithmics}. {\em I7)} Use MAU (stage) parallelism to reduce the number of steps by performing the bitmap lookups in parallel.
+
+\textbf{From \dxr to \bsic}: Search on prefix {\em ranges}~\cite{dxr, lampson, dir, suri, changhoon} represents prefixes as range endpoint pairs (e.g., 0**$\rightarrow$[000, 011]). Finding the longest matching prefix becomes equivalent to finding the smallest range that encompasses the lookup key. \dxr~\cite{dxr}, the fastest IPv4 software implementation of range-based searches, uses an initial lookup table to split the search space into multiple smaller binary search tables. In \cref{fig:dxrtobsic}, to obtain \bsic~(Binary Search with Initial CAM), we: {\em I1)} Replace the SRAM-based initial lookup table, which supports up to 20-bit prefixes due to direct indexing, with a TCAM-based table that can store prefixes of up to 44 bits (Tofino-2 TCAM block width). {\em I8)} Replace each binary search {\em table} with a binary search {\em tree} that can be fanned out across stages. {\em I4)} Strategically cut the initial lookup table to balance TCAM required against binary search depth.
+
+\textbf{From multibit tries to \mashup:} For trie-based search~\cite{prefix_expansion, lctrie, lulea, indira, flashtrie, tree_bitmap, poptrie}, we specifically focus on multibit tries---tries that examine multiple bits, known as a stride, per lookup. We do not consider state-of-the-art {\em compressed} trie schemes like Poptrie~\cite{poptrie} and Tree Bitmap~\cite{tree_bitmap}, because in the \cram model, one can directly compress with TCAM without the extra computational and storage costs of bitmap compression. ~\cref{fig:multibittomashup} shows a standard multibit trie for the prefixes P1 = 000*, P2 = 100*, P3 = 110*, and P4 = 111*, with a 2-bit stride at the root and a 1-bit stride at the next level---chosen by strategic cutting {\em (I4)} to minimize the number of downstream pointers. In \cref{fig:multibittomashup}, to obtain \mashup~(mashup of CAM and RAM nodes), we: {\em I1)} Replace the SRAM root node with a TCAM node to eliminate the empty 01 entry, and do the same for the two upper-right nodes. {\em I2)} Leave the bottom-right node as SRAM, as it has no wasted space. {\em I5)} Coalesce the two upper-right TCAM nodes using tag bits~(not shown). While the improvement is minimal in this simple example, \cref{subsec:designing_mashup} demonstrates significant gains for large databases.
+
+Although the \cram versions of these classical schemes may seem simple, they require new algorithms to determine, for example, where to make strategic cuts and which nodes to coalesce. We elaborate on these details when describing \resail, \bsic, and \mashup in \cref{sec:resail}, \cref{sec:bsic}, and \cref{sec:mashup}, respectively.
+
+\subsection{\cram for other Hardware Architectures}\label{subsec:other_architectures}
+
+\cram can be generalized to hardware architectures beyond RMT and dRMT as follows: the space and time metrics of an algorithm specified in the \cram model serve as lower bounds on the corresponding costs in any implementation, whether in programmable switch ASICs~\cite{intel_tofino, cisco_silicon_one, nvidia_spectrum, marvell_teralynx}, SmartNICs~\cite{intel_ipu, amd_pensando, nvidia_bluefield}, FPGAs~\cite{intel_fpga, amd_fpga}, or purpose-built fixed-function ASICs designed solely to execute that algorithm. A faithful implementation of a \cram algorithm achieves a minimum latency equal to that of the longest (critical) path in its directed acyclic graph. While an implementation may have a longer latency, it cannot be shorter. Similarly, the number of bits required may match or exceed the amount specified by the \cram model, but it cannot be less.
+
+\subsection{\cram for broader Network Applications}\label{subsec:other_applications}
+
+Although this paper focuses on IP lookup, we believe \cram applies to other memory-intensive network applications. These include packet classification~(with Access Control Lists~(ACLs) and Quality of Service~(QoS) as specific instances), measurement algorithms~(such as sketching), regular expression matching, and in-network ML.
+
+% Each of these can be framed as a broader fundamental problem: matching a set of fields against a database to output a corresponding result.
+
+In packet classification~\cite{pkt_class_surv1, pkt_class_surv2, pkt_class_surv3}, packet headers are matched against a classifier, where the highest-priority match determines whether to allow or deny traffic, enforce a QoS policy, or apply a custom action. Measurement algorithms~\cite{opensketch, hashpipe, count_min_sketch, sketch_sampling}, by contrast, dynamically build and update a stateful database that tracks network statistics such as per-flow counters, traffic volume, or frequency estimates. Regular expression matching~\cite{insomnia, estan, hyperscan} compares unstructured data streams against a database of predefined patterns, often represented as finite automata~\cite{p4dfa}, to detect keywords, signatures, and anomalies. Lastly, in-network ML~\cite{homunculus, planter, inml_survey} performs inference by matching a feature vector against a classification model database, which contains decision rules mapping extracted feature values to inference labels.
+
+In practice, these applications often rely on combinations of common data structures, such as decision trees, Bloom filters~\cite{bloom_filters}, tries, hash tables, and bitmaps, many of which we demonstrate how to optimize with \cram. Consequently, our optimization idioms naturally extend beyond IP lookup. For example, the careful balancing of TCAM compression ({\em I1}) and SRAM expansion ({\em I2}) used in \mashup to create a hybrid trie, can similarly be applied to packet classification~\cite{neurocuts, hypercuts} and in-network ML~\cite{mousika, decision_tree_p4} algorithms that rely on decision trees. Likewise, the look-aside TCAM ({\em I6}) in \resail, which captures longer prefixes, can serve a similar role in offloading other specialized cases, such as multi-field wildcard classification rules~\cite{pkt_class_surv1}, heavy-hitter flows with rare protocols~\cite{hashpipe}, multi-line attack patterns~\cite{hyperscan}, and fast-patch updates for classification models~\cite{IIsy}. A more in-depth exploration of \cram's broader applicability is left for future work.
+
+\subsection{Other Algorithmic Requirements}\label{subsec:constraints}
+
+Certain algorithmic requirements introduce additional considerations. We briefly examine how \cram applies to algorithms that require atomic memory updates, stateful data plane operations, and pseudo-random keys.
+
+\textbf{Atomic memory updates:} \cram neither facilitates nor hinders an algorithm’s ability to support atomic updates~\cite{p4dfa, flowradar, atomic_updates_data_plane}. The \cram model provides an abstraction to estimate {\em performance}, not an execution model to predict {\em implementation feasibility}. If an algorithm requiring atomic updates can be implemented, the \cram model should accurately predict latency and memory.
+
+% Some algorithms achieve atomic updates with minimal constant space overhead~\cite{tree_bitmap}, while others require significant resources. The \cram model can be used to represent both kinds of algorithms.
+
+\textbf{Stateful data plane operations:} P4 register arrays are the primary mechanism for stateful operations in the data plane, as used in \cite{hashpipe, snap, conquest}. Stateful operations can be incorporated into the \cram model by introducing a new SRAM-based register match table, and counting these memory bits separately alongside regular TCAM and SRAM bits.
+
+%Updating an entry in a P4 register array is a stateful operation, as modified values persist across subsequent packets. However, the \cram model, as defined in \cref{subsec:cram_model}, does not explicitly support such operations.
+
+%In this table, each entry maps an index to its associated stateful register, effectively simulating a P4 register array. A common approach is to precede a register match table with an exact or ternary match table, using the initial lookup result as the subsequent register index.
+
+\textbf{Pseudo-random keys:} For algorithms with pseudo-random keys~\cite{halfsiphash, netcache, aes}, the efficacy of some \cram optimization idioms is clearly reduced, as uniformly distributed random bytes are difficult, if not impossible, to compress. In contrast, other idioms are unaffected by key distribution. Specifically, table coalescing ({\em I5}), look-aside TCAM ({\em I6}), step reduction ({\em I7}), and memory fan-out ({\em I8}) can still be applied. Nevertheless, the benefits of the \cram model are likely to be significantly diminished, as lack of compression eliminates a major source of optimization.

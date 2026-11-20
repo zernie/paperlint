@@ -1,0 +1,41 @@
+\section{Background}
+
+\subsection{SSH}
+
+\begin{figure}[t]
+    \centering
+    \frame{\includegraphics[width=\columnwidth]{img/SSH_Protocol_Flow.pdf}}
+    \caption{SSH handshake example, with the corresponding (partial) state machine of the server. State transitions are caused by the interleaved incoming messages, and their output is shown by the interleaved outgoing messages. We analyze this state machine for strict KEX violations. Note that the message flow on the left only shows mandatory messages, but SSH allows for various optional messages, e.g., the \msgignore messages included in the partial state machine.}
+    \Description{The figure depicts a typical SSH protocol handshake using an elliptic curve Diffie-Hellman key exchange. Client and server start by sending ASCII banners with their supported SSH version and software version, followed by algorithm negotiation via the \msgkexinit messages. The client then initiates the actual key exchange by sending \msgkexecdhinit, to which the server responds with \msgkexecdhreply and the \msgnewkeys message. The message exchange then continues inside a secure channel where the client requests the user authentication service and performs user authentication. On the right side, the corresponding state diagram of the server is depicted, which transitions according to the messages sent and received.}
+    \label{fig:ssh-hs}
+\end{figure}
+
+\paragraph{SSH Protocol} 
+
+An example of an SSH key exchange is shown in \autoref{fig:ssh-hs}. First, an ASCII banner is exchanged, followed by a \msgkexinit message containing algorithm proposals and nonces. Then, the algorithm-specific key exchange protocol is executed, which in the case of ECDH consists of the \msgkexecdhinit message, with the client's ephemeral public key, followed by a \msgkexecdhreply message containing the server's ephemeral public key and host key signature. The signature authenticates the server and critical parts of the key exchange so far. Finally, both parties send a \msgnewkeys message to complete the handshake and activate encryption. Both parties continue with the user authentication protocol. The client sends \msguserauthrequest messages to authenticate itself, e.g., with a username and password. If these are correct, the server will send the \msguserauthsuccess message. Afterward, both parties switch to the connection protocol, which provides the remote shell.
+
+\paragraph{Optional Messages} 
+
+The SSH specification defines message types that either party may optionally send. For example, the \msgignore message can be sent at any time to thwart traffic analysis attacks~\cite{USENIX:SonWagTia01}. Another example is the \msgextinfo message, which can be used to negotiate protocol extensions securely within the secure channel.
+
+\paragraph{Sequence Numbers in the Binary Packet Protocol} 
+
+SSH uses sequence numbers (SQNs) to prevent man-in-the-middle attackers from dropping or re-arranging messages conveyed through the secure channel by appending a MAC over the SQN to each packet. SQNs are implemented as two counters, one for each connection direction: a send counter and a receive counter. Unless an attacker manipulates the message sequence, the send counter of one end and the receive counter of the other end should always align. Changing the order of a message results in an invalid MAC, as the recipient would use an incorrect SQN during validation. Similarly, dropping a message would invalidate the MAC of the following message on the recipient's end. Note that unprotected messages sent before the \msgnewkeys message already increment the SQNs, but SQN verification only begins afterward, as there is no MAC included earlier.
+
+\paragraph{Terrapin Attack and Strict KEX} 
+
+The Terrapin attack presented by Bäumer~et~al.~\cite{USENIX:BauBriSch24} is a prefix truncation attack, allowing an attacker to delete initial messages from the secure channel. The attack exploits that some cipher modes continue to use the SQNs of the handshake inside the secure channel, in combination with the protocol's tolerance for optional messages. To delete a message, an attacker would first inject an optional message, such as \msgignore, which increments the receive counter of the recipient and misaligns it with the send counter of its peer. Then, after both parties sent their respective \msgnewkeys messages, the attacker can drop the first message sent to this peer, thus realigning the receive counter with the send counter of the other party. Consequently, future protected messages will not reveal that the attacker deleted a message from the secure channel, as the MAC validation succeeds.
+
+To mitigate the attack, the server and client can negotiate a \emph{strict KEX} mode that forces sequence numbers to be reset to zero when cryptographic key material is activated and defines any optional messages sent prior to \msgnewkeys as invalid, rendering the SQN manipulation technique of the Terrapin attack impossible. However, the initial definition of this requirement is quite informal~\cite[Section 1.10]{protocolopenssh}: \emph{``During initial KEX, terminate the connection if an out-of-sequence packet or any message that is not strictly required by KEX is received. This includes terminating the connection if the first packet received is not SSH2\_MSG\_KEXINIT. Unexpected packets in the context of strict KEX include messages that are otherwise  valid at any time during the connection such as SSH2\_MSG\_DEBUG, SSH2\_MSG\_IGNORE or SSH2\_MSG\_UNIMPLEMENTED.''} A more formal specification~\cite{ietf-sshm-strict-kex-00} of this countermeasure is currently being discussed for adoption by the sshm IETF working group.
+
+\subsection{State Learning}
+
+State Learning usually consists of four elements: a \textit{learner}, a \textit{mapper}, an \textit{equivalence oracle}, and a \textit{system under learning} (SUL). The user defines an abstract set of input symbols (\textit{alphabet}). The learner constructs chains of symbols (\textit{words}) to formulate queries. The mapper receives these queries and transforms the individual abstract symbols into meaningful protocol messages to be sent to the SUL. The mapper collects the responses of the SUL, transforms them into abstract protocol messages, and returns them to the learner as the result of the requested query. Providing an abstraction for the responses allows the learner to discern semantic differences in the output, rather than meaningless differences caused, for example, by random nonces in each invocation of the protocol. By observing the output of different queries, the learner generates a \textit{hypothesis} of the SUL's state machine. Ideally, this hypothesis can be used to accurately predict the output of the SUL for any sequence of symbols of the alphabet.
+
+\paragraph{Equivalence Tests}
+
+After forming a hypothesis, the \textit{equivalence oracle} checks its correctness by generating queries and comparing the responses of the hypothesis and the SUL. A mismatch yields a \textit{counterexample}, which the learner uses to refine the hypothesis. This process is repeated until no more counterexamples are found. The final hypothesis is then assumed to represent the SUL accurately. Various strategies, such as random queries, are used to find counterexamples.
+
+\paragraph{Choosing the Alphabet}
+
+Designing the input alphabet is a key challenge in state learning. It requires expert knowledge of the protocol to define symbols that enable the learner to distinguish states based on observable responses. Symbols that do not reveal behavioral differences should be avoided, as execution time typically grows exponentially with alphabet size. Since the actual effect of each symbol becomes apparent only during learning, input selection must rely on informed assumptions.

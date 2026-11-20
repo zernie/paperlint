@@ -1,0 +1,161 @@
+\documentclass[sigconf]{acmart}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[CCS '25]{Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security}{October 13--17, 2025}{Taipei, Taiwan}
+\acmBooktitle{Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security (CCS '25), October 13--17, 2025, Taipei, Taiwan}
+\acmDOI{10.1145/3719027.3765079}
+\acmISBN{979-8-4007-1525-9/2025/10}
+
+\input{preamble}
+\input{commands}
+
+\begin{document}
+
+\title{On the Security of SSH Client Signatures}
+
+\author{Fabian B{\"a}umer}
+\orcid{0009-0006-5569-6625}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{fabian.baeumer@rub.de}
+
+\author{Marcus Brinkmann}
+\orcid{0000-0001-5649-6357}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{marcus.brinkmann@rub.de}
+
+\author{Maximilian Radoy}
+\orcid{0009-0005-3059-6823}
+\affiliation{%
+  \institution{University Paderborn}
+  \city{Paderborn}
+  \country{Germany}}
+\email{maximilian.radoy@upb.de}
+
+\author{J{\"o}rg Schwenk}
+\orcid{0000-0001-9315-7354}
+\affiliation{%
+  \institution{Ruhr University Bochum}
+  \city{Bochum}
+  \country{Germany}
+}
+\email{joerg.schwenk@rub.de}
+
+\author{Juraj Somorovsky}
+\orcid{0000-0002-3593-7720}
+\affiliation{
+  \institution{University Paderborn}
+  \city{Paderborn}
+  \country{Germany}
+}
+\email{juraj.somorovsky@upb.de}
+
+\renewcommand{\shortauthors}{Fabian Bäumer, Marcus Brinkmann, Maximilian Radoy, Jörg Schwenk, and Juraj Somorovsky}
+
+\begin{abstract}
+  \input{sections/000-abstract}
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002944.10011123.10010916</concept_id>
+       <concept_desc>General and reference~Measurement</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003033.10003039.10003048</concept_id>
+       <concept_desc>Networks~Transport protocols</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002978.10002979.10002981.10011602</concept_id>
+       <concept_desc>Security and privacy~Digital signatures</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002978.10002979.10002983</concept_id>
+       <concept_desc>Security and privacy~Cryptanalysis and other attacks</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{General and reference~Measurement}
+\ccsdesc[500]{Networks~Transport protocols}
+\ccsdesc[500]{Security and privacy~Digital signatures}
+\ccsdesc[300]{Security and privacy~Cryptanalysis and other attacks}
+
+\keywords{SSH, Authentication, Digital Signatures, Cryptographic Attacks, Measurement, Public Key Cryptography}
+
+\maketitle
+
+%-------------------------------------------------------------------------------
+\section{Introduction}
+%-------------------------------------------------------------------------------
+\input{sections/010-introduction}
+
+
+%-------------------------------------------------------------------------------
+\section{Background}
+%-------------------------------------------------------------------------------
+\input{sections/020-background}
+
+%-------------------------------------------------------------------------------
+\subsection{Authentication Protocol Ecosystem}
+%-------------------------------------------------------------------------------
+\input{sections/021-authenticationprotocol}
+
+%-------------------------------------------------------------------------------
+\section{Methodology}
+%-------------------------------------------------------------------------------
+\input{sections/030-methodology}
+
+%-------------------------------------------------------------------------------
+\section{SSH Client Keys}
+%-------------------------------------------------------------------------------
+\input{sections/040-keys}
+
+%-------------------------------------------------------------------------------
+\section{SSH Client Signatures}
+%-------------------------------------------------------------------------------
+\input{sections/050-signatures}
+%-------------------------------------------------------------------------------
+\section{Related Work}
+%-------------------------------------------------------------------------------
+\input{sections/060-related-work}
+
+%-------------------------------------------------------------------------------
+\section{Discussion}
+%-------------------------------------------------------------------------------
+\input{sections/070-countermeasures}
+
+%-------------------------------------------------------------------------------
+\section{Conclusions}
+%-------------------------------------------------------------------------------
+\input{sections/080-conclusion}
+
+\begin{acks}
+\input{sections/090-ack}
+\end{acks}
+
+\bibliographystyle{ACM-Reference-Format}
+\balance
+\bibliography{bib/abbrev2,bib/crypto,bib/rfc,bib/paper}
+
+\end{document}
+\endinput

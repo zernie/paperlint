@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2025.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "tex/0-abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/1-intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/intro-fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/2-related.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/3-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/diffusion-fmcw.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/lens-less-explained.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/4-technical.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/pipeline.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/lens-less-sampling-v2-fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/main_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/speed_mem_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/5-results.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/quant-results-updated.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/render-example.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/nvs_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/abl_Nplane_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/abl_Nt_Nlevel_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/abl_Nr_Nz_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/abl_mask_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/abl_diff_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/6-conc.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/near-far-fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/mf_bf_ex_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/mf_groundtruth.tex",
+      "role": "body"
+    },
+    {
+      "path": "tex/suppl.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/nvs_explanation_fig.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "87773abcc72207e3eb6453b2a328fc0973fa024d24c37e016814e18d055e0faf",
+    "neurips_2025.sty": "ef7a55f0a7c9da12fea39af7990a6a314a721b74a23b1544f252e55fcba940cd",
+    "tex/0-abstract.tex": "82782b5806920125ba7eb698420d383884ca5d532b06dbf17bf30a14c39169f9",
+    "tex/1-intro.tex": "5802027b1af1e5368129f3493cf2d9617cac3de52a8a30958767b16eaa88836e",
+    "figures/intro-fig.tex": "54599bd97b66a1299655a032390930e20f32f19fb3b6b57d430950ac5e92e5a7",
+    "tex/2-related.tex": "ee2f23b607ad81654d31bf62249cb0be095428d730f565e37015f4bbce51d382",
+    "tex/3-background.tex": "e4082954db7a9402bf68950947087515db76f9e2d705673c9e950dfe9e6f7e5b",
+    "figures/diffusion-fmcw.tex": "a5e821e44cd35b36687a5088abcf4763096a7a851cba926d26bc333c41dfcff3",
+    "figures/lens-less-explained.tex": "ad6cfe61512b5214ef83680959b2fe389ca8939f2fd1f4035a2471b854f0a90b",
+    "tex/4-technical.tex": "5478747193e6a00c9c4d34bce37b4292ac38bde585a0a6a0652eb212b156b38e",
+    "figures/pipeline.tex": "2da7453ad8a016cabd01c2532ccf42f63b0289f7071fae5f8e33014a055b84aa",
+    "figures/lens-less-sampling-v2-fig.tex": "482bb90cdaaec193bac4be36cb447df0173d939fb49f3b69a19cc382a359b7a6",
+    "figures/main_results.tex": "1d5b27e155a27d84c2b805fa9c4611a570edc2816f6a161e596664315bc8b916",
+    "figures/speed_mem_fig.tex": "91197bcda2535cf211d15f287baa415141d89acded4dead8d01e32a93b3d46f4",
+    "tex/5-results.tex": "414c5a51768c5952d29a68ef954fdcf89e9044525b341aa0a7b65f9d9252175d",
+    "figures/quant-results-updated.tex": "51c04da073d9d80d637c48768c643f44e30e5d77a11668f35727e7eba270d39c",
+    "figures/render-example.tex": "6609d1a0a29da353c7313b09bff1e732c17842a3b496a2648f3ca7bb02a41610",
+    "figures/nvs_fig.tex": "99661d42a207e1c1280870ab52d3364b7daf19ee9020bab9ec98a3df09065b9e",
+    "figures/abl_Nplane_fig.tex": "6b9dc5adf45970bb38d58bd3452981b2fde6bf7ca10da9d8aeff135733319837",
+    "figures/abl_Nt_Nlevel_fig.tex": "200f97dc79184e2318260d31743ac6a1eac3db8b100c848a09423e468e5eb78c",
+    "figures/abl_Nr_Nz_fig.tex": "75f3245a1ee3e7f7c27215434e0b597a2d2f3e881cec3f18c6d5ebd086b725ec",
+    "figures/abl_mask_fig.tex": "832c771977ea0c7272b912508f908f360efd13487502858fc8bea89d6e7665e9",
+    "figures/abl_diff_fig.tex": "3e9e9ade4650caa29c9c82c32789587610737c908d2a330c917405592fd5c8d1",
+    "tex/6-conc.tex": "e77f815de39f0bb572e2e83ed68f98171023acdd776fd3bb440e59114e089384",
+    "tex/appendix.tex": "7b517ab90c8423960853d34b7f8eca69ba28862978b5e322d8e3b9738391bc7c",
+    "figures/near-far-fig.tex": "46212c768cb7ff20f1e7a2ce73b572d38ff7fa3601b91ff65c94ca10a17d8404",
+    "figures/mf_bf_ex_fig.tex": "5edf433c12763754459d69cadba750533ee20f1688e288f3179b3edc6c7085ce",
+    "figures/mf_groundtruth.tex": "2f51fc5e21225548caf1fe808065a776d85d3573dc142060b1c0e9b86c288888",
+    "tex/suppl.tex": "ab7858cb5be996fa8c7b0749ee4b47f39e4f62ef2ef40892df1bbe4e6d615e45",
+    "figures/nvs_explanation_fig.tex": "483fb8f4986058c80c72444010c9d29a08979c1c2359df166753c5a538330d93"
+  }
+}

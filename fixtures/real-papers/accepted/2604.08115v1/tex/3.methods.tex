@@ -1,0 +1,72 @@
+\section{\textsc{Revise}}
+
+
+The \textsc{Revise} framework systematically addresses OCR errors that occur at the character, word, and structural levels. Specifically, our approach involves: (1) a comprehensive OCR error taxonomy that hierarchically categorizes errors according to their linguistic granularities, (2) a contamination strategy for synthesizing realistic error patterns by injecting them into clean datasets, and (3) a training procedure designed to revise contaminated text sequences back to their original forms.
+
+\subsection{OCR Error Categorization}
+\label{categorize}
+
+
+
+
+OCR errors negatively impact various downstream NLP tasks, including key extraction, named entity recognition, and information retrieval. \citet{error_cascade} has demonstrated that errors introduced in early processing stages propagate to subsequent stages, resulting in cumulative error cascades.
+Motivated by these challenges, we conduct a comprehensive analysis of OCR error patterns across various document types. Based on the scope and influence of errors within textual structures, we propose a hierarchical OCR error taxonomy as illustrated with examples in Table~\ref{tab:categorization}, consistent with existing frameworks found in the post-OCR correction literature. 
+
+\input{table/categorization}
+
+\subsubsection*{Character-level}
+Character-level errors encompass a range of misrecognitions and distortions that occur at the individual character scale, fundamentally altering the basic building blocks of text and potentially cascading into more significant semantic disruptions. \textbf{\textit{Insertion}} represents the addition of spurious characters into the text stream, commonly resulting from document noise, artifacts, or scanner interference~\cite{afli-etal-2016-using, kashid2025roundtripocrdatagenerationtechnique}. \textbf{\textit{Deletion}} involves the omission of legitimate characters, frequently occurring when poor contrast or faded text prevent proper recognition~\cite{7991582}. \textbf{\textit{Substitution}} occurs when the OCR incorrectly identifies characters, replacing them with visually similar alternatives due to font peculiarities or resolution limitations, resulting in common confusions such as ``l/1/!'',``5/S'' and ``0/O''~\cite{artidigh20, essay102117}. \textbf{\textit{Transposition}} results in character position swapping, often stemming from bounding box coordinate miscalculations~\cite{suissa2023optimizingneuralnetworktraining}.
+
+
+\subsubsection*{Word-level} 
+Word-level errors primarily manifest as improper segmentation issues, where the boundaries between words are incorrectly identified, leading to the fragmentation or merging of terms and significantly impacting the lexical integrity of the processed text. Segmentation stems from OCR's misidentification of word boundaries, taking the form of two distinct types~\cite{suissa2023optimizingneuralnetworktraining, afli-etal-2016-using}. \textbf{\textit{Over-segmentation}} occurs when OCR incorrectly inserts word boundaries (i.e., extra space) within what should be a single word, fragmenting cohesive terms into separate components. \textbf{\textit{Under-segmentation}} results from distinct words erroneously combining into a single unit due to spacing misinterpretation or layout analysis failures. \citet{nastase-hitschler-2018-correction} demonstrate how these errors impact keyword extraction and information retrieval, as they alter token distribution and disrupt phrase-level semantics.
+
+
+
+
+
+\subsubsection*{Column-level}
+Column-level errors refer to structural misinterpretations that disrupt the logical flow of text and distort the intended document layout. Documents with multiple columns are particularly vulnerable to these errors, potentially misarranging reading order and weakening overall coherence and readability. \textbf{\textit{Column reading order}} frequently arises due to the common assumption of a standard reading order from left to right and top to bottom. This assumption tends to cause incorrect interpretations of logical continuity within multi-column layouts, leading to misplaced text segments~\cite{wang2023textreadingorderuncontrolled, wang2021layoutreaderpretrainingtextlayout}. Such layout errors can significantly impact various downstream NLP tasks, severely compromising overall task performance even when the OCR's textual output itself is relatively accurate~\cite{artidigh20}.
+
+By categorizing OCR errors according to this hierarchical taxonomy, it becomes possible to devise customized correction strategies tailored to tackle specific errors at their corresponding levels of textual organization. This approach serves as a foundation for generating effective error revision datasets.
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Data Contamination Strategy}
+\label{strategy}
+To train the revision model effectively, we utilize publicly available datasets and systematically introduce synthetic OCR errors based on the error categories defined in Section~\ref{categorize}. Our contamination strategy is designed to mimic both structural and granular OCR failures in a controlled manner, creating a realistic training corpus that reflects the hierarchical error patterns observed in real-world OCR outputs.
+
+The contamination process unfolds in two stages. First, we create a structured template by dividing the raw text into fixed-length lines, reformatting to a single column layout. Next, we simulate \textit{Column reading order} errors by segmenting the text into sections, converting selected sections into multi-column formats, and reading horizontally across columns instead of vertically down each column. This approach mirrors how OCR systems typically misinterpret multi-column layouts, where text is incorrectly read left to right across columns rather than processing each column separately.
+
+
+In the second stage, after the structural reordering, a set of error functions is applied to introduce distortions at the character, word, and sentence levels. \textit{Deletion}, \textit{Insertion}, \textit{Substitution}, and \textit{Transposition} are applied probabilistically, while \textit{Segmentation} errors are introduced by either inserting extra spaces or omitting existing spaces. Each error function is governed by configurable parameters to ensure a realistic blend of error types. The framework supports multiple contamination settings;
+ 
+in this work, we primarily adopt a configuration that emphasizes fine-grained perturbations. This approach closely emulates common OCR errors while maintaining sufficient overall document coherence. {Detailed information regarding the contamination algorithms and parameter ratios can be found in the Appendix~\ref{apx:cp}.} 
+The final output is a contaminated corpus reflecting typical OCR-induced distortions, forming the basis for training our \textsc{Revise} model to correct OCR outputs and improve downstream document processing tasks robustly.
+
+
+
+
+
+\input{table/retrieval}
+\subsection{Training}
+
+For effective OCR error correction, we design a total of seven \textsc{Revise} models, consisting of one main model trained comprehensively on all error types and six auxiliary models, each specialized individually on a specific error type. All models share an identical backbone architecture, the Llama-3.1-1B-Instruct~\footnote{\url{https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct}}, and are trained on synthetic data generated using text sampled from the Wikipedia~\footnote{\url{https://huggingface.co/datasets/wikimedia/wikipedia}} corpus. To ensure fair and consistent comparisons between models, each dataset comprises an equal number of samples, totaling 30,000 data points.
+
+The central model proposed in this paper, \textsc{Revise}$_{meta}$, is designed to robustly handle realistic and general document processing scenarios. Specifically, based on the strategy described in \S~\ref{strategy}, \textsc{Revise}$_{meta}$ is trained comprehensively on data that incorporates the six major error categories frequently confronted in practical OCR systems: column reading order, segmentation, deletion, substitution, insertion, and transposition errors. Thus, the model is capable of effectively handling and correcting complex and diverse errors that commonly arise during OCR processing of documents.
+
+To precisely analyze the performance of \textsc{Revise} and to better understand the characteristics and correction difficulties associated with each error type, we further train six specialized auxiliary models, each focusing exclusively on a single type of OCR error. These specialized models are individually trained on data injected with only one specific error category, thereby allowing each model to be optimized for correcting its particular error type.
+
+Through this experimental design, we evaluate the overall effectiveness and practical applicability of the \textsc{Revise}$_{meta}$ model when dealing with realistic OCR error scenarios. Additionally, comparisons between the generalized and respective error-targeted models enable us to quantify and analyze the relative importance and characteristics of each specific type of error, as well as their influence on the overall OCR error correction pipeline. Ultimately, our goal is to clearly identify the strengths and weaknesses of generalized versus error-specific approaches, dependent upon the characteristics of documents and distributions of errors encountered, thereby providing practically useful guidelines for real-world implementations.
+
+
+

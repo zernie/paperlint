@@ -1,0 +1,40 @@
+\begin{tikzpicture}
+\begin{axis}[
+    width=6cm, % Set the width of the plot to the text width of the subfigure
+    height=6cm, % You can adjust the height as needed
+    xlabel={$n$ (squared-matrix size)},
+    legend pos=north east,
+    grid=both,
+    % xmin=2, xmax=64,
+]
+
+\addplot table {
+n	FHE-DataSeal
+2	0.3499
+4	0.1707
+6	0.1224
+8	0.0867
+16	0.0444
+24	0.0298
+32	0.0242
+64	0.0047665748
+};
+\addlegendentry{FHE-DataSeal}
+
+\addplot table {
+n   FHE+MAC
+2 0.832
+4 1.426
+6 2.521
+8 3.10581
+16 5.769
+24 8.082796059
+32 10.348
+64 16.956
+};
+\addlegendentry{FHE-MAC}
+
+
+
+\end{axis}
+\end{tikzpicture}

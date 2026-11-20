@@ -1,0 +1,257 @@
+\documentclass[acmsmall,screen]{acmart}
+
+\usepackage{amsmath,amsfonts}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{listings} %
+\lstset{ %
+xleftmargin=0.02\textwidth,  %
+xrightmargin=0.02\textwidth, %
+basicstyle=\ttfamily\footnotesize,%
+keywordstyle=\color{blue},%
+stringstyle=\color{red},  %
+commentstyle=\color{gray},%
+showstringspaces=false,  %
+frame=single,            %
+breaklines=true,         %
+numbers=none,            %
+tabsize=2,               %
+}
+\usepackage{wrapfig}
+\usepackage[english]{babel}
+\usepackage[figuresright]{rotating}
+\usepackage[flushleft]{threeparttable}
+\newcommand{\toolname}{STP}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{bbm}
+\usepackage{array}
+\usepackage{graphicx} %
+\usepackage{caption}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{fancybox}
+\newcommand{\myul}[2][black]{\setulcolor{#1}\ul{#2}\setulcolor{black}}
+
+\usepackage{supertabular,booktabs}
+\usepackage{soul}
+\soulregister\cite7 %
+\soulregister\citep7 %
+\soulregister\citet7 %
+\soulregister\ref7 %
+\soulregister\pageref7 %
+
+\usepackage[normalem]{ulem}
+\newcommand{\revise}[1]{{\color{black}{#1}}}
+\newcommand{\delete}[1]{}
+
+\newcommand{\newrevise}[1]{{\color{black}{#1}}}
+\newcommand{\newdelete}[1]{}
+
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\usepackage{CJKutf8}
+\usepackage{enumitem}
+
+
+\newcommand{\todoc}[2]{{\textcolor{#1}{\textbf{#2}}}}
+\newcommand{\TODO}[1]{\todored{TODO: #1}}
+
+\newcommand{\todored}[1]{{\todoc{red}{\textbf{[[#1]]}}}}
+\newcommand{\todogreen}[1]{\todoc{green}{\textbf{[[#1]]}}}
+\newcommand{\todoblue}[1]{\todoc{blue}{\textbf{[[#1]]}}}
+\newcommand{\todoorange}[1]{\todoc{orange}{\textbf{[[#1]]}}}
+\newcommand{\todobrown}[1]{\todoc{brown}{\textbf{[[#1]]}}}
+\newcommand{\todogray}[1]{\todoc{gray}{\textbf{[[#1]]}}}
+\newcommand{\todopink}[1]{\todoc{pink}{\textbf{[[#1]]}}}
+\newcommand{\todopurple}[1]{\todoc{purple}{\textbf{[[#1]]}}}
+
+\usepackage[most]{tcolorbox}
+
+\newcommand{\finding}[2]{
+\begin{center}
+\begin{tcolorbox}[leftrule=0mm,toprule=0mm,bottomrule=0mm,rightrule=0mm,left=1pt,right=2pt,top=0pt,bottom=0pt,breakable]
+\textbf{Finding {#1}:}
+{#2}
+\end{tcolorbox}
+\end{center}
+}
+
+\newcommand{\summary}[1]{
+\begin{center}
+\begin{tcolorbox}[leftrule=0mm,toprule=0mm,bottomrule=0mm,rightrule=0mm,left=1pt,right=2pt,top=0pt,bottom=0pt,breakable]
+\textbf{Summary:}
+{#1}
+\end{tcolorbox}
+\end{center}
+}
+
+
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+\newcommand{\zqj}[1]{{\color{blue}{\textbf{[ZQJ: #1]}}}}
+
+\newcommand{\gsq}[1]{{\color{orange}{\textbf{[GSQ: #1]}}}}
+
+\newcommand{\fcr}[1]{{\color{red}{\textbf{[FCR: #1]}}}}
+
+\setcopyright{acmcopyright}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+\acmJournal{PACMSE}
+\acmVolume{0}
+\acmNumber{ISSTA}
+\acmArticle{0}
+\acmMonth{0}
+
+\acmConference[ISSTA 2025]{ACM SIGSOFT International Symposium on Software Testing and Analysis}{25-28 June, 2025}{Trondheim, Norway}
+
+
+
+
+
+
+\begin{document}
+
+\title{A Large-scale Empirical Study on Fine-tuning Large Language Models for Unit Testing}
+
+\author{Ye Shang} 
+\orcid{0009-0000-8699-8075}
+\authornote{Both authors contributed equally to this research.}
+\email{201250032@smail.nju.edu.cn}
+
+\author{Quanjun Zhang} 
+\orcid{0000-0002-2495-3805}
+\email{quanjun.zhang@smail.nju.edu.cn}
+\authornotemark[1]
+\affiliation{
+  \institution{State Key Laboratory for Novel Software Technology, Nanjing University}
+  \city{Nanjing}
+  \state{Jiangsu}
+  \country{China}
+  \postcode{210093}
+}
+
+\author{Chunrong Fang} 
+\orcid{0000-0002-9930-7111}
+\email{fangchunrong@nju.edu.cn}
+\authornote{Chunrong Fang is the corresponding author.}
+\affiliation{
+  \institution{State Key Laboratory for Novel Software Technology, Nanjing University}
+  \city{Nanjing}
+  \state{Jiangsu}
+  \country{China}
+  \postcode{210093}
+}
+
+\author{Siqi Gu} 
+\orcid{0000-0001-5514-6734}
+\email{siqi.gu@smail.nju.edu.cn}
+\affiliation{
+  \institution{State Key Laboratory for Novel Software Technology, Nanjing University}
+  \city{Nanjing}
+  \state{Jiangsu}
+  \country{China}
+  \postcode{210093}
+}
+
+\author{Jianyi Zhou}
+\email{zhoujianyi2@huawei.com}
+\orcid{0000-0002-4867-5416}
+\affiliation{
+  \institution{Huawei Cloud Computing Technologies Co., Ltd.}
+  \city{Beijing}
+  \country{China}
+  \postcode{100085}
+}
+
+\author{Zhenyu Chen}
+\email{zychen@nju.edu.cn}
+\orcid{0000-0002-9592-7022}
+
+\affiliation{
+  \institution{State Key Laboratory for Novel Software Technology, Nanjing University}
+  \city{Nanjing}
+  \state{Jiangsu}
+  \country{China}
+  \postcode{210093}
+}
+
+
+\begin{abstract}
+
+Unit testing plays a pivotal role in software development, improving software quality and reliability. However, generating effective test cases manually is time-consuming, prompting interest in unit testing research. 
+Recently, Large Language Models (LLMs) have shown potential in various unit testing tasks, including test generation, assertion generation, and test evolution, but existing studies are limited in scope and lack a systematic evaluation of the effectiveness of LLMs. 
+
+To bridge this gap, we present a large-scale empirical study on fine-tuning LLMs for unit testing.
+Our study involves three unit testing tasks, five benchmarks, eight evaluation metrics, and 37 popular LLMs across various architectures and sizes, consuming over 3,000 NVIDIA A100 GPU hours.
+We focus on three key research questions: (1) the performance of LLMs compared to state-of-the-art methods, (2) the impact of different factors on LLM performance, and (3) the effectiveness of fine-tuning versus prompt engineering. 
+Our findings reveal that LLMs outperform existing state-of-the-art approaches on all three unit testing tasks across nearly all metrics, highlighting the potential of fine-tuning LLMs in unit testing tasks. 
+Furthermore, large-scale, decoder-only models achieve the best results across tasks, while encoder-decoder models perform better under the same parameter scale. 
+Additionally, the comparison of the performance between fine-tuning and prompt engineering approaches reveals the considerable potential capability of the prompt engineering approach in unit testing tasks. 
+We then discuss the concerned issues on the test generation task, including data leakage issues, bug detection capabilities, and metrics comparisons. 
+Finally, we further pinpoint carious practical guidelines for LLM-based approaches to unit testing tasks in the near future.
+Overall, our work demonstrates the promising future of fine-tuning LLMs on unit testing tasks and reduces the manual efforts of unit testing experts in practical scenarios.
+
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+	<concept>
+	<concept_id>10011007.10011074.10011099.10011102.10011103</concept_id>
+	<concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~Software testing and debugging}
+
+\keywords{Software Testing, Unit Testing, Large Language Model,  AI for SE}
+
+\maketitle
+
+
+\input{section/1_Introduction}
+
+\input{section/2_Background}
+
+\input{section/3_Study_Design}
+
+\input{section/4_Result_Analysis}
+
+\input{section/5_Discussion}
+
+\input{section/6_Guideline}
+
+
+\input{section/6_5_Validity}
+
+\input{section/7_Conclusion}
+
+\section{Data Availability}
+Our experimental materials are available at \url{https://github.com/iSEngLab/LLM4UT_Empirical}.
+
+\section*{Acknowledgments}
+The authors would like to thank the anonymous reviewers for their insightful comments.
+This work is supported partially by the National Natural Science Foundation of China (61932012, 62372228), CCF-Huawei Populus Grove Fund (CCF-HuaweiSE202304, CCF-HuaweiSY202306) and Science, Technology and Innovation Commission of Shenzhen Municipality (CJGJZD20200617103001003).
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference}
+
+
+
+\end{document}

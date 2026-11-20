@@ -1,0 +1,33 @@
+\section{Related Work}
+\label{sec:relatedwork}
+
+% \yicheng{Todo}
+\textbf{OS-level covert and side channel attacks.} The OS is designed to ensure isolation between multiple users or processes. However, researchers have demonstrated that side-channel leakages can compromise this isolation, exposing sensitive information like passwords and keystrokes. On Linux, Zhang and Wang~\cite{zhang2009peeping} first demonstrated side-channel attacks via \textit{procfs}, enabling the eavesdropping of users' keystrokes. Qian et al.~\cite{qian2012collaborative} then leveraged error packet counters in \texttt{/proc/net/} to execute off-path TCP session hijacking. Recently, Shen et al.~\cite{shen2023mes} exploited mutual exclusion and synchronization mechanisms (MES) to establish covert channels for data transmission.
+On Android, 
+% Chen et al.~\cite{chen2014peeking} revealed a shared-memory side channel in the GUI framework that allows UI state inference without requiring permissions. 
+Diao et al.~\cite{diao2016no} identified critical information leakage in Android's interrupt handling mechanism. Similarly, on iOS, Zhang et al.~\cite{zhang2018level} were the first to uncover OS-level side-channel vulnerabilities in iOS, exposing attack vectors such as memory and network usage APIs. Our work uncovers a novel vector of OS-level leakage, focusing specifically on file system synchronization calls within shared file systems.
+
+\textbf{I/O-related attacks.}  Our attacks fall into the category of I/O-related attacks. Prior research has demonstrated that contention leakages on I/O can be exploited to establish covert and side channels. On one hand, timing leakages from contention have been shown on physical I/O components in modern computers, such as PCIe, CPU ring bus, and NVLink. For example, Tan et al.~\cite{tan2021invisible} introduced PCIe congestion side-channel attacks across GPUs, Network Interface Cards (NICs), and Solid-State Drives (SSDs). Similarly, Mert Side et al.~\cite{side2022lockeddown} introduce a novel side channel vulnerability exploiting contention on the host-GPU PCIe bus, a critical interface in modern GPUs used in both traditional and cloud computing.  Paccagnella et al.~\cite{paccagnella2021lord} and Dutta et al.~\cite{dutta2021} propose microarchitectural side channel attacks leveraging contention on the CPU ring interconnect. Similar contention-based attacks have also been executed on other hardware architectures, such as CPU Mesh~\cite{wan2022meshup}. 
+% Wan et al.~\cite{wan2022meshup} present MESHUP, a stateless cache side-channel attack targeting the mesh interconnect of server-grade CPUs. 
+% Dai et al.~\cite{dai2022don} also demonstrate side-channel attacks targeting Intel's mesh interconnect, revealing how attackers can exploit contention to build a 1.53 Mbps covert channel and extract keys from cryptographic implementations. 
+Recently, Zhang et al.~\cite{zhang2024beyond} reveal vulnerabilities in NVLink interconnects, demonstrating a covert channel across GPUs and an application fingerprinting side channel attack using congestion-based timing leakages. 
+On the other hand, software I/O has also been investigated for contention-based leakages. Gruss et al.~\cite{gruss2019page} introduced a software side-channel attack on the OS page cache, allowing unprivileged monitoring of memory access patterns. 
+
+\textbf{Comparison with \textit{fsync}-based attacks.}
+More recently, Chen et al.{~\cite{chen2023sync+}} proposed a set of software cache write covert channels that exploit file system synchronization primitives. Similarly, Jiang et al.{~\cite{jiang2024sync+}} presented Sync+Sync, a timing-based covert channel leveraging contention in \textit{fsync} calls on shared persistent storage. Both of these works depend on contention from concurrent \textit{fsync} API invocations and are limited to forming covert channels. 
+Jiang et al.{~\cite{jiang2024sync+}} introduced \textit{fsync}-based contention leakage for website fingerprinting, requiring both the victim and attacker to use the \textit{fsync} system call to create contention. However, their approach is limited by the similar number of \textit{fsync} calls across websites, resulting in low accuracy for website fingerprinting, with reliable identification for \textbf{only two} websites (\texttt{qq.com} and \texttt{sina.com.cn}). 
+In contrast, our method utilizes each website's unique \textit{syncfs} delay pattern, which reflects the sequence of write operations and sizes, patterns that are unique to the website content and structure.  As a result, the attack achieves over 93\% average F1 score in a 100-class website fingerprinting attack.
+
+% \hlc[cyan!40]{Prior work on web fingerprinting using \textit{fsync} is limited by the similar number of \textit{fsync} calls across websites, leading to low classification accuracy. In fact, reliable identification was achieved for only two websites: \texttt{qq.com} and \texttt{sina.com.cn}. In contrast, our approach leverages each website’s unique \textit{syncfs} delay pattern, which captures differences in write frequency and content size. It requires no special behavior from the victim (such as explicitly invoking \textit{fsync}) and achieves over 93\% average F1 score in a 100-class website fingerprinting task.
+% }
+% Our work exploits delay patterns in \textit{syncfs}, a fundamentally different approach to contention-based leakages, which does not require the victim application to execute any I/O system calls, enabling us to implement both robust covert channels and high-resolution side channel attacks.
+
+
+\textbf{Cross-container attacks.} Multi-tenancy is the feature of cloud computing that allows computation instances from different tenants to run on the same physical server. However, a series of work has demonstrated the cross-container attack on the cloud.  
+ Ristenpart et al.~\cite{ristenpart2009hey}  is the first work on co-residence detection on the commercial cloud server. Gao et al.~\cite{gao2018study} identify information leakage channels in multi-tenancy container clouds caused by incomplete Linux kernel isolation mechanisms. Recently, Zhao et al.~\cite{zhao2024last} conducted co-location attacks in public Function-as-a-Service (FaaS) environments, focusing on Google Cloud Run. Later, they successfully an end-to-end LLC Prime+Probe side-channel attack on Google Cloud Run~\cite{zhao2024everywhere}. 
+ 
+ 
+
+
+
+

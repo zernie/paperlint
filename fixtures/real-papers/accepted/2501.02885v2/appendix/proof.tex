@@ -1,0 +1,183 @@
+\section{Proofs}
+
+\subsection{Preliminaries}
+
+\begin{definition}[Submodular Maximization~\cite{lovasz1983submodular}]\label{thm:sub_def}
+	Let $\Omega$ denote a finite set, and let $f: 2^{\Omega} \rightarrow \mathbb{R}_{\geq 0}$ be a set function, where $2^{\Omega}$ is the power set of $\Omega$. The function $f$ is called submodular if it satisfies one of the following three equivalent conditions:
+	\begin{itemize}
+		\item For every $X, Y \subseteq \Omega$ with $X \subseteq Y$, and for all $x \in \Omega \setminus Y$, we have 
+			\begin{equation}
+				f(X \cup \{x\}) - f(X) \geq f(Y \cup \{x\}) - f(Y) \,,
+			\end{equation}
+		\item For every $X, Y \subseteq \Omega$, we have 
+			\begin{equation}\label{thm:sub_def_cond2}
+				f(X) + f(Y) \geq f(X \cup Y) + f(X \cap Y) \,,
+			\end{equation}
+		\item For every $X \subseteq \Omega$ and $x_1, x_2 \in \Omega \setminus X$ such that $x_1 \neq x_2$, we have 
+			\begin{equation}
+				f(X \cup \{x_1\}) + f(X \cup \{x_2\}) \geq f(X \cup \{x_1, x_2\}) + f(X) \,.
+			\end{equation}
+	\end{itemize}
+\end{definition}
+These three conditions are equivalent, and the first condition is the most commonly used, as it directly reflects the law of diminishing marginal utility as the number of items increases.
+
+\begin{definition}[Sub-additive]
+	A set function $f: 2^{\Omega} \rightarrow \mathbb{R}_{\geq 0}$ is sub-additive if for every two sets $X, Y \in \Omega$, we have \
+	\begin{equation}
+		f(X\cup Y)\leq f(X) + f(Y)\,.
+	\end{equation}
+\end{definition}
+
+\begin{lemma}\label{thm:sub_additive}
+	A non-negative submodular set function $f: 2^{\Omega}\rightarrow\mathbb{R}_{\geq 0}$ is sub-additive.
+	\begin{proof}
+		As the second condition \cref{thm:sub_def_cond2} in \cref{thm:sub_def}. 
+		for $X,Y\subseteq \Omega$, we have $f(X) + f(Y) \geq f(X \cup Y) + f(X \cap Y)$. So, $f(X) + f(Y) \geq f(X \cup Y)$ as $f(X \cap Y) \geq 0$.
+	\end{proof}
+\end{lemma}
+
+\begin{lemma}\label{thm:fs_submodular}
+	Let $f: 2^{\Omega}\rightarrow \mathbb{R}$ be submodular. 
+	Let $S\subseteq \Omega$, and $f_{S}(X)=f(S\cup X)-f(S)$ for every $X\subseteq\Omega$. ($f_{S}$ is the marginal value function for set $S$.) 
+	Then $f_S$ is also submodular.
+	\begin{proof}
+		Let $X, Y\subseteq\Omega \setminus S$; it suffices to consider ground set $\Omega\setminus S$.
+		\begin{align}
+			&\left(f_S(X\cup Y)+f_S(X\cap Y)\right)-\left(f_S(X)-f_S(Y)\right) \notag\\
+			&\quad=f(S\cup X\cup Y)-f(S)+f(S\cup(X\cap Y))-f(S) \notag\\
+			&\qquad-\left(f(S\cup X)-f(S)+f(S\cup Y)-f(S)\right) \\
+			&\quad = f(S\cup X\cup Y)+f(S\cup(X\cap Y)) \notag\\
+			&\qquad-f(S\cup X)-f(S\cup Y) \notag\\
+			&\quad \leq 0 \,. \notag
+		\end{align}
+		The last inequality is by $S\cup X\cup Y=(S\cup X)\cup(S\cup Y)$, $S\cup(X\cap Y)=(S\cup X)\cap(S\cup Y)$ and submodularity of $f$.
+		Therefore, $f_S$ is also submodular is proved.
+	\end{proof}
+\end{lemma}
+
+\subsection{Proof of $(1-1/e)$-approximation}
+
+Submodular maximization is NP-hard in general.
+Therefore, most research in this field focuses on approximation algorithms with polynomial-time complexity. 
+While the submodular function is monotone, \ie, for every $X, Y \subseteq \Omega$, we have $f(X) \leq f(Y)$. 
+The problem of maximizing a monotone submodular function subject to a cardinality constraint admits a $(1 - 1/e)$-approximation greedy algorithm~(as introduced  in \cref{subsec:method_dpp})~\cite{nemhauser1978analysis}.
+
+In this section, we provide a concise proof of the $1 - 1/e$ approximation ratio for the greedy algorithm.
+\begin{theorem}[$(1 - \frac{1}{e})$-approximation of Greedy Algo.]
+    There exists a greedy algorithm for the submodular maximization problem, which starts with an empty set \( S = \emptyset \) and iteratively selects the item that maximizes the marginal gain:
+    \begin{equation}\label{eq:greed_sub}
+        j = \mathop{\mathrm{argmax}}\limits_{i \in \Omega \setminus S} \quad f(S \cup \{i\}) - f(S) \,.
+    \end{equation}
+    The algorithm continues until the selected set \( S \) reaches the cardinality limit \( k \).
+    
+    This greedy algorithm provides a solution \( \hat{S} \), which guarantees a $(1 - 1/e)$ approximation, where the optimal solution is denoted as \( S^* \):
+    \begin{equation}
+        f(\hat{S}) \leq f(S^*)
+    \end{equation}
+\end{theorem}
+\begin{proof}
+    According to \cref{thm:fs_submodular}, \(f_S\) is submodular, and by \cref{thm:sub_additive}, it is also sub-additive. Therefore, we have:
+    \begin{equation}
+        f_S(S^*) \leq \sum_{x \in S^*} f_S(x)\,,
+    \end{equation}
+    which implies that:
+    \begin{equation}
+        \exists x \in S^*, \quad f_S(x) \geq \frac{1}{k} f_S(S^*) \,.
+    \end{equation}
+    For this \(x\), we have the following margin lower bound:
+    \begin{equation}\label{eq:margin_lowerbound}
+        f(S \cup \{x\}) - f(S) \geq \frac{f(S^*) - f(S)}{k}\,.
+    \end{equation}
+    
+    Let \( S_t \) denote the selected subset after the \(t\)-th step of the greedy algorithm. According to \cref{eq:greed_sub}, in the greedy algorithm, we have:
+    \begin{equation}
+        f(S_{t+1}) - f(S_t) \geq f(S_t \cup \{x\}) - f(S_t), \quad \forall x \in \Omega \setminus S_t\,.
+    \end{equation}
+    Therefore, in the greedy algorithm, the marginal gain is lower-bounded by:
+    \begin{equation}\begin{aligned}\label{eq:margin_gain_lowerbound}
+        f(S_{t+1}) - f(S_t) &\geq \frac{f(S^*) - f(S_t)}{k}\,.
+    \end{aligned}\end{equation}
+    This implies:
+    \begin{equation}
+        f(S^*) - f(S_{t+1}) \leq \left(1 - \frac{1}{k}\right)(f(S^*) - f(S_t))\,.
+    \end{equation}
+    Hence, when the greedy algorithm selects a subset \( \hat{S} = S_k \) after \(k\) steps, we have:
+    \begin{equation}\begin{aligned}
+        f(S^*) - f(S_k) &\leq \left(1 - \frac{1}{k}\right)(f(S^*) - f(S_{k-1})) \\
+        &\leq \left(1 - \frac{1}{k}\right)^2(f(S^*) - f(S_{k-2})) \\
+        & \qquad \vdots \\
+        &\leq \left(1 - \frac{1}{k}\right)^k(f(S^*) - f(S_0))\,,
+    \end{aligned}\end{equation}
+    where \( S_0 \) is the initial set at \( t = 0 \), with \( S_0 = \emptyset \), such that \( f(S_0) = 0 \).
+    Therefore, we obtain:
+    \begin{equation}
+        f(S^*) - f(\hat{S}) \leq \left(1 - \frac{1}{k}\right)^k f(S^*)\,.
+    \end{equation}
+    Hence, we have:
+    \begin{equation}\begin{aligned}\label{eq:detailed_bound}
+        f(\hat{S}) 
+            &\geq \left( 1 - \left(1 - \frac{1}{k}\right)^k \right) f(S^*) \\
+            &\geq \lim_{k \to +\infty} \left( 1 - \left(1 - \frac{1}{k}\right)^k \right) f(S^*) \\
+            & = \left(1 - \frac{1}{e}\right) f(S^*)\,.
+    \end{aligned}\end{equation}
+    The proof is complete.
+\end{proof}
+
+
+Previous works~\cite{fujishige2005submodular,krause2014submodular} have established that the determinantal point process~(DPP) is a monotone submodular function.
+Therefore, when selecting 8 frames using the standard DPP, the approximation ratio is at least \mbox{\( 1 - \left( 1 - \frac{1}{8} \right)^8 = 65.6\% \).}
+
+
+\subsection{Proof of Time Complexity}
+The time complexity of \cref{alg} is closely $\mathcal{O}(nk^3)$, where $n$ represents the number of candidate frames and $k$ denotes the selection size.
+
+
+\begin{proof}
+    As indicated by the pseudocode in \cref{alg}, there are three loops, with the iteration sizes specified as follows:
+    \begin{itemize}
+        \item Line 3: $\lceil \frac{n}{m} \rceil$;
+        \item Line 6: $k + 1$;
+        \item Line 7: $k_{t-1} \leq \min(m, k, k - C_{t-1}) \leq \min(m, k)$.
+    \end{itemize}
+    Here, $m$ denotes the segment size. 
+    The DPP update in each iteration (Line 9) has a time complexity of $\mathcal{O}(mk_{t-1})$, utilizing Cholesky decomposition for incremental computation.
+
+    Therefore, the overall time complexity can thus be expressed as:
+    \begin{equation}
+        \mathcal{O}\left(
+            \frac{n}{m} \cdot (k \cdot mk_{t-1}^2 ) 
+        \right) = \mathcal{O}\left(
+            n \cdot \min(m^2k, k^3)  
+        \right)
+    \end{equation}
+    Additionally, the time complexity of computing the determinant in line 5 is $\mathcal{O}(m^3)$, resulting in the following time complexity:
+    \begin{equation}
+        \mathcal{O}\left(
+            \frac{n}{m} \cdot m^3
+        \right) = \mathcal{O}\left(
+            n m^2
+        \right)
+    \end{equation}
+    Next, we analyze the relationship between $m$ and $k$, leading to the following total time complexity:
+    \begin{equation}
+        \left\{
+            \begin{array}{ll}
+                \mathcal{O}(nm^2),  & \text{if } k < m^{2/3} \\
+                \mathcal{O}(nk^3),  & \text{if } m^{2/3} \leq k < m  \\
+                \mathcal{O}(nm^2k) < \mathcal{O}(nk^3), & \text{if } k \geq m \\
+            \end{array}
+        \right.
+    \end{equation}
+    In practice, the segment size $m$ is typically small, so in most practical cases, the time complexity of \cref{alg} is upper-bounded by $\mathcal{O}(nk^3)$.
+\end{proof}
+This algorithm exhibits pseudo-polynomial time complexity, analogous to the knapsack problem. 
+In the dynamic programming approach proposed in this paper, the runtime of the pseudo-polynomial complexity is practically comparable to that of a polynomial-time algorithm.
+
+In practical applications, the segment size $m$ and selection size $k$ are both much smaller than the total number of video frames $n$, \ie, $m \ll n$ and $k \ll n$. 
+Thus, regardless of the relationship between $m$ and $k$, the total time complexity is much smaller than feeding all frames into transformer-based LLMs, which have a time complexity of $O((n \cdot \text{\#tokens\_per\_image})^2)$ per layer and attention head.
+
+Additionally, the iteration in line 6 of \cref{alg} is independent, enabling parallel updates. 
+This results in a time complexity of \(\mathcal{O}(nk^2)\), making its efficiency comparable to that of the standard DPP. 
+Moreover, without lazy strategies and parallel updates, the time complexity is closely \(\mathcal{O}(nk^4)\) in most practical cases, and the proof is similar.
+
+

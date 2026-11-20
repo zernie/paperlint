@@ -1,0 +1,67 @@
+% !TEX root = ./main.tex
+
+\section{Introduction}
+
+
+Probabilistic programming languages (PPLs) extend standard programming languages with probabilistic statements to model random behavior and to condition on observed evidence.
+These constructs allow probabilistic programs to concisely model complex distributions, and PPLs make probabilistic modeling approachable to developers who might lack the required expertise in probability theory. 
+Thus, the main purpose of probabilistic programs is not to execute them, but to perform probabilistic inference, i.e.\ to determine the probability distribution over possible output values, conditioned on the observations in the program.
+Over the years, a variety of tools and languages has been proposed to perform probabilistic inference \cite{ gehr2016psi, wang2018pmaf, bingham2019pyro, wood-aistats-2014, randone2024inference}.
+However, support for (non-probabilistic) nondeterminism is lacking among modern inference engines, and combining nondeterminism with conditioning in PPLs remains an open problem \cite{gordon2014probabilistic, junges2023scalable}.
+
+Nondeterminism is \textit{"a powerful modeling tool to deal with unknown information, as well as to specify abstractions in situations where details are unimportant"}~\cite{gordon2014probabilistic}.
+Alas, combining nondeterminism and conditioning significantly complicates inference:
+Probabilistic programs no longer model a single distribution, but a \emph{set} of distributions. 
+This renders probabilistic inference no longer compositional, i.e.\ maximum conditional probabilities in a program cannot generally be inferred from the maximum conditional probabilities of its subprograms.
+Due to this, work on PPLs extended with nondeterminism and conditioning is sparse, and existing approaches often cannot deal with both simultaneously \cite{olmedo2018conditioning, van2010dtproblog}.
+Currently, the only option to combine both features is to apply probabilistic model checkers directly to the operational semantics of programs \cite{jansen2016bounded}, but this approach often leads to very large state spaces.
+
+
+\subsection{The \NDICE Inference Framework}
+% STATEMENT OF PURPOSE
+We introduce \NDICE, a discrete probabilistic program inference engine which aims to reduce the state space of models with nondeterminism by extending the \DICE inference engine~\cite{holtzen2020scaling}.
+\DICE and \NDICE specialize in inference for loop-free programs with \textit{discrete} randomness by forgoing support for unbounded numbers and continuous distributions in favor of more efficient inference.
+Hence, \NDICE uses a simple first-order, non-recursive language with discrete probabilistic and nondeterministic choices as well as first-class observations for Bayesian reasoning.
+\NDICE provides a novel inference algorithm to determine the maximum probability to return a specific value among all ways to resolve the nondeterminism.
+To do so, \NDICE proceeds as follows:
+
+\paragraph{Boolean Compilation}
+First, \NDICE uses the compilation engine of \DICE to compile the probabilistic program into a pair of boolean formulas along with an annotated trace of boolean variables to encode its behavior.
+Here, one formula reflects the programs behavior while ignoring observations, and the other formula represents solely the observations.
+
+
+\paragraph{Decision Diagrams}
+The previously compiled boolean formulas are represented internally as \textit{Binary Decision Diagrams} (BDDs), a compact graphical encoding of boolean functions.
+Now, \NDICE diverges from the \DICE algorithm and combines the two BDDs into a single \textit{Algebraic Decision Diagram} (ADD).
+ADDs are a generalization of BDDs which allows more than binary outputs, and this enables the ADD to unify the two boolean formulas into a single decision diagram. 
+
+
+\paragraph{Markov Decision Process}
+The final step is to use the previously built ADD as scaffolding for a \textit{Markov Decision Process} (MDP).
+MDPs naturally combine nondeterministic and probabilistic behavior, making them a suitable tool for our inference method.
+We build upon results from \citet{baier2014computing} and {\citetBisection} on conditional reachability properties in MDPs, which allows us to construct an MDP that aligns with the compiled program.
+More precisely, the distributions modeled by the program correspond to the memoryless schedulers in the MDP.
+\medskip
+
+We can infer the maximum probability that the original program outputs a particular value as a conditional reachability probability in the constructed MDP. 
+Inference performance can heavily depend on the size of the final MDP, hence reducing its state space is often critical for the inference algorithm.
+In our work, decision diagrams exploit the program structure to efficiently remove redundant states from the MDPs, which significantly reduces their size.
+ 
+
+
+\subsection{Outline and Contributions}
+
+We provide an overview of the \NDICE language and inference algorithm in \Cref{sec:overview}, followed by the formal semantics of \NDICE in \Cref{sec:semantics}.
+Then, \Cref{sec:background,sec:inference} present the theoretical foundation of the inference algorithm, which we implement and evaluate in \Cref{sec:implementation}.
+Finally, \Cref{sec:related_work,sec:future} explore related and future work.
+Our contributions are summarized as follows:
+
+\begin{itemize}
+	\item We develop the probabilistic programming language \NDICE, a non-recursive functional language with probabilistic choices, nondeterministic choices and first-class observations.
+	\item We present the theoretical foundation of the \NDICE inference algorithm. We use decision diagrams to compile a compact MDP, and we infer the maximum probability  for a \NDICE program to output a value via conditional reachability probabilities in that MDP.
+	\item We implement the inference algorithm and evaluate its efficiency against other approaches on a range of benchmarks. 
+	Here, \NDICE significantly reduces the size of the MDPs, and even outperforms state-of-the-art model checkers on some benchmarks.
+\end{itemize}
+
+
+

@@ -1,0 +1,81 @@
+\newcommand{\fixme}[1]{\textcolor{pink}{FIXME: #1}}
+\newcommand{\todo}[1]{\textcolor{cyan}{TODO: #1}}
+\newcommand{\revision}[1]{\textcolor{pink}{(Revision: #1)}}
+% \newcommand{\R}[1]{\textcolor{red}{#1}}
+% \newcommand{\OURR}[1]{\textcolor{red}{#1}}
+\newcommand{\R}[1]{{#1}}
+\newcommand{\OURR}[1]{{#1}}
+
+% \newcommand{\fixme}[1]{}
+% \newcommand{\todo}[1]{}
+
+% useful macros
+\newcommand{\thiswork}{\textsf{KPerfIR}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\Sec}[1]{Sec.~{#1}}
+\newcommand{\Fig}[1]{Fig.~{#1}}
+\newcommand{\Tbl}[1]{Tbl.~{#1}}
+
+\usepackage{graphicx} 
+% \usepackage[dvipsnames,table,xcdraw]{xcolor}
+\usepackage{amsmath}
+
+% for placeholder text
+\usepackage{lipsum}  
+
+
+% for quote_summary environment
+% https://jevon.org/wiki/Fancy_Quotation_Boxes_in_Latex
+% for adjustwidth environment
+\usepackage[strict]{changepage}
+% for formal definitions
+\usepackage{framed}
+% environment derived from framed.sty: see leftbar environment definition
+\definecolor{quoteshade}{RGB}{220,220,220}
+\definecolor{quoteframe}{RGB}{160,160,160}
+\newenvironment{takeaway}{%
+  \def\FrameCommand{%
+    \hspace{1pt}%
+    {\color{quoteframe}\vrule width 2pt}%
+    {\color{quoteshade}\vrule width 4pt}%
+    \colorbox{quoteshade}%
+  }%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}%
+  \noindent\hspace{-4.55pt}% disable indenting first paragraph
+  \begin{adjustwidth}{}{7pt}%
+  \vspace{2pt}\vspace{2pt}%
+}
+{%
+  \vspace{2pt}\end{adjustwidth}\endMakeFramed%
+}
+
+% for thick table grid
+\usepackage{makecell}
+
+% for table rules
+\usepackage{booktabs}
+
+% for table centering
+\usepackage{array}% for m
+
+% for linebreak in table cells
+\usepackage{makecell}
+
+% for row color in tables
+% \usepackage[table,xcdraw]{xcolor}
+
+% for circled numbers
+% https://ctan.org/pkg/circledtext
+\usepackage{circledtext}
+\newcommand{\ballnumber}[1]{\circledtext*[charf=\Large]{#1}}
+
+\renewcommand{\paragraph}[1]{\vspace{0.1cm}\noindent\textbf{#1}}
+
+\usepackage{capt-of}
+
+\usepackage{multirow}
+
+% for circle and semi-circle symbols
+\usepackage{wasysym}

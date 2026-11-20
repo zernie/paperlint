@@ -1,0 +1,19 @@
+% Discussion and Limitations
+
+\section{Discussion}
+\label{sec:discussion}
+
+
+\mypar{Distribution} While \sys{} is currently a single-GPU system, its temporal tensor dimensions can serve as a foundation for distribution~\cite{silvestre2025rlft}. This requires identifying temporal dimensions that can be mapped to parallel for-loops in the schedule. 
+\sys{} can create such temporal dimensions by tiling (\S\ref{sec:tiling}) the SDG across a new ``worker'' dimension. If the starting point is an input-data tensor, this gives \emph{data-parallelism}~\cite{krizhevsky2017imagenet}; in combination with SDG cuts (partitioning the SDG into per-worker subgraphs), input-data tiling also yields \emph{pipeline parallelism}~\cite{huang2019gpipe}; if tiling starts from a weight tensor, we obtain \emph{model-parallelism}~\cite{shoeybi2019megatron}. \sys{} can then assign schedule partitions to workers, which perform reductions as collective communication operations. 
+
+\mypar{Dynamic termination} \sys{} does not yet support dynamic termination of temporal dimensions (\eg $T$ determined at runtime). Prior work~\cite{benabderrahmane2010polyhedral} has shown that this can be achieved by generating schedules that break out of infinite loops when the termination condition is met. Evaluating termination at each step, however, is expensive, because it requires a GPU/CPU transfer. We plan to explore speculative methods to reduce this overhead in future work.
+
+
+\mypar{Smart transformation policies} While \sys{} proposes powerful transformations, it often lacks sophisticated policies for applying them. For example, \sys{}'s swapping augmentations are oblivious to kernel execution latencies, causing stalls when dependent operations wait for data. This can be addressed through adding constraints to the scheduling problem based on kernel profiling.
+Additionally, tiling is currently triggered based on operator's point memory usage, and not on a more accurate memory usage analysis of the whole program. Finally, the tile size used in static tiling is currently set by the user, which can be suboptimal. The ideal tile size, typically the smallest size that maximizes GPU utilization~(\S\ref{sec:eval:decoding}), could instead be found through binary search.
+
+
+
+\mypar{Optimized kernels} LLM programs today use hand-crafted, high-performance kernels, such as FlashAttention~\cite{dao2022flashattention}, which are not currently supported by \sys{}. Adding these as first-class operators to \sys{} is difficult due to their complex semantics~\cite{barham2019machine}, which prevents \sys{} from applying its transformations (vectorization, tiling, etc.). One approach is to introduce a final compiler pass, before scheduling, that identifies attention-like patterns in the SDG and lifts them~(\S\ref{sec:pdg}) into a single FlashAttention kernel operator. %This would allow \sys{} to apply its transformations to the entire kernel, rather than just to individual operations.
+

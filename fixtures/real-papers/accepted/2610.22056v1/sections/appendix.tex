@@ -1,0 +1,409 @@
+\section{Theoretical Proof}\label{app:proofs}
+\begin{theorem}[Policy Invariance]\label{thm:policy-invariance-proof}
+Define an MDP \( M = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \), where $R_t = \mathbb{I}(s_{t+1})\cdot r_{bonus}$ represents the sparse reward when the task is considered successful.
+Giving a potential-based reward shaping function as follows:
+\begin{equation*}
+    F =  \gamma \cdot \Phi(s_{t+1}) - \Phi(s_{t})
+\end{equation*}
+Let another MDP \( M' = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R+F, \gamma, \rho_0 \rangle \), then every optimal policy in $M'$ will also be an optimal policy in $M$ and vice versa.
+\end{theorem}
+
+\begin{proof}
+For the original MDP \( M \), we know that its optimal \( Q \)-function \( Q^*_M \) satisfies the Bellman Equations
+
+\[
+Q^*_M(s,a) = \mathbb{E}_{s' \sim P_{s,a}(\cdot)} \left[ R(s,a,s') + \gamma \max_{a' \in A} Q^*_M(s',a') \right]
+\]
+
+Some simple algebraic manipulation then gives us
+
+\[
+Q^*_M(s,a) - \Phi(s) = \mathbb{E}_{s'} \left[ R(s,a,s') + \gamma \Phi(s') - \Phi(s) + \gamma \max_{a' \in A} \left( Q^*_M(s',a') - \Phi(s') \right) \right]
+\]
+
+If we now define \( \hat{Q}_{M'}(s,a) \triangleq Q^*_M(s,a) - \Phi(s) \) and substitute that and \( F(s,a,s') = \gamma \Phi(s') - \Phi(s) \) back into the previous equation, we get
+
+\begin{align*}
+\hat{Q}_{M'}(s,a)
+&= \mathbb{E}_{s'} \left[ R(s,a,s') + F(s,a,s') + \gamma \max_{a' \in A} \hat{Q}_{M'}(s',a') \right] \\
+&= \mathbb{E}_{s'} \left[ R'(s,a,s') + \gamma \max_{a' \in A} \hat{Q}_{M'}(s',a') \right]
+\end{align*}
+
+But this is exactly the Bellman equation for \( M' \). For the undiscounted case, we moreover have \( \hat{Q}_{M'}(s_0, a) = Q^*_M(s_0, a)- \Phi(s_0) = 0 - 0 = 0 \). So, \( \hat{Q}_{M'}(s,a) \) satisfies the Bellman equations for \( M' \), and must in fact be the unique optimal \( Q \)-function. Thus, \( Q^*_{M'}(s,a) = \hat{Q}_{M'}(s,a) = Q^*_M(s,a) - \Phi(s)\) and the optimal policy for \(M'\) therefore satisfies.
+\begin{align*}
+\pi^*_{M'}(s)
+& \in \arg \max_{a \in A} Q^*_{M'}(s,a) \\
+& = \arg \max_{a \in A} Q^*_{M}(s,a) - \Phi(s)\\
+& = \arg \max_{a \in A} Q^*_M(s,a)
+\end{align*}
+and is therefore also optimal in \( M \). To show every optimal policy in \( M \) is also optimal in \( M' \), simply apply the same proof with the roles of \( M \) and \( M' \) interchanged (and using the shaping function \( -F \)). This completes the proof.
+\end{proof}
+
+\begin{theorem}[Convergence Efficiency]\label{thm:convergence-efficiency-proof}
+Consider two MDPs: \( M = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R+F, \gamma, \rho_0 \rangle \) with $Q$-function $Q$ and \( M' = \langle \mathcal{S}, \mathcal{A}, \mathcal{T}, R, \gamma, \rho_0 \rangle \). If we initialize the $Q$-function in $M'$ as follows:
+\begin{equation*}
+    Q'_0(s, a) = Q_0(s, a) + \Phi(s)
+\end{equation*}
+Then for all timesteps $t \geq 0$ and $(s,a) \in \mathcal{S} \times \mathcal{A}$:
+\begin{equation}
+    Q'_t(s,a) = Q_t(s,a) + \Phi(s)
+\end{equation}
+where $Q_t$ and $Q'_t$ are the Q-functions of MDP $M$ and $M'$ respectively.
+\end{theorem}
+
+\begin{proof}
+We prove the equivalence by induction on the update steps.
+
+\textbf{Base case ($t=0$):}
+By initialization definition:
+\begin{equation}
+    Q'_0(s,a) = Q_0(s,a) + \Phi(s) \quad \forall (s,a)
+\end{equation}
+
+\textbf{Inductive step:} Assume $Q'_k(s,a) = Q_k(s,a) + \Phi(s)$ holds for all $(s,a)$ at step $k$. Consider the Q-learning update for both agents when transitioning from $(s,a)$ to $(s',a')$ with reward $r$:
+
+In MDP $M$:
+\begin{align*}
+    Q_{k+1}(s,a) &= Q_k(s,a) + \alpha_k \Big[ r + F(s,s') + \gamma \max_{a'} Q_k(s',a') - Q_k(s,a) \Big] \\
+    &= Q_k(s,a) + \alpha_k \Big[ r + (\gamma\Phi(s') - \Phi(s)) + \gamma \max_{a'} Q_k(s',a') - Q_k(s,a) \Big]
+\end{align*}
+
+In MDP $M'$:
+\begin{align*}
+    Q'_{k+1}(s,a) &= Q'_k(s,a) + \alpha_k \Big[ r + \gamma \max_{a'} Q'_k(s',a') - Q'_k(s,a) \Big] \\
+    &= [Q_k(s,a) + \Phi(s)] + \alpha_k \Big[ r + \gamma \max_{a'} [Q_k(s',a') + \Phi(s')] - [Q_k(s,a) + \Phi(s)] \Big] \\
+    &= Q_k(s,a) + \Phi(s) + \alpha_k \Big[ r + \gamma \max_{a'} Q_k(s',a') + \gamma\Phi(s') - Q_k(s,a) - \Phi(s) \Big]
+\end{align*}
+
+Simplify the difference:
+\begin{align*}
+    Q'_{k+1}(s,a) - Q_{k+1}(s,a) &= \Phi(s) + \alpha_k \Big[ \gamma\Phi(s') - \Phi(s) \Big] - \alpha_k \Big[ \gamma\Phi(s') - \Phi(s) \Big] \\
+    &= \Phi(s)
+\end{align*}
+
+Thus $Q'_{k+1}(s,a) = Q_{k+1}(s,a) + \Phi(s)$ maintains the invariant. By induction, the equivalence holds for all $t \geq 0$.
+\end{proof}
+
+\section{Experiment Details}
+
+\subsection{Additional Generalization Results}\label{app:generalization}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/additional-generalization.png}
+  \caption{The evaluation results of generalization experiment.}
+\label{fig:additional-generalization}
+\end{figure}
+We conduct additional generalization evaluations. Specifically, for the evaluation results shown in Section \ref{sec:generalization}, the original task is `Metaworld-faucet-open', the unseen tasks are `Metaworld-drawer-close', `Metaworld-button-press-wall', `Metaworld-button-press', `Metaworld-coffee-button', respectively.
+For the results shown in Figure \ref{fig:additional-generalization}, the original task is `Metaworld-pick-place', the unseen tasks are `Metaworld-drawer-close', `Metaworld-pick-place-wall', `Metaworld-sweep-into', `Metaworld-handle-press', respectively.
+We test the trained policy in evaluation tasks, and the results are averaged over 5 seeds and 100 test per seed.
+
+\subsection{Baseline Settings}\label{app:baselines}
+\textbf{ELLM}(ICML23)\cite{du2023guiding} utilizes an LLM as a high-level planner, embedding subtask priors into the policy. Since ELLM has not been previously tested on Metaworld and Maniskill, we re-implement it the experiments. For goal embedding, we gave the same subtask prior as in our framework to the policy; For reward, we then gave it the subtask success reward, which is also goal-related as in its original application. We also use our $\Psi$ for determining current subtask to avoid enormous LLM calls.
+
+\textbf{Text2Reward}(ICLR24)\cite{xie2024text2reward} utilizes an LLM to write dense reward function. As T2R has evaluate its performance on Metaworld and Maniskill, we directly reuse its generated reward functions. If there are few-shot and zero-shot versions of reward functions, we always choose the few-shot version for better performance. Specifically, for `Metaworld-drawer-close', `Metaworld-window-open', `Metaworld-button-press', `Metaworld-sweep-into', `Metaworld-door-close', `Maniskill-LiftCube', `Maniskill-PickCube', we reuse its generated reward functions. For other tasks that are not orginally evaluated in T2R, we generate a reward function following its code.
+
+\section{Hyper-Parameter Details}\label{app:hyperparameters}
+In this section, we provide the hyper-parameter details used for our reward function generation and reinforcement learning backbones. For progress function generation, we base on GPT-4o. In the experiments of the main body, the temperature of sampling is set to 0.7 for each experiment.
+
+For reinforcement learning training, we employed the open-source PPO\cite{schulman2017proximal} and SAC implementation\cite{haarnoja2018softactorcriticoffpolicymaximum} from Stable-Baselines3\cite{stable-baselines3}
+\footnote{stable-baselines3 v2.6.0 (MIT License), code available at \url{https://github.com/DLR-RM/stable-baselines3}}
+, and list the hyper-parameters in Table \ref{tab:sac-hyperparameters} and \ref{tab:ppo-hyperparameters}.
+
+\begin{table}[h]
+\caption{Hyper-parameter of SAC algorithm applied to each task.}
+\label{tab:sac-hyperparameters}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyper-parameter}         & \textbf{Value}                                              \\
+\midrule
+Discount factor \( \gamma \)     & 0.99                       \\
+Target update frequency          & 2                            \\
+Learning rate                    & \( 3 \times 10^{-4} \)                     \\
+Train frequency                  & 1                              \\
+Soft update \( \tau \)           & \( 5 \times 10^{-3} \)                                      \\
+Gradient steps                   & 1                           \\
+Learning starts                  & 4000                                                       \\
+Batch Size                       & 512                        \\
+\# of layers                      & 3                             \\
+Hidden units per layer           & 256                                                        \\
+Initial temperature              & 0.1                       \\
+Rollout steps per episode        & 500                         \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Hyper-parameter of PPO algorithm applied to each task.}
+\label{tab:ppo-hyperparameters}
+\begin{tabular}{ll}
+\toprule
+\textbf{Hyper-parameter}         & \textbf{Value}                                              \\
+\midrule
+Discount factor \( \gamma \)     & 0.8                        \\
+\# of epochs per update          & 15                           \\
+Learning rate                    & \( 1 \times 10^{-4} \)                                      \\
+\# of environments               & 8                                                          \\
+Batch size                       & 400                              \\
+Target KL divergence             & 0.1                           \\
+\# of layers                      & 3                                                         \\
+Hidden units per layer           & 256                                                        \\
+\# of steps per update           & 3200                        \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We utilize a 4 NVidia Geforce RTX-3090 graphic cards, 128 core CPUs, and 256 GiB memory server for RL training. The time required for training a policy is approximately 1 hours per task (5 seeds running simultaneouly) for MetaWorld, and between 1 to 10 hours for ManiSkill, varying with the task’s difficulty.
+
+\section{Tasks}\label{app:tasks}
+In this section, we provide a full list of tasks within each simulation environment, accompanied by their corresponding language instructions.
+\subsection{Metaworld}
+In METAWORLD\cite{yu2019meta}\footnote{Metaworld v2.0.0 (MIT License), code available at \url{https://github.com/Farama-Foundation/Metaworld}} environment, we use a 7 DoF Sawyer robot arm with a fixed base to complete tabletop tasks. For all tasks, the observation space is a combination of the 3D position of the robot end-effector, a normalized measurement of gripper openness, the 3D position of the manipulated object, the quaternion of the object, all of the previous measurements, and the goal position. The environment adopts end-effector delta position control, which means the action space consists of the change of the end effector’s 3D position, as well as the normalized torque the gripper should apply. For all tasks, the initial and target positions of the manipulated object and the initial joint positions of the robot arm are variable.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/metaworld-tasks.png}
+  \caption{Tasks in Metaworld.}
+  \label{fig:metaworld-tasks}
+\end{figure}
+
+The task descriptions are provided in the following Table \ref{tab:metaworld-tasks}.
+\begin{table}[h]
+\centering
+\caption{Task list of Metaworld}
+\label{tab:metaworld-tasks}
+\begin{tabular}{ll}
+\toprule
+\textbf{Task}         & \textbf{Task Description}   \\
+\midrule
+button-press & Press a button in y coordination. \\
+door-close & Close a door with a revolving joint by pushing the door’s handle. \\
+drawer-close & Close a drawer by its handle. \\
+faucet-open & Rotate the handle counter-clockwise. \\
+window-open & Push and open a sliding window by its handle. \\
+sweep-into & Sweep a puck from the initial position into a hole. \\
+pick-place & Pick up an object and move it to the goal location. \\
+pick-out-of-hole & Pick an object out of a hole and move it to the goal location. \\
+sweep &  Sweep a puck off the table.\\
+push &  Push an object to the goal location.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Maniskill}
+MANISKILL\cite{taomaniskill3}\footnote{Maniskill3 v3.0.0 (Apache-2.0 License), code available at \url{https://github.com/haosulab/ManiSkill}} environment uses a 7 DoF Franka Panda as the default robot arm. For all tasks, the observation space consists of robot proprioception information (e.g. current joint positions, current joint velocities, robot base position and quaternion in the world frame) and task-specific information (e.g. goal position, endeffector position). We use end-effector delta pose control mode for this environment, which controls the change of 3D position and rotation (represented as an axis-angle in the end-effector frame). For all tasks, the initial and target positions of the manipulated object, the initial joint positions of the robot arm and physical parameters (e.g. friction and damping coefficient) are variable.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\textwidth]{figures/maniskill-tasks.png}
+  \caption{Tasks in Maniskill.}
+  \label{fig:maniskill-tasks}
+\end{figure}
+
+The task descriptions are provided in the following Table \ref{tab:maniskill-tasks}.
+\begin{table}[h]
+\centering
+\caption{Task list of Maniskill}
+\label{tab:maniskill-tasks}
+\begin{tabular}{ll}
+\toprule
+\textbf{Task}         & \textbf{Task Description}   \\
+\midrule
+LiftCube & Pick up cube A and lift it up by 0.2 meters. \\
+PullCube & Pull a cube to the goal position. \\
+PushCube & Push a cube to the goal position. \\
+PickCube & Pick up cube A and move it to the 3D goal position. \\
+LiftPegUpright & Move a peg laying on the table to any upright position on the table. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Prompt Details}\label{app:prompts}
+
+To ground LLMs into robotics simulation environments, following Text2Reward\cite{xie2024text2reward} we propose a Pythonic prompt, which can be abstracted by the experts who developed the environment. This class-like prompt is a more compact representation than simply listing all environment attributes linearly, which can delete redundant information and save more tokens, and this Pythonic prompt can also better bootstrap Python code generation. More specifically, our prompt leverages python class, class attribute, python typing and comments to recursively define the environment. For simplicity, here we prompt the progress function to return the current subtask index together with the main progress.
+
+Here we provide an example of the zero-shot prompt for Metaworld manipulation tasks:
+
+\definecolor{backgroundyellow}{rgb}{0.99215686, 0.9882353, 0.97647}
+\definecolor{kuangyellow}{rgb}{0.90980, 0.882353, 0.72941}
+\definecolor{commentgreen}{rgb}{0.415686, 0.670588, 0.45098}
+\definecolor{keywordblue}{rgb}{0.32549, 0.5372549, 0.81961}
+\definecolor{stringorange}{rgb}{0.8745098, 0.47843, 0.368627}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{backgroundyellow},
+    frame=none,
+    breaklines=true,
+    language=Python,
+    keywordstyle=\color{keywordblue},
+    commentstyle=\color{commentgreen},
+    stringstyle=\color{stringorange},
+}
+
+\textbf{Basic Prompt}
+provides the foundational context for the task. The prompt establishes the user's role as an expert in robotics, reinforcement learning, and code generation, focusing on the development of a Python function called `progress function' for RL. The objective is to help generate code that tracks progress during task execution, guiding the learning of a low-level policy.
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={Basic Propmt}, breakable]
+You are an expert in robotics, reinforcement learning and code generation.We are going to use a robot arm to complete given tasks. Now I want you to help me write a python function named `progress function' of reinforcement learning.
+\end{tcolorbox}
+
+\textbf{Environment Information}
+defines the environment in which the robot operates. The BaseEnv class describes the robot and its interaction with objects in the environment, including their positions and states. The Robot and RigidObject classes further define the robot's end effector, object positions, and other relevant parameters. This context provides essential details for the task, enabling the LLM to make informed decisions about task progress and control.
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={Environment Information}, breakable]
+\begin{lstlisting}
+class BaseEnv(gym.env):
+    self.robot : Robot # the robot in the environment
+    self.obj : RigidObject # the first object in the environment
+    self.goal_position : np.ndarray[(3,)] # indicate the 3D position of the goal
+    near_object = float(tcp_to_obj <= 0.3)
+    success = float(obj_to_target <= 0.07)
+
+class Robot:
+    self.ee_position : np.ndarray[(3,)] # indicate the 3D position of effector
+    self.hand_init_pos: np.ndarray[(3,)] # indicate the initial 3D position of effector
+    self.tcp = self.ee_position - [0, 0, 0.045]  # indicate the 3D position of effector's tool center point
+
+class RigidObject:
+    self.position : np.ndarray[(3,)] # indicate the 3D position of the rigid object
+    self.quaternion : np.ndarray[(4,)] # indicate the quaternion of the rigid object
+    self.obj_init_pos : np.ndarray[(3,)] # indicate the initial 3D position of the rigid object
+\end{lstlisting}
+\end{tcolorbox}
+
+\textbf{Task Information}
+provides a description of the task to be completed by the robot. The task description, which needs to be filled in by the user, is crucial for decomposing the task into manageable subtasks.
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={Task Information}, breakable]
+\{ Fill in the task description here. \} (e.g. In pick-place, the robot need to pick up the object and move it to the goal position.)
+\end{tcolorbox}
+
+\textbf{Basic Instructions}
+provide guidelines for writing the code necessary for the task. The instructions emphasize the importance of using existing Python packages only when necessary, avoiding the invention of new variables or attributes, and incorporating step-by-step reasoning with clear comments. These instructions ensure that the code remains efficient, understandable, and aligned with the task's requirements.
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={Basic Instruction}, breakable]
+1. You are allowed to use any existing python package if applicable. But only use these packages when it's really necessary.
+
+\vspace{2pt}
+
+2. Do not invent any variable or attribute that is not given.
+
+\vspace{2pt}
+
+3. Think step by step, add comment for reasoning and thought when you write code.
+\end{tcolorbox}
+
+\textbf{Reasoning Instructions}
+outline a step-by-step procedure for task decomposition and the generation of key functions.
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={Reasoning Instructions}, breakable]
+Follow the steps below:
+
+\vspace{2pt}
+
+a. Decompose the task and generate plan\_list\\
+a.1 Decompose the given task into a series of subtasks. Each subtask should be described in a `verb + noun' form.
+tips: `move to object', `grasp object', `move to goal'...\\
+a.2 Generate a python list named plan\_list where each subtask is an element of the plan\_list.
+
+\vspace{5pt}
+
+b. Write a `determination\_function' for determine which subtask we are in based on Environment Information above.\\
+b.1 For each subtask in the plan\_list, consider when each subtask is considered completed, express the condition in python code form.
+Typical completion conditions:
+ -`Move' completion: distance under threshold
+ -`Grasp' completion: object's z-coordinate higher than its initialize z-coordinate.\\
+b.2 Write a `determination\_function' using `if' and `elif' to categorize the current subtask based on Environment Information
+ - consider the logic of determining subtasks completion, using `if not' `elif not' if needed.\\
+b.3 The `determination\_function' return the current subtask's index in plan\_list.
+
+\vspace{5pt}
+
+c. Write a `progress\_function'\\
+c.1 For each subtask, construct a progress metric named `subprogress' indicating the progress of the corresponding subtask. The `subprogress' should be range from 0 (no progress) to 1 (completed)
+Typical subprogress metric: the distance between the robot's gripper and target object normalized by its initial distance; \\
+c.2 Based on the `determination\_function', add the `subprogress' computation codes in the corresponding `if' or `elif' block.\\
+c.3 Add the `main\_progress' computation codes in each subtask's `if' or `elif' block.
+- `main\_progress' is the progress of the entire task.
+- typically, main\_progress can be calculated by adding the current subtask idx and current subprogress, regarding all completed subprogress as `1'.
+The completed progress can be set to `1' without computing again.\\
+c.4 `progress function' return the main\_progress and the current subtask's index in plan\_list.
+
+\end{tcolorbox}
+
+\section{Example of Generated Progress Function}
+In this section, to help better understand the generation ability and results, we provide zero-shot generated reward function on Metaworld. The response of the prompt defined in Appendix \ref{app:prompts} is as follows:
+
+\begin{tcolorbox}[colframe=kuangyellow, colback=backgroundyellow, coltitle=black, title={LLM response in Metaworld-pick-place}, breakable]
+
+\begin{lstlisting}
+import numpy as np
+# Plan the task into subtasks
+def generate_plan_list():
+    # Task decomposition: [verb + noun]
+    plan_list = [
+        'move to object',
+        'grasp object',
+        'move to goal',
+        'release object'
+    ]
+    return plan_list
+
+# Determining the current subtask based on environment information
+def determination_function(env, plan_list):
+    # Decompose the task completion into conditions for each subtask
+
+    # Subtask 1: 'move to object'
+    if np.linalg.norm(env.robot.tcp - env.obj.position) > 0.3:
+        return 0  # Still moving towards the object
+
+    # Subtask 2: 'grasp object'
+    elif env.obj.position[2] <= env.obj.obj_init_pos[2]:
+        return 1  # Object not yet grasped
+
+    # Subtask 3: 'move to goal'
+    elif np.linalg.norm(env.obj.position - env.goal_position) > 0.07:
+        return 2  # Still moving towards the goal
+
+    # Subtask 4: 'release object'
+    else:
+        return 3  # Task is completed
+
+# Progress computation for each subtask
+def progress_function(env):
+    plan_list = generate_plan_list()
+    subtask_idx = determination_function(env, plan_list)
+
+    # Initialize variables
+    main_progress = 0.0  # Overall task progress
+    subprogress = 0.0  # Progress of the current subtask
+
+    # Subtask 1: 'move to object'
+    if subtask_idx == 0:
+        # Progress of moving towards the object
+        initial_distance = np.linalg.norm(env.robot.tcp - env.obj.obj_init_pos)
+        current_distance = np.linalg.norm(env.robot.tcp - env.obj.position)
+        subprogress = 1 - (current_distance / initial_distance)
+        main_progress = subtask_idx + subprogress  # Task progress is the sum of subtasks
+
+    # Subtask 2: 'grasp object'
+    elif subtask_idx == 1:
+        # Progress of grasping the object (object lifted above initial position)
+        subprogress = (env.robot.ee_position[2] - env.obj.obj_init_pos[2]) / 0.5  # Normalize based on height
+        main_progress = subtask_idx + subprogress
+
+    # Subtask 3: 'move to goal'
+    elif subtask_idx == 2:
+        # Progress of moving towards the goal position
+        initial_distance_to_goal = np.linalg.norm(env.obj.position - env.obj_init_pos)
+        current_distance_to_goal = np.linalg.norm(env.obj.position - env.goal_position)
+        subprogress = 1 - (current_distance_to_goal / initial_distance_to_goal)
+        main_progress = subtask_idx + subprogress
+
+    # Subtask 4: 'release object'
+    elif subtask_idx == 3:
+        # Task is complete, no further progress is needed
+        subprogress = 1.0
+        main_progress = 1.0
+
+    return main_progress, subtask_idx
+\end{lstlisting}
+
+\end{tcolorbox}

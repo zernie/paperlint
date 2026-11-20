@@ -112,7 +112,7 @@ see it, so the content of the artifact is what gets measured.**
 
 **Where the body ends, on real papers** (`test/e2e/tex/page-count.e2e.ts`). `format/page-limit`
 counts a body that ends at the references, and that count is checked on papers nobody here wrote:
-the accepted ACSAC papers in `fixtures/accepted-papers/` that carry a `page-count.json` (ACSAC is
+the accepted ACSAC papers in `fixtures/real-papers/accepted/` that carry a `page-count.json` (ACSAC is
 AIDC's parent venue, same IEEEtran template), built with figures replaced by blank boxes of the
 same size and the packages paperlint's TeX Live lacks vendored beside them. Each `page-count.json`
 holds the references page and the body count established by rendering the PDF and looking at it,
@@ -201,6 +201,6 @@ it so the LaTeX rules see LaTeX rather than a placeholder.
 
 ⚠️ **Every line of that corpus was written by somebody who already knew which rule would read it.**
 It keeps the stage machinery honest and it cannot tell you anything about false positives. So the
-run then adds one accepted paper from `fixtures/accepted-papers/` (`secure-acsac24`) and holds the
+run then adds one accepted paper from `fixtures/real-papers/accepted/` (`secure-acsac24`) and holds the
 installed binary to that paper's recorded `baseline.json` — the same recording
 `fixtures/real-papers.test.ts` holds the repository's own `run` to.

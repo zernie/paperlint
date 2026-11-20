@@ -1,0 +1,33 @@
+\begin{table}[t]
+    \small
+    \centering
+    \tabcolsep 1pt
+    \begin{tabular}{l l r r r}
+        \toprule
+         & & \multicolumn{2}{c}{\textbf{Number of Tokens}} & \textbf{Response} \\
+         & &\textbf{ Input} & \textbf{Output} & \textbf{Time (s)} \\
+         % \begin{tabular}{c}
+         %    Response \\Time (s) \\
+         % \end{tabular} \\
+        \midrule
+        % \cmidrule{1-2} \cmidrule(lr){2-3} \cmidrule{3}
+        \multirow{3}{*}{
+        \begin{tabular}{l}
+            P4G
+        \end{tabular}
+        } & Simple & $340.35$ & $30.27$ & $0.84$ \\
+          & ProCoT-p4g & $505.26$ & $156.58$ & $2.73$ \\
+          & ProCoT-rich-desc & $1272.89$ & $152.55$ & $1.94$ \\
+        \midrule
+        \multirow{3}{*}{
+        \begin{tabular}{l}
+            Daily\\Persuasion
+        \end{tabular}
+        } & Simple & $282.35$ & $25.15$ & $0.87$ \\
+          & ProCoT-p4g & $408.35$ & $109.75$ & $1.64$ \\
+          & ProCoT-rich-desc & $1208.35$ & $116.87$ & $2.51$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Average token counts and response times per turn in P4G and DailyPersuasion. The averages were computed from 30 P4G dialogues (6-7 turns each) and 100 single-turn DailyPersuasion dialogues.}
+    \label{tab:time_p4g_dp}
+\end{table}

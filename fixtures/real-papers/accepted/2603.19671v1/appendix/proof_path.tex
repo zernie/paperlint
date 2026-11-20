@@ -1,0 +1,343 @@
+
+
+
+
+\begin{lemma}
+For any graph $G$, path length $k$, and parameter $\beta$, 
+the $k$-round non-private algorithm $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}$ satisfies $
+    \mathbb{E}[\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)] = P_k $,
+and with probability at least $1 - \beta$,
+\begin{equation*}
+    |\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)-P_k| \leq
+    (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k
+    = O(\sqrt{N} d(G)^k).
+\end{equation*}
+\end{lemma}
+
+
+\begin{proof}
+
+We begin by associating a random variable $I$ with each $k$-line path in $G$, indexed arbitrarily. 
+Notably, we consider paths in different orientations to be treated as distinct.
+Let $I_q = 1$ if the $q$-th path is sampled by the algorithm, i.e., if the round indices of its nodes are exactly $0$ through $k$ in order; otherwise, set $I_q = 0$. 
+Thus, $\mathbb{E}[I_q] = \Pr[I_q=1] = (k+1)^{-(k+1)}$.
+Let $\rho = (k+1)^{-(k+1)}$, as the mechanism's output $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G) = \rho^{-1}\sum_q I_q$, we have
+\begin{equation*}
+    \mathbb{E}[\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)] = \rho^{-1}\sum_{q=1}^{P_k} \mathbb{E}[I_q] = P_k. 
+\end{equation*}
+% showing that $\mathcal{F}_{\mathrm{k\text{-}pt}}(G)$ is an unbiased estimator of $P_k$.
+
+Next, consider the variance of this output:
+\begin{equation*}
+    \operatorname{Var}(\rho^{-1}\sum_{q=1}^{P_k} I_q)
+    =
+    \rho^{-2}
+     \sum_{q,{q'} =1}^{P_k} \operatorname{Cov}(I_q, I_{q'}).
+\end{equation*}
+Let $s$ be the number of the same nodes that occupy the same order in the $q$-th and the $q'$-th paths in $G$.
+Then,
+\begin{align*}
+    \operatorname{Cov}(I_q, I_{q'}) 
+    &= \mathbb{E}[I_qI_{q'}] - \mathbb{E}[I_q]\mathbb{E}[I_{q'}] \\
+    &= \Pr[I_q = 1 \land I_{q'} = 1] - \rho^2\\
+    &\leq \rho^2 \, ((k + 1)^{s}-1),
+\end{align*}
+where inequality in the last line arises from the case that two paths overlap on the same nodes but in different positions, then $\Pr[I_q = 1 \land I_{q'} = 1] = 0$.
+When $s =0$, the covariance is at most $0$.
+Now, fix the $q$-th oriented path, the number of oriented $k$-line paths that overlap it in exactly $s$ nodes is upper bounded by:
+\begin{equation*}
+    n(s, k) \leq \binom{k+1}{s}\, d(G)^{k+1-s}.
+\end{equation*}
+Given that $P_k\leq N d(G)^k$, the total output variance is bounded as:
+\begin{align*}
+  \mathrm{Var}(\rho^{-1}\sum_q I_q) &\leq 
+   \rho^{-2} P_k \,
+   \sum_{s=1}^{k+1} n(s, k) \, \rho^2 \, ((k + 1)^{s}-1)
+   \\
+   & \leq
+   P_k \, \sum_{s=1}^{k+1} \binom{k+1}{s}
+   d(G)^{k+1-s}\,{(k + 1)^s}.  
+\end{align*}
+Using binomial expansion, 
+\begin{align*}
+    \sum_{s=1}^{k+1} \binom{k+1}{s} d(G)^{k+1-s}\,{(k + 1)^s} 
+    &= (d(G) +k+1)^{k+1} - d(G)^{k+1} \\
+    &= (k+1)\,\sum_{i=0}^{k} (d(G) + k + 1)^{k-i} d(G)^{i}\\
+    &\leq (k + 1)^{2} (d(G) + k + 1)^{k}.
+\end{align*}
+
+Finally, by Chebyshev's inequality (Lemma~\ref{lem:che_neq}), with probability at least $1- \beta$, 
+\begin{align*}
+     |\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G) -P_k| 
+     &\leq
+  \sqrt{N d(G)^k ({k+1})^2(d(G)+k+1)^{k} \beta^{-1}} \\
+  &\leq (k+1) \sqrt{N\beta^{-1}}(d(G)+k+1)^k\\
+  &= {O}(\sqrt{N}d(G)^k). \qedhere
+\end{align*}
+\end{proof}
+
+
+
+
+
+% privacy for pt
+
+\begin{theorem}
+    For any graph $G$, path length $k$, and privacy budget $\varepsilon$, the mechanism $\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+
+\begin{proof}
+Let $G$ and $G'$ be two edge-neighboring graphs that differ by a single edge $(v_i, v_j)$.  
+For each round $\ell \in \{1, \dots, k-1\}$, let $\mathcal{X}'^{(\ell)}$ denote the collective message produced by all $N$ nodes in $G'$.  
+Let the node markings for $G$ and $G'$ be $\mathbf{r}= (r_1, \dots, r_N)$ and $\mathbf{r}' = (r'_1, \dots, r'_N)$, respectively.  
+Since each node's mark is sampled independently of the graph's edge structure, the distributions of $\mathbf{r}$ and $\mathbf{r}'$ are identical and uniform over $\{0, 1, \dots, k\}^N$.  
+Hence, releasing node markings does not incur any privacy loss.
+
+
+
+Now, consider the case where both graphs have the same node markings, and the differing edge $(v_i, v_j)$ is sampled by the mechanism, i.e., nodes $v_i$ and $v_j$ receive consecutive marks.  
+Without loss of generality, assume the computation at node $v_i$ is affected.  
+Suppose $r_j, r_i < k - 1$ and $r_i = r_j + 1$. Then, the computations prior to round $r_i$ are identical for $G$ and $G'$, implying
+\begin{equation}
+\label{e:pt_privacy_1}
+     \frac{
+    \Pr[ 
+    (\mathbf{r}, \mathcal{X}^{(1)}, \dots, \mathcal{X}^{(r_j)}) = \mathcal{H}^{(\leq r_j)}
+    ]
+  }{
+    \Pr[ (\mathbf{r}', \mathcal{X}'^{(1)}, \dots, \mathcal{X}'^{(r_j)}) = \mathcal{H}^{(\leq r_j)}
+    ]
+  } = 1,
+\end{equation}
+where $\mathcal{H}^{(\ell)}$ denotes an arbitrary possible collective message at round $\ell$, and $\mathcal{H}^{(\leq\ell)}$ denotes the joint message through round $\ell$, including the random marking round.
+We use $\mathcal{X}^{(\leq r_j)}$ to denote $(\mathbf{r}, \mathcal{X}^{(1)}, \dots, \mathcal{X}^{(r_j)})$ for $G$, and analogously for $G'$.
+In round $r_i$, where the differing edge influences the computation, adding Laplace noise with scale $\|\mathcal{X}^{(r_i - 1)}\|_\infty/\varepsilon$ ensures:
+\begin{equation}
+\label{e:pt_privacy_2}
+    \frac{\Pr[\mathcal{X}^{(r_i)} = \mathcal{H}^{(r_i)} \mid 
+    \mathcal{X}^{(\leq r_j)} = \mathcal{H}^{(\leq r_j)}]}
+    {\Pr[\mathcal{X}'^{(r_i)} = \mathcal{H}^{(r_i)} \mid 
+    \mathcal{X}'^{(\leq r_j)} = \mathcal{H}^{(\leq r_j)}]} \leq e^\varepsilon.
+\end{equation}
+
+
+% Subsequently, given identical intermediate results up to round $r_i$, the computations in all later rounds yield the same distributions on both graphs. That is,
+% \begin{equation}
+% \label{e:pt_privacy_3}
+%      \frac{\Pr[
+%      \mathcal{X}^{(>r_i)} = \mathcal{H}^{( >r_i)} 
+%      \mid 
+%     \mathcal{X}^{(\leq r_i)} = \mathcal{H}^{(\leq r_i)}
+%     ]}
+%     {
+%     \Pr[\mathcal{X}'^{(>r_i)} = \mathcal{H}^{(> r_i)} 
+%     \mid 
+%    \mathcal{X}'^{(\leq r_i)} = \mathcal{H}^{(\leq r_i)}
+%     ]} = 1.
+% \end{equation}
+% Combining \eqref{e:pt_privacy_1}, \eqref{e:pt_privacy_2}, and \eqref{e:pt_privacy_3},
+
+Then, we can further utilize the post-processing theorem to know that the remaining rounds of outputs do not lead to any privacy loss of edge $(v_i,v_j)$. Further combining \eqref{e:pt_privacy_1}, \eqref{e:pt_privacy_2}, we conclude that the full sequence of outputs satisfies $\varepsilon$-edge-LDP.  
+
+In the case where $r_i = k-1$ and $r_j = k$, the joint outputs up to round $k-2$ are identically distributed across $G$ and $G'$, and the final round, where the differing edge affects node $v_i$'s output, satisfies $\varepsilon$-edge-DP. 
+This also results in an overall $\varepsilon$-edge-LDP guarantee for the joint results of $k$ rounds.
+
+Finally, if the differing edge is not sampled, then the outputs of all rounds are identical for $G$ and $G'$, resulting in zero privacy loss.  
+Note that although the mechanism operates on a sampled subset of edges, sampling amplification does not apply here since node markings are released to the analyzer.
+\end{proof}
+
+
+\begin{lemma}
+    For any graph $G$, path length $k$, parameters $\varepsilon$ and $\beta$, 
+$\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies
+$
+    \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)]
+    =  
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)$
+under the same node marking $(r_1, \dots, r_N)$, 
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)| 
+    &\leq 
+    {k(k+1)} \,
+    \gamma
+    \sqrt{N}
+    (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+    \\
+    &=  \tilde{O}(\sqrt{N} d(G)^{k-1}),
+\end{align*}
+where $\gamma = (k+1)\sqrt{8\log(6N/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil\gamma^2\rceil)$.
+\end{lemma}
+
+
+\begin{proof}
+
+As in the analysis for $k$-line walk counting under edge-LDP, each added Laplace noise has mean $0$.
+Hence, $\mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] = \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)$ under the same node markings $(r_1,\dots,r_N)$.
+
+
+To bound $|\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)|$, we introduce the notion of effective degree.
+For a node $v_i$, its effective degree to round $c$ is defined as
+\begin{equation}
+    \label{e:eff_deg}
+     d^{(c)}(v_i) := 
+   \sum_{j\in \mathcal{N}(i)} \mathbf{1}\{r_j = c\}.
+\end{equation} 
+Since the markings $r_j$ are independent across $j \in \mathcal{N}(i)$,
+\begin{equation*}
+    d^{(c)}(v_i)  \;=\; \sum_{j\in \mathcal{N}(i)} B_j,
+\qquad
+B_j \sim \operatorname{Ber}(\frac{1}{k + 1}).\ \text{i.i.d.}
+\end{equation*}
+In our mechanism, for any node marked $r_i = \ell$, only $d^{(\ell\pm1)}(v_i)$ is relevant. 
+Let $\gamma_1 = \sqrt{3(k + 1)\log(2N / \beta')}$ and $\hat{d}(G) = \max(d(G), \lceil \gamma_1^2 \rceil)$, then for every node $v_i$, $|\mathcal{N}(i)| \leq d(G) \leq \hat{d}(G)$.
+Applying the multiplicative Chernoff bound (Lemma~\ref{lem:con_cher}), for each $v_i$ and $c = r_i \pm 1$, we have with probability at least $1 - \beta'$:
+\begin{equation}
+\label{e:d*_bound}
+    d^{(c)}(v_i) \leq d^*(G) 
+    = \frac{1}{k + 1} \left( \hat{d}(G) + \gamma_1 \sqrt{\hat{d}(G)} \right),
+\end{equation}
+where $\delta = \gamma_1 / \sqrt{\hat{d}(G)} \leq 1$.
+
+
+
+
+
+Then, under the condition that \eqref{e:d*_bound} holds, we derive an upper bound on $\|\mathcal{X}^{(\ell)}\|_\infty$ for each $\ell \in \{1, \dots, k-1\}$, where $\mathcal{X}^{(k-1)}$ refers to the value before multiplication with $\sum_{j \in \mathcal{N}(i)} \mathbf{1}\{r_j = k\} + \mathrm{Lap}(1/\varepsilon)$.
+Following the proof for \eqref{e:round_max_wk},
+we allocate a failure probability of $\beta'/N$ to each node $v_i \in V$ to bound the Laplace noise added at round $r_i$ using the Laplace concentration bound (Lemma~\ref{lem:con_lap}). 
+By the union bound, with probability at least $1 - \beta'$, for all $\ell \leq k-1$,
+\begin{equation}
+\label{e:max_sampling_mi}
+    \|\mathcal{X}^{(\ell)}\|_\infty 
+    \leq (d^*(G) + \frac{\gamma_2}{k+1})^{\ell}
+     ,
+\end{equation}
+where $\gamma_2 = (k{+}1)\sqrt{8\log(2N/\beta')}/\varepsilon$.
+
+
+
+In the final round $k{-}1$, the analyzer computes
+\[
+    \mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) =(k+1)^{k+1}
+    \sum_{i=1}^N 
+    \mathcal{X}^{(k-1)}_i
+    \left(
+        \sum_{j \in \mathcal{N}(i)} \mathbf{1}\{r_j = k\}
+        + \mathrm{Lap}(\frac{1}{\varepsilon})
+   \right).
+\]
+We divide the total error $|\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)|$ into two components. 
+    The first arises from the additive error in 
+\[
+(k+1)^{k+1} \sum_{i=1}^N\mathcal{X}_i^{(k-1)} \sum_{j \in \mathcal{N}(i)}\mathbf{1}\{r_j = k\},
+\]
+and can be expressed as
+\begin{equation*}
+    (k+1)^{k+1} \, \sum_{\ell=1}^{k-1} \sum_{i=1}^N  
+   \mathrm{Lap}(
+   \frac{1}{\varepsilon} 
+   \,
+    \|\mathcal{X}^{(\ell-1)}\|_\infty   \,
+   {P}_{k-\ell}(i)
+   ),
+\end{equation*}
+where ${P}_{k-\ell}(i)$ denotes the number of $(k{-}\ell)$-line paths starting with node $v_i$, with marks from $\ell$ to $k$. 
+Clearly, ${P}_{k-\ell}(i) \leq {d^*(G)}^{k-\ell}$.
+Allocating a failure probability of $\beta'/N$ for each round $\ell \in \{1, \dots, k{-}1\}$ yields an upper bound of 
+$
+   (k+1)^{k}(k-1) \,  \gamma_2  \sqrt{N}(d^*(G) + {\gamma_2}/({k+1}))^{k-1}.
+$
+The second part of the error is
+   \begin{align*}
+ (k+1)^{k+1}
+ \,
+ \sum_{i=1}^N  \mathrm{Lap}(\frac{1}{\varepsilon} \, \mathcal{X}^{(k -1)}_i),
+\end{align*}
+which is upper bounded by $
+     (k+1)^{k} \, \gamma_2 \sqrt{N}(d^*(G) + {\gamma_2}/{(k+1)})^{k-1}
+$
+using the Laplace concentration bound with a failure probability of $\beta'/N$. 
+
+
+
+
+Summing up both parts, the total error is bounded by
+\begin{align*}
+ &(k+1)^{k} k \, \gamma_2 \sqrt{N}(d^*(G) + \frac{\gamma_2}{k+1})^{k-1} \\
+   &= {k(k+1)} \, \gamma_2 \sqrt{N}(\hat{d}(G) + \gamma_1\sqrt{\hat{d}(G)} + \gamma_2)^{k-1}
+\end{align*}
+with probability at least $1- \beta'-\beta' -k\beta'/N \geq 1-3\beta'$. 
+Thus, setting $\beta' = \beta/3$ ensures the same error bound holds with probability at least $1-\beta$, with
+$\gamma_1 = \sqrt{3(k+1)\log(6N/\beta)}$, $\gamma_2 = (k+1)\sqrt{8\log(6N/\beta)}/\varepsilon$, and $\hat{d}(G) = \max(d(G), \lceil \gamma_1^2 \rceil)$.
+In typical settings where $\varepsilon \leq \sqrt{8(k+1)/3}$, we have $\gamma_2 \geq \gamma_1$, so we replace $\gamma_1$ with $\gamma_2$ in the error bound for simplicity.
+Finally, since $\hat{d}(G) = O(d(G))$, the error bound is of 
+$\tilde{O}(\sqrt{N}d(G)^{k-1})$. \qedhere
+
+\end{proof}
+
+
+
+
+\begin{theorem}
+    For any graph $G$, path length $k$, parameters $\varepsilon$ and $\beta$, the $k$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}pt}}$ satisfies $
+    \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] =  
+    P_k$,
+and with probability at least $1 - \beta$,
+\begin{align*}
+    |\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    P_k|  \leq  (k+1) \sqrt{2N\beta^{-1}}(d(G)+k+1)^k + \\ 
+          {k(k+1)} \, 
+        \gamma
+        \sqrt{N}
+        (\hat{d}(G) + \gamma \sqrt{\hat{d}(G)} + \gamma)^{k-1} 
+          =  \tilde{O}(\sqrt{N} d(G)^{k}),
+\end{align*}
+where $\gamma = (k+1)\sqrt{8\log(12N/\beta)}/\varepsilon = \tilde{O}(1) $ and $\hat{d}(G) = \max(d(G), \lceil\gamma^2\rceil)$.
+\end{theorem}
+
+
+
+
+\begin{proof}
+We first establish that $
+\mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] = P_k$.
+By Lemma~\ref{lem:k-lp_sampling_bound}, $
+\mathbb{E}[\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)] = P_k$.
+Moreover, Lemma~\ref{lem:k-lp_additive_bound} implies that, for any fixed assignment of node markings $\mathbf{r} = (r_1, \dots, r_N)$,
+$
+\mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] = \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)
+$.
+For clarity, we use $\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon, \mathbf{r})$ and $\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G, \mathbf{r})$ to denote the outputs of the respective mechanisms under fixed markings $\mathbf{r}$. Since the node markings are drawn uniformly from $\{0, 1, \dots, k\}^N$, we take the expectation over all such $\mathbf{r}$:
+\begin{align*}
+     \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)] 
+     &= \sum_{\mathbf{r} \in \{0, 1, \dots, k\}^N} \Pr[\mathbf{r}] \cdot \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon,  \mathbf{r})] \\
+     &= \sum_{\mathbf{r}} \Pr[\mathbf{r}] \cdot \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G, \mathbf{r}) \\
+     &= \mathbb{E}[\widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)] = P_k.
+\end{align*}
+This concludes the proof that $\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon)$ is an unbiased estimator of $P_k$.
+
+Secondly, for the utility bound, consider an arbitrary marking $\mathbf{r} \in \{0, 1, \dots, k\}^N$. We apply the triangle inequality:
+\begin{equation*}
+|\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    P_k| \leq |\mathcal{M}_{\mathrm{k\text{-}pt}}(G, \varepsilon) - 
+    \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G)| 
+    + | \widehat{\mathcal{M}}_{\mathrm{k\text{-}pt}}(G) - P_k|.  
+\end{equation*}
+Combining the utility bound in Lemma~\ref{lem:k-lp_sampling_bound} and Lemma~\ref{lem:k-lp_additive_bound} with a failure probability of $\beta/2$ to each, the union bound implies that the result in the theorem holds with probability at least $1 - \beta$. \qedhere
+
+\end{proof}
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,22 @@
+\begin{table*}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{15cm}}
+        \toprule
+        % \bf{Prompt} \\
+        % \midrule
+        You are a skilled persuader. \\
+        The persuasion background: \{background\} \\
+        The persuasion goal: \{goal\}.  \\
+        To achieve this, you will first analyze the current conversational context, then evaluate and select the most effective dialogue strategy to persuade effectively. Afterward, you will generate a response based on the dialogue history and the selected dialogue strategy. The reply should start with the analysis of the current conversational context and consideration of the next dialogue strategy, followed by ``Therefore, the appropriate dialogue strategy is []. Based on the selected dialogue strategy, the response is'' \\
+        Please reply with only one short and persuasive sentence in English. \\
+        \\
+        Dialogue strategies: \{persuasive\_strategies\} \\
+        The following is the conversation history: \\
+        \{conversation\_history\} \\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Prompt template of ProCoT-based agent in DailyPersuasion.}
+    \label{tab:procot-daily-persuasion}
+\end{table*}

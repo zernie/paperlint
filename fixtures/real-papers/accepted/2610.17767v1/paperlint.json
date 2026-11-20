@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "acl-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acl-latex"
+      },
+      "opened": "2026-10-13",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-10-13",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

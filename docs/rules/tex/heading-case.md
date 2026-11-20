@@ -373,10 +373,10 @@ here.
 A rule that judges a venue's requirement is validated on papers of that venue, not on fixtures its
 author wrote. Two corpora, 2026-10-03, both measured on headings, before the rule read `\title`:
 
-- **The accepted paper in this repository**, `fixtures/accepted-papers/agenticdev-acm26`: 9
+- **The accepted paper in this repository**, `fixtures/real-papers/accepted/agenticdev-acm26`: 9
   headings, 6 of them in sentence case, which the vendor's checklist does not accept. The rule
   reports 18 words, every one a true positive, and its fixes write the six corrected
-  headings ([`fixtures/accepted-papers/README.md`](https://github.com/zernie/paperlint/blob/main/fixtures/accepted-papers/README.md)).
+  headings ([`fixtures/real-papers/accepted/README.md`](https://github.com/zernie/paperlint/blob/main/fixtures/real-papers/accepted/README.md)).
   Its `\title` and short title, read since 2026-10-04, are already in headline style and add no
   finding.
 - **277 `acmart` sources from arXiv** (authors' versions of papers whose arXiv comment names an ACM

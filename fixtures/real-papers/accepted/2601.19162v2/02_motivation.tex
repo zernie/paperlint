@@ -1,0 +1,159 @@
+\section{Background and Motivation}
+\label{sec:motivation}
+
+\subsection{Primer on Multi-Access Edge Computing}
+\label{sec:primer}
+
+Multi-Access Edge Computing (MEC) brings computational resources closer to end users by deploying compute infrastructure close to cellular base stations~\cite{etsi-mec}.
+The MEC architecture consists of three key components: the RAN that manages wireless spectrum and radio resource scheduling, edge servers that provide CPU and GPU resources, and the core network that connects the RAN and the servers.
+In the typical MEC request-response model, LC applications offload compute-intensive tasks from client devices to edge servers.
+Clients send requests via RAN uplink, edge servers process them locally, and responses return via RAN downlink.
+
+\begin{table}[]
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.0}
+\footnotesize
+\centering
+\begin{tabular}{@{}p{2.1cm}p{2.0cm}p{0.8cm}p{1.2cm}p{1.2cm}@{}}
+\toprule
+\textbf{Applications} & \textbf{Offloaded Task} & \textbf{SLO} & \textbf{UL/DL Load} & \textbf{Compute Resource} \\ \midrule
+Smart stadium~\cite{www-orange-5gstadium} & Video transcoding & 100ms & High/High & CPU \\
+Augmented reality~\cite{mao2019delay, padmanabhan2023gemel} & Object detection & 100ms & Med/Low & GPU \\
+Video conferencing~\cite{www-zoom-latency, www-wikipedia-audio-latency} & Super resolution & 150ms & Low/High & GPU \\ \bottomrule
+\end{tabular}
+\caption{Examples of MEC applications evaluated in this paper, each with distinct SLO, network (uplink/downlink) load, and compute resource requirements. Details are described in~\autoref{sec:eval-setup}.}
+\label{tbl:apps}
+\vspace{-1em}
+\end{table}
+
+\autoref{tbl:apps} shows the MEC applications we focus on in this paper, each with distinct SLO, network load, and compute resource requirements.
+We target realistic MEC deployments where multiple user equipment (UE) devices (\eg smartphones, cameras, AR headsets) simultaneously offload compute-intensive tasks to edge servers.
+
+However, as we demonstrate next, the reality of current MEC deployments falls short of these performance promises.
+
+\subsection{Unpredictable Performance of MEC}
+\label{sec:unpredictable}
+
+We benchmarked MEC deployments across three cities in the US, South Korea, and China (Dallas, Seoul, and Nanjing) to quantify this performance gap.
+
+\mypara{Measurement setup.}
+We deployed the smart stadium and augmented reality applications from~\autoref{tbl:apps} using a laptop client connected to a 5G smartphone hotspot and edge VMs provisioned through edge service providers (\eg AWS in the US).
+Each application runs in isolation (\ie no contention on the VM), generates 10,000 requests, and we measure end-to-end latency from request transmission to complete response reception.
+For brevity, we focus our analysis on the smart stadium application, presenting results from all three cities that employ different combinations of cellular operators and cloud providers.
+We observe similar trends for the augmented reality application across all cities (\autoref{appnd:ar}).
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/ran-contention/video-transcoding/e2e_latency_cdf.pdf}
+    \tightcaption{End-to-end latency for the smart stadium application without edge resource contention across MEC deployments in three cities. The dotted red line indicates the SLO.}
+    \label{fig:motive-e2e-transcoding-ran}
+\end{figure}
+
+\mypara{Results.}
+\autoref{fig:motive-e2e-transcoding-ran} reveals unpredictable performance characterized by high tail latencies across all deployments, even without compute resource contention on the edge server.
+Specifically, 7\%, 20\% and 47\% of requests exceed their SLO requirements in \dallas, \nanjing, and \seoul, respectively, during low network activity periods (measured at 2am).
+Although median latencies remain below the SLO threshold, the P95 and P99 latencies are substantially higher, resulting in an inconsistent user experience.
+This problem intensifies under higher network load: when additional UE devices access the 5G network and increase contention for RAN resources (\dallas-Busy), even the median latency exceeds the SLO requirements.
+
+
+\subsection{Root Causes of Unpredictability}
+\label{sec:root-cause}
+
+To understand the sources of this unpredictability, we investigate what contributes to the tail latency in both the RAN and the edge server.
+
+\subsubsection{RAN Resource Contention}
+\label{sec:wireless-bottlenecks}
+
+To analyze RAN-induced latency variability, we decompose end-to-end latency into uplink and downlink transmission phases.
+Using Precision Time Protocol (PTP)~\cite{ptp-std} for clock synchronization between client device and edge server via a stable out-of-band wired connection, we developed a synthetic application that  measures uplink and downlink latency separately while varying request and response sizes.
+Specifically, we measured the time to receive complete requests at the server (uplink) and complete responses at the client (downlink) while varying data size. 
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-decompose-results/total_latency_boxplot.pdf}
+    \tightcaption{Network latency variability for uplink and downlink transmissions across different data sizes in \dallas.
+ Data size refers to request size for uplink and response size for downlink.}
+    \label{fig:motive-decompose}
+\end{figure}
+
+\autoref{fig:motive-decompose} reveals an asymmetry that explains MEC's unpredictable performance: 
+uplink latency exhibits high variability, especially for larger request sizes, while downlink latency remains stable.
+This reflects how cellular networks provision fewer uplink slots than downlink slots, causing higher contention for uplink transmissions.
+We observe similar trends across all measured cities (\autoref{appnd:latency-variability}).
+
+To understand the specific mechanisms causing uplink jitter, we leveraged our srsRAN 5G~\cite{srsran}-based testbed for in-depth analysis (details in~\autoref{sec:eval-setup}), since we have no visibility into the internals of public cellular networks.
+The srsRAN stack employs the proportional fair (PF) scheduling algorithm~\cite{kelly1997charging,jalali2000data} used in commercial deployments, allowing us to emulate real-world scheduling behavior.
+
+We ran the smart stadium application on the testbed and monitored MAC layer state by collecting buffer status reports (BSRs) sent from each UE.
+As a background workload, we also deployed five file transfer UEs.
+BSRs indicate remaining data in UE-side transmission buffers, providing direct insight into whether the scheduler allocates sufficient RAN resources\footnote{We use the term RAN resources to refer to uplink and downlink spectrum resources managed by the MAC scheduler (\ie Physical Resource Blocks in 5G).} to meet application demands.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/transcoding-bsr/request_bsr.pdf}
+    \tightcaption{
+        Smart stadium UE's uplink buffer status changes over time. 
+        300 KB is the maximum for BSR from UE to the RAN, which means UE may buffer more than 300 KB.
+    }
+    \label{fig:uplink-bsr}
+\end{figure}
+
+\autoref{fig:uplink-bsr} shows persistent non-zero BSR (>1s), indicating uplink starvation from PF scheduling.
+This resource starvation directly translates to the observed uplink jitter; inadequate resource allocation causes unpredictable buffering delays that lead to SLO violations.
+
+The root cause is PF schedulers' lack of SLO awareness.
+They prioritize UEs with relatively better channel conditions to their historical average throughput, balancing fairness and efficiency without considering SLO requirements.
+When multiple UEs compete for uplink resources, LC applications cannot obtain timely allocations, missing SLO requirements even when aggregate bandwidth is sufficient.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/measurement-contention-results/compute-contention/video-transcoding/Dallas/e2e_latency_cdf.pdf}
+    \tightcaption{End-to-end latency for smart stadium under different levels of compute resource contention in \dallas. The dotted red line indicates the SLO.}
+    \label{fig:motive-e2e-transcoding-compute}
+\end{figure}
+
+\subsubsection{Edge Compute Resource Contention}
+\label{sec:compute-bottlenecks}
+
+While wireless resource allocation causes unpredictable uplink performance, edge compute resources present an additional bottleneck in MEC deployments.
+To quantify the impact of compute resource contention, we emulate competing offloaded tasks by running a CPU stressor (stress-ng~\cite{stress-ng}) with varying CPU usage levels.
+\autoref{fig:motive-e2e-transcoding-compute} shows that compute resource contention significantly contributes to unpredictable performance of the smart stadium application.
+As CPU load increases, tail latencies grow substantially, confirming that inadequate management of edge compute resources causes processing delays that cascade into SLO violations.
+This problem extends to GPU-intensive applications and other MEC deployments (\autoref{appnd:compute-contention}).
+
+
+\subsection{Prior Approaches and Limitations}
+\label{sec:prior}
+
+Having identified the root causes of unpredictable MEC performance, we now examine existing resource management approaches and discuss why they fall short for our setting.
+
+\mypara{MEC-specific resource management.}
+Recent MEC resource management proposals suffer from impractical deployment requirements and limited scope as we show in~\autoref{sec:eval}.
+\tutti{}~\cite{xu2022tutti} assumes explicit coordination between the RAN  and edge applications, requiring servers to notify the RAN upon receiving requests and transport protocol modifications to identify ``first packets.''
+This is impractical because RAN infrastructure and edge servers are typically managed by different entities (\eg Verizon operates the RAN while AWS provides edge compute).
+Even setting deployment issues aside, \tutti{} fails to timely accelerate LC requests due to feedback delays between edge servers and RAN.
+Moreover, \tutti{} only supports homogeneous applications with identical SLOs.
+\arma{}~\cite{arma:mobisys25} similarly requires coordination between edge servers and RAN schedulers, is narrowly tailored to video analytics, and allows non-LC applications to block LC ones when their uplink bandwidth usage is high.
+Both systems focus solely on RAN scheduling while ignoring edge compute resource management for co-existing heterogeneous applications.
+
+\mypara{SLO-aware resource management in clouds.}
+A natural approach for managing compute resources is to adapt existing SLO-aware resource management solutions from cloud environments.
+However, these solutions are ill-suited for our target LC applications.
+PARTIES~\cite{parties:asplos19} reactively adjusts server resource partitions based on SLO feedback from clients, but fails in MEC where wireless feedback delays mean multiple requests miss deadlines before adjustments take effect.
+Caladan~\cite{caladan:osdi20} employs proactive CPU core allocation without requiring client feedback but requires extensive application modifications.
+ML-based schedulers like OSML~\cite{liu2023intelligent} incur inference overhead and operate at second-level intervals, making them too slow to react within the tens of milliseconds required for LC applications.
+Similarly, UFO~\cite{peng2024ufo} relies on changes in system-wide metrics (\eg CPU utilization, scheduling frequency) captured at second-level intervals to infer potential SLO violations and makes scheduling decisions, which reacts too slowly for LC applications. 
+Vessel~\cite{lin2024fast} assumes all processes share one memory space and relies on hardware-assisted core allocation, limiting its applicability in multi-tenant MEC settings and beyond CPU scheduling.
+
+\mypara{End-to-end rate control mechanisms.}
+End-to-end congestion control mechanisms~\cite{carlucci2017congestion,zhu2020network,johansson2017self} are ill-suited for LC applications in MEC environments.
+Congestion control requires hundreds of milliseconds to converge, causing SLO violations before it can react to uplink congestion.
+Also, the 5G uplink channel quality fluctuates rapidly due to limited UE transmission power and varying user counts, making it nearly impossible for congestion control to stabilize.
+\modified{Even approaches that leverage 5G control-channel information (\eg PBE-CC~\cite{xie2020pbe}) to react quickly run solely at the end host and cannot directly influence RAN uplink scheduling.
+Under severe wireless contention, the RAN may allocate minimal or no uplink resources to a UE, so sender-side adaptation alone is insufficient to satisfy SLO requirements.}
+Additionally, many LC applications rely on constant or variable bitrate encoding to maintain video quality~\cite{Fortinet2020_IPSurveillanceCameraBandwidth,Sony_BRCX400_Specs}, where reactive rate adaptation directly degrades quality.
+
+\modified{\mypara{URLLC.}
+5G Ultra-Reliable Low-Latency Communication (URLLC), a service category designed for mission-critical applications, achieves low latency and high reliability through conservative radio configurations and dedicated resource reservations~\cite{esti-5g-arch}.
+However, this approach reduces spectrum efficiency: reserved resources often remain underutilized, and reliability-enhancing techniques consume additional radio resources without commensurate benefit.
+The inefficiency is particularly pronounced for uplink-heavy workloads where resource demand is dynamic, making static reservations ill-suited for our setting.}

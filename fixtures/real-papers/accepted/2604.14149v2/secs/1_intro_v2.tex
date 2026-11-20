@@ -1,0 +1,32 @@
+\begin{figure}
+    \centering
+    \includegraphics[width=0.97\linewidth]{figs/slides_with_pdf/teaser.pdf}
+    \caption{\textbf{Left:} We present \name that explores using the LLM layers to progressively compress the video tokens towards the extreme of \emph{one token per frame}. \textbf{Right:} Such capabilities enable the model to better improve itself with denser input frames without significantly increasing video tokens. }\vspace{-5pt}
+    \label{fig:teaser}
+\end{figure}
+
+\section{Introduction}
+\label{sec:intro}
+
+Enabling vision-language models (VLMs) to comprehensively understand long videos remains a critical yet formidable challenge~\cite{song2024moviechat, he2024ma, xu2024slowfast, cheng2024videollama, li2024videochat, li2024llava, lin2023video, wang2022internvideo, wang2024internvideo2, huang2024image, xu2024pllava}. The sheer volume of visual information challenges current VLMs' inherent context length constraints: as each frame is encoded into tens or hundreds of tokens, processing more than 1k frames usually exceeds the typical context lengths or computational budgets of the large language model (LLM) layers for the VLMs~\cite{chen2024longvila} during both training and inference. Yet, such a framework is still far from processing an hour-long video at more than one frame per second (FPS), easily losing critical temporal information and visual details. Therefore, how to effectively \emph{compress the tokens of video frames while maintaining useful information} becomes the major bottleneck. In this paper, we explore the extreme of this direction and propose an approach to compress each video frame into \emph{one single highly informative token} when reaching the final layer of the LLM in VLMs, thereby unlocking an unprecedented density of frames for VLMs to process.
+
+From this aspect, we aim to achieve extreme compression at the \emph{token level}: condensing the information from tens or hundreds of tokens per frame into a single token. Existing methods predominantly rely on heuristic-based or training-free strategies, such as special token selection~\cite{shen2024longvu, gao2024interleaved, li2024videochat} and pooling~\cite{li2024llavanext, li2023videochat}. Despite their reduced token counts, these methods risk discarding crucial visual tokens, as their underlying LLM layers of the VLMs were not supervised to encapsulate the capability of compression, \emph{i.e.}, condense the contexts from the dropped tokens into the kept ones. As a result, our analysis (Table~\ref{tab:lvbench_ablation}) reveals the limitations of such heuristic approaches when reaching high compression ratios. Therefore, our key insight is that the LLM layers should be supervised to compress extensive video data into remarkably fewer representative tokens via an additional \emph{supervised compression tuning} stage, motivating \emph{learnable} compression. To further avoid drastically losing information at large compression ratios, we let the LLM layers \emph{progressively} compress the visual tokens with a smooth schedule. These two combined lead to our ``\emph{learnable} and \emph{progressive} compression''  (LP-Comp) as in Fig.~\ref{fig:teaser}, which marks clear distinctions with previous heuristic methods. 
+
+
+In addition to decreasing the number of tokens per frame, the token efficiency of long video understanding can be further enhanced by selecting the most relevant frames, corresponding to the compression at the \emph{frame level}. Within the internal representation of VLMs, the distinctions of such relevant frames can be intuitively evaluated by the attention scores between the questions and the video tokens~\cite{gao2024interleaved}, where the frames having larger attention scores are preferred. However, a bottleneck under-explored by the previous methods is the internal \textit{position bias} of LLM transformers in long context understanding: the attention heads might assign larger scores to the tokens at the beginning or the end of the sequence~\cite{liu2023lost}. Inspired by local attention~\cite{zhang2023efficient, miao2024x, ataallah2024goldfish}, under the context of long video understanding, this motivates a splitting of long videos into short video chunks for frame-level compression, where our model inspects the relevance of frames inside each video segment. Such a step effectively utilizes the question information and is referred to as \emph{question-conditioned} compression (QC-Comp).
+
+
+Combining both \emph{learnable \& progressive} compression (LP-Comp) and \emph{question-conditioned} compression (QC-Comp), we propose a VLM named \textbf{\name} that could achieve extreme token efficiency towards \emph{one-token-per-frame for highly selective frames}. Notably, the compression behavior of the LLM layers can be learned via a data-efficient \emph{supervised compression tuning} stage requiring only 2.5\% of the supervised fine-tuning (SFT) data of VideoChat-Flash~\cite{li2024videochat}. More importantly, such token efficiency enables us to sample the frames densely and significantly enhance the performance as the LVBench~\cite{wang2024lvbench} evaluation in Fig.~\ref{fig:teaser}: our method not only achieves better accuracy on a token-for-token efficiency basis, but also keeps improving with the number of input frames increases, while VideoChat-Flash experiences performance drops after a certain frame number.
+
+
+In summary, we make the following contributions:
+
+\begin{enumerate}[leftmargin=*, noitemsep, nolistsep]
+
+\item We introduce \textbf{LC-Comp}, a \emph{learnable} and \emph{progressive} framework that supervises LLM layers to compress at the token level, without purely relying on heuristics.
+
+\item We propose \textbf{QC-Comp}, a frame-level \emph{question-conditioned} selection method that effectively selects the relevant frames for specific questions.
+
+\item We demonstrate the effectiveness of our token compression towards \emph{each selected video frame as a single token}, drastically increasing the number of frames that can be processed and leading to improved long video understanding accuracy.
+\end{enumerate}
+

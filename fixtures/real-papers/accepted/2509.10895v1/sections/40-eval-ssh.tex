@@ -1,0 +1,173 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We select \nrImplementations SSH server implementations that, according to the official Terrapin attack website,\footnote{\url{https://terrapin-attack.com/patches.html}, accessed: 2025-04-14} implement the strict KEX countermeasure (see \autoref{tab:eval_ssh_impl}). We only tested the latest version of each implementation to exclude early versions of the countermeasure with potentially faulty implementations, since strict KEX was introduced less than two years ago. Our selection includes well-known servers like OpenSSH, Dropbear, Bitvise SSH, and Tectia SSH, and libraries such as AsyncSSH, Golang's x/crypto/ssh, and libssh, which is used by GitLab and by KDE (a desktop environment for Linux). LANCOM LCOS is part of the firmware of an embedded network device, and Erlang SSH is part of OTP, the Open Telecom Platform by Ericsson, commonly used in network devices. TinySSH is included because it is a minimalist server implementation focusing on modern cryptographic primitives, such as post-quantum algorithms. All implementations support the ECDH key exchange flow, and most also support DH and DHGEX, while six support the selected PQ-hybrid key exchange. Only one implementation supports RSA. We evaluated each implementation in a lab environment with our state learner. We learned one state machine for each combination of implementation and supported key exchange flow type, with \msgkexinit bound to that key exchange algorithm. This resulted in a total number of \nrStateMachines state machines for analysis. Detailed learning statistics can be found in the additional material in the artifacts.
+
+For Bitvise SSH, we were forced to artificially close the connection when the learner attempted a key re-exchange, that is, when sending another \msgkexinit symbol inside an already established secure channel. This is because Bitvise SSH buffers messages sent during the key re-exchange and processes them collectively after the key re-exchange has concluded, resulting in new states with each non-KEX message sent during a key re-exchange, eventually causing a combinatorial explosion. With Tectia SSH and LANCOM LCOS, and libssh with DHGEX, our learner did not converge due to significant strict KEX violations or repeated cache conflicts. In these cases, we manually terminated the learning process after one hour and used the last hypothesis for analysis.
+
+For every implementation, \autoref{tab:eval_ssh_impl} also includes an overview of the observed violations by category, which are described in the following subsection. We also explain every violation in greater detail in \autoref{sec:eval:sub:violations}. These results include two severe security vulnerabilities, resulting in a rogue session attack (cf.~\cite{USENIX:BauBriSch24}) against Tectia SSH and a pre-authentication remote code execution attack in Erlang SSH. We discuss these attacks in subsections~\ref{sec:eval:sub:tectia} and~\ref{sec:eval:sub:erlang}.
+
+\newcommand{\violation}{\color{red}\faBug\xspace}
+\newcommand{\noviolation}{\color{DarkGreen}\faMinus\xspace}
+\begin{table*}
+    \centering
+    \caption{SSH server implementations and their support key exchange flow types included in the evaluation, and the observed strict key exchange violations for at least one of the flows. For all implementations, one algorithm of each key exchange algorithm flow type is learned.}
+    \label{tab:eval_ssh_impl}
+    \begin{tabular}{llccccccccccc}
+        \toprule
+        ~ & ~ & ~ & \multicolumn{5}{c}{Supported Key Exchange Flows} & \multicolumn{5}{c}{Observed Violations} \\
+        \cmidrule(lr){4-8}\cmidrule(lr){9-13}
+        Implementation & Version & OS & DH & DHGEX & RSA & ECDH & PQ-Hybrid & C1 & C2 & C3 & C4 \\
+        \midrule
+        AsyncSSH & 2.20.0 & \faLinux & \supported & \supported & \supported & \supported & \supported & \noviolation & \violation & \noviolation & \noviolation \\
+        Bitvise SSH & 9.43 & \faWindows & \supported & \supported & \unsupported & \supported & \unsupported & \noviolation & \noviolation & \noviolation & \noviolation \\
+        Dropbear & 2025.87 & \faLinux & \supported & \unsupported & \unsupported & \supported & \supported & \noviolation & \noviolation & \noviolation & \violation \\
+        Erlang SSH & 5.2.8 & \faLinux & \supported & \supported & \unsupported & \supported & \unsupported & \noviolation & \noviolation & \violation & \noviolation \\
+        Golang x/crypto/ssh & 0.37.0 & \faLinux & \supported & \unsupported & \unsupported & \supported & \unsupported & \noviolation & \noviolation & \noviolation & \noviolation \\
+        LANCOM LCOS & 10.90.0126 Rel & \faNetworkWired & \supported & \supported & \unsupported & \supported & \supported & \noviolation & \noviolation & \violation & \noviolation \\
+        libssh & 0.11.1 & \faLinux & \supported & \supported & \unsupported & \supported & \unsupported & \noviolation & \violation & \noviolation & \noviolation \\
+        OpenSSH & 9.9p2 & \faLinux & \supported & \supported & \unsupported & \supported & \supported & \noviolation & \noviolation & \noviolation & \noviolation \\
+        Tectia SSH & 6.6.5.353 & \faWindows & \supported & \supported & \unsupported & \supported & \supported & \violation & \noviolation & \violation & \noviolation \\
+        TinySSH & 20250201 & \faLinux & \unsupported & \unsupported & \unsupported & \supported & \supported & \noviolation & \noviolation & \noviolation & \violation \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\subsection{Violation Categories}
+
+Implementing strict KEX handshake hardening measures is non-trivial, as these are not cryptographically ensured and can go unnoticed. That is because any benign peer negotiating a handshake with strict KEX enabled expects the remote peer to close the connection on optional or invalid messages, and would, therefore, shy away from sending such messages in the first place. During the evaluation, we encountered four main categories of strict KEX violations.
+
+\begin{figure*}[t]
+    \begin{subfigure}[]{.24\linewidth}
+        \centering
+        \frame{\includegraphics[width=\textwidth,page=2]{img/SSH_State_Machines.pdf}}
+        \caption{C1 -- Early Message Injection}
+        \label{sec:eval:fig:c1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[]{.24\linewidth}
+        \centering
+        \frame{\includegraphics[width=\textwidth,page=3]{img/SSH_State_Machines.pdf}}
+        \caption{C2 -- Flow-dependent Injection}
+        \label{sec:eval:fig:c2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[]{.24\linewidth}
+        \centering
+        \frame{\includegraphics[width=\textwidth,page=4]{img/SSH_State_Machines.pdf}}
+        \caption{C3 -- Partial Hardening}
+        \label{sec:eval:fig:c3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[]{.24\linewidth}
+        \centering
+        \frame{\includegraphics[width=\textwidth,page=5]{img/SSH_State_Machines.pdf}}
+        \caption{C4 -- Late Message Injection}
+        \label{sec:eval:fig:c4}
+    \end{subfigure}
+    \caption{Idealized state machines illustrating different strict KEX violation categories which were observed during the evaluation. A single implementation can be subject to multiple violation categories simultaneously. Flow-dependent injections are limited to a proper subset of all supported key exchange algorithms, while violations in other categories are independent of the negotiated key exchange algorithm.}
+    \Description{The figure consists of four different state machine graphs describing different violations to the strict KEX extension. The first one, called early message injection (C1), has an additional state transition between the PRE KEXINIT and ALG NEGOTIATION DONE states. The second one has an additional self-loop inside the key exchange and is titled flow-dependent injection (C2). The third one has additional self-loops in all happy flow states and is titled partial hardening (C3). The last one has an additional self-loop just before the key exchange concludes, depicting an early restriction lifting, and is named late message injection (C4).}
+\end{figure*}
+
+\paragraph{Category 1 (C1) -- Early Message Injection (\autoref{sec:eval:fig:c1})}
+
+As support for the strict KEX extension is signaled as part of the \msgkexinit message, enforcing strict KEX restrictions before both peers send their \msgkexinit message is impossible. Consequently, peers negotiating strict KEX for a connection must check that the remote peer's \msgkexinit was the first binary packet protocol message received in hindsight. One implementation violated this, allowing for message injection immediately after the protocol version exchange.
+
+\paragraph{Category 2 (C2) -- Flow-Dependent Injection (\autoref{sec:eval:fig:c2})}
+
+The sequence of allowed messages in an SSH handshake depends on the negotiated key exchange algorithm. That is, the message flow between the \msgkexinit and \msgnewkeys messages cannot be implemented with static messages, but rather requires dynamic behavior depending on the key exchange algorithms supported by the remote peer. Depending on the implementation, this can impact handshake hardening if message restrictions are only implemented for one flow type but not the other. We identified two implementations that violated this category, as they were compliant with strict KEX requirements in some but not all key exchange flow types.
+
+\paragraph{Category 3 (C3) -- Partial Hardening (\autoref{sec:eval:fig:c3})}
+
+When implementing handshake hardening measures as a blocklist rather than an allowlist, for example, by explicitly filtering \msgignore and \msgdebug, implementors may overlook optional message types or not consider unknown message IDs. Additionally, blocklists must be changed dynamically to prevent expected message types from being accepted out of order. We found three implementations that missed at least one unexpected or invalid message when enforcing strict KEX.
+
+\paragraph{Category 4 (C4) -- Late Message Injection (\autoref{sec:eval:fig:c4})}
+
+Restrictions by strict KEX must be enforced until both parties have concluded the key exchange by sending \msgnewkeys. Although no strict order for \msgnewkeys messages is enforced in the specification, for all key exchange flow types except RSA, the server is the first party capable of computing the session keys and, thus, sending the \msgnewkeys message. Therefore, servers must take care not to lift strict KEX restrictions after sending \msgnewkeys, but after receiving \msgnewkeys from the client. We found two server implementations that allowed otherwise forbidden messages before the key exchange concluded.
+
+\subsection{Strict Key Exchange Violations}
+\label{sec:eval:sub:violations}
+
+During our evaluation, we identified a total of \nrViolatingImplementations server implementations that failed to meet the requirements set by strict KEX. Golang's x/crypto/ssh library and OpenSSH are the only implementations we analyzed that implement a strict KEX compliant with the specification and immediately close the connection.
+
+Bitvise SSH and libssh implement strict KEX with a different approach by maintaining an internal taint flag that is set whenever an unexpected or invalid message is received during key exchange. Once the key exchange concludes, the server terminates the connection if the taint flag is set and strict KEX is active, resulting in a state machine similar to the one shown in \autoref{sec:eval:fig:taint}. While not strictly compliant with the specification, this approach prevents any handshake violating the strict KEX requirements from continuing into the secure channel. Therefore, we do not consider taint-based implementations an inherent violation of the requirements of strict KEX if implemented correctly without additional violations.
+
+\begin{figure}
+    \centering
+    \frame{\includegraphics[width=.7\columnwidth,page=6]{img/SSH_State_Machines.pdf}}
+    \caption{Taint-based implementation of strict KEX used by libssh and Bitvise SSH. When an unexpected or invalid message is received, the internal state transitions into a tainted state, which eventually causes the connection to terminate. We do not consider taint-based implementations an inherent violation of strict KEX requirements if implemented correctly.}
+    \Description{A state machine depicting a taint-based implementation of strict KEX used by libssh and Bitvise SSH. The protocol flow starts in the BPP START state and then continues down the happy flow of algorithm negotiation, key exchange and derivation, and activation of the secure channel. When an unexpected or invalid message is received, the state transitions into a tainted mirror state that eventually causes the connection to terminate.}
+    \label{sec:eval:fig:taint}
+\end{figure}
+
+\paragraph{Proof-of-Concept} 
+
+For each implementation with strict KEX violations, we chose one violating message trace and verified it by executing it against the server, outside the state learning routine, with our SSH implementation. A violation is verified if the client can successfully establish a secure channel and reach authentication. We provide all proof-of-concepts as part of our artifacts.
+
+\paragraph{AsyncSSH} 
+
+For AsyncSSH, we found a minor violation of category C2 in the Diffie-Hellman group exchange flow type. In particular, AsyncSSH does not limit the number of \msgkexdhgexrequest messages but instead responds to each group request with a finite field to use within the Diffie-Hellman key exchange. This behavior is not a security vulnerability in AsyncSSH because the server correctly updates both the DH group for the key exchange and the one included in the signed exchange hash simultaneously.
+    
+\paragraph{Dropbear} 
+
+Dropbear violates strict KEX by lifting key exchange restrictions too early, resulting in a category C4 violation. This allows for message injection after the server signals \texttt{NEWKEYS}, but before the client does so as well. At this point, the connection is partially encrypted; that is, messages sent by the client are still unencrypted, while messages sent by the server are encrypted using the derived algorithms and keys. This causes messages that prompt a server response to increment the SQN send counter after the sequence number is reset by the strict key exchange extension, ultimately allowing an attacker to offset sequence numbers in the secure part of the protocol from within the unencrypted one. This directly violates the strict key exchange's goal to separate unencrypted and encrypted sequence numbers. Message injection is limited to a subset of messages, specifically any message ID less than 50---the first message ID of the authentication protocol.
+
+\paragraph{Erlang SSH} 
+
+Erlang SSH shows violations of category C3 by accepting connection protocol messages during the handshake. Additionally, optional messages such as \msgignore and \msgdebug do not cause the connection to terminate. A closer inspection of the violations revealed a remote code execution vulnerability, which we describe in greater detail in \autoref{sec:eval:sub:erlang}.
+
+\paragraph{LANCOM LCOS} 
+
+Our findings indicate significant violations of category C3 in LANCOM LCOS. In fact, the implementation replied to all unknown message IDs and message IDs greater than or equal to $50$ with \msgunimplemented messages. Interestingly, LANCOM LCOS does not appear to support \msgdebug messages and considers them unknown, as evidenced by the \msgunimplemented messages sent in response. However, other optional messages, such as \msgignore, are correctly handled and cause the connection to terminate.
+
+\paragraph{libssh} 
+
+Like Bitvise SSH, libssh uses the taint-based approach depicted in \autoref{sec:eval:fig:taint} to implement the strict KEX extension. The taint flag is only set for messages of the transport layer; messages with a message ID greater than or equal to $50$ cause the connection to terminate immediately during the handshake. However, libssh exhibits a violation of category C2 by failing to enforce strict KEX requirements for DHGEX flow types.
+
+\paragraph{Tectia} 
+
+Tectia SSH does not correctly handle optional messages such as \msgignore and \msgdebug, causing a violation of category C3. Additionally, Tectia SSH allows these messages to be sent before the \msgkexinit without causing the connection to terminate as soon as the client's \msgkexinit message is received. Therefore, this violation extends to category C1 as well. We also identified severe bugs concerning the handling of user authentication requests, allowing for a rogue session attack. We describe this attack in \autoref{sec:eval:sub:tectia}.
+
+\paragraph{TinySSH} 
+
+TinySSH lifts strict key exchange restrictions too early, and, therefore, exhibits a violation of category C4, allowing for message injection at the same stage as Dropbear. However, message injection, in this case, is not limited to a subset of transport layer protocol messages. Instead, all messages, except \texttt{DEBUG}, \texttt{IGNORE}, and \texttt{DISCONNECT}, can be inserted without the server terminating the connection. Furthermore, TinySSH does not send a response to any of these messages, maintaining sequence number separation between the encrypted and unencrypted parts of the protocol.
+
+\subsection{Rogue Session Attack against Tectia SSH}
+\label{sec:eval:sub:tectia}
+
+\begin{figure}
+    \centering
+    \frame{\includegraphics[width=\linewidth]{img/Tectia_Rogue_Session_Attack.pdf}}
+    \caption{Rogue session attack targeting clients connecting to a Tectia SSH server with strict KEX active. A MitM attacker injects a rogue authentication request just before the handshake concludes, which is possible due to the sequence number reset. The client must be lenient and not terminate the connection when receiving an early authentication success. The second authentication request causes a repeated authentication success without changing the authenticated user.}
+    \Description{The figure depicts a protocol flow between a client and a Tectia SSH server, with a MitM attacker in between. The initial messages of the SSH protocol are left out, and the flow starts with the NEWKEYS message from the server to the client. Before the client sends its NEWKEYS, the MitM attacker injects a rogue authentication request containing the attacker's credentials. The server responds to this request with a success message, which the client then responds to as \msgunimplemented, as the message is not valid at the moment. The connection then continues normally.}
+    \label{sec:eval:fig:tectia}
+\end{figure}
+
+Tectia SSH is the official SSH implementation of SSH.COM, a company founded by Tatu Ylönen, the inventor of the SSH protocol. According to the company's website, ``Tectia SSH is trusted by 40\% of Fortune 500 companies and 4/5 of the world's largest banks.''\footnote{\url{https://info.ssh.com/tectia-server-client-datasheet-download}, accessed: 2025-04-14}
+
+Upon closer examination of the extracted state machines, we find that Tectia SSH allows \msguserauthrequest messages to be sent during the handshake. All \msguserauthrequest messages are seemingly buffered until after the handshake concludes, where the server responds to these authentication requests. Tectia SSH also allows immediate user authentication without the client switching protocols using a service request first. After successful user authentication, Tectia SSH continues to answer service and user authentication requests without terminating the connection.
+
+All of these observations can be combined into the rogue session attack depicted in \autoref{sec:eval:fig:tectia}, which is similar to the one described in~\cite[Section~6.2]{USENIX:BauBriSch24}. However, the attack becomes significantly less complicated due to the sequence number reset of strict KEX and the fact that Tectia SSH handles service and authentication requests inside the connection protocol. To exploit this vulnerability, a MitM attacker can inject a user authentication request containing the attacker's credentials before the server receives the client's \msgnewkeys.
+
+This authentication request will be processed immediately by the server, and the client will likely ignore the \msguserauthsuccess message sent as a response, as strict KEX restrictions have already been lifted. We confirmed that this is the case for OpenSSH and PuTTY, two common SSH clients. The client then sends \msgservicerequest and \msguserauthrequest messages, the latter most likely of type \texttt{none}, to which the server responds positively as the session is already authenticated. In fact, this behavior violates~\cite[Section 5.1]{rfc4252}, which mandates that the \msguserauthsuccess message must not be sent more than once. This violation causes both peers to resynchronize their state at the beginning of the connection protocol, while the authenticated account is the attacker's. This finding has been assigned \tectiacve with an estimated CVSSv3 score of 6.8.
+
+We implement a proof-of-concept based on the Terrapin artifacts,\footnote{\url{https://github.com/RUB-NDS/Terrapin-Artifacts}, accessed: 2025-04-14} and confirmed that we can successfully log a victim using a recent OpenSSH client into a shell account under the attacker's control on a Tectia SSH server, enabling phishing attacks.
+
+\subsection{Remote Code Execution in Erlang SSH}
+\label{sec:eval:sub:erlang}
+
+\begin{figure}
+    \centering
+    \frame{\includegraphics[width=\linewidth]{img/Erlang_RCE.pdf}}
+    \caption{Remote code execution in Erlang SSH. A malicious actor can open a logical channel from the connection protocol early and send an \texttt{exec} request. The server will respond to this request at the beginning of the secure channel with a success message, the command's output and exit status, and subsequently close the channel.}
+    \Description{The figure depicts a remote code execution in the server implementation of Erlang SSH. The attacker opens a channel and executes a command (here: os:cmd("whoami")) immediately after the KEXINIT messages. The key exchange continues normally, after which the server sends the response to the attacker's command (here: root) as well as various channel-related messages.}
+    \label{sec:eval:fig:erlang}
+\end{figure}
+
+Erlang SSH is part of the Erlang Open Telecom Platform, which is middleware for implementing highly reliable, distributed systems, such as telecommunication and electronic payment systems. Although these systems are usually not directly accessible on the Internet, Shodan.io listed 169 servers in April 2025 that return an \texttt{SSH-2.0-Erlang} banner.
+
+In the learned state machine, we found that Erlang SSH violates strict KEX restrictions by allowing the client to send \msgchannelopen messages immediately after the \msgkexinit messages, which is a violation of category C3. However, instead of a self-loop, the extracted state machine indicates that sending \msgchannelopen triggers a state change that can be reverted by sending a \msgchannelclose message, raising suspicions whether messages are just accepted or actually processed. Furthermore, after sending \msgchannelopen, the server seemingly accepts \msgchannelrequest messages without closing the connection. However, the state learner has not received an immediate response to any of these messages.
+
+Upon further investigation of this behavior using our SSH implementation, we observed several channel-related server responses after the handshake but before client authentication, corresponding to the channel-related client requests sent during the handshake. As shown in \autoref{sec:eval:fig:erlang}, sending a \msgchannelrequest of type \texttt{exec} during the handshake results in a \msgchannelsuccess message alongside a \msgchanneldata message containing the output of the Erlang code included in the request. As all of this happens before client authentication, this behavior resembles a remote code execution vulnerability that can be exploited without privileges or user interaction. Our finding has been assigned \erlangcve with an estimated CVSSv3 score of 10.0.
+
+We describe a proof-of-concept protocol flow in an XML file that can be used with our SSH implementation. We confirmed that our proof-of-concept allows the execution of a shell command without prior authentication in the context of the Erlang SSH daemon. The proof-of-concept is included as part of our artifacts.

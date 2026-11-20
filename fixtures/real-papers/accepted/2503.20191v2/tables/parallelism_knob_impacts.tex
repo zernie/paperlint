@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{@{\hspace{1px}}l@{\hspace{0px}}c@{\hspace{4px}}c@{\hspace{4px}}c@{\hspace{1px}}} 
+    \toprule
+    \textbf{Resource Load} & Compute & Memory & Network \\
+    \midrule
+    Data Parallel & \reddownarrow & \greendownarrow & \reduparrow \\
+    Tensor Parallel & \reddownarrow & \greendownarrow & \reduparrow \\
+    Pipeline Parallel & \reddownarrow & \greendownarrow & \reduparrow  \\
+    Sequence Parallel & \reddownarrow & \greendownarrow & \reduparrow \\
+    Pipeline Interleaving & \greenuparrow & \greendownarrow & \reduparrow \\
+    Distributed Optimizer & \textbf{--} & \greendownarrow & \reduparrow \\
+    Activation Recomputation & \reddownarrow & \greendownarrow & \textbf{--} \\
+    Gradient Accumulation & \reddownarrow & \greendownarrow & \greendownarrow \\
+    \bottomrule
+    \end{tabular}
+    \caption{Effect of configuration knobs on compute utilization, memory load, and network load in a fixed global batch size setting. This table highlights the trade-offs associated with each knob: while some configurations increase compute utilization, others may reduce memory or network load, illustrating the balancing act required to optimize  large-scale training jobs. \vspace{-1.5em}
+    }
+    \label{tab:knob_impacts}
+\end{table}

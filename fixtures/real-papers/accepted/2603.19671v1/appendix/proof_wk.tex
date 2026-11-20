@@ -1,0 +1,173 @@
+
+
+% k-wk privacy
+
+\begin{theorem}
+For any graph $G$, walk length $k$, and privacy budget $\varepsilon$, $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+
+\begin{proof}
+We first show that the computation in each round $\ell \in \{1, \dots, k\}$ satisfies $\varepsilon/k$-edge-DP.
+Let the differing edge between edge-neighboring graphs $G$ and $G'$ be $(v_i, v_j)$. 
+In each round $\ell$, the computations at nodes $v_i$ and $v_j$ are affected by this edge: the presence of $(v_i, v_j)$ contributes an additional $\mathcal{X}^{(\ell-1)}_j$ to $v_i$'s result, and $\mathcal{X}^{(\ell-1)}_i$ to $v_j$'s result. 
+Therefore, the per-node global sensitivity in round~$\ell$ is upper bounded by 
+$\|\mathcal{X}^{(\ell-1)}\|_\infty$, which is the maximum of all nodes' absolute results at round $\ell{-}1$.
+Applying the Laplace mechanism, adding a Laplace noise of scale $2k\|\mathcal{X}^{(\ell-1)}\|_\infty/\varepsilon$ as in Line~6 of the Algorithm~\ref{alg:k-wk_randomizer} ensures $\varepsilon/2k$-edge-DP for each node at each round. 
+Since a single edge affects two nodes, parallel composition (Lemma~\ref{lem:pc}) implies that the collective message $\mathcal{X}^{(\ell)}$ satisfies $\varepsilon/k$-edge-DP at round $\ell$. 
+Finally, applying basic composition over $k$ rounds (Lemma~\ref{lem:bc}) guarantees that the overall mechanism satisfies $\varepsilon$-edge-LDP.
+\end{proof}
+
+
+% k-wk solution utility
+
+
+\begin{theorem}
+For any graph $G$, walk length $k$, and parameters $\varepsilon$ and $\beta$, the $k$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies
+$\mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon)] = {W}_k$,
+and with probability at least $1 - \beta$,
+\begin{equation*}
+|\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k|
+  \leq  k\gamma \sqrt{N} (d(G) + \gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1}),
+\end{equation*}
+where $\gamma = 2k\sqrt{8\log(2kN/\beta)}/\varepsilon = \tilde{O}(1)$.  
+\end{theorem}
+
+
+
+\begin{proof}
+At round $\ell \in \{1, \dots, k\}$, for any $i$,
+\begin{equation}
+\label{e:strawman_noisy_count}
+    \mathcal{X}^{(\ell)}_i = \sum_{j \in \mathcal{N}(i)} \mathcal{X}^{(\ell-1)}_j + \mathrm{Lap}(\frac{2k}{\varepsilon}\|\mathcal{X}^{(\ell-1)}\|_\infty).
+\end{equation}
+It follows immediately that 
+\begin{equation*}
+    \bigg|\sum_{j \in \mathcal{N}(i)} \mathcal{X}^{(\ell-1)}_j \bigg| 
+    \leq d(G)\, \|\mathcal{X}^{(\ell-1)}\|_\infty. 
+\end{equation*}
+Starting from the first round, we allocate a failure probability of $\beta'/N$ per node per round to upper-bound the added Laplace noise. 
+Let 
+$\gamma = 2k\sqrt{8\log(2N/\beta')}/\varepsilon$, applying the Laplace concentration bound (Lemma~\ref{lem:con_lap}), with probability at least $1- \beta'/N$, the Laplace noise added at any node in round $\ell$ satisfies
+\begin{equation*}
+   \bigg| \mathrm{Lap}(\frac{2k}{\varepsilon}\|\mathcal{X}^{(\ell-1)}\|_\infty) \bigg|
+   \leq \gamma  \|\mathcal{X}^{(\ell-1)}\|_\infty.
+\end{equation*}
+Thus, $\|\mathcal{X}^{(1)}\|_\infty = d(G)+\gamma$, and we conclude by induction that
+\begin{equation}
+\label{e:round_max_wk}
+    \|\mathcal{X}^{(\ell)}\|_\infty \leq (d(G) + \gamma)^{\ell}
+\end{equation}
+for any $\ell \leq k-1$ with probability at least $1 - (k-1)\beta'$.
+
+
+In the round $k$, the analyzer $\mathcal{A}$ sums $\mathcal{X}^{(k)}_i$ over all $v_i \in V$. 
+The Laplace noise added in round $\ell$ by node $v_i$ appears $W_{k-\ell}(i)$ times in the aggregated result, 
+where $W_{k-\ell}(i)$ denotes the number of $(k-\ell)$-line walks starting from $v_i$. 
+Thus, the total error introduced by the mechanism has
+\begin{align*}
+ \mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k
+  &= \sum_{\ell=1}^{k} \sum_{i=1}^N 
+  W_{k-\ell}(i) \cdot \mathrm{Lap}(\frac{2k}{\varepsilon} \|\mathcal{X}^{(\ell-1)}\|_\infty)\\
+ &=\sum_{\ell=1}^{k} 
+ \sum_{i=1}^N  
+ \mathrm{Lap}(\frac{2k}{\varepsilon} \,
+ \|\mathcal{X}^{(\ell-1)}\|_\infty \, W_{k-\ell}(i)).  
+\end{align*}
+Since the Laplace noises across nodes and rounds are independent and each has zero expectation, $\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon)$ is an unbiased estimator of $W_k$. 
+Additionally, applying the Laplace concentration bound (Lemma~\ref{lem:con_lap}) on the Laplace noise added in the same round, for a fixed round $\ell$, with failure probability at least $1-\beta'/N$,
+\begin{align*}
+   \bigg| \sum_{i=1}^N  
+ \mathrm{Lap}(\frac{2k}{\varepsilon} \, \|\mathcal{X}^{(\ell-1)}\|_\infty
+ W_{k-\ell}(i)
+ )
+ \bigg|
+    \leq 
+    \gamma \|\mathcal{X}^{(\ell-1)}\|_\infty
+     \sqrt{\sum_{i=1}^N W_{k-\ell}(i)^2}.
+\end{align*}
+Considering that $W_{k-\ell}(i) \leq d(G)^{k-\ell}$, the right-hand side is further upper-bounded by
+\begin{equation*}
+    \gamma (d(G) +\gamma)^{\ell-1} \sqrt{N} d(G)^{k-\ell}.
+\end{equation*} 
+Clearly, since $\gamma\geq0$, this expression is maximized when $\ell = k$, in which case the bound becomes 
+$\gamma \sqrt{N}(d(G) + \gamma)^{k - 1}$.
+
+
+
+Summing over all $k$ rounds, under probability at least $1 - k\beta'/N$, the total error is upper-bounded by $k\gamma \sqrt{N} (d(G) +\gamma)^{k-1}$.
+By the union bound, the total failure probability is at most $(k{-}1)\beta' + k\beta'/N$. 
+Since $k < N$ (otherwise no $k$-line walk exists in the graph), this sum is bounded by $k\beta'$. 
+Therefore, setting $\beta' = \beta/k$ suffices, yielding $\gamma = 2k\sqrt{8\log(2Nk/\beta)}/\varepsilon$, and the error upper bound $k\gamma \sqrt{N} (d(G) +\gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1})$.
+\end{proof}
+
+
+
+% optimized privacy
+
+\begin{theorem}
+For any graph $G$, walk length $k$, and privacy budget $\varepsilon$, the optimized mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies $\varepsilon$-edge-LDP.
+\end{theorem}
+
+\begin{proof}
+To begin with, each of the first $k-2$ rounds guarantees $\varepsilon/k$-edge-DP, as established in the proof for the original mechanism. 
+In the final round $k-1$, each node $v_i$ achieves $\varepsilon/k$-edge-DP by allocating a privacy budget of $\varepsilon/2k$ to privatize $\mathcal{X}^{(k-1)}_i$ before multiplication and the remaining $\varepsilon/2k$ to privatize $d(v_i)$, both via the Laplace mechanism.  
+Because a differing edge $(v_i,v_j)$ affects only the computations for $v_i$ and $v_j$ in this round, parallel composition yields $2\varepsilon/k$-edge-DP. 
+Hence, by basic composition across all $k-1$ rounds, $\mathcal{M}_{\mathrm{k\text{-}wk}}$ remains to achieve $\varepsilon$-edge-LDP. \qedhere
+
+\end{proof}
+
+
+
+% optimized k-wk utility
+
+\begin{theorem}
+For any graph $G$, walk length $k$, and parameters $\varepsilon$ and $\beta$, the optimized $(k-1)$-round mechanism $\mathcal{M}_{\mathrm{k\text{-}wk}}$ satisfies
+$
+     \mathbb{E}[\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon)] = {W}_k,
+$
+and with probability at least $1 - \beta$,
+\begin{equation*}
+|\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k|
+  \leq  k\gamma \sqrt{N} (d(G) + \gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1}),
+\end{equation*}
+where $\gamma = 2k\sqrt{8\log(2kN/\beta)}/\varepsilon = \tilde{O}(1)$.  
+\end{theorem}
+
+
+
+
+
+
+\begin{proof}
+The computation of $\mathcal{X}^{(\ell)}_i$ in round $\ell \in \{1, \dots, k{-}1\}$ for each node $v_i \in V$ follows the same update rule as in \eqref{e:strawman_noisy_count}, where $\mathcal{X}^{(k-1)}_i$ refers to the value before multiplication by $d(v_i) + \mathrm{Lap}(2k/\varepsilon)$. 
+Applying the same failure probability assignment, the bound in \eqref{e:round_max_wk} holds for all $\ell \leq k{-}1$ with probability at least $1 - (k{-}1)\beta'$, where $\gamma = 2k\sqrt{8\log(2N/\beta')}/\varepsilon$.
+
+
+
+In the final round $k-1$, the analyzer $\mathcal{A}$ sums $\mathcal{X}^{(k-1)}_i \, (d(v_i) + \mathrm{Lap}(2k/\varepsilon))$ over all nodes $v_i \in V$ as the output.
+We divide the total error of $|\mathcal{M}_{\mathrm{k\text{-}wk}}(G,\varepsilon) - {W}_k|$ into two parts.
+The first part arises from the additive error in the term $\sum_{i = 1}^N \mathcal{X}^{(k-1)}_i \, d(v_i)$, which can be expressed as
+\begin{equation*}
+  \sum_{\ell=1}^{k-1} \sum_{i=1}^N  
+  \mathrm{Lap}( 
+\frac{2k}{\varepsilon}  \|\mathcal{X}^{(\ell-1)}\|_\infty \,
+W_{k-\ell}(i)).
+\end{equation*}
+This part of the error matches that from the first $k-1$ rounds of the original mechanism and also has expectation $0$.
+Similarly, allocating a failure probability of $\beta'/N$ for each round $\ell \in \{1, \dots, k-1\}$ yields an upper bound of $(k-1)\gamma \sqrt{N}(d(G)+\gamma)^{k-1}$.
+The second part of the error is exactly 
+\begin{equation*}
+    \sum_{i=1}^N \mathcal{X}^{(k -1)}_i \, \mathrm{Lap}(\frac{2k}{\varepsilon}),
+\end{equation*}
+which also has an expectation of $0$.
+By \eqref{e:round_max_wk}, $|\mathcal{X}^{(k-1)}_i| \leq (d(G) + \gamma)^{k-1}$. 
+Thus, allocating a failure probability of $\beta'/N$, 
+the Laplace concentration bound implies an upper bound of $\gamma\sqrt{N}(d(G) + \gamma)^{k-1}$ for this part of the error.
+
+
+To conclude, the output of the optimized mechanism remains an unbiased estimator of $W_k$. 
+By setting $\beta' = \beta/k$ and combining both sources of error, we obtain that, with probability at least $1 - \beta$, the total error is bounded by $k \gamma \sqrt{N} (d(G) + \gamma)^{k-1} = \tilde{O}(\sqrt{N}d(G)^{k-1})$ with the same $\gamma = 2k\sqrt{8\log(2kN/\beta)}/\varepsilon$. \qedhere
+
+\end{proof}
+

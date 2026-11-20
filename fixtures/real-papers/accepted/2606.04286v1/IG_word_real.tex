@@ -1,0 +1,24 @@
+\begin{table}[!ht]
+\centering
+\small
+\resizebox{0.49\textwidth}{!}{
+\begin{tabularx}{.6\textwidth}{XX}
+% \begin{tabularx}{\textwidth}{@{}>{\hsize=.27\hsize}X>{\hsize=1.05\hsize}X>{\hsize=1.05\hsize}X@{}}
+\toprule
+\multicolumn{2}{c}{\textbf{$g^+$}~~~~~~~~~~~~~~~~~~~\textbf{Bullying}~~~~~~~~~~~~~~~~~~~\textbf{$g^-$}}\\
+% \multicolumn{1}{c}{\textbf{$g^+$}} & \multicolumn{1}{c}{\textbf{$g^-$}}\\
+\midrule
+horrible, terrible, rude, worst, \#\#ing, un, bad, lack, bull, seems, office, needs, nothing, \#\#t, negative, different, disappointed, many, \#\#ied, problem &   great, love, best, wonderful, amazing, excellent, loves, every, caring, awesome, much, top, say, happy, truly, family, dedicated, community, support, pleased \\
+\midrule
+\multicolumn{2}{c}{\textbf{$g^+$}~~~~~~\textbf{Academic Performance}~~~~~~\textbf{$g^-$}}\\
+% \multicolumn{2}{c}{\textbf{Academic Performance}}\\
+% \multicolumn{1}{c}{\textbf{$g^+$}} & \multicolumn{1}{c}{\textbf{$g^-$}}\\
+\midrule
+great, love, school, excellent, amazing, best, program, staff, happy, community, know, always, wonderful, make, learn, really, highly, part, awesome, dedicated& principal, get, administration, needs, horrible, education, new, want, rude, worst, care, leadership, bad, nothing, terrible, bullying, feel, reviews, di, bull \\
+\bottomrule
+\end{tabularx}
+}
+\caption{Top 20 terms for treatment assignment prediction ($g^+$ and $g^-$) by Integrated Gradients.}
+% Note that these terms come from reviews that were not used to determine treatment assignment.} %$g+$ represents the top term that increases the propensity score prediction, vice versa for $g-$. $Q_{0}-$ refers to the top term that decreases the outcome prediction for the control group. $Q_{1}-$ refers to the top term that decreases the outcome prediction for the treated group.}
+\label{tab:integrated_gradients_real}
+\end{table}

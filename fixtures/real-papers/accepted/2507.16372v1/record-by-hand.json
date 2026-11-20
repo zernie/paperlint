@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix-2020-09.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenixbadges.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "82f9cabbfe5e66845f72c76405d345d923a7377aa15f4ec41a8123e9788aad5a",
+    "usenix-2020-09.sty": "48874f48e681e4173748dbd6cbd2b2734501396009bee6c048332449eda163b3",
+    "usenixbadges.sty": "dfc6ee9f414bb0c8f6b082394f92cb1b0170149b9471bf03f3688c1a53f9ad49"
+  }
+}

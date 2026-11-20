@@ -1,0 +1,108 @@
+%-------------------------------------------------------------------------------
+\section{\resail}
+\label{sec:resail}
+%-------------------------------------------------------------------------------
+
+\begin{figure}[t]
+     \centering
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.95\textwidth]{figures/sail_cram}
+         \caption{\cram model representation of \sail}
+         \label{fig:sail}
+     \end{subfigure}
+     \begin{subfigure}[b]{0.49\textwidth}
+         \centering
+         \includegraphics[width=0.75\textwidth]{figures/resail_cram}
+         \caption{\cram model representation of \resail ($min\_bmp$=0)}
+         \label{fig:resail}
+     \end{subfigure}
+    \caption{\sail vs \resail for IPv4 prefixes in AS65000}
+    \label{fig:sailvsresail}
+    \vspace{-\baselineskip}
+\end{figure}
+
+By applying the optimization idioms to \sail~\cite{sail}, we create a new IPv4 \cram lookup algorithm called \resail. Refer to ~\cref{fig:sailtoresail} for the intuition to which we now add details.
+
+{\bf \sail Review:} \sail designates 24 as a pivot level and divides the forwarding information base~(FIB) into short prefixes~($\leq$24) and long prefixes~(>24). \sail determines whether there is a length-$i$ match for $i \leq 24$ by consulting a bitmap $B_i$ of size $2^{i}$ in which bit $p$ is set if and only if $p$ is a length-$i$ prefix in the FIB. Since the total memory footprint of the bitmaps is 4 MB, they are stored in on-chip SRAM. If a match is found in $B_i$, the next hop is retrieved by directly indexing into a next hop array $N_i$ of size $2^{i}$ located in off-chip DRAM. \sail handles prefixes of length $i > 24$ by using a complex scheme called pivot pushing that expands~\cite{prefix_expansion} them to 32-bit entries in $N_{32}$.
+
+\subsection{Applying the Optimization Idioms} \label{subsec:designing_resail}
+
+We show the \cram derivation of \resail using the IPv4 AS65000 BGP routing table (Sep 2023). Start with the \cram model representation of \sail in \cref{fig:sail}. To obtain \resail in \cref{fig:resail}, use the idioms as follows:
+
+{\bf 1.} Observe a large number~(26) of data dependencies between the bitmaps and next hop arrays. This makes sense in the RAM model as it enables early exits which reduce average execution time. However, these are false dependencies because their lookup keys can be computed in parallel. Therefore, we apply step reduction~({\em I7}) to reduce all the bitmap and next hop array lookups into a single step. The next hop can then be determined by taking the highest priority result.
+
+{\bf 2.} \sail relies on a significant amount of DRAM~(32 MB) for its directly indexed next hop arrays. Since DRAM is not available in \cram, we replace the next hop arrays with a more compact data structure by either compressing with TCAM~({\em I1}) or compressing with SRAM~({\em I3}). Since the 25\% memory penalty of d-left hashing~\cite{dleft} is less expensive than TCAM's 3X higher area cost, we compress with SRAM by replacing the next hop arrays with a single SRAM-based hash table.
+
+{\bf 3.} \sail uses a special next hop array $N_{32}$ for prefixes of length $>24$, which are very uncommon. Its entries are prefix expanded to 32 bits. In the worst case, a single prefix may be expanded into $2^{8}$ duplicate next hops. We address this memory inefficiency by replacing $N_{32}$ with a look-aside TCAM~({\em I6}) that can store prefixes of length $>24$ without additional expansion.
+
+{\bf 4.} The number of bitmaps serves as a trade-off between the amount of parallelism required and the hash table's memory footprint. For \resail, we introduce a parameter $min\_bmp$ that represents the smallest bitmap available. In \cref{fig:resail}, $min\_bmp$ is 0 which means there are a total of 25 bitmaps from $B_{24}$ down to $B_0$. Increasing $min\_bmp$ reduces the number of parallel lookups at the cost of increased SRAM usage.
+
+\subsection{Building the Data Structures} \label{subsec:building_resail}
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength\extrarowheight{1.1pt}
+    \begin{tabular}{ccc}
+    \hline
+    \thead[c]{Entry} & \thead[c]{Prefix (Ternary)} & \thead[c]{Output Port} \\
+        \hline
+    1 & 010100** & A \\
+    2 & 011***** & B \\
+    3 & 100100** & C \\
+    4 & 100101** & D \\
+    5 & 10010100 & A \\
+    6 & 10011010 & B \\
+    7 & 10011011 & C \\
+    8 & 10100011 & A \\
+    \bottomrule
+    \end{tabular}
+    \caption{Example routing table}
+    \label{tab:routing_table}
+    \vspace{-\baselineskip}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength\extrarowheight{1.1pt}
+    \begin{tabular}{|c|c|c|}
+    \hline
+    \thead[c]{Index} & \thead[c]{Key} & \thead[c]{Value} \\
+    \hline
+    0 & 1001001 & C \\
+    1 & 0101001 & A\\
+    2 & 0111000 & B \\
+    3 & - & - \\
+    4 & 1001011 & D \\
+    \bottomrule
+    \end{tabular}
+    \caption{Hash table for \cref{tab:routing_table} (pivot level = 6)}
+    \label{tab:hash_table}
+    \vspace{-\baselineskip}
+\end{table}
+
+{\bf Look-aside TCAM:}
+Given a routing database, add all prefixes longer than 24 bits to the look-aside TCAM. Since there are very few IPv4 prefixes of length $> 24$, little TCAM is used.
+
+{\bf Bitmaps:} \label{subsec:building_bitmaps}
+For $i=24$ down to $i=min\_bmp$, construct a bitmap ($B_i$) of length $2^i$ such that every prefix of length $i$ in the routing database is marked as a 1 at the corresponding index. If $min\_bmp$ is not equal to 0, use prefix expansion~\cite{prefix_expansion} to combine $B_0$ to $B_{min\_bmp-1}$ into $B_{min\_bmp}$. Start with length $min\_bmp-1$ prefixes and work down linearly to length 0. A bit in $B_{min\_bmp}$ is flipped from 0 to 1 only if the bit is already a 0. This prevents incorrectly overwriting longer prefixes.
+
+{\bf Hash Table:} \label{subsec:building_hash_table} We use d-left~\cite{dleft} for the hash table because it has a low probability of collision even when the ratio of entries to memory is as high as $80\%$. Hashing the matched prefix directly would require a separate hash table for each length from $min\_bmp$ to $24$, greatly fragmenting memory. Instead, \resail uses a standard trick~\cite{network_algorithmics} we call bit marking that enables us to generate hash keys of a fixed length. When an entry is added to bitmap $B_{i}$, its unique 25-bit hash key is produced by appending a $1$ and left shifting by $24-i$ bits. Each hash key is paired with its next hop and inserted into the hash table. The boundary of each prefix can be determined by scanning from the right for the first $1$. In effect, bit marking removes the need for multiple hash tables.
+
+\cref{tab:hash_table} shows a hash table using 7-bit hash keys for \cref{tab:routing_table}. For simplicity, this example assumes a pivot level of 6 and a maximum prefix length of 8. Since entries 5-8 from \cref{tab:routing_table} are longer than the pivot length, they are not placed into the hash table (they are in the look-aside TCAM instead). The hash table has a size of 5 due to d-left's 25\% memory penalty. 011, a 3-bit entry, is appended with a 1 and left shifted 3 times, thus resulting in the hash key 0111000.
+
+\subsection{Performing Lookups} \label{subsec:resail_lookups}
+
+Start by performing two sets of lookups in parallel:
+\begin{inlist}
+  \item In the look-aside TCAM, perform a longest prefix match with the full 32-bit IPv4 address.
+  \item From $B_{24}$ ($i=24$) down to $B_{min\_bmp}$, perform exact match lookups using the first $i$ bits of the destination address to directly index into $B_{i}$.
+\end{inlist}
+
+If a match is found in the look-aside TCAM, return its associated next hop. Otherwise, take the longest match across all bitmaps and generate its 25-bit hash key by bit marking.
+
+At this step, either the next hop for a prefix match greater than 24 bits has been found or the final hash key has been created. In the latter case, use the hash key to perform an exact match lookup into the hash table to retrieve the next hop. 
+
+\cref{alg:resail_lookup} in \cref{subsec:pseudocode} contains pseudocode for \resail lookups. \cref{subsubsec:resailupdates} describes incremental updates, deletions, and insertions in \resail.

@@ -1,0 +1,1143 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{110}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Abdullah et~al\mbox{.}(2022)]%
+        {Abdullah2022ChatGPT}
+\bibfield{author}{\bibinfo{person}{Malak Abdullah}, \bibinfo{person}{Alia Madain}, {and} \bibinfo{person}{Yaser Jararweh}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{ChatGPT: Fundamentals, applications and social impacts}. In \bibinfo{booktitle}{\emph{2022 Ninth International Conference on Social Networks Analysis, Management and Security (SNAMS)}}. IEEE, \bibinfo{pages}{1--8}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SNAMS58071.2022.10062688}
+\showDOI{\tempurl}
+
+
+\bibitem[Akbar et~al\mbox{.}(2023)]%
+        {akbar2023ethical}
+\bibfield{author}{\bibinfo{person}{Muhammad~Azeem Akbar}, \bibinfo{person}{Arif~Ali Khan}, {and} \bibinfo{person}{Peng Liang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Ethical Aspects of ChatGPT in Software Engineering Research}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2306.07557}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2306.07557}
+\showDOI{\tempurl}
+
+
+\bibitem[Akter et~al\mbox{.}(2022)]%
+        {10.1145/3500868.3559706}
+\bibfield{author}{\bibinfo{person}{Mamtaj Akter}, \bibinfo{person}{Leena Alghamdi}, \bibinfo{person}{Dylan Gillespie}, \bibinfo{person}{Nazmus~Sakib Miazi}, \bibinfo{person}{Jess Kropczynski}, \bibinfo{person}{Heather Lipford}, {and} \bibinfo{person}{Pamela~J. Wisniewski}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{CO-oPS: A Mobile App for Community Oversight of Privacy and Security}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2022 Conference on Computer Supported Cooperative Work and Social Computing}} (Virtual Event, Taiwan) \emph{(\bibinfo{series}{CSCW'22 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{179–183}.
+\newblock
+\showISBNx{9781450391900}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3500868.3559706}
+\showDOI{\tempurl}
+
+
+\bibitem[Aoyagui et~al\mbox{.}(2024)]%
+        {aoyagui2024exploring}
+\bibfield{author}{\bibinfo{person}{Paula~Akemi Aoyagui}, \bibinfo{person}{Sharon Ferguson}, {and} \bibinfo{person}{Anastasia Kuzminykh}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Exploring Subjectivity for more Human-Centric Assessment of Social Biases in Large Language Models}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2405.11048}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Barman et~al\mbox{.}(2024)]%
+        {barman2024beyond}
+\bibfield{author}{\bibinfo{person}{Kristian~Gonz{\'a}lez Barman}, \bibinfo{person}{Nathan Wood}, {and} \bibinfo{person}{Pawel Pawlowski}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Beyond transparency and explainability: on the need for adequate and contextualized user guidelines for LLM use}.
+\newblock \bibinfo{journal}{\emph{Ethics and Information Technology}} \bibinfo{volume}{26}, \bibinfo{number}{3} (\bibinfo{year}{2024}), \bibinfo{pages}{47}.
+\newblock
+
+
+\bibitem[Barta and Andalibi(2021)]%
+        {barta2021constructing}
+\bibfield{author}{\bibinfo{person}{Kristen Barta} {and} \bibinfo{person}{Nazanin Andalibi}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Constructing Authenticity on TikTok: Social Norms and Social Support on the" Fun" Platform}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Human-Computer Interaction}} \bibinfo{volume}{5}, \bibinfo{number}{CSCW2} (\bibinfo{year}{2021}), \bibinfo{pages}{1--29}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3479574}
+\showDOI{\tempurl}
+
+
+\bibitem[Bauer(2020)]%
+        {bauer2020virtuous}
+\bibfield{author}{\bibinfo{person}{William~A Bauer}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Virtuous vs. utilitarian artificial moral agents}.
+\newblock \bibinfo{journal}{\emph{AI \& SOCIETY}} \bibinfo{volume}{35}, \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{263--271}.
+\newblock
+
+
+\bibitem[Bennett(2019)]%
+        {bennett2019investigating}
+\bibfield{author}{\bibinfo{person}{Sarah~Joy Bennett}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Investigating the role of moral decision-making in emerging artificial intelligence technologies}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2019 Conference on Computer Supported Cooperative Work and Social Computing}}. \bibinfo{pages}{28--32}.
+\newblock
+
+
+\bibitem[Boonprakong et~al\mbox{.}(2023)]%
+        {10.1145/3584931.3611284}
+\bibfield{author}{\bibinfo{person}{Nattapat Boonprakong}, \bibinfo{person}{Gaole He}, \bibinfo{person}{Ujwal Gadiraju}, \bibinfo{person}{Niels van Berkel}, \bibinfo{person}{Danding Wang}, \bibinfo{person}{Si Chen}, \bibinfo{person}{Jiqun Liu}, \bibinfo{person}{Benjamin Tag}, \bibinfo{person}{Jorge Goncalves}, {and} \bibinfo{person}{Tilman Dingler}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Workshop on Understanding and Mitigating Cognitive Biases in Human-AI Collaboration}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2023 Conference on Computer Supported Cooperative Work and Social Computing}} (Minneapolis, MN, USA) \emph{(\bibinfo{series}{CSCW '23 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{512–517}.
+\newblock
+\showISBNx{9798400701290}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3584931.3611284}
+\showDOI{\tempurl}
+
+
+\bibitem[Bozic and Wotawa(2018)]%
+        {Bozic2018Security}
+\bibfield{author}{\bibinfo{person}{Josip Bozic} {and} \bibinfo{person}{Franz Wotawa}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Security testing for chatbots}. In \bibinfo{booktitle}{\emph{IFIP International Conference on Testing Software and Systems}}. Springer, \bibinfo{pages}{33--38}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-99927-2_3}
+\showDOI{\tempurl}
+
+
+\bibitem[Briggle and Mitcham(2012)]%
+        {Briggle2012Ethics}
+\bibfield{author}{\bibinfo{person}{Adam Briggle} {and} \bibinfo{person}{Carl Mitcham}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Ethics and science: An introduction}}.
+\newblock \bibinfo{publisher}{Cambridge University Press}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1017/CBO9781139034111}
+\showDOI{\tempurl}
+
+
+\bibitem[Broersen et~al\mbox{.}(2001)]%
+        {Broersen2001BOID}
+\bibfield{author}{\bibinfo{person}{Jan Broersen}, \bibinfo{person}{Mehdi Dastani}, \bibinfo{person}{Joris Hulstijn}, \bibinfo{person}{Zisheng Huang}, {and} \bibinfo{person}{Leendert van~der Torre}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{The BOID architecture: conflicts between beliefs, obligations, intentions and desires}. In \bibinfo{booktitle}{\emph{Proceedings of the fifth international conference on Autonomous agents}}. \bibinfo{pages}{9--16}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/375735.375766}
+\showDOI{\tempurl}
+
+
+\bibitem[Brusseau(2022)]%
+        {Brusseau2022Acceleration}
+\bibfield{author}{\bibinfo{person}{James Brusseau}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Acceleration AI Ethics, the Debate between Innovation and Safety, and Stability AI's Diffusion versus OpenAI's Dall-E}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2212.01834}} (\bibinfo{year}{2022}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.2139/ssrn.4293514}
+\showDOI{\tempurl}
+
+
+\bibitem[Cecchini et~al\mbox{.}(2024)]%
+        {cecchini2024holistic}
+\bibfield{author}{\bibinfo{person}{David Cecchini}, \bibinfo{person}{Arshaan Nazir}, \bibinfo{person}{Kalyan Chakravarthy}, {and} \bibinfo{person}{Veysel Kocaman}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Holistic evaluation of large language models: Assessing robustness, accuracy, and toxicity for real-world applications}. In \bibinfo{booktitle}{\emph{Proceedings of the 4th Workshop on Trustworthy Natural Language Processing (TrustNLP 2024)}}. \bibinfo{pages}{109--117}.
+\newblock
+
+
+\bibitem[Chandel et~al\mbox{.}(2019)]%
+        {Chandel2019Chatbot}
+\bibfield{author}{\bibinfo{person}{Sonali Chandel}, \bibinfo{person}{Yuan Yuying}, \bibinfo{person}{Gu Yujie}, \bibinfo{person}{Abdul Razaque}, {and} \bibinfo{person}{Geng Yang}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Chatbot: efficient and utility-based platform}. In \bibinfo{booktitle}{\emph{Intelligent Computing: Proceedings of the 2018 Computing Conference, Volume 1}}. Springer, \bibinfo{pages}{109--122}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-01174-1_9}
+\showDOI{\tempurl}
+
+
+\bibitem[Cristina(2006)]%
+        {cristina2006grammar}
+\bibfield{author}{\bibinfo{person}{Bicchieri Cristina}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{The Grammar of Society: The Nature and Dynamics of Social Norms}.
+\newblock  (\bibinfo{year}{2006}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1017/cbo9780511616037}
+\showDOI{\tempurl}
+
+
+\bibitem[Das et~al\mbox{.}(2023)]%
+        {das2023evaluating}
+\bibfield{author}{\bibinfo{person}{Mithun Das}, \bibinfo{person}{Saurabh~Kumar Pandey}, {and} \bibinfo{person}{Animesh Mukherjee}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Evaluating ChatGPT's performance for multilingual and emoji-based hate speech detection}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2305.13276}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Das et~al\mbox{.}(2024)]%
+        {das-etal-2024-evaluating}
+\bibfield{author}{\bibinfo{person}{Mithun Das}, \bibinfo{person}{Saurabh~Kumar Pandey}, {and} \bibinfo{person}{Animesh Mukherjee}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Evaluating {C}hat{GPT} against Functionality Tests for Hate Speech Detection}. In \bibinfo{booktitle}{\emph{Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024)}}, \bibfield{editor}{\bibinfo{person}{Nicoletta Calzolari}, \bibinfo{person}{Min-Yen Kan}, \bibinfo{person}{Veronique Hoste}, \bibinfo{person}{Alessandro Lenci}, \bibinfo{person}{Sakriani Sakti}, {and} \bibinfo{person}{Nianwen Xue}} (Eds.). \bibinfo{publisher}{ELRA and ICCL}, \bibinfo{address}{Torino, Italia}, \bibinfo{pages}{6370--6380}.
+\newblock
+\urldef\tempurl%
+\url{https://aclanthology.org/2024.lrec-main.564}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Das et~al\mbox{.}(2015)]%
+        {10.1145/2675133.2675225}
+\bibfield{author}{\bibinfo{person}{Sauvik Das}, \bibinfo{person}{Adam~D.I. Kramer}, \bibinfo{person}{Laura~A. Dabbish}, {and} \bibinfo{person}{Jason~I. Hong}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{The Role of Social Influence in Security Feature Adoption}. In \bibinfo{booktitle}{\emph{Proceedings of the 18th ACM Conference on Computer Supported Cooperative Work \& Social Computing}} (Vancouver, BC, Canada) \emph{(\bibinfo{series}{CSCW '15})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1416–1426}.
+\newblock
+\showISBNx{9781450329224}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2675133.2675225}
+\showDOI{\tempurl}
+
+
+\bibitem[Daza and Ilozumba(2022)]%
+        {Daza2022survey}
+\bibfield{author}{\bibinfo{person}{Marco~Tulio Daza} {and} \bibinfo{person}{Usochi~Joanann Ilozumba}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{A survey of AI ethics in business literature: Maps and trends between 2000 and 2021}.
+\newblock \bibinfo{journal}{\emph{Frontiers in Psychology}}  \bibinfo{volume}{13} (\bibinfo{year}{2022}), \bibinfo{pages}{1042661}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.3389/fpsyg.2022.1042661}
+\showDOI{\tempurl}
+
+
+\bibitem[Derner and Batisti{\v{c}}(2023)]%
+        {derner2023beyond}
+\bibfield{author}{\bibinfo{person}{Erik Derner} {and} \bibinfo{person}{Kristina Batisti{\v{c}}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Beyond the Safeguards: Exploring the Security Risks of ChatGPT}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2305.08005}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2305.08005}
+\showDOI{\tempurl}
+
+
+\bibitem[Devos-Comby and Devos(2001)]%
+        {devos2001social}
+\bibfield{author}{\bibinfo{person}{Loraine Devos-Comby} {and} \bibinfo{person}{Thierry Devos}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{Social norms, social value, and judgments of responsibility}.
+\newblock \bibinfo{journal}{\emph{Swiss Journal of Psychology/Schweizerische Zeitschrift f{\"u}r Psychologie/Revue Suisse de Psychologie}} \bibinfo{volume}{60}, \bibinfo{number}{1} (\bibinfo{year}{2001}), \bibinfo{pages}{35}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1024/1421-0185.60.1.35}
+\showDOI{\tempurl}
+
+
+\bibitem[Dignum(2017)]%
+        {Dignum2017Responsible}
+\bibfield{author}{\bibinfo{person}{Virginia Dignum}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Responsible artificial intelligence: designing AI for human values}.
+\newblock  (\bibinfo{year}{2017}).
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:158378636}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Dignum et~al\mbox{.}(2018)]%
+        {Dignum2018Ethics}
+\bibfield{author}{\bibinfo{person}{Virginia Dignum}, \bibinfo{person}{Matteo Baldoni}, \bibinfo{person}{Cristina Baroglio}, \bibinfo{person}{Maurizio Caon}, \bibinfo{person}{Raja Chatila}, \bibinfo{person}{Louise Dennis}, \bibinfo{person}{Gonzalo G{\'e}nova}, \bibinfo{person}{Galit Haim}, \bibinfo{person}{Malte~S Klie{\ss}}, \bibinfo{person}{Maite Lopez-Sanchez}, {et~al\mbox{.}}} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Ethics by design: Necessity or curse?}. In \bibinfo{booktitle}{\emph{Proceedings of the 2018 AAAI/ACM Conference on AI, Ethics, and Society}}. \bibinfo{pages}{60--66}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3278721.3278745}
+\showDOI{\tempurl}
+
+
+\bibitem[Dwivedi et~al\mbox{.}(2023)]%
+        {Dwivedi2023So}
+\bibfield{author}{\bibinfo{person}{Yogesh~K Dwivedi}, \bibinfo{person}{Nir Kshetri}, \bibinfo{person}{Laurie Hughes}, \bibinfo{person}{Emma~Louise Slade}, \bibinfo{person}{Anand Jeyaraj}, \bibinfo{person}{Arpan~Kumar Kar}, \bibinfo{person}{Abdullah~M Baabdullah}, \bibinfo{person}{Alex Koohang}, \bibinfo{person}{Vishnupriya Raghavan}, \bibinfo{person}{Manju Ahuja}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{“So what if ChatGPT wrote it?” Multidisciplinary perspectives on opportunities, challenges and implications of generative conversational AI for research, practice and policy}.
+\newblock \bibinfo{journal}{\emph{International Journal of Information Management}}  \bibinfo{volume}{71} (\bibinfo{year}{2023}), \bibinfo{pages}{102642}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.ijinfomgt.2023.102642}
+\showDOI{\tempurl}
+
+
+\bibitem[Evans et~al\mbox{.}(2023)]%
+        {evans2023chatgpt}
+\bibfield{author}{\bibinfo{person}{Olaniyi Evans}, \bibinfo{person}{Olawale Wale-Awe}, \bibinfo{person}{Emeka Osuji}, \bibinfo{person}{Olawale Ayoola}, \bibinfo{person}{Raymond Alenoghena}, {and} \bibinfo{person}{Sesan Adeniji}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{ChatGPT impacts on access-efficiency, employment, education and ethics: The socio-economics of an AI language model}.
+\newblock \bibinfo{journal}{\emph{BizEcons Quarterly}} \bibinfo{volume}{16}, \bibinfo{number}{1} (\bibinfo{year}{2023}), \bibinfo{pages}{1--17}.
+\newblock
+
+
+\bibitem[Farina et~al\mbox{.}(2024)]%
+        {farina2024ai}
+\bibfield{author}{\bibinfo{person}{Mirko Farina}, \bibinfo{person}{Petr Zhdanov}, \bibinfo{person}{Artur Karimov}, {and} \bibinfo{person}{Andrea Lavazza}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{AI and society: a virtue ethics approach}.
+\newblock \bibinfo{journal}{\emph{AI \& SOCIETY}} \bibinfo{volume}{39}, \bibinfo{number}{3} (\bibinfo{year}{2024}), \bibinfo{pages}{1127--1140}.
+\newblock
+
+
+\bibitem[Fast and Horvitz(2017)]%
+        {fast2017long}
+\bibfield{author}{\bibinfo{person}{Ethan Fast} {and} \bibinfo{person}{Eric Horvitz}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Long-term trends in the public perception of artificial intelligence}.
+\newblock  \bibinfo{volume}{31}, \bibinfo{number}{1} (\bibinfo{year}{2017}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1609/aaai.v31i1.10635}
+\showDOI{\tempurl}
+
+
+\bibitem[Fiesler et~al\mbox{.}(2018)]%
+        {fiesler2018research}
+\bibfield{author}{\bibinfo{person}{Casey Fiesler}, \bibinfo{person}{Amy Bruckman}, \bibinfo{person}{Robert~E Kraut}, \bibinfo{person}{Michael Muller}, \bibinfo{person}{Cosmin Munteanu}, {and} \bibinfo{person}{Katie Shilton}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Research ethics and regulation: An open forum}. In \bibinfo{booktitle}{\emph{Companion of the 2018 ACM Conference on Computer Supported Cooperative Work and Social Computing}}. \bibinfo{pages}{125--128}.
+\newblock
+
+
+\bibitem[Fleischmann et~al\mbox{.}(2019)]%
+        {10.1145/3311957.3359437}
+\bibfield{author}{\bibinfo{person}{Kenneth~R. Fleischmann}, \bibinfo{person}{Sherri~R. Greenberg}, \bibinfo{person}{Danna Gurari}, \bibinfo{person}{Abigale Stangl}, \bibinfo{person}{Nitin Verma}, \bibinfo{person}{Jaxsen~R. Day}, \bibinfo{person}{Rachel~N. Simons}, {and} \bibinfo{person}{Tom Yeh}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Good Systems: Ethical AI for CSCW}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2019 Conference on Computer Supported Cooperative Work and Social Computing}} (Austin, TX, USA) \emph{(\bibinfo{series}{CSCW '19 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{461–467}.
+\newblock
+\showISBNx{9781450366922}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3311957.3359437}
+\showDOI{\tempurl}
+
+
+\bibitem[Floridi(2019)]%
+        {Floridi2019Translating}
+\bibfield{author}{\bibinfo{person}{Luciano Floridi}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Translating principles into practices of digital ethics: Five risks of being unethical}.
+\newblock \bibinfo{journal}{\emph{Philosophy \& Technology}} \bibinfo{volume}{32}, \bibinfo{number}{2} (\bibinfo{year}{2019}), \bibinfo{pages}{185--193}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s13347-019-00354-x}
+\showDOI{\tempurl}
+
+
+\bibitem[Goertzel(2014)]%
+        {goertzel2014artificial}
+\bibfield{author}{\bibinfo{person}{Ben Goertzel}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Artificial general intelligence: concept, state of the art, and future prospects}.
+\newblock \bibinfo{journal}{\emph{Journal of Artificial General Intelligence}} \bibinfo{volume}{5}, \bibinfo{number}{1} (\bibinfo{year}{2014}), \bibinfo{pages}{1}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.2478/jagi-2014-0001}
+\showDOI{\tempurl}
+
+
+\bibitem[Gohel et~al\mbox{.}(2021)]%
+        {Gohel2021Explainable}
+\bibfield{author}{\bibinfo{person}{Prashant Gohel}, \bibinfo{person}{Priyanka Singh}, {and} \bibinfo{person}{Manoranjan Mohanty}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Explainable AI: current status and future directions}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2107.07045}} (\bibinfo{year}{2021}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2107.07045}
+\showDOI{\tempurl}
+
+
+\bibitem[Goldsmith and Burton(2017)]%
+        {goldsmith2017teaching}
+\bibfield{author}{\bibinfo{person}{Judy Goldsmith} {and} \bibinfo{person}{Emanuelle Burton}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Why teaching ethics to AI practitioners is important}.
+\newblock  \bibinfo{volume}{31}, \bibinfo{number}{1} (\bibinfo{year}{2017}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1609/aaai.v31i1.11139}
+\showDOI{\tempurl}
+
+
+\bibitem[Govindarajulu et~al\mbox{.}(2019)]%
+        {govindarajulu2019toward}
+\bibfield{author}{\bibinfo{person}{Naveen~Sundar Govindarajulu}, \bibinfo{person}{Selmer Bringsjord}, \bibinfo{person}{Rikhiya Ghosh}, {and} \bibinfo{person}{Vasanth Sarathy}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Toward the engineering of virtuous machines}. In \bibinfo{booktitle}{\emph{Proceedings of the 2019 AAAI/ACM Conference on AI, Ethics, and Society}}. \bibinfo{pages}{29--35}.
+\newblock
+
+
+\bibitem[Guarini(2012)]%
+        {guarini2012conative}
+\bibfield{author}{\bibinfo{person}{Marcello Guarini}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Conative dimensions of machine ethics: A defense of duty}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Affective Computing}} \bibinfo{volume}{3}, \bibinfo{number}{4} (\bibinfo{year}{2012}), \bibinfo{pages}{434--442}.
+\newblock
+
+
+\bibitem[Hagendorff(2020)]%
+        {hagendorff2020ethics}
+\bibfield{author}{\bibinfo{person}{Thilo Hagendorff}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{The ethics of AI ethics: An evaluation of guidelines}.
+\newblock \bibinfo{journal}{\emph{Minds and machines}} \bibinfo{volume}{30}, \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{99--120}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s11023-020-09517-8}
+\showDOI{\tempurl}
+
+
+\bibitem[Hagendorff(2022)]%
+        {Hagendorff2022virtue}
+\bibfield{author}{\bibinfo{person}{Thilo Hagendorff}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{A virtue-based framework to support putting AI ethics into practice}.
+\newblock \bibinfo{journal}{\emph{Philosophy \& Technology}} \bibinfo{volume}{35}, \bibinfo{number}{3} (\bibinfo{year}{2022}), \bibinfo{pages}{55}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s13347-022-00553-z}
+\showDOI{\tempurl}
+
+
+\bibitem[Hallamaa and Kalliokoski(2022)]%
+        {Hallamaa2022AI}
+\bibfield{author}{\bibinfo{person}{Jaana Hallamaa} {and} \bibinfo{person}{Taina Kalliokoski}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{AI ethics as applied ethics}.
+\newblock \bibinfo{journal}{\emph{Frontiers in computer science}}  \bibinfo{volume}{4} (\bibinfo{year}{2022}), \bibinfo{pages}{776837}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.3389/fcomp.2022.776837}
+\showDOI{\tempurl}
+
+
+\bibitem[Hasal et~al\mbox{.}(2021)]%
+        {Hasal2021Chatbots}
+\bibfield{author}{\bibinfo{person}{Martin Hasal}, \bibinfo{person}{Jana Nowakov{\'a}}, \bibinfo{person}{Khalifa Ahmed~Saghair}, \bibinfo{person}{Hussam Abdulla}, \bibinfo{person}{V{\'a}clav Sn{\'a}{\v{s}}el}, {and} \bibinfo{person}{Lidia Ogiela}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Chatbots: Security, privacy, data protection, and social aspects}.
+\newblock \bibinfo{journal}{\emph{Concurrency and Computation: Practice and Experience}} \bibinfo{volume}{33}, \bibinfo{number}{19} (\bibinfo{year}{2021}), \bibinfo{pages}{e6426}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1002/cpe.6426}
+\showDOI{\tempurl}
+
+
+\bibitem[Hauptman et~al\mbox{.}(2022)]%
+        {10.1145/3500868.3559450}
+\bibfield{author}{\bibinfo{person}{Allyson~I. Hauptman}, \bibinfo{person}{Wen Duan}, {and} \bibinfo{person}{Nathan~J. Mcneese}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The Components of Trust for Collaborating With AI Colleagues}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2022 Conference on Computer Supported Cooperative Work and Social Computing}} (Virtual Event, Taiwan) \emph{(\bibinfo{series}{CSCW'22 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{72–75}.
+\newblock
+\showISBNx{9781450391900}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3500868.3559450}
+\showDOI{\tempurl}
+
+
+\bibitem[Hausman(2008)]%
+        {hausman2008fairness}
+\bibfield{author}{\bibinfo{person}{Daniel~M Hausman}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Fairness and social norms}.
+\newblock \bibinfo{journal}{\emph{Philosophy of science}} \bibinfo{volume}{75}, \bibinfo{number}{5} (\bibinfo{year}{2008}), \bibinfo{pages}{850--860}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1086/594529}
+\showDOI{\tempurl}
+
+
+\bibitem[Hermann(2022)]%
+        {hermann2022leveraging}
+\bibfield{author}{\bibinfo{person}{Erik Hermann}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Leveraging artificial intelligence in marketing for social good—An ethical perspective}.
+\newblock \bibinfo{journal}{\emph{Journal of Business Ethics}} \bibinfo{volume}{179}, \bibinfo{number}{1} (\bibinfo{year}{2022}), \bibinfo{pages}{43--61}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s10551-021-04843-y}
+\showDOI{\tempurl}
+
+
+\bibitem[Hettiachchi et~al\mbox{.}(2021)]%
+        {10.1145/3462204.3481729}
+\bibfield{author}{\bibinfo{person}{Danula Hettiachchi}, \bibinfo{person}{Mark Sanderson}, \bibinfo{person}{Jorge Goncalves}, \bibinfo{person}{Simo Hosio}, \bibinfo{person}{Gabriella Kazai}, \bibinfo{person}{Matthew Lease}, \bibinfo{person}{Mike Schaekermann}, {and} \bibinfo{person}{Emine Yilmaz}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Investigating and Mitigating Biases in Crowdsourced Data}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2021 Conference on Computer Supported Cooperative Work and Social Computing}} (Virtual Event, USA) \emph{(\bibinfo{series}{CSCW '21 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{331–334}.
+\newblock
+\showISBNx{9781450384797}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3462204.3481729}
+\showDOI{\tempurl}
+
+
+\bibitem[Hu and Leung(2018)]%
+        {hu2018social}
+\bibfield{author}{\bibinfo{person}{Shuyue Hu} {and} \bibinfo{person}{Ho-fung Leung}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Do Social Norms Emerge? The Evolution of Agents' Decisions with the Awareness of Social Values under Iterated Prisoner's Dilemma}. In \bibinfo{booktitle}{\emph{2018 IEEE 12th International Conference on Self-Adaptive and Self-Organizing Systems (SASO)}}. IEEE, \bibinfo{pages}{11--19}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SASO.2018.00012}
+\showDOI{\tempurl}
+
+
+\bibitem[Huang et~al\mbox{.}(2023)]%
+        {Huang2023IS}
+\bibfield{author}{\bibinfo{person}{Fan Huang}, \bibinfo{person}{Haewoon Kwak}, {and} \bibinfo{person}{Jisun An}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Is chatgpt better than human annotators? potential and limitations of chatgpt in explaining implicit hate speech}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2302.07736}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2302.07736}
+\showDOI{\tempurl}
+
+
+\bibitem[Huang et~al\mbox{.}(2024)]%
+        {huang2024survey}
+\bibfield{author}{\bibinfo{person}{Xiaowei Huang}, \bibinfo{person}{Wenjie Ruan}, \bibinfo{person}{Wei Huang}, \bibinfo{person}{Gaojie Jin}, \bibinfo{person}{Yi Dong}, \bibinfo{person}{Changshun Wu}, \bibinfo{person}{Saddek Bensalem}, \bibinfo{person}{Ronghui Mu}, \bibinfo{person}{Yi Qi}, \bibinfo{person}{Xingyu Zhao}, {et~al\mbox{.}}} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{A survey of safety and trustworthiness of large language models through the lens of verification and validation}.
+\newblock \bibinfo{journal}{\emph{Artificial Intelligence Review}} \bibinfo{volume}{57}, \bibinfo{number}{7} (\bibinfo{year}{2024}), \bibinfo{pages}{175}.
+\newblock
+
+
+\bibitem[Jobin et~al\mbox{.}(2019)]%
+        {jobin2019global}
+\bibfield{author}{\bibinfo{person}{Anna Jobin}, \bibinfo{person}{Marcello Ienca}, {and} \bibinfo{person}{Effy Vayena}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{The global landscape of AI ethics guidelines}.
+\newblock \bibinfo{journal}{\emph{Nature machine intelligence}} \bibinfo{volume}{1}, \bibinfo{number}{9} (\bibinfo{year}{2019}), \bibinfo{pages}{389--399}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1038/s42256-019-0088-2}
+\showDOI{\tempurl}
+
+
+\bibitem[Kulkarni et~al\mbox{.}(2023)]%
+        {10.1145/3584931.3608438}
+\bibfield{author}{\bibinfo{person}{Chinmay Kulkarni}, \bibinfo{person}{Tongshuang Wu}, \bibinfo{person}{Kenneth Holstein}, \bibinfo{person}{Q.~Vera Liao}, \bibinfo{person}{Min~Kyung Lee}, \bibinfo{person}{Mina Lee}, {and} \bibinfo{person}{Hariharan Subramonyam}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{LLMs and the Infrastructure of CSCW}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2023 Conference on Computer Supported Cooperative Work and Social Computing}} (Minneapolis, MN, USA) \emph{(\bibinfo{series}{CSCW '23 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{408–410}.
+\newblock
+\showISBNx{9798400701290}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3584931.3608438}
+\showDOI{\tempurl}
+
+
+\bibitem[LaCroix and Bengio(2019)]%
+        {LaCroix2019Learning}
+\bibfield{author}{\bibinfo{person}{Travis LaCroix} {and} \bibinfo{person}{Yoshua Bengio}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Learning from learning machines: optimisation, rules, and social norms}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2001.00006}} (\bibinfo{year}{2019}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2001.00006}
+\showDOI{\tempurl}
+
+
+\bibitem[Lagerkvist et~al\mbox{.}(2024)]%
+        {lagerkvist2024body}
+\bibfield{author}{\bibinfo{person}{Amanda Lagerkvist}, \bibinfo{person}{Matilda Tudor}, \bibinfo{person}{Jacek Smolicki}, \bibinfo{person}{Charles~M Ess}, \bibinfo{person}{Jenny Eriksson~Lundstr{\"o}m}, {and} \bibinfo{person}{Maria Rogg}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Body stakes: an existential ethics of care in living with biometrics and AI}.
+\newblock \bibinfo{journal}{\emph{AI \& SOCIETY}} \bibinfo{volume}{39}, \bibinfo{number}{1} (\bibinfo{year}{2024}), \bibinfo{pages}{169--181}.
+\newblock
+
+
+\bibitem[Lauer(2021)]%
+        {Lauer2020cannot}
+\bibfield{author}{\bibinfo{person}{Dave Lauer}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{You cannot have AI ethics without ethics}.
+\newblock \bibinfo{journal}{\emph{AI and Ethics}} \bibinfo{volume}{1}, \bibinfo{number}{1} (\bibinfo{year}{2021}), \bibinfo{pages}{21--25}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s43681-020-00013-4}
+\showDOI{\tempurl}
+
+
+\bibitem[Lee et~al\mbox{.}(2024)]%
+        {lee2024one}
+\bibfield{author}{\bibinfo{person}{Yoonjoo Lee}, \bibinfo{person}{Kihoon Son}, \bibinfo{person}{Tae~Soo Kim}, \bibinfo{person}{Jisu Kim}, \bibinfo{person}{John Joon~Young Chung}, \bibinfo{person}{Eytan Adar}, {and} \bibinfo{person}{Juho Kim}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{One vs. Many: Comprehending Accurate Information from Multiple Erroneous and Inconsistent AI Generations}. In \bibinfo{booktitle}{\emph{The 2024 ACM Conference on Fairness, Accountability, and Transparency}}. \bibinfo{pages}{2518--2531}.
+\newblock
+
+
+\bibitem[Leslie(2019)]%
+        {Leslie2019Understanding}
+\bibfield{author}{\bibinfo{person}{David Leslie}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Understanding artificial intelligence ethics and safety}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1906.05684}} (\bibinfo{year}{2019}).
+\newblock
+\urldef\tempurl%
+\url{https://www.turing.ac.uk/news/publications/understanding-artificial-intelligence-ethics-and-safety}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2022)]%
+        {li2022ethical}
+\bibfield{author}{\bibinfo{person}{Hanlin Li}, \bibinfo{person}{Leah Ajmani}, \bibinfo{person}{Moyan Zhou}, \bibinfo{person}{Nicholas Vincent}, \bibinfo{person}{Sohyeon Hwang}, \bibinfo{person}{Tiziano Piccardi}, \bibinfo{person}{Sneha Narayan}, \bibinfo{person}{Sherae Daniel}, {and} \bibinfo{person}{Veniamin Veselovsky}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Ethical tensions, norms, and directions in the extraction of online volunteer work}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2022 Conference on Computer Supported Cooperative Work and Social Computing}}. \bibinfo{pages}{273--277}.
+\newblock
+
+
+\bibitem[Liang et~al\mbox{.}(2021)]%
+        {liang2021towards}
+\bibfield{author}{\bibinfo{person}{Paul~Pu Liang}, \bibinfo{person}{Chiyu Wu}, \bibinfo{person}{Louis-Philippe Morency}, {and} \bibinfo{person}{Ruslan Salakhutdinov}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Towards understanding and mitigating social biases in language models}. In \bibinfo{booktitle}{\emph{International Conference on Machine Learning}}. PMLR, \bibinfo{pages}{6565--6576}.
+\newblock
+
+
+\bibitem[Lima et~al\mbox{.}(2021)]%
+        {lima2021human}
+\bibfield{author}{\bibinfo{person}{Gabriel Lima}, \bibinfo{person}{Nina Grgi{\'c}-Hla{\v{c}}a}, {and} \bibinfo{person}{Meeyoung Cha}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Human perceptions on moral responsibility of AI: A case study in AI-assisted bail decision-making}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems}}. \bibinfo{pages}{1--17}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445260}
+\showDOI{\tempurl}
+
+
+\bibitem[Loi et~al\mbox{.}(2019)]%
+        {10.1145/3301019.3320000}
+\bibfield{author}{\bibinfo{person}{Daria Loi}, \bibinfo{person}{Christine~T. Wolf}, \bibinfo{person}{Jeanette~L. Blomberg}, \bibinfo{person}{Raphael Arar}, {and} \bibinfo{person}{Margot Brereton}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Co-Designing AI Futures: Integrating AI Ethics, Social Computing, and Design}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2019 on Designing Interactive Systems Conference 2019 Companion}} \emph{(\bibinfo{series}{DIS '19 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{381–384}.
+\newblock
+\showISBNx{9781450362702}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3301019.3320000}
+\showDOI{\tempurl}
+
+
+\bibitem[Madaio et~al\mbox{.}(2020)]%
+        {madaio2020co}
+\bibfield{author}{\bibinfo{person}{Michael~A. Madaio}, \bibinfo{person}{Luke Stark}, \bibinfo{person}{Jennifer Wortman~Vaughan}, {and} \bibinfo{person}{Hanna Wallach}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Co-Designing Checklists to Understand Organizational Challenges and Opportunities around Fairness in AI}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems}} (Honolulu, HI, USA) \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1–14}.
+\newblock
+\showISBNx{9781450367080}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376445}
+\showDOI{\tempurl}
+
+
+\bibitem[Maitra(2020)]%
+        {maitra2020artificial}
+\bibfield{author}{\bibinfo{person}{Suvradip Maitra}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Artificial intelligence and indigenous perspectives: Protecting and empowering intelligent human beings}. In \bibinfo{booktitle}{\emph{Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society}}. \bibinfo{pages}{320--326}.
+\newblock
+
+
+\bibitem[McGee(2023)]%
+        {McGee2023IS}
+\bibfield{author}{\bibinfo{person}{Robert~W McGee}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Is chat gpt biased against conservatives? an empirical study}.
+\newblock \bibinfo{journal}{\emph{An Empirical Study (February 15, 2023)}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.2139/ssrn.4359405}
+\showDOI{\tempurl}
+
+
+\bibitem[McKight and Najab(2010)]%
+        {mckight2010kruskal}
+\bibfield{author}{\bibinfo{person}{Patrick~E McKight} {and} \bibinfo{person}{Julius Najab}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Kruskal-wallis test}.
+\newblock \bibinfo{journal}{\emph{The corsini encyclopedia of psychology}} (\bibinfo{year}{2010}), \bibinfo{pages}{1--1}.
+\newblock
+
+
+\bibitem[Mhlanga(2023)]%
+        {mhlanga2023open}
+\bibfield{author}{\bibinfo{person}{David Mhlanga}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Open AI in education, the responsible and ethical use of ChatGPT towards lifelong learning}.
+\newblock \bibinfo{journal}{\emph{Education, the Responsible and Ethical Use of ChatGPT Towards Lifelong Learning (February 11, 2023)}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.2139/ssrn.4354422}
+\showDOI{\tempurl}
+
+
+\bibitem[Mijwil et~al\mbox{.}(2023)]%
+        {Mijwil2023ChatGPT}
+\bibfield{author}{\bibinfo{person}{Maad~M Mijwil}, \bibinfo{person}{Kamal~Kant Hiran}, \bibinfo{person}{Ruchi Doshi}, \bibinfo{person}{Manish Dadhich}, \bibinfo{person}{Abdel-Hameed Al-Mistarehi}, {and} \bibinfo{person}{Indu Bala}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{ChatGPT and the future of academic integrity in the artificial intelligence era: a new frontier}.
+\newblock \bibinfo{journal}{\emph{Al-Salam Journal for Engineering and Technology}} \bibinfo{volume}{2}, \bibinfo{number}{2} (\bibinfo{year}{2023}), \bibinfo{pages}{116--127}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.55145/ajest.2023.02.02.015}
+\showDOI{\tempurl}
+
+
+\bibitem[Moor(1995)]%
+        {Moor1995Is}
+\bibfield{author}{\bibinfo{person}{James~H Moor}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Is ethics computable?}
+\newblock \bibinfo{journal}{\emph{Metaphilosophy}} \bibinfo{volume}{26}, \bibinfo{number}{1/2} (\bibinfo{year}{1995}), \bibinfo{pages}{1--21}.
+\newblock
+\urldef\tempurl%
+\url{https://www.jstor.org/stable/24439044}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Morley et~al\mbox{.}(2020)]%
+        {Morley2020The}
+\bibfield{author}{\bibinfo{person}{Jessica Morley}, \bibinfo{person}{Caio~CV Machado}, \bibinfo{person}{Christopher Burr}, \bibinfo{person}{Josh Cowls}, \bibinfo{person}{Indra Joshi}, \bibinfo{person}{Mariarosaria Taddeo}, {and} \bibinfo{person}{Luciano Floridi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{The ethics of AI in health care: a mapping review}.
+\newblock \bibinfo{journal}{\emph{Social Science \& Medicine}}  \bibinfo{volume}{260} (\bibinfo{year}{2020}), \bibinfo{pages}{113172}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.socscimed.2020.113172}
+\showDOI{\tempurl}
+
+
+\bibitem[Muyskens et~al\mbox{.}(2024)]%
+        {muyskens2024can}
+\bibfield{author}{\bibinfo{person}{Kathryn Muyskens}, \bibinfo{person}{Yonghui Ma}, {and} \bibinfo{person}{Michael Dunn}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Can an AI-carebot be filial? Reflections from Confucian ethics}.
+\newblock \bibinfo{journal}{\emph{Nursing Ethics}} (\bibinfo{year}{2024}), \bibinfo{pages}{09697330241238332}.
+\newblock
+
+
+\bibitem[Neuman and Cohen(2023)]%
+        {neuman2023ai}
+\bibfield{author}{\bibinfo{person}{Yair Neuman} {and} \bibinfo{person}{Yochai Cohen}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{AI for identifying social norm violation}.
+\newblock \bibinfo{journal}{\emph{Scientific Reports}} \bibinfo{volume}{13}, \bibinfo{number}{1} (\bibinfo{year}{2023}), \bibinfo{pages}{8103}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/s41598-023-35350-x}
+\showDOI{\tempurl}
+
+
+\bibitem[Oviedo-Trespalacios et~al\mbox{.}({[n.\,d.]})]%
+        {Oviedo2023The}
+\bibfield{author}{\bibinfo{person}{O Oviedo-Trespalacios}, \bibinfo{person}{AE Peden}, \bibinfo{person}{T Cole-Hunter}, \bibinfo{person}{A Costantini}, \bibinfo{person}{M Haghani}, \bibinfo{person}{S Kelly}, {and} \bibinfo{person}{G Reniers}.} \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \showarticletitle{The risks of using ChatGPT to obtain common safety-related information and advice, 2023}.
+\newblock \bibinfo{journal}{\emph{Available At SSRN}}  \bibinfo{volume}{4346827} (\bibinfo{year}{[n.\,d.]}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.ssci.2023.106244}
+\showDOI{\tempurl}
+
+
+\bibitem[Poller et~al\mbox{.}(2017)]%
+        {10.1145/2998181.2998191}
+\bibfield{author}{\bibinfo{person}{Andreas Poller}, \bibinfo{person}{Laura Kocksch}, \bibinfo{person}{Sven T\"{u}rpe}, \bibinfo{person}{Felix~Anand Epp}, {and} \bibinfo{person}{Katharina Kinder-Kurlanda}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Can Security Become a Routine? A Study of Organizational Change in an Agile Software Development Group}. In \bibinfo{booktitle}{\emph{Proceedings of the 2017 ACM Conference on Computer Supported Cooperative Work and Social Computing}} (Portland, Oregon, USA) \emph{(\bibinfo{series}{CSCW '17})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{2489–2503}.
+\newblock
+\showISBNx{9781450343350}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2998181.2998191}
+\showDOI{\tempurl}
+
+
+\bibitem[Poslon and {\v{C}}artolovni({[n.\,d.]})]%
+        {poslonoutpacing}
+\bibfield{author}{\bibinfo{person}{Luka Poslon} {and} \bibinfo{person}{Anto {\v{C}}artolovni}.} \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \showarticletitle{Outpacing the Trustworthiness in LLM Use in Medicine by Addressing Opacity and Enhancing Explainability}.
+\newblock \bibinfo{journal}{\emph{Frontiers of Artificial Intelligence—Philosophical Explorations}} (\bibinfo{year}{[n.\,d.]}).
+\newblock
+
+
+\bibitem[Quttainah et~al\mbox{.}(2024)]%
+        {quttainah2024cost}
+\bibfield{author}{\bibinfo{person}{Majdi Quttainah}, \bibinfo{person}{Vinaytosh Mishra}, \bibinfo{person}{Somayya Madakam}, \bibinfo{person}{Yotam Lurie}, \bibinfo{person}{Shlomo Mark}, {et~al\mbox{.}}} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Cost, Usability, Credibility, Fairness, Accountability, Transparency, and Explainability Framework for Safe and Effective Large Language Models in Medical Education: Narrative Review and Qualitative Study}.
+\newblock \bibinfo{journal}{\emph{JMIR AI}} \bibinfo{volume}{3}, \bibinfo{number}{1} (\bibinfo{year}{2024}), \bibinfo{pages}{e51834}.
+\newblock
+
+
+\bibitem[Ray(2023)]%
+        {Ray2023ChatGPT}
+\bibfield{author}{\bibinfo{person}{Partha~Pratim Ray}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{ChatGPT: A comprehensive review on background, applications, key challenges, bias, ethics, limitations and future scope}.
+\newblock \bibinfo{journal}{\emph{Internet of Things and Cyber-Physical Systems}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.iotcps.2023.04.003}
+\showDOI{\tempurl}
+
+
+\bibitem[Ress{\'e}guier and Rodrigues(2020)]%
+        {Resseguier2020ethics}
+\bibfield{author}{\bibinfo{person}{Ana{\"\i}s Ress{\'e}guier} {and} \bibinfo{person}{Rowena Rodrigues}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{AI ethics should not remain toothless! A call to bring back the teeth of ethics}.
+\newblock \bibinfo{journal}{\emph{Big Data \& Society}} \bibinfo{volume}{7}, \bibinfo{number}{2} (\bibinfo{year}{2020}), \bibinfo{pages}{2053951720942541}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1177/2053951720942541}
+\showDOI{\tempurl}
+
+
+\bibitem[Rivas and Zhao(2023)]%
+        {rivas2023marketing}
+\bibfield{author}{\bibinfo{person}{Pablo Rivas} {and} \bibinfo{person}{Liang Zhao}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Marketing with chatgpt: Navigating the ethical terrain of gpt-based chatbot technology}.
+\newblock \bibinfo{journal}{\emph{AI}} \bibinfo{volume}{4}, \bibinfo{number}{2} (\bibinfo{year}{2023}), \bibinfo{pages}{375--384}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.3390/ai4020019}
+\showDOI{\tempurl}
+
+
+\bibitem[Roberts and Lee(2014)]%
+        {roberts2014autonomy}
+\bibfield{author}{\bibinfo{person}{Lisa~R Roberts} {and} \bibinfo{person}{Jerry~W Lee}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Autonomy and social norms in a three factor grief model predicting perinatal grief in India}.
+\newblock \bibinfo{journal}{\emph{Health Care for Women International}} \bibinfo{volume}{35}, \bibinfo{number}{3} (\bibinfo{year}{2014}), \bibinfo{pages}{285--299}.
+\newblock
+
+
+\bibitem[Rossi and Mattei(2019)]%
+        {rossi2019building}
+\bibfield{author}{\bibinfo{person}{Francesca Rossi} {and} \bibinfo{person}{Nicholas Mattei}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Building ethically bounded AI}. In \bibinfo{booktitle}{\emph{Proceedings of the AAAI Conference on Artificial Intelligence}}, Vol.~\bibinfo{volume}{33}. \bibinfo{pages}{9785--9789}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1609/aaai.v33i01.33019785}
+\showDOI{\tempurl}
+
+
+\bibitem[Ryan and Stahl(2020)]%
+        {Ryan2020Artificial}
+\bibfield{author}{\bibinfo{person}{Mark Ryan} {and} \bibinfo{person}{Bernd~Carsten Stahl}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Artificial intelligence ethics guidelines for developers and users: clarifying their content and normative implications}.
+\newblock \bibinfo{journal}{\emph{Journal of Information, Communication and Ethics in Society}} \bibinfo{volume}{19}, \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{61--86}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1108/jices-12-2019-0138}
+\showDOI{\tempurl}
+
+
+\bibitem[Sag(2023)]%
+        {sag2023copyright}
+\bibfield{author}{\bibinfo{person}{Matthew Sag}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Copyright safety for generative ai}.
+\newblock \bibinfo{journal}{\emph{Hous. L. Rev.}}  \bibinfo{volume}{61} (\bibinfo{year}{2023}), \bibinfo{pages}{295}.
+\newblock
+
+
+\bibitem[Salo-P{\"o}ntinen(2021)]%
+        {Salo2021AI}
+\bibfield{author}{\bibinfo{person}{Henrikki Salo-P{\"o}ntinen}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{AI Ethics-Critical Reflections on Embedding Ethical Frameworks in AI Technology}. In \bibinfo{booktitle}{\emph{International Conference on Human-Computer Interaction}}. Springer, \bibinfo{pages}{311--329}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-77431-8_20}
+\showDOI{\tempurl}
+
+
+\bibitem[Samarawickrama(2022)]%
+        {Samarawickrama2022AI}
+\bibfield{author}{\bibinfo{person}{Mahendra Samarawickrama}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{AI Governance and Ethics Framework for Sustainable AI and Sustainability}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2210.08984}} (\bibinfo{year}{2022}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2210.08984}
+\showDOI{\tempurl}
+
+
+\bibitem[Samuelson(2023)]%
+        {samuelson2023generative}
+\bibfield{author}{\bibinfo{person}{Pamela Samuelson}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Generative AI meets copyright}.
+\newblock \bibinfo{journal}{\emph{Science}} \bibinfo{volume}{381}, \bibinfo{number}{6654} (\bibinfo{year}{2023}), \bibinfo{pages}{158--161}.
+\newblock
+
+
+\bibitem[Santos et~al\mbox{.}(2018)]%
+        {santos2018social}
+\bibfield{author}{\bibinfo{person}{Fernando Santos}, \bibinfo{person}{Jorge Pacheco}, {and} \bibinfo{person}{Francisco Santos}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Social norms of cooperation with costly reputation building}. In \bibinfo{booktitle}{\emph{Proceedings of the AAAI Conference on Artificial Intelligence}}, Vol.~\bibinfo{volume}{32}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1609/aaai.v32i1.11582}
+\showDOI{\tempurl}
+
+
+\bibitem[Schlesinger et~al\mbox{.}(2018)]%
+        {schlesinger2018let}
+\bibfield{author}{\bibinfo{person}{Ari Schlesinger}, \bibinfo{person}{Kenton~P O'Hara}, {and} \bibinfo{person}{Alex~S Taylor}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Let's talk about race: Identity, chatbots, and AI}. In \bibinfo{booktitle}{\emph{Proceedings of the 2018 chi conference on human factors in computing systems}}. \bibinfo{pages}{1--14}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3173574.3173889}
+\showDOI{\tempurl}
+
+
+\bibitem[Shen et~al\mbox{.}(2023b)]%
+        {10.1145/3584931.3607492}
+\bibfield{author}{\bibinfo{person}{Hua Shen}, \bibinfo{person}{Chieh-Yang Huang}, \bibinfo{person}{Tongshuang Wu}, {and} \bibinfo{person}{Ting-Hao~Kenneth Huang}.} \bibinfo{year}{2023}\natexlab{b}.
+\newblock \showarticletitle{ConvXAI: Delivering Heterogeneous AI Explanations via Conversations to Support Human-AI Scientific Writing}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2023 Conference on Computer Supported Cooperative Work and Social Computing}} (Minneapolis, MN, USA) \emph{(\bibinfo{series}{CSCW '23 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{384–387}.
+\newblock
+\showISBNx{9798400701290}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3584931.3607492}
+\showDOI{\tempurl}
+
+
+\bibitem[Shen et~al\mbox{.}(2023a)]%
+        {Shen2023ChatGPT}
+\bibfield{author}{\bibinfo{person}{Yiqiu Shen}, \bibinfo{person}{Laura Heacock}, \bibinfo{person}{Jonathan Elias}, \bibinfo{person}{Keith~D Hentel}, \bibinfo{person}{Beatriu Reig}, \bibinfo{person}{George Shih}, {and} \bibinfo{person}{Linda Moy}.} \bibinfo{year}{2023}\natexlab{a}.
+\newblock \bibinfo{title}{ChatGPT and other large language models are double-edged swords}.
+\newblock , \bibinfo{numpages}{e230163}~pages.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1148/radiol.230163}
+\showDOI{\tempurl}
+
+
+\bibitem[Shi et~al\mbox{.}(2023)]%
+        {shi2023badgpt}
+\bibfield{author}{\bibinfo{person}{Jiawen Shi}, \bibinfo{person}{Yixin Liu}, \bibinfo{person}{Pan Zhou}, {and} \bibinfo{person}{Lichao Sun}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{BadGPT: Exploring Security Vulnerabilities of ChatGPT via Backdoor Attacks to InstructGPT}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2304.12298}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2304.12298}
+\showDOI{\tempurl}
+
+
+\bibitem[Shin(2020)]%
+        {Shin2020User}
+\bibfield{author}{\bibinfo{person}{Donghee Shin}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{User perceptions of algorithmic decisions in the personalized AI system: Perceptual evaluation of fairness, accountability, transparency, and explainability}.
+\newblock \bibinfo{journal}{\emph{Journal of Broadcasting \& Electronic Media}} \bibinfo{volume}{64}, \bibinfo{number}{4} (\bibinfo{year}{2020}), \bibinfo{pages}{541--565}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1080/08838151.2020.1843357}
+\showDOI{\tempurl}
+
+
+\bibitem[Steen-Johnsen and Enjolras(2016)]%
+        {steen2016fear}
+\bibfield{author}{\bibinfo{person}{Kari Steen-Johnsen} {and} \bibinfo{person}{Bernard Enjolras}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The fear of offending: Social norms and freedom of expression}.
+\newblock \bibinfo{journal}{\emph{Society}}  \bibinfo{volume}{53} (\bibinfo{year}{2016}), \bibinfo{pages}{352--362}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s12115-016-0044-2}
+\showDOI{\tempurl}
+
+
+\bibitem[Tanguy et~al\mbox{.}(2016)]%
+        {tanguy2016natural}
+\bibfield{author}{\bibinfo{person}{Ludovic Tanguy}, \bibinfo{person}{Nikola Tulechki}, \bibinfo{person}{Assaf Urieli}, \bibinfo{person}{Eric Hermann}, {and} \bibinfo{person}{C{\'e}line Raynal}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Natural language processing for aviation safety reports: From classification to interactive analysis}.
+\newblock \bibinfo{journal}{\emph{Computers in Industry}}  \bibinfo{volume}{78} (\bibinfo{year}{2016}), \bibinfo{pages}{80--95}.
+\newblock
+
+
+\bibitem[Terzis(2020)]%
+        {terzis2020onward}
+\bibfield{author}{\bibinfo{person}{Petros Terzis}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Onward for the freedom of others: marching beyond the AI ethics}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency}}. \bibinfo{pages}{220--229}.
+\newblock
+
+
+\bibitem[Thiebes et~al\mbox{.}(2021)]%
+        {Thiebes2020Trustworthy}
+\bibfield{author}{\bibinfo{person}{Scott Thiebes}, \bibinfo{person}{Sebastian Lins}, {and} \bibinfo{person}{Ali Sunyaev}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Trustworthy artificial intelligence}.
+\newblock \bibinfo{journal}{\emph{Electronic Markets}}  \bibinfo{volume}{31} (\bibinfo{year}{2021}), \bibinfo{pages}{447--464}.
+\newblock
+\urldef\tempurl%
+\url{https://link.springer.com/article/10.1007/s12525-020-00441-4}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Tolmeijer et~al\mbox{.}(2022)]%
+        {tolmeijer2022capable}
+\bibfield{author}{\bibinfo{person}{Suzanne Tolmeijer}, \bibinfo{person}{Markus Christen}, \bibinfo{person}{Serhiy Kandul}, \bibinfo{person}{Markus Kneer}, {and} \bibinfo{person}{Abraham Bernstein}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Capable but amoral? Comparing AI and human expert collaboration in ethical decision making}.
+\newblock  (\bibinfo{year}{2022}), \bibinfo{pages}{1--17}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3491102.3517732}
+\showDOI{\tempurl}
+
+
+\bibitem[Varona and Su{\'a}rez(2022)]%
+        {Varona2022Discrimination}
+\bibfield{author}{\bibinfo{person}{Daniel Varona} {and} \bibinfo{person}{Juan~Luis Su{\'a}rez}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Discrimination, bias, fairness, and trustworthy AI}.
+\newblock \bibinfo{journal}{\emph{Applied Sciences}} \bibinfo{volume}{12}, \bibinfo{number}{12} (\bibinfo{year}{2022}), \bibinfo{pages}{5826}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.3390/app12125826}
+\showDOI{\tempurl}
+
+
+\bibitem[Veisi et~al\mbox{.}(2025)]%
+        {10.1145/3706599.3720152}
+\bibfield{author}{\bibinfo{person}{Omid Veisi}, \bibinfo{person}{Khoshnaz Kazemian}, \bibinfo{person}{Farzaneh Gerami}, \bibinfo{person}{Mahya Mirzaee~Kharghani}, \bibinfo{person}{Sima Amirkhani}, \bibinfo{person}{Delong~K. Du}, \bibinfo{person}{Gunnar Stevens}, {and} \bibinfo{person}{Alexander Boden}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{User Narrative Study for Dealing with Deceptive Chatbot Scams Aiming to Online Fraud}. In \bibinfo{booktitle}{\emph{Proceedings of the Extended Abstracts of the CHI Conference on Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI EA '25})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{560}, \bibinfo{numpages}{7}~pages.
+\newblock
+\showISBNx{9798400713958}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3706599.3720152}
+\showDOI{\tempurl}
+
+
+\bibitem[Vitak et~al\mbox{.}(2016)]%
+        {vitak2016beyond}
+\bibfield{author}{\bibinfo{person}{Jessica Vitak}, \bibinfo{person}{Katie Shilton}, {and} \bibinfo{person}{Zahra Ashktorab}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Beyond the Belmont principles: Ethical challenges, practices, and beliefs in the online data research community}. In \bibinfo{booktitle}{\emph{Proceedings of the 19th ACM conference on computer-supported cooperative work \& social computing}}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{pages}{941--953}.
+\newblock
+
+
+\bibitem[Vitak et~al\mbox{.}(2021)]%
+        {10.1145/3462204.3481724}
+\bibfield{author}{\bibinfo{person}{Jessica Vitak}, \bibinfo{person}{Michael Zimmer}, \bibinfo{person}{Anna Lenhart}, \bibinfo{person}{Sunyup Park}, \bibinfo{person}{Richmond Y.~Wong}, {and} \bibinfo{person}{Yaxing Yao}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Designing for Data Awareness: Addressing Privacy and Security Concerns About “Smart” Technologies}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2021 Conference on Computer Supported Cooperative Work and Social Computing}} (Virtual Event, USA) \emph{(\bibinfo{series}{CSCW '21 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{364–367}.
+\newblock
+\showISBNx{9781450384797}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3462204.3481724}
+\showDOI{\tempurl}
+
+
+\bibitem[Waelen(2022)]%
+        {Rosalie2022Why}
+\bibfield{author}{\bibinfo{person}{Rosalie Waelen}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Why AI ethics is a critical theory}.
+\newblock \bibinfo{journal}{\emph{Philosophy \& Technology}} \bibinfo{volume}{35}, \bibinfo{number}{1} (\bibinfo{year}{2022}), \bibinfo{pages}{9}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s13347-022-00507-5}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2023a)]%
+        {Wang2023On}
+\bibfield{author}{\bibinfo{person}{Jindong Wang}, \bibinfo{person}{Xixu Hu}, \bibinfo{person}{Wenxin Hou}, \bibinfo{person}{Hao Chen}, \bibinfo{person}{Runkai Zheng}, \bibinfo{person}{Yidong Wang}, \bibinfo{person}{Linyi Yang}, \bibinfo{person}{Haojun Huang}, \bibinfo{person}{Wei Ye}, \bibinfo{person}{Xiubo Geng}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{a}.
+\newblock \showarticletitle{On the robustness of chatgpt: An adversarial and out-of-distribution perspective}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2302.12095}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/arXiv.2302.12095}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2023b)]%
+        {Wang2023Large}
+\bibfield{author}{\bibinfo{person}{Peiyi Wang}, \bibinfo{person}{Lei Li}, \bibinfo{person}{Liang Chen}, \bibinfo{person}{Dawei Zhu}, \bibinfo{person}{Binghuai Lin}, \bibinfo{person}{Yunbo Cao}, \bibinfo{person}{Qi Liu}, \bibinfo{person}{Tianyu Liu}, {and} \bibinfo{person}{Zhifang Sui}.} \bibinfo{year}{2023}\natexlab{b}.
+\newblock \showarticletitle{Large language models are not fair evaluators}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2305.17926}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2305.17926}
+\showDOI{\tempurl}
+
+
+\bibitem[Weidinger et~al\mbox{.}(2021)]%
+        {weidinger2021ethical}
+\bibfield{author}{\bibinfo{person}{Laura Weidinger}, \bibinfo{person}{John Mellor}, \bibinfo{person}{Maribeth Rauh}, \bibinfo{person}{Conor Griffin}, \bibinfo{person}{Jonathan Uesato}, \bibinfo{person}{Po-Sen Huang}, \bibinfo{person}{Myra Cheng}, \bibinfo{person}{Mia Glaese}, \bibinfo{person}{Borja Balle}, \bibinfo{person}{Atoosa Kasirzadeh}, {et~al\mbox{.}}} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Ethical and social risks of harm from language models}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2112.04359}} (\bibinfo{year}{2021}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2112.04359}
+\showDOI{\tempurl}
+
+
+\bibitem[Wen et~al\mbox{.}(2019)]%
+        {wen2019towards}
+\bibfield{author}{\bibinfo{person}{Ruchen Wen}, \bibinfo{person}{Ryan~Blake Jackson}, \bibinfo{person}{Tom Williams}, {and} \bibinfo{person}{Qin Zhu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Towards a role ethics approach to command rejection}. In \bibinfo{booktitle}{\emph{HRI Workshop on the Dark Side of Human-Robot Interaction}}.
+\newblock
+
+
+\bibitem[Wong et~al\mbox{.}(2020)]%
+        {10.1145/3406865.3418590}
+\bibfield{author}{\bibinfo{person}{Richmond~Y. Wong}, \bibinfo{person}{Karen Boyd}, \bibinfo{person}{Jake Metcalf}, {and} \bibinfo{person}{Katie Shilton}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Beyond Checklist Approaches to Ethics in Design}. In \bibinfo{booktitle}{\emph{Companion Publication of the 2020 Conference on Computer Supported Cooperative Work and Social Computing}} (Virtual Event, USA) \emph{(\bibinfo{series}{CSCW '20 Companion})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{511–517}.
+\newblock
+\showISBNx{9781450380591}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3406865.3418590}
+\showDOI{\tempurl}
+
+
+\bibitem[Yi et~al\mbox{.}(2003)]%
+        {yi2003privacy}
+\bibfield{author}{\bibinfo{person}{Xun Yi}, \bibinfo{person}{Yiming Ye}, \bibinfo{person}{Chee~Kheong Siew}, {and} \bibinfo{person}{Mahbubur~Rahman Syed}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Privacy and Authentication for Agent Supported Cooperative Work}.
+\newblock \bibinfo{journal}{\emph{Agent Supported Cooperative Work}} (\bibinfo{year}{2003}), \bibinfo{pages}{273--294}.
+\newblock
+
+
+\bibitem[You(2023)]%
+        {you2023impact}
+\bibfield{author}{\bibinfo{person}{Leyuan You}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{The impact of social norms of responsibility on corporate social responsibility short title: The impact of social norms of responsibility on corporate social responsibility}.
+\newblock \bibinfo{journal}{\emph{Journal of Business Ethics}} (\bibinfo{year}{2023}), \bibinfo{pages}{1--18}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s10551-023-05417-w}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2023)]%
+        {Zhang2023Is}
+\bibfield{author}{\bibinfo{person}{Jizhi Zhang}, \bibinfo{person}{Keqin Bao}, \bibinfo{person}{Yang Zhang}, \bibinfo{person}{Wenjie Wang}, \bibinfo{person}{Fuli Feng}, {and} \bibinfo{person}{Xiangnan He}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Is chatgpt fair for recommendation? evaluating fairness in large language model recommendation}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2305.07609}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2305.07609 Focus to learn more}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhu(2022)]%
+        {Zhu2022AI}
+\bibfield{author}{\bibinfo{person}{Junhua Zhu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{AI ethics with Chinese characteristics? Concerns and preferred solutions in Chinese academia}.
+\newblock \bibinfo{journal}{\emph{AI \& society}} (\bibinfo{year}{2022}), \bibinfo{pages}{1--14}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s00146-022-01578-w}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhu et~al\mbox{.}(2020)]%
+        {zhu2020blame}
+\bibfield{author}{\bibinfo{person}{Qin Zhu}, \bibinfo{person}{Tom Williams}, \bibinfo{person}{Blake Jackson}, {and} \bibinfo{person}{Ruchen Wen}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Blame-laden moral rebukes and the morally competent robot: A Confucian ethical perspective}.
+\newblock \bibinfo{journal}{\emph{Science and Engineering Ethics}} \bibinfo{volume}{26}, \bibinfo{number}{5} (\bibinfo{year}{2020}), \bibinfo{pages}{2511--2526}.
+\newblock
+
+
+\bibitem[Zhuo et~al\mbox{.}(2023)]%
+        {Zhuo2023Exploring}
+\bibfield{author}{\bibinfo{person}{Terry~Yue Zhuo}, \bibinfo{person}{Yujin Huang}, \bibinfo{person}{Chunyang Chen}, {and} \bibinfo{person}{Zhenchang Xing}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Exploring ai ethics of chatgpt: A diagnostic analysis}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2301.12867}} (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://www.arxiv-vanity.com/papers/2301.12867/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Zoshak and Dew(2021)]%
+        {zoshak2021beyond}
+\bibfield{author}{\bibinfo{person}{John Zoshak} {and} \bibinfo{person}{Kristin Dew}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Beyond kant and bentham: How ethical theories are being used in artificial moral agents}.
+\newblock  (\bibinfo{year}{2021}), \bibinfo{pages}{1--15}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445102}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

@@ -1,0 +1,50 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+
+% customization settings
+\input{preamble}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{\Large \bf \thiswork{}: Towards an Open and Compiler-centric Ecosystem \\for GPU Kernel Performance Tooling on Modern AI Workloads}
+
+\author{
+{\rm Yue Guan$^{1\dagger}$, Yuanwei Fang$^{2\ddagger}$, Keren Zhou$^{3,4}$, Corbin Robeck$^{2\ddagger}$,}\\{\rm Manman Ren$^{2\ddagger}$, Zhongkai Yu$^{1\dagger}$, Yufei Ding$^{1,2\dagger}$, Adnan Aziz$^{2\ddagger}$}\\
+$^1$University of California, San Diego, $^2$Meta, $^3$George Mason University, $^4$OpenAI\\
+$^\dagger$\{yueguan, zhy055, yufeiding\}@ucsd.edu\\
+$^\ddagger$\{fywkevin, robeck, mren, adnanaziz\}@meta.com\\
+kzhou6@gmu.edu
+}
+
+\maketitle
+
+% {\let\thefootnote\relax\footnote{{$^*$Equal contribution.}}}
+% {\let\thefootnote\relax\footnote{{$^*$yueguan@ucsd.edu}}}
+
+\input{section/0_abstract}
+\input{section/1_introduction}
+\input{section/2_motivation}
+\input{section/3_compiler_centri_design}
+\input{section/4_profiler_tool}
+\input{section/5_evaluation}
+\input{section/6_discussion}
+
+\bibliographystyle{plain}
+\bibliography{reference}
+
+\appendix
+
+\input{section/artifact.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks

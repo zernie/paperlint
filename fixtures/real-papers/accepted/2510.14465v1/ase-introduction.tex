@@ -1,0 +1,48 @@
+%% Focus on diversity
+% Prevalence of governance in the literature/OSS.
+Governance is a key aspect of software development, especially in Open-Source Software (OSS), where the collaborative nature of the process requires clear guidelines and policies to ensure effective decision-making and accountability.
+Governance policies help to establish roles, responsibilities, and processes for managing contributions, resolving conflicts, and maintaining the integrity of software projects~\cite{DBLP:journals/cacm/IzquierdoC23}.
+Such policies make explicit the decision-making process, ensuring that all the involved stakeholders know how decisions are made and who is responsible for them.
+However, most (OSS) projects do not explicitly define governance policies, and those that do are often poorly described and lack clarity~\cite{DBLP:journals/cacm/IzquierdoC23}.
+Furthermore, when described, they are usually scattered across different project resources, making it difficult for contributors to understand the rules and procedures that govern the project~\cite{DBLP:conf/icse/IzquierdoC15}.
+
+Recently, the landscape of software development is undergoing a profound transformation.
+The rapid proliferation of AI-powered agents participating in development tasks, coupled with a growing recognition of the critical role of diverse human backgrounds, presents unprecedented challenges to these established governance paradigms~\cite{DBLP:journals/pacmhci/WesselSSWPCG18, DBLP:conf/xpu/RasheedWSKA0SA24, bjorn2023diversity, DBLP:journals/ese/Rodriguez-Perez21}.
+AI agents, powered by advancements in Large Language Models (LLMs), are moving beyond simple automation to become active participants capable of complex communication, collaboration, and even decision-making~\cite{DBLP:conf/ijcai/GuoCWCPCW024}.
+On the other hand, human diversity is also beneficial for software development, as it can lead to more innovative solutions and better decision-making~\cite{yang2022gender}, while also benefiting end-users~\cite{gunatilake2024impact}.
+While this human-agent collaboration and broader human diversity promise significant benefits in innovation and productivity, they also expose a critical gap: the lack of governance frameworks designed to explicitly and holistically manage such multifaceted participation.\looseness-1
+
+% Diverse world: humans, agents, minorities, etc.
+% On the other hand, the software development landscape is becoming increasingly diverse.
+% Recent research focuses on the diversity within the software engineering process~\cite{bjorn2023diversity,DBLP:journals/ese/Rodriguez-Perez21,DBLP:journals/corr/abs-2503-05470}.
+% Diversity can be beneficial for software development, as it can lead to more innovative solutions and better decision-making~\cite{yang2022gender}, while also benefiting end-users~\cite{gunatilake2024impact}.
+% Assessing this diversity in governance is crucial to ensure an equitable representation of all stakeholders.
+
+% This diversity can be paired with the introduction of agents and bots that assist in the development process~\cite{DBLP:journals/pacmhci/WesselSSWPCG18, DBLP:conf/xpu/RasheedWSKA0SA24}.
+% With the advancements of Large Language Models (LLMs), the agents can use the capabilities of these models to automate tasks, provide recommendations, and even participate in decision-making processes, thanks to their communication, collaboration and reasoning skills~\cite{DBLP:conf/ijcai/GuoCWCPCW024}.
+% However, the adoption of these agents also raises concerns about the potential biases and ethical implications of their actions~\cite{DBLP:conf/models/MoralesCC24}.
+% Appropriate identification of the agents' role in decision-making is one of the focuses of this work.
+
+% With AI more fields are affected (not only software development).
+% Furthermore, with the advancements in artificial intelligence (AI), particularly with the natural language comprehension of large language models (LLMs) and the increasing reliance on AI systems in various domains, the need for effective governance policies has become even more critical.
+% The integration of AI agents into diverse fields, raise the concern for an holistic approach to governance that encompasses not only the technical aspects of software development but also the ethical, and social implications of AI systems.
+
+% Motivation / proposal
+% This paper first replicates the study of the presence of governance policies in OSS~\cite{DBLP:conf/icse/IzquierdoC15} to validate the need of explicit governance policies, and even more in the current agentic context. 
+This paper first replicates a study on governance policies in OSS~\cite{DBLP:conf/icse/IzquierdoC15} to demonstrate the persistent need for explicit governance, particularly in today's agentic development context.
+Then, we address this gap by proposing the conceptualization of a Domain-Specific Language (DSL) designed to define and enforce governance policies in systems involving a diverse set of stakeholders, covering both human and agent collaborators. 
+% We illustrate the application of the DSL in the context of OSS development.
+The proposed DSL provides a structured approach for expressing governance rules, roles, responsibilities, and decision-making processes.
+% By focusing on the creation and definition of this language, we aim to enable system designers to clearly articulate governance requirements, ensuring that all stakeholders are represented while also agent interactions adhere to intended behaviors and constraints.
+It encompasses various dimensions of governance, including decision-making procedures, positive and negative discrimination, and other methods to ensure a fair representation.
+We envision our DSL to be field-agnostic, extensible, and adaptable to different contexts, allowing for the inclusion of various stakeholders and their specific needs.
+We also provide tool support to automate and enforce the governance policies defined with our DSL.
+
+% To adapt
+The rest of the paper is structured as follows. 
+Section \ref{sec:motivation} provides the motivation.
+Section~\ref{sec:dsl} and \ref{sec:proof-of-concept}  presents the design and implementation of the DSL, and the proof of concept, respectively.
+Section~\ref{sec:discussion} discusses the roadmap.
+% Section N evaluates the DSL with a case study.
+% Section~\ref{sec:related} provide the related work.
+Finally, Section~\ref{sec:conclusion} concludes the paper and outlines the future work.

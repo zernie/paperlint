@@ -1,0 +1,308 @@
+
+\section{Evaluation Methodology}
+\label{sec:evaluation}
+\vspace{-5pt}
+
+\textbf{Evaluated Platforms.}
+We conduct experiments on $4$ different deep learning systems with their own programming interfaces as follows: 1) \textbf{Intel Gold 6348 CPU with VNNI Extension}, which utilizes a special instruction set for deep learning; 2) \textbf{NVIDIA A100 GPU with CUDA C}, which follows the SIMT programming model; 3) \textbf{AMD MI200 with HIP}, which provides an alternative to CUDA language; and 4) \textbf{Cambricon MLU with BANG C}, which follows SIMD programming model on a DSA.
+
+\textbf{Evaluated Benchmarks.}
+We evaluate \name{} on 21 widely-used deep learning operators (shown in Table \ref{tab::benchmark}), which can be grouped into $6$ types of operations including \emph{MatMul}, % (\texttt{GEMM}, \texttt{GEMV}, \texttt{Batch MatMul}), 
+\emph{Convolution}, % (\texttt{Conv1D}, \texttt{Conv2D NHWC}, \texttt{Conv2D NCHW}, \texttt{Depthwise Conv}), 
+\emph{Activation}, % (\texttt{ReLU}, \texttt{GeLU}, \texttt{Sigmoid}, \texttt{Softmax}),
+\emph{Pooling}, % (\texttt{MaxPool}, \texttt{MinPool}, \texttt{AvgPool}, \texttt{SumPool}), 
+\emph{Element-wise}, %(\texttt{Add}, \texttt{Sign}),
+and \emph{LLM} operation. %(\texttt{LayerNorm}, \texttt{Deformabale Attention}, \texttt{Self-Attention}, \texttt{RMSNorm}). 
+Each operator is further evaluated by $8$ typical shapes extracted from real network networks such as GPT~\cite{GPT4}, LLaMA-2~\cite{touvron2023llama}, DAT~\cite{xia2022vision}, BERT~\cite{devlin2018bert}, ResNet~\cite{He16CVPR}, and MobileNet~\cite{howard2017mobilenets}, VGG~\cite{Simonyan15VGG} and thus there are 168 test cases in total for evaluation. The test cases range from $7$ to $214$ lines of code and cover various types and shapes, which can comprehensively assess \name{}'s capabilities.
+
+
+\begin{table}[!ht]
+    \vspace{-5pt}
+    \caption{Evaluated Benchmark for \name{}}
+    \label{tab::benchmark}
+    \centering
+    \vspace{-5pt}
+    \scriptsize
+    % 调整列间距
+    \setlength{\tabcolsep}{2pt} % 调整列的间距，这里设为4pt，可以根据需要调整大小
+    \begin{tabular}{@{}c@{}c@{}cccc@{}@{}c}
+        \toprule
+        \multirow{2}{*}{\textbf{Type}} & \multirow{2}{*}{\textbf{Operators}} & \multicolumn{4}{c}{\textbf{Lines of Code}} & \multirow{2}{*}{\textbf{Cases}}\\
+        \cmidrule(lr){3-6}
+        & & \textbf{CUDA C} & \textbf{BANG C} & \textbf{Hip} & \textbf{C with VNNI} \\ 
+        \midrule
+        \multirow{2}{*}{MatMul} 
+        & GEMM, GEMV & 26, 12 & 15, 11 & 25, 12 & 41, 34 & \multirow{2}{*}{24}\\
+        & Batch GEMM & 29 & 16 & 28 & 47 & \\ 
+        \midrule
+        \multirow{3}{*}{Convolution} 
+        & Conv1D & 10 & 14 & 10 & 9  & \multirow{3}{*}{32}\\
+        & Conv2D NHWC, NCHW & 32, 30 & 23, 30 & 32, 30 & 83, 85 &\\
+        & Depthwise Conv & 27 & 24 & 27 & 17 &\\ 
+        \midrule
+        \multirow{2}{*}{Activation}  
+        & ReLU, Softmax & 7, 24 & 18, 18 & 7, 24 & 14, 28 & \multirow{2}{*}{32}\\
+        & GeLU, Sigmoid & 7, 10 & 29, 30 & 7, 10 & 14, 14 & \\ 
+        \midrule
+        Elementwise 
+        & Add, Sign & 20, 12 & 26, 29 & 18, 12 & 17, 14 & 16\\ 
+        \midrule
+        \multirow{2}{*}{Pooling} 
+        & MaxPool, AvgPool & 25, 30 & 25, 25 & 25, 30 & 31, 34 & \multirow{2}{*}{32}\\
+        & MinPool, SumPool & 23, 29 & 25, 25 & 23, 29 & 33, 30 & \\ 
+        \midrule
+        \multirow{3}{*}{LLM} 
+        & LayerNorm & 42 & 35 & 42 & 46 & \multirow{3}{*}{32}
+\\
+        & Deformable Attention & 139 & 191 & 139 & 214 & \\
+        & Self Attention, RMSNorm & 54, 25 & 64, 18 & 54, 25 & 111, 18 &\\ 
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+%\vspace{-10pt}
+\textbf{Comparison Baselines}.
+The comparison baselines include state-of-the-art LLM-based approaches and rule-based approaches.
+Regarding the LLM-based approaches, we select the \textbf{GPT-4 Zero-Shot}, \textbf{GPT-4 Few-Shot}, \textbf{OpenAI o1 Zero-Shot}, and \textbf{OpenAI o1 Few-Shot} as baselines for each transcompilation direction. 
+%GPT-4~\cite{GPT4}, the latest GPT version, stands out as a powerful LLM capable of translating across conventional programming languages such as C, Python, and Java.
+%For GPT-4 Zero-Shot, the LLMs are directly invoked with the transcompilation task from source code to target code.
+%In addition, we adopt the in-context learning technique, i.e., GPT-4 Few-Shot, which enhances performance in specific transcompilation directions by providing relevant transcompilation examples in the prompt.
+Regarding the rule-based approaches, we compare \name~with two established approaches: \textbf{PPCG}~\cite{10.1145/2400682.2400713} and \textbf{HIPIFY}\cite{HIPIFY}.
+%\footnote{\url{https://github.com/ROCm-Developer-Tools/HIPIFY}}.
+PPCG utilizes polyhedral models for auto-parallelization from C to CUDA
+%, enabling the translation of C code to CUDA code. 
+HIPIFY is a vendor-provided tool to migrate CUDA code to AMD HIP code.
+%HIPIFY, as a vendor-provided tool by AMD, offers a direct and practical solution for developers seeking to migrate their CUDA applications to AMD's ecosystem.
+Note that rule-based approaches are not available for other transcompilation directions, which is primarily due to the complexity and significant human effort required in developing such tools.
+Regarding the search-based program synthesis approaches, as they struggle with the large search space problem, they cannot perform transcompilation directly across different DLS. 
+
+
+\textbf{Evaluation  Metrics.}
+We use three key metrics to evaluate the performance and accuracy of \name{}:
+(1) \textbf{Compilation accuracy} is the ratio of programs that are correctly compiled. This metric gauges \name{}'s ability to successfully pass compiler checks, reflecting its proficiency in processing source code to generate error-free programs.
+(2) \textbf{Computation accuracy} is introduced in this paper as a crucial metric that assesses the functional correctness of the translated code, deeming a generated code correct if it passes a set of unit tests.
+(3) \textbf{Execution performance} evaluates the performance of the translated code, highlighting the significance and practicality of the proposed method in real-world applications.
+In these metrics, we execute the translated code on real platforms and verify its correctness.
+%, with the groundtruth being the absence of syntax errors during compilation and the ability to execute correctly and pass unit tests on the corresponding DLPs.
+
+\vspace{-5pt}
+\section{Experimental Results}
+
+
+\begin{table*}[t]
+  \vspace{-10pt}
+  \centering
+  \caption{Experimental results on different transcompilation directions. (\%)
+  %Code translation results based on NeurosymbolGic Synthesis(\%)
+ }
+  \label{tab:code_translation}
+  \vspace{-5pt}
+  \scriptsize
+  \begin{tabular}{c|c|cccc|cccc}
+   \toprule 
+   \multirow{3}{*}{\textbf{Source}} & \multirow{3}{*}{\textbf{Method}} &
+    \multicolumn{4}{c|}{\textbf{Compilation Accuracy}} & \multicolumn{4}{c}{\textbf{Computation Accuracy}} \\ \cmidrule{3-6} \cmidrule{7-10}  
+    %& &  \multicolumn{4}{c|}{\textbf{Target}} & \multicolumn{4}{c}{\textbf{Target}} \\ \cmidrule{3-6} \cmidrule{7-10}
+     &  & \textbf{CUDA C} & \textbf{BANG C} & \textbf{Hip} & \textbf{C with VNNI} & \textbf{CUDA C} & \textbf{BANG C} & \textbf{Hip} & \textbf{C with VNNI} \\ 
+     \cmidrule{1-10}
+    \multirow{7}{*}{\textbf{CUDA C}} 
+    & GPT-4 Zero-Shot  & -- & 0 & 82.7 & 9.5 & -- & 0 & 82.7 & 4.2\\
+    & OpenAI o1 Zero-Shot  & -- & 0 & 85.7 & 61.9 & -- & 0 & 82.7 & 60.7\\
+     & GPT-4 Few-Shot  & -- &50.6 & 97.0 & 84.5  & -- & 7.7& 96.4 & 30.4\\
+     & OpenAI o1 Few-Shot  & -- & 51.8 & 98.2 & 85.1 & -- & 48.2 & 98.2 & 55.4 \\
+     & \namewosmt~& -- & 82.7 & 98.2 & 88.1 & -- & 54.2 & 98.2 & 58.3\\
+     & \namewosmt~+ Self-Debugging  & -- & 87.5 & 98.8 & 89.3 & -- & 54.8& 98.2& 58.9 \\ 
+    & \name & -- & \textbf{100}  & \textbf{100} & \textbf{100} & -- & \textbf{91.7} & \textbf{100} & \textbf{95.2} \\ 
+     \midrule
+    \multirow{7}{*}{\textbf{BANG C}} 
+    & GPT-4 Zero-Shot & 24.4 & -- & 26.8 & 0  & 0 & -- & 0 & 0\\
+    & OpenAI o1 Zero-Shot  & 27.4 & -- & 97.0 & 9.5 & 0 &-- & 0 & 4.2\\
+     & GPT-4 Few-Shot & 69.0 & -- & 66.1 & 23.8  & 6.5 & -- & 6.5 & 13.1\\
+     & OpenAI o1 Few-Shot  & 71.4 & -- & 97.0 & 41.7 & 10.1 & -- & 7.7 & 23.2\\
+     & \namewosmt~& 85.1 & -- & 84.5 & 47.6  & 77.4 & -- & 78.6 & 41.1\\
+     & \namewosmt~+ Self-Debugging & 88.1 & -- & 88.7 & 50.6  & 77.4 & -- & 78.6 & 41.1 \\ 
+      & \name & \textbf{100} & -- & \textbf{100} & \textbf{100} & \textbf{95.8}  & -- & \textbf{97.0} & \textbf{95.2}\\
+     \midrule
+    \multirow{7}{*}{\textbf{Hip}} 
+    & GPT-4 Zero-Shot& 97.0 & 0 & -- & 23.8 & 97.0 & 0 & -- & 5.4\\
+    & OpenAI o1 Zero-Shot  & 98.2 & 0 & -- & 45.8 & 98.2 & 0 & -- & 4.2\\
+     & GPT-4 Few-Shot & 97.0 & 35.1& -- & 85.1 & 97.0 & 5.4& -- & 24.4\\
+     & OpenAI o1 Few-Shot  & 98.8 & 42.3 & -- & 88.7 & 98.2 & 9.0& -- & 30.4\\
+     & \namewosmt~& 98.2 & 60.7 & -- & 65.5 & 97.6 & 52.4 & -- & 57.1\\
+     & \namewosmt~+ Self-Debugging &  98.8 & 62.5 & -- & 66.1  & 98.2 & 52.4 & -- & 57.1 \\ 
+    & \name & \textbf{100} & \textbf{100} & -- & \textbf{100} &\textbf{100} & \textbf{86.9} & -- & \textbf{96.4} \\ 
+    \midrule
+    \multirow{7}{*}{\textbf{C with  VNNI}} 
+    & GPT-4 Zero-Shot & 57.1 & 0 & 60.1 & -- & 8.3 & 0 & 8.9 & --\\
+    & OpenAI o1 Zero-Shot  & 66.1 & 0 & 97.0 & -- & 10.1 & 0 & 96.4 & --\\
+     & GPT-4 Few-Shot & 81.5 & 41.7 & 74.4 & --  & 14.3 & 6.0 & 12.5 & --\\
+     & OpenAI o1 Few-Shot  & 87.5 & 55.4 & 97.0 & -- &51.2 & 10.7 & 96.4 & --\\
+     & \namewosmt~& 95.8 & 78.0 & 87.5 & -- & 83.9 & 58.3 & 85.7 & --\\
+     & \namewosmt~+ Self-Debugging & 97.0 & 84.5 & 89.3 & -- & 83.9 & 58.3 & 85.7 & -- \\ 
+           & \name & \textbf{100} & \textbf{99.4}&\textbf{100}& -- & \textbf{98.2} & \textbf{88.7} & \textbf{99.4} & --\\ 
+    \bottomrule 
+  \end{tabular}
+    \vspace{0pt}
+    % \begin{tablenotes}
+    %     \footnotesize
+    %     %\item[*]~~\footnotemark[1] The C we used here is pure C with VNNI extensions.
+    % \end{tablenotes}   
+\vspace{-15pt}
+\end{table*}
+
+
+
+\subsection{Evaluations on Accuracy}
+We present the evaluations on compilation/computation accuracy in Table~\ref{tab:code_translation} and Table~\ref{tab:exp-rule}, where we compare \name{} with state-of-the-art methods in different transcompilation directions.
+We conclude that
+\textbf{(1) \name{} performs the best in all directions with close to 100\% accuracy for compilation and 86.9\% to 100\% accuracy for computation.} This clearly indicates that \name{} is capable of handling source-to-source code translation tasks on various DLS with minimal human efforts, bringing revolutionary advancements to the DLS programming domain.
+\textbf{(2) \name{} performs better than the SOTA LLM-based methods} (Table~\ref{tab:code_translation}). Although the LLM-based methods have achieved high accuracy in certain cases, it is challenging for them to reach 100\% accuracy due to the uncertainty of LLMs. This means that LLM-based methods cannot be applied to transcompilers which have an extremely high demand for accuracy. In contrast, our approach can achieve 100\% accuracy in most situations, demonstrating its practical applicability as a transcompiler.
+\textbf{(3) \name{} performs better than the SOTA rule-based methods} (Table~\ref{tab:exp-rule}). For C~$\rightarrow$~CUDA C, \name{} achieves 100\% compilation and 98.2\% computation accuracy which is $\sim50\%$ higher than PPCG. For the easier CUDA C~$\rightarrow$~HIP task, \name{} successfully converts and executes with 100\% accuracy, outperforming HIPIFY, which achieves 85.7\%. 
+Also, this result shows that \name{}'s flexibility across various DLS without much adaptation cost while rule-based methods cannot.
+
+We conduct an ablation study on \name{}'s SMT solver for further analysis of the neural-symbolic synthesis paradigm, shown in Table~\ref{tab:code_translation}.
+Without the SMT solver, although \name{} still achieves better accuracy than LLM-based methods, it cannot reach 100\% accuracy (e.g., 52.4\% computation accuracy in HIP~$\rightarrow$~BANG C direction). This situation persists even after incorporating \name{} with the SOTA LLM-based code generation method, Self-Debugging
+\cite{chen2023teaching}. Due to transcompilers' high demand for accuracy, the methods that cannot achieve or close to 100\% accuracy can be hardly applied in practice. 
+In contrast, leveraging SMT-based code repairing can significantly improve the computation accuracy of program transcompilation, achieving a range of 86.9\% to 100\%.
+This underscores the necessity of the SMT solver or, more broadly, neural-symbolic synthesis for the transcompiler.
+
+\begin{table}[!ht]
+    %\vspace{-10pt}
+    \caption{Accuracy comparison to rule-based methods.}
+    \label{tab:exp-rule}
+    \vspace{-5pt}
+    \centering
+        \scriptsize
+\begin{tabular}{cccc}
+\toprule
+\textbf{Direction}                                                                            & \textbf{Method} & \begin{tabular}[c]{@{}c@{}}\textbf{Compilation}(\%)\end{tabular} & \begin{tabular}[c]{@{}c@{}}\textbf{Computation}(\%)\end{tabular} \\ \midrule
+\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}CUDA C~$\rightarrow$~\\ HIP\end{tabular}} & Hipify &   85.7  & 85.7 \\ \cmidrule{2-4} 
+                                                                                     & \name  &       100                                                              &  100    \\ \midrule
+\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}C~$\rightarrow$~\\ CUDA C\end{tabular}}   & PPCG   &          47.6                                                        &                              47.6                                \\ \cmidrule{2-4}                                 & \name  &100 &  98.2                                                        \\ \bottomrule
+\end{tabular}
+\vspace{-15pt}
+\end{table}
+
+
+\vspace{-0pt}
+
+\begin{figure*}[t]
+    \vspace{-5pt}
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/Figure_7-3_new.pdf}
+    \vspace{-20pt}
+    \caption{\footnotesize \todo{Performance evaluations on four common transcompilation directions and various operators. The performance of programs generated by \name{} is compared to its manually optimized counterparts, PyTorch, with backend libraries such as cuDNN/cuBLAS, CNNL, rocBLAS, and oneDNN.}}  
+    \label{fig:7-3}
+    \vspace{-15pt}
+\end{figure*}
+
+
+\subsection{Evaluations on Execution Performance}
+We present the performance evaluations in Figure~\ref{fig:7-3}, where we compare the performance of programs generated by \name{} with its manually optimized counterparts (e.g., PyTorch with backend libraries such as cuDNN/cuBLAS, CNNL, rocBLAS, and oneDNN) on the four most common program transcompilation directions, i.e., C with VNNI → CUDA C, CUDA C → BANG C, CUDA C → HIP, and CUDA C → C with VNNI.
+Note that we also show the functional correct cases on each type of operator in the line chart and report the average performance across them.
+
+Results show that \name{} achieves an average performance of 0.78$\times$ and up to 2.00$\times$ better than its manually optimized counterparts across the four transcompilation directions and various operators, demonstrating its remarkable transcompilation capabilities for generating high-quality tensor programs. 
+
+
+
+
+
+
+
+
+
+
+\vspace{-5pt}
+\subsection{Case Study: Trancompilation from CUDA C to BANG C}
+\vspace{-5pt}
+
+%\subsection{\small Case Study: Transcompile from CUDA to BANG}
+%\subsection{Case Study: Transcompile from CUDA to BANG}
+
+
+We further demonstrate the superiority and effectiveness of \name{} by comparing the transcompilation results of different methods in the CUDA C~$\rightarrow$~Bang C transcompilation direction. 
+This task is particularly challenging and representative because 1) it involves transcompiling between two distinct programming models, namely translating from SIMT programs to SIMD programs, and 2) it targets an uncommon language, which has significantly less training data available for LLMs.
+
+Overall, \name{} achieves much more improvements in compilation/computation accuracy in translating CUDA C to BANG C compared to other transcompilation directions.
+ While OpenAI o1 Zero-Shot shows excellent performance in some transcompilation directions, such as CUDA C~$\rightarrow$~HIP, with compilation and computation accuracy of 85.7\% and 82.7\% respectively, its performance in CUDA~$\rightarrow$~Bang translation is notably lacking, with results at 0\%. 
+This shortfall is primarily due to the aforementioned two challenges, which exceeds OpenAI o1 Zero-Shot’s capabilities.
+%Firstly, Bang C is relatively new compared to CUDA C and HIP, resulting in less training data for GPT-4, which limits its ability to generate Bang C code.
+%Secondly, CUDA and HIP share a similar programming model, whereas CUDA C and BANG C do not. The transcompiler needs to perform conversions from SIMT to SIMD (e.g., translating a set of nested loop scalar representations into tensor instructions like \textit{\_\_bang\_conv}) and allocate memory hierarchies required by BANG language. 
+%As a result, this complex task 
+ \begin{figure}[t]
+ 
+    \vspace{-5pt}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/compilation.png}
+    \vspace{-20pt}
+    \caption{\small Breakdown of \name{}’s compilation time.}
+    \label{fig:compilation_time}
+    %\vspace{-20pt}
+\end{figure}
+
+
+Although OpenAI o1 Few-Shot manages to boost compilation and computation accuracy substantially from 0\% to 50.6\% and 0\% to 7.7\%, respectively, by providing CUDA~$\rightarrow$~Bang translations examples, there still exists a large room attaining the complete accuracy. 
+In contrast, \namewosmt~ achieves much higher compilation and computation accuracy of 82.7\% and 54.2\% correspondingly. 
+This improvement stems from two key approaches adopted in \namewosmt~:
+1) it gains a comprehensive understanding of the target language's keywords, syntax, and programming APIs by automatically annotating programs via document retrieval, thus compensating for the lack of domain-specific knowledge, and 
+2) whereas typical transcompilers attempt intricate inter-language translations in a single synthesis step, \namewosmt~splits the entire process into a series of LLM-based transformation passes. 
+This enables \namewosmt~to effectively facilitate smooth translations between two substantially different source and target languages.
+
+Crucially, with the integration of SMT methods, \name{} attains remarkable accuracy in the CUDA C~$\rightarrow$~BANG C translation, achieving 100\% in compilation and 91.7\% in computation. This accuracy is largely due to \name{}'s implementation of small-scale symbolic synthesis, which ensures the functional equivalence of each transformation pass guided by the LLM. 
+In conclusion, our experiments prove that \name{} successfully accomplishes transcompiler tasks across different DLS, even for a new and relatively uncommon DLS.
+
+
+\vspace{-15pt}
+\subsection{\todo{Compilation Time}}
+Figure~\ref{fig:compilation_time} shows the compilation time of 6 typical operators when translating from CUDA C to BANG C, which ranges from \todo{1.2 to 7.8 hours, with 3.7 hours on average}.
+We further analyze the breakdown of \name{}'s compilation time and conclude that: 1) SMT is only triggered when the LLM fails to produce a correct translation, so for simpler programs, the proportion of time spent on SMT is smaller; 2) For matrix multiplication-like operators with a larger search space, the proportion of time spent on autotuning significantly increases; 3) Compilation time increases as the number of special intrinsics used in the program grows.
+
+
+\vspace{-15pt}
+\subsection{Productivity Improvement}
+We further evaluate how \name{} improves programming productivity in real-world scenarios on $2$ representative DLS, i.e., GPU and MLU.
+Specifically, we compare the development costs and performance achieved by manually implementing tensor programs versus those generated by \name{} through automatic transcompilation, on the most challenging operator, Deformable Attention, with $\sim$ 200 LoCs.
+
+We invited two CS master's students and two software engineers as junior and senior coders, respectively. Note that performance is normalized against the manually implemented programs by the senior coders.
+Table~\ref{tab::development_cost} shows that, programming productivity is improved by up to 34.3$\times$ for GPU and 96.0$\times$ for MLU via transcompiling legacy tensor program.
+Although \name{} fails to automatically generate a functional-correct program for MLU, both junior and senior coders could debug the program with minimal effort, requiring an additional 3 hours and 0.5 hours, respectively. 
+
+\begin{table}[!ht]
+    \vspace{-5pt}
+    \caption{Productivity Improvement by \name{}.}
+    \label{tab::development_cost}
+    \centering
+    \vspace{-5pt}
+    \tiny
+    %\small
+    % 调整列间距
+\begin{tabular}{cc|cc|cc}
+\toprule
+\multicolumn{2}{c|}{\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Deformable Attention\\ ( $\sim$ 200LoCs)\end{tabular}}}} & \multicolumn{2}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CUDA C-\textgreater\\ BANG C\end{tabular}}} & \multicolumn{2}{c}{\textbf{\begin{tabular}[c]{@{}c@{}}C with VNNI -\textgreater \\ CUDA C\end{tabular}}} \\ \cmidrule{3-6} 
+\multicolumn{2}{c|}{}                                                                                                     & Costs                                        & Performance                                      & Costs                                           & Performance                                         \\ \midrule
+\multicolumn{1}{c|}{\multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Senior\\ Coder\end{tabular}}}         & Manual             & $\sim$6 d                                       & 100\%                                            & $\sim$1 d                                           & 100\%                                               \\
+\multicolumn{1}{c|}{}                                                                                & w/ QiMeng-Xpiler          & 4.5 + 0.5 h                                     & 69.20\%                                          & 2.1     h                                           & 132.50 \%                                           \\
+\multicolumn{1}{c|}{}                                                                                & Time Saving        & $\sim$28.8$\times$                                       &                                                  & $\sim$11.4$\times$                                           &                                                     \\ \midrule
+\multicolumn{1}{c|}{\multirow{3}{*}{\begin{tabular}[c]{@{}c@{}}Junior\\ Coder\end{tabular}}}         & Manual             & $\sim$30 d                                      & 49.85\%                                          & $\sim$3 d                                     & 75.76\%                                             \\
+\multicolumn{1}{c|}{}                                                                                & w/ QiMeng-Xpiler          & 4.5 + 3 h                                       & 65.17\%                                          & 2.1   h                                             & 132.50 \%                                           \\
+\multicolumn{1}{c|}{}                                                                                & Time Saving        & \textbf{$\sim$96.0$\times$}                                      &                                                  & \textbf{$\sim$34.3$\times$}                                           &                                                     \\ \bottomrule
+\end{tabular}
+\end{table}
+
+
+\vspace{-15pt}
+\subsection{Failure Case}
+ Since we cannot achieve 100\% correct translation in all cases, we examine a failure case, specifically the \texttt{Deformable Attention} in CUDA to BANG transcompilation, as shown in Figure~\ref{fig:error_translated}. This code snippet involves complex control flow, including multiple nested loops and conditional statements. As a result, neither the neural component (i.e., LLMs) of \name{} can handle such complex logical structures and conditional branches to the required SIMD intrinsic for BANG C, nor can the symbolic component (SMT solver) extract the mathematical constraints and perform code repairing. More powerful LLMs and advanced SMT analysis tools are promising solutions to this issue, which could further improve \name{}'s capability in handling such complex cases.
+
+
+
+
+\begin{figure}[!ht]
+    \vspace{-5pt}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/error_translated.pdf}
+    \vspace{-20pt}
+    \caption{\small The complex control flow in \texttt{Deformable  Attention}.}
+    \label{fig:error_translated}
+    \vspace{-10pt}
+\end{figure}

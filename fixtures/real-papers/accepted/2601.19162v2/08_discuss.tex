@@ -1,0 +1,42 @@
+\section{Discussion}
+\label{sec:discuss}
+
+\mypara{Admission control for poor wireless channel conditions.}
+While \sys{}'s RAN resource management is independent of wireless channel status, poor channel conditions can still degrade performance. 
+LC applications with high bandwidth demands but weak channel quality may consume nearly all wireless resources while missing their SLOs, degrading performance for other users. 
+An admission control mechanism can address this by profiling application throughput requirements against UE channel status and terminating service when channel quality is insufficient. 
+This preserves SLO satisfaction for UEs with acceptable channel conditions while maintaining efficient spectrum utilization. 
+Recent work such as Zipper~\cite{zipper24nsdi} provides techniques for designing such mechanisms.
+
+\mypara{Handling downlink contention.}
+Although this work focuses on uplink RAN scheduling, downlink contention is also important to consider. 
+Downlink transmissions may suffer from congestion, but the downlink channel is usually more stable and predictable than uplink.
+This stability enables end-to-end rate control mechanisms to converge to appropriate sending rates when timely client feedback is available. 
+Prior work~\cite{zhuge22sigcomm} leverages uplink ACKs for faster congestion feedback, but delayed uplink grants in 5G networks can hinder timeliness. 
+By improving uplink scheduling, \sys{} can prevent excessive queueing at UE buffers that would delay feedback packets (\eg TCP ACKs), ensuring timely congestion signals and enabling more effective downlink rate adaptation.
+
+\mypara{Dealing with UE handover.}
+While the applications studied in this work do not involve UE mobility across cells, scenarios such as autonomous driving may trigger inter-cell handovers. 
+In deployments where multiple cells are managed under the same base station, handovers can often be absorbed locally without session disruption. 
+The more challenging case involves mobility across different base stations, which requires transferring both radio and edge-session state across sites.
+To support LC applications under such conditions, we envision proactively replicating UE state across base stations to enable seamless session continuation after handover. 
+Designing such mechanisms introduces open questions around synchronization overhead and consistency.
+
+\modified{\mypara{Fairness vs.\ latency trade-off.}
+\sys{} prioritizes LC requests to meet their SLOs, consistent with our design goals (\autoref{sec:design-goals}).
+Stronger throughput fairness between LC and best-effort (BE) traffic would delay LC transmissions under contention, increasing tail latency and reducing SLO satisfaction.
+Our evaluation reflects this tension: systems that prioritize fairness between LC and BE traffic (\eg \tutti{} and \arma{}) incur more LC SLO violations than \sys{}, as shown in \autoref{fig:network-latency-steady-workload} and \autoref{fig:network-latency-dynamic-workload}.
+Accordingly, for BE workloads \sys{} provides starvation freedom rather than strong throughput fairness under heavy contention.
+Achieving strong fairness guarantees while preserving tight latency bounds for LC applications under wireless contention remains an open problem.
+
+
+\mypara{Limitations.}
+Our request identification approach at the RAN is constrained by the aggregation semantics of BSR.
+When requests arrive in rapid succession within a single BSR reporting interval, they appear as a single aggregated increase at the MAC layer.
+In such cases, \sys{} can only infer a shared request start time and performs scheduling at the request-group level rather than achieving per-request granularity.
+This limitation affects scenarios with extremely high request rates but does not impact typical workloads where inter-request intervals exceed BSR reporting periods.
+
+A second limitation concerns processing time estimation for compute resource scheduling.
+\sys{} relies on processing time estimates to proactively allocate compute resources, which works well for applications with stable processing pipelines like those in our evaluation.
+However, applications with dynamic processing patterns (\eg adaptive VR rendering) can exhibit high variance in processing latency, making accurate estimation challenging.
+In such cases, estimation errors may reduce the effectiveness of \sys{}'s compute-side scheduling, though RAN-side scheduling remains unaffected and continues to minimize network delays.}

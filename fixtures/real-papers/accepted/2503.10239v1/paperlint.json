@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "usenix-security-2025",
+      "venue": {
+        "kind": "named",
+        "name": "USENIX Security 2025",
+        "url": "https://arxiv.org/abs/2503.10239v1"
+      },
+      "opened": "2025-03-13",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-03-13",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

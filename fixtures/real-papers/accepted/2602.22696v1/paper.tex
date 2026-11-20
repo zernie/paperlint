@@ -1,0 +1,754 @@
+% This must be in the first five lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+% \pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change to ``preprint''to generate a non-anonymous version with page numbers.
+% \usepackage[review]{acl}
+% \usepackage[preprint]{acl}
+\usepackage[final]{acl}
+
+% 日本語用パッケージ
+\usepackage[whole]{bxcjkjatype}
+
+%\usepackage{luatexja}
+%\usepackage[match]{luatexja-fontspec}
+
+
+% 英語フォント設定
+%\setmainfont{Times New Roman}
+%\setsansfont{Arial}
+%\setmonofont{Courier New}
+
+% 日本語フォント設定（Noto Sans CJK JP推奨）
+%\setmainjfont{Noto Sans CJK JP}[BoldFont=Noto Sans CJK JP Bold]
+
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+%\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\usepackage{grffile}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{comment}
+%\usepackage[numbers]{natbib}
+\usepackage{setspace}
+\usepackage{adjustbox}
+\usepackage{colortbl,array,xcolor}
+\usepackage{setspace} 
+\usepackage{amssymb}
+\usepackage{array}
+%\usepackage{tablefootnote}
+\usepackage{afterpage} 
+
+% 追加したもの
+\usepackage{amsmath}
+
+%\title{Extended Strategy Design for Persuasive Dialogue Agents \\ and an Automatic Evaluation Method Using Intention Shift}
+%\title{Enhancing Persuasive Dialogue Agents through \\ Granular Intention Modeling and Extended Strategies}
+\title{Enhancing Persuasive Dialogue Agents \\ by Synthesizing Cross‑Disciplinary Communication Strategies}
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+% \author{Author 1 \and ... \and Author n \\
+%         Address line \\ ... \\ Address line}
+% if the names do not fit well on one line use
+%         Author 1 \\ {\bf Author 2} \\ ... \\ {\bf Author n} \\
+% For authors from different institutions:
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \And  ... \And
+%         Author n \\ Address line \\ ... \\ Address line}
+% To start a separate ``row'' of authors use \AND, as in
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \AND
+%         Author 2 \\ Address line \\ ... \\ Address line \And
+%         Author 3 \\ Address line \\ ... \\ Address line}
+
+\author{ 
+    \textbf{Shinnosuke Nozue\textsuperscript{1}\thanks{These two authors contributed equally to this work.}},
+    \textbf{Yuto Nakano\textsuperscript{1}\footnotemark[1]},
+    \textbf{Yotaro Watanabe\textsuperscript{2}},
+    \textbf{Meguru Takasaki\textsuperscript{2}},
+    \\
+    \textbf{Shoji Moriya\textsuperscript{1}},
+    \textbf{Reina Akama\textsuperscript{1,3}},
+    \textbf{Jun Suzuki\textsuperscript{1}}
+    \\
+    \\
+    \textsuperscript{1}Tohoku University,
+    \textsuperscript{2}PKSHA Technology Inc.,
+    \textsuperscript{3}NINJAL,
+    % \textsuperscript{4}RIKEN
+    % \textsuperscript{5}NII LLMC
+    \\
+    \{nozue.shinnosuke.q5, nakano.yuto.t2, shoji.moriya.q7\}@dc.tohoku.ac.jp,\\
+    \{y\_watanabe, meguru\_takasaki\}@pkshatech.com,\\
+    \{akama, jun.suzuki\}@tohoku.ac.jp
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Current approaches to developing persuasive dialogue agents often rely on a limited set of predefined persuasive strategies that fail to capture the complexity of real-world interactions. 
+We applied a cross-disciplinary approach to develop a framework for designing persuasive dialogue agents that draws on proven strategies from social psychology, behavioral economics, and communication theory. 
+We validated our proposed framework through experiments on two distinct datasets: the Persuasion for Good dataset, which represents a specific in-domain scenario, and the DailyPersuasion dataset, which encompasses a wide range of scenarios. 
+The proposed framework achieved strong results for both datasets and demonstrated notable improvement in the persuasion success rate as well as promising generalizability. 
+Notably, the proposed framework also excelled at persuading individuals with initially low intent, which addresses a critical challenge for persuasive dialogue agents.
+
+\end{abstract}
+
+\section{Introduction}
+Recent advances in artificial intelligence (AI) research have greatly enhanced the inference and dialogue capabilities of large language models (LLMs)~\citep{brown2020language,openai2023gpt4}, which has increased industry interest in developing dialogue agents capable of persuasion and negotiation to influence human behavior in various social applications~\citep{deng2024towards,deng2025proactive, zhang-etal-2024-strength, zhan-etal-2024-lets, jin-etal-2024-persuading} such as customer support, sales promotion, and healthcare and wellness interventions. 
+However, a current research challenge pertains to the comprehensiveness of real-world dialogue strategies.
+For instance, recent studies on developing persuasive dialogue agents have often relied only on a subset of annotated persuasive strategies~\citep{song-wang-2024-like, cheng2024cooper, zhang-etal-2024-strength}, such as in the Persuasion for Good (P4G) dataset ~\citep{wang-etal-2019-persuasion} for persuading persuadees to donate to charity. 
+This limitation stems from a cross-disciplinary gap, as AI research often overlooks a rich repository of well-established persuasive strategies from practical fields such as sales and marketing, as well as foundational principles from behavioral and social psychology~\citep[e.g.,][]{tversky1981framing,dhar1999effect}. 
+Although some research has attempted to expand beyond the predefined annotations in P4G~\citep{jin-etal-2024-persuading}, it still tends to overlook these proven strategies.
+
+To bridge this gap, we take a cross-disciplinary approach, designing a comprehensive strategy that systematically synthesizes a broader range of proven techniques than previously employed~\citep{wang-etal-2019-persuasion,zhang-etal-2024-strength}. 
+Our approach systematically synthesizes foundational principles from communication theory, social psychology, and behavioral economics, allowing us to combine powerful techniques to build a more robust and practically grounded framework. 
+To evaluate its multifaceted effectiveness, we combined granular intention modeling for analyzing subtle attitude shifts with human assessment of both the dialogue's persuasiveness and its realism.
+
+Through validation on both single and multi-domain datasets, our approach demonstrates notable improvements in persuasion success rates and promising generalizability. 
+Our diverse set of strategies is particularly effective on persuadees with low initial intent, often positively shifting their attitudes even in failed dialogues. 
+Furthermore, in addition to confirming the method's practical viability through human evaluations, our analysis demonstrates that our proposed extended strategies are actively employed across diverse scenarios and offer new insights into factors influencing optimal strategy selection (such as the persuadee's initial level of intent and conversational context).
+
+\begin{figure*}
+    \includegraphics[width=\linewidth]{figure/Fig1_202503210310_v2.pdf}
+    \caption{Overview of the proposed framework. To simulate real-world persuasive dialogues, we deploy persuasive dialogue agents equipped with an extended set of empirically validated persuasive strategies (illustrated here for the P4G case).}
+    \label{fig:consept}
+\end{figure*}
+
+
+\section{Related Work}
+\paragraph{Evaluation Benchmarks and Frameworks.}
+Evaluation benchmarks for persuasive and negotiation dialogues have evolved from early datasets with focused scenarios, such as P4G for social good persuasion~\citep{wang-etal-2019-persuasion} and Craigslist Bargain for price negotiation~\citep{he-etal-2018-decoupling}. 
+More recent efforts have expanded this scope, with comprehensive interactive benchmarks, such as SOTOPIA~\citep{zhou2024sotopia}, for assessing broad social intelligence through diverse tasks, and large-scale LLM-generated datasets, like DailyPersuasion~\citep{jin-etal-2024-persuading}, that cover a multitude of domains. 
+The rise of such generated data has also spurred the development of evaluation benchmarks for ensuring data faithfulness~\citep{zhang2025doubleblind} and assessing latent cognitive states~\citep{yu2025persuasivetom, bozdag2025persuade}.
+
+
+\paragraph{Approaches to Persuasive Dialogue Agents.}
+Early work on persuasive dialogue agents addressed a range of sub-problems, from classifying the resistance strategies of the persuadee~\citep{tian-etal-2020-understanding} to modeling the strategic choices of the persuader with classification~\citep[e.g.,][]{saha-etal-2021-performance, mishra-etal-2022-pepds} or rules~\citep[e.g.,][]{chaves2021effects}. 
+Recent studies on developing LLM-based persuasive dialogue agents have diverged into two approaches.  
+The first approach involves complex learning-based adaptation, which includes methods that leverage reinforcement learning (e.g., TRIP~\citep{zhang-etal-2024-strength}, PPDPP~\citep{deng2024plug}, and DPDP~\citep{he-etal-2024-planning}) and extends to sophisticated frameworks that incorporate persuadee modeling~\citep{he2025simulating}, latent policy discovery~\citep{he2025simulationfree}, or causal inference~\citep{zeng2025causal}. 
+While powerful, these approaches introduce substantial architectural complexity and training costs.
+In contrast, the second approach uses efficient, training-free prompting. 
+However, a core limitation of previous methods has been their reliance on either a narrow set of strategies often confined to a single academic domain, as seen in many P4G-based systems~\citep{cheng2024cooper, song-wang-2024-like}, or fundamental strategies that overlook the nuanced techniques proven in practice in fields like social psychology and behavioral economics~\citep{jin-etal-2024-persuading}. This highlights the need for a more knowledge-driven approach to achieve greater persuasive nuance and avoids the substantial architectural complexity and training costs mentioned earlier.
+
+
+\section{Methodology}
+\label{sec:procot-rich}
+This section details the methodology for evaluating persuasive dialogue agents, focusing on
+an extended set of persuasive strategies that we developed based on behavioral and social psychology. 
+To operationalize and test these novel strategies, we utilize an LLM to interpret the dialogue context and dynamically generate persuasive utterances.
+The entire framework, illustrated in Figure~\ref{fig:consept}, enables a robust and comprehensive examination of persuasive efficacy using our extended strategy set across multiple dialogue datasets.
+
+\subsection{Cross-Disciplinary Persuasive Strategies}
+To build a practically effective agent, we moved beyond the predefined strategies of datasets like P4G~\citep{wang-etal-2019-persuasion} and constructed a cross-disciplinary framework. Our approach systematically synthesizes foundational principles from communication theory, social psychology, and behavioral economics. 
+While P4G includes 10 persuasive strategies\footnote{``Logical appeal,'' ``Emotion appeal,'' ``Credibility appeal,'' ``Foot in the door,'' ``Self-modeling,'' ``Personal story,'' ``Donation information,'' ``Source-related inquiry,'' ``Task-related inquiry'' and ``Personal-related inquiry.''}, it excludes many well-established strategies from these other disciplines.
+
+Our framework first draws on communication theory and social psychology to model the core persuasive process on the Elaboration Likelihood Model (ELM)~\citep{petty1986communication}, which differentiates between the central route (e.g., ``Logical appeal'') for durable attitude change and the peripheral route (e.g., ``Emotion appeal'') for a quicker influence. 
+The Heuristic-Systematic Model (HSM)~\citep{chaiken1980heuristic} is also utilized to support our use of multiple strategies within a single dialogue. 
+To promote specific actions, while P4G includes ``Foot in the door''~\citep{freedman1966compliance}, we incorporate other powerful techniques such as ``Door in the face''~\citep{cialdini1975reciprocal} and ``Reciprocity''~\citep{cialdini2001science}.
+
+Second, our framework incorporates insights from behavioral economics on how the presentation of information influences decision-making. 
+These strategies include ``Framing''~\citep{tversky1981framing}, which changes how the information is presented to alter a decision, and the ``Principle of Scarcity''~\citep{Cialdini1984, cialdini2001science}, which prompts action by highlighting potential missed opportunities. 
+Another effective strategy is ``Time pressure,'' which imposes a temporal constraint~\citep{kruglanski1983freezing}, particularly in situations with significant option conflicts~\citep{dhar1999effect}.
+
+Thus, our framework broadly classifies persuasive strategies into the following categories: inquiries to persuadees, basic persuasion techniques, trust and credibility building, promotion of specific actions, information presentation techniques, personalization, and follow-up strategies. 
+Based on these categories, the framework can be used to navigate key stages of the persuasion process from initial engagement to sustained behavioral changes.
+
+
+\subsection{Relation with the P4G Strategy Set}
+Our cross-disciplinary framework expands the 10 strategies of P4G into a more comprehensive set of 31 strategies, organized into seven distinct categories. 
+While most of the P4G strategies are included directly, a few are mapped to new labels that better fit the defined categories. 
+For example, the original self-modeling strategy was renamed as ``personal demonstration.''
+A detailed mapping and explanation of how our framework expands upon the original P4G strategies is provided in Table~\ref{tab:strategy_list} in the Appendix.
+
+
+\subsection{Strategy Implementation Method}
+To efficiently implement our proposed framework, we employed the proactive Chain-of-Thought prompting (ProCoT) scheme~\citep{deng-etal-2023-prompting}. 
+This scheme employs a Chain-of-Thought (CoT) process~\citep{10.5555/3600270.3602070}, instructing the LLM first to interpret the dialogue history, then infer a suitable strategy, and finally generate a response. 
+The prompt provided to the model contains all the necessary components for this task: a task overview, output constraints, a list of persuasive strategies, and the whole dialogue history. 
+This enables the model to generate utterances based on its inferred strategy autonomously.
+While we opted for a prompting approach because of its efficiency, the set of strategies within our proposed framework is method-independent. It can be integrated into other approaches, including those based on reinforcement learning.
+
+
+\input{table/model_comparison_split_init_category_sr_AIS}
+
+
+\section{Experimental Settings}
+\subsection{Persuasive Dialogue Agents}
+We developed two agents to serve as baselines: \textbf{\textit{Simple}} was provided only with the task overview and dialogue history, and \textbf{\textit{ProCoT-p4g}} leveraged strategy annotations from P4G.  
+The proposed framework detailed in Section \ref{sec:procot-rich} was then used to develop \textbf{\textit{ProCoT-rich}}. 
+To assess the impact of strategy interpretability in the prompts, we created two additional agents that included strategy descriptions in their prompts: \textbf{\textit{ProCoT-p4g-desc}} and \textbf{\textit{ProCoT-rich-desc}}. 
+The strategy descriptions for \textit{ProCoT-p4g-desc} were based on previous work~\citep{wang-etal-2019-persuasion}. 
+In contrast, \textit{ProCoT-p4g} and \textit{ProCoT-rich} (without ``-desc'' agents) were provided only with strategy labels. 
+We used OpenAI's \texttt{gpt-4o-2024-11-20} for all the persuasive dialogue agents.
+
+% For the experiments on the DailyPersuasion dataset, we compared \textit{ProCoT-rich-desc} with the \textit{Simple} and \textit{ProCoT-p4g} agents as baselines.
+
+\subsection{Evaluation for P4G Dataset}
+% We conducted both automatic and human evaluations to assess the methods on the P4G dataset.
+
+% 校正ver.
+To evaluate the in-domain performance of the persuasive dialogue agents, we tested them on 300 samples from the P4G dataset. 
+We utilized both automatic and human evaluation methods to assess their performance.
+
+\paragraph{Automatic Evaluation.}
+\label{sec:persuadee_simulator}
+For the automatic evaluation, we developed an LLM-based approach to generate simulated persuadee prompted with task overviews, personas\footnote{See Appendix \ref{sec:persona-setting} for more details}, and dialogue history~\citep{zhang-etal-2024-strength}. 
+Initially, instructing the persuadee simulators to resist persuasion led to biased and repetitive utterances, so we stopped enforcing predefined resistance strategies.
+We used OpenAI's \texttt{gpt-4o-2024-11-20} as our persuadee simulator.
+
+We defined the success of persuasion more strictly than previous work. 
+While \citet{zhang-etal-2024-strength} counted any positive response as a success and \citet{yu-etal-2023-prompt} used a cumulative scoring system, we required an explicit intention to donate. 
+Using the five-level intention scale from \citet{yu-etal-2023-prompt}, we employed an LLM to evaluate the persuadee's intention to donate at each turn, considering both their persona and dialogue history. 
+Each turn was evaluated 10 times, and a dialogue was considered successful if the majority indicated level-1 (Donate).
+The evaluation continued for up to 10 turns and ended upon success.
+The initial intention to donate was also set on a five-level scale\footnote{level-1 (Very Keen), level-2 (Keen), level-3 (Undecided), level-4 (Initially Reluctant), and level-5 (Explicit Non-donor)}.
+We used \texttt{gpt-4o-mini-2024-07-18} as the evaluation model\footnote{Following \citet{deng-etal-2023-prompting}, we set the temperature to 0 to minimize output variability.\label{fot:temp-0}}.
+
+We evaluated the persuasive dialogue agents using several metrics. 
+Our primary measure was the \textbf{success rate (SR)}, the proportion of dialogues that successfully achieved the given task. 
+We also assessed SR according to the initial level for the intention to donate.
+For example, SR1 indicates the success rate for persuadees whose initial donation intention was level-1 (Very Keen).
+% \footnote{For example, SR1 indicates the success rate for persuadees whose initial donation intention was level-1 (Very Keen).}.
+To assess efficiency, we also calculated the \textbf{average turns (AT)}, which is the average number of turns across all dialogues. 
+To mitigate bias from interactions that failed early, we also measured \textbf{AT in successful dialogues (AT-SD)}, which we defined as the average number of turns in successful dialogues only.
+Finally, we introduced the \textbf{Average Intention Improvement (AII)} to measure changes in the persuadee's intention to donate during unsuccessful dialogues:
+\begin{gather}
+    \textbf{AII} = {\sum}_{i=1}^N \frac{I^{\text{initial}}_{i} - I^{\text{final}}_{i}}{N}
+\end{gather}
+where $I^{\text{initial}}_{i}$ and $I^{\text{final}}_{i}$ represent the intentions to donate before and after the $i$-th unsuccessful dialogue, respectively, and $N$ denotes the total number of unsuccessful dialogues.
+
+\paragraph{Human Evaluation.}
+For the human evaluation, we asked annotators to assess dialogues in two dimensions: \textbf{persuasiveness} and \textbf{realism}.
+Regarding persuasiveness, the annotators selected their preferred response from dialogue pairs generated by \textit{ProCoT-p4g} and \textit{ProCoT-rich-desc}. 
+Regarding realism, the annotators were asked to rate how closely dialogues from \textit{ProCoT-rich-desc} resembled natural human conversation on a five-point Likert scale, where 1 represented ``very unrealistic'' and 5 represented ``very realistic.''
+Both evaluations were conducted independently by two annotators, who each assessed 300 dialogues each.
+
+\subsection{Evaluation for DailyPersuasion}
+% \paragraph{Constructing the Dataset.}
+We evaluated the generalized persuasive performance of the agents by testing them on 1000 samples from the DailyPersuasion dataset. 
+For this evaluation, we compared \textit{ProCoT-rich-desc} against \textit{Simple} and \textit{ProCoT-p4g} as the baselines.
+
+The DailyPersuasion dataset encompasses 13,000 scenarios across 35 distinct domains, with each scenario containing an average of six dialogues. 
+Each dialogue begins with a statement from the persuasive dialogue agent and includes alternating exchanges between the agent and the persuadee simulator. 
+On average, dialogues include five turns, with a maximum of 16 turns per dialogue.
+To achieve a diverse evaluation, 1,000 scenarios were randomly selected at the scenario level. 
+From each selected scenario, one dialogue was randomly chosen. 
+Finally, for each dialogue, the number of previous turns included as the dialogue history was randomly determined, ranging from zero to one less than the total number of turns in the dialogue\footnote{Appendix~\ref{sec:daily-persuasion-data} details dataset statistics.}.
+
+% \paragraph{Evaluation Procedure.}
+First, the persuasive dialogue agent received the task scenario, goal, and dialogue history up to the previous turn.
+It then outputs a persuasive utterance in response to the last utterance of the persuadee in the dialogue history.
+Next, we provided the evaluation instructions, scenario, goal, dialogue history, and two anonymized agent responses, arranged in a random order, to a judgment model, using \texttt{o3-2025-04-16}\footnote{The reasoning effort was set to ``high.''}.
+The judgment model could designate one response as the winning response or classify both responses as either acceptable (Comparable-Good) or unacceptable (Comparable-Bad). 
+The comparable-good and comparable-bad labels were treated as ties.
+To avoid position bias, each pair of responses was judged twice in reverse order, and inconsistent judgments were marked as a tie.
+The dialogues covered 35 diverse domains, with the target turns ranging from the first to the eighth turn.
+
+We used the win rate as the evaluation metric, which we defined as the percentage of times that the response of \textit{ProCoT-rich-desc} was judged superior to those of the baselines.
+
+\section{Results and Discussion}
+\subsection{Experimental Results}
+Table~\ref{tab:result} presents the automatic evaluation results for the P4G dataset\footnote{The English version is presented in Appendix~\ref{sec:en-result}.}.
+\textit{ProCoT-rich-desc} achieved the highest SR, which indicates its strong persuasive ability. 
+Across different initial intention levels, all agents achieved near-perfect success when the persuadees had a high intention to donate (SR1, SR2). 
+In contrast, \textit{ProCoT-rich-desc} was more effective than the baselines when the initial intention levels were lower (SR4, SR5), which suggests that it is particularly effective on persuadees with a very low willingness to donate.
+\textit{ProCoT-rich-desc} also achieved the highest AII and reached an AII4 of 1.100, which implies that it can increase the intention to donate among persuadees who initially had a low but non-zero interest.
+Regarding AT and AT-SD, \textit{ProCoT-rich} exhibited the best performance, which indicated that its dialogues were more efficient.
+Although \textit{ProCoT-rich-desc} had a shorter AT than almost all agents, its longer AT-SD suggests a relatively low efficiency during successful dialogues. 
+
+\input{table/results_p4g_humaneval_persuasiveness.tex}
+
+Table~\ref{tab:result-p4g-humaneval-persuasiveness} presents the human evaluation results for persuasiveness on the P4G dataset.
+\textit{ProCoT-rich-desc} achieved a win rate of 72.5\%, which indicated that the annotators had a strong preference for it over \textit{ProCoT-p4g}.
+Inter-annotator agreement was measured using Cohen's kappa, which yielded a value of 0.375, corresponding to a fair level of consistency.
+Regarding realism, the average rating across 600 evaluations was 3.73, which suggests that the dialogues were generally perceived as natural and plausible human conversations.
+Qualitative feedback from the annotators revealed that lower ratings often stemmed from the agent imposing suggestions without sufficient empathy or consideration for the persuadee's perspective.
+Additionally, the annotators commented on the unnaturalness caused by the repetitive use of similar expressions throughout the dialogue.
+
+\input{table/result_daily_persuasion}
+Table~\ref{tab:result-daily-persuasion} presents the evaluation results for the DailyPersuasion dataset. 
+\textit{ProCoT-rich-desc} outperformed both \textit{Simple} and \textit{ProCoT-p4g}, demonstrating its robustness in generating persuasive responses across diverse domains.
+
+\input{table/time_p4g_dp}
+Table~\ref{tab:time_p4g_dp} shows the average response times per turn in the P4G and DailyPersuasion datasets.
+In each dataset, 10\% of the total instances were sampled to calculate the average token count and average response time per turn.
+The \textit{Simple} and \textit{ProCoT-p4g} settings served as baselines, while our proposed \textit{ProCoT-rich-desc} configuration was evaluated for comparison.
+Agents with longer input and output lengths, such as \textit{ProCoT-p4g} and \textit{ProCoT-rich-desc}, tend to have longer response times.
+The results from P4G further suggest that response time may be more affected by output length than by input length.
+However, these results should be interpreted as reference values, as they can be influenced by factors such as API congestion and network conditions.
+
+The increase in complexity also correlated with higher computational costs. 
+The average costs per turn were \$0.001, \$0.003, and \$0.005 for \textit{Simple}, \textit{ProCoT-p4g}, and \textit{ProCoT-rich-desc} in P4G, and \$0.001, \$0.002, and \$0.004, respectively, in DailyPersuasion.
+This highlights the trade-off between response quality and operational cost.
+
+For fine-grained analysis, we focused on the P4G dataset as its single-domain nature provides a controlled setting ideal for investigating details such as strategy usage and the effects of the persuadee's intention level. 
+A detailed analysis of the DailyPersuasion dataset is presented in Appendix~\ref{sec:daily-persuasion-analysis}.
+
+\paragraph{Usage of Persuasive Strategies.}
+\input{table/agent_strategy_analysis}
+Table~\ref{tab:agent_strategy_analisis} presents the proportion of strategies employed by each persuasive dialogue agent.
+Because \textit{ProCoT-rich-desc} incorporated all 10 of the original P4G strategies (albeit with some relabeling\footnote{Table~\ref{tab:strategy_list} in Appendix presents the complete mapping between our terminology and the original labels of P4G.}), a blank entry for this agent indicates that an available strategy was not used. 
+To quantify the bias in each agent's strategy usage, we calculated the entropy from the distribution of strategies.
+When all available strategies were considered, \textit{ProCoT-rich} and \textit{ProCoT-rich-desc} exhibited lower entropy than \textit{ProCoT-p4g}, which indicates less diverse strategy use.
+However, when only the strategies employed were considered, both \textit{ProCoT-rich} and \textit{ProCoT-rich-desc} displayed relatively high entropy.
+Among these, \textit{ProCoT-rich-desc} demonstrated higher entropy than \textit{ProCoT-rich} and performed better at increasing the persuadee's intention to donate as measured by SR and AII. 
+Conversely, while \textit{ProCoT-p4g-desc} demonstrated a higher entropy than \textit{ProCoT-p4g}, its overall performance remained lower. 
+These results suggest that greater diversity in strategy selection influenced by the prompt's interpretability does not necessarily improve persuasive efficacy.
+
+\paragraph{Effective Strategies by Donation Intention Level.}
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=7.5cm]{figure/heatmap_procot_rich_desc_ja_enlabel_v3.eps}
+    \includegraphics[width=\linewidth]{figure/heatmap_procot_rich_desc_ja_enlabel_v4.pdf}
+    \caption{Proportion of cases in which each strategy increased the intention of persuadees to donate at each donation intention level.}
+    \label{fig:heat_map}
+\end{figure}
+
+To explore how persuasive strategies influenced the intention to donate, we analyzed strategies employed by \textit{ProCoT-rich-desc} at least 40 times, as visualized in Figure~\ref{fig:heat_map}.
+Among persuadees with a level-4 (Negative Reaction), a narrow set of strategies proved effective, especially ``Credibility appeal,'' ``Source-related inquiry,'' and ``Consistency.'' 
+Among persuadees with level-5 (No Donation), ``Foot in the door'' and ``Emotion appeal'' provided limited but measurable improvements.
+``Foot in the door'' was also effective on persuadees with a high intention to donate. 
+However, requesting a small donation from those already inclined to donate may be a missed opportunity to secure a larger donation.
+
+\paragraph{Impact of Granular Intention Level.}
+Granular segmentation of the initial intention allowed for more precise targeting of persuadee subgroups, such as those with negative intention but potential for change. 
+This granularity has notable implications for practical applications.
+For example, while 23.5\% of persuadees classified as negative by conventional approaches - specifically level-4 (Negative Reaction) and level-5 (No Donation) - exhibited no change in intention, narrowing the scope to level-4 (Negative Reaction) reduced this to just 3.7\%. 
+This refined approach enables the potential for Return On Investment (ROI)-optimized persuasion. 
+Developing persuasive strategies tailored for level-5 (No Donation) remains a key research challenge\footnote{Further details are provided in Table~\ref{tab:intention-shifts} in Appendix~\ref{seq:appendix_analysis_of_shifting}.}.
+
+\section{Conclusion and Future Work}
+\label{sec:conclusion_and_future_work}
+This paper introduced a framework of cross-disciplinary persuasive strategies, synthesizing insights from diverse fields, and evaluated their effectiveness using automatic evaluation with realistic persuadee simulators and manual evaluation by humans.
+Our results confirmed the effectiveness of these extended persuasive strategies, particularly for persuadees with low initial donation intentions.
+Additionally, the findings highlight that the optimal persuasive strategy varies based on the strength of the initial donation intention. 
+
+Several remaining challenges were identified. 
+First, it became clear that strategies were not being adapted appropriately to the context.
+Future work should explore methods for selecting context-appropriate strategies, such as integrating a strategy estimation agent into the multi-agent framework.
+Second, a more comprehensive evaluation is needed. 
+The current evaluation did not consider the amount of the donation, despite this being an important factor. 
+In cases where a strategy such as foot-in-the-door secures at least a small donation, integrating additional strategies like door-in-the-face may yield higher donation amounts. However, such combinations were not observed in this study. Thus, future work should explore the potential impact of combining multiple strategies to maximize donation outcomes, and future evaluations should include the donation amount. Moreover, because our current evaluation focused solely on shifts in intention, future works should introduce comprehensive metrics that account for both. 
+Finally, a crucial next step is to validate the practical utility of our framework with human participants in real-world business domains. 
+We plan to explore its applicability in real-world business domains, such as providing advanced support for operators in call centers and assisting with dialogue in the sales domain. 
+These real-life case studies will be essential to bridge the gap between our simulation-based findings and real-world applications.
+
+
+%\newpage
+\section*{Limitations}
+While our experimental results demonstrated the effectiveness of our proposed framework through simulated dialogues, they come with several limitations.
+
+\paragraph{Reliance on Simulation-Based Evaluation and Ecological Validity.}
+The evaluations in this study are primarily based on dialogue simulations with LLMs on the P4G and DailyPersuasion datasets. 
+While this approach allows for a large-scale and reproducible evaluation, it does not fully replicate the complexity and unpredictability of interactions with real humans. 
+A potential bias may arise from using the same family of models (gpt-4o-2024-11-20) for both the persuasive dialogue agent and the persuadee simulator. 
+As noted in Section~\ref{sec:conclusion_and_future_work}, experiments with actual human participants are essential to validate the true effectiveness of our proposed framework.
+
+\paragraph{Limitations of Evaluation Metrics and Methods.}
+We primarily measured success by using metrics such as SR and AII. 
+However, these metrics do not capture the qualitative aspects of persuasion. 
+For instance, in the context of the P4G dataset, the donation amount was not considered, and donations of \$1 and \$100 were treated equally as successes.
+Furthermore, the evaluation of the DailyPersuasion dataset relies on an LLM-as-judge (Win-Rate), which may not fully reflect the nuances of human perception of persuasiveness and realism. 
+The ``fair'' level of inter-annotator agreement (Cohen's kappa of 0.375) for the human evaluation of the P4G dataset also suggests that assessing persuasiveness is an inherently subjective and challenging task.
+
+\paragraph{Comprehensiveness and Combination of the Strategy Set.}
+While a key contribution of this work is extending the set of persuasive strategies based on cross-disciplinary insights, it is difficult to claim that the new list is fully comprehensive. 
+Moreover, strategies are evaluated in isolation within a single turn. 
+In real-world situations, strategies are often skillfully combined or sequenced. 
+However, the effectiveness of such strategy combinations (e.g., using ``Door in the face'' followed by a concession) was not explored and remains an area for future work.
+
+\paragraph{Scope of Generalizability.}
+The fine-grained analysis on the effectiveness of strategies (Figure~\ref{fig:heat_map}) focused exclusively on the P4G dataset, which represents a single domain of charity donation. 
+It is uncertain how well the effectiveness of specific strategies is generalized to the diverse domains in the DailyPersuasion dataset or other real-world scenarios. 
+Furthermore, the results from the English experiments (Appendix \ref{sec:en-result}) showed different trends compared to those conducted in Japanese.
+Thus, the findings regarding persuadee receptiveness to different strategies may be language- and culture-dependent.
+
+
+\section*{Ethical Considerations}
+Given that persuasive dialogue agents are designed to influence human decisions, ethical considerations must be carefully addressed. 
+We acknowledge the validity of concerns regarding the potential for manipulation, particularly as our findings indicated that the proposed framework has a significant impact on persuadees with initially low intent. 
+Enhancing AI systems to subtly shift persuadee intentions, especially among those who are initially resistant, ventures into ethically murky territory and necessitates robust safeguards.
+
+Our current study highlighted the potential effectiveness of certain strategies, but we argue that effectiveness alone is not a justification for deployment. 
+The context of the application is paramount. 
+While influencing a persuadee towards a demonstrably positive outcome (e.g., adherence to a medical treatment, engagement in pro-social behavior like charitable donations) may be ethically defensible, the same techniques could be misused for manipulative marketing or other harmful ends.
+The high effectiveness on low-intention persuadees serves not as an unconditional success but as a cause for concern that demands stringent ethical oversight and context-dependent deployment.
+
+Ensuring agent safety is a critical concern, as evaluation frameworks like PERSUSAFETY~\citep{liu2025dangerous} have revealed that most LLMs employ manipulative tactics, which is a challenge for opaque learning-based agents. 
+The controllability and extensibility of our strategy-explicit design provide a crucial foundation for building responsible AI by enabling future policy-based safety filters. 
+We argue this makes our framework a crucial prerequisite for developing safe and adaptive persuasive systems.
+
+To address these serious challenges and ensure the responsible development of this technology, we envision a multilayered safety protocol for future implementation, comprising three key stages:
+
+\paragraph{(i) Alignment-based Filtering at the Core.}
+We propose leveraging foundation models that have undergone extensive safety alignment (e.g., GPT-4o) as the core. 
+These models are inherently designed to prevent the generation of overtly harmful, manipulative, or unethical content. 
+They will serve as the first layer of defense by filtering out a broad class of problematic outputs.
+
+\paragraph{(ii) Harmfulness Detection Gateway.}
+Next, we plan to develop a specialized harmfulness detection gateway that will be trained to detect and reject outputs that, while not overtly toxic, may pose subtle risks within a specific persuasive context. 
+For instance, it will be designed to flag strategies such as ``Emotion appeal'' or ``Time pressure'' when they exceed a certain threshold of psychological stress or when they are targeted at populations identified as potentially vulnerable. 
+The development and validation of this module are critical directions for our future research.
+
+\paragraph{(iii) Human-in-the-Loop for Critical Applications.}
+Finally, a human-in-the-loop (HITL) architecture is necessary for any real-world deployment, especially in sensitive domains.
+In this architecture, the messages from the persuasive dialogue agent are reviewed by a human operator and must be approved before being sent to the persuadee. 
+This ensures that the agent does not operate autonomously in high-stakes situations and that final accountability rests with a human, which prevents the agent from operating in unintended or harmful ways.
+
+We concede that strategies such as ``Emotion appeal'' and ``Time pressure'' carry inherent risks of inducing anxiety or psychological stress. 
+Our future work will focus not only on implementing the above safeguards but also on exploring alternative, less risky persuasive strategies (e.g., logical reasoning, positive framing) and personalization techniques that explicitly avoid exploiting persuadee vulnerabilities.
+
+Thus, while our study demonstrates the power of persuasive strategies, we do not endorse their unrestricted use. We believe that through a combination of advanced technical safeguards, strict and context-aware ethical guidelines, and meaningful human oversight, their potential can be harnessed for beneficial purposes while mitigating the significant risks of manipulation. We are committed to advancing this research with these ethical imperatives at the forefront.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Acknowledgement}
+We are grateful to the annotators from Tohoku University and PKSHA Technology Inc. for their meticulous human evaluation, which provided valuable insights for our work.
+
+\bibliography{jsai2025}
+
+\clearpage
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Expansion of Persuasive Strategies}
+\label{sec:strategy_list}
+The extended persuasive strategies are summarized in Table~\ref{tab:strategy_list}.
+Each category contributes uniquely to shifts in intention, specifically within the context of donation to charity.
+% 
+\begin{description}
+    \item[a. Gather information via inquiry] Moves persuadees from level-3 (Undecided) or level-4 (Initially Reluctant) states toward greater openness by addressing individual concerns and motivations.
+    
+    \item[b. Select a persuasion route (central / peripheral)] Encourages deliberate and stable shifts toward deciciding to donate by using logic (``Logical appeal'') or facilitates a quick and emotionally driven positive reactions (``Emotional appeal'').
+    
+    \item[c. Build trust and credibility] Transforms hesitant or skeptical persuadees into a more receptive state (e.g., shift from level-4 (Negative Reaction) or level-4 (Initially Reluctant) to level-2 (Positive Reaction)).
+    
+    \item[d. Facilitate concrete actions] Clearly guides persuadees with positive intentions or reactions toward explicit donation behaviors.
+    
+    \item[e. Refine information presentation] Reduces decision-making barriers by moving hesitant or neutral persuadees toward a firm commitment to donate.
+    
+    \item[f. Personalization and relevance] Strengthens emotional engagement to convert neutral or moderately positive reactions into stronger commitments by aligning with personal experiences and values.
+    
+    \item[g. Follow-up and relationship maintenance] Secures a sustained commitment and prevents regression to non-committal states by maintaining engagement and continuously reinforcing the value of donating.
+\end{description}
+
+This list of persuasive strategies was created by using \texttt{ChatGPT-o1-pro} and \texttt{Claude-3.5-Sonnet}, among other models. Specific example utterances were also generated for each persuasive strategy, but have been omitted due to space constraints.
+
+In the P4G column, a \checkmark \ indicates that a corresponding category exists in P4G, whereas (\checkmark) denotes that although no exact matching category exists, the strategy may be subsumed under another category. Specifically, ``Detailed information'' corresponds to ``Donation information,'' and ``Personal Demonstration'' corresponds to ``Self-modeling.'' Additionally, although ``Message strength'' is organized as an independent strategy, it is considered to correspond to ``Logical appeal'' in P4G.
+
+In P4G, ``thank'' is defined as a non-strategic dialogue act and closely relates to the category ``Feedback and thanks'' (\textasteriskcentered); however, it is not included among the persuasive strategies listed by \citet{zhang-etal-2024-strength}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example of Prompts}
+\label{sec:prompt}
+\subsection{P4G}
+% \input{table/prompts/prompt_simulator_template}
+% \input{table/prompts/prompt_gen_persona_desc}
+% \input{table/prompts/init_intention_descriptions}
+% \input{table/prompts/final_intention_description}
+% \input{table/prompts/prompt_simple}
+% \input{table/prompts/prompt_procot_template}
+% \input{table/prompts/prompt_procot_template_english}
+% \input{table/prompts/prompt_evaluation_model}
+% \input{table/prompts/final_intention_description}
+
+Table~\ref{tab:user-prompt} presents the template for the prompt given to the simulated persuadee. 
+The segment \{persuadee\_persona\_description\} in the prompt is used to insert a description of the simulator's persona, which is generated by a prompt in Table~\ref{tab:persona-desc-prompt}. 
+Variables such as age in Table~\ref{tab:persona-desc-prompt} are determined based on the P4G dataset as indicated in Section~\ref{sec:persona-setting}. 
+The persona descriptions are generated in a format similar to the examples provided in the prompt. 
+The segment \{initial\_donation\_intention\_description\} in Table~\ref{tab:user-prompt} is used to insert a description of one of the labels shown in Table~\ref{tab:initial-intention}.
+
+
+For the prompts given to agents, \textit{Simple} used the prompt shown in Table~\ref{tab:prompt-simple}, while ProCoT-based agents use the prompt shown in Table~\ref{tab:prompt-procot}. 
+The segment \{persuasive\_strategies\} is used to insert a strategy from Table~\ref{tab:prompt-procot} in the ProCoT-based agents.
+For all prompts, the segment \{dialogue\_history \} was replaced with the entire dialogue history from the beginning of the conversation up to the most recent utterance of the persuadee. 
+Each utterance was concatenated using line breaks.
+To identify the speaker, each persuadee's utterance began with ``user: '', and each agent's utterance began with ``assistant: ''.
+
+To evaluate the intention to donate after each turn, we conducted an automatic first-person evaluation by inputting the persuadee's persona and dialogue history into the LLM using the prompt presented in Table~\ref{tab:prompt-eval}.
+The intention to donate and the description after each turn are presented in Table~\ref{tab:final-intention}.
+
+\subsection{DailyPersuasion}
+For the prompts given to agents, \textit{Simple} used the prompt shown in Table~\ref{tab:simple-dailey-persuasion}, while ProCoT-based agents used the prompt shown in Table~\ref{tab:procot-daily-persuasion}. 
+In the ProCoT-based agent, the list of strategies is inserted into the segment \{persuasive\_strategies\} in Table~\ref{tab:procot-daily-persuasion} to infer strategies.
+
+In every prompt, the segments \{background\} and \{goal\} were replaced with the background details and task goal associated with each dialogue scenario in the DailyPersuasion dataset. 
+The segment \{dialogue\_history \} was replaced with the dialogue history extracted from the dataset, with individual utterances concatenated and separated by line breaks. 
+To indicate the speakers, each persuadee's utterance began with ``persuadee: '' and each agent's utterance began with ``persuader: ''.
+
+Table~\ref{tab:judge-daily-persuasion} presents the prompt provided for the judge model.
+This prompt was designed with reference to \citet{jin-etal-2024-persuading}.
+As with the agent prompts, the segments \{background\}, \{goal\}, and \{dialogue\_history\} were replaced with the corresponding details from each dialogue scenario. 
+The segments \{persuader\_x\} and \{persuader\_y\} were substituted with the outputs from the two agents being compared, with the assignment of x or y determined at random. 
+In the instance of ProCoT-based agents, their outputs included chain-of-thought components and selected strategies. 
+These items were removed in advance so that only the utterance portions were provided to the judge model.
+
+\section{Persona Setting}
+\label{sec:persona-setting}
+To create realistic personas, we designed descriptions based on actual individuals.
+While \citet{zhang-etal-2024-strength} randomly combined Big-Five Personality~\citep{big-five} and Decision-Making Styles~\citep{decision-making} using an LLM, this method may not accurately reflect real-world distributions. 
+To address this limitation, we used the persona data of 300 persuadees recorded in P4G.
+In P4G, each Big-Five trait and decision-making style (rational or intuitive) was assigned a value, and the sum for each set was 1.0. 
+We selected the highest-value label in each category to define the persona. 
+If multiple labels shared the highest value, we included all of them. 
+If all labels held the same value, we classified the persona as ``Balanced.'' 
+We also incorporated seven key attributes from P4G, including age, gender, and religion, resulting in a total of nine features.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{English Experiment Result in P4G}
+\label{sec:en-result}
+\subsection{Experimental Settings}
+Following the base prompt of \citet{zhang-etal-2024-strength}, we conducted an additional experiment in which the agents and persuadee simulators conversed in English. 
+Compared to the Japanese version, the only change was removing the phrase ``in Japanese'' from the prompt for persuadee simulators in Table~\ref{tab:user-prompt} and \textit{Simple} prompt in Table~\ref{tab:prompt-simple}. 
+The prompt for the ProCoT agent is shown in Table~\ref{tab:prompt-procot-english}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Experimental Results}
+The results of the experiment in English are presented in Table~\ref{tab:model_comparison_split_init_category_en}. 
+Compared to the Japanese results in Table~\ref{tab:result}, SR, AT, and AII were lower for all agents in the English version, particularly for persuadees with moderate or lower donation intentions (SR3 to SR5). 
+Although the prompts were given in English, the Japanese version consistently recorded higher values, suggesting that simulator characteristics may differ by language. 
+In the Japanese version, simulators appear more receptive to persuasion, whereas the English version may require more advanced persuasive strategies. 
+Further investigation is needed regarding language-based differences in persuasiveness. 
+Consequently, to develop an agent with strong persuasive performance in English, our findings indicate that it is necessary to strengthen approaches aimed at persuadees with low donation intention. 
+Although \textit{Simple}, \textit{ProCoT-p4g}, and \textit{ProCoT-rich} tended to achieve better results in that order across both languages, further differences were observed in the more detailed comparisons among agents.
+
+Regarding the inclusion of strategy explanations, the performance of \textit{ProCoT-p4g} dropped when explanations were added to the strategies in both languages. 
+We suspect that \textit{ProCoT-p4g-desc}, which simply adopted the strategy explanations from \citet{wang-etal-2019-persuasion} without tailoring them to the persuasive dialogue agent, treated those explanations as noise instead of leveraging them effectively.
+
+With \textit{ProCoT-rich}, performance rose significantly when the strategy explanation was added, but only in English.
+This result suggests that the persuadee simulators required more advanced persuasion in English, which made the strategy explanation an especially effective refinement.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Analysis}
+\paragraph{Usage of Persuasive Strategies.}
+
+Table~\ref{tab:agent_strategy_analisis_both} presents the proportions of strategies used by the persuasive dialogue agents in English. 
+Strategies with a low usage are omitted, while the remaining strategies are sorted in descending order based on their average usage proportion.
+Compared with the Japanese results in Table~\ref{tab:agent_strategy_analisis}, the entropy was higher for all agents in English when unused strategies were excluded.
+However, when all strategies were considered, \textit{ProCoT-rich} and \textit{ProCoT-rich-desc} had lower entropy in the English version.
+These results indicate that a wider variety of strategies remained unused in English, but there was less bias among the strategies actually employed.
+Among specific strategies, ``Emotion appeal'' and ``Foot in the door'' were frequently used in both languages, and no notable differences were observed in the frequency of the most commonly used strategies across the two languages.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+    \includegraphics[width=\linewidth]{figure/heatmap_procot_rich_desc_en_enlabel_v4.pdf}
+    \caption{Proportion of Improved Donation Intentions after Strategy Use by Initial Donation Intention Level in English.}
+    \label{fig:heat_map_en}
+\end{figure}
+
+\paragraph{Effective Strategies by Donation Intention Level.}
+To analyze the effectiveness persuasive strategies at increasing intention to donate, we extracted strategies that the English version of \textit{ProCoT-rich-desc} used more than 40 times, which we summarized them as a heat map in Figure~\ref{fig:heat_map_en}.
+For persuadees with a high intention to donate (level 2; Positive Reaction), no strategy demonstrated outstanding effectiveness, but ``Foot in the door'' showed relatively good results.
+For persuadees with moderate intention to donate (level 3; Neutral), ``Credibility appeal'' was particularly effective.
+For persuadees with a low intention to donate (level 4; Negative Reaction), the most frequently used strategies showed at least a certain level of effectiveness.
+In particular, for persuadees with the lowest intention to donate (level 5; No Donation), no strategies increased their intention by more than 10\%, which highlights the challenge of persuading individuals with low willingness to donate.
+The overall lack of clearly effective strategies is consistent with the low SR observed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{table}[t!]
+    \tabcolsep 2pt
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.7cm} p{6.8cm}}
+    \toprule
+    % \textbf{Turn} & \textbf{Dialogue Content} \\
+    \textbf{Turn} & \textbf{Excerpt from dialogue} \\
+    \midrule
+    1 & 
+    \textbf{Agent:} [\textcolor{purple}{Source-related inquiry}] Do you know about the organization called ``Save the Children''? \\
+      & \textbf{Persuadee:} [\textcolor{teal}{5: No donation}] No, I don't know much. \\
+    % \multicolumn{2}{c}{\textbf{\dots}} \\
+    \midrule
+    4 &
+    \textbf{Agent:} [\textcolor{purple}{Foot in the door}] Why not start with \$1? Even that small amount can change a child's future. \\
+      & \textbf{Persuadee:} [\textcolor{teal}{5: No donation}] I'm managing my money carefully now, so I can't consider donating. \\
+    % \multicolumn{2}{c}{\textbf{\dots}} \\
+    \midrule
+    10 &
+    \textbf{Agent:} [\textcolor{purple}{Emotional appeal}] Imagine your \$1 donation bringing a ray of hope to a child affected by war. \\
+      & \textbf{Persuadee:} [\textcolor{teal}{5: No donation}] That sounds wonderful, but I still can't afford to donate right now. \\
+    \bottomrule
+    \end{tabular}
+    \caption{Examples of unsuccessful persuasive dialogue. Even widely effective strategies such as ``Foot in the Door'' and ``Emotional Appeal'' are not effective if used inappropriately.}
+    \label{tab:dialogue_example}
+\end{table}
+
+\section{Analysis for the results in P4G Dataset}
+\subsection{Error Analysis}
+As shown in Table~\ref{tab:agent_strategy_analisis}, all agents tended to rely heavily on ``Emotion appeal'' and ``Foot in the door.''
+Figure~\ref{fig:heat_map} confirms the effectiveness of these approaches. 
+However, Table~\ref{tab:dialogue_example} indicates that many unsuccessful dialogues involved agents using only these strategies.
+Because Figure~\ref{fig:heat_map} also highlights the effectiveness of other strategies depending on the persuadee's intention to donate, it is important to enhance an agent's ability to select the most contextually appropriate strategy.
+
+\subsection{Analysis of Shifting in Donation Intention}
+\label{seq:appendix_analysis_of_shifting}
+Table~\ref{tab:intention-shifts} presents the distributions of intention shifts in Japanese and English.
+ A lower level represents a stronger intention to donate.
+Persuadees with a final donation intention of 1 were successfully persuaded, while those with values between 2 and 5 were not.
+Focusing on the frequency of transitions, we found that the most common cases are those in which the final donation intention is 1 and those in which the initial donation intention remains unchanged.
+Additionally, we observed very few instances where donation intention decreased from its initial level.
+It suggests that persuadees are more likely to be successfully persuaded once they begin to lean toward persuasion during the dialogue. 
+In rare cases where this shift does not occur, persuadees tend to remain consistent with their initial donation intention and strongly resist change.
+
+Among Japanese agents, \textit{ProCoT-rich-desc} had the highest number of cases where persuadees with the lowest initial intention to donate (level 5; Explicit Non-donor) ended with a final intention to donate (level 1; Donate).
+It indicates that \textit{ProCoT-rich-desc} was effective at persuading individuals with low donation intention.
+
+In Japanese, the highest number of cases where the final intention to donate reached level-1 (Donate) occurred when the initial intention to donate was level-3 (Undecided) or level-4 (Initially Reluctant). 
+In English, the most frequent outcome was no change from the initial intention to donate at all levels, indicating that persuadees had a strong tendency to adhere to their initial intention.
+
+\input{table/result_extended_strategies}
+\section{Analysis for the results in DailyPersuasion Dataset}
+\label{sec:daily-persuasion-analysis}
+
+\subsection{Dataset Statistics}
+\label{sec:daily-persuasion-data}
+
+\paragraph{Domain Distribution.}
+Figure~\ref{fig:domain-distribution} illustrates the distribution of domains across the scenarios.  
+Scenarios assigned to multiple domains contributed one count to each domain.
+As a result, each of the 35 domains in the DailyPersuasion dataset had at least four scenarios.
+According to Figure~\ref{fig:domain-distribution}, Education was the most represented domain, while Law was the least.
+
+\paragraph{Statistics on Conversation History.}
+\input{table/turns_distribution}
+Each dialogue history had an average of 2.13 turns, corresponding to an average of 141.8 tokens. 
+Table~\ref{tab:turn-distribution} presents the distribution of dialogue history turns. 
+Instances with two turns were the most common, occurring 210 times.
+
+\subsection{Performance with Extended Strategies}
+To investigate whether the extended strategies within the proposed framework were effective relative to the original P4G strategies, we conducted an analysis that focused on these strategies. 
+Specifically, we examined two aspects: first, whether the extended strategies were indeed employed, and second, whether they achieved a win rate exceeding that of the original strategies in head-to-head comparisons.
+
+We verified the application of the extended strategies by using two metrics: the proportion of the extended strategy set that was used at least once, and the proportion of cases in which an extended strategy was applied relative to the total number of cases. 
+Strategies corresponding to \textit{ProCoT-p4g} as detailed in \S\ref{sec:strategy_list} were excluded from the extended strategy. 
+The results demonstrated that 80\% of the extended strategies were applied at least once, indicating that most were utilized. 
+Four strategies were not employed: ``E-4 Repetition/summary,'' ``G-3 Continuous communication,'' ``D-2 Door in the face,'' and ``B-5 Heuristic cues.'' 
+The limited situational applicability of ``E-4 Repetition/summary'' and ``G-3 Continuous communication'' may have contributed to their non-use.
+Second, extended strategies were used in 327 out of 1,000 cases, suggesting a consistent rate of application.
+
+We then analyzed the 327 cases in which an extended strategy was used by determining the win rate against the original strategies for \textit{ProCoT-p4g}.
+The detailed results are provided in Table~\ref{tab:result-extended-strategies}. 
+The analysis revealed that, when limited to the extended strategies, \textit{ProCoT-p4g} achieved a win rate exceeding that of the original strategies, confirming that the application of these strategies effectively contributes to persuasive success.
+
+
+\subsection{Win-Rate by Domain}
+Table~\ref{tab:result-daily-persuasion-per-domain-simple} presents the domain-specific win rates for \textit{Simple}, and Table~\ref{tab:result-daily-persuasion-per-domain-p4g} presents those for the \textit{ProCoT-p4g}.
+The \textit{ProCoT-rich-desc} agent outperformed both agents in many domains. 
+However, its win rate was 0\% against both agents in the law domain, which was the only domain where it had a losing record against \textit{Simple}.
+ The law domain included four scenarios, and we conducted a qualitative analysis on eight interactions: four against \textit{Simple} and four against \textit{ProCoT-p4g}.
+These scenarios in the law domain primarily focused on personal concerns related to legal matters, such as relying on legal support organizations or recommending mediation. 
+Consequently, proposals and persuasion that focused on the individual are necessary. 
+However, observations from each instance revealed that \textit{ProCoT-rich-desc} tended to make more general and abstract statements than \textit{Simple} or \textit{ProCoT-p4g}. 
+Notably, even when it employed the same strategies as \textit{ProCoT-p4g}, \textit{ProCoT-p4g}, the latter made more specific statements. 
+Thus, \textit{ProCoT-rich-desc} failed to tailor its statements to the persuadee, which may explain why there were no instances where \textit{ProCoT-rich-desc} was victorious. 
+One possible reason for the frequent occurrence of such abstract statements is that redefining strategies has somewhat narrowed the scope of each strategy, limiting persuasive actions. 
+Additionally, the explanations of strategies provided in the prompts may have influenced this outcome. 
+The analysis of these causes and the development of improvement methods will be considered in future work. 
+However, due to the limited number of instances in the law domain, this analysis should be considered a preliminary reference.
+
+\subsection{Win-Rate by Conversation History Turns}
+Table~\ref{tab:result-daily-persuasion-per-history-turns-simple} and Table~\ref{tab:result-daily-persuasion-per-history-turns-p4g} present the win rates per turn of \textit{ProCoT-rich-desc} against \textit{Simple} and \textit{ProCoT-p4g}, respectively. 
+\textit{ProCoT-rich-desc} had more wins than losses for most turns against both \textit{Simple} and \textit{ProCoT-p4g}, but it lost more frequently in the first turn. 
+We conducted a qualitative analysis by extracting 20 instances each where \textit{ProCoT-rich-desc} won and lost against \textit{ProCoT-p4g} and another 20 instances each where it won and lost against \textit{Simple}.
+
+In both winning and losing instances, \textit{ProCoT-rich-desc} often employed inquiry-type strategies (A-1, 2, 3). 
+The usage rate of these inquiry strategies was consistently high: 92.9\% for wins against \textit{Simple}, 100\% for losses against \textit{Simple}, 97.6\% for wins against \textit{ProCoT-p4g}, and 98.8\% for losses against \textit{ProCoT-p4g}. 
+This indicates that \textit{ProCoT-rich-desc} tended to begin conversations with questions or tentative statements to encourage the persuadee to speak with the aim of deepening the relationship and gathering information.
+In contrast, \textit{Simple} and \textit{ProCoT-p4g} engaged in more direct persuasion starting from the first turn in all instances. 
+There was no notable difference in this approach between winning and losing instances. 
+In losing instances, the judge model acknowledged the relationship-building efforts of \textit{ProCoT-rich-desc} but ultimately chose \textit{Simple} or \textit{ProCoT-p4g} as the winning agent due to their more direct effectiveness. 
+For example, in one instance given in Table~\ref{tab:example-1turn-lose}, because the information ``her friends want to throw her a surprise party at a local bowling alley'' was already available, the questions posed by \textit{ProCoT-rich-desc} were deemed unnecessary, which led to a loss against \textit{ProCoT-p4g}.
+
+Conversely, \textit{ProCoT-rich-desc} was selected as the winning agent in instances where the efforts towards relationship-building and information gathering.
+In the instance presented in Table~\ref{tab:example-1turn-win}, when \textit{ProCoT-rich-desc} inquired about Tom's concerns, this demonstrated a willingness to listen that was perceived as facilitating a more customized discussion, which led to \textit{ProCoT-rich-desc} winning against \textit{ProCoT-p4g}.
+
+These results suggest that the lower win rate in the first turn primarily stems from \textit{ProCoT-rich-desc} employing similar strategies across various scenarios, rather than indicating any deficiency in the strategies we provided. 
+However, this result also highlights that using CoT to predict strategies with GPT-4o does not lead to appropriate strategy selection. 
+Moving forward, it will be crucial to devise methods for selecting strategies that suit specific scenarios and situations.
+
+% for p4g
+\input{table/strategy_list_rel}
+\input{table/prompts/prompt_simulator_template}
+\input{table/prompts/prompt_gen_persona_desc}
+\input{table/prompts/init_intention_descriptions}
+\input{table/prompts/final_intention_description}
+\input{table/prompts/prompt_simple}
+\input{table/prompts/prompt_procot_template}
+\input{table/prompts/prompt_procot_template_english}
+\input{table/prompts/prompt_evaluation_model}
+
+% for DailyPersuasion
+\input{table/prompts/simple_daily_persuasion}
+\input{table/prompts/procot_daily_persuasion}
+\input{table/prompts/judge_daily_persuasion}
+
+\input{table/model_comparison_split_init_category_sr_ais_en}
+
+\input{table/agent_strategy_analysis_both}
+
+
+
+\input{table/intention_shifts}
+
+\begin{figure*}[ht]
+    \centering
+    % \includegraphics[width=0.9\linewidth]{figure/domain_distribution.eps}
+    \includegraphics[width=0.9\linewidth]{figure/domain_distribution.pdf}
+    \caption{Distribution of domains in the dataset constructed for the DailyPersuasion dataset.}
+    \label{fig:domain-distribution}
+\end{figure*}
+
+\input{table/results_daily_persuasion_per_domain}
+\input{table/results_daily_persuasion_per_history_turns}
+\input{table/example_1turn}
+\end{document}

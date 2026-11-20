@@ -1,0 +1,19 @@
+\section{Related Work}
+
+\subsection{Automated Evaluation of Summarization}
+
+Automated evaluation has traditionally relied on lexical overlap metrics such as BLEU~\cite{papineni2002bleu}, ROUGE~\cite{lin2004rouge}, METEOR~\cite{banerjee2005meteor}, CIDEr~\cite{vedantam2015cider}, and SPICE~\cite{anderson2016spice}. While computationally efficient and widely used, these reference-based metrics primarily measure surface-level similarity between candidate and human-written reference texts, often failing to capture deeper semantic consistency, factual correctness, or coherence~\cite{kryscinski2019evaluating, kasai2022transparenthumanevaluationimage}. 
+
+To address these limitations, embedding-based metrics such as BERTScore~\cite{zhang2020bertscore} and CLIPScore~\cite{hessel2022clipscorereferencefreeevaluationmetric} have been proposed to measure semantic similarity using learned embeddings. However, these methods still require reference summaries, limiting their practical applicability and scalability. More recently, Large Language Models (LLMs) have been leveraged as evaluators ("LLM-as-a-Judge"), demonstrating promising correlation with human judgments~\cite{zheng2023judgingllmasajudgemtbenchchatbot}, but they introduce challenges such as biases, reproducibility issues, and high API costs~\cite{fu2023gptscore}.
+
+Our proposed QEVA metric addresses these challenges by employing a fully reference-free evaluation approach, directly comparing generated summaries against source videos through multimodal question-answering, thus providing a more semantically grounded and scalable alternative.
+
+\subsection{QA-based Evaluation Metrics}
+
+Question-answering (QA) based evaluation methods assess the semantic quality of generated texts by testing their ability to answer questions derived from relevant contexts~\cite{wang2020askingansweringquestionsevaluate}. Unlike traditional lexical metrics, QA-based evaluation directly probes textual outputs for factuality, coverage, and relevance. Examples include FEQA~\cite{Durmus_2020} and QAFactEval~\cite{fabbri2022qafacteval}, which evaluate factual consistency by comparing answers derived from summaries and source documents.
+
+Reference-free QA metrics such as QuestEval~\cite{scialom2021questeval} and $Q^2$~\cite{honovich2021q2evaluatingfactualconsistency} offer increased scalability by eliminating the dependency on human-written references. QuestEval integrates precision-oriented (summary-based) and recall-oriented (source-based) QA components, achieving strong correlation with human judgments. Recently, the TIFA metric~\cite{hu2023tifaaccurateinterpretabletexttoimage} extended QA-based evaluation to text-to-image synthesis by generating questions from textual prompts and assessing image fidelity through visual QA.
+
+Our work builds upon these advances by introducing QEVA, which uniquely applies multimodal QA to narrative video summarization, explicitly measuring Coverage, Factuality, and Chronology, thereby providing a comprehensive and reference-free evaluation framework tailored specifically for multimodal summarization.
+
+\input{attachments/figure3}

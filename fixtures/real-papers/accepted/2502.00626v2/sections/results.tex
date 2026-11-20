@@ -1,0 +1,219 @@
+\section{Results}
+
+
+Table \ref{tab:timing_table} summarizes the timing statistics for the examples in our paper. Time per step increases with cut changes due to the need to re-evaluate the neural network and update the basis for the new cut shape. Without cut changes, our method matches traditional reduced space simulations. Our method runs at $28.5 \sim 42.4$ fps with cut changes and $62 \sim 166$ fps without. For reference, full-space simulation takes around 1.1s per frame without cut changes during simulation. This gives our method a $30\times \sim 183\times$ speedup over full-space simulations while enabling cut changes during simulation. All results are reported using an NVIDIA RTX 4090 GPU and an AMD 7950X CPU. \Revision{Unless otherwise noted, we use a 5-layer, 128-channel SIREN MLP with positional encoding up to maximum frequency of $2^3$. Winding numbers are scaled by a factor of 32 to ensure sufficient separation of lifted and 2D coordinates.}
+
+\paragraph{Discretization-agnostic domain representation} Our method does not assume a specific type of domain discretization, instead relying only on the ability to sample the domain. All examples below use stochastic cubature drawn from a uniform distribution over the domain~\cite{chang:2023:licrom,Modi:2024:Simplicits}. Figures \ref{fig:kirigami_chain} and \ref{fig:Comparison_results} are rendered with a mesh \Revision{bound} to the shape, while other figures are visualized as point clouds with colors sampled from a texture.
+
+
+
+\subsection{Evaluation on Data-Free Settings}
+
+\paragraph{Comparison to prior work}
+To the best of our knowledge, our method is the first data-free model reduction method to support displacement field discontinuities, \Revision{progressive} cutting, or generalization of cut placement. As depicted by the butterfly in Figure~\ref{fig:butterly} and the small ginkgo leaves in Figure~\ref{fig:teaser}, our method enables a ROM with highly detailed cut structures. All of our data-free examples use the $18$-dimensional basis presented above. 
+
+
+
+% \captionsetup[subfloat]{position=bottom,labelformat=empty, skip=0pt, justification=centering}
+% \begin{figure} % Use figure (not figure*) for single-column width
+% \centering
+% \begin{minipage}[c]{0.05\columnwidth}
+%     \begin{tikzpicture}
+%         % Add rotated text or other overlay
+%         \node[rotate=90, anchor=south] at (0, 1) {\footnotesize \parbox{2cm}{\centering Reduced-space \\ progressive cut}};
+%     \end{tikzpicture}
+% \end{minipage}
+% \hfill
+% \begin{minipage}[c]{0.93\columnwidth} % 3 Subfigures
+%     \begin{tikzpicture}[overlay]
+%         \draw[->, draw=gray!85] (0.02\linewidth, 1.55) -- (0.98\linewidth, 1.55);
+%     \end{tikzpicture}
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/ginkgo_1_1.pdf}}
+%     \hfill
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/ginkgo_1_2.pdf}}
+%     \hfill
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/ginkgo_1_3.pdf}}
+% \end{minipage}
+
+% \vspace{-3em} % sorry.....
+
+% % Row 2: Big subfigure
+% \subfloat[Front view \hspace{9em} Side view]{\includegraphics[width=0.95\columnwidth]{figures/new/ginkgo_1_4.pdf}}
+
+% \caption{Our method is capable of handling cuts in highly detailed shapes. The three small ginkgo leaves are cut from a larger leaf, and the intricate details of the small leaves are accurately captured by our approach.}
+% \label{fig:ginko} 
+% \end{figure}
+
+\begin{figure} % Use figure (not figure*) for single-column width
+\centering
+\includegraphics[width = 0.9\linewidth]{figures/new/butterfly_progressive.pdf}
+% \begin{minipage}[c]{0.05\columnwidth}
+%     \begin{tikzpicture}
+%         % Add rotated text or other overlay
+%         \node[rotate=90, anchor=south] at (0, 1) {\footnotesize \parbox{2cm}{\centering Reduced-space \\ progressive cut}};
+%     \end{tikzpicture}
+% \end{minipage}
+% \hfill
+% \begin{minipage}[c]{0.93\columnwidth} % 3 Subfigures
+%     \begin{tikzpicture}[overlay]
+%         \draw[->, draw=gray!85] (0.02\linewidth, 1.7) -- (0.98\linewidth, 1.7);
+%     \end{tikzpicture}
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/butterfly_v2_1.pdf}}
+%     \hfill
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/butterfly_v2_2.pdf}}
+%     \hfill
+%     \subfloat[]{\includegraphics[width=0.315\columnwidth]{figures/new/butterfly_v2_3.pdf}}
+% \end{minipage}
+
+% \vspace{-3em} % sorry.....
+
+% % Row 2: Big subfigure
+% \subfloat[\hspace{2em}Side view \hspace{10em} Front view]{\includegraphics[width=0.95\columnwidth]{figures/new/butterfly_v2_4.pdf}}
+\caption{Our method is able to capture the complex cut of this butterfly shape, this is not achievable by previous data-free method \cite{Modi:2024:Simplicits} that uses traditional MLP due to the built-in continuity.}
+\label{fig:butterly} 
+\end{figure}
+
+
+
+% \captionsetup[subfloat]{position=bottom,labelformat=empty, skip=0pt, justification=centering}
+% \begin{figure} % Use figure (not figure*) for single-column width
+% \centering
+% \begin{tikzpicture}
+%     % First image
+%     \node[anchor=south west, yshift=15] (img1) at (0, 0) {\includegraphics[width=0.23\columnwidth]{figures/new/simplicits_comparison/ginkgo.pdf}};
+%     % Second image
+%     \node[anchor=south west, xshift=0.24\columnwidth, yshift=15] (img2) at (0, 0) {\includegraphics[width=0.23\columnwidth]{figures/new/simplicits_comparison/ginkgo_sim.pdf}};
+%     % Add dashed line between second and third image
+%     % Third image
+%     \node[anchor=south west, xshift=0.53\columnwidth, ] (img3) at (0, 0) {\includegraphics[width=0.23\columnwidth]{figures/new/simplicits_comparison/butterfly.pdf}};
+%     % Fourth image
+%     \node[anchor=south west, xshift=0.77\columnwidth] (img4) at (0, 0) {\includegraphics[width=0.23\columnwidth]{figures/new/simplicits_comparison/butterfly_sim.pdf}};
+%     \draw[dashed] ($(img2.north east)!0.5!(img3.north west)$) -- ($(img2.south east)!0.5!(img3.south west)$);
+
+%     \node[anchor=north, yshift=-15] at 
+%     ($
+%       (img1.south)$) {\footnotesize Our method};
+%     \node[anchor=north, yshift=-15] at 
+%     ($
+%       (img2.south)$) {\footnotesize Simplicits \shortcite{Modi:2024:Simplicits}};
+%     \node[anchor=north] at 
+%     ($
+%       (img3.south)$) {\footnotesize Our method};
+%     \node[anchor=north] at 
+%     ($
+%       (img4.south)$) {\footnotesize Simplicits \shortcite{Modi:2024:Simplicits}};
+
+%     \coordinate (leafCoord)     at ($(img1.north east)!0.5!(img2.north west)$);
+%     \coordinate (butterflyCoord)at ($(img3.north east)!0.5!(img4.north west)$);
+    
+%     \node[anchor=south] at (leafCoord |- butterflyCoord) {Leaf};
+%     \node[anchor=south] at (butterflyCoord)              {Butterfly};
+% \end{tikzpicture}
+% \caption{Simplicits comparison}
+% \label{fig:simplicits_comparison} 
+% \end{figure}
+
+\paragraph{Generalization}
+We explore generalization to 
+\emph{external loads} and \emph{cut geometry} unseen during training.
+Since data-free ROMS do not explicitly consider external loads during training, any external force may demonstrate generalization. We applied a sequence of external forces at different stages of a progressive helical cut, inducing varying deformations responsive to the changing geometry of the evolving discontinuity (see Figure \ref{fig:GenLoading} and accompanying video). We cut a helix from real paper and observed that its final sagged state agrees with the simulated result (see Figure \ref{fig:realworld}). 
+
+To evaluate generalization over cut geometry, we trained the network weights $\theta$ on three ``training'' cuts, then froze the weights and simulated three significantly different 'test' cuts, observing plausible results (see Figure~\ref{fig:GenGeo1} and accompanying video).
+
+\paragraph{Interactive design}
+We prototyped an interactive cut editor (see Figure \ref{fig:Interaction}). The designer draws and edits the cut geometry, applies external forces, while observing the corresponding deformation in real time. The cut position and shape may be edited without restarting the simulation, with the deformation updating in real time (refer to accompanying video). To the best of our knowledge, real-time physical preview as a cut geometry is altered has not been reported in the literature. Implementing interactive cut editing with a pure neural field representation~\cite{chang:2023:licrom} is not possible since the discontinuity is ``baked in'' to the network weights; on the other hand, if a mesh-based discontinuity representation is introduced~\cite{Belhe:2023:DiscontinuityAwareNeuralFields}, interactive editing would necessitate ongoing remeshing to align mesh edges with $\Gamma$, which has not been demonstrated, and has the potential to be costly or to exhibit basis-projection artifacts.
+
+
+
+
+% \captionsetup[subfloat]{position=bottom,labelformat=empty}
+% \begin{figure*}
+% \begin{subcolumns}[0.44\linewidth]
+%   \subfloat[Training shapes]{\includegraphics[width=\subcolumnwidth]{figures/new/generalization_1_train.pdf}}
+%    \vspace{-0.5em}
+% % \nextsubfigure
+%   \subfloat[Test shapes, not in training data]{\includegraphics[width=\subcolumnwidth]{figures/new/generalization_1_test.pdf}}
+% \nextsubcolumn[0.55\linewidth]
+%   \subfloat[Front view \hspace{30mm} Side view]{\includegraphics[width=\subcolumnwidth]{figures/new/generalization_2.pdf}}
+% \end{subcolumns}
+% \caption{We train our method with the three blue cut shapes, as shown on the top, and tested with three other cut shapes that is significantly different cut shapes that is not in the training set, as shown in the bottom. We can still get reasonable deformation for the test set. \textbf{we are planning to change this figure to only retain the left part of it so there is space to add a timing table or timing graph}}
+% \label{fig:GenGeo1}
+% \end{figure*}
+
+\begin{table*}[ht]
+\centering
+\rowcolors{2}{white}{gray!20} % Apply row colors
+\begin{tabularx}{\linewidth}{l |>{\centering\arraybackslash}X |>{\centering\arraybackslash}X |>{\centering\arraybackslash}X |>{\centering\arraybackslash}X}
+% \toprule
+ & \textbf{Number of Vertices (k)}& \textbf{Training Time (s)} & \makecell{\textbf{Time per Step}\\ \textbf{With Cut (ms)}} & \makecell{\textbf{Time per Step}\\ \textbf{Without Cut (ms)}} \\
+\textbf{hand} (\reffig{fig:hand}) & 50 & 53 & 23.56 & 8.57 \\
+\textbf{leaf} (\reffig{fig:teaser}) & 50 & 78 & 25.40 & 9.96 \\
+\textbf{butterfly} (\reffig{fig:butterly}) & 90 & 73 & 34.86 & 14.89 \\
+\textbf{helical} (\reffig{fig:GenLoading})& 100 & 161 & 35.32 & 14.77 \\
+\textbf{generalization} (\reffig{fig:GenGeo1}) & 100 & 81 & 35.11 & 15.15 \\
+\textbf{kirigami} (\reffig{fig:kirigami_chain})& 137 & 2760 & 30.95 & 16.01 \\
+\textbf{slit} (\reffig{fig:Comparison_results})& 20 & 1740 & 25.33 & 6.02 \\
+% \bottomrule
+\end{tabularx}
+\caption{We provide the number of vertices and timing details for all examples. Thanks to the compact neural representation, our approach significantly reduces training time compared to many neural methods that require hours or even days. Our training time ranges from just under a minute to slightly less than an hour. During inference, the time cost is higher when cut changes are involved, as these require both neural network inference and basis updates.}
+\label{tab:timing_table}
+\end{table*}
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.99\linewidth]{plot_data/tfigure.tikz}
+% \caption{Reconstruction error of different settings compared with baselines}
+% \label{fig:mseplot}
+% \end{figure}
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.99\linewidth]{plot_data/cfigure.tikz}
+% \caption{Convergence Convergence PLACEHOLDER}
+% \label{fig:convplot}
+% \end{figure}
+
+
+
+\subsection{Evaluation on Data-Driven Settings}
+We also evaluate our method in data-driven settings. The training data and ground-truth full-space simulations for all examples in this section are generated using the data generation code publicly released by~\citet{chang:2023:licrom}, which implements a FEM solver for stable Neo-Hookean energy~\cite{Smith:2018:stablenh}. We train $k=20$ displacement modes for all examples in this section. 
+
+\paragraph{Interactive deformation editing}
+
+We trained a ROM on simulations of tugging on square sheet with various etched angular cuts (see Figures \ref{fig:kirigami_chain} and \ref{fig:remeshing}). By connecting many instances of this ROM end to end, we obtain a reduced simulation of a ``kirigami tower.''
+
+We demonstrate generalizability with an interactive interface that enables users to edit the cut geometry while the simulation is active (see Figures \ref{fig:kirigami_interactive} and \ref{fig:remeshing}). Starting from a straight cut, users can drag and adjust the control points of the kirigami cuts. After editing, the resulting zig-zag cut shape significantly differs from the initial straight cut, which was not included in the training data (Figure \ref{fig:remeshing}). 
+
+This type of editing is particularly challenging for prior mesh-based methods, including neural fields that rely on meshes \cite{Belhe:2023:DiscontinuityAwareNeuralFields}. As shown in Figure \ref{fig:remeshing}, we applied constrained Delaunay triangulation \cite{Richard:2005:triangle} to two different cut shapes. The resulting number of vertices and triangle arrangement for the two cut patterns differs significantly, highlighting that remeshing is a global operation and that alignment of edges and points to revised cut lines would be a non-trivial (unexplored) alternative.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{figures/triangulate.pdf}
+\caption{The cut change can lead to a big difference in discretization using the mesh-based method. We applied constrained Delaunay triangulation with the same setting for these two cut shapes, and the resulting number of vertices is significantly different.}
+\label{fig:remeshing}
+\end{figure}
+
+
+\vspace{-0.1cm}
+\paragraph{One-shot generalization}
+To evaluate quantitatively the generalizability of our method, we compare it with previous approaches that also use neural fields to construct the basis for reduced-space simulation, including LiCROM \cite{chang:2023:licrom} and Simplicits \cite{Modi:2024:Simplicits}. As a third baseline, the DANN network proposed by \citet{Belhe:2023:DiscontinuityAwareNeuralFields}, which is designed to better capture discontinuities, replaces the standard MLP in LiCROM, keeping the remainder of LiCROM \Revision{intact}.
+
+We first run full-space simulations on cuts at different positions and train all methods using simulation snapshots from one cut position. For Simplicits, which does not require simulation trajectories and only samples the rest shape, we trained solely on the undeformed shape samples found in the same training set.
+
+As shown in the top row of Figure \ref{fig:Comparison_results}, when evaluated on the training set, the reconstruction errors for all data-driven methods are below \Revision{$0.14 \%$}. Our approach achieves the most accurate reconstruction of deformation details and exhibits the lowest reconstruction error among them. 
+
+To further highlight our method's advantage in modeling discontinuities, we compare the reconstruction error of our method against LiCROM \cite{chang:2023:licrom} across various network scales and activation functions. As shown in Figure \ref{fig:combined_mse_conv}, our method reduces the mean squared error by an order of magnitude under the same settings. Furthermore, our method demonstrates faster convergence compared to LiCROM.
+
+Since Simplicits \Revision{\cite{Modi:2024:Simplicits}} does not require training data, it is expected to have a larger reconstruction error. Simplicits does not consider cuts or discontinuities in its vibration mode analysis, and it also cannot leverage training data that exemplifies the displacements induced by discontinuities. For these reasons, a Simplicits model does not ``know'' that a cut exists. Since the neural field used in Simplicits has built-in continuity, the reduced simulations keep the two sides of the cut glued together. This result reflects the state of the art in geometry-agnostic data-free model reduction until now. By contrast, our approach is explicitly discontinuity-aware, and therefore accurately \Revision{captures} cutting. 
+
+
+
+When tested on cut shapes not included in training data, our method demonstrates greater generalizability. We have shown the one-shot generalizability of our approach. As shown in the bottom line of Figure \ref{fig:Comparison_results}, when tested on cut shapes with altered cut positions, all previous methods exhibit limitations in reconstructing visually reasonable results. In contrast, our method is flexible enough to adapt to new cut positions by simply updating the $\Gamma$ to the new cut position \emph{without} retraining the neural basis. This adaptation is nontrivial for previous methods because their basis functions are either fully coupled to the neural network weights \cite{chang:2023:licrom} or require remeshing and retraining of the entire domain to handle new cuts \cite{Belhe:2023:DiscontinuityAwareNeuralFields}. 
+\Revision{We plot the reconstruction error as a function of the normalized gap difference between the test shapes and those used during training. As shown in Figure~\ref{fig:generalization_curve}, the error increases with the percentage difference between training and test cuts. No significant visual artifacts are observed when the difference is below $15\%$.}
+
+
+
+
+ 
+
+

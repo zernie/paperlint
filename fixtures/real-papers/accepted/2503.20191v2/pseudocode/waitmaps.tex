@@ -1,0 +1,54 @@
+
+\begin{algorithm}
+\caption{Synchronization Wait Map Structures}
+\label{alg:waitmaps}
+\begin{algorithmic}[1]
+\algblock{CudaEventWaitMap}{EndCudaEventWaitMap}
+\CudaEventWaitMap
+    \State \Comment{\textbf{Structure:} Map from a CUDA (event ID, version) pair to a list ops waiting for it. Versions track re-use of the same CUDA event handle.}
+    \State $\textit{events}: (\textit{event\_id}, \textit{version}) \to \textit{waiting\_ops}$
+    \Statex
+    \Procedure{BlockOnEvent}{event\_id, version, op}
+        \LComment{An operation `op` (from a host or stream) blocks on a future event.}
+        \State $\textit{events}[\textit{event\_id},\textit{version}].add(op)$
+        \State Stall the host/stream associated with $\textit{op}$
+    \EndProcedure
+    \Statex
+    \Procedure{ReleaseWaiters}{event\_id, version}
+        \State \Comment{The event has been recorded; release all waiting operations for scheduling.}
+        \State $\textit{released\_ops} \gets \textit{events}.pop(\textit{event\_id},\textit{version})$
+        \For{each $op$ in $released\_ops$}
+        \State Free the host/stream associated with $op$ by creating the associated $EndEvent$ instances
+        \EndFor
+        \State \Return $\textit{released\_ops}$
+    \EndProcedure
+\EndCudaEventWaitMap
+\end{algorithmic}
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+\begin{algorithmic}[1]
+\algblock{NetworkCollectiveWaitMap}{EndNetworkCollectiveWaitMap}
+\NetworkCollectiveWaitMap
+    \State \Comment{\textbf{Structure:} A map from a NCCL collective's unique ID to its list of participant kernels.}
+    \State $\textit{collectives}: (\textit{nccl\_group\_id}, \textit{call\_idx}) \to \textit{kernels}$
+    \Statex
+    \Procedure{JoinCollective}{kernel}
+        \State \Comment{A device's kernel joins a collective operation and waits for peers.}
+        \State $collectives[\textit{group\_id}, \textit{call\_idx}].add(kernel)$
+        \State $\textit{wait\_list} \gets collectives[\textit{group\_id}, \textit{call\_idx}]$
+        \Statex
+        \If{$\text{length}(\textit{wait\_list}) = \textit{kernel.num\_ranks}$}
+            \LComment{The last worker has arrived; the collective can proceed.}
+            \State $collectives.pop(\textit{group\_id}, \textit{call\_idx})$
+            \LComment{Return all kernels to be scheduled.}
+            \State \Return $\textit{wait\_list}$ 
+        \Else
+            \State \Comment{Not all workers have arrived; keep blocking.}
+            \State \Return $\emptyset$
+        \EndIf
+    \EndProcedure
+\EndNetworkCollectiveWaitMap
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,186 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix2019_v3}
+\usepackage{caption}
+\pagestyle{plain}
+\usepackage{framed}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{ifthen}
+\usepackage{tablefootnote}
+\usepackage{xspace}
+\usepackage[T1]{fontenc}
+\usepackage{enumerate}
+\usepackage[linesnumbered, ruled, vlined]{algorithm2e}
+\usepackage{array,graphicx}
+\usepackage{float}
+\usepackage{balance}
+\usepackage{tikz}
+\usepackage{calc}
+\usepackage{subfigure}
+\usepackage{amsfonts}
+\usepackage[table]{xcolor}
+\usepackage{xspace}
+\usepackage{hyperref,endnotes}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage[misc]{ifsym}
+\usepackage{svg}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+\usepackage{ragged2e}
+\usepackage{cite}
+\usepackage{pifont}
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage[numbers,sort]{natbib}
+\usepackage[most]{tcolorbox}
+\usepackage{longtable}
+\usepackage{helvet}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{subfigure}
+\usepackage{ulem}
+\usepackage{pifont}
+
+
+
+
+
+
+\lstdefinelanguage{Solidity}{
+    morekeywords={
+        public, Exchange, function, memory, private, delegatecall, internal, new, while, if, else
+    },
+    morekeywords=[2]{address, bytes, uint256, super},
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+}
+
+
+
+\lstdefinestyle{mystyle}{
+    language=Java,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{green},
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    tabsize=2,
+    breaklines=true,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    identifierstyle=\ttfamily,
+    frame=single,
+    rulecolor=\color{black},
+    title=\lstname,
+    breakindent=0em,
+    breakatwhitespace=true,
+    prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{blue}\hookrightarrow}},
+    postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{blue}\hookrightarrow}}
+}
+
+
+\definecolor{keywordcolor}{rgb}{0.13, 0.13, 1.0}
+\definecolor{typecolor}{rgb}{0.33, 0.10, 0.62} 
+\definecolor{commentcolor}{rgb}{0.5, 0.5, 0.5}
+\definecolor{stringcolor}{rgb}{0.58, 0.0, 0.82}
+\definecolor{bgcolor}{rgb}{0.95, 0.95, 0.95}
+
+
+\lstset{
+    language=Solidity,
+    basicstyle=\ttfamily\scriptsize, 
+    keywordstyle=\color{keywordcolor}\bfseries,
+    keywordstyle=[2]\color{typecolor}\bfseries,
+    commentstyle=\color{commentcolor}\ttfamily,
+    stringstyle=\color{stringcolor},
+    showstringspaces=false,
+    columns=flexible,
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    backgroundcolor=\color{bgcolor},
+    rulecolor=\color{black},
+    captionpos=b,
+    xleftmargin=0.02\textwidth,  
+}
+
+\def\UrlBreaks{\do\/\do-}
+
+\newcommand{\bluehref}[2]{\href{#1}{\textcolor{blue}{#2}}}
+
+
+\AtEndPreamble{
+	\usepackage{hyperref}
+	\hypersetup{
+		colorlinks = true,
+		linkcolor = purple,
+		anchorcolor = purple,
+		citecolor = purple,
+		filecolor = purple,
+		urlcolor = black
+	}
+}
+
+
+\def\eg{{e.g.}\xspace}
+\def\ie{{i.e.}\xspace}
+\def\etc{{etc.}\xspace}
+\def\etal{{et al.}\xspace}
+\def\vs{{vs.}\xspace}
+\def\cf{{cf.}\xspace}
+
+
+\newcommand{\tool}{SMARTCAT}
+\newcommand{\sx}{\textit{Extractor}}
+\newcommand{\sy}{\textit{Builder}}
+\newcommand{\sz}{\textit{Detector}}
+
+\newcommand{\algorithmicrequire}{\textbf{Input:}}
+\newcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{document}
+
+\title{Following Devils' Footprint: Towards Real-time Detection of \\Price Manipulation Attacks}
+
+
+
+\author{
+{\rm Bosi Zhang$^{1}$, Ningyu He$^{2}$\ddag, Xiaohui Hu$^{1}$, Kai Ma$^{1}$ , Haoyu Wang$^{1}$\ddag}
+\\
+$^{1}$ Huazhong University of Science and Technology
+$^{2}$ The Hong Kong Polytechnic University\\
+\rm \ddag Co-corresponding authors: ningyu.he@polyu.edu.hk, haoyuwang@hust.edu.cn
+}
+
+
+
+\maketitle
+
+
+
+\input{0_abs}
+\input{1_intro}
+
+\input{2_background}
+\input{3_motivation}
+\input{4_methodology}
+\input{5_evalutation}
+\input{6_discussion}
+\input{7_related_work}
+\input{8_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{ref}
+\input{appendix}
+
+\end{document}
+

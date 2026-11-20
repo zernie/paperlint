@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ijcai26.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "macro.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "3ef71c8141a4ea2091aafe26ee5713a3ee7b1a9e3db993350712766848754f8f",
+    "ijcai26.sty": "cdf7ca9a28c6b1ba60cde0f42019ccea3722838242b69471db572d21f879d3b2",
+    "macro.sty": "9cf9193854624583da50d1e1a8550e0a3441163979f439b783c41b76ff44ca10"
+  }
+}

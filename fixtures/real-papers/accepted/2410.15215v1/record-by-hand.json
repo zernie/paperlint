@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/2_problem.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/2_background_mot.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/BGV_TEE.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/3_design.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/4_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/5_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/6_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/ack.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/7_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/meta-review.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "828b07ab34ed578b2004b160149a10728815629d9b19876aa1fbd49779f36e0f",
+    "contents/1_intro.tex": "840149a0cd5ebd899597f8b0b25636ef0aa59b3506a939c7aa3728ce50d9e232",
+    "contents/2_problem.tex": "3096b4b586d11db1ec1afb1229d124219260d127a78f22812d30b86d8969ea90",
+    "contents/2_background_mot.tex": "4ba674f30b48c607ae3141f9e40280d52406fa148245c82f3f143f4ce54e904f",
+    "figures/BGV_TEE.tex": "e60a42cd9e6ecb32452ed7d749c25478e731aad2c7c7967f42d43d88f8718cfc",
+    "contents/3_design.tex": "50421510f500da9a10d21e4cdd1f48de00f512672590f4667464fe06bfe023b5",
+    "contents/4_method.tex": "c54ee6aab83c7b1335cb82fa71826ca0b1415b62e61e015a6c971ca2fd865d42",
+    "contents/5_result.tex": "e7b1491d060c4a60f06c365fefc6270c49720546b427dd692f2632ec965fc49e",
+    "contents/6_conclusion.tex": "6fcb1c42b809ded4ecb0ecf73212d340d0829375b8b86cfda3ff5684cae3104c",
+    "contents/ack.tex": "cb88534d5d5034d9a03ff6b18ff851f0fbc5058a483854e4297538015a9995f4",
+    "contents/7_appendix.tex": "12cd0edb85ff70979128b2c4d90465b1efd60addb9d14382cc2d2b65b3af675c",
+    "contents/meta-review.tex": "771d9e0ff829054d1998b09ea7f8eb97cfe6de641acc468629fe3170c41e8b7a"
+  }
+}

@@ -1,0 +1,23 @@
+\begin{table}[h]
+\centering
+\caption{Performance of different context lengths on RULER}
+\begin{tabular}{l|cccccc|c}
+\toprule
+Methods & 8K& 16K& 32K & 64K & 128K& 256K& Avg.\\ 
+\midrule
+\textit{Llama-3-8B-1M} & 91.47 & 92.87 & 90.31 & 86.44 & 84.10 & 79.79 & 87.50 \\
+CateKV  & 91.28 & 92.11 & 90.37 & 86.86 & 84.61 & 81.53 & 87.79 \\
+\midrule
+\textit{Phi-3-Mini-128K} & 92.02 & 91.42 & 91.24 & 87.89 & 72.06 & - & 86.93 \\
+CateKV  & 92.68 & 92.54 & 92.04 & 88.78 & 71.69 & - & 87.55 \\
+\midrule
+\textit{Llama-3.1-8B} & 94.78 & 94.95 & 94.61 &  93.02 & 84.55 & - & 92.38\\
+CateKV  & 94.66 & 94.68 & 94.58 & 93.03 & 84.66 & - & 92.32 \\
+\midrule
+\textit{Yi-9B-200K} & 87.54 & 82.33 & 72.06 & 69.19 & 64.52 & - & 75.13 \\
+CateKV  & 87.17 & 81.68 & 71.85 & 69.25 & 65.76 & - &  75.14\\
+	
+\bottomrule
+\end{tabular}
+\label{tab:ruler8k-256k}
+\end{table}

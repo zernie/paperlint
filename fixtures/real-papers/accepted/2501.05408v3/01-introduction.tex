@@ -1,0 +1,62 @@
+% Intro
+
+\vfill{}
+\noindent\textbf{To appear in the Proceedings of the ACM SIGOPS 31st Symposium on Operating Systems Principles (SOSP ’25), October 13–16, 2025, Seoul, Republic of Korea.}
+
+\section{Introduction}
+
+Deep Learning~(DL) has had enormous success in domains such as robotics~\cite{hwangbo2019learning}, games~\cite{silver2017mastering}, natural language~\cite{brown2020language}, protein folding~\cite{jumper2021highly}, and image generation~\cite{rombach2022high}. DL computation is defined using operators~(\eg matrix multiplication, addition, and indexing) with input and output \emph{tensors}. Tensors are multi-dimensional arrays laid out spatially in memory, whose \emph{shape}---a tuple of integers---specifies the size of each spatial dimension. DL workloads are resource-intensive, and DL systems, such as Torch~\cite{paszke2019pytorch} or JAX~\cite{frostig2018compiling}, offer high-level tensor programming models for GPU accelerators~\cite{raina2009large}. 
+
+A common feature of many DL algorithms~\cite{vaswani2017attention, sutton2018reinforcement, rumelhart1986learning, rombach2022high, gu2021efficiently} is their mathematical definition through \emph{recurrence equations}~\cite{karp1967organization}. Recurrence equations express \emph{temporal} relationships between values at different timesteps (past and future) declaratively, \ie without specifying an order of execution. For example, attention~\cite{vaswani2017attention}---a key operation in large language models~(LLMs)---depends, at a given timestep, on outputs from all prior timesteps; reinforcement learning~(RL)~\cite{sutton1988learning, williams1992simple} algorithms produce actions at each timestep and use a sum of future rewards to evaluate them.
+
+
+Such \emph{dynamic} (\ie time-varying) dependencies between operators and tensors of different timesteps  introduce challenges when existing DL systems try to support them:
+%
+\begin{myitemize}
+  \item \textbf{Expressiveness}---dynamic dependencies can create tensors with \emph{dynamic shapes} whose support is limited in terms of current APIs~\cite{ansel2024pytorch,lai2025relax}; 
+  \item \textbf{Optimization}---existing graph representations~\cite{abadi2016tensorflow, frostig2018compiling} cannot express dynamic dependencies, missing opportunities for algebraic simplification or vectorization;  
+  \item \textbf{Scheduling}---future dependencies complicate scheduling, as dependent computations must be delayed~\cite{karp1967organization, moritz2018ray};
+  \item \textbf{Memory management}---dependencies on past timesteps result in complex decisions on which tensors to retain, deallocate or evict with limited GPU memory~\cite{rhu2016vdnn}.
+\end{myitemize}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=1.0\textwidth]{cr_figures/overview}
+  \caption{Overview of how \sys{} expresses, optimizes, schedules and manages the memory of dynamic DL algorithms}
+  \label{fig:overview}
+\end{figure*}
+
+\noindent
+\emph{Eager} DL systems, such as Torch~\cite{paszke2019pytorch} or TF-Eager~\cite{agrawal2019tensorflow}, support dynamism through the host language~(Python) by dispatching GPU kernels on-demand~\cite{chetlur2014cudnn}. This imperative approach, however, prevents them from performing compiler-based optimizations~\cite{ansel2024pytorch} or scheduling; in contrast, \emph{graph-based systems}, such as TensorFlow~\cite{abadi2016tensorflow} and JAX~\cite{frostig2018compiling}, enable ahead-of-time compilation by first constructing a \emph{dataflow graph} in which each node represents a DL operator and edges are tensors that flow between them. 
+Optimizations such as memory planning~\cite{maas2022telamalloc,liu2024uncovering}, operator fusion~\cite{chen2018tvm}, vectorization~\cite{ragan2013halide}, and code-generation~\cite{Lattner_2021, vasilache2018tensor}, however, require statically known fixed-size tensor shapes.
+
+To compile dynamic DL algorithms, users must \emph{pad} dynamic tensor shapes to a static size, and use \emph{masks} to encode dynamic dependencies, which leads to large memory and execution overheads~\cite{zheng2023bladedisc}. Alternatively, users can break-up computation into static sub-programs, but this prevents whole-program optimizations leading to worse performance~\cite{hessel2021podracer}.
+
+Our key insight is that tensors in dynamic DL algorithms have implicit \emph{temporal dimensions}.
+By making them explicit, dynamic dependencies become regular tensor-indexing operations across temporal dimensions. Furthermore, we show that dynamism in dependencies and shapes has structure, and can be concisely represented using \emph{symbolic expressions} of timestep symbols, enabling optimization.
+
+We describe \sys{}, a new DL system that expresses, optimizes, and schedules dynamic DL programs, as well as manages their memory. \sys{} makes the following novel technical contributions (shown in \F\ref{fig:overview}):
+
+\mypar{(1)~Declarative programming with recurrent tensors~(\S\ref{sec:rts})} To capture dynamic dependencies, we introduce \emph{recurrent tensors}~(RTs), a declarative programming model inspired by recurrence equations~\cite{karp1967organization}, often used in DL algorithms~\cite{schulman2015high, vaswani2017attention, sutton1988learning, rumelhart1986learning}. RTs can have multiple temporal dimensions (\eg timestep and iteration), which define a temporal \emph{domain}. RTs can be indexed using symbolic expressions to declaratively express dynamic dependencies. RTs have well-defined domain broadcast~\cite{van2011numpy} and backpropagation~\cite{baydin2018automatic} semantics. 
+
+\mypar{(2)~Optimization using symbolic dependence graphs~(\S\ref{sec:pdg_and_transformations})} \sys translates RTs into a \emph{symbolic dependence graph~(SDG)} in which each vertex operator carries the temporal domain of the RT that created it, \ie the set of timesteps at which the operator produces output tensors; edges describe how operators at different timesteps \emph{depend on} each other's outputs using the symbolic expressions extracted from RTs. 
+
+SDGs enable \sys{} to extend classic compiler optimizations (\eg algebraic simplifications, redundant code elimination) to dynamic computations by manipulating symbolic expressions. In addition, SDGs simplify advanced transformations, such as \emph{vectorization} (batching many small operations) and \emph{tiling} (executing large operations in smaller tiles), by viewing them as moving tensor dimensions from temporal to spatial and vice versa. For efficient code-generation, \sys{} tiles dynamic dependencies into static-size tiles and \emph{fuses} islands of static operations into single operations.
+
+
+\mypar{(3)~Scheduling using a polyhedral model~(\S\ref{sec:polyhedral_model})} The declarative RT program does not prescribe an execution order, and, due to their dynamic dependencies, SDGs cannot be scheduled using  topological sorting. Instead, \sys{} uses the polyhedral model~\cite{verdoolaege2010isl, bondhugula2008pluto} for program-wide scheduling: \sys{} translates the SDG into a set of constraints and solves an integer linear program to obtain a schedule that assigns a physical execution time to each timestep. Based on the schedule, \sys{} generates an imperative program for the user computation, represented as an abstract syntax tree~(AST).
+
+
+\mypar{(4)~Automated memory management~(\S\ref{sec:mem_sched})} \sys{} introduces a simple method for automatic memory management, including buffer deallocations, donations, and GPU/CPU buffer swapping. It augments the SDG with explicit memory management operations, which are restricted by dependency edges. Therefore, memory management is also handled when solving for an execution schedule.
+
+
+\tinyskip
+
+\noindent
+Our prototype implementation of \sys{}\footnote{Available  at \url{https://github.com/LSDS/Tempo}} supports single-GPU execution on multiple execution engines (Torch and JAX). To execute SDGs, \sys{} picks physical tensor memory representations based on dependence expressions and applies existing code-generators~\cite{openxla2024} to fused operators.
+It then follows the schedule AST, evaluating symbolic dependence expressions, to resolve dynamic dependencies at runtime.
+
+Our evaluation shows that \sys{} effectively compiles dynamic DL programs, while automating algorithm-specific scheduling and memory management. For LLM decoding using Llama-3.2-3B~\cite{dubey2024llama}, we compare \sys{} against Torch and JAX and show that it is up to 7$\times$ faster and scales to 4$\times$ longer sequences due to its awareness of dynamic dependencies. For three typical RL algorithms~\cite{schulman2017proximal, williams1992simple, sutton1988learning} with different dynamic dependencies, \sys achieves up to 54$\times$ faster end-to-end training times than five baseline RL systems by eliminating redundant computation. For both workloads, \sys{} has an up to 16$\times$ lower peak GPU memory usage due to its tiling optimization and efficient memory management.
+
+% End
+

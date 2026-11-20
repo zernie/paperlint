@@ -1,0 +1,78 @@
+\section{Experiments and Results}
+\label{sec:experiments}
+
+\subsection{Models, Datasets, and Evaluation Metrics}
+We evaluate the performance of the method from two aspects: open-domain instruction compliance benchmarks and safety alignment. During the preference optimization process, two types of models, Llama-3.1-8B~\cite{grattafiori2024llama} and Mistral-7B~\cite{jiang2024mixtral}, are evaluated in both the base setting and the instruction setting. This section aims to investigate the performance of the AAO method compared to other preference optimization approaches under different experimental conditions.
+
+\textbf{Openended instruction-following benchmarks. }In the base setting, we follow Zephyr’s training procedure~\cite{tunstall2023zephyr} by first training a base model on the UltraChat-200k dataset~\cite{ding2023enhancing} to obtain an SFT model. Starting from this model, preference optimization is then performed on the UltraFeedback dataset~\cite{cui2023ultrafeedback}. In the instruction setting, off-the-shelf instruction-tuned models are used as the SFT models; these models have undergone more extensive instruction tuning and are more powerful and robust than the SFT models in the base setting. Preference optimization is also conducted on the UltraFeedback dataset. We evaluate method performance using three widely adopted open-domain instruction compliance benchmarks: MT-Bench~\cite{zheng2023judging}, AlpacaEval 2~\cite{alpaca_eval}, and Arena-Hard~\cite{li2024live}. 
+% AlpacaEval 2 contains five datasets with a total of 805 questions, MT-Bench covers eight categories with 80 questions, and the newly released Arena-Hard includes 500 clearly defined technical problem-solving queries. Scoring follows each benchmark’s evaluation protocol. AlpacaEval 2 reports raw win rate (WR) and length-controlled win rate (LC), the latter used to mitigate verbose model outputs. Arena-Hard reports win rate relative to a baseline model. MT-Bench scores are provided as average scores judged by GPT-4.1 as the referee model. 
+For detailed settings, please see Table~\ref{tab:evaluation_details}.
+\input{tabs/evaluation_detial}
+
+\textbf{Safety alignment evaluation.}
+In the base setting, we train a base model on the Alpaca dataset~\cite{alpaca} to obtain an SFT model, followed by preference optimization on the Anthropic-HH dataset~\cite{bai2022traininghelpfulharmlessassistant}. In the instruction setting, off-the-shelf instruction-tuned models are used as SFT models, and preference optimization is likewise performed on the Anthropic-HH dataset. 
+To assess harmlessness, we generated responses using aligned LLM on a mixed dataset of AdvBench~\cite{zou2023universal} and JailbreakBench~\cite{chao2024jailbreakbench}, and used Llama-Guard~\cite{inan2023llama} to determine the safety of the responses.
+
+\input{tabs/compared_result}
+
+\subsection{Baseline Methods and Training Settings}
+% We conducted comparative experiments to evaluate the proposed method against various baseline alignment methods, including sequence-level approaches such as DPO~\cite{rafailov2023direct}, IPO~\cite{azar2024general}, KTO~\cite{ethayarajh2024kto}, and SimPO~\cite{meng2024simpo}, as well as token-level methods like TDPO~\cite{zeng2024token}, RTO~\cite{zhong2024dpo}, and TIS-DPO~\cite{liu2024tis}. All baseline methods use the hyperparameter settings provided in their original papers. For our method, the learning rate is set to 5e-7, the batch size to 16, and training is performed for one epoch using the AdamW optimizer on eight A100 GPUs.
+We conducted comparative experiments to evaluate the proposed method against various baseline alignment methods, including sequence-level approaches such as DPO~\cite{rafailov2023direct}, IPO~\cite{azar2024general}, KTO~\cite{ethayarajh2024kto}, and SimPO~\cite{meng2024simpo}, as well as token-level methods such as TDPO~\cite{zeng2024token}, RTO~\cite{zhong2024dpo}, and TIS-DPO~\cite{liu2024tis}. In addition, we introduced a randomly weighted method, DPO-Random, to further validate the effectiveness of our proposed weighting strategy. All baseline methods use the hyperparameter settings provided in their original papers. For our method, the learning rate is set to 5e-7, the batch size to 16, and training is performed for one epoch using the AdamW optimizer.
+
+
+\subsection{Main results}
+% Table~\ref{tab:results} presents our main experimental results. Although AAO’s method is relatively simple, the results clearly demonstrate that our approach achieves significant improvements across all metrics. Notably, on the LLaMA-3.1-8B-Base model, our method increases the WR of AlpacaEval2 to 40.23\%, which is 7.2 percentage points higher than the second-best method. Furthermore, in the Arena-Hard benchmark, our approach boosts the performance of LLaMA-3.1-8B-Base to 41\%, further validating its effectiveness in enhancing the model’s generalization capability.
+% Although MT-Bench is widely used for model evaluation, we observed that it exhibits poor differentiation across different methods. This lack of performance variance may be attributed to the limitations of its evaluation data size and its single-instance scoring strategy~\cite{meng2024simpo, li2024live}. In contrast, AlpacaEval2 and Arena-Hard provide more distinguishable performance assessments. Despite these limitations in MT-Bench, our method still achieves top performance across various models and tasks, further proving its robustness and broad adaptability.
+% In the safety alignment task, our method achieves a score of 91.29\% on the LLaMA-3.1-8B-Base model, outperforming the second-best method by 3.42 percentage points. This result indicates that our method can more effectively distinguish between preferred and non-preferred data, thereby learning valuable information more precisely.
+Table~\ref{tab:results} presents our main experimental results. Despite its simplicity, our method achieves significant improvements across all metrics. On the LLaMA-3.1-8B-Base model, it raises the WR of AlpacaEval2 to 40.23\%, 7.2 points higher than the second-best method. In the Arena-Hard benchmark, it further boosts performance to 41\%, validating its effectiveness in enhancing generalization.
+Although MT-Bench is widely used, it shows weak differentiation across methods due to its limited data size and single-instance scoring~\cite{meng2024simpo, li2024live}. By contrast, AlpacaEval2 and Arena-Hard provide more reliable assessments. Even so, our method still achieves top performance across models and tasks, demonstrating strong robustness and adaptability.
+For safety alignment, our method scores 91.29\% on LLaMA-3.1-8B-Base, 3.42 points above the second-best, indicating better distinction between preferred and non-preferred data.
+
+\subsection{Ablation Study}
+\label{subsec:ablation}
+\textbf{Analysis of weighting function.}
+% To validate the effectiveness of the proposed weighting strategy, we designed several weighting curves with different trends for comparative experiments. Among them, Function 4 and 5 apply different weighting operations to transitional tokens based on our strategy. The specific trends of each weighting curve are illustrated in Figure~\ref{fig:curves}, and the corresponding experimental results are presented in Table~\ref{tab:curves}.
+% The experimental results clearly show that the proposed adaptive weighting strategy exhibits significant advantages across all metrics, demonstrating its superiority. Furthermore, when the weights of transitional tokens are adjusted, the model’s training process is notably affected, further verifying the correctness of our hypothesis.
+To validate the effectiveness of the proposed weighting strategy, we designed multiple weighting curves with different trends for comparative experiments. Among them, Functions (4) and (5) perform differentiated weighting operations on transitional tokens based on our strategy. The specific trends of each weighting curve are illustrated in Figure~\ref{fig:curves}, and the corresponding experimental results are presented in Table~\ref{tab:curves}.
+The experimental results clearly demonstrate that the proposed adaptive weighting strategy exhibits significant advantages across all metrics, fully proving its superiority. Moreover, when the weights of transitional tokens are adjusted, the model’s training process is significantly affected, further validating the correctness of our hypothesis. Notably, the design of most weighting curves effectively optimizes the training performance of DPO, which also reveals that the ambiguous phenomenon we proposed is both reasonable and existent.
+It should be noted that the choice of weighting curves remains an open question. 
+In this study, we demonstrated the significant optimization effects of the proposed weighting curves, and future research could further explore more weighting strategies to enhance model performance.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[trim=0 45 350 0, clip,width=0.35\textwidth]{figs/comparison_plot2.pdf}
+  \caption{Images of different weighted curves. In our approach, the thresholds $a$ and $b$ are decided by LLM itself during training.}
+  \label{fig:curves}
+  \vspace{-1em}
+\end{figure}
+
+\input{tabs/curves}
+
+\textbf{Analysis of the auxiliary loss function.}
+We further explored the impact of each component in the auxiliary loss function on the final results, as illustrated in Figure~\ref{fig:auxiliary}. The results indicate that different components exhibit varying degrees of influence on the optimization of the adaptive module. When these components work synergistically, the model achieves optimal performance, validating the effectiveness and rationality of our design.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figs/ablation_loss.pdf}
+  \caption{Effect of auxiliary losses on experimental results.}
+  \label{fig:auxiliary}
+  \vspace{-1.5em}
+\end{figure}
+
+
+\textbf{Analysis of time consumption.}
+We conducted alignment experiments based on the Mistral-7B-Base model on the UltraFeedback dataset and compared the time overhead between DPO and AAO during the training process. The experimental results are presented in Table~\ref{tab:consumption}. The results indicate that our proposed adaptive model only consumes an additional 62.50 MB of storage space while not significantly increasing the training time, demonstrating its efficiency and lightweight design.
+
+\input{tabs/consumption}
+
+\textbf{Squeeze effect.}
+We further validated the effectiveness of AAO in alleviating the “squeezing effect” observed in DPO \cite{ren2024learning}. As illustrated in Figure~\ref{fig:squeeze}, during the training process, DPO significantly reduces the confidence of the highest-probability token while correspondingly increasing the probabilities of other tokens, clearly revealing the presence of the “squeezing effect.” In contrast, our method effectively mitigates this phenomenon, further indicating that the cause of the “squeezing effect” is not solely attributed to sequence-level semantic similarity but also involves the handling of internal ambiguous labels.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figs/squeeze.pdf}
+  \caption{AAO mitigates the squeeze effect of DPO.}
+  \label{fig:squeeze}
+  \vspace{-1em}
+\end{figure}
+

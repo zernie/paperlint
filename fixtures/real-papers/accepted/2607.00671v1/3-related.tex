@@ -1,0 +1,58 @@
+\section{Related Work} \label{sec:related}
+% \syfC{重写内容和逻辑，补充ogb上的两个方法：LD和BoT}
+
+\vpara{Multi-label Node Classification (MLNC).}
+% raise awareness and 
+To promote research on MLNC, MLGNC~\citep{zhao2023multi} provides three biological datasets and performs a detailed analysis on both datasets and existing methods.
+From the methodology perspective, some methods consider using textual embeddings of labels to incorporate label proximity.
+LARN~\citep{XIAO2022235} incorporates the all label embeddings during the neighbor aggregation process. Similarly, LANC~\citep{ZHOU2021115063} proposes attention mechanism to aggregates the label embeddings with each node.
+Another line of work construct additional label-label network to use the label co-occurrence correlations.
+ML-GCN~\citep{gao2019semisupervised} construct both node-centric and label-centric graphs to aggregate information, while MLNE~\citep{8894391} use random walk to get embedding on both label-label network and original graph.
+There are also some methods that modify the approach to modeling graphs from multi-label perspective.
+MLGW~\citep{8970680} leverage label-specific agents to walk on graphs. VariMul~\citep{10.1145/3459637.3482391} utilizes VGAE to derive node and label embeddings and designs a confidence ranking loss to mine pairwise label correlations.
+Recent work improves MLNC by addressing the ambiguity in multi-label graph structures~\citep{bei2024correlation} and the limited expressive power for multi-label tasks~\citep{zhao2024gnn}.
+% zhao2024gnn
+% bei2024correlation
+However, these work do not explicitly analyze and quantify the influences between labels and exploit them to enhance the MLNC task.
+
+\vpara{Decoupled GNNs.}
+% In this section, we discuss some related decoupled GNNs. 
+Compared to conventional GNNs, decoupled GNNs explicitly isolate the two operations and aggregate all propagation (P) and transformation (T) operations separately for processing.
+APPNP~\cite{gasteiger2018predict} and DAGNN~\cite{liu2020towards} first propose that decoupling the two operations can enable GNNs to go much deeper without causing over-smoothing. Although SGC~\cite{wu2019simplifying} and lightGCN~\cite{he2020lightgcn} do not discuss the decouple paradigm, it demonstrate superior efficiency and performance. PTA~\cite{dong2021equivalence} further explore the paradigm from the perspective of label propagation. 
+Since the APPNP is more suitable for homophily graphs, GPRGNN~\cite{chien2020adaptive} improves it by adaptively learning GPR weights. This method not only avoids over-smoothing but also enables adaptive filtering to handle heterophily graphs.
+NCGNN~\cite{chen2024neighborhood} improves model capacity and training efficiency by pre-propagating node features, then employs a CNN-based approach to aggregate the propagated features, adaptively capturing contextual information to boost the performance.
+% Our work is inspired by these decoupled designs, analyzing the influence relationships among labels on a graph from the perspectives of propagation (P) and transformation (T). 
+Our work is inspired by above studies that decouple or disentangle~\cite{zhang2022model} the message passing process. 
+We focus more on analyzing the influence correlations between labels during the P and T operations, rather than designing specific P and T operations to increase model performance~\cite{gasteiger2018predict,chien2020adaptive,ijcai2022p310} or enhance model capacity and scalability~\cite{chen2024neighborhood}.
+
+% [1] Predict then propagate: Graph neural networks meet personalized pagerank, ICLR 2019
+% gasteiger2018predict   
+% appnp
+
+% [4] Towards deeper graph neural networks, KDD 2020
+% liu2020towards
+% DAGNN
+
+% GCNII不是 lightGCN SGC wu2019simplifying 没说，但是明显使用的
+
+% [2] On the equivalence of decoupled graph convolution network and label propagation, WWW 2021
+% dong2021equivalence
+% PTA
+
+% [3] Adaptive universal generalized pagerank graph neural network, ICLR 2021
+% chien2020adaptive
+% GPRGNN
+
+% [5] Neighborhood Convolutional Graph Neural Network, KBS 2024
+% chen2024neighborhood
+% NCGNN
+
+% We choose GCN~\citep{kipf2017semisupervised} as main backbone, ML-KNN~\citep{10.1016/j.patcog.2006.12.019} and latest work PLAIN~\citep{wang2023deep} as multi-label methods.
+% , GAT~\citep{2017Graph}, GraphSAGE~\citep{hamilton2017inductive}
+% \iclr{
+
+% We analyze the influence between labels on graph separately within these two components and then aggregate them. 
+% Note that even in some coupled GNNs, like GCN~\cite{kipf2017semisupervised} and GAT~\citep{2017Graph}, the operations of P and T inherently exist. Therefore, our analysis (in Sec.~\ref{sec:over}) of the influence between labels from these two step is also applicable to the coupled GNNs. 
+% In short, this paper provides deeper insights into MLNC and introduces an effective MLNC model based on these analysis.
+% }
+

@@ -9,7 +9,7 @@
  *
  * ── WHERE 150 COMES FROM ─────────────────────────────────────────────────────────
  * The wall writing-craft.md names («The wall-of-text check»), measured
- * with this rule's counter on the accepted papers in `fixtures/accepted-papers/`: it sits at the
+ * with this rule's counter on the accepted papers in `fixtures/real-papers/accepted/`: it sits at the
  * pooled 95th percentile of paragraph length of the five two-column IEEE ones (154). The measurement
  * is on the rule's page. A paragraph is at most `max` words; 150 is allowed.
  *

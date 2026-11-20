@@ -1,0 +1,59 @@
+\subsection{Operational Semantics: Decision engine}
+The operational semantics take the form of a decision engine, enforcing the policies on ongoing collaborations.
+The engine receives platform data to update the decision-making process state and take the necessary actions.
+For the first implementation of our approach, we rely on \textsc{GitHub} as the collaboration platform.
+% , using its webhook mechanism and REST API to monitor interactions and enact decisions.
+
+The decision engine operates through a continuous cycle of state management and policy enforcement. 
+When a collaboration event occurs (e.g., a pull request is created), the engine captures the event data and creates an internal representation. %, including its scope, rationale, and associated metadata. 
+This state management enables the engine to track multiple concurrent decision-making processes.\looseness-1
+
+% When receiving a new collaboration, the engine searches for the applicable policy based on the collaboration scope.
+For new collaborations, the engine identifies applicable policies based on scope.
+Once found, the engine creates an internal deadline check based on the policy to resolve the 
+%decision-making 
+process.
+% Then, when a voting action is performed
+When voting occurs (e.g., a pull request review), 
+eligible users' votes are registered in the collaboration's ballot box.
+% if the user is allowed to vote (according to an ongoing policy), the engine registers the vote, adding it to the associated ballot box of the collaboration.
+Each vote is captured with its rationale, timestamp, and association to the voter. %, building a complete audit trail of the decision-making process.
+% Finally, when the deadline is reached, 
+At deadline, the engine analyzes the votes 
+% based on the policy and conditions 
+and enacts the decision (e.g., merge the pull request).
+% In the context of composed policies, their resolution is based on the resolution of their phases.
+% The votes required by the phases happen sequentially or in parallel based on the \texttt{sequential} attribute, the votes in a ballot box are transferred to the following one if \texttt{carry\_over} is true, and the \texttt{require\_all} attribute is used to make the composition of the phases' decisions (i.e., conjunction if true, disjunction if false).
+% In the case of composed policies, the decisions of the phases are resolved 
+Composed policies resolve phases
+sequentially or in parallel, 
+%and composed based on the requirement of all decisions approval or not (i.e., conjunction or disjunction).
+combining decisions via conjunction or disjunction.
+In addition, 
+% the votes in a ballot box can be carried over to the next phase ballot box.\looseness-1
+votes can be carried over between phases.
+
+
+%%%%
+%% Description based on classes
+% At the core of the engine, collaboration models represent the state of all previous and ongoing collaborations.
+% % This state is stored following the schema depicted in Figure~\ref{fig:CollabMetamodel}. 
+% % The \texttt{Interaction} class aggregates the set of collaborations happening, the individuals involved and the decisions taken.
+% \texttt{Collaboration} represents the managed collaborations, which are defined using an identifier, a rationale, a scope, a set of ballot boxes, and an association to the \texttt{Decision} for this collaboration.
+% \texttt{Scope} represents the scope in which the collaboration was created.
+% The ballot boxes represent the mapping between applicable policies and the set of votes associated with this policy.
+% This mechanism allows managing composed policies that require multiple voting resolutions.
+% These votes are represented using \texttt{Vote} metaclass, characterized by an agreement value, a natural language rationale, and a timestamp.
+% Votes are associated with an \texttt{Individual} (the voter), one or more ballot boxes, and the resulting decisions.
+% \texttt{Decision} models decisions, registering the result and timestamp of the decision process, the policy applied, and references to the applying votes.
+
+% The collaboration model is updated based on the information provided by the collaboration platform.
+% First, when a collaboration begins %on the platform 
+% (i.e., pull request), the decision engine creates the corresponding \texttt{Collaboration} instance using the data provided.
+% In addition, the engine searches for the applicable policy based on the collaboration scope.
+% When the appropriate policy is found, the engine creates an internal deadline check based on the policy to resolve the decision-making process.
+% Then, when a voting action is performed (i.e., pull request review), if the user is allowed to vote (according to the policy), the vote object is created and added to the appropriate ballot boxes of the collaboration.
+% Finally, when the deadline is reached, the engine will analyze the votes based on the policy and conditions and create the associated decision object and enact the decision (i.e., merge the pull request).
+
+% In the context of phased policies, their resolution is based on the resolution of their phases.
+% The votes required by the phases happen sequentially or in parallel based on the \texttt{sequential} attribute, the votes in a ballot box are transferred to the following one if \texttt{carry\_over} is true, and the \texttt{require\_all} attribute is used to make the composition of the phases' decisions (i.e., conjunction if true, disjunction if false).

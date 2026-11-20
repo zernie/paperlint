@@ -1,0 +1,364 @@
+\begin{thebibliography}{10}
+
+\bibitem{erc20}
+Erc-20 token standard.
+\newblock \url{https://eips.ethereum.org/EIPS/eip-20}, 2015.
+
+\bibitem{erc1155}
+Erc-1155 multi token standard.
+\newblock \url{https://eips.ethereum.org/EIPS/eip-1155}, 2018.
+
+\bibitem{erc721}
+Erc-721 non-fungible token standard.
+\newblock \url{https://eips.ethereum.org/EIPS/eip-721}, 2018.
+
+\bibitem{mythril}
+Mythril: Security analysis tool for ethereum smart contracts.
+\newblock \url{https://github.com/ConsenSys/mythril}, 2018.
+
+\bibitem{eip1967}
+Eip-1967.
+\newblock \url{https://eips.ethereum.org/EIPS/eip-1967}, 2019.
+
+\bibitem{cheese}
+The cheese bank incident.
+\newblock \url{https://peckshield.medium.com/cheese-bank-incident-root-cause-analysis-d076bf87a1e7}, 2020.
+
+\bibitem{bian}
+\url{https://github.com/xf97/BiAn/}, 2021.
+
+\bibitem{ftx}
+The collapse of ftx.
+\newblock \url{https://www.investopedia.com/what-went-wrong-with-ftx-6828447}, 2023.
+
+\bibitem{elephant}
+The elephantstatus incident.
+\newblock \url{https://x.com/Phalcon_xyz/status/1732354930529435940}, 2023.
+
+\bibitem{percent}
+Smart contract sanctuary.
+\newblock \url{https://github.com/tintinweb/smart-contract-sanctuary}, 2023.
+
+\bibitem{aave}
+Aave.
+\newblock \url{https://aave.com}, 2024.
+
+\bibitem{akmev}
+Attack contract example.
+\newblock \url{https://etherscan.io/address/0x2F99fb66Ea797E7fA2d07262402Ab38bd5e53B12}, 2024.
+
+\bibitem{biance_re}
+Biance.
+\newblock \url{https://www.binance.com/en/square/post/8851640245434}, 2024.
+
+\bibitem{coindesk}
+Coindesk.
+\newblock \url{https://www.coindesk.com}, 2024.
+
+\bibitem{daily}
+Daily contract deployment.
+\newblock \url{https://dune.com/queries/4037888}, 2024.
+
+\bibitem{dedaub}
+Dedaub decompiler.
+\newblock \url{https://app.dedaub.com/decompile}, 2024.
+
+\bibitem{Defihacklab}
+Defihacklab.
+\newblock \url{https://github.com/SunWeb3Sec/DeFiHackLabs}, 2024.
+
+\bibitem{defillama}
+Defillama.
+\newblock \url{https://defillama.com}, 2024.
+
+\bibitem{EthApi}
+Etherscan api documentation.
+\newblock \url{https://docs.etherscan.io}, 2024.
+
+\bibitem{forta}
+Forta.
+\newblock \url{https://forta.org/blog/how-fortas-predictive-ml-models-detect-attacks-before-exploitation/}, 2024.
+
+\bibitem{foundry}
+The foundry book.
+\newblock \url{https://book.getfoundry.sh/}, 2024.
+
+\bibitem{geth}
+Geth.
+\newblock \url{https://github.com/ethereum/go-ethereum}, 2024.
+
+\bibitem{mevObfus}
+Mev smart contract obfuscation techniques.
+\newblock \url{https://degatchi.com/articles/mev-smart-contract-obfuscation}, 2024.
+
+\bibitem{openeip}
+Openzeppelin proxies document.
+\newblock \url{https://docs.openzeppelin.com/contracts/4.x/api/proxy}, 2024.
+
+\bibitem{pancakeswap}
+Pancakeswap.
+\newblock \url{https://pancakeswap.finance}, 2024.
+
+\bibitem{rekt}
+Rekt.
+\newblock \url{https://rekt.news}, 2024.
+
+\bibitem{slowmist}
+Slowmist.
+\newblock \url{https://www.slowmist.com/}, 2024.
+
+\bibitem{sollang}
+Solidity.
+\newblock \url{https://docs.soliditylang.org/en/v0.8.26/}, 2024.
+
+\bibitem{tokenter}
+Token terminal.
+\newblock \url{https://tokenterminal.com/terminal/datasets/trending-contracts}, 2024.
+
+\bibitem{ulme}
+The ulme attack.
+\newblock \url{https://x.com/BeosinAlert/status/1584888021299916801}, 2024.
+
+\bibitem{uniswap}
+Uniswap protocol.
+\newblock \url{https://docs.uniswap.org}, 2024.
+
+\bibitem{vyper}
+Vyper documentation.
+\newblock \url{https://vyperlang.org/}, 2024.
+
+\bibitem{bose2022sailfish}
+Priyanka Bose, Dipanjan Das, Yanju Chen, Yu~Feng, Christopher Kruegel, and Giovanni Vigna.
+\newblock Sailfish: Vetting smart contract state-inconsistency bugs in seconds.
+\newblock In {\em 2022 IEEE Symposium on Security and Privacy (SP)}, pages 161--178. IEEE, 2022.
+
+\bibitem{brent2020ethainter}
+Lexi Brent, Neville Grech, Sifis Lagouvardos, Bernhard Scholz, and Yannis Smaragdakis.
+\newblock Ethainter: a smart contract security analyzer for composite vulnerabilities.
+\newblock In {\em Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation}, pages 454--469, 2020.
+
+\bibitem{chen2021sadponzi}
+Weimin Chen, Xinran Li, Yuting Sui, Ningyu He, Haoyu Wang, Lei Wu, and Xiapu Luo.
+\newblock Sadponzi: Detecting and characterizing ponzi schemes in ethereum smart contracts.
+\newblock {\em Proceedings of the ACM on Measurement and Analysis of Computing Systems}, 5(2):1--30, 2021.
+
+\bibitem{chen2024flashsyn}
+Zhiyang Chen, Sidi~Mohamed Beillahi, and Fan Long.
+\newblock Flashsyn: Flash loan attack synthesis via counter example driven approximation.
+\newblock In {\em Proceedings of the IEEE/ACM 46th International Conference on Software Engineering}, pages 1--13, 2024.
+
+\bibitem{choi2021smartian}
+Jaeseung Choi, Doyeon Kim, Soomin Kim, Gustavo Grieco, Alex Groce, and Sang~Kil Cha.
+\newblock Smartian: Enhancing smart contract fuzzing with static and dynamic data-flow analyses.
+\newblock In {\em 2021 36th IEEE/ACM International Conference on Automated Software Engineering (ASE)}, pages 227--239. IEEE, 2021.
+
+\bibitem{dannen2017introducing}
+Chris Dannen.
+\newblock {\em Introducing Ethereum and solidity}, volume~1.
+\newblock Springer, 2017.
+
+\bibitem{feist2019slither}
+Josselin Feist, Gustavo Grieco, and Alex Groce.
+\newblock Slither: a static analysis framework for smart contracts.
+\newblock In {\em 2019 IEEE/ACM 2nd International Workshop on Emerging Trends in Software Engineering for Blockchain (WETSEB)}, pages 8--15. IEEE, 2019.
+
+\bibitem{frank2020ethbmc}
+Joel Frank, Cornelius Aschermann, and Thorsten Holz.
+\newblock $\{$ETHBMC$\}$: A bounded model checker for smart contracts.
+\newblock In {\em 29th USENIX Security Symposium (USENIX Security 20)}, pages 2757--2774, 2020.
+
+\bibitem{grech2019gigahorse}
+Neville Grech, Lexi Brent, Bernhard Scholz, and Yannis Smaragdakis.
+\newblock Gigahorse: thorough, declarative decompilation of smart contracts.
+\newblock In {\em 2019 IEEE/ACM 41st International Conference on Software Engineering (ICSE)}, pages 1176--1186. IEEE, 2019.
+
+\bibitem{grech2018madmax}
+Neville Grech, Michael Kong, Anton Jurisevic, Lexi Brent, Bernhard Scholz, and Yannis Smaragdakis.
+\newblock Madmax: Surviving out-of-gas conditions in ethereum smart contracts.
+\newblock {\em Proceedings of the ACM on Programming Languages}, 2(OOPSLA):1--27, 2018.
+
+\bibitem{grech2022elipmoc}
+Neville Grech, Sifis Lagouvardos, Ilias Tsatiris, and Yannis Smaragdakis.
+\newblock Elipmoc: advanced decompilation of ethereum smart contracts.
+\newblock {\em Proceedings of the ACM on Programming Languages}, 6(OOPSLA1):1--27, 2022.
+
+\bibitem{grieco2020echidna}
+Gustavo Grieco, Will Song, Artur Cygan, Josselin Feist, and Alex Groce.
+\newblock Echidna: effective, usable, and fast fuzzing for smart contracts.
+\newblock In {\em Proceedings of the 29th ACM SIGSOFT international symposium on software testing and analysis}, pages 557--560, 2020.
+
+\bibitem{he2019learning}
+Jingxuan He, Mislav Balunovi{\'c}, Nodar Ambroladze, Petar Tsankov, and Martin Vechev.
+\newblock Learning to fuzz from symbolic execution with application to smart contracts.
+\newblock In {\em Proceedings of the 2019 ACM SIGSAC conference on computer and communications security}, pages 531--548, 2019.
+
+\bibitem{he2021eosafe}
+Ningyu He, Ruiyi Zhang, Haoyu Wang, Lei Wu, Xiapu Luo, Yao Guo, Ting Yu, and Xuxian Jiang.
+\newblock $\{$EOSAFE$\}$: security analysis of $\{$EOSIO$\}$ smart contracts.
+\newblock In {\em 30th USENIX security symposium (USENIX Security 21)}, pages 1271--1288, 2021.
+
+\bibitem{he2024large}
+Zheyuan He, Zihao Li, and Sen Yang.
+\newblock Large language models for blockchain security: A systematic literature review.
+\newblock {\em arXiv preprint arXiv:2403.14280}, 2024.
+
+\bibitem{hirai2017defining}
+Yoichi Hirai.
+\newblock Defining the ethereum virtual machine for interactive theorem provers.
+\newblock In {\em Financial Cryptography and Data Security: FC 2017 International Workshops, WAHC, BITCOIN, VOTING, WTSC, and TA, Sliema, Malta, April 7, 2017, Revised Selected Papers 21}, pages 520--535. Springer, 2017.
+
+\bibitem{jiang2018contractfuzzer}
+Bo~Jiang, Ye~Liu, and Wing~Kwong Chan.
+\newblock Contractfuzzer: Fuzzing smart contracts for vulnerability detection.
+\newblock In {\em Proceedings of the 33rd ACM/IEEE international conference on automated software engineering}, pages 259--269, 2018.
+
+\bibitem{kong2023defitainter}
+Queping Kong, Jiachi Chen, Yanlin Wang, Zigui Jiang, and Zibin Zheng.
+\newblock Defitainter: Detecting price manipulation vulnerabilities in defi protocols.
+\newblock In {\em Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis}, pages 1144--1156, 2023.
+
+\bibitem{liveteos}
+Levi~Taiji Li, Ningyu He, Haoyu Wang, and Mu~Zhang.
+\newblock Veteos: Statically vetting eosio contracts for the “groundhog day” vulnerabilities.
+
+\bibitem{li2024varlifter}
+Yichuan Li, Wei Song, and Jeff Huang.
+\newblock Varlifter: Recovering variables and types from bytecode of solidity smart contracts.
+\newblock {\em Proceedings of the ACM on Programming Languages}, 8(OOPSLA2):1--29, 2024.
+
+\bibitem{luu2016making}
+Loi Luu, Duc-Hiep Chu, Hrishi Olickel, Prateek Saxena, and Aquinas Hobor.
+\newblock Making smart contracts smarter.
+\newblock In {\em Proceedings of the 2016 ACM SIGSAC conference on computer and communications security}, pages 254--269, 2016.
+
+\bibitem{manes2018fuzzing}
+Valentin~JM Manes, HyungSeok Han, Choongwoo Han, Sang~Kil Cha, Manuel Egele, Edward~J Schwartz, and Maverick Woo.
+\newblock Fuzzing: Art, science, and engineering.
+\newblock {\em arXiv preprint arXiv:1812.00140}, 2018.
+
+\bibitem{mo2023toward}
+Yifan Mo, Jiachi Chen, Yanlin Wang, and Zibin Zheng.
+\newblock Toward automated detecting unanticipated price feed in smart contract.
+\newblock In {\em Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis}, pages 1257--1268, 2023.
+
+\bibitem{mossberg2019manticore}
+Mark Mossberg, Felipe Manzano, Eric Hennenfent, Alex Groce, Gustavo Grieco, Josselin Feist, Trent Brunson, and Artem Dinaburg.
+\newblock Manticore: A user-friendly symbolic execution framework for binaries and smart contracts.
+\newblock In {\em 2019 34th IEEE/ACM International Conference on Automated Software Engineering (ASE)}, pages 1186--1189. IEEE, 2019.
+
+\bibitem{nakamoto2008bitcoin}
+Satoshi Nakamoto.
+\newblock Bitcoin: A peer-to-peer electronic cash system.
+\newblock {\em Satoshi Nakamoto}, 2008.
+
+\bibitem{pan2023automated}
+Yu~Pan, Zhichao Xu, Levi~Taiji Li, Yunhe Yang, and Mu~Zhang.
+\newblock Automated generation of security-centric descriptions for smart contract bytecode.
+\newblock In {\em Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis}, pages 1244--1256, 2023.
+
+\bibitem{qin2021attacking}
+Kaihua Qin, Liyi Zhou, Benjamin Livshits, and Arthur Gervais.
+\newblock Attacking the defi ecosystem with flash loans for fun and profit.
+\newblock In {\em International conference on financial cryptography and data security}, pages 3--32. Springer, 2021.
+
+\bibitem{raval2016decentralized}
+Siraj Raval.
+\newblock {\em Decentralized applications: harnessing Bitcoin's blockchain technology}.
+\newblock " O'Reilly Media, Inc.", 2016.
+
+\bibitem{ren2024lookahead}
+Shoupeng Ren, Tianyu Tu, Jian Liu, Di~Wu, and Kui Ren.
+\newblock Lookahead: Preventing defi attacks via unveiling adversarial contracts.
+\newblock {\em arXiv preprint arXiv:2401.07261}, 2024.
+
+\bibitem{shah2023systematic}
+Kaushal Shah, Dhruvil Lathiya, Naimish Lukhi, Keyur Parmar, and Harshal Sanghvi.
+\newblock A systematic review of decentralized finance protocols.
+\newblock {\em International Journal of Intelligent Networks}, 2023.
+
+\bibitem{shou2023ityfuzz}
+Chaofan Shou, Shangyin Tan, and Koushik Sen.
+\newblock Ityfuzz: Snapshot-based fuzzer for smart contract.
+\newblock In {\em Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis}, pages 322--333, 2023.
+
+\bibitem{su2021evil}
+Liya Su, Xinyue Shen, Xiangyu Du, Xiaojing Liao, XiaoFeng Wang, Luyi Xing, and Baoxu Liu.
+\newblock Evil under the sun: Understanding and discovering attacks on ethereum decentralized applications.
+\newblock In {\em 30th USENIX Security Symposium (USENIX Security 21)}, pages 1307--1324, 2021.
+
+\bibitem{sun2024all}
+Tianle Sun, Ningyu He, Jiang Xiao, Yinliang Yue, Xiapu Luo, and Haoyu Wang.
+\newblock All your tokens are belong to us: Demystifying address verification vulnerabilities in solidity smart contracts.
+\newblock In {\em The 33rd USENIX Security Symposium}, 2024.
+
+\bibitem{sun2024gptscan}
+Yuqiang Sun, Daoyuan Wu, Yue Xue, Han Liu, Haijun Wang, Zhengzi Xu, Xiaofei Xie, and Yang Liu.
+\newblock Gptscan: Detecting logic vulnerabilities in smart contracts by combining gpt with program analysis.
+\newblock In {\em Proceedings of the IEEE/ACM 46th International Conference on Software Engineering}, pages 1--13, 2024.
+
+\bibitem{tsankov2018securify}
+Petar Tsankov, Andrei Dan, Dana Drachsler-Cohen, Arthur Gervais, Florian Buenzli, and Martin Vechev.
+\newblock Securify: Practical security analysis of smart contracts.
+\newblock In {\em Proceedings of the 2018 ACM SIGSAC conference on computer and communications security}, pages 67--82, 2018.
+
+\bibitem{wang2024defiguard}
+Dabao Wang, Bang Wu, Xingliang Yuan, Lei Wu, Yajin Zhou, and Helei Cui.
+\newblock Defiguard: A price manipulation detection service in defi using graph neural networks.
+\newblock {\em arXiv preprint arXiv:2406.11157}, 2024.
+
+\bibitem{wang2020towards}
+Dabao Wang, Siwei Wu, Ziling Lin, Lei Wu, Xingliang Yuan, Yajin Zhou, Haoyu Wang, and Kui Ren.
+\newblock Towards understanding flash loan and its applications in defi ecosystem.
+\newblock {\em arXiv preprint arXiv:2010.12252}, 2020.
+
+\bibitem{wang2024smartinv}
+Sally~Junsong Wang, Kexin Pei, and Junfeng Yang.
+\newblock Smartinv: Multimodal learning for smart contract invariant inference.
+\newblock In {\em 2024 IEEE Symposium on Security and Privacy (SP)}, pages 126--126. IEEE Computer Society, 2024.
+
+\bibitem{wu2023defiranger}
+Siwei Wu, Zhou Yu, Dabao Wang, Yajin Zhou, Lei Wu, Haoyu Wang, and Xingliang Yuan.
+\newblock Defiranger: Detecting defi price manipulation attacks.
+\newblock {\em IEEE Transactions on Dependable and Secure Computing}, 2023.
+
+\bibitem{wustholz2020harvey}
+Valentin W{\"u}stholz and Maria Christakis.
+\newblock Harvey: A greybox fuzzer for smart contracts.
+\newblock In {\em Proceedings of the 28th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering}, pages 1398--1409, 2020.
+
+\bibitem{yang2024uncover}
+Shuo Yang, Jiachi Chen, Mingyuan Huang, Zibin Zheng, and Yuan Huang.
+\newblock Uncover the premeditated attacks: Detecting exploitable reentrancy vulnerabilities by identifying attacker contracts.
+\newblock In {\em Proceedings of the IEEE/ACM 46th International Conference on Software Engineering}, pages 1--12, 2024.
+
+\bibitem{ye2023detecting}
+Mingxi Ye, Yuhong Nan, Zibin Zheng, Dongpeng Wu, and Huizhong Li.
+\newblock Detecting state inconsistency bugs in dapps via on-chain transaction replay and fuzzing.
+\newblock In {\em Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis}, pages 298--309, 2023.
+
+\bibitem{yu2022bytecode}
+Qifan Yu, Pengcheng Zhang, Hai Dong, Yan Xiao, and Shunhui Ji.
+\newblock Bytecode obfuscation for smart contracts.
+\newblock In {\em 2022 29th Asia-Pacific Software Engineering Conference (APSEC)}, pages 566--567. IEEE, 2022.
+
+\bibitem{zetzsche2020decentralized}
+Dirk~A Zetzsche, Douglas~W Arner, and Ross~P Buckley.
+\newblock Decentralized finance.
+\newblock {\em Journal of Financial Regulation}, 6(2):172--203, 2020.
+
+\bibitem{zhang2023bian}
+Pengcheng Zhang, Qifan Yu, Yan Xiao, Hai Dong, Xiapu Luo, Xiao Wang, and Meng Zhang.
+\newblock Bian: smart contract source code obfuscation.
+\newblock {\em IEEE Transactions on Software Engineering}, 2023.
+
+\bibitem{zhang2023demystifying}
+Zhuo Zhang, Brian Zhang, Wen Xu, and Zhiqiang Lin.
+\newblock Demystifying exploitable bugs in smart contracts.
+\newblock In {\em 2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)}, pages 615--627. IEEE, 2023.
+
+\bibitem{zhou2023sok}
+Liyi Zhou, Xihan Xiong, Jens Ernstberger, Stefanos Chaliasos, Zhipeng Wang, Ye~Wang, Kaihua Qin, Roger Wattenhofer, Dawn Song, and Arthur Gervais.
+\newblock Sok: Decentralized finance (defi) attacks.
+\newblock In {\em 2023 IEEE Symposium on Security and Privacy (SP)}, pages 2444--2461. IEEE, 2023.
+
+\end{thebibliography}

@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix2019_v3.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "0_abs.tex",
+      "role": "body"
+    },
+    {
+      "path": "1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "2_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "3_motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "4_methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "5_evalutation.tex",
+      "role": "body"
+    },
+    {
+      "path": "6_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "7_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "8_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "c77164b77a1d586e89a0107ec5d0ff0d4c686a8da2338ae0abd519c3fd466d97",
+    "usenix2019_v3.sty": "cedd8c4a0ac92429f6e9cb953463fc8236aa1f042532996d0f3a89673a51f90a",
+    "0_abs.tex": "5dbe4dc4c5065b1da3207780ebdd9993eee9d0d36e2d28092f4cac4c2e4ad284",
+    "1_intro.tex": "440869096561c7357595af2e3c4098e42da9f0d434050333f1261c66db747ea0",
+    "2_background.tex": "1294fd82abf2221045a73dad82f4ed095ce6a7349e63474c4290cec31249ee27",
+    "3_motivation.tex": "59c179180a481118035af74d1acee5d4cc08fd05b249aaa63af9f8e9699547f9",
+    "4_methodology.tex": "c4e7b3636605d66ecda085e3000d3e1e79b60b933135869ef9939267c237fa15",
+    "5_evalutation.tex": "1acee7ffee7006803a5693cc781f0fc0ccd5c7dcbe92e54deb94837b1a513136",
+    "6_discussion.tex": "666c07b307e74e97558666d73c9014ab8d54ea999f66fb5ee28ed9383e39902e",
+    "7_related_work.tex": "aecf8fa4bf224586666dcb8d98bd33f1074f3e23fcb57da6938da21f16c6ca7f",
+    "8_conclusion.tex": "c4406354574ded7902bf639ba19526a29621c64d451729029d8f00b5012184ce",
+    "appendix.tex": "b031f78bb96768aabe6426354e85f5bff423d21d70d8bfd2d8c3691304a0f873"
+  }
+}

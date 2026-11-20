@@ -1,0 +1,347 @@
+In this section, we provide a brief overview of the language features of Rust
+that commonly appear in the soundness issues we collected.
+
+\subsection{Lifetimes}
+\label{sec:background:lifetime}
+
+In Rust, a \emph{reference} is a pointer with a static guarantee that it points
+to a valid value.
+%
+Each reference has a \emph{lifetime}, which specifies the duration for which the
+reference is valid.
+%
+Lifetimes are key to ensure memory safety;
+%
+for instance, the compiler ensures that a lifetime ends before the referenced
+value goes out of scope.
+%
+A reference has a type \C{\&'a T}, where \C{'a} is the lifetime and \C{T} is the
+type of the value.
+
+Functions can have \emph{lifetime parameters} to express the relationship
+between the lifetimes of the parameters and the return value.
+%
+For example, the following function with two lifetime parameters \C{'a} and
+\C{'b} takes two references to integers (\C{i32}) and returns the first one,
+specifying that the lifetime of the return value is the same as that of the
+first parameter:
+
+\vspace{-0.5em}
+\begin{lstlisting}[basicstyle=\linespread{0.85}\ttfamily\footnotesize,]
+fn foo<'a, 'b>(v: &'a i32, u: &'b i32) -> &'a i32 { v }
+\end{lstlisting}
+\vspace{-0.5em}
+
+When a lifetime \C{'a} is longer than or equal to another lifetime \C{'b}, i.e.,
+\C{'a} \emph{outlives} \C{'b}, a reference of lifetime \C{'a} can be used where
+a reference of lifetime \C{'b} is expected.
+%
+By default, different lifetime parameters are not considered to outlive each
+other, but programmers can introduce \emph{lifetime bounds} of the form \C{'a:
+'b}, implying \C{'a} outlives \C{'b}, as shown below:
+
+\vspace{-0.5em}
+\begin{lstlisting}[basicstyle=\linespread{0.85}\ttfamily\footnotesize,]
+fn foo<'a, 'b>(v: &'a i32) -> &'b i32 { v } // error
+fn bar<'a: 'b, 'b>(v: &'a i32) -> &'b i32 { v } // ok
+fn baz() { let p; { let v = 0; p = bar(&v); } *p; } // error
+fn qux() { let v = 0; let p = bar(&v); *p; } // ok
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+In \C{foo}, returning \C{v} is disallowed because there is no guarantee that
+\C{'a} outlives \C{'b};
+%
+in \C{bar}, \C{'a: 'b} allows it.
+%
+The compiler checks whether the specified lifetime bounds are satisfied at each
+call site:
+%
+\C{baz} is rejected because \C{p} is used after \C{v} goes out of scope, while
+\C{qux} is accepted.
+
+%Compound data types (structs, enums, and unions) can also have lifetime
+%parameters to specify the lifetimes of references contained within them, as in
+%the following example:
+
+%\vspace{-0.5em}
+%\begin{lstlisting}
+%struct S<'a> { x: i32, y: &'a i32 }
+%\end{lstlisting}
+%\vspace{-0.5em}
+
+%\noindent
+%%
+%Here, \C{S} has a lifetime parameter \C{'a} for the reference \C{y}.
+%%
+%Since \C{y} is valid only within \C{'a}, a value of type \C{S<'a>} is also valid
+%only within \C{'a}.
+%%
+%This naturally extends the notion of lifetime bounds to types:
+%%
+%a type \C{T} outlives \C{'a}, written \C{T: 'a}, if all lifetimes occurring in
+%\C{T} outlive \C{'a}.
+%%
+%For example, when \C{'a: 'b}, both \C{\&'a i32: 'b} and \C{S<'a>: 'b} hold.
+
+Since a value must remain valid while its reference is live, a type \C{\&'a T}
+is considered \emph{well-formed} only when every lifetime appearing in \C{T}
+outlives \C{'a}.
+%
+For example, \C{\&'a \&'b i32} is well-formed only if \C{'b: 'a} holds.
+
+To reduce the burden of stating lifetime bounds, Rust supports \emph{implied
+bounds}, which automatically introduce lifetime bounds deduced from the
+well-formedness of the types used in each definition (e.g., the parameter and
+return types of a function).
+%
+In the following example, \C{foo} passes type checking due to the implied bound
+\C{'b: 'a} and is equivalent to \C{bar}:
+
+\vspace{-0.5em}
+\begin{lstlisting}[basicstyle=\linespread{0.85}\ttfamily\footnotesize,]
+fn foo<'a, 'b>(v: &'a &'b i32) {}
+fn bar<'a, 'b: 'a>(v: &'a &'b i32) {}
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+Note that implied bounds are distinct from Rust's lifetime elision, which allows
+programmers to omit explicit lifetime annotations (e.g., writing \C{\&i32}
+instead of \C{\&'a i32}), not lifetime bounds, which the compiler then infers
+based on fixed syntactic patterns.
+
+So far, the names of lifetimes have been explicitly introduced by lifetime
+parameters, but there is one exception:
+%
+the special lifetime \C{'static} denotes the entire duration of the program and
+does not need to be defined as a lifetime parameter.
+%
+By definition, \C{'static} outlives any lifetime.
+%
+A reference to a global variable or a constant has the \C{'static} lifetime.
+
+% \vspace{-0.5em}
+% \begin{lstlisting}
+% static X: i32 = 0;
+% fn foo() { let x: &'static i32 = &X; let y: &'static i32 = &0; }
+% \end{lstlisting}
+% \vspace{-0.5em}
+
+\subsection{Traits}
+\label{sec:background:trait}
+
+A \emph{trait} represents a set of types, similar to abstract classes or
+interfaces in object-oriented languages and type classes in Haskell.
+%
+Consider the following example:
+
+\vspace{-0.5em}
+\begin{lstlisting}[basicstyle=\linespread{0.85}\ttfamily\footnotesize,]
+trait X { fn foo(self); } $\label{line:trait:1}$
+struct S; impl X for S { fn foo(self) { println!("S"); } } $\label{line:trait:2}$
+fn bar<T: X>(v: T) { v.foo(); } $\label{line:trait:3}$
+fn baz<T>(v: T) where T: X { v.foo(); } $\label{line:trait:4}$
+fn qux(v: impl X) { v.foo(); } $\label{line:trait:5}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+Here, \C{X} denotes a set of types that implement the method \C{foo}
+(line~\ref{line:trait:1}), and \C{S} belongs to \C{X}, i.e., \C{S}
+\emph{implements} \C{X} (line~\ref{line:trait:2}).
+%
+The function \C{bar} takes a value of any type \C{T} that implements \C{X} and
+calls \C{foo} (line~\ref{line:trait:3}).
+%
+In \C{bar}, \C{X} is a \emph{trait bound} of \C{T}.
+%
+Trait bounds can also be specified in a \C{where} clause
+(line~\ref{line:trait:4}).
+%
+In addition, instead of introducing a type parameter and its bound, we can use
+an \emph{impl trait} type, such as \C{impl X}, as a parameter type
+(line~\ref{line:trait:5}).
+%
+This use of an \C{impl} trait type is called an \emph{argument-position impl
+trait} (APIT).
+%
+All the functions \C{bar}, \C{baz}, and \C{qux} are equivalent, representing the
+same set of possible arguments with different syntax.
+%
+% Note that a type can have multiple bounds, separated by the \C{+} symbol
+% (e.g., \C{X + Y} or \C{X + 'a}).
+
+It is possible to implement a trait for multiple types using a single \C{impl},
+as shown below:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+struct S; struct R; struct Q; trait X {} impl X for S {} impl X for R {} $\label{line:blanket1}$
+trait Y {} impl<T: X> Y for T {} trait Z {} impl<T> Z for T {} $\label{line:blanket2}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+\C{S} and \C{R} implement \C{X}, but \C{Q} does not (line~\ref{line:blanket1}).
+%
+Since \C{Y} is implemented for all types that implement \C{X}, both \C{S} and
+\C{R} implement \C{Y}, but \C{Q} does not;
+%
+on the other hand, \C{Z} is implemented for all types, including \C{S}, \C{R},
+and \C{Q} (line~\ref{line:blanket2}).
+
+Traits can require types not only to provide particular methods but also to
+specify \emph{associated types}, as in the following example:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+trait X { type A; fn foo(self) -> Self::A; } $\label{line:assoc:1}$
+struct S; impl X for S { type A = i32; fn foo(self) -> Self::A { 0 } } $\label{line:assoc:2}$
+struct R; impl X for R { type A = f32; fn foo(self) -> Self::A { 0.0 } } $\label{line:assoc:3}$
+fn bar<T: X>(v: T) -> T::A { v.foo() } $\label{line:assoc:4}$
+fn baz<T: X>(v: T) -> <T as X>::A { v.foo() } $\label{line:assoc:5}$
+fn qux<T: X<A = i32>>(v: T) -> i32 { v.foo() } $\label{line:assoc:6}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+A type implementing \C{X} must specify an associated type \C{A}, and its method
+\C{foo} must return a value of type \C{A} (line~\ref{line:assoc:1}).
+%
+Both \C{S} and \C{R} implement \C{X}, defining different types for \C{A}
+(lines~\ref{line:assoc:2} and \ref{line:assoc:3}).
+%
+The function \C{bar} returns the value from \C{foo}, whose type is denoted
+\C{T::A} (line~\ref{line:assoc:4}).
+%
+We can also write \C{<T as X>::A} to disambiguate which trait declares the
+associated type (line~\ref{line:assoc:5}), which is useful when multiple traits
+define an associated type with the same name.
+%
+Additionally, to specify a set of types implementing a trait with a specific
+associated type, we can use a trait bound like \C{X<A = i32>};
+%
+this allows \C{S} to be passed to \C{qux}, but not \C{R}
+(line~\ref{line:assoc:6}).
+
+Traits are also used to hide the concrete return type of a function by
+specifying the return type as \C{impl X}, called a \emph{return-position impl
+trait} (RPIT).
+%
+Consider the example below:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+trait X { fn foo(self); } $\label{line:rpit:1}$
+struct S; impl X for S { fn foo(self) {} } impl S { fn bar(self) {} } $\label{line:rpit:2}$
+fn baz() -> impl X { S } $\label{line:rpit:3}$
+fn qux() { let v = baz(); v.foo(); /* ok */ v.bar(); /* error */ } $\label{line:rpit:4}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+\C{S} defines two methods \C{foo} and \C{bar}, while only \C{foo} is part of the
+trait \C{X} (lines~\ref{line:rpit:1} and \ref{line:rpit:2}).
+%
+The function \C{baz} returns \C{S}, but it hides this information from callers,
+revealing only that the return type implements \C{X} (line~\ref{line:rpit:3}).
+%
+Therefore, \C{qux} can call \C{foo} on the returned value, but not \C{bar}
+(line~\ref{line:rpit:4}).
+%
+Note that the purpose of an RPIT is not to allow returning values of different
+types.
+%
+Even when using an RPIT, a single underlying return type must exist.
+%
+For instance, the following code is rejected even though both \C{S} and \C{R}
+implement \C{X}:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+trait X {} struct S; impl X for S {} struct R; impl X for R {}
+fn foo(v: i32) -> impl X { if v == 0 { S } else { R } } // error
+\end{lstlisting}
+\vspace{-0.5em}
+
+To enable returning values of different types, Rust supports \emph{trait
+objects}, which accompany values with virtual tables for dynamic dispatch.
+%
+The type of a trait object is \C{dyn X}, where \C{X} is the implemented trait,
+as in the following example:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+fn foo(v: i32) -> &'static dyn X { if v == 0 { &S } else { &R } } // ok
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+Note that a trait object is \emph{dynamically sized}, i.e., its size is unknown
+at compile time, because values of different types can be stored.
+%
+It is thus typically placed behind a pointer.
+
+\subsection{Higher-Rank Polymorphism}
+\label{sec:background:hr}
+
+Rust supports rank-1 type polymorphism (e.g., generic functions), but not
+higher-rank type polymorphism (e.g., functions that take generic functions).
+%
+However, it supports higher-rank \emph{lifetime} polymorphism because it is
+extremely useful when dealing with function pointers:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+fn foo<'a>(v: &'a i32) -> i32 { *v }$\label{line:hr:1}$
+fn bar<'a>(f: fn(&'a i32)->i32) {{let v=0;f(&v);} {let u=1;f(&u);}} // error$\label{line:hr:2}$
+fn baz(f: for<'a> fn(&'a i32)->i32) {{let v=0;f(&v);} {let u=1;f(&u);}}// ok$\label{line:hr:3}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+The function \C{foo} takes a reference of any lifetime (line~\ref{line:hr:1}).
+%
+Another function may want to take a function pointer to \C{foo} and call it on
+references with different lifetimes.
+%
+This cannot be achieved with rank-1 polymorphism:
+%
+\C{bar} takes a function that accepts a reference of \emph{some} lifetime,
+failing to pass both \C{\&v} and \C{\&u} (line~\ref{line:hr:2}).
+%
+With higher-rank polymorphism, \C{baz} takes a function that accepts a reference
+of \emph{any} lifetime, allowing both calls (line~\ref{line:hr:3}).
+
+Higher-rank polymorphism is also useful when reference types implement traits:
+
+\vspace{-0.5em}
+\begin{lstlisting}
+trait X { fn foo(self); }$\label{line:hrtb:1}$
+fn bar<T>(mut v: T) where for<'a> &'a T: X {$\label{line:hrtb:2}$
+  { let u = v; (&u).foo(); v = u; } { let w = v; (&w).foo(); } }$\label{line:hrtb:3}$
+struct S; impl<'a> X for &'a S { fn foo(self) {} } fn baz() { bar(S); }$\label{line:hrtb:4}$
+\end{lstlisting}
+\vspace{-0.5em}
+
+\noindent
+%
+Using a \emph{higher-rank trait bound} (HRTB), the function \C{bar} requires the
+type parameter \C{T} to satisfy the condition that \C{\&'a T} implements \C{X}
+for any lifetime \C{'a} (line~\ref{line:hrtb:2}).
+%
+This allows the function body to call the method \C{foo}, which is provided by \C{X},
+using references of different lifetimes (line~\ref{line:hrtb:3}).
+%
+Since \C{\&'a S} implements \C{X} for any lifetime \C{'a}, \C{baz} can pass
+\C{S} to \C{bar} (line~\ref{line:hrtb:4}).

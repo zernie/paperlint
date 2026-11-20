@@ -1,0 +1,33 @@
+% Runtime
+
+\section{Execution Runtime Implementation}
+\label{sec:runtime}
+
+The core of \sys{} is written in $\sim$33K Python LoC. Its runtime (rightmost block in \F\ref{fig:overview}) is responsible for executing the program given an SDG, imperative AST, and DL backend.  
+
+The runtime executor is simple: it traverses the schedule AST from the root, keeping track of loop counters as they are introduced, evaluates if conditions and follows each execute/deallocate/swap instruction in order. We highlight four key components of the runtime:
+
+\myparr{DL execution backends} implement a thin interface, which has methods for (i)~allocating tensors, (ii)~moving tensors between GPU/CPU, (iii)~translating each \sys{} tensor operation to the backend equivalent, and (iv)~a code-generation function that returns a kernel when given a fused \textop{Dataflow}. \sys{} currently offers Torch~\cite{paszke2019pytorch}~(without buffer donation support) and JAX~\cite{frostig2018compiling} DL backends, easing integration with existing projects.
+
+\myparr{Kernel launchers} manage the inputs and outputs of kernel invocations. When the executor encounters an execute instruction, it invokes the corresponding kernel launcher with the loop counter state. Using the loop counters, kernel launchers evaluate input dependence expressions and use the result to index tensor stores for the inputs to the kernel. They then execute the kernel and store the outputs back in tensor stores at the current timestep $t$. 
+
+\myparr{Tensor stores} are how \sys{} stores the timesteps of RTs at runtime. Tensor stores are always written into timestep-by-timestep, but are accessed using various patterns, which requires tailored storage strategies for best performance. 
+%Consider an RT $x$ with two temporal dimensions $i$ and $t$, accessed with $\phi\!=\![\phi_i, \phi_t]$.
+\sys{} assigns each RT to one of three storage methods:
+
+  \begin{myitemize}
+    \item If the RT is point accessed (see~\F\ref{fig:access_patterns:state_passing}), \sys{} stores it in a \emph{point store}, which maps the point directly to a physical tensor. This makes point insertions and reads fast, at the cost of requiring tensor stacking for slice reads;
+    \item If the RT is block accessed (see~\F\ref{fig:access_patterns:block}) \sys{} stores it in a \emph{block store}, which maps the access to a block-sized pre-allocated buffer. It offers fast slice reads, but writes require in-place mutation. Causally and anti-causally accessed RTs also use this store (with buffer size $T$);
+    \item If the RT is window accessed (see~\F\ref{fig:access_patterns:fwd_window}), \sys{} stores it in a \emph{window store}, which maps the access to a pre-allocated circular buffer twice the size of the window. \sys{} writes to two mirrored locations, ensuring that a contiguous read window is always ready.
+  \end{myitemize}
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\columnwidth, trim={0 1 1 0}, clip]{cr_figures/kernel_wrappers}
+  \caption{Kernel wrappers \textnormal{(\sys{} avoids copies by co-designing the storage and code-generation of kernels.)}}\label{fig:kernel_wrappers}
+\end{figure}
+
+ \myparr{Kernel wrappers} inject storage related operations into kernels prior to code-generation~(see~\F\ref{fig:kernel_wrappers}). This enables efficient interaction with block or window stored RTs. Normally, a kernel first produces an output tensor, which is then copied into a pre-allocated buffer at index $t$.  The \emph{in-place writes} wrapper eliminates such copies by enabling the kernel to write directly to the preallocated buffer.  Conversely, some DL backends (\eg JAX) perform copies when slicing tensors. The \emph{lazy reads} wrapper optimizes this by slicing the backing buffer in the code-generated region.
+
+% End

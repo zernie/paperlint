@@ -1,0 +1,248 @@
+\begin{thebibliography}{10}
+
+\bibitem{NVCUBLAS}
+{Basic Linear Algebra on NVIDIA GPUs}.
+\newblock \url{https://developer.nvidia.com/cublas}.
+
+\bibitem{bangc}
+{Cambricon BANG C Developer Guide}.
+\newblock \url{https://www.cambricon.com/docs/sdk_1.13.0/cntoolkit_3.5.2/cambricon_bang_c_4.5.1/index.html}.
+
+\bibitem{MLU}
+{Cambricon MLU}.
+\newblock \url{https://www.cambricon.com/}.
+
+\bibitem{Amazoncloud}
+{Cloud Computing Services - Amazon Web Services (AWS)}.
+\newblock \url{https://aws.amazon.com/}.
+
+\bibitem{cxgo}
+{cxgo}.
+\newblock \url{https://github.com/gotranspile/cxgo}.
+
+\bibitem{Googlecloud}
+{Google Cloud: Cloud Computing Services}.
+\newblock \url{https://cloud.google.com/}.
+
+\bibitem{HIPIFY}
+{HIPIFY}.
+\newblock \url{https://github.com/ROCm/HIPIFY}.
+
+\bibitem{openaio1}
+{Introducing OpenAI o1}.
+\newblock \url{https://openai.com/o1/}.
+
+\bibitem{graphcoreipu}
+{IPU Processors}.
+\newblock \url{https://www.graphcore.ai/products/ipu}.
+
+\bibitem{Microsoftcloud}
+{Microsoft Azure: Cloud Computing Services}.
+\newblock \url{https://azure.microsoft.com/}.
+
+\bibitem{NVCUDNN}
+{NVIDIA cuDNN}.
+\newblock \url{https://developer.nvidia.com/cudnn}.
+
+\bibitem{NVTensorCore}
+{NVIDIA Tensor Core}.
+\newblock \url{https://www.nvidia.cn/data-center/tensor-cores/}.
+
+\bibitem{C2Rust}
+{C2Rust}, [n.d].
+\newblock \url{https://github.com/immunant/c2rust}.
+
+\bibitem{oneDNN}
+{oneAPI Deep Neural Network Library (oneDNN)}, [n.d].
+\newblock \url{https://github.com/intel/mkl-dnn}.
+
+\bibitem{achiam2023gpt}
+Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia~Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et~al.
+\newblock Gpt-4 technical report.
+\newblock {\em arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem{bahdanau2014neural}
+Dzmitry Bahdanau, Kyunghyun Cho, and Yoshua Bengio.
+\newblock Neural machine translation by jointly learning to align and translate.
+\newblock {\em arXiv preprint arXiv:1409.0473}, 2014.
+
+\bibitem{bansal2023mosaic}
+Manya Bansal, Olivia Hsu, Kunle Olukotun, and Fredrik Kjolstad.
+\newblock Mosaic: An interoperable compiler for tensor algebra.
+\newblock {\em Proceedings of the ACM on Programming Languages}, 7(PLDI):394--419, 2023.
+
+\bibitem{bhatia_et_al:LIPIcs.ECOOP.2023.38}
+Sahil Bhatia, Sumer Kohli, Sanjit~A. Seshia, and Alvin Cheung.
+\newblock {Building Code Transpilers for Domain-Specific Languages Using Program Synthesis}.
+\newblock In Karim Ali and Guido Salvaneschi, editors, {\em 37th European Conference on Object-Oriented Programming (ECOOP 2023)}, volume 263 of {\em Leibniz International Proceedings in Informatics (LIPIcs)}, pages 38:1--38:30, Dagstuhl, Germany, 2023. Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik.
+
+\bibitem{6145622}
+Cameron~B. Browne, Edward Powley, Daniel Whitehouse, Simon~M. Lucas, Peter~I. Cowling, Philipp Rohlfshagen, Stephen Tavener, Diego Perez, Spyridon Samothrakis, and Simon Colton.
+\newblock A survey of monte carlo tree search methods.
+\newblock {\em IEEE Transactions on Computational Intelligence and AI in Games}, 4(1):1--43, 2012.
+
+\bibitem{bubeck2023sparks}
+S{\'e}bastien Bubeck, Varun Chandrasekaran, Ronen Eldan, Johannes Gehrke, Eric Horvitz, Ece Kamar, Peter Lee, Yin~Tat Lee, Yuanzhi Li, Scott Lundberg, et~al.
+\newblock Sparks of artificial general intelligence: Early experiments with gpt-4.
+\newblock {\em arXiv preprint arXiv:2303.12712}, 2023.
+
+\bibitem{chen2021evaluating}
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde De~Oliveira Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et~al.
+\newblock Evaluating large language models trained on code.
+\newblock {\em arXiv preprint arXiv:2107.03374}, 2021.
+
+\bibitem{chen2023teaching}
+Xinyun Chen, Maxwell Lin, Nathanael Sch{\"a}rli, and Denny Zhou.
+\newblock Teaching large language models to self-debug.
+\newblock {\em arXiv preprint arXiv:2304.05128}, 2023.
+
+\bibitem{devlin2018bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock Bert: Pre-training of deep bidirectional transformers for language understanding.
+\newblock {\em arXiv preprint arXiv:1810.04805}, 2018.
+
+\bibitem{10.1145/3554736}
+Ruobing Han, Jaewon Lee, Jaewoong Sim, and Hyesoon Kim.
+\newblock Cox: Exposing cuda warp-level functions to cpus.
+\newblock {\em ACM Trans. Archit. Code Optim.}, 19(4), sep 2022.
+
+\bibitem{He16CVPR}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 770--778, 2016.
+
+\bibitem{howard2017mobilenets}
+Andrew~G Howard, Menglong Zhu, Bo~Chen, Dmitry Kalenichenko, Weijun Wang, Tobias Weyand, Marco Andreetto, and Hartwig Adam.
+\newblock Mobilenets: Efficient convolutional neural networks for mobile vision applications.
+\newblock {\em arXiv preprint arXiv:1704.04861}, 2017.
+
+\bibitem{ikarashi2022exocompilation}
+Yuka Ikarashi, Gilbert~Louis Bernstein, Alex Reinking, Hasan Genc, and Jonathan Ragan-Kelley.
+\newblock Exocompilation for productive programming of hardware accelerators.
+\newblock In {\em Proceedings of the 43rd ACM SIGPLAN International Conference on Programming Language Design and Implementation}, pages 703--718, 2022.
+
+\bibitem{johnson2022martini}
+Alister Johnson, Camille Coti, Allen~D Malony, and Johannes Doerfert.
+\newblock Martini: The little match and replace tool for automatic application rewriting with code examples.
+\newblock In {\em European Conference on Parallel Processing}, pages 19--34. Springer, 2022.
+
+\bibitem{Jouppi17ISCA}
+Norman~P Jouppi, Cliff Young, Nishant Patil, David Patterson, Gaurav Agrawal, Raminder Bajwa, Sarah Bates, Suresh Bhatia, Nan Boden, Al~Borchers, et~al.
+\newblock In-datacenter performance analysis of a tensor processing unit.
+\newblock In {\em Proceedings of the 44th ACM/IEEE Annual International Symposium on Computer Architecture (ISCA)}, pages 1--12, 2017.
+
+\bibitem{kjolstad2017taco}
+Fredrik Kjolstad, Stephen Chou, David Lugato, Shoaib Kamil, and Saman Amarasinghe.
+\newblock Taco: A tool to generate tensor algebra kernels.
+\newblock In {\em 2017 32nd IEEE/ACM International Conference on Automated Software Engineering (ASE)}, pages 943--948. IEEE, 2017.
+
+\bibitem{li2023starcoder}
+Raymond Li, Loubna~Ben Allal, Yangtian Zi, Niklas Muennighoff, Denis Kocetkov, Chenghao Mou, Marc Marone, Christopher Akiki, Jia Li, Jenny Chim, Qian Liu, Evgenii Zheltonozhskii, Terry~Yue Zhuo, Thomas Wang, Olivier Dehaene, Mishig Davaadorj, Joel Lamy-Poirier, João Monteiro, Oleh Shliazhko, Nicolas Gontier, Nicholas Meade, Armel Zebaze, Ming-Ho Yee, Logesh~Kumar Umapathi, Jian Zhu, Benjamin Lipkin, Muhtasham Oblokulov, Zhiruo Wang, Rudra Murthy, Jason Stillerman, Siva~Sankalp Patel, Dmitry Abulkhanov, Marco Zocca, Manan Dey, Zhihan Zhang, Nour Fahmy, Urvashi Bhattacharyya, Wenhao Yu, Swayam Singh, Sasha Luccioni, Paulo Villegas, Maxim Kunakov, Fedor Zhdanov, Manuel Romero, Tony Lee, Nadav Timor, Jennifer Ding, Claire Schlesinger, Hailey Schoelkopf, Jan Ebert, Tri Dao, Mayank Mishra, Alex Gu, Jennifer Robinson, Carolyn~Jane Anderson, Brendan Dolan-Gavitt, Danish Contractor, Siva Reddy, Daniel Fried, Dzmitry Bahdanau, Yacine Jernite, Carlos~Muñoz Ferrandis, Sean Hughes, Thomas Wolf, Arjun Guha, Leandro von
+  Werra, and Harm de~Vries.
+\newblock Starcoder: may the source be with you!, 2023.
+
+\bibitem{li2022competition}
+Yujia Li, David Choi, Junyoung Chung, Nate Kushman, Julian Schrittwieser, R{\'e}mi Leblond, Tom Eccles, James Keeling, Felix Gimeno, Agustin Dal~Lago, et~al.
+\newblock Competition-level code generation with alphacode.
+\newblock {\em Science}, 378(6624):1092--1097, 2022.
+
+\bibitem{magalhaes2023c2taco}
+Jos{\'e} Wesley de~Souza Magalh{\~a}es, Jackson Woodruff, Elizabeth Polgreen, and Michael~FP O'Boyle.
+\newblock C2taco: Lifting tensor code to taco.
+\newblock In {\em Proceedings of the 22nd ACM SIGPLAN International Conference on Generative Programming: Concepts and Experiences}, pages 42--56, 2023.
+
+\bibitem{Z3Solver}
+Leonardo~De Moura and Nikolaj Bjørner.
+\newblock Z3: an efficient smt solver.
+\newblock In {\em In Proceedings of the Theory and practice of software, 14th international conference on Tools and algorithms for the construction and analysis of systems}, ASPLOS '21, pages 337--340, 2008.
+
+\bibitem{nijkamp2022codegen}
+Erik Nijkamp, Bo~Pang, Hiroaki Hayashi, Lifu Tu, Huan Wang, Yingbo Zhou, Silvio Savarese, and Caiming Xiong.
+\newblock Codegen: An open large language model for code with multi-turn program synthesis.
+\newblock {\em arXiv preprint arXiv:2203.13474}, 2022.
+
+\bibitem{GPT4}
+OpenAI.
+\newblock {GPT-4} technical report.
+\newblock {\em CoRR}, abs/2303.08774, 2023.
+
+\bibitem{PAPAKONSTANTINOU13TECS}
+Alexandros Papakonstantinou, Karthik Gururaj, John~A Stratton, Deming Chen, Jason Cong, and Wen-Mei~W Hwu.
+\newblock Efficient compilation of cuda kernels for high-performance computing on fpgas.
+\newblock {\em ACM Transactions on Embedded Computing Systems (TECS)}, 13(2):1--26, 2013.
+
+\bibitem{Phitchaya14PLDI}
+Phitchaya~Mangpo Phothilimthana, Tikhon Jelvis, Rohin Shah, Nishant Totla, Sarah~E. Chasins, and Rastislav Bod{\'{\i}}k.
+\newblock Chlorophyll: synthesis-aided compiler for low-power spatial architectures.
+\newblock In Michael F.~P. O'Boyle and Keshav Pingali, editors, {\em In Proceedings of International Conference on Programming Language and Design Implementation (PLDI)}, pages 396--407, 2014.
+
+\bibitem{DBLP:conf/ecoop/QiuCBHSC24}
+Jie Qiu, Colin Cai, Sahil Bhatia, Niranjan Hasabnis, Sanjit~A. Seshia, and Alvin Cheung.
+\newblock Tenspiler: {A} verified-lifting-based compiler for tensor operations.
+\newblock In Jonathan Aldrich and Guido Salvaneschi, editors, {\em 38th European Conference on Object-Oriented Programming, {ECOOP} 2024, September 16-20, 2024, Vienna, Austria}, volume 313 of {\em LIPIcs}, pages 32:1--32:28. Schloss Dagstuhl - Leibniz-Zentrum f{\"{u}}r Informatik, 2024.
+
+\bibitem{Roziere20NIPS}
+Baptiste Roziere, Marie-Anne Lachaux, Lowik Chanussot, and Guillaume Lample.
+\newblock Unsupervised translation of programming languages.
+\newblock In H.~Larochelle, M.~Ranzato, R.~Hadsell, M.F. Balcan, and H.~Lin, editors, {\em Advances in Neural Information Processing Systems}, volume~33, pages 20601--20611. Curran Associates, Inc., 2020.
+
+\bibitem{Shah18NIPS}
+Harshil Shah and David Barber.
+\newblock Generative neural machine translation.
+\newblock In S.~Bengio, H.~Wallach, H.~Larochelle, K.~Grauman, N.~Cesa-Bianchi, and R.~Garnett, editors, {\em Advances in Neural Information Processing Systems}, volume~31. Curran Associates, Inc., 2018.
+
+\bibitem{Simonyan15VGG}
+K.~Simonyan and A.~Zisserman.
+\newblock {Very Deep Convolutional Networks for Large-Scale Image Recognition}.
+\newblock In {\em International Conference on Learning Representations}, May 2015.
+
+\bibitem{team2023gemini}
+Gemini Team, Rohan Anil, Sebastian Borgeaud, Yonghui Wu, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew~M Dai, Anja Hauth, et~al.
+\newblock Gemini: a family of highly capable multimodal models.
+\newblock {\em arXiv preprint arXiv:2312.11805}, 2023.
+
+\bibitem{touvron2023llama}
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et~al.
+\newblock Llama 2: Open foundation and fine-tuned chat models.
+\newblock {\em arXiv preprint arXiv:2307.09288}, 2023.
+
+\bibitem{10.1145/2682862.2682863}
+Andrew Trotman, Antti Puurula, and Blake Burgess.
+\newblock Improvements to bm25 and language models examined.
+\newblock In {\em Proceedings of the 19th Australasian Document Computing Symposium}, ADCS '14, page 58–65, New York, NY, USA, 2014. Association for Computing Machinery.
+
+\bibitem{vanhattumvectorization}
+Alexa VanHattum, Rachit Nigam, Vincent~T Lee, James Bornholt, and Adrian Sampson.
+\newblock Vectorization for digital signal processors via equality saturation extended abstract.
+
+\bibitem{10.1145/2400682.2400713}
+Sven Verdoolaege, Juan Carlos~Juega, Albert Cohen, Jos\'{e} Ignacio~G\'{o}mez, Christian Tenllado, and Francky Catthoor.
+\newblock Polyhedral parallel code generation for cuda.
+\newblock {\em ACM Trans. Archit. Code Optim.}, 9(4), jan 2013.
+
+\bibitem{wang2021codet5}
+Yue Wang, Weishi Wang, Shafiq Joty, and Steven~CH Hoi.
+\newblock Codet5: Identifier-aware unified pre-trained encoder-decoder models for code understanding and generation.
+\newblock {\em arXiv preprint arXiv:2109.00859}, 2021.
+
+\bibitem{Jackson22PLDI}
+Jackson Woodruff, Jordi Armengol-Estap\'{e}, Sam Ainsworth, and Michael F.~P. O'Boyle.
+\newblock Bind the gap: Compiling real software to hardware fft accelerators.
+\newblock In {\em In Proceedings of International Conference on Programming Language and Design Implementation (PLDI)}, page 687–702, 2022.
+
+\bibitem{wu2016google}
+Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc~V Le, Mohammad Norouzi, Wolfgang Macherey, Maxim Krikun, Yuan Cao, Qin Gao, Klaus Macherey, et~al.
+\newblock Google's neural machine translation system: Bridging the gap between human and machine translation.
+\newblock {\em arXiv preprint arXiv:1609.08144}, 2016.
+
+\bibitem{xia2022vision}
+Zhuofan Xia, Xuran Pan, Shiji Song, Li~Erran Li, and Gao Huang.
+\newblock Vision transformer with deformable attention.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 4794--4803, 2022.
+
+\bibitem{zheng2023codegeex}
+Qinkai Zheng, Xiao Xia, Xu~Zou, Yuxiao Dong, Shan Wang, Yufei Xue, Zihan Wang, Lei Shen, Andi Wang, Yang Li, et~al.
+\newblock Codegeex: A pre-trained model for code generation with multilingual evaluations on humaneval-x.
+\newblock {\em arXiv preprint arXiv:2303.17568}, 2023.
+
+\end{thebibliography}

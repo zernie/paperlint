@@ -46,14 +46,14 @@ export default defineConfig({
           exclude: [...EXCLUDE, "fixtures/real-papers.test.ts"],
         },
       },
-      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/arxiv-papers/README.md).
+      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/real-papers/preprints/README.md).
       {
         extends: true,
         test: {
           name: "real-papers",
           include: ["fixtures/real-papers.test.ts"],
-          testTimeout: 10 * 60_000,
-          hookTimeout: 10 * 60_000,
+          testTimeout: 20 * 60_000,
+          hookTimeout: 20 * 60_000,
         },
       },
       // The package as users install it: `npm pack`, then npm and pnpm. Needs both managers.

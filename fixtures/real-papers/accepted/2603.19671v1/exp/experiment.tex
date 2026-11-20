@@ -1,0 +1,24 @@
+\section{Experiment}
+\label{sec:exp}
+
+
+We conduct experiments on four tasks under edge-LDP: 
+$k$-line walk counting, 
+$k$-line path counting,
+$k$-edge acyclic pattern counting, 
+and $k$-star counting. 
+{For the first three tasks, we compare with the RR-based method from~\cite{suppakitpaisarn2025counting}, denoted as $RR_{\text{enum}}$.
+}
+{In particular, for $k$-line walk counting, we additionally compare against the method introduced in~\cite{betzer2024publishing}, denoted as $\mathrm{WalkClip}_k$.
+}
+For $k$-star counting, we compare against $\mathrm{LocalLap}_{k\star}$~\cite{Imola2021}. 
+
+
+
+\input{exp/setup}
+\input{exp/first_result}
+\input{exp/samplevsDP}
+
+
+% exclude this, does not make sense
+% The second baseline, denoted as $RR_\text{count}$, directly applies our non-private algorithms of the target task on the noisy graph constructed via RR. 

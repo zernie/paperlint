@@ -1,0 +1,177 @@
+\begin{thebibliography}{27}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Akchen \& Mitrofanov(2023)Akchen and Mitrofanov]{akchen2023consider}
+Yi-Chun Akchen and Dmitry Mitrofanov.
+\newblock Consider or choose? the role and power of consideration sets.
+\newblock \emph{arXiv e-prints}, pp.\  arXiv--2302, 2023.
+
+\bibitem[Aouad \& D{\'e}sir(2022)Aouad and D{\'e}sir]{aouad2022representing}
+Ali Aouad and Antoine D{\'e}sir.
+\newblock Representing random utility choice models with neural networks.
+\newblock \emph{arXiv preprint arXiv:2207.12877}, 2022.
+
+\bibitem[Aouad et~al.(2021)Aouad, Farias, and Levi]{aouad2021assortment}
+Ali Aouad, Vivek Farias, and Retsef Levi.
+\newblock Assortment optimization under consider-then-choose choice models.
+\newblock \emph{Management Science}, 67\penalty0 (6):\penalty0 3368--3386,
+  2021.
+
+\bibitem[Bach(2017)]{bach2017breaking}
+Francis Bach.
+\newblock Breaking the curse of dimensionality with convex neural networks.
+\newblock \emph{Journal of Machine Learning Research}, 18\penalty0
+  (19):\penalty0 1--53, 2017.
+
+\bibitem[Bhat(1997)]{bhat1997endogenous}
+Chandra~R Bhat.
+\newblock An endogenous segmentation mode choice model with an application to
+  intercity travel.
+\newblock \emph{Transportation science}, 31\penalty0 (1):\penalty0 34--48,
+  1997.
+
+\bibitem[Chen \& Mi{\v{s}}i{\'c}(2022)Chen and
+  Mi{\v{s}}i{\'c}]{chen2022decision}
+Yi-Chun Chen and Velibor~V Mi{\v{s}}i{\'c}.
+\newblock Decision forest: A nonparametric approach to modeling irrational
+  choice.
+\newblock \emph{Management Science}, 68\penalty0 (10):\penalty0 7090--7111,
+  2022.
+
+\bibitem[Desaulniers et~al.(2006)Desaulniers, Desrosiers, and
+  Solomon]{desaulniers2006column}
+Guy Desaulniers, Jacques Desrosiers, and Marius~M Solomon.
+\newblock \emph{Column generation}, volume~5.
+\newblock Springer Science \& Business Media, 2006.
+
+\bibitem[Greene \& Hensher(2003)Greene and Hensher]{greene2003latent}
+William~H Greene and David~A Hensher.
+\newblock A latent class model for discrete choice analysis: contrasts with
+  mixed logit.
+\newblock \emph{Transportation Research Part B: Methodological}, 37\penalty0
+  (8):\penalty0 681--698, 2003.
+
+\bibitem[Han et~al.(2020)Han, Pereira, Ben-Akiva, and Zegras]{han2020neural}
+Yafei Han, Francisco~Camara Pereira, Moshe Ben-Akiva, and Christopher Zegras.
+\newblock A neural-embedded choice model: Tastenet-mnl modeling taste
+  heterogeneity with flexibility and interpretability.
+\newblock \emph{arXiv preprint arXiv:2002.00922}, 2020.
+
+\bibitem[Hauser(2014)]{hauser2014consideration}
+John~R Hauser.
+\newblock Consideration-set heuristics.
+\newblock \emph{Journal of Business Research}, 67\penalty0 (8):\penalty0
+  1688--1699, 2014.
+
+\bibitem[Hausman \& McFadden(1984)Hausman and
+  McFadden]{hausman1984specification}
+Jerry Hausman and Daniel McFadden.
+\newblock Specification tests for the multinomial logit model.
+\newblock \emph{Econometrica: Journal of the econometric society}, pp.\
+  1219--1240, 1984.
+
+\bibitem[Hensher \& Greene(2002)Hensher and Greene]{hensher2002specification}
+David~A Hensher and William~H Greene.
+\newblock Specification and estimation of the nested logit model: alternative
+  normalisations.
+\newblock \emph{Transportation Research Part B: Methodological}, 36\penalty0
+  (1):\penalty0 1--17, 2002.
+
+\bibitem[Hu et~al.(2022)Hu, Simchi-Levi, and Yan]{hu2022learning}
+Yiqun Hu, David Simchi-Levi, and Zhenzhen Yan.
+\newblock Learning mixed multinomial logits with provable guarantees.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 9447--9459, 2022.
+
+\bibitem[Jagabathula et~al.(2020)Jagabathula, Subramanian, and
+  Venkataraman]{jagabathula2020conditional}
+Srikanth Jagabathula, Lakshminarayanan Subramanian, and Ashwin Venkataraman.
+\newblock A conditional gradient approach for nonparametric estimation of
+  mixing distributions.
+\newblock \emph{Management Science}, 66\penalty0 (8):\penalty0 3635--3656,
+  2020.
+
+\bibitem[Johnson et~al.(2023)Johnson, Bulgarelli, Shen, Gayles, Shammout,
+  Horng, Pollard, Moody, Gow, Lehman, et~al.]{johnson2023mimic}
+Alistair~EW Johnson, Lucas Bulgarelli, Lu~Shen, Alvin Gayles, Ayad Shammout,
+  Steven Horng, Tom~J Pollard, Benjamin Moody, Brian Gow, Li-wei~H Lehman,
+  et~al.
+\newblock Mimic-iv, a freely accessible electronic health record dataset.
+\newblock \emph{Scientific Data}, 10\penalty0 (1):\penalty0 1--9, 2023.
+
+\bibitem[Komorowski et~al.(2018)Komorowski, Celi, Badawi, Gordon, and
+  Faisal]{komorowski2018artificial}
+Matthieu Komorowski, Leo~A Celi, Omar Badawi, Anthony~C Gordon, and A~Aldo
+  Faisal.
+\newblock The artificial intelligence clinician learns optimal treatment
+  strategies for sepsis in intensive care.
+\newblock \emph{Nature medicine}, 24\penalty0 (11):\penalty0 1716--1720, 2018.
+
+\bibitem[Liu \& Arora(2011)Liu and Arora]{liu2011efficient}
+Qing Liu and Neeraj Arora.
+\newblock Efficient choice designs for a consider-then-choose model.
+\newblock \emph{Marketing Science}, 30\penalty0 (2):\penalty0 321--338, 2011.
+
+\bibitem[Luce(1959)]{luce1959individual}
+R~Duncan Luce.
+\newblock \emph{Individual choice behavior}, volume~4.
+\newblock Wiley New York, 1959.
+
+\bibitem[McFadden(1981)]{mcfadden1981econometric}
+D~McFadden.
+\newblock Econometric models of probabilistic choice”, 1981.
+
+\bibitem[Plackett(1975)]{plackett1975analysis}
+Robin~L Plackett.
+\newblock The analysis of permutations.
+\newblock \emph{Journal of the Royal Statistical Society Series C: Applied
+  Statistics}, 24\penalty0 (2):\penalty0 193--202, 1975.
+
+\bibitem[Rivest(1987)]{rivest1987learning}
+Ronald~L Rivest.
+\newblock Learning decision lists.
+\newblock \emph{Machine learning}, 2:\penalty0 229--246, 1987.
+
+\bibitem[Ruczinski et~al.(2003)Ruczinski, Kooperberg, and
+  LeBlanc]{ruczinski2003logic}
+Ingo Ruczinski, Charles Kooperberg, and Michael LeBlanc.
+\newblock Logic regression.
+\newblock \emph{Journal of Computational and graphical Statistics}, 12\penalty0
+  (3):\penalty0 475--511, 2003.
+
+\bibitem[Saria(2018)]{saria2018individualized}
+Suchi Saria.
+\newblock Individualized sepsis treatment using reinforcement learning.
+\newblock \emph{Nature medicine}, 24\penalty0 (11):\penalty0 1641--1642, 2018.
+
+\bibitem[Sifringer et~al.(2020)Sifringer, Lurkin, and
+  Alahi]{sifringer2020enhancing}
+Brian Sifringer, Virginie Lurkin, and Alexandre Alahi.
+\newblock Enhancing discrete choice models with representation learning.
+\newblock \emph{Transportation Research Part B: Methodological}, 140:\penalty0
+  236--261, 2020.
+
+\bibitem[Wang et~al.(2020)Wang, Mo, and Zhao]{wang2020deep}
+Shenhao Wang, Baichuan Mo, and Jinhua Zhao.
+\newblock Deep neural networks for choice analysis: Architecture design with
+  alternative-specific utility functions.
+\newblock \emph{Transportation Research Part C: Emerging Technologies},
+  112:\penalty0 234--251, 2020.
+
+\bibitem[Wei et~al.(2019)Wei, Dash, Gao, and Gunluk]{wei2019generalized}
+Dennis Wei, Sanjeeb Dash, Tian Gao, and Oktay Gunluk.
+\newblock Generalized linear rule models.
+\newblock In \emph{International conference on machine learning}, pp.\
+  6687--6696. PMLR, 2019.
+
+\bibitem[Wen \& Koppelman(2001)Wen and Koppelman]{wen2001generalized}
+Chieh-Hua Wen and Frank~S Koppelman.
+\newblock The generalized nested logit model.
+\newblock \emph{Transportation Research Part B: Methodological}, 35\penalty0
+  (7):\penalty0 627--641, 2001.
+
+\end{thebibliography}

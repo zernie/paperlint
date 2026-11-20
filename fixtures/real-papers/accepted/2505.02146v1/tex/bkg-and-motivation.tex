@@ -1,0 +1,30 @@
+
+\vspace{-10pt}
+\section{Background and Motivation}
+\vspace{-5pt}
+\subsection{Background}
+\subsubsection{Programming Deep Learning Systems}
+
+
+Deep learning systems (DLS) have their own programming languages, providing adaptable interfaces for hardware manipulation, such as CUDA C for NVIDIA GPU, HIP for AMD MI, BANG C for Cambricon MLU, and VNNI instruction extensions for Intel DL Boost CPU.
+However, programming DLS poses substantial challenges, which stem from their \emph{inherent high parallelism}, \emph{intricate memory hierarchies}, and \emph{specialized instruction sets}. 
+First, DLS typically follows parallel programming models, like SIMT or multi-core, diverging from conventional serial programming. This paradigm shift necessitates a deep understanding of task and data parallelism from programmers.
+Furthermore, DLS are designed with complex on-chip memory hierarchies to process diverse data types efficiently. For instance, Cambricon MLU uses separate neuron and weight storage for different memory types (i.e., NRAM and WRAM space), while NVIDIA GPU utilizes various memory spaces (e.g., local and shared memory) for multi-level dataflow. Such designs require programmers to explicitly manage complicated memory hierarchies.
+Additionally, to suit deep learning's computational demands, DLS often incorporate specialized instruction sets. Examples include Intel's DL Boost VNNI for specific operations and Cambricon's tensor intrinsics % like \texttt{\_\_bang\_conv}. 
+These specialized intrinsics often come with intricate constraints, adding extra complexity to programming. 
+Table~\ref{tab:my_label} illustrates the stated programming difficulty for various DLS.
+
+
+
+\subsubsection{Search-based Program Synthesis}
+
+Researchers have studied how to use search-based program synthesis to transform legacy code to high-performance code with minimal manual efforts~\cite{ikarashi2022exocompilation,bansal2023mosaic,vanhattumvectorization, bhatia_et_al:LIPIcs.ECOOP.2023.38}.
+The idea is to obtain programs that satisfy semantic correctness by searching through a pre-defined domain-specific language (DSL) or using an SMT solver for constraint solving.
+The main advantage of search-based program synthesis is to ensure
+the semantic equivalence between the original code and the translated code.
+However, these approaches always struggle with large search spaces, which means that they can only be applied to pre-defined DSL and thus cannot generate code for commodity deep learning systems. Additionally, they can only handle computational instructions and are unable to meet optimization requirements for hierarchical storage and parallel capabilities. Thus, the source-to-source translation across different deep learning systems remains an open problem.
+
+\subsubsection{LLM-assisted Program Generation}
+LLMs such as Codex~\cite{chen2021evaluating} and StarCoder~\cite{li2023starcoder} are being increasingly used to assist in programming. They can generate programs based on problem descriptions and generate possible code snippets based on the provided code context, helping programmers write code quickly. They also allow programmers to describe problems in natural language without following specific programming language syntax.
+However, these LLMs have several limitations. Firstly, they lack a deep understanding of program semantics and cannot comprehend the intent of the code. This means that the generated code may be incorrect or incomplete, requiring further adjustment and optimization. Secondly, these models perform poorly in specific domains or complex problems, because it is typically difficult to obtain high-quality and diverse training data for these problems. 
+

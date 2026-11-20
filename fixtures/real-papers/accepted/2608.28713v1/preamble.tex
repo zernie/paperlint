@@ -1,0 +1,85 @@
+\usepackage[capitalise,nameinlink]{cleveref}
+%\usepackage{graphicx}
+%\usepackage{amsmath}
+%\usepackage{mathpartir}
+\usepackage{enumitem}
+\usepackage{multirow}
+
+% code listing
+%\usepackage[T1]{fontenc}
+%\usepackage{lmodern}
+\usepackage{listings}
+%\usepackage{xcolor}
+
+% subtables
+\usepackage{subcaption}
+%\usepackage{booktabs}
+
+% figures
+%\usepackage{setspace}
+
+\crefformat{section}{#2\S{}#1#3}
+\crefname{lstlisting}{Listing}{Listings}
+
+\definecolor{SoftBlue}{HTML}{005CC5}
+\definecolor{WarmGray}{HTML}{6A737D}
+\definecolor{DarkRed}{HTML}{D73A49}
+\definecolor{WarmGray}{HTML}{6A737D}
+\definecolor{Teal}{HTML}{22863A}
+\definecolor{BurntOrange}{HTML}{E36209}
+\definecolor{backcolor}{rgb}{0.95,0.95,0.95}
+\definecolor{shadecolor}{rgb}{0.95,0.95,0.95}
+
+% Wrap every listing (code + caption) in a shaded box so the grey background
+% includes the caption. `framed` is only auto-loaded by acmart for the acmcp
+% format, so load it explicitly here (it is on the TAPS accepted list).
+\usepackage{framed}
+\newenvironment{lstshade}%
+  {\setlength{\fboxsep}{1pt}\vspace{1pt}\begin{snugshade}}%
+  {\end{snugshade}\vspace{2pt}}
+\BeforeBeginEnvironment{lstlisting}{\begin{lstshade}}
+\AfterEndEnvironment{lstlisting}{\end{lstshade}}
+
+\colorlet{DSLKeyword}{SoftBlue}
+\colorlet{DSLStatement}{Teal}
+\colorlet{DSLComment}{WarmGray}
+\colorlet{DSLSymbol}{DarkRed}
+
+\lstdefinelanguage{Rust}{
+  keywords={as,break,const,continue,crate,else,enum,extern,false,fn,for,if,
+  impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,
+  super,trait,true,type,unsafe,use,where,while,async,await,dyn,abstract,become,
+  box,do,final,macro,override,priv,typeof,unsized,virtual,yield,try,union,raw},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+}
+
+\lstdefinestyle{mystyle}{
+  aboveskip=0pt,
+  belowskip=0pt,
+  abovecaptionskip=3pt,
+  belowcaptionskip=0pt,
+  keywordstyle=\color{DSLKeyword},
+  commentstyle=\color{DSLComment},
+  basicstyle=\linespread{0.8}\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=1pt,
+  numberstyle=\tiny,
+  showspaces=false,
+  showstringspaces=false,
+  escapechar=$,
+  language=Rust,
+}
+\lstset{style=mystyle}
+
+% some custom macros
+\newcommand{\num}[1]{\textcolor{orange}{#1}}
+\newcommand{\word}[1]{\textit{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+\newcommand{\C}[1]{{\small\tt#1}}
+\newcommand{\rustc}[0]{\C{rustc}}
+\newcommand{\topspace}{\rule{0pt}{2.0ex}}

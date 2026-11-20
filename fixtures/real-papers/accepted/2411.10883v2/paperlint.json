@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "ieee-s-p-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:ieee-conference"
+      },
+      "opened": "2025-04-26",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-04-26",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

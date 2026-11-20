@@ -1,0 +1,13 @@
+\section{Future Work}
+\label{sec:future_work}
+
+
+{
+A natural direction for future work is to extend our approach to cyclic patterns, which present additional challenges.
+Unlike acyclic patterns, cyclic patterns do not allow recursive decomposition, so their counts cannot always be derived by aggregating subpattern counts, making our multi-round aggregation strategy inapplicable. 
+A possible workaround is to break cycles and reduce the problem to acyclic patterns with additional node constraints. 
+For example, triangle counting can be reduced to counting 2-line paths whose endpoints are connected, but this introduces significant utility challenges, as it requires tracking both endpoints of each counted path while preserving privacy.
+}
+Another promising extension is to support node-LDP, which offers stronger privacy guarantees than edge-LDP by protecting the presence of each individual node along with all its incident edges.
+
+

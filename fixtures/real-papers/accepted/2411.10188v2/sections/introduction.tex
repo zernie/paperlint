@@ -1,0 +1,145 @@
+\section{Introduction} \label{sec:intro}
+
+
+The Domain Name System (DNS) is a central component of the Internet's infrastructure. 
+It translates human-readable domain names, such as \name{www.sigplan.org}, into machine-recognizable IP addresses via \emph{name resolution}, thereby simplifying Internet navigation and resource access for users. 
+This seemingly simple translation service,  handled by \emph{recursive resolvers}, is underpinned by an intricate, hierarchical, globally distributed database. 
+Each organization, like Google or Cloudflare, 
+provides name resolution for its portion or \emph{zone} of the entire DNS namespace.
+Operators within each organization manage that zone through,  often manually configured, \emph{zone files}. 
+These zone files, 
+stored on \emph{authoritative nameservers},
+map domain names to IP addresses as well as other types of DNS records, 
+specifying further actions to be taken such as query rewriting or delegation. 
+
+\new{The IETF (Internet Engineering Task Force)~\cite{ietf} publishes \emph{requests for comments} (RFCs), which are technical documents describing the Internet's technical foundations.}
+To date, hundreds of RFCs (e.g., \cite{rfc1034,rfc1035,rfc6672,rfc2181}) have been published that define and guide the design, implementation, and operation of DNS. 
+The sophisticated nature and large scale of DNS pose unique challenges for developers and operators, who have invested considerable efforts to ensure its functional correctness,   security, and availability.
+These challenges  often stem from name resolution failures, which result mainly from misconfigurations or  attacks, and have historically led to large-scale outages~\cite{DNS-outage-1,facebook-outage,azure-outage}. Of particular concern are \emph{denial of service} (DoS)  vectors, which have been frequently identified over the past decade~\cite{iDNS,NRDelegationAttack,TUDOOR}. In particular,  \emph{amplification attacks}, which exploit the DNS protocol to significantly 
+increase the query load on the victim (resolvers or authoritative nameservers), have seen a surge in recent years~\cite{NXNSAttack,dnsmaude,TsuKing,TsuNAME,camp}.
+
+Despite continuous advances in DNS testing and monitoring~\cite{ResolFuzz,ResolverFuzz,thousandeyes,check-host,Eywa,scale}, 
+numerous issues, like those just mentioned, still arise from RFCs or protocol-level defects in extensively tested production resolvers and nameservers. This highlights the necessity for 
+a principled, proactive way to mitigate such problems, 
+preferably at an early design stage. 
+Two recent formal efforts~\cite{dnsmaude,groot} have attempted to address this issue. 
+GRoot~\cite{groot} is the first static verifier for DNS configuration errors, building on the protocol-level DNS resolution semantics.
+It has been successfully applied to identify 
+misconfigurations in DNS zone files, prior to their deployment. 
+DNSMaude~\cite{dnsmaude} is a formal framework, implemented in the Maude~\cite{DBLP:conf/maude/2007} language, 
+for both the qualitative (e.g., functional correctness) and quantitative (e.g., amplification) analysis of  DNS protocols. 
+It is based on a 
+semantics for the entire end-to-end name resolution, 
+ covering essential features such as resolver caching and recursive subqueries, which GRoot abstracts away.
+\emph{Henceforth, when we refer to DNS, we consider this more comprehensive semantics.}
+DNSMaude's accompanying analyzer has also discovered multiple attacks on DNS with large amplification effects. %
+
+
+\inlsec{Research Gaps} %
+Both works have provided partial solutions to the \emph{DNS verification}   
+(\scrsf{dnsverif}) problem
+where, 
+given the DNS zone files $\cal Z$,
+one asks whether a property $\phi$ of interest holds for some behavior of DNS (see \Cref{sec:property-validation-to-reachability}  for its formal definition). 
+Intuitively, the property $\phi$ captures the \emph{bad} behaviors exhibiting attacks. As every behavior of DNS starts with an initial query from the resolver, on behalf of a client, an immediate challenge in this problem is to explore the infinite space of queries exhaustively. A priori, this was infeasible.
+
+GRoot tackles this problem by introducing an equivalence relation on the query space, with finitely many equivalence classes (ECs), such that queries within an EC are resolved in the same manner and yield the same result. While this equivalence is proven to be sound under a simplified DNS semantics, it is unsound with respect to the more realistic semantics involving resolver caching (formalized in DNSMaude). Moreover, GRoot must be supplied with a pre-determined bound on the length of runs in DNS, making it incomplete by design. Additionally, the number of ECs increases explosively with query rewrites, to the order of $n^{255}$ in the size of  zone files, due to advanced DNS features like \rtype{DNAME} rewriting \cite{rfc6672} (see also \Cref{subsec:dns}), which can quickly inflate GRoot's verification time. Finally, GRoot is inherently incapable of specifying behavioural vulnerabilities like amplification DoS attacks within its semantic framework.
+
+DNSMaude also works with GRoot's ECs but supports specifying common behavioural vulnerabilities. However, it still struggles with 
+attack discovery. Since it uses GRoot's ECs, it may fail to explore certain bad behaviours that it believes are equivalent to those that have already been explored. It may then incorrectly conclude that there is an absence of bad behaviours, rendering its search procedure incomplete.
+\new{
+Moreover, DNSMaude's search procedure is also incomplete by design; it uses bounded, explicit-state, linear temporal logic (LTL) model checking~\cite{DBLP:conf/maude/2007}
+for functional correctness properties, searching for bugs or potential attacks. 
+DNSMaude also employs
+ statistical model checking (SMC)~\cite{Sen05} for quantitative properties like amplification. 
+ SMC verifies a property probabilistically, up to a given confidence level, by running Monte Carlo simulations. As a result, the search for attacks is again bounded, for example, in the number of simulations, and attacks may be missed.\footnote{\new{We have experimented with DNSMaude's simulation mode, which is used to discover attacks as presented in~\cite{dnsmaude}. We observe that around 30\% of the runs do not achieve the maximum amplification factor, thus potentially overlooking attacks.}} 
+ }
+
+
+Overall, neither of these two efforts provides a \emph{decision procedure} for the $\scrsf{dnsverif}$ problem. Moreover, an upper bound on the complexity of this problem still remains unknown~\cite{dns-complex}.  
+
+
+
+
+
+\inlsec{Our Approach} In this paper, we aim to address the above challenges. 
+As the first step, we must faithfully model the semantics of DNS. We consider the well-studied model of a system of recursive communicating processes \cite{heussner2010reachability,heussner2012reachability}, and extend it with timers. We call this extension, a \emph{system of recursive communicating processes with timers} (trCPS). We  model the DNS semantics as an instance of a trCPS. 
+Intuitively, the timer keeps track of the age of a resource record in a resolver’s cache. 
+As resolvers are \emph{stateful} (due to referrals or query rewriting),
+we utilize stacks to model how they  track the resolution process, where  each stack entry corresponds to a subquery being resolved. 
+Nameservers just behave as \emph{labelled transition systems} (LTSs) as they are \emph{stateless}.
+
+
+\paragraph{DNS is Eager}
+It is well-known that reachability is undecidable for networks of LTSs that contain cycles in the underlying topology, assuming a finite message alphabet and perfect channels \cite{brand1983communicating}.
+However, this problem becomes  decidable with \emph{lossy communications}~\cite{finkel2001well, AbJo:lossy:IC}. 
+Since DNS typically operates over UDP (User Datagram Protocol)~\cite{rfc1035}, which is inherently lossy, we can use lossy channels.
+ \new{Nevertheless, the problem once again becomes undecidable if a cycle contains a process that is a pushdown system (PDS)~\cite[Thm. 1]{aiswarya2020network}.}
+ Unfortunately, DNS falls within this class, as a resolver is modeled as a PDS with timers and communicates bidirectionally with nameservers (sending queries and receiving answers). 
+ Heussner et al.~\cite{heussner2010reachability, heussner2012reachability} show that the reachability problem for networks of PDSs over \emph{perfect} channels \new{and a \emph{finite} message alphabet}, is decidable for eager runs and pointed network topologies. We show that all runs of DNS are eager by design, and that the underlying topology is pointed. This makes DNS fall within this decidable class of systems.
+
+
+\paragraph{Congruence}
+ Since DNS operates over both (i) an infinite query space and (ii) infinitely many timer valuations,
+ the eagerness of DNS by itself is insufficient to obtain decidability. \new{This is because an infinite query space also necessitates an infinite message alphabet.} We propose a novel \emph{congruence} on the domain space with finitely many equivalence classes, derived using syntactic congruences for carefully constructed regular languages \cite{nerode1958synmon,rabinscott1959synmon}, from the given zone file configuration $\cal Z$. We then show that the domains in any two DNS configurations only need to be syntactically congruent to each other with respect to certain \emph{positive prefix-testable languages} (see \Cref{subsec:ppt}). Moreover, these languages are parametric only in the names and values appearing in $\cal Z$'s resource records (see \Cref{subsec:def-not}), in order to exhibit equivalent behaviours with respect to the DNS semantics. Notably,
+ owing to the nature of these languages, the equivalence is robust to an unbounded number of \rtype{DNAME} rewrites (unlike GRoot), enabling an unbounded analysis. \new{This effectively yields an abstraction with an \emph{equivalent} finite message alphabet for the system.} Finally, the set of timer valuations are abstracted using a standard region construction.
+
+\paragraph{Kernel Bisimulation}
+The domain congruence induces a homomorphism on the semantics
+of DNS, allowing us to reduce it to a recursive CPS with  finitely many control states. However, to show that the reduction is both sound and complete, we introduce a novel,  generalized notion of bisimulation, called \emph{generalized kernel bisimulation}. A crucial property of this bisimulation is the pointwise equivalence of runs from equivalent states \emph{up to the equivalence of transitions}. We prove that the homomorphism induces a generalized kernel bisimulation on the DNS semantics such that any run in the abstract semantics corresponds to a class of equivalent runs in the original semantics. 
+We use this to establish both soundness and completeness of our abstract model with respect to DNS behavior.
+
+\paragraph{Reduction to Reachability}
+As we prove that DNS is an eager trCPS over a pointed network topology,
+the reduced abstract DNS is also an eager recursive CPS over the same topology. %
+We then reduce the $\scrsf{dnsverif}$ problem to an instance of the reachability problem for PDSs, which is known to be decidable \cite{bouajjani1997reachability}.
+Thus, we obtain the decidability of this problem. In addition, we establish that it is solvable in doubly-exponential time in the size of the zone file configuration $\cal Z$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\inlsec{Contributions} Overall, we make the following  contributions.
+
+\begin{itemize}
+    \item We establish the first decision procedure for the $\scrsf{dnsverif}$ problem (Theorem~\ref{thm:sound-complete-abstraction}). Moreover, we show that our algorithm has an upper-bound of $\mathsf{2ExpTime}$ complexity (Lemma~\ref{lem:complexity}), which was previously unknown. %
+
+    \item At the technical level, we initially propose trCPS, a model for networks of recursive communicating processes with timers, as the underlying formal model for DNS (Section~\ref{formal-model}). But it comprises an infinite message alphabet due to the infinite query space. \new{Owing to the monoidal nature of queries, we devise an algebraic abstraction for them (\Cref{subsec:syn-domain-congruence}), with finitely many equivalence classes, using a special class of semigroups (Lemma~\ref{lem:prefix-prefix-singleton-ec}).} We then introduce a novel generalization of bisimulation for LTSs, weaker than strong bisimulation \cite{milner1980calculus} but incomparable to weak bisimulation, \new{to show that our abstraction is sound and complete (\Cref{subsec:gen-ker-bis})}. Both these tools may also be of independent theoretical interest.
+    \item We show how our framework can be applied to instantiate two of the most prominent attacks on DNS, namely \emph{amplification attacks} and \emph{rewrite blackholing} (Section~\ref{sec:applications}). This demonstrates the versatility of our approach. %
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+

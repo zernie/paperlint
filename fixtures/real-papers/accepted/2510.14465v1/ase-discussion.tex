@@ -1,0 +1,47 @@
+The proposed DSL is just a first step towards a more diverse,  
+transparent and agentic collaboration in software development. 
+Open challenges and future directions are discussed below.
+
+\smallskip
+\noindent\textbf{Usability improvement via new syntaxes.}
+To facilitate the adoption of our DSL by less technical users, we envision offering alternative UIs, like chatbots, to enhance usability.
+%  to define the policies, enhancing usability through intuitive UIs or chatbot interfaces. 
+This will be especially useful when introducing our DSL to manage governance in other, non-software, domains.
+% Furthermore, we could leverage some technologies, such as BESSER Agentic Framework\footnote{\url{https://github.com/BESSER-PEARL/BESSER-Agentic-Framework}}, to create a chatbot interface that guides users through the policy definition process.
+%This would broaden accessibility beyond technical users, fostering more inclusive governance design.
+
+\smallskip
+\noindent\textbf{Longitudinal study.}
+To better understand if explicit governance rules help to increase 
+%the number of contributions in an OSS project,
+OSS contributions,
+% (and, if so, what types of policies are more helpful to that), 
+we plan a longitudinal study where we could compare the evolution of contributions in projects before and after they committed to an explicit governance model. 
+This same study could be useful to see whether projects are sticking to such governance model or they just ignore it even after committing to it. 
+
+%ly, we intend to investigate usability aspects and gather feedback from practitioners to refine the language and its supporting tools.
+
+\smallskip
+\noindent\textbf{Improved impact of Multi-agent systems in software development.}
+We plan to test whether our governance layer enables more complex multi-agent systems to collaborate, in a controlled way, to solve more ambitious software engineering tasks. 
+By leveraging SWE-bench~\cite{DBLP:conf/iclr/JimenezYWYPPN24}, we can systematically evaluate how governance policies affect agent collaboration, task completion rates, and adherence to defined constraints.
+% This evaluation will provide insights into how formal governance structures impact autonomous agent behavior and overall system performance in software engineering contexts.
+
+\smallskip
+\noindent\textbf{Participant identification and bias mitigation.}
+A problem some projects face is identifying the right people to play certain roles. 
+Given a governance model, it would be possible to analyze past project data to propose candidates to fill the roles required in the governance model. 
+% These candidates could then be validated by the community. 
+A real-time monitoring component should also be helpful to proactively change the candidates to continuously improve the diversity of the collaborations. Indeed, a key element of this (semi)automatic participant analysis could be devoted to make sure the participants list is not biased against certain communities and that it respects the profile requirements. 
+%This would enable automated role adjustments, proactive governance violation detection, and adaptive policy enforcement incorporating positive and negative discrimination strategies to maintain fair representation.
+
+%\smallskip
+%\noindent\textbf{Bias mitigation and diversity enhancement.}
+%Finally, we plan to introduce mechanisms that actively promote diversity in governance decisions and team composition.
+%This includes automatic role identification in governance processes and implementing diversity metrics that can be continuously monitored and enforced, thus maintaining inclusive participation across different profile dimensions.
+
+\smallskip
+\noindent\textbf{Governance beyond software.}
+We believe other domains could also benefit from an explicit and precise definition of their governance policies based on our DSL. 
+% This broader applicability underscores the potential impact of a generalized governance framework for mixed-initiative systems and is a key direction for future exploration.
+For instance, making explicit the governance systems of organizations (such as NGOs) would enable systematic comparison of their decision-making structures and their assessment of inclusivity. % across different organizational contexts.

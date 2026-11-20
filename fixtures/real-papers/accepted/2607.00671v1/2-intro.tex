@@ -1,0 +1,149 @@
+\section{Introduction} \label{sec:intro}
+% \syf{TODO:
+% 1. The first section is too short, add more storytelling elements, emphasize that inter-label relationships in the graph are important, etc.
+% 2. Keep the contribution concise and clear so that it becomes memorable.
+% 3. Continuously highlight the relationship with graphs throughout the motivation section.
+% 4. Arrange the observations and experiments from Figure 1 in a row (with more obs).
+% 5. Make Figure 3 clearer, showing the amount of information.
+% 6. If possible, modify the experiment figures.}
+
+% Background: the motivation to do MLNC
+Graphs, as a complex data structure, are prevalent across various fields~\citep{Jiang2019SemiSupervisedLW,kipf2016variational,ying2018graph,liu2023survey,Fang2024ExploringCO}. Among these, graphs with multi-label nodes are common and of great importance. For instance, proteins in ogbn-protein dataset have multiple functions~\citep{hu2020open}. Accurately identifying all the functions can assist with understanding biological processes and advancing biomedical research. Thus, we focus on this realistic but challenging problem named multi-label node classification on graphs, which we abbreviate as MLNC in the following paper. 
+
+% However, multi-label relationships in graph data are inherently complex. In protein interaction networks, node labels represent various disease-related phenotypes. These phenotypes may not be semantically related but are closely connected through the topological structure of protein interactions. For example, proteins may interact via shared biological processes or functional pathways (topological relationships) to exhibit the same phenotype (label). Therefore, thoroughly analyzing and leveraging the relationships between node labels is crucial for better understanding multi-label graph data and enhancing multi-label classification performance. 
+
+\stitle{Prior studies.}
+Current methods typically adopt three strategies to address this problem.
+The \emph{first strategy} is to neglect the multi-label information and predict the labels without mining label correlations~\citep{shi2020masked,li2023gipa}.
+The \emph{second strategy} is to explicitly treat labels as a new type of node and incorporate them into the original graph, thereby enhancing task performance through propagation and aggregation information between nodes and label nodes~\citep{gao2019semisupervised,8894391}. 
+Since only incomplete connections between nodes and label nodes are available in the training set, the \emph{third strategy} is to integrate label representations into the neighbor aggregation and classification processes, thereby improving the utilization of multi-label information~\citep{ZHOU2021115063,XIAO2022235}. 
+However, these strategies underestimate the complex label correlations in graph data, only assessing label proximity without modeling their influence, thereby failing to fully utilize these correlations to improve MLNC.
+% existing studies have not explicitly analyzed and explored the label correlation in graph data, 
+
+% For graph vs. other data form -> related work
+% Current methods typically adopt two strategies to model label relations.
+% The first is explicitly computing label co-occurrence as the relation~\cite{wang2023deep}.
+% The second is implicitly modeling by connecting labels as special nodes to the original graph, learning their representations during training~\cite{shi2020multi,si2023multi}.
+
+% MLGNC~\cite{zhao2023multi} mainly provides three biological datasets and performs a detailed analysis on both datasets and existing methods.
+% LARN~\cite{XIAO2022235} incorporates the all label embeddings during the neighbor aggregation process.
+% VariMul~\cite{10.1145/3459637.3482391} utilizes VGAE to derive node and label embedding and designs a confidence ranking module to calculate second-order label correlations.
+% LANC~\cite{ZHOU2021115063} attentively aggregates the label embeddings with each node.
+% MLNE~\cite{8894391} use random walk to get embedding on both label-label network and original graph.
+% ML-GCN~\cite{gao2019semisupervised} construct both node-centric and label-centric graphs to aggregate information.
+% MLGW~\cite{8970680} leverage label-specific agent to walk on graph. 
+% MCCA~\cite{ZHANG201872} clustering.
+
+% \begin{wrapfigure}{r}{0.39\textwidth}
+%     \centering
+%     % \setlength{\abovecaptionskip}{-0.05cm}   %调整图片标题与图距离
+%     % \setlength{\belowcaptionskip}{-0.2cm} 
+%     \includegraphics[width=.37\textwidth]{figs/dblp_gat_f1_only.png}
+%     % \includesvg[width=.4\textwidth]{fig/heatmap_perform_newest.svg}  
+%     % \setlength{\abovecaptionskip}{-0.05cm} 
+%     \setlength{\belowcaptionskip}{-0.35cm} 
+%     \caption{Observation on DBLP showing positive (red) and negative (blue) influence between different labels. Each value in the matrix\protect\footnotemark represents the performance on the column label when trained together with the row label, minus the result of training the column label individually.}
+%     \label{fig:intro}
+% \end{wrapfigure}
+
+\stitle{Observations.}
+Our observations (Fig.~\ref{fig:intro}) further show that, for graph data, different labels can mutually enhance or harm each other's performance. 
+Specifically, we compare the performance differences when training a graph neural network (GNN) using both row and column labels simultaneously versus training with only column labels individually. A positive difference indicates that jointly training with row and column labels outperforms training with column label alone, implying that the row label can enhance the column label. Conversely, a negative difference suggests a negative influence. As shown in Fig.~\ref{fig:intro}, most graph datasets exhibit both positive and negative influence between labels. Therefore, in this paper we aim to analyze and quantify these complex label influences on graphs to enhance or mitigate the positive or negative effects.
+% Thus, it is vital to model the influence between labels then enhance/reduce the positive/negative influence between labels for MLNC task.
+
+
+\begin{figure*}[!t]
+    \centering
+    % \setlength{\abovecaptionskip}{-0.05cm}   %调整图片标题与图距离
+    % \setlength{\belowcaptionskip}{-0.2cm} 
+    \includegraphics[width=1.0\textwidth]{figs/Intro_new.pdf}
+    % \includesvg[width=.4\textwidth]{fig/heatmap_perform_newest.svg}  
+    \setlength{\abovecaptionskip}{-0.06cm} 
+    \setlength{\belowcaptionskip}{-0.4cm} 
+    \caption{Observations showing positive (red) and negative (blue) influence between different labels. Each value in the heat maps\protect\footnotemark\ represents the performance on the column label when trained together with the row label, minus the result of training the column label individually.}
+    \label{fig:intro}
+\end{figure*}
+
+% This shows whether the row label helps or harms the results of the column label.
+\footnotetext{These heat maps are asymmetric because each value represents the degree to which the row label helps ($+$) or harms ($-$) the column label. Without loss of generality, we selected the first 10 labels as observation targets (except for DBLP) due to space limitations.} 
+
+
+\stitle{Challenges.}
+% three obs? 
+% challenge 1: influence existing not only between labels but structures, nodes with different labels entangle together 
+% challenge 2: during the training, the influences changes 
+% challenge 3: difficult to analyze higher order correlaiton and use them
+However, given the intricate nature of graph, several challenges emerges. 
+First, the influences existing not only between labels themselves but between nodes entangled together through graph structure. Thus, \emph{how to quantify the influences between labels on the complex non-Euclidean graph data} is the first challenge. 
+% Second, as GNNs progressively update message passing based on label information from the training set, the influence among labels dynamically evolves during the training process. Thus, \emph{how to capture the dynamically evolving influences during training} is the second challenge. 
+Second, since any label may exert both positive and negative influences on multiple other labels simultaneously, the second challenge is \emph{how to capture the high-order influence correlations between all labels}. 
+Finally, our goal is to encourage or suppress labels that bring positive or negative influences, respectively. Thus, \emph{how to leverage the quantified high-order influence correlations to enhance the performance of MLNC task} is the third challenge.
+
+% Given the intricate nature of graph, a pressing challenge emerges: \emph{How can we explicitly quantify the label correlations in a way that reflects the multifaceted influences--both positive and negative--between multiple labels?} 
+% Moreover, understanding the label influence holds the key to unlocking potential advantages in predictive accuracy for each label. This raises another critical challenge: \emph{How can we architect an innovative model that leverages these influences to enhance the results of MLNC?}
+
+\stitle{Present work.}
+% To clearly analyze the above challenges posed by label correlations on graphs, 
+To address the \emph{first} challenge,
+we decompose the message passing into propagation and transformation operations~\citep{zhang2022model}, allowing for a detailed analysis of the label influence correlation on graph data. 
+% Through this innovative decomposition, we conduct a thorough analysis and quantification of the influence between labels, setting the stage for building a model tailored to enhance MLNC task.
+Moreover, we provide a theoretical analysis, grounded in the inductive biases inherent in graph models~\citep{xu2018representation,wang2020unifying}, revealing that the graph structure itself is a key driver of label influence during propagation operation. 
+% Based on these analyses, we quantitatively calculated the magnitude and direction of the mutual influence between node groups with different labels caused by message passing. 
+As for transformation operation, our analysis revealed that the dynamic interactions between labels during training are caused during each back propagation on model parameters. 
+% Then, we calculate the influence between labels synchronized with gradient descent. 
+The above two parts of the label influence analysis not only provide a deep insight into multi-label correlations on graph data but also lay a solid foundation for improving MLNC on graphs. 
+
+To tackle the \emph{second} challenge, we construct a high-order label influence propagation graph based on the pair-wise correlations. Thus, we can quantify the propagated influence from one label to any other labels on graph data.
+For the \emph{third} challenge, we propose a novel method, \underline{L}abel \underline{I}nformation \underline{P}ropagation (\model), which contains the above quantification steps and crafts the training dynamics among multiple labels to improve the overall performance.
+% Specifically, we constructed a high-order label influence propagation graph based on the quantified pairwise label influences.
+% Building on the quantified label influences, 
+By calculating the importance of each label in this propagation graph, we dynamically adjusted its learning proportion throughout the training process. This ensures that labels with more positive influence on others are learned more effectively, while minimizing negative interactions between labels, ultimately enhancing the performance of MLNC.
+As a plug-and-play approach, our method can be applied to various GNN backbones. We validated its effectiveness using multiple settings on the most comprehensive collection~\citep{zhao2023multi} of MLNC datasets.
+
+
+% \vspace{-0.2cm}
+
+\stitle{Contributions.}
+To summarize, our contributions are three-fold.
+% \vspace{-0.2cm}
+% \begin{compactitem}[leftmargin=*]
+\begin{itemize}[leftmargin=*]
+\item We offer a novel perspective on label correlation analysis by dissecting the pipeline into forward and backward propagation segments, where we conduct a thorough analysis and quantification of the influence correlation between labels.
+
+\item Building on the quantified pairwise label influence, we design \model, which calculates high-order label correlation and the influence propagation between labels to dynamically guide the learning process of the model.
+
+\item Empirically, we validate the superiority of our method on MLNC graph data across various domains, showing improvements (AUC) of 3.06\% and 3.42\% on average under the node split and label split settings, respectively.
+\end{itemize}
+% \end{compactitem}
+
+
+
+
+% However, objects (nodes) in the real world are inherently complex and often contain rich semantics or labels.
+% % However, in the real world, each data point actually corresponds to multiple sets of labels.
+% For example, in social networks, a person may belong to various interest groups simultaneously; in gene interaction networks, a protein can have multiple functions; in financial networks, a user might exhibit several types of anomalies at the same time. 
+% If an independent model is designed and trained for each label, it is not only time-consuming and labor-intensive on one hand, but on the other hand, there is often mutually beneficial information between these labels in most cases. One type of label could be significantly helpful for another type. It is well known that the relevance and dependency of labels exist extensively among multiple labels~\cite{liu2021emerging}, i.e., basketball is often closely related to fitness interest groups, and credit card anomalies may lead to overdue payments, etc.
+
+
+
+
+% \zeminC{缩写一下：multi-label node classification 为 MLNC}
+
+
+
+% The task demands a method that not only measures these correlations precisely but also quantifies them in a meaningful manner.
+
+
+% In this paper, we tackle the intricate task of MLNC by exploring the nuanced influences exerted by labels on one another within the context of graph structure. 
+% Subsequently, by accurately quantifying these label influences, we introduce an innovative model designed to harness such insights. This model strategically leverages the quantified influences to modulate the learning process, aiming to finely adjust the interplay among various labels. 
+% This approach not only facilitates improved model optimization but also enhances the predictive accuracy, providing a significant contribution to the field of MLNC on graphs.
+
+% Furthermore, our exploration of interactions among multiple labels during backward propagation identifies the gradients affecting the shared component--namely, the backbone model--as a source of influence among the labels. By synthesizing these insights, we are able to quantify the influence of labels throughout the entire process, laying the groundwork for the development of an effective model for MLNC.
+
+% To tackle the second challenge, leveraging the quantified influences, we introduce a novel model for MLNC on graphs, termed Label Information Propagation (\model). 
+% We use the quantified label influence to construct a label influence propagation graph, capturing higher-order label relationships beyond pairwise.
+% Then, we assesses label importance based on this label graph structure. Additionally, we modulate the training loss generated by multiple labels to amplify beneficial influences while mitigating adverse ones. Through this approach, we significantly boost overall performance, showing the efficacy of \model in harnessing label interactions for MLNC on graphs.
+
+% (1) We offer a novel perspective on multi-label node classification (MLNC) by dissecting the model into forward and backward propagation segments. Through this innovative decomposition, we conduct a thorough analysis and quantification of the influence between labels across the entire modeling process, setting the stage for building the model tailored to enhance MLNC task.
+% (2) Building on the quantified label influences, we propose a novel model \model, specifically designed for MLNC, which represents a strategic advancement by crafting the training dynamics among multiple labels to improve overall performance.
+% (3) We conduct extensive experiments on several benchmark datasets, and the superior performance of \model\ surpassing the state-of-the-art demonstrates its effectiveness.

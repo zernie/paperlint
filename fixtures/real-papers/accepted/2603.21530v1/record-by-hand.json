@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/0_abs.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "data/intro_figure.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/2_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/3_approach.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/4_setup.tex",
+      "role": "body"
+    },
+    {
+      "path": "data/RQ1_table.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/5_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "data/RQ2_table.tex",
+      "role": "body"
+    },
+    {
+      "path": "data/RQ3_table.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/6_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/7_relatedWork.tex",
+      "role": "body"
+    },
+    {
+      "path": "section/8_conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "ad3890e96392b0f7546ae6ab885201f662a587673b29bd11b5a864fb1f9d4a41",
+    "section/0_abs.tex": "788f55b2d1022d19ad67d7ad2ae415f6fc46b492d6864d264c15c24a58cb237b",
+    "section/1_intro.tex": "a8223a6071fc1b69fe172db3668ee6f140d8830c39d6d4e98f661f9fd8fc69cf",
+    "data/intro_figure.tex": "9c6bdee6e4bcdb14ff28dcca55ebb37779166145f981652e7761560e686b6f90",
+    "section/2_background.tex": "42bfb5887fd645cc5921273e5924c70c702c399da053d16836dd68ff0cbedeb1",
+    "section/3_approach.tex": "0f67602788eed76674bde1d3f3423b6fa2081013b2abeb0d07563b4d5b03ba98",
+    "section/4_setup.tex": "7eab8ea321c4b2f2ea320b97d9c47208a79ffb96b275585e05b151b67218de92",
+    "data/RQ1_table.tex": "04a45aa4eb38e6e01d2c3f55608c14f4e105c9a1488909732b025f21e9c67d70",
+    "section/5_result.tex": "6e22416b108f90b40e93e331a651acdd8dea70a14a9e97da60e38b289195574e",
+    "data/RQ2_table.tex": "747a64896e0d699686b3dbef75e2026ab2cb30f8b2174587adf2bcd4f282c439",
+    "data/RQ3_table.tex": "b51e704919c5542ad3d57b40867a2ff14d1408439b187d54f8342db10002a5ac",
+    "section/6_discussion.tex": "49527066ed7a874174b66b6d24245bcb82333969a213b470ee68f5d3b337187e",
+    "section/7_relatedWork.tex": "57dfe40d9738f8a7443f4a7658b8cdcfecc596601c12e4371b4074d326d56630",
+    "section/8_conclusion.tex": "c58fef13c1f3365ddcc72c721be0262814e38f41c26266b47a73c9facec3a7dd"
+  }
+}

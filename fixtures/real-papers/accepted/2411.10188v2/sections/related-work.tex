@@ -1,0 +1,102 @@
+\section{Related Work} 
+\label{sec:related}
+
+Our framework, along with its underlying formalism, analysis approach, and application domain, is closely related to the following three lines of  earlier research.
+
+\paragraph{Formal Modeling and Analysis of DNS}
+Kakarla et al.~\cite{groot} formalize the DNS resolution semantics, abstracting away critical resolver-side logic including caching and recursive queries. 
+Building upon this semantics, they also 
+provide the first static analyzer GRoot for identifying DNS misconfiguration errors. 
+Liu et al.~\cite{dnsmaude} complement GRoot's semantics by
+providing the first formal 
+semantics of end-to-end name resolution.
+The accompanying tool DNSMaude
+offers a collection of formal analyses for both qualitative (e.g., rewrite blackholing)
+and quantitative 
+properties (e.g., amplification).
+We have already discussed
+their limitations in \Cref{sec:intro}. 
+
+
+
+
+\paragraph{Testing, Monitoring, and Verification of DNS Implementations} 
+Recent years have seen significant advances in DNS testing tools~\cite{Eywa,ResolFuzz,ResolverFuzz,scale}. 
+ResolFuzz~\cite{ResolFuzz} is a differential tester, searching for semantic
+bugs such as inaccuracies in resolver responses across DNS resolver implementations.
+ResolverFuzz~\cite{ResolverFuzz} fuzzes resolvers via
+ short query-response sequences. 
+ It also leverages differential testing and can identify resolver vulnerabilities like cache poisoning bugs.
+Unlike pure fuzzing,
+SCALE~\cite{scale}
+guides its test generation by  
+symbolically executing GRoot's  semantics. 
+It focuses on detecting RFC compliance errors in authoritative nameserver implementations rather than recursive resolvers.
+While also deriving exhaustive test cases using symbolic execution, Eywa~\cite{Eywa} leverages large language models to construct intended DNS behaviors from natural language sources like RFCs. 
+All these testers, along with excellent DNS monitors~\cite{thousandeyes,check-host}, 
+can only show the presence of bugs or vulnerabilities, not their absence, in DNS implementations.
+Moreover, in contrast to our framework, they
+do not
+encompass the full name resolution process involving both  recursive resolvers and nameservers.
+
+
+IRONSIDES~\cite{Ironsides} is a nameserver
+implementation provably secure against DNS vulnerabilities like single-packet DoS
+attacks. 
+However, it may still be susceptible to application-layer issues such as amplification attacks, in contrast to our framework. 
+DNS-V~\cite{DNS-V} is a verification
+framework for an in-house DNS authoritative 
+engine in Alibaba Cloud.
+A symbolic-execution-based approach is used to 
+facilitate the adoption of layered verification, where 
+source code within each decomposed layer of DNS can be verified independently with respect to correctness properties. 
+Quantitative properties like amplification are out of its scope.
+Wang et al.~\cite{10.1145/3663408.3663412}  scale up the verification of DNS configuration
+by parallelizing the analysis of zone-file-specific query processing behaviour and symbolically combining the analysis results. 
+Unlike our framework, the use of formal methods in none of these works is related to the DNS semantics.
+
+
+All these testing, monitoring, and verification efforts focus on DNS implementations.
+Given that many DNS vulnerabilities have stemmed
+ from RFCs or protocol-level defects in heavily tested production resolvers and nameservers, protocol-level verification
+ at an early design stage is highly desirable. Our framework takes a step forward towards this goal. 
+
+
+
+\paragraph{Verification Problem for Infinite-State Systems}
+Verification of infinite-state systems is a well-studied problem and is still an active area of research. Abdulla \& Jonsson \cite{AbJo:lossy,AbJo:lossy:IC} and C{\'e}c{\'e} et al. \cite{cece1996unreliable} independently show that the verification problem for CPSes communicating over lossy channels is decidable in non-primitive recursive time, for arbitrary topologies. Abdulla et al. \cite{abdulla2012timed} later show that the decidability holds even when the communicating processes are timed and the messages contain time-stamps. Heussner et al. \cite{heussner2010reachability,heussner2012reachability} study this problem for rCPSes, however, over perfect channels. They restrict their attention to eager runs and show that the problem is decidable in exponential-time for a restricted class of topologies that they call \emph{non-confluent}. Prior to this work, Atig et al. \cite{atig2008reachability} show that the problem is decidable even without the restriction of eagerness, but instead requires the underlying topology to be acyclic. In the context of PDSes, Bouajjani et al. \cite{bouajjani1997reachability} show that the problem is decidable for PDS, using a \textit{saturation method} that computes the set of all reachable computations. Abdulla et al. \cite{abdulla2012dense} and Clemente and Lasota \cite{clemente2015timed} extend the decidability to timed PDS with a timed stack. In contrast, our work handles a timed extension of rCPS with an infinite message alphabet. In addition, we focus on models pertaining to the DNS semantics.
+
+Kakarla et al. \cite{dns-complex} study the expressive complexity of DNS. They show that the verification of DNS zone files, a simpler problem than $\verif$, is likely to take at least cubic time in
+the number of records, effectively giving a lower bound. In this work, we provide an upper bound for this problem (\Cref{lem:complexity}).
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

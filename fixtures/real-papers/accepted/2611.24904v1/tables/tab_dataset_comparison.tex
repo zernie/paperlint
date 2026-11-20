@@ -1,0 +1,26 @@
+\begin{table}[t]
+  \centering
+  \caption{
+    \textbf{Comparison of shadow detection datasets.}
+    No existing overhead dataset combines human-verified labels, multiple cities, multiple native resolutions, and a defined geographic transfer protocol.
+    \shadow{} fills this gap.
+    ISTD is included for context only; ground-level geometry is not a substitute for overhead evaluation.
+    ``Transfer protocol'' = a defined geographic train-test split with formal evaluation guidelines.
+    $\checkmark$~=~present; \texttimes{}~=~absent; n/r~=~not reported.
+  }
+  \label{tab:dataset_comparison}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lllcccc@{}}
+    \toprule
+    Dataset & Domain & Scale & Human QC & Cities & Multi-res & Transfer protocol \\
+    \midrule
+    ISTD~\cite{istd}                & Ground-level             & 1{,}870     & $\checkmark$         & --          & \texttimes & \texttimes \\
+    AISD~\cite{aisd}                & Aerial 0.3\,m   & 514         & $\checkmark$         & 5           & \texttimes & \texttimes \\
+    Airborne-Shadow~\cite{azimi2023airborne} & Aerial & n/r         & $\checkmark$         & DE only     & \texttimes & \texttimes \\
+    S-EO~\cite{seo}                 & Satellite 0.3\,m & $\sim$19{,}000 & \texttimes\ (auto) & 3 (US)      & \texttimes & \texttimes \\
+    \midrule
+    \shadow{} (ours)                & Aerial 0.3/0.6\,m & 4{,}500   & $\checkmark$         & 3 (US)      & $\checkmark$ & $\checkmark$\ \loco \\
+    \bottomrule
+  \end{tabular}
+\end{table}

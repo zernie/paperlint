@@ -1,0 +1,86 @@
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\linewidth]{figs/slides_with_pdf/overview-v2.pdf}
+    \caption{\textbf{Overview.} Our \name comprises of two parts to achieve extreme compression in long video understanding. \textbf{(1)} At the \emph{token level}, we propose the supervised compression tuning that enables the LLM to compress every video frame into one compact token in a \emph{learnable and progressive} manner, namely, LP-Comp (Sec.~\ref{subsec:lpd}). \textbf{(2)} At the \emph{frame level}, we utilize the internal attention mechanism to select the frames relevant to the questions, which is \emph{question-conditioned} compression, namely, QC-Comp (Sec.~\ref{subsec:qcd}). Both aspects combined lead to our objective of extreme compression in long video understanding: one token per highly selective frame.
+    }
+    \label{fig:overview}
+\vspace{-3pt}
+\end{figure}
+
+\vspace{-3pt}
+
+
+\section{Methodology}
+
+\vspace{-3pt}
+
+
+Towards the objective of extreme compression, we introduce a novel framework that unifies the compression of long video tokens from two dimensions, as illustrated in Fig.~\ref{fig:overview}:
+\begin{enumerate}[leftmargin=*, noitemsep, nolistsep]
+    \item \emph{Token-level}: the \textbf{Learnable\&Progressive Compression (LP‑Comp)} represents each frame using as few as one token, which is learned via training (Sec.~\ref{subsec:lpd}).
+    \item \emph{Frame-level}: \textbf{Question-conditioned Compression (QC-Comp)} selects the frames that are most relevant to the questions based on the attention scores inside the LLM layers, which is employed as an inference-time enhancement (Sec.~\ref{subsec:qcd}).
+\end{enumerate}
+
+
+%------------------------------------------------------------------------
+\subsection{Preliminaries and Formulation}\label{subsec:problem}
+
+\textbf{VLMs for Video Understanding.}\;\; Current VLMs primarily follow the architecture of LLaVA~\cite{liu2023visual} when handling visual inputs: (1) an encoder encodes the raw pixels into a set of visual tokens; (2) a projector, commonly several multi-layer perceptions (MLPs), projects the visual tokens into the dimensions the LLMs; (3) an LLM accepts both the text tokens and projected visual tokens and decodes the output in an auto-regressive manner. This paper concentrates on the compression between the LLM layers and keeps the visual encoder and projector unchanged.
+
+More formally, we consider accepting videos as input, the standard practice is to sample $T$ frames for the VLM to process, denoted as $\{F_t\}_{t=1}^{T}$. Suppose the vision encoder converts each frame into $N^{(1)}$ visual tokens, we then let the LLM's input for the $i$-th frame be $V_i^{(1)}\in\mathbb{R}^{N^{(1)}\times d}$, where $d$ is the LLM's dimension. So the input video tokens for the LLM become a sequence of $T\times N^{(1)}$ tokens, namely, $V^{(1)}\xleftarrow{}\bigl[V_1^{(1)}, ..., V_T^{(1)}]$. Denoting the input query as $Q^{(1)}$ with $N_q$ tokens in standard question-answering scenarios, we follow the practice of our baseline model VideoChat-Flash~\cite{li2024videochat} of appending the query $Q^{(1)}$ after the visual tokens $V^{(1)}$, yielding the input sequence to LLM as $X^{(1)}\xleftarrow{}[V^{(1)}, Q^{(1)}]$, a sequence with length $T\times N^{(1)} + N_q$. Then, the LLM begins the auto-regressive generation of new text tokens based on the input sequence $X^{(1)}$.
+
+\textbf{Objective: Visual Token Compression.}\;\; The computation process of the LLM is commonly dominated by the large volume of visual tokens $T\times N^{(l)}$ in long video understanding. To reduce the cost of LLM layers and permit more input frames, we explore two directions to reduce video token counts: either from the aspect of $N^{(1)}$, the number of tokens per frame, or $T$, the number of frames. \textbf{(1)} \emph{Token-level Compression}. Denoting $N^{(l)}$ as the number of tokens per frame at $l$-th transformer layer, our formal objective is to decrease $N^{(l)}$ so that the transformer layers have a gradually more concise set of visual tokens to process, shrinking from $T\times N^{(1)}$ to $T\times N^{(l)}$. We demonstrate such token-level compression in Sec.~\ref{subsec:lpd}.  \textbf{(2)} \emph{Frame-level Compression}. Another way of decreasing the computation is to convert the frame number $T$ into a smaller $T'$. In the context of long video understanding, this means selecting a subset of relevant frames to process and ignoring the rest. Our Sec.~\ref{subsec:qcd} presents frame-level compression strategies. Finally, our framework unifies both types of compression to enhance long video understanding.
+
+%------------------------------------------------------------------------
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\linewidth]{figs/slides_with_pdf/lp-drop.pdf}
+    \caption{\textbf{Learnable and Progressive Compression (LP-Comp).} With \emph{supervised compression tuning}, the LLM layers \emph{learn} to condense the visual tokens \emph{progressively} into a concise set of tokens until reaching the extreme of one token per frame.} %\textcolor{red}{To Zheyu: (1) Change the colors, borders, the representation of tokens to improve visual quality; (2) Font should be consistent and nice looking, how about Cambria; (3) it seems the tokens are not only one at the end? (4) N0 to N1 (5) Refer to my GLUS paper, Figure 2 for visual styles. } }
+    \vspace{-6mm}
+    \label{fig:lp-drop}
+\end{figure}
+\subsection{Learnable and Progressive Token Compression (LP-Comp)}\label{subsec:lpd}
+
+\noindent\textbf{Objective.}\;\; As discussed in Sec.~\ref{subsec:problem}, the objective of \emph{token-level compression} is to decrease the number of video tokens $N^{(l)}$ than the initial token number $N^{(1)}$. Suppose the LLM contains $L$ layers, we aim at enabling the LLM to compress the tokens so that \emph{each frame is compressed to a single token} at the last layer, namely, $N^{(L)}=1$. In the case of our baseline VideoChat-Flash~\cite{li2024videochat}, where $N^{(1)}=16$, our target marks the compression ratio of 16.
+
+Although previous studies have demonstrated the redundancy in visual modalities~\cite{bolya2022token}, especially for videos~\cite{li2025mapsparse}, such a level of compression is challenging, as modern VLMs like VideoChat-Flash have already utilized the projector for visual token compression in the form of downsampling. As a result, we discover that the heuristic compression approaches, \emph{e.g.}, selecting tokens in a training-free manner, are prone to failure for such a large compression ratio (as in Sec.~\ref{sec:ablation}, Table~\ref{tab:lvbench_ablation}), whose performance significantly falls behind the baseline without token compression. Therefore, our key insight is to let the LLM layers actively \emph{learn} to condense the tokens into a concise set instead of purely relying on inference-time heuristics for extreme visual token compression.
+
+\noindent\textbf{Learnable Token Compression.}\;\; As shown in Fig.~\ref{fig:lp-drop}, the LLM layers can be trained with the token compression by decreasing the number of tokens during the training stage. A critical design of such token compression is always to preserve the \emph{suffix} tokens of a frame. Concretely, we assume a specific layer $k$ compresses visual tokens from $N^{(k)}$ to $N^{(k+1)}$, where $N^{(k+1)} < N^{(k)}$, then the first $N^{(k)} - N^{(k+1)}$ remaining tokens for a frame are determined to be removed (the dashed boxes in Fig.~\ref{fig:lp-drop}). Such a \emph{suffix-preservation} behavior is compatible with the causal attention of decoder-only LLM layers, as the later tokens in a sequence can absorb the earlier token features instead of the reverse direction. By end-to-end supervising the LLM layers for compression, we observe a significant improvement over heuristics (Sec.~\ref{sec:ablation}, Table~\ref{tab:lvbench_ablation}).
+
+\noindent\textbf{Progressive Token Compression.}\;\; The effectiveness of learnable compression is determined by the capability of LLM layers. For instance, we could directly conduct extreme one-token-per-frame compression with the first LLM layer for maximum efficiency, \emph{i.e.}, $N^{(2)}=1$, but this would risk discarding critical visual information. To balance both token efficiency and preserving information, we propose to compress progressively across all the LLM layers. As illustrated in Fig.~\ref{fig:lp-drop}, each LLM layer only decreases a small amount of visual tokens according to a smooth schedule. We empirically find the cosine curve effective for token compression, where the visual token number evolves as,
+\begin{equation}
+    N^{(\ell)} \;=\;
+      \Bigl\lceil
+        \frac{N^{(1)}-1}{2}\cos\Bigl(\tfrac{\ell}{L}\pi\Bigr)
+        +\frac{N^{(1)}+1}{2}
+      \Bigr\rceil,
+    \quad \ell=1,\dots,L.                  \label{eq:cosine}
+\end{equation}
+Our experiments (Sec.~\ref{sec:ablation}, Table~\ref{tab:lvbench_ablation}) show that smoother compression indeed performs better.
+
+\noindent\textbf{Data-efficient Supervised Compression Tuning.}\;\; We state such continued training of VLMs for the compression capability as \emph{supervised compression tuning} (SCT). It can be learned in a data-efficient way: only using 2.5\% of the data samples from VideoChat-Flash's SFT dataset. Besides, our learnable compression also improves the training efficiency by reducing the average number of tokens, accelerating the training speed, and enabling training on more frames. 
+
+\noindent\textbf{Discussion.}\;\; Despite its simplicity, we emphasize three critical insights leading to our effective token compression: (1) it is viable to conduct visual token compression between the LLM layers without only relying on the visual encoder and projector; (2) \emph{learnable} LLM layers can grasp the condensing of visual information without only relying on training-free heuristics; (3) \emph{progressive} schedule utilizes all the LLM layers for compression without only relying on a few selected layers.
+
+%------------------------------------------------------------------------
+\subsection{Question‑Conditioned Frame Compression (QC-Comp)}\label{subsec:qcd}
+
+\noindent\textbf{Objective.}\;\; Recalling our objective in Sec.~\ref{subsec:problem}, this section addresses the compression at the frame level (from $T$ to $T'$). In its simplest form, our frame-level compression is achieved via frame selection, where only the frames relevant to the user's questions are used for the response. According to the prior works in VLMs, reducing such redundancy is beneficial to the performance and also enable us to digest more video frames. To complete such selection, we aim to assign a \emph{relevance score} for each frame reflecting its usefulness to the user's question and then remove the ones with the lowest relevance; thus, this step is named \emph{Question-Conditioned Compression}.
+
+\begin{wrapfigure}{r}{0.6\textwidth}
+\centering
+\vspace{-3mm}
+    \includegraphics[width=0.99\linewidth]{figs/slides_with_pdf/QC-drop.pdf}
+    \caption{\textbf{Question-Conditioned Compression.} To reduce the visual redundancy and improve long video understanding performance, we split a video into individual segments and assign question-conditioned relevance scores to video frames. The frames with lower relevance scores are discarded so that the LLM only concentrates on the informative frames. }\vspace{-4mm}
+    \label{fig:qc-drop}
+\end{wrapfigure}
+
+
+\noindent\textbf{QC-Comp Overview.}\;\; The QC-Comp is employed at the inference time for our model to select the most relevant frames. Similar to the previous works~\cite{park2024too, buch2022revisiting, wang2024videotree, fan2024videoagent}, we also utilize the internal representation of the VLM for this objective. Concretely, we calculate the attention scores between the question tokens and the video tokens, which serve as the metric for the contributions of a frame: a larger attention score indicates better relevance, an intuition adopted by representative LLM~\cite{wu2024retrieval} and video analysis~\cite{zhou2024rmem}. However, previous approaches utilizing attention score for frame selection exhibit an under-explored issue: the bias of LLM attention for the tokens at the beginning and the end of a sequence, namely ``\emph{lost in the middle}''~\cite{liu2023lost}, which could overlook the critical information at the middle of videos. To address the above problem, we propose splitting a long video sequence into independent short clips.
+
+
+\noindent\textbf{Segmented Local Attention for Relevance Scoring.}\;\; The only change of our solution to conventional LLM layers is to split a video token sequence $V^{(l)}$ with $T$ frames into $N_S=\lceil (T-w)/\mathrm{stride}\rceil$ segments, where $w$ is the window size of the segments. Denoting the $N_S$ segments as $\big [ \tilde{V}^{(l)}_{1}, ..., \tilde{V}^{(l)}_{N_S}\big ]$, we compute the question-conditioned attention within each segment locally by connecting the segment-level video tokens with question tokens, \emph{i.e.}, $[\tilde{V}^{(l)}_{i}, Q^{(l)}]$. The calculation of these segments is independent and can be conducted in parallel, as shown in Fig.~\ref{fig:qc-drop}. Finally, we record the average attention scores across different attention heads. With these attention scores, we calculate the relevant score for each frame as the average of attention score from any question token to any video token that represents this frame in any segment. Top-k relevant frames among the $T$ frames are selected.
+
+\noindent\textbf{Discussion.}\;\;  Despite the complexity of duplicating the question token, it is viable to mitigate the bias in long-context LLM attention, resulting in an improved performance as shown in Table~\ref{tab:segment_vs_global}.
+

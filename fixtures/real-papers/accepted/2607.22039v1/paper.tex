@@ -1,0 +1,1351 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2026_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{colortbl}
+\usepackage{arydshln}
+\usepackage{subcaption}
+\usepackage{titletoc}
+\usepackage{adjustbox}
+\usepackage{tabulary}
+\usepackage[capitalize]{cleveref} 
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage[english]{babel}
+
+
+\title{Enough is as good as a feast: \\A Comprehensive Analysis of How Reinforcement Learning Mitigates Task Conflicts in LLMs}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\author{
+Zixuan Ren\textsuperscript{\rm 1,2}\ ,\ Jinliang Lu\textsuperscript{\rm 3}\ ,\ Junhong Wu\textsuperscript{\rm 1,2},\ Yang Zhao\textsuperscript{\rm 1,2},\ Dai Dai\textsuperscript{\rm 3}\ ,\ Hua Wu\textsuperscript{\rm 3},\\ {\bf Haifeng Wang\textsuperscript{\rm 3},\ Chengqing Zong\textsuperscript{\rm 1,2} \thanks{~Corresponding author.}} \\ 
+\textsuperscript{\rm 1}State Key Laboratory of Multimodal Artificial Intelligence Systems, Institute of Automation, \\
+CAS, Beijing, China \\
+\textsuperscript{\rm 2}School of Artificial Intelligence, University of Chinese Academy of Sciences, Beijing, China \\
+\textsuperscript{\rm 3}Baidu Inc., Beijing, China \\
+\texttt{\textrm{\{}renzixuan2021,wujunhong2021,zhaoyang2015\textrm{\}}@ia.ac.cn}\\
+\texttt{\textrm{\{}cqzong\textrm{\}}@nlpr.ia.ac.cn}\\
+\texttt{\textrm{\{}lujinliang,daidai,wu\_hua,wanghaifeng\textrm{\}}@baidu.com}\\
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newlength{\SubfigContentHeight}
+\setlength{\SubfigContentHeight}{0.60\textwidth}
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\usepackage{float}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+% Jinliang - 0916
+Model merging plays a crucial role in consolidating multiple specialized models into a single, unified model, especially in the era of large language models (LLMs). Recent research has primarily focused on developing strategies to enhance merging performance with the trained models, while the impact of training paradigms, such as supervised fine-tuning (SFT) and reinforcement learning (RL), on the effectiveness of model merging remains underexplored.
+In this study, we systematically explore the merging behavior of RL-trained LLMs compared to those trained with traditional SFT. Through comprehensive evaluations across five representative tasks, we find that RL significantly reduces task conflicts and results in less performance degradation after merging, making RL-trained models particularly well-suited for this process.
+To unearth the reasons behind the superior suitability of RL for model merging, we conduct extensive empirical experiments and theoretical analyses. Our findings highlight three key factors: (1) On-policy training data in RL control the gradient updates in a smaller magnitude, reducing the risk of overwriting existing knowledge for other tasks in the model. (2) The RL optimization objective, which favors ``\textit{enough is as good as a feast}", progressively reduces the magnitude and the number of conflict parameter updates as the model converges. (3) Joint optimization of positive and negative examples in RL steers the model towards an unbiased task-specific parameter subspace, ensuring robust performance while further preventing parameter conflicts. 
+
+% Model merging plays a crucial role in consolidating multiple specialized models into a single, unified model, especially in the era of large language models (LLMs). While recent research has primarily focused on developing strategies to enhance merging performance, the impact of specialization algorithms—such as supervised fine-tuning (SFT) and reinforcement learning (RL)—on the effectiveness of model merging remains underexplored.
+% In this work, we investigate the properties of RL-specialized LLMs in the context of model merging. Through comprehensive evaluation across five representative tasks, we find that RL with Verifiable Reward(RL) substantially mitigates task conflicts and results in less performance degradation compared to traditional SFT approaches, making it more suitable for model merging. 
+% Our further analysis reveals that RL is task-orthogonal, which means RL on a specific task has little effect on other tasks.
+% To understand the mechanism behind this phenomenon, we conduct extensive empirical studies focusing on parameter optimization during RL training. Our analysis identifies two key contributing factors: (1) on-policy training data in RL leads to less gradient magnitude and less risk to overriding knowledge from other tasks, and (2) joint optimization over both positive and negative samples induces low-conflict gradient sub-networks. Furthermore, our theoretical analysis based on the Fisher Information Matrix corroborates these empirical findings and highlights the advantages of RL for model merging.
+
+% ----
+%Model merging plays a crucial role in consolidating multiple specialized models into a single, unified model, especially in the era of large language models (LLMs). While most recent studies have concentrated on merging strategies for LLMs fine-tuned with SFT, limited attention has been given to models specialized through reinforcement learning (RL). In this work, we investigate the properties of RL-specialized LLMs in the context of model merging. Through comprehensive evaluation across five representative tasks, we find that RL substantially mitigates task conflicts and results in less performance degradation compared to traditional SFT approaches, making it more suitable for model merging. Our further analysis reveals that RL is task-orthogonal, which means RL on a specific task has little effect on other tasks. To understand the mechanism behind this phenomenon, we conduct extensive empirical studies focusing on parameter optimization during RL training. Our analysis identifies three key contributing factors: (1) on-policy training data in RL leads to less gradient magnitude and less risk to overriding knowledge from other tasks, (2) the nature of RL contributes to a lower update magnitutde and cross task conflicts (3) joint optimization over both positive and negative samples induces a unbiased task-specific learning process.
+\end{abstract}
+
+
+\section{Introduction}
+
+% 引言说明model merging 的背景, 以及基础模型的微调范式（RL，SFT）没有被考虑
+% Recent advances in LLMs have showcased impressive performance across a wide spectrum of tasks~\citep{team2024qwen2, grattafiori2024llama}. To further enhance task-specific performance, these models often undergo additional fine-tuning on downstream datasets~\citep{shao2024deepseekmath, ahmad2025opencodeinstructlargescaleinstructiontuning, toshniwal2025openmathinstruct}. In multi-task scenarios, an emerging challenge is how to efficiently consolidate multiple specialized models into a single, general-purpose model. Model merging, which directly fuses the parameters of independently fine-tuned models without requiring access to the original training data or costly retraining, has become a promising solution~\citep{yang2024modelmergingllmsmllms}. However, a fundamental challenge in this approach lies in managing \emph{task conflicts}, wherein the merged model exhibits degraded performance due to incompatibilities among task-specific parameters. To address this issue, prior work has introduced a variety of parameter merging strategies~\citep{ilharco2023editingmodelstaskarithmetic, yadav2023ties, yu2024language}. Nevertheless, most of these methods assume the underlying models were fine-tuned using the Supervised Fine-Tuning (SFT) paradigm, while the impact of the fine-tuning paradigm itself on task conflicts has largely been overlooked.
+
+
+% 说明大背景，以及
+% 先说明什么是task conlicts， 不同任务学习到的参数会有冲突。。。（namely task conflicts）
+% Jinliang-Modification
+% Large language models (LLMs) have fundamentally reshaped the landscape of artificial intelligence, capturing growing interest from both academia and industry. Recent statistics show that there are now more than 272,533 models with over 3 billion parameters available on HuggingFace\footnote{https://huggingface.co/models}. These large models often exhibit diverse capabilities and strengths, prompting researchers to explore model merging techniques as a means to integrate various specialized abilities into a single, unified model.  To tackle this, plenty of studies have introduced a variety of parameter merging strategies~\citep{ilharco2023editingmodelstaskarithmetic, yadav2023ties, yu2024language}. Nevertheless, most of these methods assume the underlying models were fine-tuned using the Supervised Fine-Tuning (SFT) paradigm, while the impact of the fine-tuning paradigm itself on task conflicts has largely been overlooked.% 先引入RL，RL带来了极其显著的性能改善。RL 训练模型的融合策略探索
+
+% Enriching large language models with impressive 
+% Recent advances in LLMs have showcased impressive performance across a wide spectrum of tasks~\citep{team2024qwen2, grattafiori2024llama}. To further enhance task-specific performance, these models often undergo additional fine-tuning on downstream datasets~\citep{shao2024deepseekmath, ahmad2025opencodeinstructlargescaleinstructiontuning, toshniwal2025openmathinstruct}. In multi-task scenarios, an emerging challenge is how to efficiently consolidate multiple specialized models into a single, general-purpose model.
+% managing \emph{task conflicts}, wherein the merged model exhibits degraded performance due to incompatibilities among task-specific parameters. To address this issue, prior work has introduced a variety of parameter merging strategies~\citep{ilharco2023editingmodelstaskarithmetic, yadav2023ties, yu2024language}. Nevertheless, most of these methods assume the underlying models were fine-tuned using the Supervised Fine-Tuning (SFT) paradigm, while the impact of the fine-tuning paradigm itself on task conflicts has largely been overlooked.
+
+% 引出RL，以及我们实验的初步发现，RL能够缓解任务冲突
+% Reinforcement Learning (RL) has recently gained traction for its ability to improve LLM performance across diverse tasks ~\citep{hu2025openreasonerzeroopensourceapproach, deepseekai2025deepseekr1incentivizingreasoningcapability}.
+
+% In this work, we investigate the role of RL as an alternative post-training method for model merging. We conduct a series of controlled experiments across five representative tasks—mathematical reasoning, code generation, instruction following, logical puzzles, and ranking.  For each task, we evaluate the post-merge performance degradation of models trained with either SFT or RL. The experimental results, visualized in Figure~\ref{fig:case}, reveal a pronounced difference in robustness. Notably, models trained via SFT exhibit substantial performance drops after merging, indicating significant task conflicts. In contrast, RL-trained models experience minimal degradation, highlighting RL's capacity to mitigate inter-task conflicts and better preserve individual task capabilities during merging. This finding suggests that RL is not only beneficial for in-task learning but also fundamentally advantageous for building general-purpose models through merging
+
+
+% To provide theoretical grounding for these observations, we consider tools such as the Fisher Information Matrix, which has been used to characterize parameter importance in continual learning. Our results suggest that RL implicitly regularizes gradient directions to avoid salient parameters of unrelated tasks with on-policy training data and joint optimization on both positive and negative sample, thereby reducing interference and supporting stable multi-task merging.
+Large language models (LLMs) have fundamentally reshaped the landscape of artificial intelligence, capturing growing interest from both academia and industry~\citep{team2024qwen2, grattafiori2024llama, xiang2025survey}. Recent statistics show that there are now more than 270,000 models with over 3 billion parameters available on HuggingFace\footnote{\url{https://huggingface.co/models}}. These large models often exhibit diverse capabilities and strengths~\citep{shao2024deepseekmath, ahmad2025opencodeinstructlargescaleinstructiontuning, toshniwal2025openmathinstruct}, prompting researchers to investigate ensemble techniques that integrate the specialized abilities of different models~\citep{li2023deep, chen2025harnessing, ruan2025task}. Among these techniques, model merging—which directly fuses the parameters of independently fine-tuned models without requiring access to the original training data, expensive retraining, or the maintenance of multiple checkpoints—has emerged as a particularly promising solution~\citep{lu2024merge, yang2024modelmergingllmsmllms}.
+% copy tise, task interface
+
+A central challenge in model merging is preserving performance when integrating different models, as interference between parameters can lead to performance degradation in the merged model, a phenomenon commonly referred to as \emph{task conflicts}. To mitigate this issue, prior research has proposed a range of model-merging strategies~\citep{ilharco2023editingmodelstaskarithmetic, yadav2023ties, yu2024language}, typically under the assumption that the models involved have already been trained on different tasks. Nonetheless, the approach used to train these task-specific models—which critically impacts the ultimate effectiveness of the merged model—has been largely overlooked. In the era of LLMs, training paradigms can be broadly classified into supervised fine-tuning (SFT) and reinforcement learning (RL) ~\citep{hu2025openreasonerzeroopensourceapproach, deepseekai2025deepseekr1incentivizingreasoningcapability}. Most existing works focus on merging models trained via SFT, leaving differences between SFT and RL in the context of model merging largely unexplored and deserving of further investigation.
+
+%  假定有了模型，但是没有关注 如何训练得到这些模型对于模型融合的影响。
+
+% most of recent methods ignoring the impact of training paradigms on model mergeability, with they only taken models trained with Supervised Fine-Tuning (SFT) paradigm into consideration.
+
+% 训练paradigm可以分为SFT和 RL，其中模型融合大部分工作都聚焦在 SFT 上。最近 RL 盛行，xxxx
+% The training paradigms in LLMs can be classified 
+
+% However, most of these methods assume the underlying models were fine-tuned using the Supervised Fine-Tuning (SFT) paradigm. More recently, Reinforcement Learning (RL) has gained prominence as an alternative fine-tuning paradigm, owing to its effectiveness in enhancing LLM performance across diverse tasks
+% 然而很少有工作具体investiage RL 模型的模型融合
+
+
+% Despite these advances, the influence of the fine-tuning paradigm itself on task conflicts has received little scholarly attention, motivating further investigation.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{case_smoothed_legend_center.pdf}
+    \caption{Comparison of performance changes between SFT and RFT in model merging.}
+    \label{fig:case}
+\end{figure}
+
+In this work, we investigate the role of fine-tuning paradigms (SFT and RL) in model merging. A series of controlled experiments are conducted across five representative tasks—mathematical reasoning, code generation, instruction following, logical puzzles, and ranking. And we assess the extent to which models fine-tuned with SFT or RL, respectively, preserve their original performance after model merging. As shown in Figure~\ref{fig:case}, reveal that \textbf{models trained with RL exhibit significantly better performance preservation after merging than those trained with SFT}. Extensive experiments suggest that our finding holds regardless of different merging method, various base model, or distinct RL algorithm. Furthermore, we demonstrate that RL alleviates parameter conflicts, thereby making it particularly well-suited for model merging.
+
+
+% A further analysis indicates that \textbf{RL could mitigate the cross task conflicts}, thus making it more suitable for model merging.
+% \, which means that for a given task, the parameter updates induced by SFT tend to interfere with other tasks, whereas those produced by RL appear to be more orthogonal to unrelated task directions and lead t
+% 算法模型 通用的发现，热力图结论
+% To understand the source of this phenomenon, we first examine the parameter space. We observe that \textbf{RL learns a task-orthogonal parameter updates}, which means that for a given task, the parameter updates induced by SFT tend to interfere with other tasks, whereas those produced by RL appear to be more orthogonal to unrelated task directions. We support this claim through Performance-Surface Flatness: Performance landscape visualization shows that performance along the RL optimization direction remains relatively flat, while SFT introduces steep declines.
+% (2)\textbf{Parameter Update Consistency}: Parameter sign conflicts demonstrates that RL introduces less updated parameter sign conflicts than SFT.
+
+
+% To delve deeper, we further analyze gradient-level factors that which contributes to RL's superiority. To provide theoretical grounding for these observations, we consider tools such as the Fisher Information Matrix, to analyze each part's contribution. Three key mechanisms emerge: \textbf{On-policy training data}, \textbf{the training nature of RL} and \textbf{Joint optimization on both positive and negative sample} appears to be the main contributor. The contribution of on-policy training data, which is sampled from model, greatly reduce the gradient magnitude and the risk to overriding knowledge from other tasks. We then analyze the effect of the training nature of RL, which controls update with additional advantage coefficient compared with SFT. This allows lower update with models' capability increase. Our analysis further reveals that both optimizing over positive and negative samples leads to a unbiased update, contributing to a high-convergent performance and more robust task integration.
+
+% To further investigate the reason behind the superiority of RL on model merging, we further conduct a comprehensive series of theoretical and empirical analyses. Our results demonstrate three primary contributing factors: (1) On-policy training data, which is sampled from the model, greatly reduce the gradient magnitude and thus, lowers the risk of overwriting knowledge from other tasks. (2) The training objective of RL algorithms naturally attenuate parameter updates as the model converges, favoring a state where \textit{"enough is as good as a feast"}. This property alleviates \textit{task conflict} during integration. (3) The joint optimization over both positive and negative examples in RL produces unbiased updates, resulting in higher convergence performance and more robust task integration.
+
+
+To further investigate the reason behind the superiority of RL on model merging, we conduct a series of theoretical and empirical analyses. Our results demonstrate three primary contributing factors: (1) \textbf{On-policy training data}: unlike SFT, where training data are sampled from fixed datasets or human annotations, RL relies on data sampled from the model itself. This substantially reduces gradient magnitudes and thereby lowers the risk of overwriting knowledge acquired from other tasks. (2) \textbf{The intrinsic dynamics of RL}: the training objective of RL algorithms naturally attenuate parameter updates and avoiding the increase of parameter conflicts as the model converges, favoring a state where \textit{``enough is as good as a feast"}. In contrast, SFT applies update with fixed intensity regardless of convergence. This intrinsic characteristics of RL alleviates \textit{task conflict} during integration. (3) \textbf{The joint optimization over positive and negative samples}: RL simultaneously optimizes over both positive and negative examples, whereas SFT relies only on positive samples. This leads to more unbiased updates, resulting in higher convergence stability and more robust task integration.
+
+
+% To further investigate the  of RL’s superiority in model merging, we conduct a detailed theoretical and empirical analysis. Our results indicate three primary contributing factors: \textbf{On-policy training data}, \textbf{the training nature of RL} and \textbf{Joint optimization on both positive and negative sample}. The contribution of on-policy training data, which is sampled from model, greatly reduce the gradient magnitude and the risk to overriding knowledge from other tasks. We then analyze the effect of the training nature of RL, which controls update with additional advantage coefficient compared with SFT. This allows a lower parameter update and task conflicts in the training process with models' capability increase. Our analysis further reveals that both optimizing over positive and negative samples leads to a unbiased update, contributing to a high-convergent performance and more robust task integration.
+
+
+In summary, this work highlights a previously underappreciated advantage of RL: its natural superiority for model merging. Our findings offer new insights into how different fine-tuning paradigms shape the task conflicts of LLMs and point toward more robust and scalable strategies for building generalist models without retraining from scratch.
+
+% 第一第二个合到一起，现象层面和原理层面
+\paragraph{Our key contributions are as follows:}
+\begin{itemize}
+\item We investigate the effect of LLM post-training paradigms on model merging. Our empirical results consistently demonstrate that RL-trained models are more suitable for merging, irrespective of the employed merging method, the selection of RL algorithm, or the choice of base model. Further analysis suggests that the superiority of RL-trained models stems from its ability to mitigate task conflicts.
+
+% \item We investigate the effect of post-training paradigms on model merging. And empirically validate that RL-trained models is more suitable for model merging, regardless of the merging method, RL algorithm and base model. Through analysis, we discover this RL's priority stems from its ability to mitigate task conflicts.
+
+% \item We propose a theoretical explanation with experiment validation - indicating the on-policy data, the intrinsic characteristics of RL and optimization over positive and negative samples contributes to the superior less task conflicts, offering a new lens through which to understand reinforcement-based fine-tuning in multi-task settings.
+
+\item Through both empirical and theoretical analyses, we advance novel hypotheses and argue that (1) the use of on-policy data, (2) the intrinsic characteristics of RL algorithms, and (3) the joint optimization of positive and negative samples collectively contribute to the enhanced suitability of RL-trained models for model merging.
+
+\end{itemize}
+
+
+% \paragraph{Our key contributions are as follows:}
+% \begin{itemize}
+% \item We investigate the effect of post-training paradigms on model merging. We identify and empirically validate the phenomenon that RL could mitigate the task conflict, demonstrating their superior less task conflicts compared to SFT-trained models. 
+
+% \item We propose a theoretical explanation with experiment validation - indicating the on-policy data, the nature of RL and optimization over positive and negative samples contributes to the superior less task conflicts, offering a new lens through which to understand reinforcement-based fine-tuning in multi-task settings.
+% \end{itemize}
+
+
+\section{Background}
+
+\subsection{Model Merging}
+
+Model merging aims to integrate the multiple independently trained models into a single unified model.  
+Assume there are $T$ models with parameters $\bm{\theta}_1, \bm{\theta}_2, \cdots, \bm{\theta}_T$, each sharing the same architecture and initialized from a common base model $\bm{\theta}_0$. The goal of merging is to obtain a new model $\bm{\theta}_{\text{merge}}$ by applying a merging operator:
+\begin{equation}
+    \bm{\theta}_{\text{merge}} = \text{merge}(\bm{\theta}_1, \bm{\theta}_2, \cdots, \bm{\theta}_T).
+\end{equation}
+Recent advances merging methods are typically based on the task-relevant parameter updates $\bm{\tau}_i:= \bm{\theta}_i-\bm{\theta}_0$, namely \textit{Task Vector}~\citep{ilharco2023editingmodelstaskarithmetic}. The direction of these \textit{Task Vectors} often reveals conflicts between different tasks. To mitigate such conflicts, recent studies have introduced pruning processes to remove redundant or unimportant parameters, as seen in approaches like DARE~\citep{yadav2023ties, yu2024language, wang2024localizing}.
+
+
+\subsection{Supervised Fine-Tuning and Reinforce Learning}
+ 
+\paragraph{Supervised Fine-Tuning (SFT)} Given a dataset $\mathcal{D}_{\text{SFT}} = \{(x_i, y_i)\}_{i=1}^N$, consisting of prompts $x_i$ and their ground-truth responses $y_i$, SFT optimizes the model by minimizing the negative conditional likelihood of generating the correct response:
+\begin{equation}
+    \mathcal{L}_{\text{SFT}}(\bm{\theta}) = - \mathbb{E}_{(x,y)\sim D_{\text{SFT}}} \left[ \sum_{t=1}^{|y|} \log \pi_\theta(y_t \mid x, y_{<t}) \right],
+\end{equation}
+where $\pi_\theta$ denotes the model policy parameterized by \bm{$\theta$}.  
+This objective enforces strict adherence to labeled data, enabling stable convergence but limiting the flexibility to incorporate reward-based feedback beyond supervised signals.
+
+\paragraph{Reinforce Learning (RL)} provides an alternative optimization paradigm that aligns model behavior with task-specific reward functions.  
+Formally, the objective is to maximize the expected return:
+\begin{equation}
+    \mathcal{J}_{\text{RL}}(\bm{\theta}) = \mathbb{E}_{x\sim \mathcal{D}_{\text{RL}},\, y \sim \pi_\theta(\cdot \mid x)} \big[ r(y, x) \big],
+\end{equation}
+where $r(y,x)$ is a scalar function that reflects the expected reward of the output $y$ given the input $x$. In the era of large language models, a widely used reinforcement learning algorithm is Proximal Policy Optimization (PPO, \cite{schulman2017proximal}), which can be formulated as:
+\begin{equation}
+\mathcal{J}^{\text{ppo}}(\bm{\theta}) = \mathbb{E}_{x\sim\mathcal{D}_{RL}} \sum_{t=1}^{|y|} \left[
+    \min \left(
+        \frac{\pi_\theta(y_{t}|y_{<t})}{\pi_{\theta_{\text{old}}}(y_{t}|y_{<t})} \hat{A}_t,
+        \mathrm{clip}\left(\frac{\pi_\theta(y_{t}|y_{<t})}{\pi_{\theta_{\text{old}}}(y_{t}|y_{<t})}, 1 - \epsilon, 1 + \epsilon\right) \hat{A}_t
+    \right)
+\right]
+\end{equation}
+where $\hat{A}_t$ denotes the estimated advantage based on the reward 
+$r$ and the function $\mathrm{clip}(\cdot)$ constrains the probability ratio to the interval $[1-\epsilon, 1+\epsilon]$ to ensure training stability. Standard PPO typically employs a critic model to estimate the advantage $A_{t}$. To further improve the training efficiency, recent studies have proposed critic-free variants, such GRPO~\citep{shao2024deepseekmath}, and \textsc{Reinforce++}~\citep{ahmadian2024back}, which are also widely adopted in current research.
+
+
+
+\section{Reinforcement Learning Mitigates Task Conflicts}
+In this section, we experimentally compare the performance preservation of SFT-trained and RL-trained models after model merging.
+\subsection{Experiment Setup}
+
+\paragraph{Models and Settings} 
+We adopt the open-source models \textbf{Llama-3.2-3B}~\citep{grattafiori2024llama}, \textbf{Llama-3.1-8B}~\citep{grattafiori2024llama}, and \textbf{Mistral-Small-3-24B}\footnote{\url{https://mistral.ai/news/mistral-small-3}} as the base models. For training, we employ three representative RL algorithms: PPO~\citep{schulman2017proximal}, GRPO~\citep{shao2024deepseekmath}, and \textsc{Reinforce}++~\citep{ahmadian2024back}. Unless otherwise specified, all experiments and analyses default to \textbf{Llama-3.1-8B} as the base model and \textbf{GRPO} as the optimization algorithm.  
+
+
+\paragraph{Experiment Tasks and Data}
+Our evaluation spans five tasks that permit automatic verification: \textbf{math}, \textbf{code}, \textbf{instruction following (IF)}, \textbf{logical puzzles (puzzle)}, and \textbf{ranking (rank)}.  
+For \textbf{math}, models are trained on a subset of \textit{OpenMathInstruct-2}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning} and evaluated on \textsc{GSM8K}~\citep{cobbe2021training} and \textsc{MATH-500}~\citep{hendrycks2021measuring,lightman2023let}. 
+For \textbf{code}, models are trained on a subset of \textit{OpenCodeInstruct}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning} and evaluated on  the \textsc{HumanEval}~\citep{chen2021evaluating} and \textsc{MBPP}~\citep{austin2021program} datasets. 
+For \textbf{instruction following}, models are trained on the instruction subset from \textit{Tulu-3-SFT}~\citep{lambert2025tulu3pushingfrontiers} and evaluated on \textsc{IFEval}~\citep{zhou2023instruction} and the instruction-following subset of \textsc{LiveBench}~\citep{white2024livebench}. 
+For \textbf{logical puzzles}, models are trained on task \textit{Knights and Knaves}~\citep{johnson1990meta} with synthetic data using templates implemented by~\cite{xie2024memorization} and evaluated on the same task.
+For \textbf{rank}, models are trained on the \textit{Rank1} dataset~\citep{weller2025rank1testtimecomputereranking} and evaluated on the pairwise ranking benchmark \textsc{NevIR}. Further details are listed in appendix~\ref{chapter:appendix_expriement_detail}.
+
+
+
+% \paragraph{Model and Training Datasets} 
+% We adopt the open-source model \textbf{LLaMA-3.1-8B}~\citep{grattafiori2024llama} as the base model for experiments and analysis. Our evaluation covers five tasks that allow for automatic verification: mathematics, code generation, logical puzzles, instruction following, and ranking. For the puzzle task, we adopt the representative logical reasoning benchmark \textit{Knights and Knaves}~\citep{johnson1990meta}. For the \textbf{SFT} setting, we prepare task-specific training data as follows. For the math task, we use a subset of \textit{OpenMathInstruct-2}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning}. For the code generation task, we adopt a subset of \textit{OpenCodeInstruct}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning}. For the puzzle task, we automatically generate synthetic data using templates implemented by~\cite{xie2024memorization}, with the number of people ranging from 2 to 8. For the instruction-following task, we use the instruction subset from \textit{Tulu-3-SFT}~\citep{lambert2025tulu3pushingfrontiers}. For the ranking task, we use the \textit{Rank1} dataset~\citep{weller2025rank1testtimecomputereranking}. For the \textbf{RL} setting, we reuse the same query for the math, code, puzzle, and ranking tasks. To enable verifiable supervision for the instruction-following task, we employ the signal construction method proposed by~\cite{pyatkin2025generalizing}.  Before applying reinforcement learning, we first fine-tune the base model on the math, code, and instruction-following datasets to equip it with basic instruction-following capabilities. This initialization step ensures stable and meaningful reward signals during the RL training stage. Futher details are listed in Appedix~\ref{chapter:appendix_detail}.
+
+
+% \paragraph{Benchmarks and Evaluation Metrics} 
+% To comprehensively assess model performance across diverse task domains, we employ a broad set of benchmarks. 
+% For \textbf{mathematical reasoning}, we adopt \textsc{GSM8K}~\citep{cobbe2021training} and \textsc{MATH-500}~\citep{hendrycks2021measuring,lightman2023let}, and report the \emph{accuracy} on each benchmark.
+% For \textbf{code generation}, we utilize the \textsc{HumanEval}~\citep{chen2021evaluating} and \textsc{MBPP}~\citep{austin2021program} datasets, including both the base and plus versions. The evaluation metric is \emph{pass@1}, which measures the percentage of correct solutions in the first attempt.
+% For \textbf{instruction following}, we adopt \textsc{IFEval}~\citep{zhou2023instruction} and the instruction-following subset of \textsc{LiveBench}~\citep{white2024livebench}. We report both the \emph{loose} and \emph{strict} accuracies for \textsc{IFEval}, and the overall \emph{LiveBench score} as computed by the benchmark's official evaluation script.
+% For the \textbf{puzzle-solving} task, we generate evaluation data using a templated prompt . Specifically, we construct an \emph{in-domain} test set involving scenarios with 2 to 8 people, and an \emph{out-of-domain (OOD)} test set with 9 to 13 people. Accuracy is reported separately for in-domain and OOD settings.
+% Finally, for \textbf{ranking}, we evaluate on the pairwise ranking benchmark \textsc{NevIR}, and report the \emph{accuracy} computed using the official \textsc{MTEB} evaluation protocol.
+
+
+
+\paragraph{Model Merging Settings} 
+We evaluate four model merging strategies: \emph{model averaging}~(\emph{Averaging} for short) \citep{choshen2022fusingfinetunedmodelsbetter}, \emph{TIEs}~\citep{yadav2023ties}, \emph{Task-Arithmetic}~(\emph{Arithmetic} for short)~\citep{ilharco2023editingmodelstaskarithmetic} and \emph{DARE+TIEs}~(\emph{DARE} for short)~\citep{yu2024language}. In our experiments, we focus on \emph{pairwise merging}, where two models are merged at a time to investigate the robustness and compatibility of different training paradigms. For each task, we report the average performance of the pairwise-merged models from the specific task to any other tasks.
+
+
+% \paragraph{Implementation Details} 
+% For \textbf{SFT} experiments, we train models using the \textsc{OpenRLHF}\footnote{https://github.com/OpenRLHF/OpenRLHF}~\citep{hu2024openrlhf} framework. Most hyperparameters are adopted from the \texttt{tulu-3} configuration, including a learning rate of $5 \times 10^{-6}$, batch size of 128, warm-up ratio of 0.03, a learning rate decay scheduler, and a total of 3 training epochs.
+% For the \textbf{Reinforcement Learning (RL)} experiments, we employ the \textsc{verl}\footnote{https://github.com/volcengine/verl}~\citep{sheng2024hybridflow} framework and \textbf{GRPO} as the RL algorithm. The training configuration includes a learning rate of $1 \times 10^{-6}$, rollout batch size of 512, rollout count of 8, rollout temperature and top-$p$ both set to 1.0, and a KL-divergence coefficient of $1 \times 10^{-3}$.
+% For \textbf{model merging}, we utilize the \textsc{MergeKit} toolkit. In the case of \emph{TIEs merging} and \emph{DARE}, we follow the default hyperparameter settings recommended by \textsc{MergeKit}, setting the sensitivity to 0.8 and the interpolation weight to 0.5. In \emph{Task-Arithmetic}, we set $\lambda=0.7$, which is recomended by the original paper.
+
+
+\subsection{Main results}
+
+\begin{table}[t]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2} 
+\begin{tabular}{lcccccc}
+\hline
+                & \textbf{Math}         & \textbf{Code}         & \textbf{IF}          & \textbf{Puzzle}        & \textbf{Rank}         & \textbf{Average}  \\ \hline
+SFT             & 61.9         & 60.5         & 63.9        & 86.2          & 52.8         & 61.5 \\
+Averaging       & 52.0(-16\%)  & 56.0(-7.4\%) & 49.2(-23\%) & 30.8(-65\%)   & 51.6(-2.3\%) & 47.9(-22\%) \\
+TIEs            & 56.8(-8.3\%) & 58.0(-4.1\%) & 47.5(-25\%) & 35.8(-58\%)   & 51.3(-2.7\%) & 49.9(-19\%) \\
+Arithmetic      & 52.4(-15\%)  & 56.3(-7.0\%) & 48.2(-25\%) & 44.9(-48\%)   & 51.1(-3.3\%) & 50.6(-18\%) \\ 
+DARE            & 58.2(-6.1\%) & 58.0(-4.1\%) & 46.7(-27\%) & 38.0(-56\%)   & 49.3(-6.7\%) & 50.0(-19\%) \\\hline
+RL (GRPO)             & 64.6         & 65.6         & 90.0         & 85.2          & 55.7         & 72.2 \\
+Averaging       & 62.1(-3.9\%) & 61.7(-5.9\%) & 84.4(-6.2\%) & 37.8(-56\%)   & 54.4(-2.3\%) & 60.1(-17\%) \\
+TIEs            & 63.3(-2.0\%) & 64.3(-2.0\%) & 90.0(-0\%)   & 64.6(-24\%)   & 53.1(-4.7\%) & 67.1(-7.1\%) \\ 
+Arithmetic      & 62.6(-3.1\%) & 63.8(-2.7\%) & 89.2(-0.9\%) & 60.7(-29\%)   & 54.6(-2.0\%) & 66.2(-8.3\%) \\ 
+DARE            & 63.5(-1.7\%) & 64.2(-2.1\%) & 89.9(-0.1\%) & 65.0(-24\%)   & 53.1(-4.7\%) & 67.1(-7.1\%) \\ \hline
+\end{tabular}
+
+\caption{Performance comparison across five tasks using different merging strategies (Averaging,  TIEs, Arithmetic and DARE), applied to both SFT and RL (GRPO) models. The values in parentheses indicate the relative performance drop compared to the original unmerged model and less performance drop.}
+\label{table:main}
+\end{table}
+
+Table~\ref{table:main} compares the effects of four parameter-merging methods on models trained via SFT and GRPO. A consistent, paradigm-dependent gap emerges: \textbf{RL-trained models are substantially more suitable for merging}, largely preserving the performance of individual models after merging, both in specific tasks and in overall averages. SFT-trained models suffer severe degradation—for instance, Puzzle drops by up to 65\% and the mean decline spans 18–22\%. By contrast, RL-trained models limit losses to under 10\% for most strategies. Even on the most fragile task (Puzzle), RL-based models degrade less sharply. This advantage holds across methods: with \emph{Averaging}, SFT shows a 22\% mean decline versus 17\% for RL; with \emph{TIEs}, RL falls only 7.1\% compared to 19\% for SFT. \emph{Arithmetic} and \emph{DARE} follow the same pattern, with RL consistently outperforming SFT by a wide margin.
+
+% Table~\ref{table:main} compares the effects of four parameter-merging methods on models trained via SFT and GRPO. A consistent, paradigm-dependent gap emerges: \textbf{RL-trained models are substantially more suitable for merging} than their SFT-trained counterparts, retaining markedly more of their pre-merge performance across tasks and on average.  This strength holds across both individual tasks and overall averages. For SFT-trained models, merging leads to severe degradation—for example, Puzzle suffers drops of up to 65\%, and the mean decline across tasks ranges from 18–22\%. By contrast, RL-trained models consistently maintain stronger post-merge performance: even on the most fragile task (Puzzle), RL-based models degrade less sharply.
+% % , while on more stable tasks such as IF, performance is nearly preserved (-0\%). 
+% On average, RL-trained models limit performance loss to under 10\% for most strategies, compared with nearly 20\% for SFT. The conclusion also generalizes across merging methods. Whether using \emph{Averaging}, \emph{TIEs}, \emph{Arithmetic}, or \emph{DARE}, RL-based models exhibit smaller relative drops than SFT-based ones. For instance, while SFT combined with \emph{Averaging} yields a 22\% mean decline, the same strategy applied to RL models reduces the loss to 17\%. More advanced approaches such as \emph{TIEs} further narrow the gap, achieving only a 7.1\% drop for RL, compared with 19\% for SFT. \emph{Arithmetic} and \emph{DARE} follow the same pattern, with RL consistently outperforming SFT by a wide margin.
+
+% For \textbf{SFT-trained} models, model averaging yields a mean drop of \(\mathbf{22\%}\), while \emph{TIEs} reduces the loss to \(\mathbf{19\%}\); arithmetic and DARE provide only marginal relief (\(\mathbf{18\%}\) and \(\mathbf{19\%}\), respectively). By contrast, \textbf{RL-trained} models are far more robust: \emph{Averaging} incurs a \(\mathbf{17\%}\) mean drop, \emph{TIEs} lowers it to just \(\mathbf{7.1\%}\), and \emph{arithmetic/DARE} remain within \(\mathbf{8.3\%}\) and \(\mathbf{9.8\%}\). Notably, TIEs essentially preserves performance on IF (-0\%), and even on the most brittle task (Puzzle) RL bases mitigate degradation relative to SFT. 
+
+\paragraph{Generality of RL Algorithms in Model Merging}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{algo.pdf}
+    \caption{Performance comparison across three tasks using TIEs merging, applied to both SFT and RL models. The values in parentheses indicate the relative performance drop compared to the original unmerged model.}
+    \label{fig:algo}
+\end{figure}
+% To further assess the generality of RL algorithms in the context of model merging, we extend our analysis beyond GRPO by incorporating two additional algorithm-PPO and \textsc{Reinforce++}-across three representative tasks: Math, Instruction Following and Code. We evaluate the merged models with two widely adopted strategies: model averaging and TIEs merging. As shown in Figure~\ref{fig:algo}, across all RL algorithms, the merged models consistently exhibit significantly smaller performance degradation compared to those trained with SFT. These results confirm that merging capacity of RL-trained models is not limited to a specific algorithm. Instead, it appears to be a generalizable property across multiple RL variants. This reinforces our key observation: \textbf{RL-trained model bases are substantially more suitable for model merging than their SFT counterparts}, regardless of the specific RL algorithm employed. The full results are list in Table~\ref{table:algotithm_res} in appendix.
+
+To further assess the generality of RL algorithms in the context of model merging, we extend our analysis beyond GRPO by incorporating two additional algorithm-PPO and \textsc{Reinforce++} with TIEs merging. As shown in Figure~\ref{fig:algo}, across all RL algorithms, the merged models consistently exhibit significantly lower performance degradation compared to those trained with SFT. After TIEs merging, SFT models exhibit a substantial 28.7\% decrease in IF, whereas RL models experience only negligible performance losses (GRPO: -0.3\%, PPO: -2.5\%, \textsc{Reinforce++}: -2.6\%). This reinforces our key observation: \textbf{RL-trained model bases are substantially more suitable for model merging than their SFT counterparts}, regardless of the specific RL algorithm employed. Detailed results with other merging methods are provided in Table~\ref{table:algotithm_res} in the Appendix.
+
+
+\paragraph{RL Algorithms Benefit Model Merging with Different LLMs}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{base_model.pdf}
+    \caption{Performance comparison across three tasks using TIEs merging, applied to both SFT and GRPO models with different base models. The values in parentheses indicate the relative performance drop compared to the original unmerged model.}
+    \label{fig:base}
+\end{figure}
+% We further conduct experiments on different base models, specifically Llama-3.2-3B and Mistral-Small-3-24B, across three representative tasks: Math, Instruction Following, and Code. We evaluate merged models using two widely adopted strategies: model averaging and TIEs. As shown in Figure~\ref{fig:base}, across both base models, models trained with GRPO consistently exhibit substantially smaller performance degradation compared with those trained with SFT. This findings reinforces our central observation: \textbf{RL-trained model bases are substantially more mergeable than their SFT counterparts}, regardless of the specific base model. The full results are list in Table~\ref{table:basemodel_res} in appendix.
+
+
+
+We further conduct experiments on different base models, Llama-3.2-3B, Llama-3.1-8B and Mistral-Small-3-24B, across three tasks: Math, Instruction Following, and Code. We evaluate merged models TIEs merging. As shown in Figure~\ref{fig:base}, across all base models, GRPO-trained models consistently suffer substantially less performance degradation than their SFT-trained counterparts. For instance, after TIEs merging, SFT models drop by -35.6\% to -17.7\% on IF, whereas RL-trained models decline -4.6\% to +0.4\%. These results reinforce our central observation: \textbf{RL-trained models are substantially more suitable for model merging}, irrespective of the base models. Detailed results with other merging methods are included in Table~\ref{table:basemodel_res} in the appendix.
+
+
+% \paragraph{The Number of Merging Model}
+
+% We examine how the \textit{number of merged models} influences task conflicts under different post-training paradigms. In this experiment, we employ the TIEs merging strategy to combine varying numbers of independently fine-tuned models. As shown in Figure~\ref{fig:case}, the performance degradation patterns differ markedly between paradigms. For RL-trained models, the average performance decreases only gradually as the number of merged models increases. In contrast, SFT-trained models exhibit a much steeper decline, suggesting that parameter conflicts accumulate more rapidly when merging multiple SFT-based models. This result further supports our earlier findings that RL produces more task-orthogonal parameter updates, thereby mitigating cross-task interference in multi-model merging scenarios. 
+
+
+% \section{A Deep Understanding In the View of Parameter Visualization}
+% To understand how different fine-tuning strategies affect model mergeability, we analyze their behavior from three complementary perspectives: loss landscape geometry, output distribution shift, and parameter update alignment. These views provide insight into how task-specific updates interact in the parameter space, and why RL tends to produce models that are more compatible when merged compared to those trained via SFT.
+
+% \newpage
+
+
+
+% \subsection{Logits changes}
+
+% While the previous section focused on task-level performance, we now conduct a more fine-grained analysis to understand how different fine-tuning paradigms affect model behavior at the \emph{distributional} level. In particular, we study changes in the output \emph{logits}—i.e., predicted token probability distributions—when models are fine-tuned on different tasks.
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{all.png}
+%     \caption{2D-KDE plot of JS divergence and token-level entropy for SFT- and RL-trained models.}
+%     \label{fig:kde}
+% \end{figure}
+% To quantify distributional changes induced by task-specific fine-tuning, we perform controlled inference using identical input prompts and fixed output responses across models. For each prompt–response pair, we extract the output probability distribution from two models:  
+% (1) a model fine-tuned on the current task $t_1$, denoted $P_1$;  
+% (2) a model fine-tuned on a different task $t_2$, denoted $P_2$.  
+
+% We measure the token-level divergence between these two distributions using the \textbf{Jensen–Shannon (JS) divergence}:
+% \begin{equation}
+%     \mathrm{JS}(P_1 \parallel P_2) 
+%     = \frac{1}{2} \left[ \mathrm{KL}\left(P_1 \parallel Q\right) + \mathrm{KL}\left(P_2 \parallel Q\right) \right],
+% \end{equation}
+% where $Q = \frac{1}{2}(P_1 + P_2)$ is the mixture distribution, and $\mathrm{KL}(\cdot \parallel \cdot)$ is the Kullback–Leibler divergence.
+% To further interpret these results, we examine the relationship between JS divergence and the \emph{token-level entropy} of the output distribution:
+% \begin{equation}
+%     H(P) = -\sum_{y} P(y) \log P(y).
+% \end{equation}
+% We perform a two-dimensional kernel density estimation (KDE) over $(\mathrm{JS}, H)$ pairs, sampling 30{,}000 tokens from evaluation outputs of both SFT- and RL-trained models.  As shown, comparing the KDE of JS-divergence, models trained with RL on different tasks exhibit substantially lower JS divergence compared to those fine-tuned via SFT. Furthermore, for RL models, high-divergence tokens occur mainly in low-entropy regions, implying changes happen for confident predictions. For SFT models, high-divergence tokens appear in both low- and high-entropy regions, indicating disruptions even for uncertain predictions.
+
+\subsection{Performance landscape of SFT- and RL-trained models}
+
+To understand \textbf{why RL-trained models are more suitable for model merging}, we investigate the source of this superiority from two aspects: ``RL-trained models are more robust to parameter permutation" and ``RL mitigates the task conflict". Specifically, given two models fine-tuned independently on tasks $t_1$ and $t_2$, let their respective parameters be denoted as $\bm{\theta}_{t_1}$ and $\bm{\theta}_{t_2}$. Model merging aims to obtain a unified parameter set $\bm{\theta}_{\text{merge}}$ that integrates knowledge from both tasks. From the perspective of model $\theta_{t_1}$, the merged model can be expressed as a perturbation in parameter space:
+\begin{equation}
+    \bm{\theta}_{\text{merge}} = \bm{\theta}_{t_1} + \Delta\bm{\theta},
+\end{equation}
+where $\Delta\bm{\theta} = \bm{\theta}_{\text{merge}} - \bm{\theta}_{t_1}$ represents the update direction induced by merging with $\bm{\theta}_{t_2}$. This formulation naturally raises the question: \textit{Is the performance loss of the model caused by simple parameter perturbations, or by parameters that conflict with other tasks $\Delta\bm{\theta}$?} 
+
+
+% Given two models fine-tuned independently on tasks $t_1$ and $t_2$, let their respective parameters be denoted as $\bm{\theta}_{t_1}$ and $\bm{\theta}_{t_2}$. Model merging aims to obtain a unified parameter set $\bm{\theta}_{\text{merge}}$ that integrates knowledge from both tasks. From the perspective of model $\theta_{t_1}$, the merged model can be expressed as a perturbation in parameter space:
+% \begin{equation}
+%     \bm{\theta}_{\text{merge}} = \bm{\theta}_{t_1} + \Delta\bm{\theta},
+% \end{equation}
+% where $\Delta\bm{\theta} = \bm{\theta}_{\text{merge}} - \bm{\theta}_{t_1}$ represents the update direction induced by merging with $\bm{\theta}_{t_2}$. This formulation naturally raises the question: \textit{To what extent does the model's performance depend on the direction of $\Delta\bm{\theta}$?} Specifically, how does the performance change when a parameter perturbation of equal magnitude but random direction is applied?
+
+
+To investigate this, we visualize the performance landscape~\citep{li2018visualizing} around $\bm{\theta}_{t_1}$. For each model, we compare two perturbation directions: (1) Task-induced direction: $\Delta\bm{\theta} = \bm{\theta}_{\text{merge}} - \bm{\theta}_{t_1}$, (2) Random direction: $\bm{\theta}_{\text{rand}} \sim \mathcal{N}(0, \sigma^2 I)$, scaled such that $\|\bm{\theta}_{\text{rand}}\|_2 = \|\Delta\bm{\theta}\|_2$. We evaluate model performance over the two-dimensional surface defined by:
+\begin{equation}
+    f(\alpha, \beta) = \mathcal{L}(\bm{\theta}_{t_1} + \alpha \Delta\bm{\theta} + \beta \bm{\theta}_{\text{rand}}),
+\end{equation}
+where $\mathcal{L}(\cdot)$ denotes the task-specific performance function, and $(\alpha, \beta) \in \mathbb{R}^2$ parameterize the perturbation magnitude along each direction.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{lossscape_new_oneline.pdf}
+    \caption{Performance landscape visualization around $\bm{\theta}_{t_1}$ for SFT and RL models. The $\alpha$-axis corresponds to the task-induced update $\Delta\bm{\theta}$, and the $\beta$-axis corresponds to a random perturbation of equal norm.}
+    \label{fig:landscape}
+\end{figure}
+
+As illustrated in Figure~\ref{fig:landscape}\footnote{Full content is shown in appendix \ref{chapter:appendix_landscape}.}, adding a random perturbation $\bm{\theta}_{\text{rand}}$ has minimal impact on performance in both SFT and RL models, indicating robustness to parameter noise. However, the task-induced update $\Delta\bm{\theta}$ reveals a stark contrast: for SFT-trained models, increasing $\alpha$ along $\Delta\bm{\theta}$ leads to a noticeable degradation in task performance, suggesting strong interference from task $t_2$. In contrast, RL-trained models maintain stable performance even when perturbed in the direction of $\Delta\bm{\theta}$, implying that parameters learned from task $t_2$ do not conflict with task $t_1$. These observations support our key finding: \textbf{parameter updates induced by SFT tend to be more entangled across tasks, leading to interference, while RL encourages task-orthogonal updates that are less disruptive when merged}.
+% \textbf{parameter updates induced by SFT tend to be more entangled across tasks, leading to interference, while RL encourages task-orthogonal updates that are less disruptive when merged}.
+
+
+
+\section{How RL mitigates the task conflict}
+Having established that RL-trained models exhibit significantly lower task interference than those trained with SFT, we now delve deeper into the mechanisms underlying this advantage. In this section, we systematically analyze how RL can mitigate task conflicts by examining three key differences between RL and SFT, which specifically are on-policy data, different training objective and joint use of positive and negative examples.
+
+% In this section, we systematically analyze three components of the RL objective, which are on-policy data, different training objective and joint use of positive/negative examples, contribute most to mitigating task conflicts.
+
+
+% \paragraph{Preliminary} 
+
+% With a single data point $(x,y_i)$, the gradient under SFT is $\nabla_\theta \log \pi_\theta(y_i|x)$. The parameter updates for task $t_i$ under RL is $A_i S(\theta, x, y_i) \nabla_\theta \log \pi_\theta(y_i|x)$, in which $S(\theta, x, y_i) = \frac{\pi_\theta(y_i|x)}{\pi_{old}(y_i|x)}$. Considering the common practice like clip, the $S(\theta) \approx 1$. So the simplified updates over $n$ steps from SFT can be written as $\Delta \theta = \eta \sum_{k=1}^n  G^k(\theta)$ and $\Delta \theta = \eta \sum_{k=1}^n A_i^k S(\theta,y_i,x)^k G^k(\theta)$.
+
+
+
+\subsection{The Effect of On-Policy Data}
+\label{chapter:on-policy}
+One main difference between SFT and RL is the training data. In RL, the training data are sampled from the current model while in SFT, it is from a fixed dataset. The on-policy data is more close to the model’s distribution, thus leading to more stable updates with smaller gradient norms, which could mitigate the influence of conflicted parameters.
+% Parameter conflict is fundamentally determined by interactions between tasks, particularly the directions and magnitudes of their parameter updates. On-policy data—generated by the model itself—tends to produce more stable updates with smaller gradient norms.
+To quantify this effect, we compute the norm of model updates under the three training paradigm: SFT, RL and Reject-FineTuning (RFT), which supervise the model with rejection sampling data from the model. The results, summarized in Table~\ref{tab:norm_convergence}, show that on-policy data consistently produce significantly lower parameter magnitudes than off-line SFT. For instance, in math task,  the norm fo models trained with SFT is 6.5, much higher than that of RFT- and RL-trained models, which are 2.36 and 0.78. This indicates that on-policy data stabilizes gradient updates and reduces parameter sensitivity, which in turn alleviates task interference during optimization.
+
+
+
+\subsection{The intrinsic characteristics of Reinforcement Learning}
+Another difference of SFT and RL is the optimization targets. Through theoretical and empirical analyses, we find that different optimization targets leading to a natural property of RL, which is ``RL optimization is inherently adaptive". Specifically, it  adjusts updates according to the model’s current capacity and performance. As training progresses, this adaptivity reduces the effective update magnitude, which in turn moderates parameter sensitivity and lowers the likelihood of harmful cross-task interference.
+
+
+% To characterize the distinction between SFT and RL, we analyze them from the perspective of the loss function and the training procedure. This perspective highlights that RL optimization is inherently adaptive: it adjusts updates according to the model’s current capacity and performance. As training progresses, this adaptivity reduces the effective update magnitude, which in turn moderates parameter sensitivity and lowers the likelihood of harmful cross-task interference.
+
+\paragraph{Theorem 1.}
+For a single query $x \in \mathcal{D}_{\text{RL}}$, the expected absolute advantage is upper bounded by
+\begin{equation}
+\mathbb{E}_{a \sim \pi{\theta}(\cdot \mid x)}\big[ |A(a,x)| \big]
+\le \sqrt{\mathrm{Var}(r(a,x))},
+\end{equation}
+where $A(a,x) := r(a,x) - b(x)$ denotes the advantage, computed as the deviation of the observed reward $r(a,x)$ from a baseline $b(x)$.
+
+\paragraph{Theorem 2.}
+Based on theorem 1, the advantage estimate $A_n(a,x)$ at the $n$-th step converges to zero in expectation. Since rewards are bounded within a fixed interval and advantages have zero mean for each state, we obtain
+\begin{equation}
+\lim_{n \to \infty} \mathbb{E}(|A_n(a,x)|) = 0.
+\end{equation}
+Theorem 2 implies that as training stabilizes, the expected scaling factor $A$ diminishes. Consequently, RL progressively down-weights parameter updates, whereas SFT continues to apply updates of similar magnitude even at convergence. We list the proof in the appendix \ref{chapter:appendix_proof_baseline}.  For recently widely used ``normalized advantage", $A(a,x):= \frac{r(a,x)-\mathbb{E}(r)}{std(r)}$, the theorem 2 also works. We also list the proof in the appendix  \ref{chapter:appendix_proof_normalize}. 
+
+
+\paragraph{Update Magnitudes.}
+For $n$ sampled trajectories $\{s\}_{s=1}^n$, the cumulative parameter update magnitudes can be expressed as
+\[
+\big\| \Delta \bm{\theta}_{t_i}^{\text{SFT}} \big\|_2 = \Big\| \sum_{s=1}^n \eta \, \bm{G}_{t_i}^s \Big\|_2, 
+\qquad
+\big\| \Delta \bm{\theta}_{t_i}^{\text{RL}} \big\|_2 = \Big\| \sum_{s=1}^n \eta \, A_{t_i}^s \bm{G}_{t_i}^s \Big\|_2\le \eta \sum_{s=1}^n\Big|A_{t_i}^s\Big|\Big\|\bm{G}_{t_i}^s\Big\|,
+\]
+where $\bm{G}_{t_i}^s = \nabla_\theta \log \pi_\theta(y^s | x^s)$ denotes the stochastic gradient contribution of sample $s$. The key difference is that RL scales each update by its corresponding advantage $A_{t_i}^s$, which decays over training (Theorem 2), while SFT applies uniform updates. Similar to the analysis in \S \ref{chapter:on-policy}, the less updates could reduce the influence of conflicted parameter. 
+
+
+
+\paragraph{Conflict norm} One way to understand how RL reduces task interference is to measure the consistency of parameter updates across tasks. Task conflicts occur when two tasks push parameters in opposing directions, leading to destructive interference. To capture this effect, we define the \textbf{conflict indicator matrix} as
+\begin{equation}
+    \mathcal{C}(\Delta \bm{\theta}_{t_i}, \Delta \bm{\theta}_{t_j}) = \Delta \bm{\theta}_{t_i}\odot\Delta \bm{\theta}_{t_j}
+\end{equation}
+where $\odot$ denotes the Hadamard (element-wise) product. Negative entries of $\mathcal{C}$ indicate conflicting updates, while positive entries correspond to aligned updates. We then define the \textbf{conflict norm} as:
+\begin{equation}
+    \Vert \mathcal{C}(\Delta \bm{\theta}_{t_i}, \Delta \bm{\theta}_{t_j})\Vert_{\text{conflict}} = \left\| \big( \mathcal{C}(\Delta \bm{\theta}_{t_i}, \Delta \bm{\theta}_{t_j})_{ij} \cdot \mathbf{1}_{\{\mathcal{C}_{ij} < 0\}} \big)_{i,j} \right\|_2
+\end{equation}
+where $\mathbf{1}_{\{\mathcal{C}{ij} < 0\}}$ is an indicator function that selects only the conflicting entries. This measure thus quantifies the aggregate strength of parameter conflicts between two tasks.
+
+
+
+\paragraph{Implications for Task Interference.}
+Building on these results, we examine the conflict norm between two tasks $t_1$ and $t_2$. Under SFT:
+\[
+\Vert \mathcal{C}(\Delta \bm{\theta}_{t_1}, \Delta \bm{\theta}_{t_2})\Vert_{\text{conflict}}^{\text{SFT}}
+= \eta^2 \Vert\mathcal{C}(\sum_{k=1}^n \bm{G}_{t_1}^k, \sum_{k=1}^n \bm{G}_{t_2}^k)\Vert_{\text{conflict}},
+\]
+whereas under RL:
+\[
+\Vert \mathcal{C}(\Delta \bm{\theta}_{t_1}, \Delta \bm{\theta}_{t_2}) \Vert_{\text{conflict}}^{\text{RL}}
+= \eta^2 \Vert \mathcal{C}(\sum_{k=1}^n A_1^k \bm{G}_{t_1}^k, \sum_{k=1}^n A_2^k \bm{G}_{t_2}^k) \Vert_{\text{conflict}}.
+% \Big( \sum_{k=1}^n A_1^k G_{t_1}^k(\theta) \Big)^\top \Big( \sum_{k=1}^n A_2^k G_{t_2}^k(\theta) \Big).
+\]
+In the verifiable setting where $r \in \{0,1\}$, we have $|A| \le \sqrt{\mathrm{Var}(r)} \le \tfrac{1}{2}$, and $A^k \to 0$ in expectation as training stabilizes. It follows that
+\begin{equation}
+\mathbb{E}\!\left[ \Vert \mathcal{C}(\Delta \bm{\theta}_{t_1}, \Delta \bm{\theta}_{t_2})\Vert_{\text{conflict}}^{\text{RL}} \right]
+\ll 
+\mathbb{E}\!\left[ \Vert\mathcal{C}(\Delta \bm{\theta}_{t_1}, \Delta \bm{\theta}_{t_2}) \Vert_{\text{conflict}}^{\text{SFT}} \right]     
+\end{equation}
+which formalizes the intuition that RL reduces cross-task parameter conflicts by down-scaling gradient magnitudes through the vanishing advantage. 
+
+
+We plot the norm of update parameter in Figure~\ref{fig:norm} and the conflict norm in Figure~\ref{fig:conflict_norm}. As is shown in the figures, the growth trend of norm and conflict norm of  RL is obviously slower than SFT, indicating that the advantages effect during the training process.
+
+\begin{figure}
+\begin{minipage}[b]{0.30\linewidth}
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.35} 
+    \begin{tabular}{lcccc}
+    \hline
+           & \textbf{Math} & \textbf{Code} & \textbf{IF}   \\ \hline
+    SFT    & 6.50 & 7.75 & 4.83 \\
+    RFT    & 2.36 & 2.17 & 1.70 \\
+    RL     & \textbf{0.78} & \textbf{0.71} & \textbf{0.64} \\ \hline
+    \end{tabular}
+    \vspace{5mm} 
+    \captionof{table}{The norm of $\Delta\theta$ for different tasks and settings.}
+    \label{tab:norm_convergence}
+\end{minipage}
+\hspace{5mm}
+\begin{minipage}[b]{0.30\linewidth}
+    \centering
+    \includegraphics[width=1.0\linewidth]{norm2.pdf}
+    \caption{The norm of SFT and RL}
+    \label{fig:norm}
+\end{minipage}%
+\hspace{5mm}
+\begin{minipage}[b]{0.30\linewidth}
+    \centering
+    \includegraphics[width=1.0\linewidth]{conflict_norm2.pdf}
+    \caption{The conflict norm of SFT and RL}
+    \label{fig:conflict_norm}
+\end{minipage}%
+\end{figure}
+
+
+% For the parameter update magnitude, $||\Delta \theta_{t_i}^{SFT}||_2 = ||\sum_{s=1}^n \eta G_{t_i}^s||_2$ and $||\Delta \theta_{t_i}^{RL}||_2 = ||\sum_{s=1}^n \eta A_{t_i}^s G_{t_i}^s||_2$
+
+
+% \paragraph{Theorem 1} As in the training stage, the advantage of the n-th step $A_n$ is trending convergence to zero. For the alogithm that use critic/value model to estimate the advantage, it training target is to $\min_\theta \frac{1}{2} ||V_\theta(s)-(\sum_{t=0}^T\gamma^tr_t|s_0=s)||_2$. Then for baseline-estimation, the advantage is $A_{ni} = (r_i -E(r_i))$\footnote{GRPO-like method including a normalized would be discussed in appendix, which could lead to a similar conclusion.}, 
+
+
+% Under this theorem, we can infer that for a single task, the norm of updated number would be reduced
+% the task conflict term for task $t_1$ and $t_2$ under SFT is $Conflict_{SFT}(t_1, t_2) = \eta^2(\sum_{k=1}^nG_{t_1}^k(\theta) * (\sum_{k=1}^nG_{t_2}^k(\theta))$ and for RL approximates $Conflict_{RL}(t_1, t_2) = \eta^2(\sum_{k=1}^nA_1^kG_{t_1}^k(\theta) * (\sum_{k=1}^nA_2^kG_{t_2}^k(\theta))$. Then we have that $Conflict_{SFT}(t_1, t_2) \ll Conflict_{RL}(t_1, t_2)$. 
+
+
+
+% \subsection{Which part contributes to the mitigation}
+
+% \paragraph{Task Conflict Risk.}  
+% To quantify the potential interference a parameter perturbation $\Delta\theta$ may introduce to a given task, we consider the Kullback–Leibler (KL) divergence between the original and perturbed models. Let $D_{t_i}$ denote the training dataset for task $t_i$, and $\theta_{t_i}$ be the model parameters optimized for $t_i$. The KL divergence is defined as:
+% \[
+% D_{\mathrm{KL}}\big(P(D_{t_i} \mid \theta_{t_i}) \,\|\, P(D_{t_i} \mid \theta_{t_i} + \Delta \theta)\big)
+% \]  
+% Approximating this divergence to second order leads to the definition of \emph{task conflict risk}:
+% \begin{equation}
+%     R(t_i, \Delta\theta) := \Delta\theta^\top F(\theta_{t_i}) \, \Delta\theta,
+% \end{equation}
+% where $F(\theta_{t_i})$ is the Fisher Information Matrix (FIM), given by:
+% \begin{equation}
+%     F(\theta_{t_i}) := \mathbb{E}_{(x,y) \sim D_{t_i}} \left[ \nabla_{\theta_{t_i}} \log \pi_{\theta_{t_i}}(y|x) \; \nabla_{\theta_{t_i}} \log \pi_{\theta_{t_i}}(y|x)^\top \right].
+% \end{equation}
+% This formulation implies that $R(t_i, \Delta\theta)$ is approximately twice the KL divergence and captures the curvature of the log-likelihood landscape, with larger values indicating higher task sensitivity and potential conflict.
+
+% \paragraph{Cross-Task Conflict Risk.}  
+% To assess interactions between different tasks, we introduce the \emph{cross-task conflict risk} between tasks $t_i$ and $t_j$:
+% \begin{equation}
+%     R(t_i, t_j) := g_{t_j}^\top \, F(\theta_{t_i}) \, g_{t_j},
+% \end{equation}
+% where $g_{t_j} := \nabla_{\theta_{t_i}} P(D_{t_j} \mid \theta_{t_i})$ represents the gradient of the loss on task $t_j$ with respect to the parameters $\theta_{t_i}$. This metric reflects the degree of gradient misalignment between tasks and serves as a proxy for expected interference under joint optimization.
+
+% \paragraph{Definition 1 (Fisher Information Matrix for Policy Gradient).}  
+% For RL-based training, we estimate the FIM under the policy gradient framework:
+% \begin{equation}
+% F(\theta) := \mathbb{E}_{x \sim D_{t_1}} \left[ \nabla_\theta J(x \mid \theta) \; \nabla_\theta J(x \mid \theta)^\top \right],
+% \end{equation}
+% where $\nabla_\theta J(\cdot \mid \theta)$ denotes the policy gradient of the optimization objective $J$ with respect to $\theta$. A complete derivation is provided in the Appendix.
+
+
+% \paragraph{GRPO Objective Decomposition.}  
+% Ignoring the clipping term, the GRPO-based reinforcement learning objective under task $t$ can be written as:
+% \begin{equation}
+% \label{eq:rl_obj}
+% \begin{aligned}
+% J(\theta, t) &= -\mathbb{E}_{x \sim D_t} \; \mathbb{E}_{y \sim \pi_{\theta_{\mathrm{old}}}(\cdot|x)}
+% \left[ \frac{\pi_\theta(y|x)}{\pi_{\theta_{\mathrm{old}}}(y|x)} A_i - \beta \, D_{\mathrm{KL}}\left(\pi_\theta \,\|\, \pi_{\mathrm{ref}}\right) \right],
+% \end{aligned}
+% \end{equation}
+% where $D_t$ is the training data of task $t$, $A_i$ is the advantage of action $y$, and $\beta$ is the KL regularization coefficient.
+
+% This objective can be decomposed into three interpretable components:
+% \begin{equation}
+% \label{eq:rl_decomposed}
+% \begin{aligned}
+% J(\theta, t) &= -\mathbb{E}_{(x,y) \sim \pi_{\theta_{\mathrm{old}}}(D_t)} \Big[
+% \underbrace{\frac{\pi_\theta(y_+|x)}{\pi_{\theta_{\mathrm{old}}}(y_+|x)} A_i^+}_{\text{Encourage positive samples}}
+% +
+% \underbrace{\frac{\pi_\theta(y_-|x)}{\pi_{\theta_{\mathrm{old}}}(y_-|x)} A_i^-}_{\text{Suppress negative samples}}
+% -
+% \underbrace{\beta \, D_{\mathrm{KL}}\left(\pi_\theta \,\|\, \pi_{\mathrm{ref}}\right)}_{\text{KL regularization}}
+% \Big],
+% \end{aligned}
+% \end{equation}
+% where $y_+$ and $y_-$ represent positive and negative samples, respectively.
+
+% Compared to SFT, this formulation differs in three critical aspects:
+% \begin{enumerate}
+%     \item \textbf{On-policy data}: $y$ is sampled from the current model rather than from a fixed dataset.
+%     \item \textbf{Negative sample optimization}: Unlike SFT, which only encourages positive samples, RL explicitly penalizes negative ones.
+%     \item \textbf{KL regularization}: Controls deviation from a reference policy.
+% \end{enumerate}
+
+% To isolate the contribution of each component, we evaluate: \textbf{RL}: Full objective (positive + negative samples, KL regularization); \textbf{RL w/o KL}: Removes the KL regularization term; \textbf{RL w/o Neg}: Optimizes only on positive samples (loss for negative samples masked) while keeping KL regularization.
+
+
+% \begin{table}[]
+% \centering
+% \renewcommand{\arraystretch}{1.6} 
+% \footnotesize
+% \resizebox{\textwidth}{!}{
+% \begin{tabular}{lccccccccccccccc}
+% \hline
+%      & \multicolumn{3}{c}{SFT} &  & \multicolumn{3}{c}{RL} &  & \multicolumn{3}{c}{22} &  & \multicolumn{3}{c}{RL w/o KL} \\ \cline{2-4} \cline{6-8} \cline{10-12} \cline{14-16} 
+%      &   Math    &   Code   &   IF    &  & Math   & Code   & IF      &  & Math   & Code     & IF     &  & Math   & Code   & IF     \\ \hline
+% Math &    /      &   2.4    &  15.5   &  & /      & 2.1e-3 & 3.0e-3  &  & /      & 1.0e-2   &  3.2e-3&  & /      & 2.0e-3 & 3.3e-3 \\
+% Code &   4.6     &     /    &  1.0    &  & 6.0e-8 & /      & 2.3e-6  &  & 1.3e-6 & /        & 1.5e-5 &  & 2.5e-7 & /      & 3.5e-7 \\
+% IF   &    19.3   &  10.5    &   /     &  & 1.9e-3 & 4.1e-3 & /       &  & 5.6e-3 & 6.0e-2   &  /     &  & 2.3e-3 & 6.1e-3 & /       \\ \hline
+% \end{tabular}}
+% \caption{Cross-task conflict risk between Math, Code, and Instruction-Following (IF) under various optimization strategies.}
+% \label{tab:task_risk}
+% \end{table}
+% \begin{figure}[]
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{cross-task-conflict-risk.png}
+%     \caption{Cross-task conflict risk between Math, Code, and Instruction-Following (IF) under various optimization strategies.}
+%     \label{fig:task_risk}
+% \end{figure}
+
+
+% As shown in Figure~\ref{fig:task_risk}, the results reveal that RL substantially reduces cross-task conflict risk compared to SFT, highlighting its robustness in multi-task learning scenarios. Notably, removing the KL regularization (RL w/o KL) leads to only a marginal increase in conflict risk, suggesting that although KL divergence contributes to training stability, it is not the principal factor in mitigating task interference. In contrast, when negative samples are excluded from the optimization process (RL w/o Neg), the conflict risk rises significantly, indicating that optimization on both positive and negative samples plays a pivotal role in aligning gradient directions across tasks. Furthermore, the gap between RL w/o Neg and RL w/o KL underscores the importance of on-policy data, implying that sampling from the model’s current distribution, rather than from static datasets, also contributes meaningfully to reducing cross-task interference. These findings collectively suggest that the synergy of negative sample suppression and on-policy optimization is central to the effectiveness of RL in mitigating parameter conflicts across tasks. 
+
+
+% rft onpolicy data 梯度什么样子
+% \paragraph{The effect of on-policy data} Cross-task conflict risk is fundamentally governed by gradient interactions between tasks, particularly their directions and magnitudes.  On-policy data—generated by the model itself—yields more stable updates with smaller gradients. To quantify this effect, we compute the average absolute gradient magnitudes under previous four different training paradigms. The results, summarized in Table~\ref{tab:avg_gradient}, show that RL-based approaches consistently produce significantly lower gradient magnitudes than SFT. This indicates that on-policy data stabilizes gradient updates and reduces parameter sensitivity, which in turn alleviates task interference during optimization.
+
+% \begin{table}[]
+%     \centering
+%     \footnotesize
+%     \renewcommand{\arraystretch}{1.6} 
+%     \begin{tabular}{lcccc}
+%     \hline
+%              & SFT  &  RL & RL w/o Neg  & RL w/o KL \\\hline
+%     Math     & 32.3 & 2.08&         1.29& 2.23\\
+%     Code     & 22.3 & 1.16&         0.60& 1.21\\
+%     IF       & 21.7 & 5.68&         5.67& 5.59\\
+%     \hline
+%     \end{tabular}
+%     \caption{Average absolute gradient magnitudes (scaled by \(10^{-6}\)) under different training settings.}
+%     \label{tab:avg_gradient}
+% \end{table}
+
+
+\subsection{Analysis of optimization over both positive and negative samples}
+
+% In the previous section, we identified two factors contributing to the reduction of task conflict in RL-based fine-tuning: (1) the use of on-policy data, and (2) the optimization nature of RL. 
+The third difference between RL and SFT is that RL is optimized over both positive and negative samples. In this section, we provide empirical analyses to elucidate the effects of optimization over both positive and negative samples.
+
+
+% \subsubsection{Gradient Subspace Alignment}
+% \paragraph{Definition 2 (Gradient Subspace).}  
+% Let $D_t$ denote the training data for task $t$, and let $J$ represent the training objective. We define the \emph{gradient subspace S} at threshold $\epsilon$ as the set of parameter indices with gradient magnitude exceeding $\epsilon$:
+% \begin{equation}
+%     S(J, t, \epsilon) := \left\{ i \; \middle| \; \left| \left( \nabla_\theta J(\theta, t) \right)_i \right| \ge \epsilon \right\}.
+% \end{equation}
+
+% \begin{wrapfigure}{rt}{0.4\textwidth}
+%     \centering
+%     \includegraphics[width=0.38\textwidth]{subspace-visualize-3.png}
+%     \makeatletter\def\@captype{figure}\makeatother\caption{Visualization of partial subspaces of $S_{\text{POS}}$ and $S_{\text{P\&N}}$.}
+%     \label{fig:placeholder}
+% \end{wrapfigure}
+ 
+
+% To assess the influence of negative samples on optimization characteristics, we compare two subspaces: (1) $S_{\text{POS}}$, obtained from optimizing with only positive samples; and (2) $S_{\text{P\&N}}$, derived from optimizing with both positive and negative samples. An illustrative visualization is provided in Figure~\ref{fig:placeholder}. The gradient subspaces can be partitioned into four regions, highlighted with different colors: (i) $S_{\text{POS}} \setminus S_{\text{P\&N}}$ (blue), (ii) $S_{\text{P\&N}} \setminus S_{\text{POS}}$ (orange), (iii) $S_{\text{POS}} \cap S_{\text{P\&N}}$ with consistent gradient signs (green), and (iv) $S_{\text{POS}} \cap S_{\text{P\&N}}$ with conflicting gradient signs (red).
+
+
+% \paragraph{On the single task level} To direct compare the difference of $S_{\text{POS}}$ and $S_{\text{P\&N}}$, we consider the \emph{overlap ratio} of the two subspaces, which specifically is the area of $S_{\text{POS}} \cap S_{\text{P\&N}}$ with same sign divide the area of $S_{\text{POS}}$. The changed area, including $S_{\text{POS}} \cap S_{\text{P\&N}}$ with different sign and $S_{\text{POS}} \setminus S_{\text{P\&N}}$, suggests that optimizing over negative samples introduces a opposite gradient, which we called as "\emph{modulation effect}" of optimization over negative samples. The lower overlap ratio implies a larger changed area and stronger "modulation effect". We plot the rate under different $\epsilon$ in Figure~\ref{fig:overlap}. As is shown in the figure, the overlap ratio decreases as $\epsilon$ increases, suggesting that high-magnitude gradients are more susceptible to modulation effect. This indicates that the inclusion of negative samples serves to recalibrate the optimization trajectory, especially in regions of steep gradient descent. Such recalibration may help avoid overly aggressive parameter updates that lead to overfitting.
+
+ 
+% \paragraph{On the cross task level} We extend the analysis to a multi-task setting by examining gradient sign contradiction rates across tasks. Specifically, we compare the gradient \emph{sign contradiction rate} across subspaces derived from: Positive samples only ($S_{\text{POS}}$); Both positive and negative samples ($S_{\text{P\&N}}$); The complement of the above two subspaces. Figure~\ref{fig:grad-sign-conflict} presents the contradiction ratios. We observe that $S_{\text{P\&N}}$ exhibits significantly lower sign conflicts across tasks than $S_{\text{POS}}$, highlighting improved inter-task gradient alignment. Furthermore, the complement subspace $S_{\text{P\&N}} \setminus S_{\text{POS}}$ shows the lowest conflict rates, implying that high-conflict directions are often suppressed when both types of samples are included. These findings suggest that negative sample optimization helps eliminate parameter directions with conflicting signals, thereby mitigating cross-task interference.
+
+% \begin{figure}
+% \begin{minipage}[b]{0.48\linewidth}
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{subspace_beautified.png}
+%     \caption{The subspace overlap ratio under different threshold}
+%     \label{fig:overlap}
+% \end{minipage}%
+% \begin{minipage}[b]{0.48\linewidth}
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{grad-sign-conflict-2.png}
+%     \caption{Gradient sign conflict rates across different subspaces. For each task, we plot the average conflict rates over the other two tasks.}
+%     \label{fig:grad-sign-conflict}
+% \end{minipage}%
+% \end{figure}
+
+% \subsubsection{Empirical Validation through Controlled Ablations}
+
+
+To further isolate the contribution of negative samples, we design a controlled experiment in which their influence is selectively removed. Specifically, we construct an RL variant (\textbf{RL-Pos}) in which the advantage values for all negative samples are set to zero, thereby excluding them from gradient updates while retaining the KL regularization and on-policy sampling.
+
+We test two hypotheses: \textbf{H1 (Single-task performance).}  
+Models trained with both positive and negative samples should converge to higher task-specific accuracy than models trained on positive samples only. 
+\textbf{H2 (Cross-task conflict).}  
+Given the same training budget, models trained with both types of samples should exhibit lower cross-task conflict (as measured by performance degradation after model merging) compared to positive-only training.
+
+To validate \textbf{H1}, we report the convergent accuracy of three models—SFT, RL, and RL-Pos—on Math, Code, and IF tasks in Table~\ref{tab:convergence}. Results show that while RL-Pos improves over SFT, it still underperforms full RL, confirming that negative samples facilitate better single-task optimization.
+To test \textbf{H2}, we select RL and RL-Pos checkpoints trained for the same number of steps and apply two merging strategies—parameter averaging and Task-Independent Experts (TIEs). As shown in Figure~\ref{fig:only_pos}, RL consistently suffers less performance degradation, reinforcing the claim that negative samples reduce gradient conflicts and enhance model mergeability.
+
+
+\begin{figure}[h]
+\begin{minipage}[b]{0.47\linewidth}
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.35} 
+    \begin{tabular}{lcccc}
+    \hline
+           & \textbf{Math} & \textbf{Code} & \textbf{IF}   & \textbf{Avg.}\\ \hline
+    SFT    & 61.9 & 60.5 & 63.9 & 62.1\\
+    RL     & \textbf{64.6} & \textbf{65.6} & \textbf{90.0} & \textbf{73.4} \\
+    RL-Pos & 58.5 & 61.7 & 86.1 & 68.8\\ \hline
+    \end{tabular}
+    \vspace{12mm} 
+    \captionof{table}{Convergent performance across tasks.}
+    \label{tab:convergence}
+\end{minipage}%
+\hspace{5mm}
+\begin{minipage}[b]{0.475\linewidth}
+    \centering
+    \includegraphics[width=1.0\linewidth]{additional.pdf}
+    \caption{Performance drop in cross-task merging for RL and RL-Pos models under model averaging and TIEs.}
+    \label{fig:only_pos}
+\end{minipage}%
+\end{figure}
+
+\section{Related Works}
+\subsection{Model Merging of Large Language Models}
+Model merging offers a practical alternative to retraining by eliminating the need for access to raw training data or computationally expensive fine-tuning procedures~\citep{ilharco2022editing, crisostomi2024c, yang2024model}. In this work, we focus on training-free model merging, where the merging process relies solely on the weights of pre-trained and fine-tuned models. Recent advances have improved this approach through heuristically guided merging strategies based on parameter statistics (e.g. value magnitudes or sign alignment)~\citep{yadav2023ties}, task importance derived from the Fisher Information Matrix~\citep{tam2023merging}, task-specific layer-wise attribution modeling~\citep{wang2024localizing}, and trust region constraints~\citep{sun2025task}. Several efforts have also aimed to explain the effectiveness of model merging from a theoretical perspective, drawing on tools such as loss landscape geometry~\citep{izmailov2018averaging, gupta2020stochastic}, bias-variance decomposition~\citep{arpit2022ensemble, rame2022diverse}, and linear mode connectivity (LMC) in neural networks~\citep{pmlr-v119-frankle20a, zhou2024cross}. However, these analyses have been predominantly confined to models fine-tuned via SFT. To date, little attention has been paid to how different fine-tuning paradigms—particularly reinforcement-based methods—affect the model merging and interaction of models.
+
+
+\subsection{Analysis of LLM Post-Training}
+Post-training has emerged as an effective approach for enhancing the task-specific capabilities of large language models (LLMs)~\citep{grattafiori2024llama, team2024qwen2, shao2024deepseekmath}. Among the most commonly used paradigms, \textbf{SFT} adapts pre-trained models to downstream tasks by training them on task-specific datasets, often formatted as instructions~\citep{wei2021finetuned, zhou2023lima, chung2024scaling, li2024x}. In contrast, \textbf{Reinforcement Learning (RL)} is typically employed to align models with human preferences or to optimize performance on specific target tasks~\citep{ouyang2022training, ahmadian2024back, guo2025deepseek,yang2025parallel, zhao2025imitate}. To deepen understanding of the post-training stage, recent research has explored how different learning paradigms influence model behavior. For instance, several studies investigate memorization and generalization dynamics across knowledge-intensive and reasoning tasks~\citep{allen2023physics, ye2024physics, qi2024quantifying, chu2025sft, kang2025what}. Others have examined learning dynamics by contrasting SFT and RL in terms of convergence behavior and sample efficiency~\citep{ren2024learning, zeng2025lensllm, kang2025what, shenfeld2025rl, mukherjee2025reinforcement}. In this work, we take a complementary perspective by analyzing how the choice of post-training paradigm impacts \textit{task conflicts} in model merging. Our findings demonstrate that models fine-tuned with RL exhibit significantly reduced inter-task interference compared to those trained with SFT, thereby offering a more robust foundation for multi-task integration.
+
+
+% To deepen understanding of the post-training stage, recent research has explored how different learning paradigms influence model behavior. For instance, several studies investigate memorization and generalization dynamics across knowledge-intensive and reasoning tasks~\citep{allen2023physics, ye2024physics, qi2024quantifying, chu2025sft, kang2025what}. Others have examined learning dynamics and model behaviors by contrasting SFT and RL in terms of convergence behavior and sample efficiency~\citep{ren2024learning, zeng2025lensllm, kang2025what, shenfeld2025rl, mukherjee2025reinforcement}. In this work, we take a complementary perspective by analyzing how the choice of post-training paradigm impacts \textit{task conflicts} in model merging. Our findings demonstrate that models fine-tuned with RL exhibit significantly reduced inter-task interference compared to those trained with SFT, thereby offering a more robust foundation for multi-task integration.
+
+\section{Conclusion}
+This work provides a comprehensive investigation into the influence of post-training paradigms on model merging in LLMs. Our central finding is that RL, as opposed to standard SFT, inherently mitigates cross task conflicts, making it more substantially suitable for model merging. 
+To further understand the mechanism behind this advantage, we isolate and evaluate three components of the RL training objective: (1) on-policy training data, (2) the intrinsic characteristics of RL algorithm, and (3) optimization over both positive and negative samples. Both theoretical and empirical analyses demonstrate that the three components play a critical role in conflict mitigation. Taken together, our findings indicate that RL is not merely an alternative to SFT but constitutes a fundamentally more suitable paradigm for multi-task post-training in foundation models. Beyond this, the results provide new insights into how different fine-tuning paradigms shape task conflicts in LLMs and highlight RL as a robust and scalable strategy for developing generalist models.
+
+\section{Acknowledgment}
+The research work has been supported by the Natural Science Foundation of China under Grant No. 62476271
+
+\bibliography{iclr2026_conference}
+\bibliographystyle{iclr2026_conference}
+\newpage
+\appendix
+
+\section{The Use of Large Language Models }
+In this study, LLMs are employed solely to assist with the refinement of written expression. Specifically, they were used to improve grammar, enhance clarity, and ensure fluency in academic writing. The LLMs were not involved in data analysis, methodological design, or interpretation of results, but served only as a linguistic polishing tool to improve readability and presentation.
+
+
+\section{Proof of the convergence of $\mathbb{E}(A_n)$}
+\subsection{Upper Bound Estimation For Advantage with Baseline}
+\label{chapter:appendix_proof_baseline}
+
+In the standard formulation of advantage estimation with a baseline $\hat{b}$~\citep{williams1992simple},
+\[
+A := r - \hat{b},
+\]
+where $\hat{b} = \mathbb{E}[r_n]$ is the expectation of the reward $r$. Then we obtain the following bound:
+\begin{equation}
+\begin{aligned}
+    \mathbb{E}(|A|)& \le \sqrt{\mathbb{E}(A^2)}\\
+            & = \sqrt{\mathbb{E}((r -\mathbb{E}(r))^2)}\\
+            & = \sqrt{\mathbb{E}(r^2)-2\mathbb{E}(r)\mathbb{E}(r)+\mathbb{E}^2(r)}\\
+            & = \sqrt{\mathbb{E}(r^2)-\mathbb{E}^2(r)} \\
+            &= \sqrt{\mathrm{Var}(r)}
+\end{aligned}
+\end{equation}
+
+Recent work has established the global convergence of reinforcement learning algorithms~\citep{zhang2020global}. In particular, the expected reward at the $n$-th step, $\mathbb{E}(r_n)$, converges to $r^\star$, the reward of the optimal policy. Formally,  
+\begin{equation}
+    \lim_{n \to \infty} \mathbb{E}(r_n) = r^\star.
+\end{equation}
+
+\paragraph{Variance Decay.}  
+Since the reward is bounded in the interval $[a, r^\star]$, we can apply the Bhatia–Davis inequality:  
+\begin{equation}
+    \mathrm{Var}(r_n) 
+    = \mathbb{E}(r_n^2) - \mathbb{E}^2(r_n) 
+    \;\le\; (r^\star - \mathbb{E}(r_n)) \big(\mathbb{E}(r_n) - a\big).
+\end{equation}
+As $\mathbb{E}(r_n) \to r^\star$, the right-hand side tends to zero, which implies  
+\[\lim_{n \to \infty} \mathrm{Var}(r_n) = 0,\]
+which leads to 
+\begin{equation}
+    \lim_{n \to \infty} \mathbb{E}(|A_n|) = 0.
+\end{equation}
+
+
+\subsection{Convergence For Discrete Advantage with Baseline and Standard Deviation}
+\label{chapter:appendix_proof_normalize}
+
+A widely adopted variant of advantage estimation, used for example in GRPO and Reinforce++, normalizes the centered reward by its standard deviation:  
+\[
+A := \frac{r - \mathbb{E}(r)}{\sqrt{\mathrm{Var}(r)}}.
+\]
+
+
+\paragraph{Theorem 3.1.}  For any bounded reward distribution $P_r$ supported on $[a,b]$, the expectation of the absolute advantage is maximized when $P_r$ is a Bernoulli distribution $P_{r^\star}$ with the same expectation, i.e.,
+\[
+\mathbb{E}_{P_r}(|A|) \le \mathbb{E}_{P_{r^\star}}(|A|),
+\qquad \text{with } \mathbb{E}_{P_r}(r) = \mathbb{E}_{P_{r^\star}}(r).
+\]  
+
+
+\textit{Proof.}  
+Define the centered random variable $X := r - \mu$, where $\mu = \mathbb{E}[r]$. Then the normalized advantage can be written as
+\[
+\mathbb{E}(|A(r)|) = \frac{\mathbb{E}(|X|)}{\sqrt{\mathbb{E}(X^2)}}.
+\]  
+
+
+Consider the family of reward distributions with fixed expectation:
+\[
+\mathcal{S}_\mu := \{ P \;\mid\; \mathbb{E}_P(r) = \mu \}.
+\]
+This set is convex and compact under the topology of weak convergence (by Prokhorov’s theorem), since all measures are supported on the compact interval $[0,1]$.  
+
+---
+
+
+\paragraph{Supporting-Line Reduction.}  
+Define the linear functionals
+\[
+U(P) := \mathbb{E}_P(|X|), 
+\quad 
+V(P) := \mathbb{E}_P(X^2).
+\]
+Maximizing the functional
+\[
+\psi(U,V) := \frac{U}{\sqrt{V}}
+\]
+over $\mathcal{S}_\mu$ can be reduced to maximizing a linear functional. Specifically, if $(u_\star, v_\star)$ is an optimizer of $\psi$, then set
+\[
+c := \frac{u_\star}{\sqrt{v_\star}}, 
+\qquad 
+\lambda := \frac{u_\star}{2 v_\star}.
+\]
+By convex analysis, $\psi$ admits the supporting-line inequality
+\[
+c \sqrt{v} \le u_\star + \lambda (v - v_\star), \qquad \forall v \ge 0.
+\]
+Hence, for any $(u,v) \in \mathcal{S}_\mu$,
+\[
+u - \lambda v \le u_\star - \lambda v_\star,
+\]
+which shows that $(u_\star, v_\star)$ also maximizes the linear functional
+\[
+L(u,v) := u - \lambda v
+\]
+over $\mathcal{S}_\mu$. Thus, the nonlinear problem
+\[
+\sup_{(u,v) \in \mathcal{S}_\mu} \frac{u}{\sqrt{v}}
+\qquad\text{and}\qquad
+\sup_{(u,v) \in \mathcal{S}_\mu} \big(u - \lambda v\big)
+\]
+share the same maximizer $(u_\star,v_\star)$.  
+
+---
+
+\paragraph{Existence of Optimizer.}  
+Since $\mathcal{S}_\mu$ is compact and $L$ is continuous, the supremum is attained at some $(u_\star, v_\star) \in \mathcal{S}_\mu$. By definition, there exists a distribution $P_\star$ such that
+\[
+(u_\star, v_\star) = (U(P_\star), V(P_\star)).
+\]
+Moreover, since $L$ is linear in $(u,v)$ and both $U$ and $V$ are linear functionals of $P$, maximizing $L$ over $\mathcal{S}_\mu$ is equivalent to maximizing
+\[
+P \;\mapsto\; \int \big(|x| - \lambda x^2\big)\, P(dx),
+\]
+over the convex, compact set $\mathcal{S}_\mu$. By the Krein–Milman theorem, the supremum is attained at an \emph{extreme point} of $\mathcal{S}_\mu$.  
+
+---
+
+
+\paragraph{Extreme Points of $\mathcal{S}_\mu$.}  
+The extreme points of $\mathcal{S}_\mu$ are precisely two-point distributions of the form
+\[
+p(x) = c \, \delta(x-x_1) + (1-c)\,\delta(x-x_2),
+\]
+satisfying the expectation constraint $c x_1 + (1-c) x_2 = \mu.$, in which $\delta$ is the dirac delta function.
+
+\textit{Proof.}  \\
+\medskip
+\noindent\emph{Sufficiency (two points $\Rightarrow$ extreme).}
+Let $P=c\,\delta_{x_1}+(1-c)\,\delta_{x_2}$ with $x_1\neq x_2$ and $c\in(0,1)$ satisfy $c\,x_1+(1-c)\,x_2=\mu$. Suppose
+\[
+P=\lambda P_1+(1-\lambda)P_2,\qquad 0<\lambda<1,\quad P_1,P_2\in\mathcal{S}_\mu.
+\]
+For any Borel set $E\subset\mathbb{R}$ we have $P(E)=\lambda P_1(E)+(1-\lambda)P_2(E)$. Since $P(\{y\})=0$ for every $y\notin\{x_1,x_2\}$, it follows that $P_1(\{y\})=P_2(\{y\})=0$ for all such $y$ (otherwise the convex combination would be positive), hence
+\[
+supp(P_1),\ supp(P_2)\ \subseteq\ \{x_1,x_2\}.
+\]
+Write $P_i=\alpha_i\,\delta_{x_1}+(1-\alpha_i)\,\delta_{x_2}$ for $i=1,2$ with some $\alpha_i\in[0,1]$. Because $P_i\in\mathcal{S}_\mu$, each must satisfy the same mean constraint:
+\[
+\alpha_i x_1 + (1-\alpha_i) x_2=\mu
+\quad\Rightarrow\quad
+\alpha_i=\frac{x_2-\mu}{x_2-x_1}\quad(i=1,2).
+\]
+Thus $\alpha_1=\alpha_2=c$, and then the identity $P=\lambda P_1+(1-\lambda)P_2$ forces $P_1=P_2=P$. Hence $P$ is extreme. 
+The degenerate one–point case $P=\delta_{x^\ast}$ also yields extremality: the mean constraint implies $x^\ast=\mu$, and the same support argument shows any convex decomposition must be trivial.
+
+\medskip
+\noindent\emph{Necessity ($\ge3$ points $\Rightarrow$ not extreme).} Suppose the size of $p$'s support, $|supp(p)|$ is greater than 2.  Assume $P\in\mathcal{S}_\mu$ has at least three distinct atoms $y_1,y_2,y_3$ with masses $\alpha_1,\alpha_2,\alpha_3>0$:
+\[P=\sum_{i=1}^3 \alpha_i\,\delta_{y_i} + P_{\mathrm{rest}},
+\qquad
+\alpha_1+\alpha_2+\alpha_3>0,
+\].where $P_{\mathrm{rest}}$ is the remainder (possibly zero). Consider the $2\times 3$ matrix
+\[
+M=
+\begin{pmatrix}
+1 & 1 & 1\\
+y_1 & y_2 & y_3
+\end{pmatrix}.
+\]
+Since $\mathrm{rank}(M)=2$, there exists a nonzero vector $\beta=(\beta_1,\beta_2,\beta_3)^\top$ in the nullspace of $M$, i.e.
+\[
+\beta_1+\beta_2+\beta_3=0, 
+\qquad
+\beta_1 y_1+\beta_2 y_2+\beta_3 y_3=0,
+\qquad
+\beta\neq 0.
+\]
+Define the signed measure
+\[
+\nu:=\sum_{i=1}^3 \beta_i\,\delta_{y_i}.
+\]
+Then $\int 1\,d\nu=0$ and $\int x\,d\nu=0$. Choose
+\[
+t \in \Big(0,\ \min_{\,i:\,\beta_i\neq 0}\frac{\alpha_i}{|\beta_i|}\Big],
+\]
+so that all coefficients $\alpha_i\pm t\beta_i$ remain nonnegative. Set
+\[
+P_1:=P+t\nu,\qquad P_2:=P-t\nu.
+\]
+By construction, $P_1$ and $P_2$ are probability measures ($\int 1\,dP_j=1$), they satisfy the mean constraint ($\int x\,dP_j=\mu$), and $P=\frac{1}{2}P_1+\frac{1}{2}P_2$. Since $\nu\neq 0$, we have $P_1\neq P_2$, showing that $P$ is not extreme.
+
+If $P$ has infinite support or a non-atomic part, pick three disjoint Borel sets of positive mass and perform the same construction after restricting to those sets (approximating each by a point via conditional expectations), which yields a nontrivial $\nu$ with $\int1\,d\nu=0$ and $\int x\,d\nu=0$. Hence any $P$ with $\lvert supp(P)\rvert\ge 3$ fails to be extreme.
+
+\medskip
+Combining the two parts, the extreme points of $\mathcal{S}_\mu$ are precisely the probability measures supported on at most two points, i.e. the two-point laws $c\,\delta_{x_1}+(1-c)\,\delta_{x_2}$ satisfying $c\,x_1+(1-c)\,x_2=\mu$ (with the one-point Dirac at $\mu$ as a degenerate case).
+
+---
+
+
+\paragraph{Convergence of the Discrete Advantage.}  
+Let $b = r*$, from the previous proof, we have 
+\[
+\lim_{n\to\infty} E(r_n) = b
+\]
+For the discrete rewards, which lives on a finite grid $\{a, i_1, i_2, \cdots, i_K, b\}$, the extremizer with fixed mean $\mu\in[i_K, b]$ is supported on $\{i_K, b\}$ and
+\begin{equation}
+    \lim_{n \to \infty} \mathbb{E}(|A_n|) = \lim_{\mu\to b}\mathbb{E}(\frac{2\sqrt{(b-\mu)(\mu-i_K)}}{b-i_K})=0.
+\end{equation}
+Here $\mu$ is $\mathbb{E}(r)$. This result shows that, under convergence of the RL algorithm, the normalized advantage vanishes asymptotically, ensuring that parameter updates diminish and training stabilizes.
+
+
+
+
+
+% \begin{equation}
+% \begin{aligned}
+%     E(|A_n|)& \le \sqrt{E(A_n^2)}\\
+%             & = \sqrt{E((r_i -E(r_i))^2)}\\
+%             & = \sqrt{E(r_i^2)-2E(r_i)E(r_i)+E^2(r_i)}\\
+%             & = \sqrt{E(r_i^2)-E^2(r_i)} \\
+%             &= \sqrt{Var(r_i)}
+% \end{aligned}
+% \end{equation}
+
+% For GRPO-like algorithm, we have $A_i = \frac{r_i-E(r_i)}{\sqrt{Var{r_i}}}$, then we first have $E(|A_i|) < E(|A_i^b|)$ for a given reward interval, in which $A_i$ is the advantage of reward distribution $r$, $A_i^b$ is the advantage of binary reward distribution $r_i^b$ and $E(r_i)=E(r_i^b)$.
+
+% suppose $\mu=E(r_i) = E(r_I^b)$, then can covert the reward into zero-mean interval $X=r_i-\mu, X^b=r_i^b-\mu$. Considering $\{P | \int_x p(x)dx=1 \&\int_xxP(x)dx=E\}$ is convex and tight. 
+% % for p_1, p_2, 
+
+% The mapping functions
+% \begin{equation}
+% E_{\mathsf P}|X|=\int |x|\,\mathsf P(dx),\qquad
+% E_{\mathsf P}[X^2]=\int x^2\,\mathsf P(dx)
+% \end{equation}
+% are linear functionals of $\mathsf P$
+
+% and consider the objective
+% \[
+% \Phi(\mathsf P):=\frac{U(\mathsf P)}{\sqrt{V(\mathsf P)}}\quad\text{whenever }V(\mathsf P)>0.
+% \]
+% (If $V(\mathsf P)=0$ then $X\equiv 0$ $\mathsf P$-a.s.\ and we set $\Phi(\mathsf P)=0$, which
+% can never be optimal once $a<\mu<b$.)
+
+
+% \paragraph{Convexity and compactness.}
+% The set $\mathcal P$ is convex because the constraints ``probability'' and ``mean $0$''
+% are linear in $\mathsf P$. It is compact for the topology of weak convergence
+% (Prokhorov's theorem), since all measures are supported on the fixed compact interval
+% $[-d_1,d_2]$. The maps $U$ and $V$ are continuous and \emph{linear} in $\mathsf P$:
+% $U(\lambda\mathsf P_1+(1-\lambda)\mathsf P_2)=\lambda U(\mathsf P_1)+(1-\lambda)U(\mathsf P_2)$
+% (and similarly for $V$). Hence the image
+% \[
+% \mathcal S\;:=\;\bigl\{(U(\mathsf P),\,V(\mathsf P)):\ \mathsf P\in\mathcal P\bigr\}
+% \subset\mathbb R_{\ge0}^2
+% \]
+% is a compact, convex subset of $\mathbb R^2$.
+
+
+
+
+% \paragraph{Supporting-line reduction.}
+% We wish to maximize $\Phi(\mathsf P)=U/\sqrt V$ over $\mathcal P$, or equivalently,
+% maximize the function $\psi(u,v):=u/\sqrt v$ over $(u,v)\in\mathcal S$ with $v>0$.
+% Let $(u_\star,v_\star)\in\mathcal S$ be a maximizer of $\psi$ (existence will be deduced
+% below). Put $c:=\psi(u_\star,v_\star)=u_\star/\sqrt{v_\star}$. Consider the concave
+% function $h(v):=c\sqrt v$ on $(0,\infty)$. By concavity,
+% \[
+% h(v)\ \le\ h(v_\star)+h'(v_\star)\,(v-v_\star)
+% \quad\text{for all }v>0,
+% \]
+% that is,
+% \[
+% c\sqrt v\ \le\ \frac{u_\star}{\sqrt{v_\star}}
+% \;+\;\frac{c}{2\sqrt{v_\star}}\,(v-v_\star)
+% \ =\ u_\star\;+\;\lambda\,(v-v_\star),
+% \qquad
+% \lambda:=\frac{u_\star}{2v_\star}.
+% \]
+% Therefore, for any $(u,v)\in\mathcal S$ with $v>0$ and $u\le c\sqrt v$ (i.e.\ $\psi(u,v)\le c$),
+% \[
+% u-\lambda v\ \le\ u_\star-\lambda v_\star. \tag{$\ast$}
+% \]
+% Inequality $(\ast)$ shows that \emph{any} maximizer $(u_\star,v_\star)$ of $\psi$ over
+% $\mathcal S$ also maximizes the \emph{linear} functional
+% \[
+% L(u,v):=u-\lambda v
+% \quad\text{with}\quad \lambda=\frac{u_\star}{2v_\star},
+% \]
+% over $\mathcal S$. In particular, the two optimization problems
+% \[
+% \sup_{(u,v)\in\mathcal S}\ \frac{u}{\sqrt v}
+% \qquad\text{and}\qquad
+% \sup_{(u,v)\in\mathcal S}\ \bigl(u-\lambda v\bigr)
+% \]
+% share a common maximizer $(u_\star,v_\star)$ for the specific (data-dependent) slope
+% $\lambda=u_\star/(2v_\star)$.
+
+% \paragraph{Existence and passage back to measures.}
+% Because $\mathcal S$ is compact and $L$ is continuous (indeed linear), the supremum of
+% $L$ over $\mathcal S$ is attained at some $(u_\star,v_\star)\in\mathcal S$. By definition
+% of $\mathcal S$, there exists $\mathsf P_\star\in\mathcal P$ such that
+% \[
+% (u_\star,v_\star)=\bigl(U(\mathsf P_\star),\,V(\mathsf P_\star)\bigr).
+% \]
+% Moreover, since $L$ is linear in $(u,v)$ and $(u,v)$ arises from \emph{linear} functionals
+% of $\mathsf P$, maximizing $L$ over $\mathcal S$ is equivalent to maximizing the linear
+% functional
+% \[
+% \mathsf P\ \longmapsto\ \int \bigl(|x|-\lambda x^2\bigr)\,\mathsf P(dx)
+% \]
+% over the convex, compact set $\mathcal P$. Hence the supremum is achieved at some
+% \emph{extreme point} of $\mathcal P$.
+
+
+
+% \paragraph{Extreme points of $\mathcal P$.}
+% We now characterize extreme points of $\mathcal P$. Suppose $\mathsf P\in\mathcal P$ has
+% support on at least three distinct points $x_1<x_2<x_3$ in $[-d_1,d_2]$. The vectors
+% $w_i:=(1,x_i)\in\mathbb R^2$ are then linearly dependent in the sense that there exist
+% coefficients $\alpha_1,\alpha_2,\alpha_3$, not all zero, with
+% \[
+% \sum_{i=1}^3 \alpha_i=0,
+% \qquad
+% \sum_{i=1}^3 \alpha_i x_i=0.
+% \]
+% Define the signed measure $\nu:=\sum_{i=1}^3 \alpha_i \delta_{x_i}$. Then
+% $\nu([-d_1,d_2])=0$ and $\int x\,\nu(dx)=0$. For $\varepsilon>0$ sufficiently small,
+% the measures
+% \[
+% \mathsf P_\pm\ :=\ \mathsf P \pm \varepsilon \nu
+% \]
+% remain nonnegative (choose $\varepsilon$ so that no atom mass becomes negative), and they
+% both belong to $\mathcal P$ because the probability and mean constraints are preserved
+% by construction. Furthermore, $\mathsf P=\tfrac12(\mathsf P_+ + \mathsf P_-)$ with
+% $\mathsf P_+\neq\mathsf P_-$. Thus $\mathsf P$ is \emph{not} an extreme point.
+
+% It follows that every extreme point of $\mathcal P$ must have support on at most two
+% points (indeed, with two linear constraints: total mass and mean, the Carath\'eodory/Dubins
+% argument above is sharp). Therefore, a maximizer of $L$ over $\mathcal P$ can be taken
+% to be a \emph{two-point} distribution supported in $[-d_1,d_2]$ with mean zero.
+
+
+% \begin{equation}
+% \begin{aligned}
+%      E(|A_n|) & \le \sqrt{E(A_n^2)}\\
+%               & =\sqrt{E(\frac{a}{Var(r_i)})}
+% \end{aligned}
+% \end{equation}
+% Supposing the reward is normalized to a fixed interval, such as [0, 1], given that $E(r_i)=\mu$
+
+
+
+% \begin{equation}
+% \begin{aligned}
+%     Var(r_i) & \le \mu(1-\mu)\\
+%              & \le \frac{1}{4}
+% \end{aligned}
+% \end{equation}
+% Then recalling the convergence of RL training, $E(r_i) = \int p(\tau)R(\tau)d\tau$ is increasing, so we got that in the convergence process, $E(|A_n|)\to 0$.
+
+
+
+
+
+% Then we get the hessian matrix
+% \begin{equation}
+% \begin{aligned}
+%     H(J(\theta|x))
+%     &= \nabla^2_\theta(J(\theta|x)) \\
+%     &= \nabla^2_\theta\left(E_{y\sim \pi_\theta(\cdot|x)}[A_i \frac{\pi_\theta(y|x)}{\pi_{ref}(y|x)}]\right)
+%     &= \nabla_\theta\left(E_{y\sim \pi_\theta(\cdot|x)}[A_i \frac{\nabla_\theta\pi_\theta(y|x)}{\pi_{ref}(y|x)}]\right)\\
+%     &= E_{y\sim \pi_\theta(\cdot|x)}[A_i ]
+% \end{aligned}
+% \end{equation}
+
+
+
+
+
+% \subsection{}
+% Ignoring the clip part and KL constraint, the optimization project can be simplified as
+% \begin{equation}
+% \begin{aligned}
+% J(\theta)&= E_xE_{y\sim \pi_{\theta_{old}}(\cdot|x)}[A_i \frac{\pi_\theta(y|x)}{\pi_{\theta_{old}}(y|x)}]
+% \end{aligned}
+% \end{equation}
+
+% Recalling that the Fisher Information Matrix(FIM) is defined as 
+% \begin{equation}
+%     F(\theta) = E_{(x,y)\sim D}[(\nabla_\theta \log \pi_\theta(y|x))(\nabla_\theta \log \pi_\theta(y|x))^T]
+% \end{equation}
+% Then for GRPO, its policy gradient is 
+% \begin{equation}
+% \begin{aligned}
+%      \nabla_\theta J(\theta) 
+%      &=\nabla_\theta E_xE_{y\sim \pi_{\theta_{old}}(\cdot|x)}[A_i \frac{\pi_\theta(y|x)}{\pi_{\theta_{old}}(y|x)}] \\
+%      &= E_{(x,y)\sim \pi_{\theta_{old}}}[A_i  \frac{\nabla_\theta\pi_\theta(y|x)}{\pi_{\theta_{old}}(y|x)}] \\
+%      &= E_{(x,y)\sim \pi_{\theta}}[A_i  \frac{\nabla_\theta\pi_\theta(y|x)}{\pi_\theta(y|x)}] \\
+%      &= E_{(x,y)\sim\pi_\theta}[A_i \nabla_\theta \log \pi_\theta(y|x)]
+% \end{aligned}
+% \end{equation}
+% So considering the corss product of the policy gradient
+% \begin{equation}
+% \begin{aligned}
+%     \nabla_\theta J(\theta) \nabla_\theta J(\theta) ^T 
+%     &= E_{(x,y)\sim\pi_\theta}(A_i^2  \nabla_\theta \log \pi_\theta(y|x)  \nabla_\theta \log \pi_\theta(y|x)^T)\\
+%     &=  E_{(x,y)\sim\pi_\theta}(A_I^2)E_{(x,y)\sim\pi_\theta}(\nabla_\theta \log \pi_\theta(y|x)  \nabla_\theta \log \pi_\theta(y|x)^T))\\
+%     &+Cov(A_i^2, \nabla_\theta \log \pi_\theta(y|x)  \nabla_\theta \log \pi_\theta(y|x)^T))\\
+%     &= E_{(x,y)\sim\pi_\theta}(A_I^2)F(\theta) + Cov
+% \end{aligned}
+% \end{equation}
+% Considering $A_i$ reflecting the response quality, is independent to the generating logits, so $Cov(A_i^2, \nabla_\theta \log \pi_\theta(y|x)  \nabla_\theta \log \pi_\theta(y|x)^T)) \approx 0$. For GRPO, 
+% $A_i = \frac{r_i-\bar{r}}{Std(r)}$ so we have $E_{(x,y)\sim\pi_\theta}(A_i^2)=1$.
+% Finally, we got 
+% \begin{equation}
+%     \nabla_\theta J(\theta) \nabla_\theta J(\theta) ^T = F(\theta)
+% \end{equation}
+
+
+\section{Detailed Experiments Results}
+% \begin{table}[ht]
+% \centering
+% \footnotesize
+% \renewcommand{\arraystretch}{1.3} 
+% \begin{tabular}{cccccccccccccc}
+% \hline
+% Fraction  & 0.9 & 0.8 & 0.7 & 0.6 & 0.5 & 0.4 & 0.3 & 0.2 & 0.1 & 0.05 & 0.01 & 0.005 & 0.001 \\
+% \hline
+% Math v.s. Code & 7.98 & 8.98 & 10.26 & 11.97 & 14.37 & 17.96 & 23.56 & 18.27 & 7.83 & 1.82 & 0.70 & 0.53 & 0.05 \\
+% Code v.s. IF & 7.97 & 8.96 & 10.24 & 11.95 & 14.34 & 17.92 & 22.93 & 18.51 & 8.33 & 1.86 & 0.72 & 0.61 & 0.08 \\
+% Math v.s. IF & 10.26 & 11.54 & 13.19 & 15.38 & 18.46 & 23.08 & 29.39 & 17.30 & 8.68 & 4.57 & 1.33 & 0.69 & 0.09 \\
+% Math v.s. Code & 36.39 & 40.94 & 35.75 & 30.48 & 25.75 & 20.54 & 15.38 & 10.25 & 5.22 & 3.18 & 2.96 & 3.57 & 2.41 \\
+% Code v.s. IF & 33.95 & 38.20 & 35.57 & 30.20 & 25.17 & 20.21 & 14.37 & 10.21 & 5.27 & 2.99 & 2.97 & 3.99 & 4.30 \\
+% Math v.s. IF & 33.85 & 38.08 & 35.39 & 29.99 & 25.05 & 20.05 & 14.20 & 10.02 & 5.16 & 2.82 & 2.27 & 3.09 & 3.57 \\
+% \hline
+% \end{tabular}
+% \caption{Performance comparison on Test Set}
+% \label{tab:perf}
+% \end{table}
+
+
+
+
+\begin{table}[]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.3} 
+\begin{tabular}{lcccccc}
+\hline
+                & \textbf{Math}         & \textbf{Code}         & \textbf{IF}             & \textbf{Average}  \\ \hline
+SFT             & 61.9                  & 60.5                  & 63.9                    & 62.1 \\
+Averaging       & 55.8(-10\%)           & 55.7(-7.8\%)          & 51.7(-19.1\%)           & 54.4(-12.4\%) \\
+TIEs            & 57.1(-7.6\%)          & 57.2(-5.5\%)          & 47.7(-28.7\%)           & 54.0(-13.0\%) \\
+\hline
+GRPO            & 64.6                  & 65.6                  & 90.0                    & 73.4 \\
+Averaging       & 60.9(-5.3\%)          & 62.0(-5.4\%)          & 83.7(-7.0\%)            & 68.9(-6.2\%) \\
+TIEs            & 62.1(-3.9\%)          & 64.0(-2.5\%)          & 89.8(-0.3\%)            & 72.0(-2.0\%) \\ 
+\hline
+PPO             & 62.8                  & 65.2                  & 87.4                    & 71.8 \\
+Averaging       & 60.9(-3.0\%)          & 61.7(-5.4\%)          & 80.0(-8.5\%)            & 67.5(-5.9\%) \\
+TIEs            & 60.5(-3.6\%)          & 62.3(-4.4\%)          & 85.2(-2.5\%)            & 69.3(-3.4\%) \\ 
+\hline
+\textsc{Reinforce}++     & 62.3                  & 63.7                  & 83.8                    & 70.0 \\
+Averaging       & 61.5(-1.3\%)          & 61.0(-4.2\%)          & 79.1(-5.6\%)            & 67.2(-4.0\%) \\
+TIEs            & 60.4(-3.0\%)          & 63.1(-1.0\%)          & 81.6(-2.6\%)            & 68.4(-2.3\%) \\ 
+\hline
+\end{tabular}
+
+\caption{Performance comparison across three tasks using different merging strategies (Averaging and TIEs), applied to both SFT and RL models. The values in parentheses indicate the relative performance drop compared to the original unmerged model.}
+\label{table:algotithm_res}
+\end{table}
+
+
+
+% \begin{table}[]
+% \centering
+% \footnotesize
+% \renewcommand{\arraystretch}{1.3} 
+% \begin{tabular}{lcccccc}
+% \hline
+%                 & \textbf{Math}         & \textbf{Code}         & \textbf{IF}             & \textbf{Average}  \\ \hline
+% \multicolumn{5}{l}{\textbf{\textit{Based on Llama-3.2-3B}}}\\
+% SFT             & 42.7                  & 42.8                  & 42.2                    & 42.6 \\
+% Averaging       & 33.1(-22.5\%)           & 38.3(-10.4\%)          & 33.1(-21.6\%)        & 34.8(-18.2\%) \\
+% TIEs            & 38.3(-10.2\%)          & 39.8(-7.1\%)          & 27.2(-35.6\%)          & 35.1(-17.6\%) \\
+% \hdashline
+% GRPO            & 41.4                  & 49.8                  & 56.7                    & 49.3 \\
+% Averaging       & 40.4(-2.4\%)          & 46.2(-7.2\%)          & 50.0(-11.8\%)           & 45.5(-7.6\%) \\
+% TIEs            & 38.2(-7.7\%)          & 47.7(-4.2\%)          & 54.1(-4.6\%)            & 46.7(-5.3\%) \\ 
+% \hline
+% \multicolumn{5}{l}{\textbf{\textit{Based on Mistral-Small-24B}}}\\
+% SFT             & 73.9                  & 71.7                  & 76.5                    & 74.0 \\
+% Averaging       & 71.5(-3.3\%)          & 71.6(-0\%)            & 66.5(-13.0\%)           & 69.9(-5.6\%) \\
+% TIEs            & 68.9(-6.8\%)          & 70.3(-2.0\%)          & 62.9(-17.7\%)           & 70.4(-4.3\%) \\ 
+% \hdashline
+% GRPO            & 77.9                  & 73.9                  & 89.6                    & 80.5 \\
+% Averaging       & 77.0(-1.2\%)          & 74.0(-0\%)            & 86.4(-3.6\%)            & 79.1(-1.7\%) \\
+% TIEs            & 77.9(-0\%)            & 73.4(-0.7\%)          & 90.0(+0.4\%)            & 80.4(-0\%) \\ 
+% \hline
+% \end{tabular}
+% \caption{Performance comparison across three tasks using different merging strategies (Averaging and TIEs), applied to both SFT and GRPO models with different base models. The values in parentheses indicate the relative performance drop compared to the original unmerged model.}
+% \label{table:basemodel_res}
+% \end{table}
+
+
+% \section{Optimization over positive and negative samples}
+% In this section, we will analysis how the optimization over positive and negative samples could introduce a less cross task conflict in an ideal setting. We consider a single step action. 
+% Specifically, we consider two queries $X_A, X_B$ represent two different tasks $A, B$, a base model $\phi$ such that $\phi(X)\in\mathbb{R}^{d\times1}$, an output layer $W\in\mathbb{R}^{d\times V}$. The $d$ represents the dimension and $V$ represents action space. Supposing $A$ and $B$ are independent, so the positive action $y_{A+}, y_{B+}$ and negative actions $y_{A-}, y_{B-}$ has no overlap.
+
+% For SFT, we consider the cross-entropy loss and for RL, we consider the weighted cross-entropy, 1 for positive action and -1 for negative action. 
+% \begin{equation}
+%     \mathcal{L}(y, p) = -e_y^T\log p;\quad p:=Softmax(z); \quad z:= W^T\phi(X，\theta)
+% \end{equation}
+% \paragraph{Update based on SFT}
+% \begin{equation}
+%     \nabla_\theta \mathcal{L} = -e_y \frac{1}{p}*(p*(e_y-p)^T)*W*\nabla_\theta\phi\\
+%      = (e_y-p)^TW\nabla_\theta\phi
+% \end{equation}
+
+
+
+\begin{table}[]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.1} 
+\begin{tabular}{lcccccc}
+\hline
+                & \textbf{Math}         & \textbf{Code}         & \textbf{IF}             & \textbf{Average}  \\ \hline
+\multicolumn{5}{l}{\textbf{\textit{Based on Llama-3.2-3B}}}\\
+SFT             & 42.7                  & 42.8                  & 42.2                    & 42.6 \\
+Averaging       & 33.1(-22.5\%)           & 38.3(-10.4\%)          & 33.1(-21.6\%)        & 34.8(-18.2\%) \\
+TIEs            & 38.3(-10.2\%)          & 39.8(-7.1\%)          & 27.2(-35.6\%)          & 35.1(-17.6\%) \\
+\hdashline
+GRPO            & 41.4                  & 49.8                  & 56.7                    & 49.3 \\
+Averaging       & 40.4(-2.4\%)          & 46.2(-7.2\%)          & 50.0(-11.8\%)           & 45.5(-7.6\%) \\
+TIEs            & 38.2(-7.7\%)          & 47.7(-4.2\%)          & 54.1(-4.6\%)            & 46.7(-5.3\%) \\ 
+\hline
+\multicolumn{5}{l}{\textbf{\textit{Based on Llama-3.1-8B}}}\\
+SFT             & 61.9                  & 60.5                  & 63.9                    & 62.1 \\
+Averaging       & 55.8(-10\%)           & 55.7(-7.8\%)          & 51.7(-19.1\%)           & 54.4(-12.4\%) \\
+TIEs            & 57.1(-7.6\%)          & 57.2(-5.5\%)          & 47.7(-28.7\%)           & 54.0(-13.0\%) \\
+\hdashline
+GRPO            & 64.6                  & 65.6                  & 90.0                    & 73.4 \\
+Averaging       & 60.9(-5.3\%)          & 62.0(-5.4\%)          & 83.7(-7.0\%)            & 68.9(-6.2\%) \\
+TIEs            & 62.1(-3.9\%)          & 64.0(-2.5\%)          & 89.8(-0.3\%)            & 72.0(-2.0\%) \\ 
+\hline
+\multicolumn{5}{l}{\textbf{\textit{Based on Mistral-Small-24B}}}\\
+SFT             & 73.9                  & 71.7                  & 76.5                    & 74.0 \\
+Averaging       & 71.5(-3.3\%)          & 71.6(-0\%)            & 66.5(-13.0\%)           & 69.9(-5.6\%) \\
+TIEs            & 68.9(-6.8\%)          & 70.3(-2.0\%)          & 62.9(-17.7\%)           & 70.4(-4.3\%) \\ 
+\hdashline
+GRPO            & 77.9                  & 73.9                  & 89.6                    & 80.5 \\
+Averaging       & 77.0(-1.2\%)          & 74.0(-0\%)            & 86.4(-3.6\%)            & 79.1(-1.7\%) \\
+TIEs            & 77.9(-0\%)            & 73.4(-0.7\%)          & 90.0(+0.4\%)            & 80.4(-0\%) \\ 
+\hline
+\end{tabular}
+\caption{Performance comparison across three tasks using different merging strategies (Averaging and TIEs), applied to both SFT and GRPO models with different base models. The values in parentheses indicate the relative performance drop compared to the original unmerged model.}
+\label{table:basemodel_res}
+\end{table}
+
+
+
+
+
+\section{Parameter Sign Conflicts}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{para-sign-conflict-new_beautified.png}
+    \caption{Proportion of parameter sign conflicts under varying proportions of retained parameters.}
+    \label{fig:para-sign-conflict}
+\end{figure}
+
+A direct way to assess task interference between large language models (LLMs) is to measure the \emph{parameter sign conflict}, i.e., the proportion of parameters for which the update directions (weight differences) differ between models trained on different tasks. Prior work has shown that parameter sign conflicts can substantially impact merged model performance, as inconsistent signs may lead to destructive interference during parameter fusion~\citep{yadav2023ties}. To quantify this, we compute the ratio of sign conflicts while varying the \emph{kept parameter rate}, defined as the fraction of parameters retained after selecting those with the largest absolute values. Figure~\ref{fig:para-sign-conflict} reports the conflict rate as a function of the kept rate. As shown, RL-trained models consistently exhibit lower sign conflict rates than their SFT-trained counterparts, particularly in the highest-importance parameter subset. This suggests that RL optimization produces more compatible update directions across tasks, thereby reducing destructive interference during merging.
+
+\section{Performance Landscape}
+\label{chapter:appendix_landscape}
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{landscape2.pdf}
+    \caption{The full content of performance landscape}
+    \label{fig:full_scape}
+\end{figure}
+
+\subsection{The Number of Merging Model}
+
+% \paragraph{The Number of Merging Model}
+
+We examine how the \textit{number of merged models} influences task conflicts under different post-training paradigms. In this experiment, we employ the TIEs merging strategy to combine varying numbers of independently fine-tuned models. As shown in Figure~\ref{fig:case}, the performance degradation patterns differ markedly between paradigms. For RL-trained models, the average performance decreases only gradually as the number of merged models increases. In contrast, SFT-trained models exhibit a much steeper decline, suggesting that parameter conflicts accumulate more rapidly when merging multiple SFT-based models. This result further supports our earlier findings that RL produces more task-orthogonal parameter updates, thereby mitigating cross-task interference in multi-model merging scenarios. 
+
+
+
+\section{Futher Details}
+\label{chapter:appendix_expriement_detail}
+\subsection{Experiment Setup Details} 
+\paragraph{Model and training datasets}
+We adopt the open-source model \textbf{LLaMA-3.1-8B}~\citep{grattafiori2024llama} as the base model for experiments and analysis. Our evaluation covers five tasks that allow for automatic verification: mathematics, code generation, logical puzzles, instruction following, and ranking. For the puzzle task, we adopt the representative logical reasoning benchmark \textit{Knights and Knaves}~\citep{johnson1990meta}. For the \textbf{SFT} setting, we prepare task-specific training data as follows. For the math task, we use a subset of \textit{OpenMathInstruct-2}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning}. For the code generation task, we adopt a subset of \textit{OpenCodeInstruct}~\citep{ahmad2025opencodeinstructlargescaleinstructiontuning}. For the puzzle task, we automatically generate synthetic data using templates implemented by~\cite{xie2024memorization}, with the number of people ranging from 2 to 8. For the instruction-following task, we use the instruction subset from \textit{Tulu-3-SFT}~\citep{lambert2025tulu3pushingfrontiers}. For the ranking task, we use the \textit{Rank1} dataset~\citep{weller2025rank1testtimecomputereranking}. For the \textbf{RL} setting, we reuse the same query for the math, code, puzzle, and ranking tasks. To enable verifiable supervision for the instruction-following task, we employ the signal construction method proposed by~\cite{pyatkin2025generalizing}.  Before applying reinforcement learning, we first fine-tune the base model on the math, code, and instruction-following datasets to equip it with basic instruction-following capabilities. This initialization step ensures stable and meaningful reward signals during the RL training stage. 
+
+\paragraph{Benchmarks and Evaluation Metrics} 
+To comprehensively assess model performance across diverse task domains, we employ a broad set of benchmarks. 
+For \textbf{mathematical reasoning}, we adopt \textsc{GSM8K}~\citep{cobbe2021training} and \textsc{MATH-500}~\citep{hendrycks2021measuring,lightman2023let}, and report the \emph{accuracy} on each benchmark.
+For \textbf{code generation}, we utilize the \textsc{HumanEval}~\citep{chen2021evaluating} and \textsc{MBPP}~\citep{austin2021program} datasets, including both the base and plus versions. The evaluation metric is \emph{pass@1}, which measures the percentage of correct solutions in the first attempt.
+For \textbf{instruction following}, we adopt \textsc{IFEval}~\citep{zhou2023instruction} and the instruction-following subset of \textsc{LiveBench}~\citep{white2024livebench}. We report both the \emph{loose} and \emph{strict} accuracies for \textsc{IFEval}, and the overall \emph{LiveBench score} as computed by the benchmark's official evaluation script.
+For the \textbf{puzzle-solving} task, we generate evaluation data using a templated prompt . Specifically, we construct an \emph{in-domain} test set involving scenarios with 2 to 8 people, and an \emph{out-of-domain (OOD)} test set with 9 to 13 people. Accuracy is reported separately for in-domain and OOD settings.
+Finally, for \textbf{ranking}, we evaluate on the pairwise ranking benchmark \textsc{NevIR}, and report the \emph{accuracy} computed using the official \textsc{MTEB} evaluation protocol.
+
+\subsection{Implementation Details}
+% \label{chapter:appendix_detail}
+For \textbf{SFT} experiments, we train models using the \textsc{OpenRLHF}\footnote{\url{https://github.com/OpenRLHF/OpenRLHF}}~\citep{hu2024openrlhf} framework. Most hyperparameters are adopted from the \texttt{tulu-3} configuration, including a learning rate of $5 \times 10^{-6}$, batch size of 128, warm-up ratio of 0.03, a learning rate decay scheduler, and a total of 3 training epochs.
+For the \textbf{Reinforcement Learning (RL)} experiments, we employ the \textsc{Verl}\footnote{\url{https://github.com/volcengine/verl}}~\citep{sheng2024hybridflow} framework and \textbf{GRPO} as the RL algorithm. The training configuration includes a learning rate of $1 \times 10^{-6}$, rollout batch size of 512, rollout count of 8, rollout temperature and top-$p$ both set to 1.0, and a KL-divergence coefficient of $1 \times 10^{-3}$.
+For \textbf{model merging}, we utilize the \textsc{MergeKit} toolkit. In the case of \emph{TIEs merging} and \emph{DARE}, we follow the default hyperparameter settings recommended by \textsc{MergeKit}, setting the sensitivity to 0.8 and the interpolation weight to 0.5. In \emph{Task-Arithmetic}, we set $\lambda=0.7$, which is recomended by the original paper.
+\end{document}

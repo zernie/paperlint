@@ -1,0 +1,32 @@
+\begin{wraptable}{l}{0.5\textwidth}
+
+\centering
+\footnotesize
+\caption{Comparisons of LLMs with previous approaches on the assertion generation task using the $Data_{old}$ dataset. The best results among all LLMs are \textbf{bolded}, and the second-best results are \uline{underlined}.}
+\label{tab:ag_comparisons_llm}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Approaches/LLMs} & \textbf{EM} & \textbf{BLEU} & \textbf{CodeBLEU} \\
+\midrule
+$ATLAS$ & 31.42\% & 68.51\% & 63.60\% \\
+$IR_{ar}$ & 36.26\% & 71.49\% & 71.03\% \\
+$RA_{adapt}^H$ & 40.97\% & 73.28\% & 72.46\% \\
+$RA_{adapt}^{NN}$ & 43.63\% & 73.95\% & 72.12\% \\
+$Intergration$ & 46.54\% & 78.86\% & 73.29\% \\
+\textsc{EditAS} & 53.46\% & 80.77\% & 77.00\% \\
+\midrule 
+CodeBERT & 54.64\% & 74.31\% & 73.89\% \\
+GraphCodeBERT & 58.32\% & 74.69\% & 76.02\% \\
+UniXcoder & 55.12\% & 68.92\% & 73.14\% \\
+CodeT5-base & 60.26\% & \uline{85.12\%} & \uline{87.32\%} \\
+CodeT5p-220m & 61.76\% & \textbf{85.89\%} & \textbf{88.25\%} \\
+PLBART-base & 53.92\% & 82.09\% & 84.86\% \\
+CodeGPT & 51.30\% & 61.28\% & 69.12\% \\
+StarCoder2-3b & 63.29\% & 72.50\% & 77.60\% \\
+CodeLlama-7b & \textbf{71.42\%} & 83.92\% & 83.34\% \\
+DeepSeek-Coder-6b & \uline{70.57\%} & 82.99\% & 82.66\% \\
+\bottomrule
+\end{tabular}
+
+
+\end{wraptable}

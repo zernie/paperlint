@@ -1,0 +1,178 @@
+\label{big_sec:tlcm_adaptive}
+
+In this section, we investigate the mechanisms underlying TLCM. In Section \ref{sec:tlcm-adaptive}, we test whether layer $i+1$'s correction is directly caused by layer $i$'s output, using causal interventions. In Section \ref{sec:jacobian-selective}, we ask whether the correction targets specific subspaces or attenuates the prior layer uniformly, using the transformer layer Jacobian. Finally, we introduce the propose-and-reject hypothesis as a framework that organizes these findings.
+
+
+% \arjun{A priori, we dont know if the whole layer is attenuated uniformly or not. We want to answer this quesiton. make that the motivaiton. }
+% Further analysis of the correction suggests that TLCM only \textit{partially} corrects the prior layer. We then hypothesize that TLCM identifies and rejects unwanted or ``bad'' components, while leaving ``good'' components untouched (Sec.~\ref{sec: corrects component}). Finally, we utilize the eigen-decomposition of the layer Jacobian to observe how TLCM selectively demotes certain subspaces while promoting others (Sec.~\ref{sec: jacobian selective}). Ultimately, this suggests that TLCM is sophisticated and adaptive.
+
+\textbf{Notation.} For a particular token $t$, consider the marginal contribution of layer $i$ and layer $i+1$ to be $\mathbf{a}_t$ and $\mathbf{b}_t$, respectively. Recall that the correction mechanism is currently described by a negative cosine similarity between $\mathbf{a}_t$ and $\mathbf{b}_t$ across a variety of layers and tokens. Additionally, observe that the $d_m$-dimensional input to layer $i+1$ would be $\mathbf{x}_{i,t} = \mathbf{x}_{i-1,t} + \mathbf{a}_t$. We define a function $\mathbf{b}_t^\prime$ that captures contribution of layer $i+1$ when the previous layer's output is perturbed by $\mathbf{\Delta}$. Specifically:
+\begin{align*}
+    \mathbf{b}_t'(\mathbf{\Delta}) := \operatorname{Layer}_{i + 1}(\mathbf{x}_{i,t} + \mathbf{\Delta})
+\end{align*}
+Note that $\mathbf{b}_t'(\mathbf{0}) = \mathbf{b}_t$, i.e., the original layer contribution. 
+
+% provides evidence to formulate the \textit{propose-and-reject} hypothesis. Layer 
+
+% We then analyze the nature of the correction, and find evidence for the \emph{propose-and-reject} hypothesis: the preceding layer proposes both `good' and `bad' components, and the TLCM identifies and rejects the `bad' components by producing the negation of the components. Specifically, we find that correction direction is not perfectly aligned with the preceding output (Sec.~\ref{sec: corrects component}). Moreover, by decomposing the Jacobian of the correcting layer into its eigenbasis, we find that TLCM selectively demotes certain components of the preceding output and promotes others (Sec.~\ref{sec: jacobian selective}).
+
+
+% First, we ask whether TLCM is actively finding and correcting the prior layer's contribution. If so, should TLCM scale its correction in proportion to the magnitude of the prior layer's contribution? Through empirical analysis, we find that this is indeed true.
+
+% Additionally, we ask \textit{how much} of the prior layer is being corrected. Intuitively, TLCM should not correct the entirety of the previous layer. If so, it would not be clear how it could help with information consolidation-like tasks. Furthermore, it would be a largely inefficient use of compute—rather than entirely scale back the prior layer, the prior layer should contribute less originally. Empirically, we find these intuitions to be correct: the correction is partial, suggesting that the TLCM employs a refined mechanism to selectively adjust undesirable components of the prior layer’s contribution.
+
+% We use Llama 3.1 8B for all experiments in this section.
+
+\subsection{TLCM is Adaptive}
+\label{sec:tlcm-adaptive}
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=\linewidth,trim={2mm, 0, 15mm, 10mm},clip]{figures/adaptable_correction.pdf}
+%     \vspace{-16pt}
+%     \caption{TLCM exhibits a near linear relationship between its correction strength and the prior layer's contribution, strongly suggesting that it systematically identifies and attenuates the previous layer's contribution. When the prior layer's contribution is reduced (negative $\alpha$ values), layers demonstrate compensatory behavior, evidenced by positive cosine similarity. While only 5 randomly sampled curves are shown, they represent the broader pattern observed across the dataset.}
+%     \label{fig:adaptable_correction}
+% \end{figure}
+
+
+In Section \ref{sec:tlcm-exists}, we showed that adjacent-layer anticorrelations are far from what independence-based null models would predict, leaving open whether the cause is a common confounder or direct dependence between the layers.
+Here, we use a causal intervention to test whether layer $i+1$'s correction depends directly on layer $i$'s output.
+
+
+% Here, we address the question of whether the TLCM will scale its correction as the scale of the prior layer increases. Earlier experiments in Sec.~\ref{sec:tlcm-exists} only demonstrated a negative correlation between adjacent layers; here we aim to demonstrate causality.
+
+\textbf{Setup.} To understand whether layer $i+1$ is adaptively correcting the contribution of layer $i$, we add some perturbation $\mathbf{\Delta} = \alpha \mathbf{a}_t$, for $\alpha \in [-1, 1]$ to the input of layer $i+1$. Formally, the input to layer $i+1$ is intervened to become $$\mathbf{x}_{i-1,t} +  \mathbf{a}_t + \alpha \mathbf{a}_t = \mathbf{x}_{i-1,t} + (1 + \alpha) \mathbf{a}_t$$
+
+If layer $i+1$ is attuned to correcting $\mathbf{a}_t$, we should expect to see the correction increase as $\alpha$ is scaled up from $0$ and decrease as $\alpha$ is decreased from $0$. To this end, we measure the cosine similarity between $\mathbf{a}_t$ and $\mathbf{b}_t'(\alpha\mathbf{a}_t)$ at $\alpha \in \{-1, -0.9, \ldots, 0.9, 1\}$.
+
+\textbf{Results.}
+Increasing $\alpha$ leads to stronger correction. Decreasing $\alpha$ leads to less correction. Figure \ref{fig:adaptable_correction} depicts this near-linear relationship.
+
+When $\alpha = 1$---effectively doubling $\mathbf{a}_t$ in the residual stream---layer $i+1$ responds by adjusting its contribution to further oppose $\mathbf{a}_t$. The relationship between $\alpha$ and correction strength is approximately linear (Figure \ref{fig:adaptable_correction}), and this pattern appears consistently across all layers where TLCM is active, with complete results in Appendix \ref{appendix:tlcm_adaptivity}.
+
+Our experiments also reveal a \textit{compensatory} effect. Specifically, in Figure \ref{fig:adaptable_correction_full} at $\alpha = -1$, the cosine similarity between the adjacent layers becomes \textit{positive}; layer $i+1$ effectively \textit{boosts} the contribution of layer $i$. This effect occurs most strongly in earlier layers. This finding aligns with recent research on self-repair mechanisms that enable models to recover from interventions \citep{mcgrath2023hydraeffectemergentselfrepair}. However, extreme values of $\alpha$ place the model in counterfactual states that do not appear during standard inference or training. Moreover, this compensation effect may stem from self-repair mechanisms unrelated to TLCM.
+
+\textbf{Discussion.} The scaling experiment shows that layer $i+1$'s output responds systematically to perturbations of layer $i$'s contribution, consistent with direct dependence rather than a shared confounder.
+
+One interpretation is that layer $i+1$ identifies layer $i$'s contribution within the full residual stream and adjusts accordingly. However, layer $i+1$'s input is the sum of contributions from all preceding layers, making it unclear how layer $i$'s specific contribution would be isolated. A simpler alternative is that layer $i$'s contribution comprises both components that should persist and components that should be removed, and layer $i+1$ targets the latter. For instance, layer $i$ might write several candidate features, and layer $i+1$---with access to broader context via attention---removes incorrect ones while leaving the rest intact. This motivates two questions:
+\begin{enumerate}
+    \item Does TLCM uniformly correct the entire previous layer contribution, or does it target specific components?
+    \item If TLCM correction is selective, can we identify the most aggressively targeted subspaces?
+\end{enumerate}
+
+
+% \subsection{Layer $i+1$ Corrects an ``Undesirable'' Component of Layer $i$} \label{sec: corrects component}
+
+% If the \textit{propose-and-reject} hypothesis is true, layer $i+1$ should only partially correct the prior layer. Specifically, it should correct the ``undesirable'' component. We test this implication.
+
+% \textbf{Setup.} Consider that $\mathbf{b}_t$ is a superposition of a correction component and a contribution component. The correction component aims to correct $\mathbf{a}_t$ whereas the contribution vector is simply adding to the residual stream. We want to isolate the correction component of $\mathbf{b}_t$. The previous experiment demonstrated that we can scale the correction by linearly scaling $\mathbf{a}_t$. This enables us to approximate the correction component. Specifically, we consider the effects of the mechanism when we add a small perturbation $0.1\mathbf{a_t}$ to the residual stream before layer $i+1$. As shown in the previous experiment, there will be a corresponding correction by the following layer, performed by $\mathbf{b}_t'(0.1\mathbf{a}_t)$. From $\mathbf{b}_t$ to $\mathbf{b}_t'(0.1\mathbf{a}_t)$, the component corresponding to correction should scale, but the component corresponding to contribution should not. Thus, we claim the correction component is approximated by $\mathbf{b}'_t(0.1\mathbf{a}_t) - \mathbf{b}_t$.
+
+% We compare $\mathbf{b}'_t(0.1\mathbf{a}_t) - \mathbf{b}_t$ with $\mathbf{a}_t$ using cosine similarity.
+% If the cosine similarity is close to $-1$, it suggests layer $i+1$ aims to correct the \textit{entirety} of $\mathbf{a}_t$. If the cosine similarity is significantly higher than $-1$, the evidence suggests that layer $i+1$ is correcting some part of $\mathbf{a}_t$.
+
+% \textbf{Results.} We plot $\operatorname{cossim}(\mathbf{b}'_t(0.1\mathbf{a}_t) - \mathbf{b}_t, \mathbf{a}_t)$ across 300 TLCM activations and find most values clustered around $-0.45$. See Figure \ref{fig:correction_component_hist}.
+
+% \textbf{Discussion.} Even with our approximation, TLCM is not close to correcting the entirety of $\mathbf{a}_t$. More broadly, this supports a hypothesis that there is an ``undesirable'' component of $\mathbf{a}_t$. However, partial correction is also consistent with an alternative hypothesis that layer $i+1$ is trying to correct all of layer $i$ outputs, but is doing so imperfectly. The next section eliminates this.
+
+
+\subsection{Isolating the Correction Subspace} \label{sec:jacobian-selective}
+
+
+% \arjun{Add something here or in the appendix that showing the jacobian sanity check plots}
+
+In this section, we execute an experiment to answer the prior two questions. An open question is \textit{how} the previous layer's contribution is attenuated: is it scaled back uniformly, or are specific subspaces selectively targeted for correction?
+
+The layer Jacobian---the local linearization of both the attention and MLP sublayers---contains information about how the entire layer will respond to input perturbations. The eigenvectors of the symmetrized Jacobian decompose the input space into directions that are corrected, reinforced, or left approximately unchanged by the layer.
+
+\textbf{Notation.} As previously defined, $\mathbf{b}'_t$ is the function representing transformer layer $i+1$. We can linearize this function by computing the Jacobian $\nabla \mathbf{b}'_t(0) = \mathbf{J} \in \mathbb{R}^{d_\text{model} \times d_\text{model}}$ of the transformer layer, such that $\mathbf{b}'_t(\mathbf{\Delta}) \approx \mathbf{b}_t +\mathbf{J}\mathbf{\Delta}$. Finally, let $\overline{\mathbf{J}} := \frac{1}{2}(\mathbf{J} + \mathbf{J}^\top)$ be the symmetrized Jacobian.
+
+\textbf{Claim}. The eigenvectors of $\overline{\mathbf{J}}$ with negative eigenvalues correspond to the corrected subspace, with the eigenvalue dictating the correction strength. In a similar vein, we argue that the positive eigenvalue eigenvectors are reinforced proportional to their eigenvalue. Finally, eigenvectors with near zero eigenvalue are mostly untouched by this layer.
+
+Intuitively, consider a layer input perturbation $\mathbf{\Delta}$ which is an eigenvector of the Jacobian with some negative eigenvalue $\lambda_i < 0$. Observe that the layer's response to this perturbation is approximately $\mathbf{J}\mathbf{\Delta} = \lambda_i \mathbf{\Delta}$ and the net contribution of this perturbation to the residual stream becomes $\mathbf{\Delta} + \lambda_i \mathbf{\Delta}$. For negative $\lambda_i$, this is a correction; if $\lambda_i = -1$, there is zero net contribution from the perturbation, corresponding to a full reversal. Similarly, if the eigenvalue were positive, the subspace would be reinforced. In Appendix \ref{appendix:jacobian_epairs_correct}, we formalize this intuition and show why it's sufficient to consider the eigenpairs of the symmetrized Jacobian $\overline{\mathbf{J}}$, with spectral eigendecomposition $\overline{\mathbf{J}} = \mathbf{Q}\mathbf{V}\mathbf{Q^\top}$.
+
+
+% \textbf{Proof.} An input perturbation to layer $i+1$ is ``corrected'' if $\operatorname{cossim}(\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t, \mathbf{\Delta}) < 0$. Observe that this condition is true if and only if $\langle \mathbf{\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t}, \mathbf{\Delta} \rangle < 0$. For a small enough perturbation, the condition is equivalent to $\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle < 0$. Because $\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{\Delta}, \mathbf{J\Delta} \rangle$, the condition becomes:
+
+% \begin{align}
+% \langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle = \frac{1}{2}\left(\langle \mathbf{J\Delta}, \mathbf{\Delta} \rangle + \langle \mathbf{\Delta}, \mathbf{J\Delta} \rangle\right) = \langle \frac{1}{2}(\mathbf{J} + \mathbf{J}^\top)\mathbf{\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{\overline{J}\Delta}, \mathbf{\Delta} \rangle < 0 \label{eq:sym_jacobian}
+% \end{align}
+
+% Moreover, by the spectral theorem, $\overline{\mathbf{J}}$ has an eigendecomposition $\overline{\mathbf{J}} = \mathbf{QVQ^\top}$ with unitary eigenvector matrix $\mathbf{Q} \in \mathbb{R}^{d_\text{m} \times d_\text{m}}$ and eigenvalues are $\operatorname{diag}(\mathbf{V})$. Plugging this into inequality \ref{eq:sym_jacobian}:
+
+% \begin{align}
+% \langle \overline{\mathbf{J}} \mathbf{\Delta}, \mathbf{\Delta} \rangle = \langle \mathbf{QVQ^\top} \mathbf{\Delta}, \mathbf{\Delta} \rangle &= \mathbf{\Delta}^\top \mathbf{QVQ^\top} \mathbf{\Delta} = (\mathbf{Q}^\top \mathbf{\Delta})^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{\Delta}) < 0 \label{eq:neg_evals}
+% \end{align}
+
+% In summary, we have reduced our original condition for a corrected perturbation, $\operatorname{cossim}(\mathbf{b}'_t(\mathbf{\Delta}) - \mathbf{b}_t, \mathbf{\Delta}) < 0$, into something more tractable to analyze: $(\mathbf{Q}^\top \mathbf{\Delta})^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{\Delta}) < 0$. Observe that $\mathbf{Q}^\top \mathbf{\Delta} \in \mathbb{R}^{d_\text{model}}$ is a vector of the perturbation projected into the Jacobian's eigenvector space. In, \ref{eq:neg_evals}, each projected component is squared and multiplied by the corresponding eigenvalue. Thus, if a perturbation decomposes heavily onto an eigenvector with a negative eigenvalue, our original condition for "correction" will be satisfied. \qed
+
+We can apply this insight to TLCM. Concretely, consider the perturbation from earlier, $\mathbf{a}_t$. We can project $\mathbf{a}_t$ into eigenvector space to obtain $\mathbf{q} = \mathbf{Q}^\top\mathbf{a}_t$. Observe that entry $\mathbf{q}_i$ is the projection onto the $i$-th eigenvector with eigenvalue $\lambda_i$. Suppose we consider the top eigenvectors, namely those with the top fifty $|\mathbf{q}_i|^2$ values; these fifty directions account for $15+$\% of the variance of $\mathbf{a}_t$. Then, we can plot the distribution of the corresponding $\lambda_i$ to understand how TLCM interacts with the top components of $\mathbf{a}_t$.
+
+% From the derivation in \ref{eq:neg_evals}, we have
+% \begin{align}
+% \langle \overline{\mathbf{J}} \mathbf{a}_t, \mathbf{a}_t \rangle = (\mathbf{Q}^\top \mathbf{a}_t)^\top \mathbf{V} (\mathbf{Q}^\top \mathbf{a}_t) = \mathbf{q^\top V q} = \sum_i \lambda_i |\mathbf{q}_i|^2 \label{eq:main_sum}
+% \end{align}
+
+
+
+% Thus, if $\sum_i \lambda_i |\mathbf{q}_i|^2 < 0$, $\mathbf{a}_t$ is being corrected. Additionally, any individual $\lambda_i |\mathbf{q}|^2_i < 0$ corresponds to an individual direction that is being corrected, specifically the $i$-th eigenvector, with correction strength $\lambda_i$.
+
+
+\begin{figure}[t]
+    \vspace{-30pt}
+    \centering
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/jacobian_evals.pdf}
+        \caption{Nearly 3/4 of the 4096 eigenvalues of the Jacobian $\overline{\mathbf{J}}$ are negative.}
+        \label{fig:jacobian_evals}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/jacobian_comparison.pdf}
+        \caption{Left: Strongest components of $\mathbf{a}_t$ are corrected or reinforced by the TLCM Jacobian. Right: For non-TLCM Jacobians, $\mathbf{a}_t$'s strongest components are predominantly untouched.}
+        % \caption{Across 8 Jacobians \arjun{update}, the strongest components of $\mathbf{a}_t$ (large $\mathbf{q}_i^2$ terms) are corrected and reinforced disproportionately—see the points on the far left and right. This disproportionate correction does not hold for non-TLCM Jacobians, reinforcing the \textit{propose-and-reject} hypothesis.}
+        \label{fig:jacobian_comparison}
+    \end{subfigure}
+    \caption{}
+    \vspace{-6pt}
+\end{figure}
+
+
+
+% \textbf{Results.} Across a variety of different layers and tokens, we observe that about 3000 of the total 4096 eigenvalues of $\overline{\mathbf{J}}$ are negative; see Figure \ref{fig:jacobian_evals}. Each corresponds to an attenuated direction. More importantly, we discover a strong and surprising relationship between the eigenvalues and $\mathbf{a}_t$: $\mathbf{a}_t$ decomposes disproportionately onto a handful of eigenvectors with high $|\lambda_i|$. We plot this relationship against a non-TLCM baseline (adjacent layer interactions where TLCM is not present). Figure \ref{fig:jacobian_comparison} shows the TLCM and non-TLCM baseline, each plot depicting the relationships across 16 randomly sampled $\mathbf{J}$-$\mathbf{a}_t$ pairs.
+
+
+% We develop three key takeaways. First, the prior layer $\textit{is not}$ attenuated evenly. TLCM targets a low-dim yet strong subspace to selectively suppress, as demonstrated by points in the top left of the plot. Second, most surprisingly, we find there are a small number of strong subspaces that are $\textit{reinforced}$ by the layer, denoted by points in the top right. More broadly, the TLCM plots in \ref{fig:jacobian_comparison} demonstrate that TLCM has an ``opinion'' about all large components of $\mathbf{a}_t$; there are nearly no strong components of $\mathbf{a}_t$ with a small $|\lambda_i|$. As a component becomes more relevant to $\mathbf{a}_t$, TLCM develops more of an preference—reject or promote—about what should be done with it. This relationship is absent for the non-TLCM baseline. We caveat that these directions—while perfectly orthogonal—would not directly correspond to features as extracted by standard interpretability methods.
+
+% Altogether, this is strong evidence that TLCM engages in propose-and-reject. This also suggests that TLCM interacts with the prior layer in a more meaningful way than a simple correction: TLCM aligns itself with the most prominent directions of the previous layer and chooses what to do with them. This counteracts assumptions embedded in current interpretability techniques, which neglect these interactions. We discuss these next.
+
+
+
+\textbf{Results.} We compute the described plot---the histogram of $\lambda_i$ for top directions of $\mathbf{a}_t$---across 50 Jacobian-$\mathbf{a}_t$ pairs where TLCM is present and 50 pairs where TLCM is not present. Figure \ref{fig:jacobian_comparison} shows the aggregated results. We observe a bimodal eigenvalue distribution for TLCM pairs. The strongest mode hovers near $\lambda = -1$, which means that a unit increase in this direction from the prior layer results in a unit-sized correction.
+
+A mode around $\lambda = -1$ implies correction \textit{rather than} partial attenuation of undesired features; the features are entirely reversed. The other mode hovers around $\lambda = 0.5$, which implies that there are directions being \textit{promoted} by TLCM. This bimodal distribution is inconsistent with uniform attenuation of the previous layer. It targets specific subspaces for correction while leaving others unchanged or reinforcing them. For adjacent layers without TLCM, we observe one strong peak at $\lambda = 0$, suggesting such layers do not interact significantly with the prior layer.
+
+
+Finally, we observe that about 3000 of the total 4096 eigenvalues of $\overline{\mathbf{J}}$ are negative; see Figure \ref{fig:jacobian_evals}.
+
+\subsection{Propose and Reject Hypothesis}
+
+We have shown that TLCM does not uniformly reverse the prior layer's contribution but rather selectively corrects a subspace of it. To synthesize our findings, we introduce the propose-and-reject hypothesis as a conceptual framework:
+
+\textbf{Propose-and-reject hypothesis (P\&R).} TLCM contributes to feature enrichment through a two-stage process: (1) a layer proposes a set of candidate features, and (2) the subsequent layer, equipped with attention mechanisms to gather context, removes irrelevant features.
+
+P\&R is consistent with our experiments thus far: Attention and MLP layers both play a role in TLCM; TLCM activates more frequently later in the context window; TLCM activates predominately in the first two-thirds of models, which is connected with enrichment; TLCM corrects \textit{only} the prior layer; TLCM appears to perform selective correction rather than uniform attenuation, as shown in Sec. \ref{sec:jacobian-selective}. We note that we do not explicitly test P\&R in this work.
+
+P\&R may be relevant to contextual processing. For example, consider the token ``202'' within ``1,808,202''. During the forward pass, layer $i$ at this token might propose a handful of feature vectors: ``hundred'', ``thousand'', ``million''. Layer $i+1$---equipped with an attention sublayer---can evaluate and eliminate the incorrect features. The incorrect features would form the ``undesirable'' subspace which would be corrected by layer $i+1$. The correct feature, ``million'', would reside in the ``desirable'' subspace and hence remain untouched.
+
+
+% For TLCM transformer layer pairs, we observe
+
+% (1) for tlcm we see a bimodal distribution. one mode is around -1, which is what you would expect if trying to correct something—a unit increase in this direction from the prior layer will result in a unit-sized correction. the other peak is slightly higher than 0. this means that the layer is slightly promoting something.
+
+% (2) this bimodal distribution is firm evidence that TLCM does not seek to attenuate the previous layer unifromly. in fact, it selects key subspaces to correct, disregarding some and promoting others.
+
+% (3) for adjacent layers without TLCM, we observe a very strong peak at 0, reminicent of a Lapalace distribution.
+
+% Altogether, this is strong evidence that TLCM engages in propose-and-reject. This also suggests that TLCM interacts with the prior layer in a more meaningful way than a simple correction: TLCM aligns itself with the most prominent directions of the previous layer and chooses what to do with them. This counteracts assumptions embedded in current interpretability techniques, which neglect these interactions. We discuss this next.

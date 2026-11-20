@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "background.tex",
+      "role": "body"
+    },
+    {
+      "path": "reverse_engineering.tex",
+      "role": "body"
+    },
+    {
+      "path": "covert_channel.tex",
+      "role": "body"
+    },
+    {
+      "path": "side_channel.tex",
+      "role": "body"
+    },
+    {
+      "path": "cross_container.tex",
+      "role": "body"
+    },
+    {
+      "path": "mitigation.tex",
+      "role": "body"
+    },
+    {
+      "path": "relatedwork.tex",
+      "role": "body"
+    },
+    {
+      "path": "conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "meta_review.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "b9cacb9e54d04c12b8ce38e307181e7b9cdfefed94b4c08260a45124be1e9a3b",
+    "usenix.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "abstract.tex": "423376fd7a087be3ff0f2c1e1ae3add370b0add4a7f6649919149a9cfad4e91a",
+    "introduction.tex": "034922e34717f5f435640c8c33cc14b8bcd6027d8234c6887711e2cdeeff7f03",
+    "background.tex": "111d4ba767377be7c92bd2b8f78e953f800ea1b835076e5c70df9837434fa7ed",
+    "reverse_engineering.tex": "32933b5e591f35d98027b2a4fc9aa0683c45915c4edff629f896cfea3c306533",
+    "covert_channel.tex": "bad4ac0cc04c7ba8a118a36cbeaa1920a33c3df0f179835386c2f48b149ebcc9",
+    "side_channel.tex": "f902e588f3bc4491ab639622edbdd6f19cf148b4e107c56d6e0ae0dcc65f7c6d",
+    "cross_container.tex": "8cbb13000a5a3c3a9c9d35089e6894b88ee39a405b56487479f01a211ef3500f",
+    "mitigation.tex": "c888b72f1d9a078014819747e352d09593bdaae562fc276e307dda23b14b4892",
+    "relatedwork.tex": "a3cdd01ed1617f66a933ee3614db264da5fe45c0da5fb43518705b79c8765402",
+    "conclusion.tex": "594866d1971b8e095fa711cf5995dc1a98884114b34cfb763afbc76fef17311c",
+    "meta_review.tex": "1240e2165bf1aed596c259c62b9ddf0d09fb9db64d5f59c8bf95767f3d03a569"
+  }
+}

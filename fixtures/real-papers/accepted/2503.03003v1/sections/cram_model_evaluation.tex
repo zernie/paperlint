@@ -1,0 +1,64 @@
+%-------------------------------------------------------------------------------
+\section{\cram Model Evaluation}
+\label{sec:crammodelevaluation}
+%-------------------------------------------------------------------------------
+
+How predictive was the \cram model? \cref{subsec:before_implementation} showed that the \cram model accurately predicted \resail and \bsic as the best algorithms for IPv4 and IPv6, respectively. We now examine the \cram metrics in more detail.
+
+% to see how closely they align with real implementations on Tofino-2.
+
+\cref{tab:ipv4_cram_evaluation} and \cref{tab:ipv6_cram_evaluation} show results for \resail and \bsic on three models: the \cram model, an ideal RMT model, and a Tofino-2 implementation. The three models form a hierarchy of abstractions with increasing detail. We scale the \cram metrics found in \cref{tab:cram_ipv4} and \cref{tab:cram_ipv6} from raw bits to TCAM blocks and SRAM pages to allow for uniform comparisons. The three models can be understood as follows:
+
+\textbf{\cram model:} Using the \cram metrics (raw bits and dependent steps), an algorithm designer can quickly predict scalability {\em without} seeing the product data sheet.
+
+\textbf{Ideal RMT model:} This model allows for more precise predictions but requires a {\em basic} understanding of the data sheet, specifically the general organization of memory and stages.
+
+\textbf{Tofino-2 implementation:} This is the most accurate model but also the most complex to develop. It accounts for low-level details that are hard to glean from data sheets, such as action bits and ALU operations per stage. This often requires an {\em expert} with intimate knowledge of the product.
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength\extrarowheight{1.25pt}
+    \setlength\tabcolsep{2.5pt}
+    \begin{tabular}{lcccc}
+    \hline
+      \thead[l]{Scheme} & \thead[c]{TCAM \\ Blocks} & \thead[c]{SRAM \\ Pages} & \thead[c]{Steps \\ (Stages)} & \thead[c]{Model} \\ 
+        \hline
+        \resail ($min\_bmp$=13) & 1.14 & 549.12 & 2 & CRAM \\
+        \resail ($min\_bmp$=13) & 2 & 556 & 9 & Ideal RMT \\
+        \resail ($min\_bmp$=13) & 17 & 750 & 16 & Tofino-2 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-0.5em}
+    \caption{Predictive accuracy of \cram for \resail (IPv4)}
+    \label{tab:ipv4_cram_evaluation}
+    \vspace{-0.5em}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength\extrarowheight{1.25pt}
+    \setlength\tabcolsep{2.5pt}
+    \begin{tabular}{lcccc}
+    \hline
+      \thead[l]{Scheme} & \thead[c]{TCAM \\ Blocks} & \thead[c]{SRAM \\ Pages} & \thead[c]{Steps \\ (Stages)} & \thead[c]{Model} \\ 
+        \hline
+        \bsic ($k$=24) & 7.45 & 203.52 & 14 & CRAM \\
+        \bsic ($k$=24) & 15 & 211 & 14 & Ideal RMT \\
+        \bsic ($k$=24) & 15 & 416 & 30 & Tofino-2 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{-0.5em}
+    \caption{Predictive accuracy of \cram for \bsic (IPv6)}
+    \label{tab:ipv6_cram_evaluation}
+    \vspace{-\baselineskip}
+\end{table}
+
+Consider the predictive accuracy for \resail in \cref{tab:ipv4_cram_evaluation} as we move from \cram to ideal RMT. The TCAM and SRAM measures reflect small rounding errors due to unit conversion. However, the latency increases significantly from 2 steps to 9 stages because, unlike dRMT, RMT stages provide {\em both} memory and processing---to support 556 RAM pages, more stages are required even when no additional processing is needed.
+
+Next, consider the predictive accuracy for \resail in \cref{tab:ipv4_cram_evaluation} as we move from ideal RMT to Tofino-2. There is a small additive increase in TCAM blocks due to extra ternary tables required for implementing \resail in P4. Additionally, SRAM pages increase by a factor of 1.35, and stages increase by a factor of 1.78. As discussed earlier in \cref{subsubsec:ipv4_comparison}, this is because the maximum achievable SRAM utilization on Tofino-2 is 50\%, necessitating more SRAM pages and stages.
+
+The predictive accuracy for \bsic in \cref{tab:ipv6_cram_evaluation} can be interpreted similarly. The key difference is that the $\sim$2X increase in SRAM pages and stages from ideal RMT to Tofino-2 is due to the fact that implementing 3-way branching on Tofino-2 requires two stages for each BST level.
+
+Based on our limited experience, the \cram model provides a useful, easily computed initial model for estimating algorithm scalability. Although its measures of space and time are off by small constant factors, this is no different from Big O notation.

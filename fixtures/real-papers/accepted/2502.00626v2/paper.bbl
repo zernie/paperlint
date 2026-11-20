@@ -1,0 +1,876 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{60}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[An et~al\mbox{.}(2008)]%
+        {An:Cubature:2008}
+\bibfield{author}{\bibinfo{person}{Steven~S. An}, \bibinfo{person}{Theodore
+  Kim}, {and} \bibinfo{person}{Doug~L. James}.}
+  \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Optimizing cubature for efficient integration of
+  subspace deformations}.
+\newblock  \bibinfo{volume}{27}, \bibinfo{number}{5} (\bibinfo{year}{2008}).
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1409060.1409118}
+\showDOI{\tempurl}
+
+
+\bibitem[Barbi{\v{c}} and James(2005)]%
+        {barbivc2005real}
+\bibfield{author}{\bibinfo{person}{Jernej Barbi{\v{c}}} {and}
+  \bibinfo{person}{Doug~L James}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Real-time subspace integration for St.
+  Venant-Kirchhoff deformable models}.
+\newblock \bibinfo{journal}{\emph{ACM transactions on graphics (TOG)}}
+  \bibinfo{volume}{24}, \bibinfo{number}{3} (\bibinfo{year}{2005}),
+  \bibinfo{pages}{982--990}.
+\newblock
+
+
+\bibitem[Barill et~al\mbox{.}(2018)]%
+        {Barill:FW:2018}
+\bibfield{author}{\bibinfo{person}{Gavin Barill}, \bibinfo{person}{Nia
+  Dickson}, \bibinfo{person}{Ryan Schmidt}, \bibinfo{person}{David~I.W. Levin},
+  {and} \bibinfo{person}{Alec Jacobson}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Fast Winding Numbers for Soups and Clouds}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics}}
+  (\bibinfo{year}{2018}).
+\newblock
+
+
+\bibitem[Belhe et~al\mbox{.}(2023)]%
+        {Belhe:2023:DiscontinuityAwareNeuralFields}
+\bibfield{author}{\bibinfo{person}{Yash Belhe}, \bibinfo{person}{Micha\"{e}l
+  Gharbi}, \bibinfo{person}{Matthew Fisher}, \bibinfo{person}{Iliyan Georgiev},
+  \bibinfo{person}{Ravi Ramamoorthi}, {and} \bibinfo{person}{Tzu-Mao Li}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Discontinuity-aware 2D neural fields}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (Proceedings of
+  SIGGRAPH Asia)}} \bibinfo{volume}{41}, \bibinfo{number}{6}
+  (\bibinfo{year}{2023}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3550454.3555484}
+\showDOI{\tempurl}
+
+
+\bibitem[Benner et~al\mbox{.}(2015)]%
+        {benner2015survey}
+\bibfield{author}{\bibinfo{person}{Peter Benner}, \bibinfo{person}{Serkan
+  Gugercin}, {and} \bibinfo{person}{Karen Willcox}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{A survey of projection-based model reduction
+  methods for parametric dynamical systems}.
+\newblock \bibinfo{journal}{\emph{SIAM review}} \bibinfo{volume}{57},
+  \bibinfo{number}{4} (\bibinfo{year}{2015}), \bibinfo{pages}{483--531}.
+\newblock
+
+
+\bibitem[Bielser and Gross(2000)]%
+        {Bielser:2000:ISSC}
+\bibfield{author}{\bibinfo{person}{Daniel Bielser} {and}
+  \bibinfo{person}{Markus~H. Gross}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{Interactive Simulation of Surgical Cuts}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 8th Pacific Conference on
+  Computer Graphics and Applications}} \emph{(\bibinfo{series}{PG '00})}.
+  \bibinfo{publisher}{IEEE Computer Society}, \bibinfo{address}{USA},
+  \bibinfo{pages}{116}.
+\newblock
+\showISBNx{0769508685}
+
+
+\bibitem[Busaryev et~al\mbox{.}(2013)]%
+        {Busaryev:2013:AFS}
+\bibfield{author}{\bibinfo{person}{Oleksiy Busaryev}, \bibinfo{person}{Tamal~K.
+  Dey}, {and} \bibinfo{person}{Huamin Wang}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Adaptive Fracture Simulation of Multi-Layered Thin
+  Plates}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph. (SIGGRAPH)}}
+  \bibinfo{volume}{32}, \bibinfo{number}{4}, Article \bibinfo{articleno}{52}
+  (\bibinfo{date}{jul} \bibinfo{year}{2013}), \bibinfo{numpages}{6}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2461912.2461920}
+\showDOI{\tempurl}
+
+
+\bibitem[Cai et~al\mbox{.}(2022)]%
+        {Cai:2022:CSDF}
+\bibfield{author}{\bibinfo{person}{Xinhao Cai}, \bibinfo{person}{Eulalie
+  Coevoet}, \bibinfo{person}{Alec Jacobson}, {and} \bibinfo{person}{Paul Kry}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Active Learning Neural C-space Signed Distance
+  Fields for Reduced Deformable Self-Collision}. In
+  \bibinfo{booktitle}{\emph{Proceedings of Graphics Interface 2022}}
+  (Montr{\'e}al, Quebec) \emph{(\bibinfo{series}{GI 2022})}.
+  \bibinfo{publisher}{Canadian Information Processing Society},
+  \bibinfo{pages}{92 -- 100}.
+\newblock
+\showISSN{0713-5424}
+\urldef\tempurl%
+\url{https://doi.org/10.20380/GI2022.11}
+\showDOI{\tempurl}
+
+
+\bibitem[Carlberg(2011)]%
+        {carlberg2011model}
+\bibfield{author}{\bibinfo{person}{Kevin~Thomas Carlberg}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \emph{\bibinfo{title}{Model reduction of nonlinear mechanical systems
+  via optimal projection and tensor approximation}}.
+\newblock \bibinfo{thesistype}{Ph.\,D. Dissertation}. \bibinfo{school}{Stanford
+  University}.
+\newblock
+
+
+\bibitem[Chang et~al\mbox{.}(2023)]%
+        {chang:2023:licrom}
+\bibfield{author}{\bibinfo{person}{Yue Chang}, \bibinfo{person}{Peter~Yichen
+  Chen}, \bibinfo{person}{Zhecheng Wang}, \bibinfo{person}{Maurizio~M.
+  Chiaramonte}, \bibinfo{person}{Kevin Carlberg}, {and} \bibinfo{person}{Eitan
+  Grinspun}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{LiCROM: Linear-Subspace Continuous Reduced Order
+  Modeling with Neural Fields}. In \bibinfo{booktitle}{\emph{SIGGRAPH Asia 2023
+  Conference Papers}} (, Sydney, NSW, Australia,) \emph{(\bibinfo{series}{SA
+  '23})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{111},
+  \bibinfo{numpages}{12}~pages.
+\newblock
+\showISBNx{9798400703157}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3610548.3618158}
+\showDOI{\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2023a)]%
+        {CHEN:CROM-MPM:2023}
+\bibfield{author}{\bibinfo{person}{Peter~Yichen Chen},
+  \bibinfo{person}{Maurizio~M. Chiaramonte}, \bibinfo{person}{Eitan Grinspun},
+  {and} \bibinfo{person}{Kevin Carlberg}.} \bibinfo{year}{2023}\natexlab{a}.
+\newblock \showarticletitle{Model reduction for the material point method via
+  an implicit neural representation of the deformation map}.
+\newblock \bibinfo{journal}{\emph{J. Comput. Phys.}}  \bibinfo{volume}{478}
+  (\bibinfo{year}{2023}), \bibinfo{pages}{111908}.
+\newblock
+\showISSN{0021-9991}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.jcp.2023.111908}
+\showDOI{\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2023b)]%
+        {chen2023crom}
+\bibfield{author}{\bibinfo{person}{Peter~Yichen Chen}, \bibinfo{person}{Jinxu
+  Xiang}, \bibinfo{person}{Dong~Heon Cho}, \bibinfo{person}{Yue Chang},
+  \bibinfo{person}{G~A Pershing}, \bibinfo{person}{Henrique~Teles Maia},
+  \bibinfo{person}{Maurizio~M Chiaramonte}, \bibinfo{person}{Kevin~Thomas
+  Carlberg}, {and} \bibinfo{person}{Eitan Grinspun}.}
+  \bibinfo{year}{2023}\natexlab{b}.
+\newblock \showarticletitle{{CROM}: Continuous Reduced-Order Modeling of {PDE}s
+  Using Implicit Neural Representations}. In \bibinfo{booktitle}{\emph{The
+  Eleventh International Conference on Learning Representations}}.
+\newblock
+\urldef\tempurl%
+\url{https://openreview.net/forum?id=FUORz1tG8Og}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Chen et~al\mbox{.}(2014)]%
+        {Chen:2014:refine}
+\bibfield{author}{\bibinfo{person}{Zhili Chen}, \bibinfo{person}{Miaojun Yao},
+  \bibinfo{person}{Renguo Feng}, {and} \bibinfo{person}{Huamin Wang}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Physics-inspired adaptive fracture refinement}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{33},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{113} (\bibinfo{date}{jul}
+  \bibinfo{year}{2014}), \bibinfo{numpages}{7}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2601097.2601115}
+\showDOI{\tempurl}
+
+
+\bibitem[Chi and Song(2021)]%
+        {chi2021garmentnets}
+\bibfield{author}{\bibinfo{person}{Cheng Chi} {and} \bibinfo{person}{Shuran
+  Song}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{GarmentNets: Category-Level Pose Estimation for
+  Garments via Canonical Space Shape Completion}. In
+  \bibinfo{booktitle}{\emph{The IEEE International Conference on Computer
+  Vision (ICCV)}}.
+\newblock
+
+
+\bibitem[Deng et~al\mbox{.}(2023)]%
+        {deng2023neural}
+\bibfield{author}{\bibinfo{person}{Yitong Deng}, \bibinfo{person}{Hong-Xing
+  Yu}, \bibinfo{person}{Diyang Zhang}, \bibinfo{person}{Jiajun Wu}, {and}
+  \bibinfo{person}{Bo Zhu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Fluid Simulation on Neural Flow Maps}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{42},
+  \bibinfo{number}{6} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Fan et~al\mbox{.}(2025)]%
+        {fan2025hybrid}
+\bibfield{author}{\bibinfo{person}{L Fan}, \bibinfo{person}{FM Chitalu}, {and}
+  \bibinfo{person}{T Komura}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{A Hybrid Lagrangian--Eulerian Formulation of
+  Thin-Shell Fracture}. In \bibinfo{booktitle}{\emph{Computer Graphics Forum}}.
+  Wiley Online Library, \bibinfo{pages}{e15273}.
+\newblock
+
+
+\bibitem[Feng et~al\mbox{.}(2023)]%
+        {Feng:2023:WND}
+\bibfield{author}{\bibinfo{person}{Nicole Feng}, \bibinfo{person}{Mark
+  Gillespie}, {and} \bibinfo{person}{Keenan Crane}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Winding Numbers on Discrete Surfaces}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{42},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{36} (\bibinfo{date}{jul}
+  \bibinfo{year}{2023}), \bibinfo{numpages}{17}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3592401}
+\showDOI{\tempurl}
+
+
+\bibitem[Feng et~al\mbox{.}(2024)]%
+        {Feng:2024:NAH}
+\bibfield{author}{\bibinfo{person}{Xudong Feng}, \bibinfo{person}{Huamin Wang},
+  \bibinfo{person}{Yin Yang}, {and} \bibinfo{person}{Weiwei Xu}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Neural-Assisted Homogenization of Yarn-Level
+  Cloth}. In \bibinfo{booktitle}{\emph{SIGGRAPH 2024 Conference Papers}}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}.
+\newblock
+
+
+\bibitem[Fulton et~al\mbox{.}(2019)]%
+        {Fulton:LSD:2018}
+\bibfield{author}{\bibinfo{person}{Lawson Fulton}, \bibinfo{person}{Vismay
+  Modi}, \bibinfo{person}{David Duvenaud}, \bibinfo{person}{David I.~W. Levin},
+  {and} \bibinfo{person}{Alec Jacobson}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Latent-space Dynamics for Reduced Deformable
+  Simulation}.
+\newblock \bibinfo{journal}{\emph{Computer Graphics Forum}}
+  (\bibinfo{year}{2019}).
+\newblock
+
+
+\bibitem[Grangier et~al\mbox{.}(2023)]%
+        {grangier2023adaptive}
+\bibfield{author}{\bibinfo{person}{David Grangier}, \bibinfo{person}{Pierre
+  Ablin}, {and} \bibinfo{person}{Awni Hannun}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Adaptive training distributions with scalable
+  online bilevel optimization}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2311.11973}}
+  (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Hu et~al\mbox{.}(2018)]%
+        {Hu:2018:TMW}
+\bibfield{author}{\bibinfo{person}{Yixin Hu}, \bibinfo{person}{Qingnan Zhou},
+  \bibinfo{person}{Xifeng Gao}, \bibinfo{person}{Alec Jacobson},
+  \bibinfo{person}{Denis Zorin}, {and} \bibinfo{person}{Daniele Panozzo}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Tetrahedral meshing in the wild}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{37},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{60} (\bibinfo{date}{jul}
+  \bibinfo{year}{2018}), \bibinfo{numpages}{14}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3197517.3201353}
+\showDOI{\tempurl}
+
+
+\bibitem[Jacobson et~al\mbox{.}(2013)]%
+        {Jacobson:2018:GWN}
+\bibfield{author}{\bibinfo{person}{Alec Jacobson}, \bibinfo{person}{Ladislav
+  Kavan}, {and} \bibinfo{person}{Olga Sorkine-Hornung}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Robust inside-outside segmentation using
+  generalized winding numbers}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{32},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{33} (\bibinfo{date}{jul}
+  \bibinfo{year}{2013}), \bibinfo{numpages}{12}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2461912.2461916}
+\showDOI{\tempurl}
+
+
+\bibitem[Jain et~al\mbox{.}(2024)]%
+        {10.1145/3641519.3657438}
+\bibfield{author}{\bibinfo{person}{Pranav Jain}, \bibinfo{person}{Ziyin Qu},
+  \bibinfo{person}{Peter~Yichen Chen}, {and} \bibinfo{person}{Oded Stein}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Neural Monte Carlo Fluid Simulation}. In
+  \bibinfo{booktitle}{\emph{ACM SIGGRAPH 2024 Conference Papers}} (Denver, CO,
+  USA) \emph{(\bibinfo{series}{SIGGRAPH '24})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article
+  \bibinfo{articleno}{9}, \bibinfo{numpages}{11}~pages.
+\newblock
+\showISBNx{9798400705250}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3641519.3657438}
+\showDOI{\tempurl}
+
+
+\bibitem[Jiang et~al\mbox{.}(2016)]%
+        {jiang2016material}
+\bibfield{author}{\bibinfo{person}{Chenfanfu Jiang}, \bibinfo{person}{Craig
+  Schroeder}, \bibinfo{person}{Joseph Teran}, \bibinfo{person}{Alexey
+  Stomakhin}, {and} \bibinfo{person}{Andrew Selle}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The material point method for simulating continuum
+  materials}.
+\newblock In \bibinfo{booktitle}{\emph{Acm siggraph 2016 courses}}.
+  \bibinfo{pages}{1--52}.
+\newblock
+
+
+\bibitem[Kaufmann et~al\mbox{.}(2009)]%
+        {Kaufmann:2019:enrich}
+\bibfield{author}{\bibinfo{person}{Peter Kaufmann}, \bibinfo{person}{Sebastian
+  Martin}, \bibinfo{person}{Mario Botsch}, \bibinfo{person}{Eitan Grinspun},
+  {and} \bibinfo{person}{Markus Gross}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Enrichment textures for detailed cutting of
+  shells}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{28},
+  \bibinfo{number}{3}, Article \bibinfo{articleno}{50} (\bibinfo{date}{jul}
+  \bibinfo{year}{2009}), \bibinfo{numpages}{10}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1531326.1531356}
+\showDOI{\tempurl}
+
+
+\bibitem[Kim et~al\mbox{.}(2019)]%
+        {kim2019deep}
+\bibfield{author}{\bibinfo{person}{Byungsoo Kim}, \bibinfo{person}{Vinicius~C
+  Azevedo}, \bibinfo{person}{Nils Thuerey}, \bibinfo{person}{Theodore Kim},
+  \bibinfo{person}{Markus Gross}, {and} \bibinfo{person}{Barbara Solenthaler}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Deep fluids: A generative network for parameterized
+  fluid simulations}. In \bibinfo{booktitle}{\emph{Computer Graphics Forum}},
+  Vol.~\bibinfo{volume}{38}. Wiley Online Library, \bibinfo{pages}{59--70}.
+\newblock
+
+
+\bibitem[Kim and James(2009)]%
+        {Kim:Skipping:2009}
+\bibfield{author}{\bibinfo{person}{Theodore Kim} {and} \bibinfo{person}{Doug~L.
+  James}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Skipping steps in deformable simulation with online
+  model reduction}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}.
+\newblock
+\showISBNx{9781605588582}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1661412.1618469}
+\showDOI{\tempurl}
+
+
+\bibitem[Koschier et~al\mbox{.}(2017)]%
+        {Koschier:2017:RobustXFEM}
+\bibfield{author}{\bibinfo{person}{Dan Koschier}, \bibinfo{person}{Jan Bender},
+  {and} \bibinfo{person}{Nils Thuerey}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Robust eXtended finite elements for complex cutting
+  of deformables}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{36},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{55} (\bibinfo{date}{jul}
+  \bibinfo{year}{2017}), \bibinfo{numpages}{13}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3072959.3073666}
+\showDOI{\tempurl}
+
+
+\bibitem[Liu et~al\mbox{.}(2024)]%
+        {liu20242d}
+\bibfield{author}{\bibinfo{person}{Chenxi Liu}, \bibinfo{person}{Siqi Wang},
+  \bibinfo{person}{Matthew Fisher}, \bibinfo{person}{Deepali Aneja}, {and}
+  \bibinfo{person}{Alec Jacobson}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{2D Neural Fields with Learned Discontinuities}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2408.00771}}
+  (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Lyu et~al\mbox{.}(2024)]%
+        {lyu2024accelerate}
+\bibfield{author}{\bibinfo{person}{Aoran Lyu}, \bibinfo{person}{Shixian Zhao},
+  \bibinfo{person}{Chuhua Xian}, \bibinfo{person}{Zhihao Cen},
+  \bibinfo{person}{Hongmin Cai}, {and} \bibinfo{person}{Guoxin Fang}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Accelerate Neural Subspace-Based Reduced-Order
+  Solver of Deformable Simulation by Lipschitz Optimization}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}}
+  \bibinfo{volume}{43}, \bibinfo{number}{6} (\bibinfo{year}{2024}),
+  \bibinfo{pages}{1--10}.
+\newblock
+
+
+\bibitem[Mescheder et~al\mbox{.}(2019)]%
+        {mescheder2019occupancy}
+\bibfield{author}{\bibinfo{person}{Lars Mescheder}, \bibinfo{person}{Michael
+  Oechsle}, \bibinfo{person}{Michael Niemeyer}, \bibinfo{person}{Sebastian
+  Nowozin}, {and} \bibinfo{person}{Andreas Geiger}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Occupancy networks: Learning 3d reconstruction in
+  function space}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF
+  conference on computer vision and pattern recognition}}.
+  \bibinfo{pages}{4460--4470}.
+\newblock
+
+
+\bibitem[Modi et~al\mbox{.}(2024)]%
+        {Modi:2024:Simplicits}
+\bibfield{author}{\bibinfo{person}{Vismay Modi}, \bibinfo{person}{Nicholas
+  Sharp}, \bibinfo{person}{Or Perel}, \bibinfo{person}{Shinjiro Sueda}, {and}
+  \bibinfo{person}{David I.~W. Levin}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Simplicits: Mesh-Free, Geometry-Agnostic Elastic
+  Simulation}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{43},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{117} (\bibinfo{date}{jul}
+  \bibinfo{year}{2024}), \bibinfo{numpages}{11}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3658184}
+\showDOI{\tempurl}
+
+
+\bibitem[Mor and Kanade(2000)]%
+        {Mor:2000:MSTM}
+\bibfield{author}{\bibinfo{person}{Andrew~B. Mor} {and} \bibinfo{person}{Takeo
+  Kanade}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{Modifying Soft Tissue Models: Progressive Cutting
+  with Minimal New Element Creation}. In \bibinfo{booktitle}{\emph{Proceedings
+  of the Third International Conference on Medical Image Computing and
+  Computer-Assisted Intervention}} \emph{(\bibinfo{series}{MICCAI '00})}.
+  \bibinfo{publisher}{Springer-Verlag}, \bibinfo{address}{Berlin, Heidelberg},
+  \bibinfo{pages}{598–607}.
+\newblock
+\showISBNx{3540411895}
+
+
+\bibitem[Mousavi et~al\mbox{.}(2011)]%
+        {Mousavi:XFEM:2011}
+\bibfield{author}{\bibinfo{person}{S.~E. Mousavi}, \bibinfo{person}{E.
+  Grinspun}, {and} \bibinfo{person}{N. Sukumar}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Higher-order extended finite elements with harmonic
+  enrichment functions for complex crack problems}.
+\newblock \bibinfo{journal}{\emph{Internat. J. Numer. Methods Engrg.}}
+  \bibinfo{volume}{86}, \bibinfo{number}{4-5} (\bibinfo{year}{2011}),
+  \bibinfo{pages}{560--574}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1002/nme.3098}
+\showDOI{\tempurl}
+\showeprint{https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.3098}
+
+
+\bibitem[Moës et~al\mbox{.}(1999)]%
+        {Moes:1999:XFEM}
+\bibfield{author}{\bibinfo{person}{Nicolas Moës}, \bibinfo{person}{John
+  Dolbow}, {and} \bibinfo{person}{Ted Belytschko}.}
+  \bibinfo{year}{1999}\natexlab{}.
+\newblock \showarticletitle{A finite element method for crack growth without
+  remeshing}.
+\newblock \bibinfo{journal}{\emph{Internat. J. Numer. Methods Engrg.}}
+  \bibinfo{volume}{46}, \bibinfo{number}{1} (\bibinfo{year}{1999}),
+  \bibinfo{pages}{131--150}.
+\newblock
+
+
+\bibitem[M{\"u}ller et~al\mbox{.}(2021)]%
+        {Mueller:CVPR:2021}
+\bibfield{author}{\bibinfo{person}{Lea M{\"u}ller}, \bibinfo{person}{Ahmed
+  A.~A. Osman}, \bibinfo{person}{Siyu Tang}, \bibinfo{person}{Chun-Hao~P.
+  Huang}, {and} \bibinfo{person}{Michael~J. Black}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{On Self-Contact and Human Pose}. In
+  \bibinfo{booktitle}{\emph{Proceedings IEEE/CVF Conf.~on Computer Vision and
+  Pattern Recogßnition (CVPR)}}.
+\newblock
+
+
+\bibitem[Obiols-Sales et~al\mbox{.}(2023)]%
+        {obiols2023adarnet}
+\bibfield{author}{\bibinfo{person}{Octavi Obiols-Sales},
+  \bibinfo{person}{Abhinav Vishnu}, \bibinfo{person}{Nicholas Malaya}, {and}
+  \bibinfo{person}{Aparna Chandramowlishwaran}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{ADARNet: Deep Learning Predicts Adaptive Mesh
+  Refinement}. In \bibinfo{booktitle}{\emph{Proceedings of the 52nd
+  International Conference on Parallel Processing}}. \bibinfo{pages}{524--534}.
+\newblock
+
+
+\bibitem[Pan et~al\mbox{.}(2022)]%
+        {pan2022neural}
+\bibfield{author}{\bibinfo{person}{Shaowu Pan}, \bibinfo{person}{Steven~L
+  Brunton}, {and} \bibinfo{person}{J~Nathan Kutz}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Neural Implicit Flow: a mesh-agnostic
+  dimensionality reduction paradigm of spatio-temporal data}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2204.03216}}
+  (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Puri et~al\mbox{.}(2024)]%
+        {puri2024snf}
+\bibfield{author}{\bibinfo{person}{Vedant Puri}, \bibinfo{person}{Aviral
+  Prakash}, \bibinfo{person}{Levent~Burak Kara}, {and}
+  \bibinfo{person}{Yongjie~Jessica Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{SNF-ROM: Projection-based nonlinear reduced order
+  modeling with smooth neural fields}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2405.14890}}
+  (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Rahaman et~al\mbox{.}(2019)]%
+        {Rahaman:2019:Spectral}
+\bibfield{author}{\bibinfo{person}{Nasim Rahaman}, \bibinfo{person}{Aristide
+  Baratin}, \bibinfo{person}{Devansh Arpit}, \bibinfo{person}{Felix Draxler},
+  \bibinfo{person}{Min Lin}, \bibinfo{person}{Fred~A. Hamprecht},
+  \bibinfo{person}{Yoshua Bengio}, {and} \bibinfo{person}{Aaron Courville}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{On the Spectral Bias of Neural Networks}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 36th International Conference on
+  Machine Learning}}. PMLR, \bibinfo{pages}{5301--5310}.
+\newblock
+
+
+\bibitem[Reinhart(1960)]%
+        {Reinhart1960TheWN}
+\bibfield{author}{\bibinfo{person}{Bruce~L. Reinhart}.}
+  \bibinfo{year}{1960}\natexlab{}.
+\newblock \showarticletitle{The winding number on two manifolds}.
+\newblock \bibinfo{journal}{\emph{Annales de l'Institut Fourier}}
+  \bibinfo{volume}{10} (\bibinfo{year}{1960}), \bibinfo{pages}{271--283}.
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:53078482}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Romero et~al\mbox{.}(2021)]%
+        {Romero:LCCHSD:2021}
+\bibfield{author}{\bibinfo{person}{Cristian Romero}, \bibinfo{person}{Dan
+  Casas}, \bibinfo{person}{Jes\'{u}s P\'{e}rez}, {and} \bibinfo{person}{Miguel
+  Otaduy}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Learning Contact Corrections for Handle-Based
+  Subspace Dynamics}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}}
+  \bibinfo{volume}{40}, \bibinfo{number}{4}, Article \bibinfo{articleno}{131}
+  (\bibinfo{date}{jul} \bibinfo{year}{2021}), \bibinfo{numpages}{12}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3450626.3459875}
+\showDOI{\tempurl}
+
+
+\bibitem[Sharp et~al\mbox{.}(2023)]%
+        {Sharp:2023:datafree}
+\bibfield{author}{\bibinfo{person}{Nicholas Sharp}, \bibinfo{person}{Cristian
+  Romero}, \bibinfo{person}{Alec Jacobson}, \bibinfo{person}{Etienne Vouga},
+  \bibinfo{person}{Paul Kry}, \bibinfo{person}{David~I.W. Levin}, {and}
+  \bibinfo{person}{Justin Solomon}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Data-Free Learning of Reduced-Order Kinematics}. In
+  \bibinfo{booktitle}{\emph{ACM SIGGRAPH 2023 Conference Proceedings}} (Los
+  Angeles, CA, USA) \emph{(\bibinfo{series}{SIGGRAPH '23})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{40},
+  \bibinfo{numpages}{9}~pages.
+\newblock
+\showISBNx{9798400701597}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3588432.3591521}
+\showDOI{\tempurl}
+
+
+\bibitem[Shen et~al\mbox{.}(2021)]%
+        {shen2021high}
+\bibfield{author}{\bibinfo{person}{Siyuan Shen}, \bibinfo{person}{Yang Yin},
+  \bibinfo{person}{Tianjia Shao}, \bibinfo{person}{He Wang},
+  \bibinfo{person}{Chenfanfu Jiang}, \bibinfo{person}{Lei Lan}, {and}
+  \bibinfo{person}{Kun Zhou}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{High-order differentiable autoencoder for nonlinear
+  model reduction}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2102.11026}}
+  (\bibinfo{year}{2021}).
+\newblock
+
+
+\bibitem[Shewchuk(2005)]%
+        {Richard:2005:triangle}
+\bibfield{author}{\bibinfo{person}{Jonathan~Richard Shewchuk}.}
+  \bibinfo{year}{2005}\natexlab{}.
+\newblock \bibinfo{title}{Triangle: A Two-Dimensional Quality Mesh Generator
+  and Delaunay Triangulator}.
+\newblock
+  \bibinfo{howpublished}{\url{https://www.cs.cmu.edu/~quake/triangle.html}}.
+\newblock
+
+
+\bibitem[Shimrat(1962)]%
+        {10.1145/368637.368653}
+\bibfield{author}{\bibinfo{person}{M. Shimrat}.}
+  \bibinfo{year}{1962}\natexlab{}.
+\newblock \showarticletitle{Algorithm 112: Position of point relative to
+  polygon}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{5},
+  \bibinfo{number}{8} (\bibinfo{date}{aug} \bibinfo{year}{1962}),
+  \bibinfo{pages}{434}.
+\newblock
+\showISSN{0001-0782}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/368637.368653}
+\showDOI{\tempurl}
+
+
+\bibitem[Sifakis and Barbic(2012)]%
+        {sifakis2012fem}
+\bibfield{author}{\bibinfo{person}{Eftychios Sifakis} {and}
+  \bibinfo{person}{Jernej Barbic}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{FEM simulation of 3D deformable solids: a
+  practitioner's guide to theory, discretization and model reduction}.
+\newblock In \bibinfo{booktitle}{\emph{Acm siggraph 2012 courses}}.
+  \bibinfo{pages}{1--50}.
+\newblock
+
+
+\bibitem[Sitzmann et~al\mbox{.}(2020)]%
+        {Sitzmann:2020:Implicit}
+\bibfield{author}{\bibinfo{person}{Vincent Sitzmann}, \bibinfo{person}{Julien
+  N.~P. Martel}, \bibinfo{person}{Alexander~W. Bergman},
+  \bibinfo{person}{David~B. Lindell}, {and} \bibinfo{person}{Gordon
+  Wetzstein}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Implicit Neural Representations with Periodic
+  Activation Functions}. In \bibinfo{booktitle}{\emph{Advances in Neural
+  Information Processing Systems}}, Vol.~\bibinfo{volume}{33}.
+  \bibinfo{pages}{7462--7473}.
+\newblock
+
+
+\bibitem[Smith et~al\mbox{.}(2018)]%
+        {Smith:2018:stablenh}
+\bibfield{author}{\bibinfo{person}{Breannan Smith},
+  \bibinfo{person}{Fernando~De Goes}, {and} \bibinfo{person}{Theodore Kim}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Stable Neo-Hookean Flesh Simulation}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{37},
+  \bibinfo{number}{2}, Article \bibinfo{articleno}{12} (\bibinfo{date}{March}
+  \bibinfo{year}{2018}), \bibinfo{numpages}{15}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3180491}
+\showDOI{\tempurl}
+
+
+\bibitem[Spainhour et~al\mbox{.}(2024)]%
+        {Spainhour2024_arxiv}
+\bibfield{author}{\bibinfo{person}{Jacob Spainhour}, \bibinfo{person}{David
+  Gunderman}, {and} \bibinfo{person}{Kenneth Weiss}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Robust containment queries over collections of
+  rational parametric curves via generalized winding numbers}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2403.17371}
+\showDOI{\tempurl}
+\showeprint[arxiv]{2403.17371}~[cs.CG]
+
+
+\bibitem[Su et~al\mbox{.}(2022)]%
+        {su2022ulmpm}
+\bibfield{author}{\bibinfo{person}{Haozhe Su}, \bibinfo{person}{Tao Xue},
+  \bibinfo{person}{Chengguizi Han}, {and} \bibinfo{person}{Mridul Aanjaneya}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{A-ULMPM: An Adaptively Updated Lagrangian Material
+  Point Method for Efficient Physics Simulation without Numerical Fracture}. In
+  \bibinfo{booktitle}{\emph{Computer Graphics Forum}},
+  Vol.~\bibinfo{volume}{41}. Wiley Online Library, \bibinfo{pages}{325--341}.
+\newblock
+
+
+\bibitem[Tancik et~al\mbox{.}(2020)]%
+        {Tancik:2020:Fourier}
+\bibfield{author}{\bibinfo{person}{Matthew Tancik}, \bibinfo{person}{Pratul~P.
+  Srinivasan}, \bibinfo{person}{Ben Mildenhall}, \bibinfo{person}{Sara
+  Fridovich-Keil}, \bibinfo{person}{Nithin Raghavan}, \bibinfo{person}{Utkarsh
+  Singhal}, \bibinfo{person}{Ravi Ramamoorthi}, \bibinfo{person}{Jonathan~T.
+  Barron}, {and} \bibinfo{person}{Ren Ng}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Fourier Features Let Networks Learn High Frequency
+  Functions in Low Dimensional Domains}. In \bibinfo{booktitle}{\emph{Advances
+  in Neural Information Processing Systems}}, Vol.~\bibinfo{volume}{33}.
+  \bibinfo{pages}{7537--7547}.
+\newblock
+
+
+\bibitem[Tao et~al\mbox{.}(2024)]%
+        {tao2024neural}
+\bibfield{author}{\bibinfo{person}{Yuanyuan Tao}, \bibinfo{person}{Ivan
+  Puhachov}, \bibinfo{person}{Derek Nowrouzezahrai}, {and}
+  \bibinfo{person}{Paul Kry}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Neural Implicit Reduced Fluid Simulation}. In
+  \bibinfo{booktitle}{\emph{SIGGRAPH Asia 2024 Conference Papers}}.
+  \bibinfo{pages}{1--11}.
+\newblock
+
+
+\bibitem[Ton-That et~al\mbox{.}(2024)]%
+        {xfemCutting2024}
+\bibfield{author}{\bibinfo{person}{Quoc-Minh Ton-That},
+  \bibinfo{person}{Paul~G. Kry}, {and} \bibinfo{person}{Sheldon Andrews}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Generalized eXtended Finite Element Method for
+  Deformable Cutting via Boolean Operations}.
+\newblock \bibinfo{journal}{\emph{Computer Graphics Forum}}
+  \bibinfo{volume}{43}, \bibinfo{number}{8} (\bibinfo{year}{2024}),
+  \bibinfo{numpages}{13}~pages.
+\newblock
+
+
+\bibitem[Xu et~al\mbox{.}(2023)]%
+        {Rui2023GCNO}
+\bibfield{author}{\bibinfo{person}{Rui Xu}, \bibinfo{person}{Zhiyang Dou},
+  \bibinfo{person}{Ningna Wang}, \bibinfo{person}{Shiqing Xin},
+  \bibinfo{person}{Shuangmin Chen}, \bibinfo{person}{Mingyan Jiang},
+  \bibinfo{person}{Xiaohu Guo}, \bibinfo{person}{Wenping Wang}, {and}
+  \bibinfo{person}{Changhe Tu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Globally Consistent Normal Orientation for Point
+  Clouds by Regularizing the Winding-Number Field}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{42},
+  \bibinfo{number}{4}, Article \bibinfo{articleno}{111} (\bibinfo{date}{jul}
+  \bibinfo{year}{2023}), \bibinfo{numpages}{15}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3592129}
+\showDOI{\tempurl}
+
+
+\bibitem[Yang et~al\mbox{.}(2020)]%
+        {yang2020learning}
+\bibfield{author}{\bibinfo{person}{Shuqi Yang}, \bibinfo{person}{Xingzhe He},
+  {and} \bibinfo{person}{Bo Zhu}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Learning Physical Constraints with Neural
+  Projections}. In \bibinfo{booktitle}{\emph{Advances in Neural Information
+  Processing Systems}}.
+\newblock
+
+
+\bibitem[Zesch et~al\mbox{.}(2023)]%
+        {zesch2023neural}
+\bibfield{author}{\bibinfo{person}{Ryan~S Zesch}, \bibinfo{person}{Vismay
+  Modi}, \bibinfo{person}{Shinjiro Sueda}, {and} \bibinfo{person}{David~IW
+  Levin}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Neural Collision Fields for Triangle Primitives}.
+  In \bibinfo{booktitle}{\emph{SIGGRAPH Asia 2023 Conference Papers}}.
+  \bibinfo{pages}{1--10}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2019)]%
+        {zhang2019amrex}
+\bibfield{author}{\bibinfo{person}{Weiqun Zhang}, \bibinfo{person}{Ann
+  Almgren}, \bibinfo{person}{Vince Beckner}, \bibinfo{person}{John Bell},
+  \bibinfo{person}{Johannes Blaschke}, \bibinfo{person}{Cy Chan},
+  \bibinfo{person}{Marcus Day}, \bibinfo{person}{Brian Friesen},
+  \bibinfo{person}{Kevin Gott}, \bibinfo{person}{Daniel Graves},
+  {et~al\mbox{.}}} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{AMReX: a framework for block-structured adaptive
+  mesh refinement}.
+\newblock \bibinfo{journal}{\emph{The Journal of Open Source Software}}
+  \bibinfo{volume}{4}, \bibinfo{number}{37} (\bibinfo{year}{2019}),
+  \bibinfo{pages}{1370}.
+\newblock
+
+
+\bibitem[Zhou et~al\mbox{.}(2016)]%
+        {Zhou:2016:MASG}
+\bibfield{author}{\bibinfo{person}{Qingnan Zhou}, \bibinfo{person}{Eitan
+  Grinspun}, \bibinfo{person}{Denis Zorin}, {and} \bibinfo{person}{Alec
+  Jacobson}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Mesh Arrangements for Solid Geometry}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (TOG)}}
+  \bibinfo{volume}{35}, \bibinfo{number}{4} (\bibinfo{year}{2016}).
+\newblock
+
+
+\bibitem[Zong et~al\mbox{.}(2023)]%
+        {zong2023neural}
+\bibfield{author}{\bibinfo{person}{Zeshun Zong}, \bibinfo{person}{Xuan Li},
+  \bibinfo{person}{Minchen Li}, \bibinfo{person}{Maurizio~M Chiaramonte},
+  \bibinfo{person}{Wojciech Matusik}, \bibinfo{person}{Eitan Grinspun},
+  \bibinfo{person}{Kevin Carlberg}, \bibinfo{person}{Chenfanfu Jiang}, {and}
+  \bibinfo{person}{Peter~Yichen Chen}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Neural Stress Fields for Reduced-order
+  Elastoplasticity and Fracture}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2310.17790}}
+  (\bibinfo{year}{2023}).
+\newblock
+
+
+\end{thebibliography}

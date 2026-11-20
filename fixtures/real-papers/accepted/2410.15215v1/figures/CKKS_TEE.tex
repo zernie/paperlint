@@ -1,0 +1,55 @@
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={$n$ (squared-matrix size)},
+    ylabel={Time in Seconds},
+    legend pos=north west,
+    grid=both,
+    ymode=log,
+    log basis y={10},
+    % xmin=1, xmax=100
+    % ymin=0, ymax=1
+]
+\addplot table {
+n   CKKS-only
+1 0.012425
+2 0.025203
+3 0.048207
+4 0.080781
+5 0.113938
+6 0.148432
+7 0.192368
+8 0.252141
+15 0.782655
+16 0.926448
+23 1.78682
+24 1.954255
+31 3.274524
+32 3.346213
+63 12.623586
+64 12.89933
+};
+\addlegendentry{CKKS-only}
+
+\addplot table {
+n   CKKS+TEE
+1 50.71277504
+2 103.7315074
+3 200.0358153
+4 338.1851214
+5 482.5090674
+6 635.5973637
+7 830.7200881
+8 1104.345786
+15 3454.40572
+16 4130.962094
+23 8036.687162
+24 8909.178855
+31 15059.4815
+32 15571.92579
+63 59239.89151
+64 73147.55324
+};
+\addlegendentry{CKKS+TEE}
+
+\end{axis}
+\end{tikzpicture}

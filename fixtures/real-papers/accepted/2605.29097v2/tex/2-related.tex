@@ -1,0 +1,25 @@
+\section{Related Work}
+\label{sec:related}
+\noindent\textbf{Vision-Based Multi-View 3D Reconstruction and Inverse Rendering}
+Traditional methods exploit photometric consistency across images~\cite{furukawa2009accurate} and fuse the resulting depth maps into a dense point cloud~\cite{furukawa2015multi, yu2020fast, yao2018mvsnet}. 
+To obtain a surface representation, techniques such as Alpha Shapes~\cite{edelsbrunner1983shape} and Poisson Surface Reconstruction~\cite{kazhdan2006poisson} are commonly applied as post-processing steps on the point cloud.
+With the rise of deep learning, methods like Neural Radiance Fields (NeRF)~\cite{mildenhall2021nerf} and Gaussian Splatting (3DGS)~\cite{kerbl20233d} use learnable parameters to reconstruct 3D scenes from multi-view images. 
+Building upon neural implicit representations~\cite{niemeyer2020differentiable, yariv2020multiview, yariv2021volume, wang2021neus} and 3DGS~\cite{huang20242d, jiang2024gaussianshader, liang2024gs, gao2024relightable, chen2023neusg}, recent work further decomposes scenes into explicit geometry and reconstruct surface meshes.
+Moreover, \cite{srinivasan2021nerv, boss2021nerd, munkberg2022extracting, yao2022neilf, jin2023tensoir, liu2023nero, gu2025irgs, yao2025reflective} address the challenge of predicting lighting and material properties by considering complex light interactions, based on the explicit forward rendering equation with BRDF, a process known as inverse rendering. 
+This technique is more physically grounded and brings reconstructions closer to real-world appearance.
+While these methods typically operate on lens-based RGB images, \cite{madavan2025ganesh} proposes novel view synthesis on lensless RGB images. 
+However, lensless RGB images can still be mapped to a lens-based imaging model without altering the underlying ray physics, unlike RF signals, where such transformation is fundamentally invalid.
+To date, all of these 3D representations are derived from \textit{RGB images}, which are not easily transferable to \textit{mmWave data}.
+
+\noindent\textbf{3D Radar Imaging}
+Some works have used low
+frequency radars to estimate the 3D
+pose of humans and track them through walls and occlusions~\cite{adib2013see, adib2015capturing, zhao2018through, korany2019xmodal}. However, these works leverage human motion to combat specularity, and are geared towards human mesh reconstruction.
+Past work also leverages deep learning in the context of
+millimeter wave radar data for imaging or point cloud completion, however these works primarily focus on the context of self-driving cars, where image resolution is not important and may not generalize to other objects~\cite{guan2020through, sun20213drimr, lai2024enabling, sun20223d, sun2022r2p}.
+
+More recently,~\cite{lu2024newrf, zhao2023nerf2, chen2024radio} take inspiration from NeRF~\cite{mildenhall2021nerf} to solve a different problem of estimating the wireless channel based on the predicted signal emitted from different reflectors in space. A group of work~\cite{barbierrenard2025multiview3dsurfacereconstruction, tan2024fast} applies NeRF to simulated satellite images;
+\cite{borts2024radar,huang2024dart} tries to reconstruct 3D scenes by representing the wireless signal in the frequency domain, and learning the reflectance and occupancy of different points. However, all of these prior works try to perform radar image rendering tailored for reconstructing large scale scenes such as streets or satellite images and don't address close range high resolution object reconstruction, which requires different wave propagation modeling as explained in Appendix~\ref{sec:app-radar-nf-ff}.
+Authors of~\cite{takawale2025spinr}, proposes a method for 3D neural reconstruction of objects. However, their evaluation is limited to simulated data, which when dealing with wireless signals, cannot come close to representing the complexity of real world experiments.
+
+It is important distinction to make, that all prior works of 3D neural reconstruction using radio frequency are either limited to simulated data or reconstruction for far range scenes, whereas our work is the first paper to propose complete high resolution 3D mesh reconstruction.

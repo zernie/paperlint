@@ -1,0 +1,110 @@
+\section{Methodology}
+
+Our study aims to find bypasses to the handshake hardening measures in the strict KEX implementations \emph{of SSH servers}. Specifically, we aim to identify messages that can be injected into the happy flow of messages sent to the server without causing immediate session termination, as mandated by strict KEX. We chose state machine learning (SML) as our main methodology, as it offers a systematic approach to protocol implementation analysis and is well-suited to uncover such violations. If an implementation tolerates unexpected messages, this should manifest as a self-loop in the structure of the inferred state machine. SML has been used before to analyze cryptographic protocol implementations, and authentication bypasses were found with SML in the case of DTLS~\cite{USENIX:FJMRSS20}.
+
+\subsection{Architecture}
+\label{sec:methodology:sub:architecture}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/ssh-state-learner-cache_LinLibertine.pdf}
+    \caption{Illustration of the components of our state learner. New contributions are highlighted in blue. Our happy flow mutation strategy for the equivalence oracle injects misplaced messages (yellow) into the chain of valid messages (green). In contrast, the supplementary random words approach, often used for state learning, chooses random queries regardless of the validity of the created flow.}
+    \Description{The figure describes the different components of our state learner. The components include the learner implementing the TTT algorithm, the mapper with a cache, the system under learning, and the equivalence oracle. The mapper is the connecting component of the three other components. For the equivalence oracle, happy flow mutations and random words are depicted.}
+    \label{fig:state-learner-overview}
+\end{figure}
+
+\autoref{fig:state-learner-overview} depicts the architecture used in our evaluation. The \emph{learner} uses the TTT algorithm---more precisely, the LearnLib library~\cite{isberner2014ttt,isberner2015open} by Isberner, Howar, and Steffen---which issues conjectures about the state machine of the \emph{system under learning} (SUL) based on responses from the SUL to inputs taken from the learning alphabet. In our case, the SULs are different SSH server implementations. Learner and SUL speak different languages: The learner only outputs and understands abstract symbols, while the SUL requires valid SSH client messages and responds with valid SSH server messages. The \emph{mapper} translates between the two entities. One of the design choices to be made in SML is how to map abstract symbols to SSH messages and vice versa, as detailed in subsections~\ref{subsec:alphabet} and~\ref{subsec:mapper}.
+
+The learner assumes that the SUL is deterministic; that is, the system always responds with the same answers when queried with the same message sequences. When the learner queries the same sequence of symbols repeatedly, we already know the answers of the SUL from the first run-through of this sequence. As in previous works~\cite{SP:SAPKJ17,CCS:ASJKK16,SP:KIHB23}, we can always answer consecutive queries for the same sequence of symbols from a \emph{cache} to enhance performance. However, as soon as a single symbol is added to a known sequence that does not already end in a closed connection state, and this extended sequence has never been asked before, we cannot rely on the cache. We have to invoke the SUL again, replaying the common prefix to reproduce the SUL's internal state, before we can answer the additional symbol. As discussed in \autoref{par:nondeterminism}, we may observe non-determinism due to internal timings and inconsistent behavior. In this case, the response to a replayed prefix conflicts with the cache. In such cases, we use high-confidence majority voting to resolve the dispute.
+
+After some queries via the mapper to the SUL, the learner will issue a \emph{hypothesis} on the state machine of the SUL. In the beginning, this hypothesis may only consist of a single state. To challenge this hypothesis and to force the learner to refine it, an \emph{equivalence oracle} is invoked that outputs several sequences of symbols. These \emph{equivalence tests} are used to, on the one hand, traverse the state machine hypothesis issued by the learner and to invoke the actual SUL through the mapper. If the outputs of the hypothesis and the SUL are always identical, the hypothesis is confirmed, and the SML terminates. If the outputs differ, the current hypothesis is disproven as it does not accurately represent the state machine of the SUL, and the learner then uses this counterexample to refine the hypothesis.
+
+A generic equivalence oracle outputs random sequences of symbols from the alphabet; we use such an oracle implemented by the LearnLib library. A random words oracle closely resembles random binary fuzzing, but at a different level of abstraction. Like random binary fuzzing, this is the best strategy to find all deviations in an implementation, but it may consume an infeasible amount of time. Therefore, we add a second equivalence oracle, \emph{happy flow mutation}, which directly targets violations of strict KEX implementations (see \autoref{subsec:eqoracle}). The mapper and happy flow mutation components form the novel tooling support for our study.
+
+\subsection{Alphabet} 
+\label{subsec:alphabet}
+
+To analyze if servers tolerate any misplaced messages, we include \emph{all} SSH client messages from the transport layer~\cite{rfc4253}, authentication~\cite{rfc4252}, and connection protocol~\cite{rfc4254}. These are defined either in the SSH RFCs mentioned above or in additional RFCs~\cite{rfc8308, rfc4256, rfc4419, rfc4335, rfc4432, rfc5656}, and we also include messages from well-known vendor extensions of OpenSSH. In addition to those messages sent from the client to the server, we include messages usually expected to be sent exclusively by the server, such as \msgkexecdhreply. Furthermore, we include error-related messages, such as the \msgunimplemented and optional \msgignore and \msgextinfo messages. 
+
+Lastly, we add symbols for undefined messages, as these might reveal corner cases of the message handling. The SSH protocol distinguishes messages based on a one-byte message number. The IANA registry for SSH parameters further partitions the byte range into multiple blocks for the transport layer protocol, the authentication protocol, and the connection protocol. We add one symbol translating to a message number in each of the ten unassigned message blocks. Specifically, we construct 1-byte messages solely consisting of the message type, which corresponds to the structure of other signaling messages of SSH, such as \msgnewkeys. 
+
+In total, our alphabet consists of 94 symbols. The complete list of included symbols, with their corresponding SSH message type and specification reference, is provided in the artifacts.
+
+\subsection{Mapper} 
+\label{subsec:mapper}
+
+\paragraph{Message Directions}
+
+Our mapper strictly maps the alphabet symbols to \emph{valid} SSH messages. Some messages, such as \msgkexecdhinit and \msgkexecdhreply, require complex cryptographic computations to be valid. Additionally, to send \msgservicerequest in the encrypted channel, all SSH keys must be derived. As mentioned previously, the mapper is not restricted to messages sent from the client to the server. Consequently, the mapper contains our implementation of a standard-compliant SSH client and server; when queried, it maintains a state that allows it to answer cryptographic messages sent later in the handshake.
+
+\paragraph{Final State}
+
+In our experiment, we only investigate the beginning of the server's SSH state machine. The target state of this partial state machine is the state where the SUL has received and accepted the \msgservicerequest message. To distinguish different states reached by \msgservicerequest messages, we allow the learner to continue into the authentication protocol. To exclude states of the connection protocol, the mapper uses an incorrect username-password combination not known to the SUL in order to fail user authentication. Therefore, any \msguserauthsuccess message returned would directly indicate an authentication bypass.
+
+\paragraph{Message Contents}
+
+We distinguish three classes of messages:
+\begin{itemize}
+    \item \textbf{Static.} Message types like \msgnewkeys contain static content. There is a one-to-one correspondence between these message types and the actual messages.
+    \item \textbf{Cryptographic.} Message types like \msgkexecdhinit and \msgkexecdhreply contain cryptographic values computed based on the states of the mapper and the SUL.
+    \item \textbf{Variable.} Different options exist for the contents of other messages, which may reveal different details of the SUL in the learned state machine. A prominent example of this class of messages is the \msgkexinit message, which includes lists of supported algorithms. These lists---covering key exchange, signature, encryption, MAC, and compression---may each include an arbitrary subset of supported algorithms, resulting in an exponentially large number of possible contents.
+\end{itemize}
+
+While our mapper can deterministically form \emph{static} and \emph{cryptographic} messages, and thus provide a one-to-one mapping from the message type to the actual message itself, this is not possible for \emph{variable} messages. For \msgkexinit, we consider the following key exchange flow types:
+\begin{itemize}
+    \item \textbf{ECDH.} Algorithms of this flow type perform an elliptic curve Diffie-Hellman key exchange on a named curve. The protocol flow will resemble \autoref{fig:ssh-hs}.
+    \item \textbf{DH.} Similar to ECDH, but a multiplicative group of integers modulo $p$ will be used instead.
+    \item \textbf{DHGEX.} Here, an additional message exchange selecting the Diffie-Hellman group is introduced. The actual key exchange is identical to the previous one.
+    \item \textbf{RSA.} If this (seldomly supported) key exchange flow type is selected through the \msgkexinit messages, the client generates a shared secret and encrypts it using a previously exchanged RSA public key from the server.
+    \item \textbf{PQ-Hybrid.} This flow type combines a classical key exchange with a post-quantum algorithm, and the protocol flow is similar to ECDH.
+\end{itemize}
+Since these key exchange flow types change the state machine activated within the SUL, we learn \emph{up to five different state machines for each SUL}: For each supported key exchange flow type of the SUL (see \autoref{tab:eval_ssh_impl}), we included one algorithm of the corresponding flow type in the \msgkexinit message from the mapper to the SUL, forcing the SUL to activate the corresponding state machine. This selection is made through a configuration in the mapper; the TTT algorithm and the random words equivalence oracle remain unaffected, but the happy flow mutation oracle must be adapted to this choice.
+
+We assume that other \msgkexinit parameters, like encryption and MAC algorithms, are unlikely to affect the state machine. Since a thorough study of the side effects of such choices would require a different methodology, it is out of scope for this work. The exact mapping of key exchange flow types to actual algorithms and our choices for all other algorithm lists are described in the artifacts.
+
+\subsection{Equivalence Oracle} 
+\label{subsec:eqoracle}
+
+To find counterexamples, we apply a novel strategy tailored to our research question, which we call a \emph{happy flow mutation} oracle. This oracle follows the following algorithm:
+\begin{enumerate}
+    \item Construct the happy flow $\mathcal{F}$ for the chosen key exchange flow type, and represent it as a sequence of symbols.
+    \item Pick up to $n$ symbols from the alphabet $\mathcal{A}$  (with repetitions).
+    \item Choose a corresponding number of positions before, after, or within the happy flow symbol sequence.
+    \item Insert the chosen symbol(s) at the chosen position(s).
+\end{enumerate}
+The oracle runs this algorithm exhaustively, generating every possible combination for up to $n$ symbol insertions into the happy flow. This results in a total of \[\sum_{i = 0}^n |\mathcal{A}|^i\cdot\binom{|\mathcal{F}| + i}{i} \] sequences, where $|\mathcal{A}|$ is the size of the alphabet and $|\mathcal{F}|$ is the length of the happy flow. We choose $n = 2$ with an alphabet size of $|\mathcal{A}| = 94$, resulting in $133{,}011$ sequences ($|\mathcal{F}| = 4$), or $186{,}121$ sequences for DHGEX ($|\mathcal{F}| = 5$). Effectively, this yields a thorough analysis of specific parts of a hypothesis while omitting parts of the state machine that are unlikely to result in insights relevant to our research question. Our approach guarantees to reveal tolerances for any misplaced message, while allowing for a large alphabet.
+
+Note that the learner cannot succeed in client authentication as per the definition of the authentication request symbols in our alphabet. Therefore, we only include messages from the connection protocol to test their effect when sent during the handshake.
+
+We supplement our happy flow manipulation equivalence oracle with a generic random words approach, generating chains of randomly sampled alphabet symbols. By doing so, we also gain limited insights into states existing further from the happy flow. The interaction of our equivalence oracle with the other components of state learning is shown in \autoref{fig:state-learner-overview}. We run the random words strategy 10,000 times using sequences ranging from 5 to 15 symbols. If neither strategy yields a counterexample, the hypothesis is considered final, thereby concluding the learning process.
+
+\subsection{Implementation}
+
+\paragraph{Dynamic SSH Stack and State Learner}
+
+To conduct state learning, the mapper must be able to find suitable translations for the abstract symbols queried by the learner. This can be challenging, as message fields often depend on other messages. When sending a message outside the protocol-conformant protocol flow, the required session parameters may not yet be established. Hence, a dynamic SSH stack is needed that generates protocol-compliant messages where possible, and otherwise falls back to reasonable default values. Furthermore, some input symbols may be intended to translate to invalid messages; for example, we include symbols for undefined protocol messages in our alphabet. The underlying SSH library must provide an API to control the content of these messages. To address these challenges, we have developed our own SSH implementation, drawing on design principles from the well-known TLS-Attacker~\cite{CCS:Somorovsky16} research suite, which has been utilized in various studies~\cite[Table 1]{2024TLSAttacker}.
+
+The state learner is written in Kotlin and uses LearnLib~\cite{isberner2015open}, a framework for state learning. We use LearnLib's implementation of the TTT algorithm as our learner and employ their random words equivalence oracle to supplement our happy flow mutation oracle.
+
+\paragraph{Mapper} 
+
+To prevent parsing-related side effects, we send the undefined message types in our alphabet as empty messages consisting solely of the type field. We initialize a new cipher state and reset the SQN counter for the corresponding direction whenever a \msgnewkeys message is sent to or received from the SUL. If algorithms or key material are unavailable, the mapper defaults to a \texttt{none} cipher without any MAC algorithm. Whenever we prepare a message, including those usually only sent by servers, we update our context accordingly, assuming the peer handles the message accordingly.
+
+\subsection{Restrictions}
+
+\paragraph{Static ASCII Banner}
+
+Some implementations may use the ASCII banner sent at the beginning of the SSH handshake (\autoref{fig:ssh-hs}) to activate compatibility measures, influencing the state machine of the SUL by changing the behavior of the SSH server. We did not investigate this in our experiment, and set the client banner to the static value \texttt{SSH-2.0-OpenSSH\_9.0}.
+
+\paragraph{Invalid Messages}
+
+We do not send cryptographically or structurally invalid messages to the server. That is, all messages are constructed with valid cryptographic values and correct structural components, such as length fields and padding. Messages that represent unknown messages consist of a single byte containing the message ID.
+
+\paragraph{Static KEXINIT Symbol}
+
+We do not use multiple \msgkexinit symbols with different algorithm lists for a single learner run. Instead, the list of supported key exchange algorithms is populated with an algorithm that is provided to the learner at invocation. For all other algorithm lists, we choose reasonable defaults based on the supported algorithms of OpenSSH.
+
+\subsection{Post Analysis}
+\label{sub:postAnalysis}
+
+After extracting the state machine, we iterate over the states of the happy flow, testing for inputs to the transition function that are forbidden under strict KEX, which do not cause the handshake to fail. In particular, we search for invalid messages sent after strict KEX has been negotiated, as well as messages sent beforehand that remain unnoticed and do not cause the session to fail retrospectively once strict KEX is in effect. For any such deviation from the strict KEX specification, we manually implement a dedicated test flow using our SSH implementation to confirm and further investigate the impact of the identified issues. To correctly detect taint-based implementations, each test flow performs a complete run of the transport layer protocol, eventually requesting user authentication after algorithm negotiation and key exchange. If the server responds to this request by accepting the service despite the strict KEX violation present, we consider the strict KEX violation confirmed.

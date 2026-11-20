@@ -1,0 +1,25 @@
+\section{Discussions}
+
+\noindent \textbf{Participant number and model depth.} In our experiments, we do not consider a large number of participants for a single prompt, since involving too many participants for a single prompt is unnecessary and increases communication overhead. For instance, serving a Llama-65B requires only 6 participants each possessing a 24GB GPU. Furthermore, the last participant in 5 participants already needs to invert 80\% layers of the whole LLM. Inverting under the case of 10 participants will not be significantly more difficult. 
+
+%Besides, in Appendix~\ref{sec:nonlinear}, we examine the relationship between model depth and non-linearity, from which we confirm our hypothesis that as model depth increases, the model's non-linearity also strengthens.
+
+%\noindent \textbf{Efficiency Improvement.} Our attack is composed of two phases: optimization and discretization. The time cost for inverting a prompt length of about 150 on Llama-65B is recorded in Appendix~\ref{appendix:time}. It is obvious that the inversion is bottle-necked by optimization. The total inversion process of a paragraph on Llama-65B takes about 20 minutes. To make it faster, we can reduce the optimization iteration number $N$ to 500. Figure~\ref{fig:epoch} shows that only using 500 iterations still retains 70\% token accuracy. Also, the activation calibration computation for different candidates is highly parallelizable, which can be accelerated by batching them together and leveraging techniques like KV-Cache~\cite{pope2023efficiently}.
+
+
+%\noindent \textbf{Accuracy Improvement.} For \textit{constrained optimization}, since our originally designed term constraints the strict lower and upper bound interval on each embedding dimension, our constraint is sound but relatively loose. We could change to constrain the interval on each embedding dimension obtained by empirically sampling some sentences. This may further improve the optimization phase by introducing a stricter constraint. For \textit{adaptive discretization}, in \textit{semantic speculation}, the oracle LLM is not specifically trained for this task; therefore, it cannot generate high-quality candidates in many cases. We could further fine-tune it to generate  $S_s$ with higher quality that complements $S_e$ well.
+\revise{
+\noindent \textbf{Ethical considerations.}
+We have to emphasize that we do not endorse the practical application of prompt inversion attacks studied. Our objective in presenting this study is to alert the LLM community to the inherent risks of these attacks in collaborative inference scenarios. Accordingly, all experiments in our paper are purely simulated and do not involve attacks on real-world platforms.
+
+We have disclosed the vulnerability studied in this paper to the developers of the PETALS platform and the LocalAI project, granting them a 60-day period to address the issue before publication.
+Despite these efforts, we strongly encourage developers to remind users of the risks associated with prompt privacy leakage in collaborative inference and to discourage the input of sensitive information in prompts. Users should also be advised that they can mitigate this risk by collaborating exclusively with trusted participants.
+
+We remain committed to exploring more effective defense mechanisms in future work, although this paper demonstrates that the risk of a prompt inversion attack cannot be simply and directly mitigated using the most classical and common techniques.
+}
+
+\noindent \textbf{Future work.} 
+Our PIA design philosophies also shed light on improving other forms of inversion attacks on language models. For instance, Our building blocks can greatly enhance the performance of embedding inversion attacks in~\cite{song2020information}. Our method achieves $95.4\%$ F1 score under the setting of ~\cite{song2020information}, while ~\cite{song2020information} only achieves $49.7\%$. 
+Additionally, the insights in output calibration of \textit{adaptive discretization} is likely to enhance the performance of the LLM logits inversion~\cite{morris2023language} and LLM output text inversion~\cite{zhang2024extracting}. We will verify them in our future works. 
+ Concurrently, Luo et al.~\cite{luo2025prompt} have also investigated a related problem in the black-box setting.
+

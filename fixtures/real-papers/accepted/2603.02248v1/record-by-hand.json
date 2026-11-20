@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "0_Abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "1_Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "2_RelatedWork.tex",
+      "role": "body"
+    },
+    {
+      "path": "3_Preliminaries.tex",
+      "role": "body"
+    },
+    {
+      "path": "4_Methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "5_Experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "6_Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "7_Limitations.tex",
+      "role": "body"
+    },
+    {
+      "path": "9_Acknowledgements.tex",
+      "role": "body"
+    },
+    {
+      "path": "8_Appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "7265ce353bfa354a351fca98e1b5ae0d411c0bc020481832699ec8c88de12d8d",
+    "acl.sty": "57ec5021756530bd01dab30657a3ca88bd20b1fd5694122b7f0daa9cfaa3e3ac",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "0_Abstract.tex": "35fd3cbd69979a010fb5306292cbe9c36a44c38b9a19d0ecd5dad1bf602005e1",
+    "1_Introduction.tex": "13ba6dc5920dc7028a8b09ce42b33b12b4d60a2ef89a2fd11d19e6ce00aabc9c",
+    "2_RelatedWork.tex": "278df5ad6488a093f57007e5152e2bd45499a1a49f04f6b1fd36e076ff3c59d0",
+    "3_Preliminaries.tex": "7bd68a0c5e9fadba8aa22f4d716f3f8417481cddc2ad7edbd3664d23ff59ae19",
+    "4_Methodology.tex": "4a0ff2b57b4ae70c76af59df1b4ca53618358fd1191a4b358869e119d7c5a581",
+    "5_Experiment.tex": "61ef293c1e0d859656651d85e10d2f852ccc7f1d3dcee11a6d5ce0d8f0bd1583",
+    "6_Conclusion.tex": "d166facdd6803ac93c75b352c79264bec40207ce01a5de5487631f3158d0b60a",
+    "7_Limitations.tex": "6dfba64d90e2b710f8d54cdf24621ce959f936ebb1daa0c1d1a8c13cb6e9da38",
+    "9_Acknowledgements.tex": "3d15dbdac790a83bcda3a64a6e8abce37851f515157c268681e65100580bd67e",
+    "8_Appendix.tex": "f2eb2f33d37c554b1338dd0067c55aa58442f1eb9a5287f0930a5e3e84124749"
+  }
+}

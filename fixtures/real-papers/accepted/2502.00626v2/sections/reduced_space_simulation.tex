@@ -1,0 +1,112 @@
+
+
+\section{Reduced Order Modeling}
+
+\paragraph{Kinematics} Consider a thin-walled elastic body parameterized by the domain $\Omega \subset \mathbb{R}^2$. The deformed position of the body in three-space is given by the displacement field $\bm{u}(\bm{x}): \Omega \rightarrow \mathbb{R}^3$. Reduced order modeling (ROM) seeks to represent this displacement field using a small number $k$ of coordinates, that is, via a reduced configuration $\bm{z} \in \mathbb{R}^k$~\cite{An:Cubature:2008,Kim:Skipping:2009,barbivc2005real}. In particular, linear ROM, which we will consider here, requires that $\bm{u}$ be \emph{linear} in $\bm{z}$, that is, 
+$\bm{u} = \bm{z}^T \bm{\Phi}$, where $\bm{\Phi^T} = [\bm{\phi}_1, \ldots, \bm{\phi}_k]$, and $\bm{\phi}_i : \Omega \rightarrow \mathbb{R}^3$ is a displacement \emph{basis}. 
+
+In our setting, the displacement basis must represent a discontinuity over $\Gamma$ depending on the cutting extent $\alpha$. Therefore, $\bm{\Phi}$ is dependent on $\alpha$. We will be reminded of this dependency with the notation $\bm{\Phi}^\alpha$, and omit the decorations where it is clear from context. 
+
+\subsection{Precomputation: Training}
+
+\paragraph{Training overview}
+Recalling Equation \ref{eq:restriction}, we construct a displacement basis field $\bm{\phi}^\alpha$ discontinuous across $\Gamma$ by training a volumetric neural field $\Tilde{\bm{\phi}}_\theta^\alpha$ continuous over $\Omega \times \mathbb{R}$. 
+While $\Tilde{\bm{\phi}}_\theta^\alpha$ and $\bm{\phi}^\alpha$ are vector-valued, nothing changes in the lifting construction, which remains simply 
+$\bm{\phi}^\alpha = \Tilde{\bm{\phi}}_\theta^\alpha \circ \mathcal{L}^{\alpha}$.
+
+Our main contribution (\Cref{sec:lifting}) is orthogonal to the choice of training scheme. In fact, our neural discontinuity representation is compatible with both data-driven and data-free approaches. Below, we will develop how to incorporate the proposed winding-number-lifting approach in either of the training setups. Regardless of the approach taken, the goal is to train the weights $\theta$.
+
+
+\paragraph{Data-driven basis learning.} 
+In the data-driven setting, we begin by collecting training snapshots, recording each displacement field $\bm{u}_j$ and cut progression $\alpha_j$ at time increment $j$. The neural field  $\Tilde{\bm{\Phi}}^\alpha_\theta$ is then trained by minimizing the reconstruction loss over all the simulation snapshots:
+\begin{align}
+\mathcal{L}_{\text{data-driven}} = \sum_{j} \left\| \bm{z}_j^T \Tilde{\bm{\Phi}}_\theta  \circ \mathcal{L}  - \bm{u}_j \right\|^2_2 \ ,
+\end{align}
+where  
+$\bm{z}_j \in \mathbb{R}^k$ is the reduced coordinate corresponding to the optimal reconstruction 
+at time increment $j$. Note that $\|f\|^2_2 = \int_\Omega f(\bm{x})^2 \,\mathrm{d}\bm{x}$ is the $L_2$ norm on $\Omega$,
+which is estimated via uniform stochastic cubatures~\cite{An:Cubature:2008,carlberg2011model}.
+For more details on the training process, please refer to \cite{chang:2023:licrom}. The key distinction in our approach is the incorporation of cutting, achieved by restricting the neural field to the lifting function. Furthermore, we ensure that both $\Phi$ and $\mathcal{L}$ explicitly depend on $\alpha_j$, the cut progression parameter.
+
+% \begin{align*}
+% \mathcal{L}_{\text{data-driven}} = \sum_{j} \min_{\bm{z}^{(j)} \in \mathbb{R}^r} \int_\Omega \left\| \bm{U}^{\alpha^{(j)}}_\theta \bm{z}^{(j)} \circ \mathcal{L}^{\alpha^{(j)}}  - \bm{u}^{(j)} \right\|^2 \, \mathrm{d}\bm{x} \ .
+% \end{align*}
+
+% While LiCROM's implementation uses a PointNet encoder to determine $\bm{z}_j$, we choose the least-squares projection $\bm{z}_j = Q^{-1} \left\langle \bm{U}^T, \bm{u}_j \right\rangle$, which fits the reconstructed to the observed displacement field. Here $\langle \bm{u}, \bm{v} \rangle = \int_\Omega \bm{u} \cdot \bm{v} \, \mathrm{d}\bm{x}$ is the $L_2$ inner product on $\Omega$,
+% and the $r \times r$ matrix Q has entries $q_{ij} = \langle \bm{u}^\alpha_i, \bm{u}^\alpha_j \rangle$ \zhecheng{why not pointnet?}\todopyc{agree. this section is distracting. it should be moved to appendix.}.
+
+\paragraph{Data-free basis learning.} 
+
+In addition to the previous data-driven training setting, \Revision{our neural field} can also be trained in a data-free fashion. Following \citet{Modi:2024:Simplicits}, we trained the neural network by minimizing the elastic energy 
+\begin{align} \label{eq:training-data-free}
+    \mathcal{L}_{\text{data-free}} = E_{\text{elas}} = \int_{\Omega}\Psi(\bm{u}(\bm{x})) \, \mathrm{d}\bm{x} 
+\end{align}, where $\Psi$ is the elastic energy density, e.g., St. Venant-Kirchhoff (StVK) material \cite{barbivc2005real}. For more details on the data-free training, please refer to the supplementary material and \citep{Modi:2024:Simplicits}. We emphasize that the loss function only involves an analytically defined elastic energy and does not involve any training data (e.g., from full-order simulations).
+
+
+
+% \Cref{sec::appendix:training_details}
+
+
+
+
+
+
+
+
+
+
+
+% \begin{figure}
+% \centering
+% \begin{tikzpicture}[x=0.5\textwidth, y=0.5\textwidth]
+% \node[anchor=south] (image) at (0,0) {
+% \includegraphics[width=8cm]{figures/SpatialGradientSmoothing.pdf}
+% };
+
+%   \node at ([shift={(0.0, 0.015)}]image.south)[below] 
+%   {\scalebox{0.7} {$T(\bm{g})$}  };
+%   \node at ([shift={(-0.05, 0.6)}]image.south)[below] 
+%   {\scalebox{0.9} {Maximum Spatial Gradient Norm with Different $T(\bm{g})$}  };  
+% \end{tikzpicture}
+
+% \caption{Our smoothing method efficiently reduces the maximum spatial gradient norm. In the plot, the unsmoothed gradient norm is shown in \textcolor{orange}{orange}, where it increases significantly toward the end of the curve and exhibits more noise across different geometries $T(\bm{g})$. With smoothing applied, the gradient becomes smoother across the shape and exhibits smaller variations across geometries, as shown in \textcolor{LimeGreen}{green}.} 
+% \label{fig:WOSmooth} 
+% \centering
+% \end{figure}
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=8cm]{figures/SmoothingParameterChoice.pdf}
+% \caption{
+% We retrained and ran simulations with six different smoothing parameter choices, including a setting without smoothing. This plot shows the Y-component of the center of gravity over time for each setting. The choice of smoothing parameters has minimal impact on the resulting dynamics. However, not applying smoothing can cause the simulation to fail due to infinite spatial gradients caused by singularities in the winding number field.
+% } 
+% \label{fig:SmoothParameters} 
+% \centering
+% \end{figure}
+
+
+
+\subsection{Dynamic Subspace Simulation}
+\label{sec:reduced}
+Following \citet{chang:2023:licrom}, the reduced configuration $\bm{z}$ is updated at each time step via the optimization
+\begin{align} 
+\label{eq:time_stepping}
+ \bm{z}_{j+1} = \operatorname{argmin}_{\bm{z}} \frac{1}{2} \|\bm{z} - \bm{z}_{j+1}^{\text{pred}} \|^2 + h^2 \int_{\Omega} \Psi\left( \bm{u}(\Revision{\alpha}, \bm{x}, \bm{z}) \right) \, d\bm{x} \ ,
+\end{align}
+where $h$ is the time step size, and $\bm{z}_{j+1}^{\text{pred}} = 2\bm{z}_{j} - \bm{z}_{j-1}$. Evaluating the elastic energy $\Psi$ involves computing the deformation gradient $\mathbf{F} = \nicefrac{\partial \bm{u}(\alpha, \bm{x}, \bm{z})}{\partial \bm{x}}$. This gradient can be directly obtained from the reduced-space coordinate $\bm{z}$ and the spatial gradient of the neural field, $\nicefrac{\partial \bm{\phi}_{\bm{x}}^{\alpha}}{\partial \bm{x}}$, which is efficiently calculated via automatic differentiation of the neural network. We evaluate the domain integral using uniform stochastic cubature. Our examples optimize \eqref{eq:time_stepping} using gradient descent; we also implemented Newton's method and observed similar performance.
+
+\subsection{Implementation}
+
+\paragraph{Progressive cutting and cut placement editing}
+Our progressive cutting simulations increase the cutting extent $\alpha$ over time. Our interactive design application modifies $\Gamma$ during simulation. Changing either $\alpha$ or $\Gamma$ immediately affects the winding graph, which is computed as-needed analytically; crucially, it does not require retraining the volumetric neural field.
+
+Our implementation represents $\Gamma$ as a collection of polylines (allowing for more than one cut). The evaluation of the generalized winding number locates the appropriate bounds of integration by walking along the polyline until the fractional length $\alpha$ has been walked (refer to supplemental material).
+
+\paragraph{Strain singularity at crack tip}
+The elastic energy $\Psi$ involves the spatial gradient of displacements $\nabla_{\bm{x}}\bm{u}$, and in turn $\nabla_{\bm{x}}H$. While the winding number itself is bounded, its gradient diverges approaching the endpoints of $\Gamma$. In mechanics this is known as the crack tip strain singularity, a recognized challenge to force calculations~\cite{Mousavi:XFEM:2011}. \zhecheng{I kinda get it, but has a didactic figure here would be perfect} Following typical treatments, we smooth the $\epsilon$-neighborhood around the endpoints of $\Gamma^\alpha$ by multiplying the generalized winding number by a cubic spline kernel function (refer to supplemental material).
+
+\paragraph{Joint training}
+Since $\bm{\Phi}$ is a $k$-dimensional basis, we must repeat the lifting construction $k$ times. Conceptually, the simplest approach is to train $k$ volumetric networks, however, this is not strictly necessary, since a volumetric neural field is not limited to a 1-dimensional (real-valued) output. In our implementation, we parameterize all $k$ displacement bases using the same neural network weights $\theta$ by making $\Tilde{\bm{\phi}}_\theta^\alpha$ a $k$-valued field, i.e.,
+$\bm{\phi}_i^\alpha = \Tilde{\bm{\phi}}_{\theta,i}^\alpha \circ \mathcal{L}^{\alpha}$.
+
+

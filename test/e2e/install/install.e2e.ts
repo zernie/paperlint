@@ -57,7 +57,7 @@ import {
   RECORDED_OPT_IN,
   recordedFindings,
   type Counts,
-} from "../../../fixtures/accepted-papers/baseline.ts";
+} from "../../../fixtures/real-papers/baseline.ts";
 import { layRecord } from "../../recorded-fixture.ts";
 import { renderDetail } from "../../../lib/check.ts";
 import { afterAll, beforeAll, describe, it } from "vitest";
@@ -973,7 +973,7 @@ function stepRealPaper(c: Consumer): void {
   // recorded baseline — growth fails, a full vanish fails, a partial drop does not — read through
   // the same module `fixtures/real-papers.test.ts` uses, so the installed
   // binary and the repository's own `run` are held to one recording.
-  const source = join(ROOT, "fixtures", "accepted-papers", REAL_PAPER);
+  const source = join(ROOT, "fixtures", "real-papers", "accepted", REAL_PAPER);
   cpSync(source, join(consumer, "papers", REAL_PAPER), {
     recursive: true,
     verbatimSymlinks: true,

@@ -1,0 +1,21 @@
+
+
+\begin{table} 
+\renewcommand{\arraystretch}{0.8}
+\centering 
+\resizebox{0.9\columnwidth}{!}{%
+\begin{tabular}{cccc} 
+\toprule 
+Model & Methods & VisualMRC & CORD \\  
+\midrule 
+\multirow{2}{*}{Gemma-2-9b-it} & Baseline & 320.9 & 0.367 \\  
+& \textsc{Revise}$_{meta}$ & \textbf{329.2} & \textbf{0.372} \\   
+\midrule  
+\multirow{2}{*}{Llama-3.1-8B} & Baseline & 290.7 & 0.448 \\  
+& \textsc{Revise}$_{meta}$ & \textbf{293.1} &  \textbf{0.450} \\  
+\bottomrule 
+\end{tabular} 
+} 
+\caption{QA performance on VisualMRC and CORD} 
+\label{qa_table} 
+\end{table}

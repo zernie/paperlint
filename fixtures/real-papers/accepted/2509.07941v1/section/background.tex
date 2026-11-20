@@ -1,0 +1,61 @@
+\section{Background and Related Works}\label{sec:background}
+
+\subsection{Code Generation Safety in LLM}
+
+
+LLMs abilities in code generation has revolutionized software development by automating the translation of natural language descriptions into functional code. However, this capability introduces significant security challenges~\citep{wang2021codet5,code_llm_safety}, particularly in the context of adversarial attacks such as RAG poisoning. This section outlines the security risks associated with LLM-generated code.
+
+
+
+\textbf{Unsafe code generation.} LLMs often generate code with security flaws due to their reliance on training data that may include insecure code patterns~\citep{llm_bugs} and suboptimal prompts (e.g., lacking explicit requirements for security checks).
+%
+While LLMs struggle to generate standalone malware, they can produce components usable in complex attacks, such as file encryption routines for ransomware or typosquatted package names in supply chain attacks~\citep{code_complete_attack}. Adversarial examples can also be injected during pretraining or fine-tuning, such as favoring vulnerable code patterns~\citep{mal_code_gen_backdoor_llm}.
+
+\textbf{Domain-Specific Limitations.} LLMs exhibit suboptimal performance in domain-specific code generation (e.g., web or game development), often misusing third-party libraries due to limited domain expertise~\citep{domain_llm}. This increases the risk of introducing domain-specific vulnerabilities, such as insecure API calls.
+
+\textbf{Provider Bias and Supply Chain Risks.} LLMs may exhibit systematic biases toward specific biases when generating code, potentially promoting monopolistic dependencies and obscuring alternative secure solutions. Additionally, generated code might inadvertently include deprecated or compromised packages, exacerbating supply chain risks.
+
+The security of LLM-generated code hinges on addressing both inherent model limitations (e.g., training data biases) and external adversarial threats (e.g., poisoning attacks). While advancements in multi-agent systems and instruction tuning show promise, ongoing research is critical to mitigate emerging risks, particularly as LLMs become integral to software supply chains. 
+
+
+\subsection{Software Supply Chain in LLM}
+
+Modern codebases across programming languages heavily rely on third-party packages to streamline development. In Python, for instance, developers routinely import libraries like matplotlib for visualization, pandas and numpy for data processing, and scikit-learn for machine learning tasks. Similar patterns prevail in languages such as Rust. These dependencies form interconnected chains, collectively constituting the software supply chain. While leveraging packages and APIs significantly reduces development costs and accelerates productivity, critical security and ecosystem risks emerge when LLMs automate dependency recommendations.
+
+When requesting code generation from LLMs, developers inherently expect dependency suggestions alongside code snippets. However, LLM-driven dependency generation introduces two challenges: malicious packages and dependency monopolization. 
+
+
+\textbf{Malicious Packages in Software Supply Chains.} Official package repositories for many languages host numerous unvetted or overtly malicious packages, a long-standing software supply chain security concern~\citep{mal_pkg_pypi}. Historically, such packages posed limited practical risk due to low exposure: without visibility, normal users rarely encountered them organically. LLMs could theoretically amplify malicious package exposure by recommending them during code generation~\citep{supply_chain_attack_of_llm}.
+
+\textbf{Dependency Monopolization.} Consistent with prior studies~\citep{codex} and our own empirical findings, we observe that LLMs exhibit strong dependency monopolization in code generation tasks when no additional context is provided via RAG systems. Specifically, LLMs disproportionately favor a narrow set of widely adopted third-party libraries. To quantify this phenomenon, we replicate the test in \citep{codex} about completions of the prompt on two state-of-the-art LLMs (DeepSeek-v3 and GPT-4o):
+\begin{tcolorbox}
+% \begin{lstlisting}
+\#import machine learning package \\
+import
+% \end{lstlisting} 
+\end{tcolorbox}
+Our evaluation reveals striking uniformity: in 100 trials of code completions, DeepSeek-v3 exclusively recommends \texttt{sklearn} in all cases, while GPT-4o suggests sklearn 89 times and \texttt{scikit-learn} 9 times (both referring to the same package) at $temperature=0$. Experiments at higher temperatures(0.5, 0.7, 1.0) do not significantly improve suggestion diversity. GPT-4o, Qwen3-235B-A22B and DeepSeek-v3 still overwhelmingly suggested \texttt{sklearn}. These results not only confirm the persistence of dependency monopolization but suggest its intensification compared to earlier observations in ~\citep{codex} (which showed diversity between TensorFlow and PyTorch).
+
+
+\subsection{RAG Poisoning in LLM}
+RAG has emerged as a widely adopted paradigm in LLM-integrated applications~\citep{rag_related_work2,rag_related_work1}. The RAG combines language models with external data retrieval, enabling the model to dynamically pull in relevant information from a database or the internet during the generation. The workflow of RAG systems is typically divided into two sequential phases: \textbf{Retrieval} and \textbf{Generation}. 
+
+In \textbf{Retrieval}, RAG focuses on extracting data from diverse external sources like specialized databases and broader internet searches. This step is vital for enhancing LLMs’ response capabilities by providing specific information pertinent to the query. The \textbf{Generation} involves integrating this externally retrieved data with the LLM’s existing knowledge base. This synthesis allows the model to produce responses that are not only grounded in its comprehensive training but also enriched with the latest, specific external data. Compared to perturbing the training process~\citep{iclr_howfar}, embedding adversarial text into the input data more effectively disrupts inference, particularly when such text is embedded as contextual content within the LLM’s prompt.
+
+
+Prior attacks primarily target isolated components or objectives. For instance, \citep{rag_attack1_emnlp23} demonstrated corpus poisoning against retrievers without affecting generators, while \citep{rag_attack2_workshop} introduced gradient-based prompt injection but omitted retriever optimization, limiting control over contextual inputs. \citep{poisonedrag} advanced this with PoisonedRAG, enabling targeted poisoning via multiple passages to force predefined outputs for specific queries. While effective, their approach lacks generality, requiring extensive adversarial resources per query. Concurrent works further narrow the scope: \citep{rag_attack3_arxiv} focuses solely on inducing refusal-to-answer behaviors, and \citep{rag_attack4_badrag_iclr_reject,rag_attack4_Trojanrag_iclr_reject} address subsets of adversarial goals.
+
+
+\textbf{No-trigger attack.} While prior work focuses on trigger-based attacks, we investigate triggerless attacks, which are a more practical scenario requiring no explicit triggers. The goal is to generate adversarial documents that are retrieved for any query. Given the infeasibility of a single universal adversarial document, the attacker inserts a small set of adversarial documents \(A\) into the corpus \(P_n\), where \(|A| \ll |P_n|\), such that:
+\[
+A: \forall q \in Q,\ \exists a' \in A\ \text{where}\ a' \in \text{TopK}(q, P_n \cup A, k)
+\]
+This constitutes an inference-time attack: we assume the encoder \(E\) is fixed and pre-trained, with the attacker having only black-box access during adversarial document generation.
+
+
+
+\subsection{Prompt Injection in LLM}
+Prompt injection attacks manipulate LLMs by misleading them to deviate from the original input instructions and execute maliciously injected instructions, because of their instruction-following capabilities and inability to distinguish between the original input instructions and maliciously injected instructions~\citep{prompt_injection_1,prompt_injection_2}.
+
+Initially, researchers discovered that LLMs could be misled through simple "ignoring prompt" techniques~\citep{prompt_injection_ignore}. Subsequent work demonstrated that "fake response" strategies were also effective~\citep{prompt_injection_fake_response}. More recently, a variety of methods for prompt injection attacks have been proposed~\citep{prompt_injection_multiple}. Some researchers also consider the semantic similarity between the original text and the text augmented with triggers in their forgery, to maintain retrieval performance~\citep{Neural_exec}.
+Technically, these attacks are often easier to succeed than jailbreaking because almost all LLMs undergo extensive instruction-following training. Defending against such attacks by simply filtering instructions is challenging, as it would result in a significant loss of functionality.

@@ -1,0 +1,319 @@
+\subsection{Implementations}
+
+\subsubsection{AddressSanitizer and Miri}
+
+AddressSanitizer~\cite{serebryany2012addresssanitizer} is a memory bug detector
+based on instrumentation, and
+%
+Miri~\cite{jung2026miri, gh-miri} is a Rust interpreter designed to detect
+undefined behavior, including memory bugs.
+%
+They can serve as test oracles by checking whether a program that passes type
+checking incurs a memory bug during execution.
+%
+However, since type checking is outside their scope, they cannot identify
+soundness bugs that do not manifest as undefined behavior.
+
+To empirically validate their effectiveness, we applied them to the code from
+the eleven soundness issues that result in memory bugs.
+%
+In our experiments, both AddressSanitizer and Miri successfully detected memory
+bugs in all cases.
+%
+Therefore, using AddressSanitizer or Miri as a test oracle is a promising
+direction, although complementary tools are necessary to cover a broader range
+of soundness bugs.
+
+\subsubsection{Chalk}
+
+Chalk~\cite{gh-chalk} is an experimental trait solver that serves as a
+prototyping ground for designing and improving the trait solver in \rustc{}.
+%
+It determines whether certain \C{impl}s are overlapping or orphan and whether a
+given type implements a specific trait.
+%
+Chalk approaches these tasks in a fundamentally different way from \rustc{};
+%
+it models Rust declarations using logical predicates and performs checks by
+solving logical formulas.
+%
+Thus, it is reasonable to utilize Chalk as a test oracle to discover
+trait-related soundness bugs.
+%
+However, since Chalk targets only the trait system, other type system features
+remain outside its scope.
+
+To assess its effectiveness, we applied the latest version (0.104.0) to the
+seven trait-affecting issues (99554, 105787, 106040, 114061, 114389, 126079, and
+133361).
+%
+% As Chalk's syntax differs from Rust's, we manually rewrote each code snippet
+% in Chalk's syntax.
+%
+Unfortunately, Chalk currently cannot express Issue 106040 because it does not
+support associated types with bounds in \C{impl}s.
+%
+For the remaining issues, Chalk correctly identified the orphan \C{impl} in
+Issue 99554 and the dyn-compatibility violation in Issue 126079;
+%
+it also rejected Issue 105787, but the message incorrectly cited an orphan
+\C{impl} rather than overlapping \C{impl}s;
+%
+it crashed on Issue 114061 and accepted Issues 114389 and 133361.
+%
+Consequently, we conclude that Chalk is yet immature for use as a practical test
+oracle.
+
+To facilitate its realistic use as an oracle for trait-related soundness bugs,
+we suggest improving its robustness and correctness by testing it with diverse
+inputs.
+%
+As Chalk targets only the trait system, we do not consider it a general oracle
+that can cover all kinds of soundness bugs, and we do not suggest extending it
+to cover features irrelevant to traits.
+
+\subsubsection{a-mir-formality}
+
+\begin{figure}[t]
+% \begin{lstlisting}[caption={Issue 99554 in Chalk}, label={lst:chalk}]
+% #[upstream] trait X<T, U> {}
+% struct S {}
+% trait Y { type A; }
+% impl<T> Y for T { type A = T; }
+% impl<T> X<S, T> for <T as Y>::A where T: Y {}
+% \end{lstlisting}
+% \vspace{-1em}
+\begin{lstlisting}[caption={Issue 99554 in a-mir-formality}, label={lst:a-mir-formality}]
+[ crate a { trait X<ty T, ty U> {} },
+  crate b { struct S {}
+            trait Y { type A: []; }
+            impl<ty T> Y for T { type A = T; }
+            impl<ty T> X<S, T> for <T as Y>::A where T: Y {} } ]
+\end{lstlisting}
+\vspace{-1em}
+\end{figure}
+
+The a-mir-formality project~\cite{gh-amirformality} aims to develop an
+executable formal model of the Rust type system, which can decide whether a
+given program should pass type checking or not.
+%
+As its scope is not limited to a specific part of the type system, we believe it
+has strong potential to become a comprehensive test oracle for type soundness.
+
+To validate its effectiveness, we applied a-mir-formality at commit \C{ab4f18e}
+to the collected soundness issues.
+%
+As a-mir-formality defines its own syntax, we manually rewrote the code;
+%
+for top-level items, its syntax is close to Rust's;
+%
+for function bodies, it follows MiniRust~\cite{gh-minirust}, which resembles the
+mid-level intermediate representation (MIR) used in \rustc{}.
+%
+For example, \cref{lst:a-mir-formality} shows the code for Issue 99554 rewritten
+in a-mir-formality, where a single \emph{program} consists of a list of crates
+and a type parameter is introduced with the keyword \C{ty}.
+%
+While rewriting the code, we found that it currently supports only a subset of
+Rust and MiniRust;
+%
+it lacks support for implied bounds, \C{impl} traits, trait objects, function
+pointer types, closures, asynchrony, array types, and casts.
+%
+Furthermore, the \C{?} operator cannot be used because it exists only at the
+surface level and is desugared when code is lowered to MIR.
+%
+As a result, we could express code snippets for only five issues (99554, 98117,
+106040, 109628, and 114061).
+%
+In our experiments, a-mir-formality rejected three (99554, 98117, and 109628)
+but accepted the others.
+%
+Therefore, we conclude that a-mir-formality is also currently immature for
+practical use.
+
+To leverage its strong potential as an oracle, we suggest supporting more
+features.
+%
+We believe important features to prioritize include implied bounds, \C{impl}
+traits, and trait objects.
+
+\subsection{Documentation}
+
+In this section, we describe \emph{holes} in the existing documentation,
+focusing primarily on the Rust Reference~\cite{rust-reference} and the
+FLS~\cite{fls}, while also referring to Rust RFCs~\cite{rust-rfcs} where
+appropriate.
+%
+Both the Reference and the FLS describe the syntax in BNF and provide brief
+explanations for each syntactic construct.
+%
+While the Reference has been maintained as an official Rust project for many
+years, the FLS was initially developed by Ferrous Systems and AdaCore for use in
+safety-critical industries before being adopted as a Rust project in
+2025~\cite{adopting-fls}.
+%
+Although their explanations overlap in many areas, the level of detail provided
+for specific features often varies between them.
+%
+On the other hand, RFCs comprise a collection of proposed changes to the
+language.
+%
+As discussed below, certain features are explained in detail only within RFCs
+even after their stabilization.
+%
+While investigating these documents, we reviewed all sections containing
+relevant keywords by utilizing the search functionality on their websites,
+avoiding incorrectly claiming that certain information is missing.
+
+Note that the purpose of this discussion is to demonstrate that constructing a
+mechanized specification for Rust cannot be achieved simply by collecting
+existing documents;
+%
+rather, it requires significant effort to fill these holes.
+%
+Our goal is not to criticize existing documents;
+%
+they were not intended to serve as specifications and remain valuable for
+providing intuitive understanding.
+%
+Since we only aim to demonstrate that the current documentation contains
+\emph{some} holes, our discussion does not systematically cover every language
+feature.
+
+% Additionally, our goal is not to claim that soundness issues occur due to
+% insufficient documentation.
+%
+% We refer to relevant issues in our discussion to illustrate that the current
+% documentation does not provide the precise information required to construct a
+% test oracle capable of detecting the collected issues.
+
+{\it Implied bounds and well-formedness.}
+%
+The Reference explains implied bounds by stating that ``lifetime bounds required
+for types to be well-formed are sometimes inferred,'' but it does not define
+what well-formed types are.
+%
+Similarly, the FLS does not provide a precise explanation of implied bounds,
+stating only that ``an implied bound is \ldots the byproduct of relations
+between lifetime parameters and function parameters \ldots'' without further
+clarification on how such relations introduce bounds as a byproduct.
+%
+The definition of well-formedness exists only in RFCs, notably RFC 1214
+\C{projections-lifetimes-and-wf}~\cite{rfc1214}.
+%
+This RFC defines well-formedness using inference rules based on its own syntax
+for Rust types.
+%
+Unfortunately, this syntax lacks several types present in Rust, most notably
+\C{impl} trait types.
+%
+Furthermore, some inference rules are unclear;
+%
+e.g., one rule includes the premise \C{('x: 'a) in Env}, yet \C{Env} is never
+formally defined.
+
+% Implied bounds serve as a trigger for four issues.
+%
+% Note that Issue 110925 stems from missing well-formedness checks for \C{impl}
+% trait types.
+%
+% Consequently, while the current definition of well-formedness aids intuitive
+% understanding, it remains insufficient for a mechanized specification.
+
+{\it Coercion.}
+%
+In Issue 99158, coercion from a function item to a function pointer breaks type
+soundness.
+%
+The Reference defines this kind of coercion vaguely, stating only that
+%
+``coercion is allowed \ldots [from] function item types to \C{fn} pointers.''
+%
+% although it would be nonsensical to interpret this as allowing the coercion of
+% any function item to any function pointer type.
+%
+The explanation in the FLS is more refined, specifying that coercion is
+permitted when
+%
+``the source's function signature is a subtype of the target's function
+signature.''
+%
+The FLS further defines the subtyping of function pointer types (presumably
+including function item signatures) using the standard notion of variance, where
+they are contravariant in their parameter types and covariant in their return
+types.
+%
+However, this definition does not cover higher-rank cases, where functions have
+type or lifetime parameters, possibly accompanied by bounds.
+%
+Consequently, it remains unclear whether coercing generic functions to function
+pointers requires specific checks for their bounds or permits the substitution
+of these parameters with concrete types or lifetimes.
+
+{\it HRTBs and associated types.}
+%
+In Issue 141713, the use of the type path \C{F::Output} triggers the problem,
+where \C{F} has an HRTB.
+%
+We searched the documentation using the keywords ``higher-rank,'' ``associated
+type,'' and ``type path'' to determine how an associated type projected from a
+type parameter with an HRTB should be interpreted.
+%
+Unfortunately, we found explanations only for HRTBs and associated types in
+isolation, with no documentation regarding their interaction.
+%
+Notably, the description of how a type path is resolved to a type is
+insufficient even when HRTBs are not involved.
+%
+The Reference defines the syntax of type paths in its ``Paths'' section but does
+not explain their resolution process.
+%
+The FLS includes an ``Entities and Resolution'' section, which states that \C{<S
+as T>::A} ``resolves to the associated type of \C{S}'s trait implementation of
+trait \C{T}.''
+%
+However, it provides no information regarding the resolution of type paths that
+lack such explicit trait disambiguation.
+
+%{\it Type inference.}
+%%
+%The Reference does not precisely describe when type inference succeeds.
+%%
+%Upon searching for the keyword ``infer,'' we found only two relevant sentences:
+%%
+%``infer the type if possible based on the surrounding information available''
+%and
+%%
+%``infer the type, or signal an error if insufficient type information is
+%available for definite inference.''
+%%
+%It is not even clear whether there must be only one possible type, although the
+%phrase ``definite inference'' may imply this.
+%%
+%Moreover, it does not explain how ``information'' is collected.
+
+%{\it Arrays.}
+%%
+%In Issue 144045, the compiler does not check the lifetime of the expression
+%\C{[\&x; 0]}.
+%%
+%The Reference does not specify how expressions of the form \C{[e; N]} are
+%type-checked;
+%%
+%it only states that ``an array is a fixed-size sequence of \C{N} elements of
+%type \C{T},'' where ``the array type is written as \C{[T; N]}.''
+%%
+%This natural-language description is ambiguous.
+%%
+%We could interpret this to mean that \C{e} must be of type \C{T} for \C{[e; 0]}
+%to be typed as \C{[T; 0]} because there is no explicit description for cases
+%where \C{N} is zero.
+%%
+%Alternatively, we might interpret \C{[T; 0]} as a type denoting any empty array,
+%%
+%although this even allows using the expression \C{[42; 0]} as a value of type
+%\C{[\&'static i32; 0]}, which is rejected by the current compiler.
+
+% While five issues are caused by arbitrary type selection during type
+% inference,
