@@ -40,7 +40,70 @@
  * - later global-ignore patterns win, across blocks, in config order;
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */
+import { relative, sep } from "node:path";
 import type { ConfigBlock, RuleBlock, RuleEntry } from "./rules-config.ts";
+
+/**
+ * Which papers' own files paperlint's blocks claim. `any` is the config's SHAPE, for the rule list and
+ * the docs: a file in any folder. `papers` is what `paperlint lint` runs on: the real papers, as glob
+ * prefixes relative to ESLint's `cwd` ("" for `cwd` itself), so a copy of a paper kept inside one (a
+ * review snapshot, a build copy) is claimed by no block (#582).
+ */
+export type PaperScope =
+  | { readonly kind: "any" }
+  | {
+      readonly kind: "papers";
+      readonly cwd: string;
+      readonly prefixes: readonly string[];
+    };
+
+export const ANY_PAPER: PaperScope = { kind: "any" };
+
+/** The characters a glob reads as syntax, escaped so a folder's name matches only itself. Pure. */
+const literalGlob = (path: string): string =>
+  path.replace(/[\\*?[\]{}()!+@]/gu, "\\$&");
+
+/** `to` relative to `from`, `/`-separated. Pure. */
+const posixRelative = (from: string, to: string): string =>
+  relative(from, to).split(sep).join("/");
+
+/** The papers `dirs` under ESLint's `cwd`: the scope `paperlint lint` lints. Pure. */
+export const papersScope = (
+  dirs: readonly string[],
+  cwd: string,
+): PaperScope => ({
+  kind: "papers",
+  cwd,
+  prefixes: dirs.map((d) => literalGlob(posixRelative(cwd, d))),
+});
+
+/** A glob of a paper's own file (`paper.tex`, `reviews/*.md`) in each paper of `scope`. Pure. */
+export const paperFiles = (
+  scope: PaperScope,
+  glob: string,
+): readonly string[] =>
+  scope.kind === "any"
+    ? [`**/${glob}`]
+    : scope.prefixes.map((p) => (p === "" ? glob : `${p}/${glob}`));
+
+/**
+ * A glob relative to `cwd`, as the block whose `basePath` is `base` must write it — ESLint reads a
+ * block's patterns from its `basePath`, and a paper's own settings carry the paper's folder. None
+ * when the glob names files outside `base`: that block can never reach them. A glob that starts with
+ * `**` matches at any depth and is kept as it is. Pure.
+ */
+export const rebaseGlob = (
+  glob: string,
+  cwd: string,
+  base: string,
+): readonly string[] => {
+  if (glob.startsWith("**")) return [glob];
+  const up = posixRelative(base, cwd);
+  if (!up.startsWith(".."))
+    return [up === "" ? glob : `${literalGlob(up)}/${glob}`];
+  const down = `${literalGlob(posixRelative(cwd, base))}/`;
+  return glob.startsWith(down) ? [glob.slice(down.length)] : [];
+};
 
 /**
  * A set of files paperlint lints: an own block's globs and the exceptions that block makes. A file is
@@ -158,6 +221,7 @@ export function ruleOwners(
 export function narrowToOwners(
   block: RuleBlock,
   owners: ReadonlyMap<string, readonly OwnedScope[]>,
+  papers: PaperScope = ANY_PAPER,
 ): ScopedBlock[] {
   // Keyed by the owner's JSON, so rules with equal owners share one group of blocks.
   const groups = new Map<string, Record<string, RuleEntry>>();
@@ -170,24 +234,49 @@ export function narrowToOwners(
     ownerOf.set(key, owner);
   }
   return [...ownerOf].flatMap(([key, owner]) =>
-    owner.map((scope) => within(block, scope, { ...groups.get(key) })),
+    owner.flatMap((scope) =>
+      within(block, rebased(scope, papers, block.basePath), {
+        ...groups.get(key),
+      }),
+    ),
   );
 }
 
-/** `block`'s rules over the files both it and `scope` claim, minus both sets of exceptions. */
+/**
+ * `scope` as the block with `basePath` `base` must write it. The scope's globs are relative to ESLint's
+ * `cwd`; a paper's own settings are read from the paper's folder (#582).
+ */
+function rebased(
+  scope: OwnedScope,
+  papers: PaperScope,
+  base: string,
+): OwnedScope {
+  if (papers.kind === "any") return scope;
+  const onto = (globs: readonly string[]): readonly string[] =>
+    globs.flatMap((g) => rebaseGlob(g, papers.cwd, base));
+  return { files: onto(scope.files), ignores: onto(scope.ignores) };
+}
+
+/**
+ * `block`'s rules over the files both it and `scope` claim, minus both sets of exceptions; none when
+ * the scope claims no file the block can reach (ESLint refuses an empty `files`).
+ */
 function within(
   block: RuleBlock,
   scope: OwnedScope,
   rules: Readonly<Record<string, RuleEntry>>,
-): ScopedBlock {
+): readonly ScopedBlock[] {
+  if (scope.files.length === 0) return [];
   const files: readonly FilesEntry[] = block.files
     ? block.files.flatMap((f) => scope.files.map((o) => [f, o]))
     : scope.files;
   const ignores = [...(block.ignores ?? []), ...scope.ignores];
-  return {
-    basePath: block.basePath,
-    files,
-    ...(ignores.length ? { ignores } : {}),
-    rules,
-  };
+  return [
+    {
+      basePath: block.basePath,
+      files,
+      ...(ignores.length ? { ignores } : {}),
+      rules,
+    },
+  ];
 }

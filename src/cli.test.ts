@@ -846,19 +846,16 @@ test("lint: a copy of a paper inside it (a review snapshot, a build copy) is not
   );
 });
 
-test("lint: a folder inside a paper with its own paperlint.json is still linted (#582)", async () => {
-  const dir = writeTree(join(root, "lint-nested-paper"), {
+test("lint: the same failing scorecard as the paper's own is reported, so the test above can fail (#582)", async () => {
+  const dir = writeTree(join(root, "lint-own-status"), {
     "paperlint.json": JSON.stringify({ papersDir: "papers" }),
     "papers/p/paper.tex": "% P\n",
-    "papers/p/PIPELINE-STATUS.md": "---\n---\n",
-    "papers/p/part/paperlint.json": "{}",
-    "papers/p/part/paper.tex": "% P\n",
-    "papers/p/part/PIPELINE-STATUS.md": FAILING_STATUS,
+    "papers/p/PIPELINE-STATUS.md": FAILING_STATUS,
   });
   const r = await cli(["lint"], dir);
   assert.deepEqual(
-    { code: r.code, nested: /part\/PIPELINE-STATUS\.md/.test(r.out) },
-    { code: 1, nested: true },
+    { code: r.code, own: /papers\/p\/PIPELINE-STATUS\.md/.test(r.out) },
+    { code: 1, own: true },
   );
 });
 

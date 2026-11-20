@@ -119,11 +119,15 @@ import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
 import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
+  ANY_PAPER,
   narrowToOwners,
   ownedPatterns,
+  paperFiles,
+  papersScope,
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
+import type { PaperScope } from "./paper-files.ts";
 import {
   paperPreset,
   settingsProblemLine,
@@ -189,8 +193,6 @@ import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { EDITION_RULE_LEVELS, editionRules } from "./edition-rule.ts";
 import { ARTIFACT_RULE_LEVELS, artifactRules } from "./artifact-rules.ts";
-import { copiesIn } from "./domain/paper-copies.ts";
-import { absolutePath } from "./domain/paths.ts";
 import { changesRules } from "./changes-rule.ts";
 import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
@@ -575,7 +577,11 @@ const TALK_RULE_DEPS = {
 export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
+  // The papers whose own files the blocks claim (`PaperScope`): any folder for the config's shape,
+  // the real papers for `paperlint lint`, so a copy kept inside one is claimed by no block (#582).
+  papers: PaperScope = ANY_PAPER,
 ): ConfigBlock[] {
+  const own = (glob: string): readonly string[] => paperFiles(papers, glob);
   const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
@@ -616,7 +622,7 @@ export function buildConfig(
       },
     },
     {
-      files: ["**/PIPELINE-STATUS.md"],
+      files: own("PIPELINE-STATUS.md"),
       // Every paper folder has one: the rules about the folder itself (its stages, its frozen
       // sources, its name) are judged here, once per paper.
       plugins: {
@@ -656,7 +662,7 @@ export function buildConfig(
       },
     },
     {
-      files: ["**/reviews/*.md"],
+      files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
       ...md,
       // A review's frontmatter is a record, validated by paperlint's JSON Schema
@@ -666,7 +672,7 @@ export function buildConfig(
     {
       // A sibling card says how much of the competing paper was read (`read:`). The cards are
       // written by this package's analyze-sibling-paper skill; its README is an index, not a card.
-      files: ["**/siblings/*.md"],
+      files: own("siblings/*.md"),
       ignores: ["**/siblings/README.md"],
       plugins: { markdown, sibling: siblingFrontmatter },
       ...md,
@@ -678,7 +684,7 @@ export function buildConfig(
   // corpus without a single `.tex` would be refusing to work where work is possible.
   if (texLanguage)
     cfg.push({
-      files: ["**/paper.tex"],
+      files: own("paper.tex"),
       plugins: {
         tex: {
           languages: { latex: texLanguage },
@@ -762,7 +768,7 @@ export function buildConfig(
   // PIPELINE-STATUS.md than beside paper.tex, and ESLint throws on a rule its plugin lacks.
   cfg.push(
     ...fragments,
-    ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners)),
+    ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners, papers)),
   );
   return cfg;
 }
@@ -2518,40 +2524,21 @@ async function paperEslint(
     : [];
 
   const cwd = lintRoot(cfg.root, paths);
+  // The papers whose own files the config names: the ones `paths` reach and the project's. A copy of
+  // a paper kept inside it (a review snapshot, a build copy) is in no such list, so no block claims
+  // it (#582).
+  const claimed = papersScope(paperDirs([...paths, ...papersRoots(cfg)]), cwd);
   const eslint = new ESLint({
     cwd,
     overrideConfigFile: true,
     overrideConfig: eslintConfig([
-      ...buildConfig(opts, texLanguage),
+      ...buildConfig(opts, texLanguage, claimed),
       ...includeBlocks(bodies),
-      // LAST, so no un-ignore above reaches into a copy (#582).
-      ...copiesIgnored(paperDirs(paths), cwd),
     ]),
     fix,
     stats,
   });
   return { ok: true, value: { eslint, opts, bodies } };
-}
-
-/**
- * One block ignoring every copy of a paper inside it — a review snapshot, a build copy
- * (src/domain/paper-copies.ts) — as folders relative to ESLint's `cwd`; none when there is none. Only
- * a folder with a paper's own file at its top is a paper whose copies are looked for: a papers
- * directory or the project root holds whole papers, and they are not copies.
- */
-function copiesIgnored(
-  dirs: readonly string[],
-  cwd: string,
-): readonly ConfigBlock[] {
-  const names = { config: CONFIG_FILE, markers: [MAIN, STATUS_FILE] };
-  const ignores = dirs
-    .filter((d) => names.markers.some((m) => existsSync(join(d, m))))
-    .flatMap((d) =>
-      copiesIn(nodeListTree(absolutePath(d)) ?? [], names).map(
-        (copy) => `${relative(cwd, join(d, copy))}/`,
-      ),
-    );
-  return ignores.length === 0 ? [] : [{ ignores }];
 }
 
 /**

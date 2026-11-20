@@ -841,12 +841,11 @@ describe("paperlint lint — a scaffolded paper has no layout finding", () => {
 });
 
 describe("paperlint lint — extra/ is never read", () => {
-  // An archived snapshot of an older paper carries every marker a paper does, its own paperlint.json
-  // too. Under extra/ it is spillover the layout promises never to judge; anywhere else its own
-  // settings file makes its folder a paper root (a copy without one is ignored anywhere, #582).
+  // An archived snapshot of an older paper carries every marker a paper does. Under extra/ it is
+  // spillover the layout promises never to judge; anywhere else inside the paper it is a copy, and
+  // lint claims only the paper's own files (#582).
   const SNAPSHOT = (dir: string) => ({
     [`${dir}/PIPELINE-STATUS.md`]: "# Pipeline status\n",
-    [`${dir}/paperlint.json`]: "{}\n",
     [`${dir}/notes.txt`]: "x\n",
   });
 
@@ -855,8 +854,13 @@ describe("paperlint lint — extra/ is never read", () => {
     expect(ids).toEqual(["pdf/measured", "paper/sources-fresh"]);
   });
 
-  it("the same snapshot outside extra/ is reported, so the test above can fail", async () => {
+  it("the same snapshot elsewhere in the paper is a copy, not a paper: no rule reads it either (#582)", async () => {
     const { ids } = await lintScaffold(SNAPSHOT("research/old-2025"));
+    expect(ids).toEqual(["pdf/measured", "paper/sources-fresh"]);
+  });
+
+  it("a stray file at the paper's own top level is reported, so the two tests above can fail", async () => {
+    const { ids } = await lintScaffold({ "notes.txt": "x\n" });
     expect(ids).toContain("paper/allowed-files-only");
   });
 });
