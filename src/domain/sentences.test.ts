@@ -12,9 +12,7 @@ const cut = (text: string): readonly string[] =>
 describe("sentences — a sentence that opens in lowercase (#543)", () => {
   it("🔴 a typed lowercase name opens a sentence of its own", () => {
     expect(
-      cut(
-        "First sentence has four. fp16 and bf16 are formats. Next one here.",
-      ),
+      cut("First sentence has four. fp16 and bf16 are formats. Next one here."),
     ).toEqual([
       "First sentence has four. ",
       "fp16 and bf16 are formats. ",
@@ -31,7 +29,9 @@ describe("sentences — a sentence that opens in lowercase (#543)", () => {
 
   it("🔴 a citation or reference that opens the sentence is its subject, and stays with it", () => {
     expect(
-      cut(`Weights are quantised. ${CITATION} applied it. ${REFERENCE} lists all.`),
+      cut(
+        `Weights are quantised. ${CITATION} applied it. ${REFERENCE} lists all.`,
+      ),
     ).toEqual([
       "Weights are quantised. ",
       `${CITATION} applied it. `,
@@ -80,8 +80,20 @@ describe("sentences — a full stop before a lowercase word that ends nothing", 
     ["an ellipsis", "We tried one, two... and then stopped."],
     ["a full stop inside brackets", "Displacement (Disp.) is the shift."],
     ["a decimal", "The rate is 2.5 per run."],
+    [
+      "inline enumerators",
+      "We consider two cases: 1. the rate is 40%, and 2. the rate is 60%.",
+    ],
+    ["an enumerator in brackets", "Two steps (1. parse, 2. check) run."],
   ])("%s: %s", (_, text) => {
     expect(cut(text)).toEqual([text]);
+  });
+
+  it("a number that ends a sentence still ends it before a lowercase word", () => {
+    expect(cut("The total was 40. fp16 then halves it.")).toEqual([
+      "The total was 40. ",
+      "fp16 then halves it.",
+    ]);
   });
 
   it("before a capital, `etc.` and an initial end a sentence as before", () => {

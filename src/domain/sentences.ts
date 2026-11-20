@@ -57,12 +57,13 @@ const LOWERCASE_OPENING = /\.['"’”]*\s+(?=[^\p{L}.!?]*\p{Ll})/gu;
  * A full stop that ends no sentence before a lowercase word: a dotted abbreviation (`i.i.d.`,
  * `w.r.t.`, `Ph.D.`), an initial (`Y.`, the `P.` of `C.-P.`), an ellipsis, the short name of a
  * numbered thing (`Art. 5(c)`, `Eqn. 3`, `eq. 2`, `see refs. 4`), a company's (`Co.`, `Inc.`) or a
- * common truncation (`etc.`, `avg.`, `dim.`). Before a capital each of these may end a sentence, so the
+ * common truncation (`etc.`, `avg.`, `dim.`), or an inline enumerator (`cases: 1. the`, `and 2. the`,
+ * `(1. parse`). Before a capital each of these may end a sentence, so the
  * segmenter's own breaks after them stay. Matched against the text up to and including the full
  * stop, at most `WINDOW` characters of it.
  */
 const ABBREVIATION_BEFORE_LOWERCASE =
-  /(?:\p{L}\.\p{L}{1,3}|(?:^|[^\p{L}])(?:\p{Lu}|Appx|Art|Def|Thm|Lem|Prop|Alg|Ch|Vol|pp|Refs?|Eqns?|eqn|eqs?|refs?|Co|Inc|Ltd|Corp|etc|avg|func|dim)|\.\.)\.$/u;
+  /(?:\p{L}\.\p{L}{1,3}|(?:^|[^\p{L}])(?:\p{Lu}|Appx|Art|Def|Thm|Lem|Prop|Alg|Ch|Vol|pp|Refs?|Eqns?|eqn|eqs?|refs?|Co|Inc|Ltd|Corp|etc|avg|func|dim)|(?:^|[:;,(]\s*|\b(?:and|or)\s+)\d{1,2}|\.\.)\.$/u;
 
 /** Enough text before a full stop to hold the longest abbreviation above and the character before it. */
 const WINDOW = 8;

@@ -261,9 +261,7 @@ describe("tex/max-sentence-words", () => {
     ).toEqual([]);
     expect(
       sFound(`${w(29)} quantised. \\citet{b} applied ${w(53)} end.`),
-    ).toEqual([
-      { words: 56, max: 55, head: "applied w w w w w w w…" },
-    ]);
+    ).toEqual([{ words: 56, max: 55, head: "applied w w w w w w w…" }]);
   });
 });
 
