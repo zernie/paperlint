@@ -164,7 +164,12 @@ A later batch follows these rules, so that the set stays a sample and not a sele
 - **Not classified yet** (above).
 - **The record is not TeX's answer**: `record-by-hand.json` is written as in `preprints/` —
   `paper.tex`, the class and style files at the root, then the `\input`/`\include` files in the
-  order the source names them. Nothing was compiled.
+  order the source names them. Nothing was compiled. Whether every `\input` resolves to a file
+  here, and every file it resolves to is in the record, is held by `../inputs.test.ts` over both
+  folders. It caught one paper (2610.17767v1) whose main file sat in a subfolder: the collector
+  staged from that subfolder, while arXiv compiles from the archive's root, so the sections went
+  unread and its baseline counted little more than the abstract. Restaged by hand; the collector's
+  rule (`sampling/sample.mjs`, `dirname(pick)`) is fixed in its tested rewrite, not here.
 - **An arXiv source is the author's, not the publisher's file.** Several carry acmart's `nonacm`
   option, which drops the ACM furniture the proceedings add; the class and its format option are
   the venue's.

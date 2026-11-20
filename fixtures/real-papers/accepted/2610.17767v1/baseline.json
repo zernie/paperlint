@@ -4,8 +4,9 @@
     "Counts only, not yet classified (../README.md). A finding on a published camera-ready is presumed a false positive until shown otherwise. The record is record-by-hand.json, not TeX's answer."
   ],
   "findings": {
-    "paper/allowed-files-only": 4,
+    "paper/allowed-files-only": 3,
+    "paper/section-word": 6,
     "pdf/measured": 1,
-    "tex/claim-provenance": 1
+    "tex/claim-provenance": 3
   }
 }
