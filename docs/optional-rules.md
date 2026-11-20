@@ -33,8 +33,8 @@ writing, not a number the venue states.
 | [`tex/claim-emphasis`](rules/tex/claim-emphasis.md)               | claims set in bold inside a sentence outside that band                                                                               |
 | [`tex/relation-markers`](rules/tex/relation-markers.md)           | words naming how a sentence relates to the one before (_because_, _however_ …) outside that band                                     |
 | [`tex/negated-sentences`](rules/tex/negated-sentences.md)         | negated sentences outside that band                                                                                                  |
-| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)     | a paragraph over 150 words                                                                                                           |
-| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md) | a paragraph holding more than 8 numbers                                                                                              |
+| [`tex/max-paragraph-words`](rules/tex/max-paragraph-words.md)     | a paragraph over 250 words                                                                                                           |
+| [`tex/max-paragraph-numbers`](rules/tex/max-paragraph-numbers.md) | a paragraph holding more than 10 numbers                                                                                             |
 | [`tex/max-sentence-words`](rules/tex/max-sentence-words.md)       | a sentence over 55 words                                                                                                             |
 | [`tex/max-caption-words`](rules/tex/max-caption-words.md)         | a caption over 100 words, or a caption sentence over 40                                                                              |
 

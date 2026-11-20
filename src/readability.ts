@@ -1,17 +1,20 @@
 /**
  * THE PARAGRAPH CEILING — `tex/max-paragraph-words`, a rule of the `tex` plugin over the body's
- * prose: a paragraph runs past `max` words (default 150).
+ * prose: a paragraph runs past `max` words (default 250).
  *
  * ── OFF BY DEFAULT ───────────────────────────────────────────────────────────────
  * No call for papers states a paragraph limit, so no venue is a source for the number. The rule is
  * registered and silent until a project turns it on in its `rules`, as `tex/heading-case` is. The
  * name and the `max` option follow ESLint's own `max-lines`, `max-len`, `max-statements`.
  *
- * ── WHERE 150 COMES FROM ─────────────────────────────────────────────────────────
- * The wall writing-craft.md names («The wall-of-text check»), measured
- * with this rule's counter on the accepted papers in `fixtures/real-papers/accepted/`: it sits at the
- * pooled 95th percentile of paragraph length of the five two-column IEEE ones (154). The measurement
- * is on the rule's page. A paragraph is at most `max` words; 150 is allowed.
+ * ── WHERE 250 COMES FROM ─────────────────────────────────────────────────────────
+ * The 99th percentile of paragraph length over the accepted real papers in
+ * `fixtures/real-papers/accepted/` (96 papers with at least 2,500 body words, 7,994 paragraphs,
+ * measured with this rule's counter): p99 is 252, so 250 leaves about 1% of accepted paragraphs
+ * over it. The author chose it on 2026-11-20. It rests on what 99% of accepted paragraphs pass, not
+ * on reviewer evidence: a pilot on ICLR 2025 presentation scores found no link between long
+ * paragraphs and the score (inconclusive). The measurement is on the rule's page. A paragraph is
+ * at most `max` words; 250 is allowed.
  *
  * ── WHAT IT READS ────────────────────────────────────────────────────────────────
  * The body's prose through the `LatexReader` port (`bodyProse`): paragraphs, list items and
@@ -40,10 +43,10 @@ import {
 } from "./tex-venue-rules.ts";
 
 /** The ceiling when the config sets none: the largest paragraph that does not fire. */
-export const DEFAULT_MAX_PARAGRAPH_WORDS = 150;
+export const DEFAULT_MAX_PARAGRAPH_WORDS = 250;
 
-/** The numbers ceiling when the config sets none: a ninth number fires. */
-export const DEFAULT_MAX_PARAGRAPH_NUMBERS = 8;
+/** The numbers ceiling when the config sets none: an eleventh number fires. */
+export const DEFAULT_MAX_PARAGRAPH_NUMBERS = 10;
 
 /** The sentence ceiling when the config sets none: a 56th word fires. */
 export const DEFAULT_MAX_SENTENCE_WORDS = 55;
