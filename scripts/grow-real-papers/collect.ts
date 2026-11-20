@@ -298,7 +298,10 @@ export async function collect(w: Walk): Promise<readonly SlotEnd[]> {
     ),
   );
   const ends: SlotEnd[] = [];
+  // An edition that ran out of candidates or failed its search is not walked again in a later round.
+  const done = new Set<string>();
   for (const [slot, target] of order) {
+    if (done.has(slotKey(slot))) continue;
     const full = () =>
       count((e) => edition(e) === edition(slot)) >= target ||
       count((e) => e.field === slot.field) >=
@@ -307,6 +310,7 @@ export async function collect(w: Walk): Promise<readonly SlotEnd[]> {
     const end = await walkSlot(w, st, slot, full);
     ends.push({ slot: slotKey(slot), ...end });
     if (end.ended === "time") break;
+    if (end.ended !== "full") done.add(slotKey(slot));
   }
   return ends;
 }
