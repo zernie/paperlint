@@ -74,6 +74,12 @@ export interface Args {
   submit: boolean;
   /** `--save` for `submission update`: really change the submission; without it, a dry run. */
   save: boolean;
+  /** `--url`, `--host`, `--to`, `--node`, `--numbers` for `artifact`: where the upload is, and what it holds. */
+  url: string | null;
+  host: string | null;
+  to: string | null;
+  node: string | null;
+  numbers: string | null;
   /**
    * `--allow-venue-name` for `new`: create the folder even though its name names a venue. Skips
    * that one refusal and no other.

@@ -33,6 +33,7 @@ import {
 import { citeKeysOf, macroTextsOf, registeredNumbersOf } from "./facts.ts";
 import { captionProse } from "./captions.ts";
 import { headingsOf } from "./headings.ts";
+import { macroValuesOf, macrosUsedOf } from "./macros.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
@@ -93,4 +94,6 @@ export const latexReader: LatexReader = {
   citeKeys: (src) => citeKeysOf(parseLatex(src)),
   registeredNumbers: registeredNumbersOf,
   macroTexts: macroTextsOf,
+  macroValues: macroValuesOf,
+  macrosUsed: macrosUsedOf,
 };

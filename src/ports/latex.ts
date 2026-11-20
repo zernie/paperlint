@@ -48,6 +48,12 @@ export type AbstractProblem =
       readonly at: readonly number[];
     };
 
+/** An argument-less macro the source defines, and its body as written. */
+export interface MacroValue {
+  readonly name: string;
+  readonly value: string;
+}
+
 export interface LatexReader {
   /** The source's `\documentclass`, as one of its states. */
   readonly documentClass: (src: string) => ClassLine;
@@ -143,4 +149,8 @@ export interface LatexReader {
     src: string,
     names: readonly string[],
   ) => readonly string[];
+  /** Each argument-less macro `src` defines, with its body as written, in source order. */
+  readonly macroValues: (src: string) => readonly MacroValue[];
+  /** The names of the macros `src` uses anywhere but in their own definition. */
+  readonly macrosUsed: (src: string) => readonly string[];
 }

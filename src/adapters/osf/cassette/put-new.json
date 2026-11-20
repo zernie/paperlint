@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": "osfstorage/0123456789abcdef01234567",
+    "type": "files",
+    "attributes": {
+      "extra": {
+        "guid": null,
+        "version": 1,
+        "downloads": 0,
+        "checkout": null,
+        "latestVersionSeen": null,
+        "hashes": {
+          "md5": "3f395fbbb68716f38f5ff7fa9d740e3b",
+          "sha256": "59bd16dfc39e768f82bb8ec74467e571e80ed284683b586f077dbf1aa2483ecd"
+        }
+      },
+      "kind": "file",
+      "name": "artifact.zip",
+      "path": "/0123456789abcdef01234567",
+      "provider": "osfstorage",
+      "materialized": "/artifact.zip",
+      "size": 15
+    },
+    "links": {
+      "move": "https://files.osf.io/v1/resources/abcde/providers/osfstorage/0123456789abcdef01234567",
+      "upload": "https://files.osf.io/v1/resources/abcde/providers/osfstorage/0123456789abcdef01234567?kind=file",
+      "delete": "https://files.osf.io/v1/resources/abcde/providers/osfstorage/0123456789abcdef01234567",
+      "download": "https://files.osf.io/v1/resources/abcde/providers/osfstorage/0123456789abcdef01234567"
+    }
+  }
+}
