@@ -846,6 +846,27 @@ test("lint: a copy of a paper inside it (a review snapshot, a build copy) is not
   );
 });
 
+test.each([
+  ["a review card", "archive/p/reviews/r.md"],
+  ["its reviews/ folder", "archive/p/reviews"],
+])(
+  "lint: %s named outside the papers directory is judged as its paper's own (#582)",
+  async (_, path) => {
+    const dir = writeTree(join(root, `lint-owner-${path.replaceAll("/", "-")}`), {
+      "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+      "archive/p/paper.tex": "% P\n",
+      "archive/p/PIPELINE-STATUS.md": "---\n---\n",
+      // A finding without a status: the review schema refuses it.
+      "archive/p/reviews/r.md": "---\nfindings:\n  - id: 1\n---\n# R\n",
+    });
+    const r = await cli(["lint", path], dir);
+    assert.deepEqual(
+      { code: r.code, card: /archive\/p\/reviews\/r\.md/.test(r.out) },
+      { code: 1, card: true },
+    );
+  },
+);
+
 test("lint: the same failing scorecard as the paper's own is reported, so the test above can fail (#582)", async () => {
   const dir = writeTree(join(root, "lint-own-status"), {
     "paperlint.json": JSON.stringify({ papersDir: "papers" }),

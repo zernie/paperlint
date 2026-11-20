@@ -937,13 +937,18 @@ export async function silentOptionalRules(
 }
 
 /**
- * The paper directories `paths` reach: each directory and the papers under it. A FILE named on the
- * command line belongs to the paper it sits in.
+ * The paper directories `paths` reach: each directory and the papers under it. A file or a folder
+ * named inside a paper (a review card, its `reviews/`) belongs to the paper it sits in, found the way
+ * the hooks find it (`paperFolderOf`), so that paper's rules and own files are the ones claimed
+ * (#582). A folder that holds papers is kept as it is.
  */
 function paperDirs(paths: readonly string[]): readonly string[] {
-  const dirs = paths.map((p) =>
-    existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
-  );
+  const dirs = paths.map((p) => {
+    const dir = resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p);
+    return papersIn(dir).length > 0
+      ? dir
+      : (paperFolderOf(join(dir, STATUS_FILE), nodeFiles) ?? dir);
+  });
   return [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
 }
 
