@@ -4,9 +4,9 @@
     "Counts only: no finding of this paper has been classified as real or false (../README.md, 'What is weak about this'). The record is record-by-hand.json, not TeX's answer."
   ],
   "findings": {
-    "tex/claim-provenance": 73,
-    "paper/section-word": 47,
     "paper/allowed-files-only": 3,
-    "pdf/measured": 1
+    "paper/section-word": 47,
+    "pdf/measured": 1,
+    "tex/claim-provenance": 80
   }
 }
