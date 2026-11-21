@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:89320c33252078ae compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:903762a91abaa0c7 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -26,7 +26,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### The Linter First
 
-**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, first that it is opt-in and off until turned on, then what it adds, that `paperlint lint` reports the same findings with it and its hooks call no model, and how to turn it on. Its copy states facts plainly, without the 'not X but Y' pattern. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
+**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, first that it is opt-in and off until turned on, then one edit replayed with the lint-edited hook's real output (held by `src/lint-edited-site-example.test.ts`; the ask, the edit and the fix are labelled an example), then what else it adds, that `paperlint lint` reports the same findings with it and its hooks call no model, and how to turn it on. Its copy states facts plainly, without the 'not X but Y' pattern. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
 
 ### Modern Not 2010
 

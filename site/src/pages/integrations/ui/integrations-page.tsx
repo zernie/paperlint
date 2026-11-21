@@ -10,6 +10,7 @@ import { SectionLabel } from "@/shared/ui/section-heading";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
 import { pluginSteps } from "../model/plugin.ts";
+import { Replay } from "./replay.tsx";
 
 const readme = readmeContent(readRepo("README.md"));
 const packageName = (
@@ -67,10 +68,10 @@ const Part = ({
 
 /**
  * paperlint.dev/integrations: the one place the Claude Code plugin is described (site/CLAUDE.md,
- * "The Linter First"). Written for a researcher who distrusts AI tools: the plugin is opt-in, the
- * linter is fixed rules, what the plugin adds, what stays the same, how to turn it on. Each sentence
- * is checked against docs/install.md, docs/skills.md, plugin/hooks/hooks.json and the hooks' own
- * sources.
+ * "The Linter First"). Written for a researcher who distrusts AI tools: the plugin is opt-in, then
+ * one edit replayed with the hook's real output, what else it adds, what stays the same, how to
+ * turn it on. Each sentence is checked against docs/install.md, docs/skills.md,
+ * plugin/hooks/hooks.json and the hooks' own sources.
  */
 export function IntegrationsPage() {
   return (
@@ -99,53 +100,33 @@ export function IntegrationsPage() {
             </p>
           </div>
 
-          <div className="border-b border-border lg:col-span-7 lg:col-start-6">
-            <Part id="linter" title="The linter is fixed rules">
-              <p>
-                paperlint&apos;s checks are rules written as code: the same
-                files give the same findings. Nothing in{" "}
-                <Code>paperlint lint</Code> or <Code>paperlint build</Code>{" "}
-                sends your paper to an AI model. Building sends only each
-                reference&apos;s DOI, arXiv id or title to public catalogues, to
-                check that the work exists.
-              </p>
-            </Part>
+          <div className="lg:col-span-7 lg:col-start-6">
+            <Replay />
+          </div>
 
-            <Part id="adds" title="What the plugin adds">
+          <div className="border-b border-border lg:col-span-7 lg:col-start-6">
+            <Part id="adds" title="What else it adds">
               <p>
-                <span className="font-medium text-foreground">Skills.</span>{" "}
-                Written instructions Claude Code follows when you ask it for a
-                step of the work, such as &ldquo;where does my paper
-                stand?&rdquo; or &ldquo;is it ready to submit?&rdquo;. Several
-                of them run <Code>paperlint build</Code> or{" "}
-                <Code>paperlint lint</Code> and start from what it reports.{" "}
+                Two more hooks: one refuses a new file in the wrong place in the
+                paper folder, and one holds a submission to a venue&apos;s
+                portal until you have said yes to that paper and its PDF.
+              </p>
+              <p>
+                Skills: instructions Claude Code follows when you ask it for a
+                step of the work, such as &ldquo;is it ready to submit?&rdquo;.{" "}
                 <a href={`${GITHUB}/blob/main/docs/skills.md`} className={link}>
                   The list of skills
                 </a>
                 .
-              </p>
-              <p>
-                <span className="font-medium text-foreground">Hooks.</span>{" "}
-                Small programs Claude Code runs around its own edits. After it
-                edits a file in your paper, one runs paperlint on that file and
-                shows Claude Code the errors the edit introduced, so it fixes
-                them in the same turn. Others refuse a new file in the wrong
-                place in the paper folder, and hold a submission to a
-                venue&apos;s portal until you have said yes to that paper and
-                its PDF.
               </p>
             </Part>
 
             <Part id="same" title="What stays the same">
               <p>
                 <Code>paperlint lint</Code> reports the same findings with the
-                plugin installed, in your terminal and in CI: the hook that
-                lints after an edit runs the same check, with the same rules.
-              </p>
-              <p>
-                The skills are text Claude Code reads when you ask it for
-                something. The hooks are programs on your computer; they call no
-                AI model and send nothing over the network.
+                plugin installed, in your terminal and in CI. Nothing in
+                paperlint sends your paper to an AI model, and the hooks run on
+                your computer.
               </p>
             </Part>
 

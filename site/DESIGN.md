@@ -128,10 +128,17 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
 The one page that describes the Claude Code plugin (`site/CLAUDE.md`, "The Linter First"), on
 paper, with the same header and footer. On the left the label, the headline «paperlint and Claude
 Code.», then first «Optional. It stays off until you turn it on.» and a lead saying paperlint works
-on its own. On the right four parts under hairlines, in this order: the linter is fixed rules; what
-the plugin adds; what stays the same; how to turn it on, which leads with `npx paperlint init` and
-its question, then «Or add it by hand, inside Claude Code» with the two Claude Code commands. Every
-command has its caption and a Copy button. The copy states facts plainly: no «not X but Y», no
+on its own. On the right, first the replay (`src/pages/integrations/ui/replay.tsx`): one edit in
+Claude Code on a white sheet with a hairline edge, under a thin title line «Claude Code» and a
+one-line caption saying it is an example. Four turns, each with its speaker in `text-label` capitals
+in a narrow column (stacked above the turn on a phone): You, the ask; Claude Code, the edit in mono;
+paperlint, the hook's real output on stone, coloured like a finding's terminal line and wrapped;
+Claude Code, the fix. Each turn fades up as it scrolls in (the CSS `reveal`), so the text is in the
+HTML without a script and stays still under reduced motion. Then three parts under hairlines: what
+else it adds (the other two hooks, the skills in one line and the link to the list); what stays the
+same; how to turn it on, which leads with `npx paperlint init` and its question, then «Or add it by
+hand, inside Claude Code» with the two Claude Code commands. Every command has its caption and a
+Copy button. The copy states facts plainly: no «not X but Y», no
 «if you do not…»; a negative stays only where it is itself the fact («sends nothing to an AI
 model»).
 

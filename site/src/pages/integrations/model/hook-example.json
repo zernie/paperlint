@@ -1,0 +1,4 @@
+{
+  "file": "papers/my-paper/paper.tex",
+  "reason": "papers/my-paper/paper.tex\n  7:14  error  ASE requires a section titled «Data Availability Statement» and there is none — add `\\section*{Data Availability Statement}` (the title exactly; a bold paragraph does not count)  tex/required-section\n\n✖ 1 problem (1 error, 0 warnings)\npaperlint lint-edited: the edit was kept; the errors above are the ones it introduced."
+}
