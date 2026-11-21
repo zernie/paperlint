@@ -20,7 +20,7 @@ reads:
 
 | what the page shows                        | read from                                                                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| the install commands, in "How do I start?" | the first `sh` block under "A new paper" in `README.md`                                                                                    |
+| the install commands, in Install          | the first `sh` block under "A new paper" in `README.md`                                                                                    |
 | the first two findings of checkpoint 01    | the `text` block after "the first run already catches something" in `README.md`, explained in `site/src/entities/finding/model/explain.ts` |
 | the headline's venue names                 | the "Supported venues" table in `README.md`                                                                                                |
 | the venue grid, one column per field       | "Editions, by field" and "Families" in `docs/venues.md`, each series' `"name"` in `presets/`, the README's table for format and limits     |

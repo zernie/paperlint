@@ -83,7 +83,7 @@ export function Venues({ grid }: { readonly grid: VenueGrid }) {
     >
       <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-12 px-6 md:px-8 lg:grid-cols-12">
         <div className="lg:col-span-12">
-          <Rubric n="02" name="Venues" />
+          <Rubric n="03" name="Venues" />
         </div>
         <div className="lg:col-span-4">
           <SectionHeading id="venues">

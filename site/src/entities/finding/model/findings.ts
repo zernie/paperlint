@@ -3,7 +3,7 @@
 // findings.test.ts fails when the quoted text, or a value marked `sourced`, is no longer in that
 // file, so a reworded rule message cannot leave a stale copy on the site. `title` and `plain` are
 // the same finding in words a scientist who does not program reads first (site/CLAUDE.md, "Not
-// Scary For Non Programmers"); the exact message is folded under them.
+// Scary For Non Programmers"); the exact message is shown under them.
 
 export interface Finding {
   readonly rule: string;

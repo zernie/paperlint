@@ -20,7 +20,7 @@ const TONE: Readonly<Record<HeroFact["tone"], string>> = {
 /**
  * The opening, set as a magazine's first spread: the cover line, the promise in a short lead, four
  * short facts, then the campus etching as the spread's plate. No command and no
- * links: a reader scrolls to what it checks, and the commands wait in "How do I start?".
+ * links: a reader scrolls to what it checks, and the commands wait in Install, after the checks.
  */
 export function Hero({
   venues,

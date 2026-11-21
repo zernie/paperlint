@@ -44,7 +44,7 @@ export const withCaption = (
 };
 
 /**
- * What "How do I start?" shows for each paper, in the README's order: the command that creates the
+ * What the Install section shows for each paper, in the README's order: the command that creates the
  * paper (its "Create a paper." step), then the commands that build and check it.
  */
 export const perPaperSteps = (
