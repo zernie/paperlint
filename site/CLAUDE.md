@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:04a04ceff51d6650 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:5d8fbb0a618ecadb compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -24,9 +24,9 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 **Guidance only** — The page must read as a dependable tool to a working scientist, never as AI marketing. No sparkles, glow, decorative gradients, stock icons or emoji; no 'AI-powered', 'magic' or 'effortless'. Every block shows something real: a command, a real finding, a real file. Many researchers distrust AI tools, and one slop signal costs the reader's trust in the linter.
 
-### The Linter Only
+### The Linter First
 
-**Guidance only** — The site sells the linter and the paper folder. The Claude Code skills, the hooks and anything agent-shaped are not mentioned on it, nor linked from it, until the author decides otherwise.
+**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, what it adds, how to turn it on, and that it never changes what `paperlint lint` reports and calls no model on its own. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
 
 ### Modern Not 2010
 
@@ -42,7 +42,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### A Short Page
 
-**Guidance only** — The page is about four screens on a desktop: hero, the road, the venues, the questions, the footer. Everything past the first look is folded: a stop's panel, the exact terminal output, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for this on 2026-11-19, when the page measured 11 screens; a section that adds a screen needs a screenshot and the author's yes.
+**Guidance only** — The page stays short: hero, the road, install, the venues, the questions, the footer. Code and terminal output are shown open, never folded (the author, 2026-11-22). What is folded is prose past the first look: a stop's panel, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for about four screens on a desktop on 2026-11-19, when the page measured 11; a section that adds a screen needs a screenshot and the author's yes.
 
 ### Subtract First
 
@@ -62,7 +62,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### Not Scary For Non Programmers
 
-**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is folded underneath; a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19.
+**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in terracotta, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.
 
 ### Say Latex And Peer Review
 

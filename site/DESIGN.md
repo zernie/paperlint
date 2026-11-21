@@ -14,7 +14,9 @@ Every token below is copied from `src/app/styles/globals.css`, and the page may 
   structure (numbered rubrics, thin rules, a column grid). The look of Nature, Science or a LaTeX
   paper was rejected.
 - **Not scary for non-programmers.** Plain words come first. A finding is a title and a sentence;
-  its exact terminal output is folded under it. A command carries a caption and a Copy button.
+  its exact terminal output is shown open under it. A command carries a caption and a Copy button.
+- **Code is shown open.** Commands and terminal output are never folded (the author,
+  2026-11-22). What folds is prose: a stop, a venue's limits, an answer, a term's meaning.
 - **Only what ships.** A count, venue, finding or command is read from the repository at build
   time or quoted with a test behind it. Prose around it is written by hand and checked against
   the docs.
@@ -30,11 +32,11 @@ with a name that says what it is for.
 | token                      | value     | use                                                          |
 | -------------------------- | --------- | ------------------------------------------------------------ |
 | `--color-paper`            | `#faf9f5` | the page; the hero and the questions                         |
-| `--color-stone`            | `#f2f1ec` | the ground of 01 Checks and of the footer                    |
-| `--color-sand-soft`        | `#f3ead9` | the ground of 02 Venues                                      |
+| `--color-stone`            | `#f2f1ec` | the ground of 01 Checks, of the footer, of terminal output   |
+| `--color-sand-soft`        | `#f3ead9` | the ground of 03 Venues                                      |
 | `--color-sand-edge`        | `#d6c19b` | a hairline or underline on soft sand                         |
 | `--color-surface`          | `#ffffff` | a checkpoint's plate, a popover, the command box             |
-| `--color-card`             | `#f2efe9` | a file's contents, the folded terminal line                  |
+| `--color-card`             | `#f2efe9` | a file's contents                                            |
 | `--color-border`           | `#e4e1d8` | hairlines                                                    |
 | `--color-ink`              | `#181816` | headings and the wordmark (`foreground`)                     |
 | `--color-copy`             | `#45433e` | running text                                                 |
@@ -43,9 +45,9 @@ with a name that says what it is for.
 | `--color-ink-blue`         | `#305e8b` | the one accent (`primary`): the venue name, the open numeral |
 | `--color-sage`             | `#56695c` | a fact's word in the hero (5.6:1 on paper)                   |
 | `--color-sand-deep`        | `#8a6a36` | a fact's word in the hero (4.8:1 on paper)                   |
-| `--color-signal`           | `#c15f3c` | terracotta, for an error only (`destructive`)                |
+| `--color-signal`           | `#c15f3c` | terracotta, for an error only: «error» in terminal output    |
 | `--color-error`            | `#a24a2b` | a finding's «Must fix»                                       |
-| `--color-warn`             | `#8a6a1c` | a finding's «Advice»                                         |
+| `--color-warn`             | `#8a6a1c` | a finding's «Advice»; «warning» in terminal output           |
 
 ### Type
 
@@ -83,7 +85,8 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
 
 ## Page anatomy
 
-1. **Header.** The wordmark and three anchors; GitHub.
+1. **Header.** The wordmark; Install, Venues and Integrations (from a tablet up); GitHub. The
+   links are absolute (`/#install`), so the same header serves `/integrations`.
 2. **Hero, on paper.** The cover line, «Writing a paper for _an IEEE conference_?», with the venue
    cycling through the README's table. The lead, whose first «paperlint» is the `Wordmark`
    (`src/shared/ui/wordmark.tsx`, the same component as the nav logo). Four facts. The campus
@@ -92,13 +95,25 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
 3. **01 Checks, on stone.** On the left, an index of the four stops; on the right, the open stop's
    plate, a white sheet with a hairline edge. Only this section shows findings: stop 01 shows
    three real desk-reject reasons. On a phone each stop opens in place.
-4. **02 Venues, on soft sand.** The heading and a short note on the left, with the families in one
+4. **02 Install, on paper.** Right after the road, where a reader who has seen what paperlint
+   catches asks how to start. The heading and «In a terminal, in the folder that holds your
+   papers» on the left; on the right the README's install commands, then «Then, for each paper»
+   and the commands that create, build and check one, each with its caption and a Copy button.
+   Last, one line: the optional Claude Code plugin, linked to `/integrations`.
+5. **03 Venues, on soft sand.** The heading and a short note on the left, with the families in one
    line («And any ACM, IEEE or ACL conference, by its template»). On the right, the four fields of
    `docs/venues.md` two by two, each workshop under its conference. A name opens its format and
    page limits.
-5. **03 Questions, on paper.** The heading on the left, the folded answers on the right. The
-   install commands live in "How do I start?", read from the README, each with its caption.
-6. **Footer, on stone.** The README's «An aid, not a guarantee», the links, «Made by zernie».
+6. **04 Questions, on paper.** The heading on the left, the folded answers on the right.
+7. **Footer, on stone.** The README's «An aid, not a guarantee», the links, «Made by zernie».
+
+## `/integrations`
+
+The one page that describes the Claude Code plugin (`site/CLAUDE.md`, "The Linter First"), on
+paper, with the same header and footer. On the left the label, the headline «paperlint and Claude
+Code.» and a lead saying the linter does not need it. On the right four parts under hairlines, in
+this order: the linter is deterministic; what the plugin adds; what it never does; how to turn it
+on, with the two Claude Code commands, each with its caption and a Copy button.
 
 ## Patterns
 
@@ -107,9 +122,10 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
 - **Fact.** A short word in the serif at `text-title`, each in its own colour (ink-blue, sage, ink,
   sand-deep), over a muted sans label. No hairlines or boxes. Each fact is backed by a test
   (`src/pages/home/model/facts.test.ts`).
-- **Finding.** «Must fix» or «Advice», a serif title, one plain sentence, then «Show what the
-  terminal says», which unfolds the exact line. The rule id appears once: in the terminal line
-  when the line carries it, otherwise on its own line under it.
+- **Finding.** «Must fix» or «Advice», a serif title, one plain sentence, then what the terminal
+  says, open, in a soft stone panel in JetBrains Mono: the file and the line muted, «error» in
+  `signal` or «warning» in `warn`, the message, the rule id muted. The line wraps rather than
+  scrolling sideways.
 
 ## Motion
 
@@ -129,6 +145,8 @@ the venue stays on its first name.
 | the install command in the hero                | "who's going to install without checking first?"  |
 | findings in the hero                           | they repeated checkpoint 01                       |
 | a caption under the etching                    | it said what the page should not say              |
+| terminal output folded under a link            | code is shown open (2026-11-22)                   |
+| install as a question among the questions      | it is a section of its own (2026-11-22)           |
 | decks on the right of each rubric              | repeated labels                                   |
 | an eyebrow on the open plate                   | the same words were in the index beside it        |
 | Newsreader at weight 300, tight, for the cover | hard to read at that size                         |
