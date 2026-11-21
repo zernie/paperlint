@@ -8,8 +8,9 @@
  * adapter per portal kind does the talking (`src/adapters/hotcrp/`).
  *
  *   show     status, id, title, paper type, topics, abstract length, the PDF the portal holds — and
- *            whether it is the local `paper.pdf`, by sha256
- *   update   send the PDF (and, if asked, an abstract, or "submitted"). A DRY RUN unless `--save`:
+ *            whether it is the local `paper.pdf`, by sha256, and the paper's title when it differs
+ *   update   send the PDF, the paper's title when the portal holds another (and, if asked, an
+ *            abstract, or "submitted"). A DRY RUN unless `--save`:
  *            the portal checks the change and keeps nothing
  *   topics   the topics the portal offers, against the ones the venue preset records
  *
@@ -376,12 +377,23 @@ export function deadlineLine(d: InForce): string {
 export function showLines(
   t: SubmissionTarget,
   view: SubmissionView,
-  local: { readonly shown: string; readonly sha256: Sha256 | null },
+  local: {
+    readonly shown: string;
+    readonly sha256: Sha256 | null;
+    /** The paper's own title; null when paperlint cannot read one. */
+    readonly title: string | null;
+  },
 ): readonly string[] {
+  const differs = local.title !== null && !sameTitle(local.title, view.title);
   return [
     `submission ${String(view.id)} on ${t.portal.url} (${t.portal.kind})`,
     `status        ${view.status}${view.submittedAt === null ? "" : `, submitted ${iso(view.submittedAt)}`}`,
     `title         ${view.title ?? "—"}`,
+    ...(differs
+      ? [
+          `paper title   ${local.title} — NOT the portal's; \`paperlint submission update\` sends it`,
+        ]
+      : []),
     `paper type    ${view.paperType ?? "—"}`,
     `topics        ${view.topics.length ? view.topics.join("; ") : "—"}`,
     `abstract      ${view.abstract === null ? "—" : `${String(wordCount(view.abstract))} words`}`,
@@ -489,9 +501,11 @@ async function runShow(
   const view = await portal.show(t.id);
   if (!view.ok) return failed(view.error, deps);
   const bytes = bytesAt(deps.files, pdfPath);
+  const title = paperTitle(t.paperDir, bytes, deps);
   const local = {
     shown: shownPath(deps.cwd, pdfPath),
     sha256: bytes === null ? null : sha256Hex(bytes),
+    title: title.ok ? title.value : null,
   };
   // With `cycles`, the frozen versions beside the portal's copy: which is under review, which is history.
   const versions = versionLines(t.paperDir, deps);
@@ -517,15 +531,15 @@ function abstractOf(
     : ok(new TextDecoder().decode(bytes).trim());
 }
 
-/** What `update` sends: the PDF's bytes, the abstract's text, whether to mark it submitted, the fields. */
+/** What `update` sends: the PDF's bytes, the title, the abstract's text, whether to mark it submitted, the fields. */
 const changeOf = (
   a: SubmissionArgs & { readonly pdfPath: string },
   bytes: Uint8Array,
-  abstract: string | null,
+  text: { readonly title: string | null; readonly abstract: string | null },
   fields: FieldValues,
 ) => ({
   pdf: { name: basename(a.pdfPath), bytes },
-  abstract,
+  ...text,
   submit: a.submit,
   fields,
 });
@@ -619,7 +633,7 @@ const VENUE_RULES = "venue rules at their default options";
 const REBUILD_REFUSAL =
   "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
 
-/** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
+/** `update`: send the PDF, a changed title (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget & { readonly id: number },
   portal: SubmissionPortal,
@@ -641,8 +655,8 @@ async function runUpdate(
   if (refused) return 2;
   const plan = planFor(t, a.save, deps);
   if (!plan.ok) return (deps.err(plan.error), 2);
-  const change = changeOf(a, bytes, abstract.value, t.fields);
-  const r = await portal.update(t.id, change, { save: a.save });
+  const sent = { a, bytes, abstract: abstract.value };
+  const r = await sendChange(t, portal, sent, deps);
   if (!r.ok) return failed(r.error, deps);
   return afterUpdate(t, r.value, sentOf(a, { shown, bytes }, plan.value), deps);
 }
@@ -653,6 +667,66 @@ const sentOf = (
   file: { readonly shown: string; readonly bytes: Uint8Array },
   plan: FreezePlan | null,
 ) => ({ ...file, save: a.save, submit: a.submit, plan });
+
+/** Two titles that differ only in spacing are one title. Pure. */
+const sameTitle = (paper: string, portal: string | null): boolean =>
+  portal !== null &&
+  paper.replace(/\s+/g, " ").trim() === portal.replace(/\s+/g, " ").trim();
+
+/** What `update` does about the title: the one it sends (null: none), and the line saying so. Pure. */
+export function titleChange(
+  paper: Result<string, string>,
+  portal: string | null,
+): { readonly send: string | null; readonly line: string } {
+  if (!paper.ok)
+    return { send: null, line: `title         not checked — ${paper.error}` };
+  return sameTitle(paper.value, portal)
+    ? {
+        send: null,
+        line: `title         unchanged — the portal holds «${paper.value}»`,
+      }
+    : {
+        send: paper.value,
+        line: `title         sends «${paper.value}» — the portal has ${portal === null ? "none" : `«${portal}»`}`,
+      };
+}
+
+/**
+ * The title `update` sends: the paper's, when the portal holds another (#619). The portal is read
+ * only when the paper's title is readable; a failed read stops the update.
+ */
+async function titleToSend(
+  t: SubmissionTarget & { readonly id: number },
+  portal: SubmissionPortal,
+  pdf: Uint8Array,
+  deps: RunDeps,
+): Promise<
+  Result<{ readonly send: string | null; readonly line: string }, PortalFailure>
+> {
+  const paper = paperTitle(t.paperDir, pdf, deps);
+  if (!paper.ok) return ok(titleChange(paper, null));
+  const view = await portal.show(t.id);
+  return view.ok ? ok(titleChange(paper, view.value.title)) : err(view.error);
+}
+
+/** The change sent, its title line printed first: the portal's answer, or why there is none. */
+async function sendChange(
+  t: SubmissionTarget & { readonly id: number },
+  portal: SubmissionPortal,
+  sent: {
+    readonly a: SubmissionArgs & { readonly pdfPath: string };
+    readonly bytes: Uint8Array;
+    readonly abstract: string | null;
+  },
+  deps: RunDeps,
+): Promise<Result<UpdateOutcome, PortalFailure>> {
+  const title = await titleToSend(t, portal, sent.bytes, deps);
+  if (!title.ok) return err(title.error);
+  deps.log(title.value.line);
+  const text = { title: title.value.send, abstract: sent.abstract };
+  const change = changeOf(sent.a, sent.bytes, text, t.fields);
+  return portal.update(t.id, change, { save: sent.a.save });
+}
 
 /** The portal's answer to `update` printed, and what it kept frozen: the exit code. */
 function afterUpdate(
@@ -950,6 +1024,26 @@ function assembledPaper(
     : readPaper(join(paperDir, MAIN), new TextDecoder().decode(bytes), deps);
 }
 
+/**
+ * The paper's title, as `titleOf` reads it from the source, falling back on the build's facts
+ * about `pdf` (none without one) — what `new` sends and `update` and `show` compare.
+ */
+function paperTitle(
+  paperDir: string,
+  pdf: Uint8Array | null,
+  deps: SubmissionDeps,
+): Result<string, string> {
+  const paper = assembledPaper(paperDir, deps);
+  const facts = pdf === null ? null : factsOfSent(paperDir, pdf, deps);
+  return titleOf(
+    paper === null
+      ? null
+      : { text: paper.text, where: (o: number) => placeIn(paper, o) },
+    deps.latex,
+    facts?.text.metadata ?? null,
+  );
+}
+
 /** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the source's abstract. */
 function titleAndAbstract(
   a: SubmissionArgs & { readonly paperDir: string },
@@ -958,16 +1052,9 @@ function titleAndAbstract(
 ): Result<{ readonly title: string; readonly abstract: string }, string> {
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
-  const paper = assembledPaper(a.paperDir, deps);
-  const metadata = factsOfSent(a.paperDir, pdf, deps)?.text.metadata ?? null;
-  const title = titleOf(
-    paper === null
-      ? null
-      : { text: paper.text, where: (o: number) => placeIn(paper, o) },
-    deps.latex,
-    metadata,
-  );
+  const title = paperTitle(a.paperDir, pdf, deps);
   if (!title.ok) return title;
+  const paper = assembledPaper(a.paperDir, deps);
   const abstract =
     own.value === null
       ? sourceAbstract(paper, deps)

@@ -119,10 +119,15 @@ then `match`: `yes` means the portal holds exactly the PDF you built (compared b
 deadlines in force for the current attempt, each with when and where it was read
 ([Deadlines](configuration.md#deadlines)). Exit 0 whenever the portal answered.
 
+When the portal's title is not the paper's own (read as `new` reads it), a `paper title` line under
+it says so; `update` sends the paper's.
+
 ## `update`
 
-Sends the PDF, the paper's `"fields"`, and, when asked, a new abstract (`--abstract <file>`) and
-"submitted" (`--submit`).
+Sends the PDF, the paper's `"fields"`, the paper's title when the portal holds another, and, when
+asked, a new abstract (`--abstract <file>`) and "submitted" (`--submit`). The `title` line says
+which: `sends «…» — the portal has «…»`, `unchanged`, or `not checked` with the reason when paperlint
+cannot read the title, and then it sends none. Titles that differ only in spacing are the same.
 Without `--save` it is a dry run. It prints the portal's verdict and its messages; exit 1 when the
 portal would not take the change. Before sending, it asks you to open that exact PDF and check it
 against the venue's call for papers.

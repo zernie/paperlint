@@ -20,6 +20,8 @@ import {
   fakePortal,
   run,
   STEPS,
+  files,
+  DEFAULT_TEX,
 } from "../test/submission-fixtures.ts";
 import { frozenText } from "../test/frozen-presets.ts";
 
@@ -217,3 +219,23 @@ test("show, in the flat form: the deadlines in force are the preset's readings a
 });
 
 // ── new ───────────────────────────────────────────────────────────────────────────────
+
+test("🔴 show: a portal title that is not the paper's \\title is flagged, with what sends it", async () => {
+  const fs = files({ extra: { [`${PAPER}/paper.tex`]: DEFAULT_TEX } });
+  const r = await run({}, { files: fs });
+  expect(r.code).toBe(0);
+  expect(r.out.slice(2, 4)).toStrictEqual([
+    "title         A Fake Title",
+    "paper title   Agents That Lie — NOT the portal's; `paperlint submission update` sends it",
+  ]);
+});
+
+test("show: a portal title that is the paper's \\title adds no line", async () => {
+  const fs = files({ extra: { [`${PAPER}/paper.tex`]: DEFAULT_TEX } });
+  const same = fakePortal({ show: ok({ ...VIEW, title: "Agents That Lie" }) });
+  const r = await run({}, { files: fs, portal: same });
+  expect(r.out.slice(2, 4)).toStrictEqual([
+    "title         Agents That Lie",
+    "paper type    Regular",
+  ]);
+});

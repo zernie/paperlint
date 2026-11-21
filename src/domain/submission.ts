@@ -98,6 +98,8 @@ export interface SubmissionView {
 /** A change to send. Every absent part is left as the portal has it. */
 export interface SubmissionChange {
   readonly pdf: { readonly name: string; readonly bytes: Uint8Array } | null;
+  /** The paper's title, sent when it differs from the portal's; null leaves the portal's. */
+  readonly title: string | null;
   readonly abstract: string | null;
   /** Mark the submission submitted (ready for review). */
   readonly submit: boolean;

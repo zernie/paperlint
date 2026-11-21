@@ -102,6 +102,7 @@ export function changeObject(
     object: "paper",
     pid: id,
     ...(c.pdf === null ? {} : { submission: { content_file: CONTENT_FIELD } }),
+    ...(c.title === null ? {} : { title: c.title }),
     ...(c.abstract === null ? {} : { abstract: c.abstract }),
     ...(c.submit ? { status: "submitted" } : {}),
     ...c.fields,

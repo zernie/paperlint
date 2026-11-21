@@ -278,6 +278,7 @@ test("🔴 show: 401 surfaces HotCRP's own message, and the token is in no part 
 
 const CHANGE: SubmissionChange = {
   pdf: { name: "paper.pdf", bytes: PDF },
+  title: "A New Title",
   abstract: "new abstract",
   submit: true,
   fields: {},
@@ -301,6 +302,7 @@ test("update: a dry run by default — dry_run=1, the json field, the PDF under 
     object: "paper",
     pid: 7,
     submission: { content_file: CONTENT_FIELD },
+    title: "A New Title",
     abstract: "new abstract",
     status: "submitted",
   });
@@ -573,7 +575,13 @@ test("a portal that does not answer is unreachable, with the network's words", a
 
 test("changeObject: only what changes is sent", () => {
   assert.deepEqual(
-    changeObject(7, { pdf: null, abstract: null, submit: false, fields: {} }),
+    changeObject(7, {
+      pdf: null,
+      title: null,
+      abstract: null,
+      submit: false,
+      fields: {},
+    }),
     { object: "paper", pid: 7 },
   );
 });
@@ -585,7 +593,13 @@ test("changeObject and createObject: the venue's fields go in as submission-obje
     ACMCorAut: "ada@example.org",
   };
   assert.deepEqual(
-    changeObject(7, { pdf: null, abstract: null, submit: false, fields }),
+    changeObject(7, {
+      pdf: null,
+      title: null,
+      abstract: null,
+      submit: false,
+      fields,
+    }),
     { object: "paper", pid: 7, ...fields },
   );
   const created = createObject({ ...NEW, fields });

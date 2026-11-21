@@ -14,6 +14,8 @@ import {
   run,
   NO_ERRORS,
   facts,
+  DEFAULT_TEX,
+  VIEW,
 } from "../test/submission-fixtures.ts";
 
 test("update: a dry run by default — the paper's PDF sent, nothing saved, exit 0", async () => {
@@ -25,6 +27,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
       7,
       {
         pdf: { name: "paper.pdf", bytes: PDF },
+        title: null,
         abstract: null,
         submit: false,
         fields: {},
@@ -35,6 +38,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
     NO_ERRORS,
+    NOT_CHECKED,
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
     "HTTP          200",
     "valid         yes",
@@ -64,6 +68,7 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
       7,
       {
         pdf: { name: "other.pdf", bytes: PDF },
+        title: null,
         abstract: "The abstract.",
         submit: true,
         fields: {},
@@ -72,9 +77,10 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
     ],
   ]);
   // Guards: the PDF that is sent is the one named, and --save is told to check it too.
-  expect(r.out.slice(0, 3)).toStrictEqual([
+  expect(r.out.slice(0, 4)).toStrictEqual([
     CHECK("other.pdf", "the call for papers, https://example.org/cfp"),
     NO_ERRORS,
+    NOT_CHECKED,
     "saved",
   ]);
 });
@@ -113,7 +119,7 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { portal: fakePortal({ update: invalid }) },
   );
   expect(r1.code).toBe(1);
-  expect(r1.out.slice(4)).toStrictEqual([
+  expect(r1.out.slice(5)).toStrictEqual([
     "valid         NO",
     "changes       —",
     `local PDF     papers/p/paper.pdf sha2-${HEX}`,
@@ -154,7 +160,7 @@ test("update --save that the portal withheld says so", async () => {
     { sub: "update", save: true },
     { portal: fakePortal({ update: withheld }) },
   );
-  expect(r.out[2]).toBe("SAVE WITHHELD by the portal — nothing changed");
+  expect(r.out[3]).toBe("SAVE WITHHELD by the portal — nothing changed");
 });
 
 test("update: no PDF to send, or no abstract file, is refused before the portal is asked", async () => {
@@ -168,6 +174,10 @@ test("update: no PDF to send, or no abstract file, is refused before the portal 
   expect(r2.code).toBe(2);
   expect(r2.errs).toStrictEqual(["--abstract: no file at nope.txt"]);
 });
+
+/** `update`'s title line for the made-up paper, which has no paper.tex and no PDF Title. */
+const NOT_CHECKED =
+  "title         not checked — no \\title in paper.tex, and the PDF names no Title — add \\title{…}, or \\hypersetup{pdftitle={…}}, and rebuild";
 
 // ── the venue check before a send (paperlint#264) ─────────────────────────────────────
 
@@ -197,11 +207,12 @@ const LINT_BLOCK = (level: "error" | "warning", text: string): string[] => [
 test("update over the page limit: the venue rules' findings on that PDF, as lint prints them, before the portal is asked; a dry run still runs", async () => {
   const r = await run({ sub: "update" }, { files: OVER });
   expect(r.code).toBe(0);
-  expect(r.out.slice(1, 7)).toStrictEqual([
+  expect(r.out.slice(1, 8)).toStrictEqual([
     ...LINT_BLOCK(
       "error",
       "body pages (up to the references on page 9): 8, over the limit 6 for venue/short — a desk reject; cut the text  format/page-limit",
     ),
+    NOT_CHECKED,
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
   ]);
   expect(r.seen[0]?.calls).toHaveLength(1);
@@ -209,7 +220,7 @@ test("update over the page limit: the venue rules' findings on that PDF, as lint
 
 test("update --save over the limit: the same findings, and the send goes ahead — the person decides on them, not the command", async () => {
   const r = await run({ sub: "update", save: true }, { files: OVER });
-  expect([r.code, r.errs, r.out[2], r.out[6]]).toStrictEqual([
+  expect([r.code, r.errs, r.out[2], r.out[7]]).toStrictEqual([
     0,
     [],
     `${PAPER}/paper.tex`,
@@ -313,4 +324,88 @@ test("porting skips the venue rules, not the freshness: --save with facts about 
     { files: porting(null) },
   );
   expect([unbuilt.code, unbuilt.errs]).toStrictEqual([2, [REFUSAL]]);
+});
+
+/** The made-up paper with a `\title`, so `update` has a title to compare with the portal's. */
+const titled = (tex: string = DEFAULT_TEX) =>
+  files({ extra: { [`${PAPER}/paper.tex`]: tex } });
+
+test("🔴 update: a \\title that differs from the portal's is sent, and said, in the dry run", async () => {
+  const r = await run({ sub: "update" }, { files: titled() });
+  expect(r.code).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([
+    ["show", 7],
+    [
+      "update",
+      7,
+      {
+        pdf: { name: "paper.pdf", bytes: PDF },
+        title: "Agents That Lie",
+        abstract: null,
+        submit: false,
+        fields: {},
+      },
+      { save: false },
+    ],
+  ]);
+  expect(r.out.slice(0, 4)).toStrictEqual([
+    CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
+    NO_ERRORS,
+    "title         sends «Agents That Lie» — the portal has «A Fake Title»",
+    "dry run — the portal checked the change and kept nothing; --save sends it for real",
+  ]);
+});
+
+test("update: a \\title the portal already holds is not sent", async () => {
+  const same = fakePortal({
+    show: ok({ ...VIEW, title: " Agents  That Lie " }),
+  });
+  const r = await run({ sub: "update" }, { files: titled(), portal: same });
+  expect(r.code).toBe(0);
+  const [, sent] = r.seen[0]?.calls ?? [];
+  expect(sent).toStrictEqual([
+    "update",
+    7,
+    {
+      pdf: { name: "paper.pdf", bytes: PDF },
+      title: null,
+      abstract: null,
+      submit: false,
+      fields: {},
+    },
+    { save: false },
+  ]);
+  expect(r.out[2]).toBe(
+    "title         unchanged — the portal holds «Agents That Lie»",
+  );
+});
+
+test("update: a title paperlint cannot read is said, nothing asked of the portal for it, and the PDF still sent", async () => {
+  const r = await run({ sub: "update" });
+  expect(r.code).toBe(0);
+  expect(r.seen[0]?.calls).toStrictEqual([
+    ["update", 7, expect.anything(), { save: false }],
+  ]);
+  expect(r.out[2]).toBe(NOT_CHECKED);
+});
+
+test("update: the portal refusing the read of its title exits 1 and sends nothing", async () => {
+  const refused = fakePortal({
+    show: err<PortalFailure>({
+      kind: "refused",
+      httpStatus: 401,
+      messages: [{ message: "Missing credentials", field: null, status: 2 }],
+    }),
+  });
+  const r = await run({ sub: "update" }, { files: titled(), portal: refused });
+  expect(r.code).toBe(1);
+  expect(r.seen[0]?.calls).toStrictEqual([["show", 7]]);
+});
+
+test("update: a portal with no title gets the paper's, said as none", async () => {
+  const none = fakePortal({ show: ok({ ...VIEW, title: null }) });
+  const r = await run({ sub: "update" }, { files: titled(), portal: none });
+  expect(r.out[2]).toBe(
+    "title         sends «Agents That Lie» — the portal has none",
+  );
 });
