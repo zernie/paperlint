@@ -44,6 +44,8 @@ describe("parseArgs — the switches, each turning one field on", () => {
     ["--yes", "yes"],
     ["-y", "yes"],
     ["--no-hooks", "noHooks"],
+    ["--plugin", "plugin"],
+    ["--no-plugin", "noPlugin"],
     ["--allow-venue-name", "allowVenueName"],
   ] as const)("%s → %s", (flag, key) => {
     const off = parseArgs(["new", "x"]);

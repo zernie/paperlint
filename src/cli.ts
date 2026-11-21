@@ -383,6 +383,10 @@ init:
   --yes, -y           ask nothing, take every default. Without a terminal on stdin AND stdout,
                       or with CI set, nothing is asked either
   --no-hooks          do not wire the hooks (the default without a human is to wire them)
+  --plugin            turn on the Claude Code plugin (the skills and hooks) without asking, with
+                      or without a terminal. Without a human and without this flag, init turns
+                      nothing on and prints one line saying so
+  --no-plugin         never ask about the plugin, never turn it on
   --paper <name>      create this paper too (without a human, the only way init creates one)
 
 new:
@@ -1208,6 +1212,8 @@ export function parseArgs(argv: readonly string[]): Args {
     check: false,
     yes: false,
     noHooks: false,
+    plugin: false,
+    noPlugin: false,
     allowVenueName: false,
     paper: null,
     venue: null,
@@ -1293,6 +1299,8 @@ const SWITCHES: ReadonlyMap<
   | "check"
   | "yes"
   | "noHooks"
+  | "plugin"
+  | "noPlugin"
   | "allowVenueName"
   | "submit"
   | "save"
@@ -1305,6 +1313,8 @@ const SWITCHES: ReadonlyMap<
   ["--yes", "yes"],
   ["-y", "yes"],
   ["--no-hooks", "noHooks"],
+  ["--plugin", "plugin"],
+  ["--no-plugin", "noPlugin"],
   ["--allow-venue-name", "allowVenueName"],
   ["--submit", "submit"],
   ["--save", "save"],
@@ -2429,11 +2439,13 @@ async function runInit(
     err,
     cwd,
     install,
+    claude,
   }: {
     log: typeof console.log;
     err: typeof console.error;
     cwd: string;
     install: ProjectInstall;
+    claude: ClaudeCode;
   },
 ): Promise<number> {
   // Deferred, not implemented: named and refused, rather than read as the directory argument.
@@ -2462,6 +2474,8 @@ async function runInit(
     prompts,
     yes: a.yes,
     hooks: !a.noHooks,
+    claude,
+    pluginFlag: a.plugin ? "plugin" : a.noPlugin ? "no-plugin" : null,
     paper: a.paper,
     createPaper: (papersRoot, name) =>
       createPaperAt(papersRoot, name, { log, err, cwd }),
@@ -2523,7 +2537,7 @@ export async function run(
     cwd?: string;
     /** How `init` adds paperlint to a project: the package manager by default; a test hands a fake. */
     install?: ProjectInstall;
-    /** Claude Code as `doctor`, `lint` and the hooks see it: the disk and `claude` by default; a test hands a fake. */
+    /** Claude Code as `init` and `doctor` see it: the disk and `claude` by default; a test hands a fake. */
     claude?: ClaudeCode;
     /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
     now?: () => number;
@@ -2566,7 +2580,7 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init") return await runInit(a, { log, err, cwd, install });
+  if (a.cmd === "init") return await runInit(a, { log, err, cwd, install, claude });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.

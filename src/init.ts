@@ -54,11 +54,17 @@ import {
   type ProgramProbe,
 } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
-import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
+import {
+  linkSkills,
+  SKILLS_HOME,
+  unlinkSkills,
+  type LinkReport,
+} from "./link-skills.ts";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
   shippedWiring,
+  unwireHooks,
   wireHooks,
   type Merge,
   type WireResult,
@@ -76,6 +82,14 @@ import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
 import type { Answer, Prompts } from "./ports/prompts.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
+import { absolutePath } from "./domain/paths.ts";
+import {
+  offerPlugin,
+  pluginOn,
+  reportPlugin,
+  type PluginFlag,
+} from "./plugin-offer.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -459,23 +473,108 @@ export async function offerHooks(
     if (!valueOr(answer, true)) return { status: "declined" };
   }
   try {
-    // Called THROUGH the protocol object rather than as a detached method: the port is an
-    // object, and an implementation that one day reads `this` must not break here.
-    let m = merge;
-    if (!m) {
-      // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
-      const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
-      m = (existing, compiled, managedBy) =>
-        claudeCodeHookProtocol.mergeRegistrations(
-          existing,
-          compiled,
-          managedBy,
-        );
-    }
-    return wireHooks(root, m, shippedWiring());
+    return wireHooks(root, await loadMerge(merge), shippedWiring());
   } catch (e) {
     return { status: "failed", reason: messageOf(e) };
   }
+}
+
+/** vigiles' merge: the injected one, or the real one, loaded only when init needs it. */
+async function loadMerge(merge: Merge | undefined): Promise<Merge> {
+  if (merge) return merge;
+  // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
+  const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
+  // Called THROUGH the protocol object rather than as a detached method: the port is an
+  // object, and an implementation that one day reads `this` must not break here.
+  return (existing, compiled, managedBy) =>
+    claudeCodeHookProtocol.mergeRegistrations(existing, compiled, managedBy);
+}
+
+/** Without the plugin: each skill linked into `.claude/skills/`, the hooks wired into settings. */
+async function linkAndWire(
+  root: string,
+  {
+    link,
+    asking,
+    here,
+    log,
+  }: {
+    readonly link: (root: string) => LinkReport;
+    readonly asking: Parameters<typeof offerHooks>[1] & {
+      readonly why: string;
+    };
+    readonly here: (p: string) => string;
+    readonly log: (line: string) => void;
+  },
+): Promise<"cancelled" | "done"> {
+  reportSkillLinks(link(root), here).forEach((line) => {
+    log(line);
+  });
+  log(``);
+  log(
+    `hooks (Claude Code runs them from ${SETTINGS_PATH} — committed, shared with every clone)`,
+  );
+  const hooked = await offerHooks(root, asking);
+  reportHooks(hooked, {
+    here,
+    how: asking.interactive
+      ? `you were asked; \`--no-hooks\` skips this next time`
+      : `default taken: YES — ${asking.why}, so nothing was asked. \`--no-hooks\` skips this`,
+  }).forEach((line) => {
+    log(line);
+  });
+  return hooked.status === "cancelled" ? "cancelled" : "done";
+}
+
+/**
+ * The plugin is on: the skill links and hook commands init made earlier go, so nothing is listed or
+ * run twice. What the project made itself stays, and doctor names it.
+ */
+async function retireOld(
+  root: string,
+  {
+    unlink,
+    merge,
+    here,
+    log,
+  }: {
+    readonly unlink: (root: string) => ReturnType<typeof unlinkSkills>;
+    readonly merge?: Merge | undefined;
+    readonly here: (p: string) => string;
+    readonly log: (line: string) => void;
+  },
+): Promise<"done"> {
+  const skills = unlink(root);
+  const hooks = await loadMerge(merge)
+    .then((m) => unwireHooks(root, m))
+    .catch((e: unknown) => ({
+      status: "failed" as const,
+      reason: messageOf(e),
+    }));
+  const hookLine = {
+    removed: (h: {
+      readonly path: string;
+      readonly names: readonly string[];
+    }) =>
+      `  ✓ removed the hook commands init wrote into ${here(h.path)}: ${h.names.join(", ")}`,
+    none: () => `  ✓ no hook commands of init's to remove`,
+    other: (reason: string) => `  ⚠ hook commands not checked — ${reason}`,
+  };
+  [
+    ``,
+    `skills and hooks (the plugin carries them now)`,
+    skills.ok
+      ? `  ✓ ${skills.removed.length === 0 ? "no skill links of init's to remove" : `removed the skill links init made: ${skills.removed.join(", ")}`}`
+      : `  ⚠ skill links not checked — ${skills.error}`,
+    hooks.status === "removed"
+      ? hookLine.removed(hooks)
+      : hooks.status === "none"
+        ? hookLine.none()
+        : hookLine.other(hooks.reason),
+  ].forEach((line) => {
+    log(line);
+  });
+  return "done";
 }
 
 /** The hooks section of init's report. Every default names the flag that changes it. */
@@ -626,6 +725,12 @@ export interface InitOptions {
    * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.
    */
   tex?: { readonly installed: () => boolean; readonly install?: () => number };
+  /** Claude Code, for the plugin offer. Passed in by the CLI; without it nothing is offered. */
+  claude?: ClaudeCode;
+  /** `--plugin` or `--no-plugin`. */
+  pluginFlag?: PluginFlag;
+  /** Removes the skill links init made; injected only so a test can stand in for the package. */
+  unlink?: (root: string) => ReturnType<typeof unlinkSkills>;
 }
 
 /** Reads one line from a real terminal, for `paperlint new` and the build; init asks through `Prompts`. */
@@ -732,6 +837,70 @@ function papersLines(decl: DeclarationResult, why: string): string[] {
   ];
 }
 
+/** The name of the first paper: `--paper`, else asked of a human when there is none yet. */
+async function wantedPaper(
+  hasPaper: boolean,
+  {
+    paper,
+    asking: { prompts, interactive },
+    createPaper,
+  }: Readonly<FirstPaperDeps>,
+): Promise<Answer<string | null>> {
+  if (paper !== null || hasPaper || !interactive || !prompts || !createPaper)
+    return { kind: "answer", value: paper };
+  const answer = await askOrNull(() =>
+    prompts.text({
+      message: "create a first paper? its name (an empty line skips):",
+      placeholder: "skip",
+    }),
+  );
+  if (cancelled(answer)) return { kind: "cancel" };
+  return { kind: "answer", value: valueOr(answer, "").trim() || null };
+}
+
+interface FirstPaperDeps {
+  readonly papersDir: string;
+  readonly paper: string | null;
+  readonly asking: {
+    readonly prompts?: Prompts | undefined;
+    readonly interactive: boolean;
+    readonly why: string;
+  };
+  readonly createPaper?:
+    ((papersRoot: string, name: string) => Promise<number>) | undefined;
+  readonly venues: readonly NamedVenue[];
+  readonly log: (line: string) => void;
+}
+
+/** Step 6, a first paper: the exit code it owes (0 when none was asked for), or a cancel. */
+async function firstPaper(
+  papersAbs: string,
+  deps: Readonly<FirstPaperDeps>,
+): Promise<number | "cancelled"> {
+  const { papersDir, asking, createPaper, venues, log } = deps;
+  const hasPaper = papersIn(papersAbs).length > 0;
+  const asked = await wantedPaper(hasPaper, deps);
+  if (asked.kind === "cancel") return "cancelled";
+  const wanted = asked.value;
+  if (wanted === null || !createPaper) {
+    log(
+      hasPaper
+        ? `  ✓ ${papersDir} already holds a paper`
+        : `  · none yet${asking.interactive ? "" : ` — ${asking.why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
+    );
+    return 0;
+  }
+  const problem = nameProblem(wanted, venues);
+  if (problem) {
+    log(`  ✗ no paper created — ${problem}`);
+    return 2;
+  }
+  const code = await createPaper(papersAbs, wanted);
+  if (code !== 0)
+    log(`  ⚠ the new paper's lint exited ${String(code)} — see above`);
+  return code;
+}
+
 /** A question was cancelled: say so, and stop. */
 const stop = (log: typeof console.log): number => (
   log(CANCELLED_LINE),
@@ -758,6 +927,7 @@ export async function init(
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
+    unlink = (r: string) => unlinkSkills(r),
   } = opts;
   // An injected `interactive` is a test standing in for a terminal; its reason is the classic one.
   const { interactive, why } =
@@ -820,23 +990,28 @@ export async function init(
     return 2;
   }
 
-  // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
-  for (const line of reportSkillLinks(link(root), here)) log(line);
-
-  // ── 4. the hooks, wired where Claude Code reads them ───────────────────────────────────
-  log(``);
-  log(
-    `hooks (Claude Code runs them from ${SETTINGS_PATH} — committed, shared with every clone)`,
-  );
-  const hooked = await offerHooks(root, { hooks, interactive, prompts, merge });
-  for (const line of reportHooks(hooked, {
-    here,
-    how: interactive
-      ? `you were asked; \`--no-hooks\` skips this next time`
-      : `default taken: YES — ${why}, so nothing was asked. \`--no-hooks\` skips this`,
-  }))
+  // ── 3. the Claude Code plugin, which carries the skills and the hooks ──────────────────
+  const plugin = await offerPlugin(absolutePath(root), opts.claude, {
+    flag: opts.pluginFlag ?? null,
+    interactive,
+    why,
+    prompts,
+  });
+  if (plugin.kind === "cancelled") return stop(log);
+  reportPlugin(plugin).forEach((line) => {
     log(line);
-  if (hooked.status === "cancelled") return CANCELLED_CODE;
+  });
+
+  // ── 4. without the plugin: the skills linked, the hooks wired; with it, init's old ones gone ─
+  const wired = pluginOn(plugin)
+    ? await retireOld(root, { unlink, merge, here, log })
+    : await linkAndWire(root, {
+        link,
+        asking: { hooks, interactive, prompts, merge, why },
+        here,
+        log,
+      });
+  if (wired === "cancelled") return CANCELLED_CODE;
 
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
@@ -848,40 +1023,17 @@ export async function init(
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);
   log(`first paper`);
-  const papersAbs = resolve(root, papersDir);
-  const hasPaper = papersIn(papersAbs).length > 0;
-  let wanted: string | null = paper;
   // A paper that was asked for and not delivered decides the exit code (below): the doctor's
   // code can be 0, and automation would read an unfulfilled `--paper` as done.
-  let paperCode = 0;
-  if (wanted === null && !hasPaper && interactive && prompts && createPaper) {
-    const answer = await askOrNull(() =>
-      prompts.text({
-        message: "create a first paper? its name (an empty line skips):",
-        placeholder: "skip",
-      }),
-    );
-    if (cancelled(answer)) return stop(log);
-    const name = valueOr(answer, "").trim();
-    wanted = name ? name : null;
-  }
-  if (wanted !== null && createPaper) {
-    const problem = nameProblem(wanted, venues);
-    if (problem) {
-      log(`  ✗ no paper created — ${problem}`);
-      paperCode = 2;
-    } else {
-      const code = await createPaper(papersAbs, wanted);
-      if (code !== 0) {
-        log(`  ⚠ the new paper's lint exited ${String(code)} — see above`);
-        paperCode = code;
-      }
-    }
-  } else if (hasPaper) log(`  ✓ ${papersDir} already holds a paper`);
-  else
-    log(
-      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
-    );
+  const paperCode = await firstPaper(resolve(root, papersDir), {
+    papersDir,
+    paper,
+    asking: { prompts, interactive, why },
+    createPaper,
+    venues,
+    log,
+  });
+  if (paperCode === "cancelled") return stop(log);
 
   // ── 7. TeX Live — offered to a human with its cost, never installed unasked ─────────────
   log(``);
