@@ -72,10 +72,17 @@
   "deadlines": [
     {
       "what": "submission",
-      "at": "2026-11-14T11:59:59Z",
+      "at": "2026-11-15T11:59:59Z",
       "source": "portal",
       "url": "https://icse2027-agentverify.hotcrp.com/deadlines",
-      "read": "2026-10-26",
+      "read": "2026-11-21",
+    },
+    {
+      "what": "resubmission",
+      "at": "2026-11-16T11:59:59Z",
+      "source": "portal",
+      "url": "https://icse2027-agentverify.hotcrp.com/deadlines",
+      "read": "2026-11-21",
     },
     {
       "what": "notification",
