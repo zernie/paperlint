@@ -22,6 +22,8 @@ import {
   STEPS,
   files,
   DEFAULT_TEX,
+  AUTHORS,
+  WANT,
 } from "../test/submission-fixtures.ts";
 import { frozenText } from "../test/frozen-presets.ts";
 
@@ -220,22 +222,79 @@ test("show, in the flat form: the deadlines in force are the preset's readings a
 
 // ── new ───────────────────────────────────────────────────────────────────────────────
 
-test("🔴 show: a portal title that is not the paper's \\title is flagged, with what sends it", async () => {
-  const fs = files({ extra: { [`${PAPER}/paper.tex`]: DEFAULT_TEX } });
-  const r = await run({}, { files: fs });
+/** The made-up paper with its source and its authors, against `view` on the portal. */
+const against = (view: Partial<SubmissionView>, paper: object = {}) =>
+  run(
+    {},
+    {
+      files: files({
+        paper: {
+          extends: "../../venue.jsonc",
+          submission: { id: 7 },
+          authors: AUTHORS,
+          ...paper,
+        },
+        extra: { [`${PAPER}/paper.tex`]: DEFAULT_TEX },
+      }),
+      portal: fakePortal({ show: ok({ ...VIEW, ...view }) }),
+    },
+  );
+
+test("🔴 show: a portal title, abstract or authors that are not the paper's are flagged, with what changes each", async () => {
+  const r = await against({
+    authors: [
+      {
+        name: "A. Author",
+        email: "author@example.org",
+        affiliation: "Example University",
+      },
+    ],
+  });
   expect(r.code).toBe(0);
-  expect(r.out.slice(2, 4)).toStrictEqual([
+  expect(r.out.slice(2, 9)).toStrictEqual([
     "title         A Fake Title",
     "paper title   Agents That Lie — NOT the portal's; `paperlint submission update` sends it",
+    "paper type    Regular",
+    "topics        A; B",
+    "abstract      4 words",
+    "paper abstract 17 words — NOT the portal's; `paperlint submission update` sends it",
+    "paper authors Ada Lovelace <ada@example.org>, Analytical; Bob Bobson <bob@example.org> — NOT the portal's (A. Author <author@example.org>, Example University); `paperlint submission update` does not change the authors: change them on the site",
   ]);
 });
 
-test("show: a portal title that is the paper's \\title adds no line", async () => {
-  const fs = files({ extra: { [`${PAPER}/paper.tex`]: DEFAULT_TEX } });
-  const same = fakePortal({ show: ok({ ...VIEW, title: "Agents That Lie" }) });
-  const r = await run({}, { files: fs, portal: same });
-  expect(r.out.slice(2, 4)).toStrictEqual([
+test("show: what matches the paper adds no line — spacing, the case of an email, an affiliation left out on both", async () => {
+  const r = await against({
+    title: "Agents That Lie",
+    abstract: ` ${WANT.abstract}`,
+    authors: [
+      {
+        name: "Ada  Lovelace",
+        email: "ADA@example.org",
+        affiliation: "Analytical",
+      },
+      { name: "Bob Bobson", email: "bob@example.org", affiliation: null },
+    ],
+  });
+  expect(r.out.slice(2, 7)).toStrictEqual([
     "title         Agents That Lie",
     "paper type    Regular",
+    "topics        A; B",
+    "abstract      17 words",
+    `portal PDF    sha2-${HEX}, ${String(PDF.length)} bytes, uploaded 1970-01-01T00:00:00.000Z`,
   ]);
+});
+
+test("show: authors compared only when both sides name them, and an author missing on one side is a difference", async () => {
+  const same = { title: "Agents That Lie", abstract: WANT.abstract };
+  const quiet = [
+    await against({ ...same, authors: null }),
+    await against({ ...same, authors: WANT.authors }, { authors: undefined }),
+  ];
+  expect(
+    quiet.map((r) => r.out.some((l) => l.startsWith("paper authors"))),
+  ).toStrictEqual([false, false]);
+  const fewer = await against({ ...same, authors: WANT.authors.slice(0, 1) });
+  expect(fewer.out[6]).toBe(
+    "paper authors Ada Lovelace <ada@example.org>, Analytical; Bob Bobson <bob@example.org> — NOT the portal's (Ada Lovelace <ada@example.org>, Analytical); `paperlint submission update` does not change the authors: change them on the site",
+  );
 });

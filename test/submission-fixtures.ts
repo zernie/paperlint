@@ -107,6 +107,7 @@ export const VIEW: SubmissionView = {
   paperType: "Regular",
   topics: ["A", "B"],
   abstract: "one two  three\nfour",
+  authors: null,
   pdf: {
     sha256: HEX,
     hash: `sha2-${HEX}`,

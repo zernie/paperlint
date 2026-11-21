@@ -119,15 +119,25 @@ then `match`: `yes` means the portal holds exactly the PDF you built (compared b
 deadlines in force for the current attempt, each with when and where it was read
 ([Deadlines](configuration.md#deadlines)). Exit 0 whenever the portal answered.
 
-When the portal's title is not the paper's own (read as `new` reads it), a `paper title` line under
-it says so; `update` sends the paper's.
+It also compares what the portal holds with the paper, and adds a line only where they differ:
+
+- `paper title`, `paper abstract` — the paper's own (read as `new` reads them) is not the portal's;
+  `update` sends it;
+- `paper authors` — `"authors"` in `paperlint.json` is not what the portal records (an author's
+  email in any case, name, affiliation, and their order). `update` does not change the authors;
+  change them on the site.
+
+Spacing is not a difference. What paperlint cannot read, or a side that names no authors, is not
+compared.
 
 ## `update`
 
-Sends the PDF, the paper's `"fields"`, the paper's title when the portal holds another, and, when
-asked, a new abstract (`--abstract <file>`) and "submitted" (`--submit`). The `title` line says
-which: `sends «…» — the portal has «…»`, `unchanged`, or `not checked` with the reason when paperlint
-cannot read the title, and then it sends none. Titles that differ only in spacing are the same.
+Sends the PDF, the paper's `"fields"`, the paper's title and abstract each when the portal holds
+another, and "submitted" when asked (`--submit`). `--abstract <file>` sends that file's text instead
+of the paper's abstract, whatever the portal holds. One `title` and one `abstract` line say what
+happens to each: `sends … — the portal has …`, `unchanged`, or `not checked` with the reason when
+paperlint cannot read it, and then it sends none. Texts that differ only in spacing are the same. The
+portal is read once for both, before the change is sent; a failed read stops the update.
 Without `--save` it is a dry run. It prints the portal's verdict and its messages; exit 1 when the
 portal would not take the change. Before sending, it asks you to open that exact PDF and check it
 against the venue's call for papers.
@@ -228,6 +238,6 @@ every client.
 
 ## What it does not do
 
-- It does not set a field the venue preset does not record, change the authors after `new`, or
-  upload supplementary files.
+- It does not set a field the venue preset does not record, change the authors after `new` (`show`
+  says when they differ), or upload supplementary files.
 - It does not run the rest of `paperlint lint`: only the venue rules, on the PDF.

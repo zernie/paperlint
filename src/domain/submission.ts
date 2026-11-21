@@ -86,6 +86,8 @@ export interface SubmissionView {
   readonly paperType: string | null;
   readonly topics: readonly string[];
   readonly abstract: string | null;
+  /** The authors the portal records, in its order; null when it does not say. */
+  readonly authors: readonly Author[] | null;
   /** The PDF the portal holds; null when none is uploaded. */
   readonly pdf: PortalDocument | null;
   /** Unix seconds; null when not submitted or not said. */

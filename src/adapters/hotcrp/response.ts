@@ -12,6 +12,7 @@ import { z } from "zod";
 import { err, ok, type Result } from "../../domain/result.ts";
 import { parseSha256, type Sha256 } from "../../domain/sha256.ts";
 import type {
+  Author,
   CreateOutcome,
   PortalDocument,
   PortalFailure,
@@ -42,6 +43,16 @@ const Paper = z.object({
   abstract: z.string().optional(),
   paper_type: z.unknown().optional(),
   topics: z.array(z.string()).optional(),
+  authors: z
+    .array(
+      z.object({
+        email: z.string().optional(),
+        given_name: z.string().optional(),
+        family_name: z.string().optional(),
+        affiliation: z.string().optional(),
+      }),
+    )
+    .optional(),
   submission: Document.nullable().optional(),
   submitted_at: z.number().optional(),
   modified_at: z.number().optional(),
@@ -115,6 +126,15 @@ const typeText = (v: unknown): string | null =>
       ? v
       : JSON.stringify(v);
 
+/** An author as HotCRP sends one — the name in two parts — in the paper's terms. */
+const authorOf = (
+  a: Readonly<NonNullable<z.infer<typeof Paper>["authors"]>[number]>,
+): Author => ({
+  name: `${a.given_name ?? ""} ${a.family_name ?? ""}`.trim(),
+  email: a.email ?? "",
+  affiliation: a.affiliation ?? null,
+});
+
 function viewOf(b: Readonly<z.infer<typeof ShowBody>>): SubmissionView {
   const p = b.paper;
   return {
@@ -124,6 +144,7 @@ function viewOf(b: Readonly<z.infer<typeof ShowBody>>): SubmissionView {
     paperType: typeText(p.paper_type),
     topics: p.topics ?? [],
     abstract: p.abstract ?? null,
+    authors: p.authors === undefined ? null : p.authors.map(authorOf),
     pdf: documentOf(p.submission),
     submittedAt: p.submitted_at ?? null,
     modifiedAt: p.modified_at ?? null,
