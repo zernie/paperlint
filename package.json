@@ -5,8 +5,8 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -b",
-    "prepare": "tsc -b",
+    "build": "tsc -b && node scripts/bundle-skills.ts",
+    "prepare": "tsc -b && node scripts/bundle-skills.ts",
     "test": "node scripts/test.ts",
     "test:e2e": "vitest run --project 'e2e-*'",
     "test:e2e:install": "vitest run --project e2e-install",

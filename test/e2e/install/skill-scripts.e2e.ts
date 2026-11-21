@@ -95,7 +95,9 @@ function shippedCommands(pkg: string): readonly Command[] {
  */
 function sourceOf(inPackage: string): string {
   const stem = join(ROOT, inPackage.replace(/\.m?js$/, ""));
-  return [`${stem}.ts`, `${stem}.mjs`].find(existsSync) ?? join(ROOT, inPackage);
+  return (
+    [`${stem}.ts`, `${stem}.mjs`].find(existsSync) ?? join(ROOT, inPackage)
+  );
 }
 
 /**
@@ -127,7 +129,9 @@ const firstLine = (r: Run): string => {
 
 // realpathSync: on macOS `/var` is a link to `/private/var`, and a refusal that prints the working
 // directory prints the resolved one.
-const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-skill-scripts-")));
+const work = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-skill-scripts-")),
+);
 const copy = join(work, "copy");
 const empty = join(work, "empty");
 

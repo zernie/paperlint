@@ -41,9 +41,7 @@ function delta(
   return {
     added: keys(after).filter((k) => !(k in before)),
     removed: keys(before).filter((k) => !(k in after)),
-    changed: keys(after).filter(
-      (k) => k in before && before[k] !== after[k],
-    ),
+    changed: keys(after).filter((k) => k in before && before[k] !== after[k]),
   };
 }
 
@@ -84,7 +82,7 @@ const whereOf = (root: string, entry: string): Record<string, string> => ({
   filename: join(root, "lib", "where.mjs"),
 });
 
-describe("bundleSkills", () => {
+describe("bundleSkills writes", () => {
   it("writes every entry's bundle beside its source and the shared chunks, and nothing else", async () => {
     const root = fixture();
     const before = snapshot(root);
@@ -99,21 +97,35 @@ describe("bundleSkills", () => {
     expect({
       entries: written.filter((p) => !p.startsWith("out/chunks/")),
       chunks: written.filter((p) => p.startsWith("out/chunks/")).length > 0,
-    }).toEqual({ entries: ["app/one/main.js", "app/two/main.js"], chunks: true });
+    }).toEqual({
+      entries: ["app/one/main.js", "app/two/main.js"],
+      chunks: true,
+    });
   });
 
   it("runs only the entry's own main, and each module keeps its own location", async () => {
     const root = fixture();
     await bundleSkills(plan(root));
-    const run = (entry: string) => runNode(join(root, entry), [], { cwd: root });
+    const run = (entry: string) =>
+      runNode(join(root, entry), [], { cwd: root });
     // Guards: the guarded module's main did not run, and `where` names its own source, not the bundle.
     expect([run("app/one/main.js"), run("app/two/main.js")]).toEqual([
-      { status: 0, stdout: `${JSON.stringify(whereOf(root, "one"))}\n`, stderr: "" },
-      { status: 0, stdout: `${JSON.stringify(whereOf(root, "two"))}\n`, stderr: "" },
+      {
+        status: 0,
+        stdout: `${JSON.stringify(whereOf(root, "one"))}\n`,
+        stderr: "",
+      },
+      {
+        status: 0,
+        stdout: `${JSON.stringify(whereOf(root, "two"))}\n`,
+        stderr: "",
+      },
     ]);
   });
+});
 
-  it("refuses, writing nothing, when an output is a tracked file", async () => {
+describe("bundleSkills refuses", () => {
+  it("writing nothing, when an output is a tracked file", async () => {
     const root = fixture();
     const before = snapshot(root);
     const tracked = (_: string, paths: readonly string[]): readonly string[] =>
@@ -125,20 +137,30 @@ describe("bundleSkills", () => {
     expect(snapshot(root)).toEqual(before);
   });
 
-  it("refuses an entry that another bundled module imports", async () => {
+  it("an entry that another bundled module imports", async () => {
     const root = fixture();
     // Guards: an entry whose code would move into a chunk is named, not bundled.
     await expect(
-      bundleSkills(plan(root, { entries: ["app/one/main.ts", "lib/where.mjs"] })),
+      bundleSkills(
+        plan(root, { entries: ["app/one/main.ts", "lib/where.mjs"] }),
+      ),
     ).rejects.toThrow(
       "bundle-skills: refused\n  lib/where.mjs is an entry and is imported by another bundled module: its code would leave its own file",
     );
   });
 
   it.each([
-    ["import.meta.resolve", `export const where = { r: import.meta.resolve("./x.mjs") };\n`, "import.meta.resolve"],
-    ["a bare import.meta", `export const where = { m: import.meta };\n`, "import.meta"],
-  ])("refuses %s in a module that is not the entry", async (_, source, named) => {
+    [
+      "import.meta.resolve",
+      `export const where = { r: import.meta.resolve("./x.mjs") };\n`,
+      "import.meta.resolve",
+    ],
+    [
+      "a bare import.meta",
+      `export const where = { m: import.meta };\n`,
+      "import.meta",
+    ],
+  ])("%s in a module that is not the entry", async (_, source, named) => {
     const root = fixture({ "lib/where.mjs": source });
     // Guards: a use of import.meta the step cannot keep correct is refused with the module's path.
     await expect(bundleSkills(plan(root))).rejects.toThrow(
@@ -167,14 +189,20 @@ describe("npm run build's bundle step, on this checkout", () => {
       });
     const before = status();
     const r = runNode(join(ROOT, "scripts", "bundle-skills.ts"));
-    const listed = r.stdout.split("\n").slice(1).map((l) => l.trim()).filter(Boolean);
+    const listed = r.stdout
+      .split("\n")
+      .slice(1)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const bundles = SKILL_ENTRIES.map((e) => e.replace(/\.(ts|mjs)$/, ".js"));
     // Guards: the step succeeded and every entry's bundle is among what it wrote.
     expect({
       status: r.status,
       stderr: r.stderr,
       bundles: bundles.filter((b) => listed.includes(b)),
-      others: listed.filter((p) => !bundles.includes(p) && !p.startsWith(`${CHUNK_DIR}/`)),
+      others: listed.filter(
+        (p) => !bundles.includes(p) && !p.startsWith(`${CHUNK_DIR}/`),
+      ),
     }).toEqual({ status: 0, stderr: "", bundles, others: [] });
     // Guards: no tracked file changed.
     expect(status()).toBe(before);

@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:25a05cd3468a3a26 compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:660c7457aab73a4e compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -109,10 +109,10 @@ paper.
 
 **How to run.**
 ```
-node scripts/verify-cites.mjs cites.json      # JSON array of {id,doi?,arxiv?,title?,year?,cve?,commit?}
-node scripts/verify-cites.mjs refs.bib        # best-effort .bib extraction
-cat cites.json | node scripts/verify-cites.mjs -
-node scripts/verify-cites.mjs cites.json --offline   # no network (everything degrades to unresolvable)
+node ${CLAUDE_SKILL_DIR}/scripts/verify-cites.js cites.json      # JSON array of {id,doi?,arxiv?,title?,year?,cve?,commit?}
+node ${CLAUDE_SKILL_DIR}/scripts/verify-cites.js refs.bib        # best-effort .bib extraction
+cat cites.json | node ${CLAUDE_SKILL_DIR}/scripts/verify-cites.js -
+node ${CLAUDE_SKILL_DIR}/scripts/verify-cites.js cites.json --offline   # no network (everything degrades to unresolvable)
 ```
 It prints per-cite `{id, verdict, reason, matched_db, matched_title?, flags?}` + a summary, and **exits 1 iff
 any `false` (fabrication)** — `unresolvable` alone is advisory and does NOT fail the gate, matching the
@@ -146,8 +146,8 @@ The three defects that found it: `docs/design/verify-citations-history.md` in th
 
 **How to run.**
 ```
-node scripts/bib-authors.mjs <paper-dir>          # the databases bibtex opened in the last build; or a .bib, or a .tex
-node scripts/bib-authors.mjs <paper-dir> --json
+node ${CLAUDE_SKILL_DIR}/scripts/bib-authors.js <paper-dir>          # the databases bibtex opened in the last build; or a .bib, or a .tex
+node ${CLAUDE_SKILL_DIR}/scripts/bib-authors.js <paper-dir> --json
 ```
 Exits **1** on any author-set or author-order disagreement, **0** when clean, **2** on usage/IO error. A paper
 directory or a `.tex` is read through the build's record (`_build/sources.json`): a paper that was never built,
@@ -200,8 +200,8 @@ Run both; neither replaces the other.
 
 ```
 # 1. measure: parse the bibliography bibtex opened (build the paper first), ask CrossRef/arXiv, write _build/refs.facts.json
-node .claude/skills/paper-pipeline/scripts/extract-ref-facts.mjs <paper-dir>
-node .claude/skills/paper-pipeline/scripts/extract-ref-facts.mjs <paper-dir> --offline  # cached responses only
+node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/extract-ref-facts.js <paper-dir>
+node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/extract-ref-facts.js <paper-dir> --offline  # cached responses only
 
 # 2. judge: rules over those facts — severity from the config, positions, disable-with-reason
 npx eslint --no-config-lookup --config eslint.config.mjs "<paper-dir>/_build/refs.facts.json"
