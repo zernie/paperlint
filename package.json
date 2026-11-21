@@ -5,8 +5,10 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -b",
-    "prepare": "tsc -b",
+    "build": "tsc -b && node scripts/bundle-skills.ts",
+    "prepare": "tsc -b && node scripts/bundle-skills.ts",
+    "prepack": "node scripts/plugin-version.ts stamp",
+    "postpack": "node scripts/plugin-version.ts restore",
     "test": "node scripts/test.ts",
     "test:e2e": "vitest run --project 'e2e-*'",
     "test:e2e:install": "vitest run --project e2e-install",
@@ -23,6 +25,7 @@
     "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site && npm run test:browser --prefix site"
   },
   "dependencies": {
+    "@clack/prompts": "1.9.0",
     "@eslint/markdown": "^8.0.3",
     "@eslint/plugin-kit": "^0.7.2",
     "@retorquere/bibtex-parser": "^10.0.1",
@@ -56,6 +59,7 @@
     "c8": "^12.0.0",
     "conventional-changelog-conventionalcommits": "9.3.1",
     "dependency-graph": "^1.0.0",
+    "esbuild": "0.28.2",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-functional": "^10.0.1",
@@ -112,6 +116,7 @@
     "./*": "./*"
   },
   "files": [
+    ".claude-plugin",
     ".github",
     "CLAUDE.md",
     "CONTRIBUTING.md",

@@ -19,7 +19,9 @@ _build/
 
 dist/
 # A skill's TypeScript scripts compiled beside themselves (tsconfig.skills.json): a consumer runs
-# them from node_modules, where Node does not strip types. Built by `npm run build` / `prepare`.
+# them from node_modules, where Node does not strip types. The scripts a SKILL.md runs are then
+# replaced by bundles with their dependencies inside (scripts/bundle-skills.ts; shared code in
+# dist/skill-chunks/), so they run from a plugin copy with no node_modules. Built by `npm run build` / `prepare`.
 skills/*/scripts/*.js
 # c8's report and raw V8 data (`npm run coverage`).
 coverage/

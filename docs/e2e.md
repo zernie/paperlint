@@ -72,6 +72,16 @@ that works under npm can be dead under pnpm with no error anywhere. The same run
 binary **directly** rather than through `node <path>`: under npm `.bin` holds a symlink, under
 pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead of the package.
 
+## `test/e2e/install/skill-scripts.e2e.ts` — the skill scripts, with no `node_modules`
+
+A Claude Code plugin copy is the tarball unpacked without its dependencies. This run packs the
+package, unpacks it into an empty directory, reads every `node <path>` command from the shipped
+`SKILL.md` files and starts each with no arguments and empty stdin. Its whole result (exit code,
+stdout, stderr) must equal the same script's source run in this checkout, where its dependencies
+resolve, and each command must be spelled `node ${CLAUDE_SKILL_DIR}/…`. Before the bundle step
+(`scripts/bundle-skills.ts`, part of `npm run build`) all nine died with `ERR_MODULE_NOT_FOUND`.
+It proves each script reaches its own argument handling; it does not run a real paper through them.
+
 ## `test/e2e/tex/build.e2e.ts` — a real `pdflatex`
 
 It copies `fixtures/build-e2e/` — nine papers, none with a build script paperlint would run — into

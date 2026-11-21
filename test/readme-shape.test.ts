@@ -15,7 +15,7 @@ const MAX_LINES = 300;
 const MAX_SECTION_LINES = 60;
 /** The install command, by line: the first screen a reader scrolls, not a page further down. */
 const MAX_INSTALL_LINE = 90;
-const INSTALL = "npm i -D paperlint";
+const INSTALL = "npx paperlint init";
 
 const README = readFileSync(
   join(import.meta.dirname, "..", "README.md"),

@@ -6,7 +6,13 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  symlinkSync,
+} from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test, vi } from "vitest";
@@ -32,8 +38,15 @@ import {
   toolchainTex,
 } from "./cli.ts";
 import { texInputsDir } from "./package-dirs.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 
 const root = useTempDir("cli-test-");
+
+const NO_CLAUDE: ClaudeCode = {
+  present: () => false,
+  plugin: () => ({ enabled: false, version: null }),
+  enable: () => assert.fail("no test here turns the plugin on for real"),
+};
 
 /**
  * `run(argv)` from `cwd`, the output as one string per stream. Its clock stands still, so `lint`'s
@@ -43,7 +56,10 @@ const root = useTempDir("cli-test-");
 async function cli(
   argv: string[],
   cwd: string,
-  deps: Pick<NonNullable<Parameters<typeof run>[1]>, "loadTexLanguage"> = {},
+  deps: Pick<
+    NonNullable<Parameters<typeof run>[1]>,
+    "loadTexLanguage" | "claude"
+  > = {},
 ) {
   const out: string[] = [];
   const err: string[] = [];
@@ -52,6 +68,13 @@ async function cli(
     err: (...a: unknown[]) => err.push(a.join(" ")),
     cwd,
     now: () => 0,
+    // `init` never spawns a package manager here: adding paperlint is `src/self-install.test.ts`'s.
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: true }),
+    },
+    // …nor finds Claude Code, unless a test hands one: the offer itself is `src/plugin-offer.test.ts`'s.
+    claude: NO_CLAUDE,
     ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
@@ -478,6 +501,24 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   );
 });
 
+test("doctor reads the plugin where Claude Code is, and says nothing of it where it is not", async () => {
+  const dir = join(root, "doctor-plugin");
+  writeTree(dir, { "paperlint.json": "{}" });
+  const read: string[] = [];
+  const claude: ClaudeCode = {
+    ...NO_CLAUDE,
+    present: () => true,
+    plugin: (at) => (read.push(at), { enabled: true, version: null }),
+  };
+  const head = "Claude Code plugin (carries the skills and the hooks)";
+  const on = (await cli(["doctor"], dir, { claude })).out.split("\n");
+  const absent = (await cli(["doctor"], dir)).out.split("\n");
+  assert.deepEqual(
+    [on.slice(on.indexOf(head), on.indexOf(head) + 2), read, absent.includes(head)],
+    [[head, "  ✓ on for this project"], [dir], false],
+  );
+});
+
 test("doctor reads a broken config as 'the CLI would lint nothing' instead of stopping", async () => {
   const dir = join(root, "doctor-broken");
   writeTree(dir, { "paperlint.json": "{ not json" });
@@ -737,6 +778,103 @@ test("init with no path sets up the current directory, and its first paper is pa
   for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
     assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
   assert.equal(made.includes("main.tex"), false);
+});
+
+test("init --plugin turns the plugin on without a terminal; --no-plugin never asks; neither, one line", async () => {
+  const on: string[] = [];
+  const claude: ClaudeCode = {
+    present: () => true,
+    plugin: () => ({ enabled: false, version: null }),
+    enable: (at) => (on.push(at), { ok: true, ran: ["claude x"] }),
+  };
+  const run = async (flag: string[]) => {
+    const dir = writeTree(join(root, `offer${flag.join("")}`), {
+      "package.json": "{}",
+    });
+    const out = (await cli(["init", "--yes", ...flag], dir, { claude })).out;
+    return out
+      .split("\n")
+      .filter(
+        (l) =>
+          l.startsWith("Claude Code plugin") ||
+          l.startsWith("  · --no-plugin") ||
+          l.startsWith("skills and hooks (") ||
+          l === "  ✓ ran claude x",
+      );
+  };
+  assert.deepEqual(
+    [
+      await run(["--plugin"]),
+      await run(["--no-plugin"]),
+      await run([]),
+      on.length,
+    ],
+    [
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  ✓ ran claude x",
+        "skills and hooks (the plugin carries them now)",
+      ],
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  · --no-plugin — nothing asked, nothing turned on",
+      ],
+      [
+        "Claude Code plugin: not turned on — --yes was given, so nothing was asked. To turn it on: npx paperlint init --plugin",
+      ],
+      1,
+    ],
+  );
+});
+
+test("init's step 0 reads the project's own copy: this checkout is present, another version is said and kept", async () => {
+  const pkg = (dir: string) => join(dir, "node_modules", "paperlint");
+  const own = writeTree(join(root, "self-own"), { "package.json": "{}" });
+  mkdirSync(join(own, "node_modules"));
+  symlinkSync(dirname(import.meta.dirname), pkg(own));
+  const older = writeTree(join(root, "self-older"), {
+    "package.json": "{}",
+    "node_modules/paperlint/package.json":
+      '{"name":"paperlint","version":"0.0.1"}',
+  });
+  const unversioned = writeTree(join(root, "self-unversioned"), {
+    "package.json": "{}",
+    "node_modules/paperlint/package.json": '{"name":"paperlint"}',
+  });
+  const head = async (dir: string) =>
+    (await cli(["init", "--yes", "--no-hooks"], dir)).out
+      .split("\n")
+      .slice(0, 4);
+  assert.deepEqual(
+    [await head(own), await head(older), await head(unversioned)],
+    [
+      [
+        "",
+        "paperlint init — each decision below says HOW it was decided",
+        "",
+        "papers directory",
+      ],
+      [
+        "",
+        "paperlint in this project",
+        "  ⚠ paperlint 0.0.1 is installed in this project, and this command is 0.0.0-semantically-released: kept 0.0.1, nothing up- or downgraded",
+        "      to move the project to 0.0.0-semantically-released: npm paperlint@0.0.0-semantically-released",
+      ],
+      [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✓ added paperlint to devDependencies",
+      ],
+    ],
+  );
+  // What is added can be named instead: the install e2e adds the packed tarball.
+  vi.stubEnv("PAPERLINT_INSTALL_SPEC", "/tmp/p.tgz");
+  try {
+    assert.equal((await head(unversioned))[2], "  → npm /tmp/p.tgz");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 test("init and doctor with a declaration that names no directory: nothing to compare", async () => {

@@ -24,7 +24,14 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  readdirSync,
+  existsSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
+import { absolutePath } from "./domain/paths.ts";
 import { createRequire } from "node:module";
 import { stripVTControlCharacters } from "node:util";
 import { spawnSync } from "node:child_process";
@@ -155,6 +162,8 @@ import { doctor } from "./doctor.ts";
 import {
   askOnTerminal,
   askOrDefault,
+  CANCELLED_CODE,
+  CANCELLED_LINE,
   init,
   processInteractivity,
 } from "./init.ts";
@@ -233,7 +242,21 @@ import {
   recordTold,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
-import { linkSkills, unlinkedSkills, type LinkReport } from "./link-skills.ts";
+import {
+  linkSkills,
+  locatePackage,
+  unlinkedSkills,
+  type LinkReport,
+} from "./link-skills.ts";
+import { projectInstall } from "./adapters/package-manager/index.ts";
+import type { ProjectInstall } from "./ports/project-install.ts";
+import { claudeCode } from "./adapters/claude-code/index.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
+import {
+  selfInstallStep,
+  versionOf,
+  type SelfInstallDeps,
+} from "./self-install.ts";
 import {
   lintEditedHook,
   type LintResult,
@@ -360,6 +383,10 @@ init:
   --yes, -y           ask nothing, take every default. Without a terminal on stdin AND stdout,
                       or with CI set, nothing is asked either
   --no-hooks          do not wire the hooks (the default without a human is to wire them)
+  --plugin            turn on the Claude Code plugin (the skills and hooks) without asking, with
+                      or without a terminal. Without a human and without this flag, init turns
+                      nothing on and prints one line saying so
+  --no-plugin         never ask about the plugin, never turn it on
   --paper <name>      create this paper too (without a human, the only way init creates one)
 
 new:
@@ -1185,6 +1212,8 @@ export function parseArgs(argv: readonly string[]): Args {
     check: false,
     yes: false,
     noHooks: false,
+    plugin: false,
+    noPlugin: false,
     allowVenueName: false,
     paper: null,
     venue: null,
@@ -1270,6 +1299,8 @@ const SWITCHES: ReadonlyMap<
   | "check"
   | "yes"
   | "noHooks"
+  | "plugin"
+  | "noPlugin"
   | "allowVenueName"
   | "submit"
   | "save"
@@ -1282,6 +1313,8 @@ const SWITCHES: ReadonlyMap<
   ["--yes", "yes"],
   ["-y", "yes"],
   ["--no-hooks", "noHooks"],
+  ["--plugin", "plugin"],
+  ["--no-plugin", "noPlugin"],
   ["--allow-venue-name", "allowVenueName"],
   ["--submit", "submit"],
   ["--save", "save"],
@@ -1572,6 +1605,8 @@ interface HookOptions {
   readonly version?: string;
   /** What `paperlint doctor` reads to find unlinked skills; the disk by default. */
   readonly skillLinks?: (root: string) => LinkReport;
+  /** Whether the Claude Code plugin is on; the disk by default. */
+  readonly claude?: ClaudeCode;
 }
 
 const readSkillLinks = (root: string): LinkReport =>
@@ -1612,6 +1647,25 @@ const packageVersion = (): string =>
       ),
     ).version;
 
+/**
+ * What the project still owes of the hooks and skills — nothing once the Claude Code plugin is on: the
+ * plugin carries both, so a project without init's links and hook entries is complete.
+ */
+function owed(
+  root: string,
+  skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
+): {
+  readonly missing: readonly string[];
+  readonly byHand: boolean;
+  readonly skills: readonly string[];
+} {
+  if (claude.plugin(absolutePath(root)).enabled)
+    return { missing: [], byHand: false, skills: [] };
+  const { missing, byHand } = unwiredHooks(root);
+  return { missing, byHand, skills: unlinkedSkills(skillLinks(root)) };
+}
+
 interface Pending {
   readonly text: string;
   readonly root: string;
@@ -1625,8 +1679,11 @@ interface Pending {
 function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
-    const { missing, byHand } = unwiredHooks(root);
-    const skills = unlinkedSkills((io.skillLinks ?? readSkillLinks)(root));
+    const { missing, byHand, skills } = owed(
+      root,
+      io.skillLinks ?? readSkillLinks,
+      io.claude ?? claudeCode(),
+    );
     const version = io.version ?? packageVersion();
     return (missing.length === 0 && skills.length === 0) ||
       !notYetTold(nodeFiles, root, version)
@@ -1655,10 +1712,10 @@ function hooksLine(
   root: string,
   err: typeof console.error,
   skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
 ): void {
   try {
-    const { missing } = unwiredHooks(root);
-    const skills = unlinkedSkills(skillLinks(root));
+    const { missing, skills } = owed(root, skillLinks, claude);
     if (missing.length > 0 || skills.length > 0)
       err(lintLine(packageVersion(), missing, skills));
   } catch {
@@ -2381,7 +2438,15 @@ async function runInit(
     log,
     err,
     cwd,
-  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+    install,
+    claude,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    install: ProjectInstall;
+    claude: ClaudeCode;
+  },
 ): Promise<number> {
   // Deferred, not implemented: named and refused, rather than read as the directory argument.
   if (a.hooksMode !== null) {
@@ -2391,12 +2456,26 @@ async function runInit(
     );
     return 2;
   }
+  // Loaded here, not at the top: every hook runs through this file, and none of them asks anything.
+  const { clackPrompts } = await import("./adapters/clack/index.ts");
+  const prompts = clackPrompts();
+  // Step 0, before init: paperlint itself, in the project's devDependencies (`self-install.ts`).
+  const stop = await selfInstallStep(
+    absolutePath(resolve(cwd, a.paths[0] ?? ".")),
+    selfInstallDeps(install),
+    { prompts, interactive: processInteractivity(a.yes).interactive, log },
+    { code: CANCELLED_CODE, line: CANCELLED_LINE },
+  );
+  if (stop !== null) return stop;
   return await init(a.paths[0] ?? ".", {
     log,
     err,
     cwd,
+    prompts,
     yes: a.yes,
     hooks: !a.noHooks,
+    claude,
+    pluginFlag: a.plugin ? "plugin" : a.noPlugin ? "no-plugin" : null,
     paper: a.paper,
     createPaper: (papersRoot, name) =>
       createPaperAt(papersRoot, name, { log, err, cwd }),
@@ -2406,6 +2485,35 @@ async function runInit(
       cliPapers({ ...a, config: null }, root),
   });
 }
+
+/** This copy of paperlint: its real directory and its version. */
+const runningCopy = (): { readonly dir: string; readonly version: string } => ({
+  dir: realpathSync(fileURLToPath(new URL("..", import.meta.url))),
+  version: packageVersion(),
+});
+
+/**
+ * What `init` needs to add paperlint to a project. `PAPERLINT_INSTALL_SPEC` replaces what is added
+ * (a tarball, for the install e2e: an unreleased build's version is on no registry).
+ */
+const selfInstallDeps = (install: ProjectInstall): SelfInstallDeps => {
+  const running = runningCopy();
+  return {
+    running,
+    installed: (root) => {
+      const at = locatePackage(root);
+      if ("error" in at) return null;
+      const version = versionOf(
+        nodeFiles.readBytes(absolutePath(join(at.dir, "package.json"))),
+      );
+      return version === null ? null : { dir: at.dir, version };
+    },
+    files: nodeFiles,
+    install,
+    spec:
+      process.env["PAPERLINT_INSTALL_SPEC"] ?? `paperlint@${running.version}`,
+  };
+};
 
 /** The LaTeX language, loaded when a lint needs it: only `lint` and the `lint-edited` hook do. */
 const loadLatexLanguage = async (): Promise<unknown> =>
@@ -2421,10 +2529,16 @@ export async function run(
     checkReferences = onlineReferences,
     loadTexLanguage = loadLatexLanguage,
     skillLinks = readSkillLinks,
+    install = projectInstall,
+    claude = claudeCode(),
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /** How `init` adds paperlint to a project: the package manager by default; a test hands a fake. */
+    install?: ProjectInstall;
+    /** Claude Code as `init` and `doctor` see it: the disk and `claude` by default; a test hands a fake. */
+    claude?: ClaudeCode;
     /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
     now?: () => number;
     /**
@@ -2466,17 +2580,21 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init") return await runInit(a, { log, err, cwd });
+  if (a.cmd === "init") return await runInit(a, { log, err, cwd, install, claude });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
     const papers = cliPapers(a, cwd);
+    const projectDir = process.env["CLAUDE_PROJECT_DIR"] ?? cwd;
+    const at = absolutePath(resolve(cwd, projectDir));
     return doctor({
       log,
       cwd,
-      projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd,
+      projectDir,
       cliPapers: papers,
+      plugin: claude.present(at) ? claude.plugin(at) : null,
+      installed: packageVersion(),
     });
   }
   const simple = SIMPLE[a.cmd];
@@ -2594,7 +2712,7 @@ export async function run(
       .filter((f) => existsSync(f)),
     bodies,
   });
-  hooksLine(root, err, skillLinks);
+  hooksLine(root, err, skillLinks, claude);
   // On stderr, so `--json` leaves stdout a clean array.
   timingLines({
     files: results.length,

@@ -139,7 +139,7 @@ shrinks. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
 run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
 does not strip types there.
 
-`npm run build` is `tsc -b`: TypeScript's build mode over the project references in the root
+`npm run build` is `tsc -b`, then the skill bundles: TypeScript's build mode over the project references in the root
 `tsconfig.json`, which is a solution file and compiles nothing itself. The three projects share
 `tsconfig.base.json`: `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
 `dist/eslint-rules/`; `tsconfig.src.json` builds `src/` to `dist/*.js` and references the first,
@@ -147,7 +147,10 @@ whose declarations it reads; `tsconfig.skills.json` compiles a skill's scripts
 (`skills/*/scripts/*.ts`) to a `.js` BESIDE each, gitignored and shipped through `files` (their
 declarations go to `dist/skills/`): a skill names its script as `${CLAUDE_SKILL_DIR}/scripts/<name>.js`,
 and only a path inside the skill's own directory resolves the same through the consumer's
-`.claude/skills/<name>` link and in this checkout. A second `tsc -b` with nothing changed is a no-op;
+`.claude/skills/<name>` link and in this checkout. Then `scripts/bundle-skills.ts` replaces each
+script a `SKILL.md` runs with an esbuild bundle at the same `.js` path (a `.mjs` script gets a `.js`
+bundle beside it), its dependencies inside and shared code in `dist/skill-chunks/`, so it runs from a
+plugin copy with no `node_modules` (`test/e2e/install/skill-scripts.e2e.ts`). A second `tsc -b` with nothing changed is a no-op;
 it decides that from `dist/.tsbuildinfo/`, so an output deleted by hand is rebuilt only by
 `npx tsc -b --force` (or by deleting `dist/` with it). `tsconfig.test.json` is not part of the build:
 it type-checks every `.ts` without emitting. Everything else imports `lib/` and `eslint-rules/` through the package's subpath imports,
