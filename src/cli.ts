@@ -24,7 +24,14 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  readdirSync,
+  existsSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
+import { absolutePath } from "./domain/paths.ts";
 import { createRequire } from "node:module";
 import { stripVTControlCharacters } from "node:util";
 import { spawnSync } from "node:child_process";
@@ -155,6 +162,8 @@ import { doctor } from "./doctor.ts";
 import {
   askOnTerminal,
   askOrDefault,
+  CANCELLED_CODE,
+  CANCELLED_LINE,
   init,
   processInteractivity,
 } from "./init.ts";
@@ -233,7 +242,19 @@ import {
   recordTold,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
-import { linkSkills, unlinkedSkills, type LinkReport } from "./link-skills.ts";
+import {
+  linkSkills,
+  locatePackage,
+  unlinkedSkills,
+  type LinkReport,
+} from "./link-skills.ts";
+import { projectInstall } from "./adapters/package-manager/index.ts";
+import type { ProjectInstall } from "./ports/project-install.ts";
+import {
+  selfInstallStep,
+  versionOf,
+  type SelfInstallDeps,
+} from "./self-install.ts";
 import {
   lintEditedHook,
   type LintResult,
@@ -2381,7 +2402,13 @@ async function runInit(
     log,
     err,
     cwd,
-  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+    install,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    install: ProjectInstall;
+  },
 ): Promise<number> {
   // Deferred, not implemented: named and refused, rather than read as the directory argument.
   if (a.hooksMode !== null) {
@@ -2393,11 +2420,20 @@ async function runInit(
   }
   // Loaded here, not at the top: every hook runs through this file, and none of them asks anything.
   const { clackPrompts } = await import("./adapters/clack/index.ts");
+  const prompts = clackPrompts();
+  // Step 0, before init: paperlint itself, in the project's devDependencies (`self-install.ts`).
+  const stop = await selfInstallStep(
+    absolutePath(resolve(cwd, a.paths[0] ?? ".")),
+    selfInstallDeps(install),
+    { prompts, interactive: processInteractivity(a.yes).interactive, log },
+    { code: CANCELLED_CODE, line: CANCELLED_LINE },
+  );
+  if (stop !== null) return stop;
   return await init(a.paths[0] ?? ".", {
     log,
     err,
     cwd,
-    prompts: clackPrompts(),
+    prompts,
     yes: a.yes,
     hooks: !a.noHooks,
     paper: a.paper,
@@ -2409,6 +2445,35 @@ async function runInit(
       cliPapers({ ...a, config: null }, root),
   });
 }
+
+/** This copy of paperlint: its real directory and its version. */
+const runningCopy = (): { readonly dir: string; readonly version: string } => ({
+  dir: realpathSync(fileURLToPath(new URL("..", import.meta.url))),
+  version: packageVersion(),
+});
+
+/**
+ * What `init` needs to add paperlint to a project. `PAPERLINT_INSTALL_SPEC` replaces what is added
+ * (a tarball, for the install e2e: an unreleased build's version is on no registry).
+ */
+const selfInstallDeps = (install: ProjectInstall): SelfInstallDeps => {
+  const running = runningCopy();
+  return {
+    running,
+    installed: (root) => {
+      const at = locatePackage(root);
+      if ("error" in at) return null;
+      const version = versionOf(
+        nodeFiles.readBytes(absolutePath(join(at.dir, "package.json"))),
+      );
+      return version === null ? null : { dir: at.dir, version };
+    },
+    files: nodeFiles,
+    install,
+    spec:
+      process.env["PAPERLINT_INSTALL_SPEC"] ?? `paperlint@${running.version}`,
+  };
+};
 
 /** The LaTeX language, loaded when a lint needs it: only `lint` and the `lint-edited` hook do. */
 const loadLatexLanguage = async (): Promise<unknown> =>
@@ -2424,10 +2489,13 @@ export async function run(
     checkReferences = onlineReferences,
     loadTexLanguage = loadLatexLanguage,
     skillLinks = readSkillLinks,
+    install = projectInstall,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /** How `init` adds paperlint to a project: the package manager by default; a test hands a fake. */
+    install?: ProjectInstall;
     /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
     now?: () => number;
     /**
@@ -2469,7 +2537,7 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init") return await runInit(a, { log, err, cwd });
+  if (a.cmd === "init") return await runInit(a, { log, err, cwd, install });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.

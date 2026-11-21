@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:55033670aec58dfb compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:8064945a6b19d6f0 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -93,7 +93,7 @@ Before writing machinery, **run the thing you are about to replace and paste its
 
 ### Installing Paperlint Is Smooth
 
-**Guidance only** — The target is `npm i` plus one command; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.
+**Guidance only** — The target is one command, `npx paperlint init`; any further manual step is a paperlint defect, except a choice that really belongs to the user, named when it is asked. An automatic step that can fail silently is worse than an explicit one.
 
 ### The Default Set Is What The Venue Decides
 

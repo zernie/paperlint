@@ -89,6 +89,11 @@ async function cli(args, cwd) {
     const code = await run(args, {
       log: (...a) => stdout.push(a.join(" ")),
       err: (...a) => stderr.push(a.join(" ")),
+      // `init` never spawns a package manager here.
+      install: {
+        command: (_r, spec) => ["npm", spec],
+        run: () => ({ ok: true }),
+      },
     });
     return {
       code,
