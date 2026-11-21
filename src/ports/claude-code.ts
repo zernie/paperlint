@@ -14,7 +14,12 @@ export interface PluginState {
 /** How the plugin was turned on, in the commands or files that did it. */
 export type EnableResult =
   | { readonly ok: true; readonly ran: readonly string[] }
-  | { readonly ok: true; readonly wrote: string }
+  | {
+      readonly ok: true;
+      readonly wrote: string;
+      /** The commands still owed where `claude` runs: the keys alone load nothing. */
+      readonly owed: readonly string[];
+    }
   | { readonly ok: false; readonly reason: string };
 
 export interface ClaudeCode {

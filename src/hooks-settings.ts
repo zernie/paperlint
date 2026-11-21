@@ -322,6 +322,19 @@ export function wireHooks(
 }
 
 /** The consequence every report of a written hook must carry, in one place. */
+/** The hooks a command of init's own spelling runs; none when the settings file cannot be read. */
+export function initWiredHooks(
+  root: string,
+  wiring: Wiring = shippedWiring(),
+): readonly string[] {
+  const read = readSettings(root);
+  return read.status === "unparsable"
+    ? []
+    : wiredCounts(read.settings, wiring.names)
+        .filter((c) => c.ours > 0)
+        .map((c) => c.name);
+}
+
 export const FRESH_CLONE_NOTE = `the commands point into node_modules/${PACKAGE_NAME}/ — in a fresh clone they cannot run until \`npm install\` has run there`;
 
 /**

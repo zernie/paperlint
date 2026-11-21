@@ -38,8 +38,15 @@ import {
   toolchainTex,
 } from "./cli.ts";
 import { texInputsDir } from "./package-dirs.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 
 const root = useTempDir("cli-test-");
+
+const NO_CLAUDE: ClaudeCode = {
+  present: () => false,
+  plugin: () => ({ enabled: false, version: null }),
+  enable: () => assert.fail("no test here turns the plugin on for real"),
+};
 
 /**
  * `run(argv)` from `cwd`, the output as one string per stream. Its clock stands still, so `lint`'s
@@ -49,7 +56,10 @@ const root = useTempDir("cli-test-");
 async function cli(
   argv: string[],
   cwd: string,
-  deps: Pick<NonNullable<Parameters<typeof run>[1]>, "loadTexLanguage"> = {},
+  deps: Pick<
+    NonNullable<Parameters<typeof run>[1]>,
+    "loadTexLanguage" | "claude"
+  > = {},
 ) {
   const out: string[] = [];
   const err: string[] = [];
@@ -63,6 +73,8 @@ async function cli(
       command: (_root, spec) => ["npm", spec],
       run: () => ({ ok: true }),
     },
+    // …nor finds Claude Code, unless a test hands one: the offer itself is `src/plugin-offer.test.ts`'s.
+    claude: NO_CLAUDE,
     ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
@@ -486,6 +498,24 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
       "paperlint:agenticdev-2026",
       "--venue ./shared/broken.jsonc",
     ],
+  );
+});
+
+test("doctor reads the plugin where Claude Code is, and says nothing of it where it is not", async () => {
+  const dir = join(root, "doctor-plugin");
+  writeTree(dir, { "paperlint.json": "{}" });
+  const read: string[] = [];
+  const claude: ClaudeCode = {
+    ...NO_CLAUDE,
+    present: () => true,
+    plugin: (at) => (read.push(at), { enabled: true, version: null }),
+  };
+  const head = "Claude Code plugin (carries the skills and the hooks)";
+  const on = (await cli(["doctor"], dir, { claude })).out.split("\n");
+  const absent = (await cli(["doctor"], dir)).out.split("\n");
+  assert.deepEqual(
+    [on.slice(on.indexOf(head), on.indexOf(head) + 2), read, absent.includes(head)],
+    [[head, "  ✓ on for this project"], [dir], false],
   );
 });
 

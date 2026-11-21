@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc -b && node scripts/bundle-skills.ts",
     "prepare": "tsc -b && node scripts/bundle-skills.ts",
+    "prepack": "node scripts/plugin-version.ts stamp",
+    "postpack": "node scripts/plugin-version.ts restore",
     "test": "node scripts/test.ts",
     "test:e2e": "vitest run --project 'e2e-*'",
     "test:e2e:install": "vitest run --project e2e-install",
@@ -114,6 +116,7 @@
     "./*": "./*"
   },
   "files": [
+    ".claude-plugin",
     ".github",
     "CLAUDE.md",
     "CONTRIBUTING.md",

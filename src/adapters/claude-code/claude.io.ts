@@ -13,7 +13,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { ClaudeCode } from "../../ports/claude-code.ts";
+import type { ClaudeCode, EnableResult } from "../../ports/claude-code.ts";
 import { isRecord } from "../../domain/record.ts";
 import {
   ENABLE_COMMANDS,
@@ -50,6 +50,8 @@ export interface ClaudeDeps {
 
 const settingsFile = (root: string) => join(root, ".claude", "settings.json");
 
+const COMMANDS = ENABLE_COMMANDS.map((c) => c.join(" "));
+
 /** Writes the plugin keys into the project's settings; the reason when the file is not JSON. */
 function writeKeys(root: string): string | null {
   const path = settingsFile(root);
@@ -79,18 +81,22 @@ export const claudeCode = ({
       root,
     ),
   }),
-  enable: (root) => {
-    if (!hasClaude()) {
-      const bad = writeKeys(root);
-      return bad === null
-        ? { ok: true, wrote: settingsFile(root) }
-        : { ok: false, reason: bad };
-    }
-    const failed = ENABLE_COMMANDS.map((argv) => ({ argv })).find(
-      ({ argv }) => run(argv, root) !== 0,
-    );
-    return failed === undefined
-      ? { ok: true, ran: ENABLE_COMMANDS.map((c) => c.join(" ")) }
-      : { ok: false, reason: `\`${failed.argv.join(" ")}\` failed` };
-  },
+  enable: (root) => enable(root, { hasClaude, run }),
 });
+
+/** `claude`'s two commands when it is on PATH; otherwise the keys, and the commands still owed. */
+function enable(
+  root: string,
+  { hasClaude, run }: Pick<ClaudeDeps, "hasClaude" | "run">,
+): EnableResult {
+  if (!hasClaude()) {
+    const bad = writeKeys(root);
+    return bad === null
+      ? { ok: true, wrote: settingsFile(root), owed: COMMANDS }
+      : { ok: false, reason: bad };
+  }
+  const failed = ENABLE_COMMANDS.find((argv) => run(argv, root) !== 0);
+  return failed === undefined
+    ? { ok: true, ran: COMMANDS }
+    : { ok: false, reason: `\`${failed.join(" ")}\` failed` };
+}

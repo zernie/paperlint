@@ -250,6 +250,8 @@ import {
 } from "./link-skills.ts";
 import { projectInstall } from "./adapters/package-manager/index.ts";
 import type { ProjectInstall } from "./ports/project-install.ts";
+import { claudeCode } from "./adapters/claude-code/index.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 import {
   selfInstallStep,
   versionOf,
@@ -1593,6 +1595,8 @@ interface HookOptions {
   readonly version?: string;
   /** What `paperlint doctor` reads to find unlinked skills; the disk by default. */
   readonly skillLinks?: (root: string) => LinkReport;
+  /** Whether the Claude Code plugin is on; the disk by default. */
+  readonly claude?: ClaudeCode;
 }
 
 const readSkillLinks = (root: string): LinkReport =>
@@ -1633,6 +1637,25 @@ const packageVersion = (): string =>
       ),
     ).version;
 
+/**
+ * What the project still owes of the hooks and skills — nothing once the Claude Code plugin is on: the
+ * plugin carries both, so a project without init's links and hook entries is complete.
+ */
+function owed(
+  root: string,
+  skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
+): {
+  readonly missing: readonly string[];
+  readonly byHand: boolean;
+  readonly skills: readonly string[];
+} {
+  if (claude.plugin(absolutePath(root)).enabled)
+    return { missing: [], byHand: false, skills: [] };
+  const { missing, byHand } = unwiredHooks(root);
+  return { missing, byHand, skills: unlinkedSkills(skillLinks(root)) };
+}
+
 interface Pending {
   readonly text: string;
   readonly root: string;
@@ -1646,8 +1669,11 @@ interface Pending {
 function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
-    const { missing, byHand } = unwiredHooks(root);
-    const skills = unlinkedSkills((io.skillLinks ?? readSkillLinks)(root));
+    const { missing, byHand, skills } = owed(
+      root,
+      io.skillLinks ?? readSkillLinks,
+      io.claude ?? claudeCode(),
+    );
     const version = io.version ?? packageVersion();
     return (missing.length === 0 && skills.length === 0) ||
       !notYetTold(nodeFiles, root, version)
@@ -1676,10 +1702,10 @@ function hooksLine(
   root: string,
   err: typeof console.error,
   skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
 ): void {
   try {
-    const { missing } = unwiredHooks(root);
-    const skills = unlinkedSkills(skillLinks(root));
+    const { missing, skills } = owed(root, skillLinks, claude);
     if (missing.length > 0 || skills.length > 0)
       err(lintLine(packageVersion(), missing, skills));
   } catch {
@@ -2490,12 +2516,15 @@ export async function run(
     loadTexLanguage = loadLatexLanguage,
     skillLinks = readSkillLinks,
     install = projectInstall,
+    claude = claudeCode(),
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
     /** How `init` adds paperlint to a project: the package manager by default; a test hands a fake. */
     install?: ProjectInstall;
+    /** Claude Code as `doctor`, `lint` and the hooks see it: the disk and `claude` by default; a test hands a fake. */
+    claude?: ClaudeCode;
     /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
     now?: () => number;
     /**
@@ -2543,11 +2572,15 @@ export async function run(
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
     const papers = cliPapers(a, cwd);
+    const projectDir = process.env["CLAUDE_PROJECT_DIR"] ?? cwd;
+    const at = absolutePath(resolve(cwd, projectDir));
     return doctor({
       log,
       cwd,
-      projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd,
+      projectDir,
       cliPapers: papers,
+      plugin: claude.present(at) ? claude.plugin(at) : null,
+      installed: packageVersion(),
     });
   }
   const simple = SIMPLE[a.cmd];
@@ -2665,7 +2698,7 @@ export async function run(
       .filter((f) => existsSync(f)),
     bodies,
   });
-  hooksLine(root, err, skillLinks);
+  hooksLine(root, err, skillLinks, claude);
   // On stderr, so `--json` leaves stdout a clean array.
   timingLines({
     files: results.length,

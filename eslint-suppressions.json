@@ -756,13 +756,13 @@
   },
   "src/doctor.ts": {
     "functional/immutable-data": {
-      "count": 25
+      "count": 18
     },
     "functional/no-let": {
       "count": 5
     },
     "functional/no-loop-statements": {
-      "count": 3
+      "count": 2
     },
     "functional/prefer-immutable-types": {
       "count": 7

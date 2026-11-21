@@ -45,19 +45,19 @@ describe("what Claude Code's files say about the plugin", () => {
   });
 });
 
-describe("claudeCode — the disk and the claude program", () => {
-  const setup = (tree: Record<string, string>, hasClaude: boolean) => {
-    const dir = useTempDir("paperlint-claude-");
-    writeTree(dir, tree);
-    const ran: string[] = [];
-    const cc = claudeCode({
-      home: join(dir, "home"),
-      hasClaude: () => hasClaude,
-      run: (argv, cwd) => (ran.push(`${cwd}: ${argv.join(" ")}`), 0),
-    });
-    return { root: absolutePath(join(dir, "p")), cc, ran };
-  };
+const setup = (tree: Record<string, string>, hasClaude: boolean) => {
+  const dir = useTempDir("paperlint-claude-");
+  writeTree(dir, tree);
+  const ran: string[] = [];
+  const cc = claudeCode({
+    home: join(dir, "home"),
+    hasClaude: () => hasClaude,
+    run: (argv, cwd) => (ran.push(`${cwd}: ${argv.join(" ")}`), 0),
+  });
+  return { root: absolutePath(join(dir, "p")), cc, ran };
+};
 
+describe("claudeCode — reading the disk", () => {
   it("present: a .claude folder, or claude on PATH", () => {
     const a = setup({ "p/.claude/x": "" }, false);
     const b = setup({ "p/x": "" }, true);
@@ -87,7 +87,9 @@ describe("claudeCode — the disk and the claude program", () => {
     );
     expect(u.cc.plugin(u.root)).toEqual({ enabled: false, version: null });
   });
+});
 
+describe("claudeCode — turning the plugin on", () => {
   it("claude on PATH: its two commands run in the project, in order", () => {
     const s = setup({ "p/x": "" }, true);
     expect([s.cc.enable(s.root), s.ran]).toEqual([
@@ -116,7 +118,7 @@ describe("claudeCode — the disk and the claude program", () => {
       s.cc.enable(s.root),
       JSON.parse(readFileSync(path, "utf8")),
     ]).toEqual([
-      { ok: true, wrote: path },
+      { ok: true, wrote: path, owed: ENABLE_COMMANDS.map((c) => c.join(" ")) },
       {
         permissions: { allow: ["Bash(ls)"] },
         extraKnownMarketplaces: {
@@ -129,6 +131,7 @@ describe("claudeCode — the disk and the claude program", () => {
     expect(fresh.cc.enable(fresh.root)).toEqual({
       ok: true,
       wrote: join(fresh.root, ".claude", "settings.json"),
+      owed: ENABLE_COMMANDS.map((c) => c.join(" ")),
     });
   });
 
@@ -140,7 +143,9 @@ describe("claudeCode — the disk and the claude program", () => {
       "[1]",
     ]);
   });
+});
 
+describe("claudeCode — its defaults", () => {
   it("the real defaults: claudeCode() answers, onPath and runInherit run programs", () => {
     const dir = useTempDir("paperlint-claude-");
     writeTree(dir, { ".claude/x": "" });
