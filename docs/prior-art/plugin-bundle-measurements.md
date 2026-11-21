@@ -200,3 +200,36 @@ The test that settles it: save one small plugin to the account (a `.plugin` file
 Continue, from a desktop browser or the desktop app), start a new cloud session, and check that
 `~/.claude/plugins/synced/<org>_<account>/` holds it and that its hook or system-prompt line is
 there.
+
+## 8. Does a plugin load from configuration alone, with nobody clicking?
+
+Measured 2026-11-21 with Claude Code 2.1.330 (`claude -p`), in throwaway git repositories with a
+throwaway `HOME`. The probe plugin's only part is a SessionStart command hook that writes a marker
+file. Each run made one small model call.
+
+| route | how                                                                                                                                                                               | marker     |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| A     | `CLAUDE_CODE_PLUGIN_DIRS=<plugin folder>` in the environment                                                                                                                      | ✅ written |
+| B     | the repository's `.claude/settings.json` declares a marketplace inside the repository (`extraKnownMarketplaces`, a `directory` source) and turns the plugin on (`enabledPlugins`) | ❌ absent  |
+| C     | control: no plugin                                                                                                                                                                | ❌ absent  |
+| D     | `claude plugin marketplace add <repo>` and `claude plugin install probe@local` from a shell, then a new session                                                                   | ✅ written |
+
+B fails as the install docs say: "Committing that entry turns the plugin on for your collaborators
+but doesn't download it to their machines", and each collaborator "runs `claude plugin install
+<name>@<marketplace> --scope project` once per clone"
+(https://code.claude.com/docs/en/plugins/install). In D the hook that ran was the repository's own
+copy, not the cache's: a plugin from a marketplace added from a local folder, with a relative
+source, is read from that folder.
+
+A and D need no click and no claude.ai account. A cloud session runs its environment's setup
+script before Claude starts, so a setup script that runs D, or writes A's variable into the
+`env` block of `~/.claude/settings.json`, should load the plugin there. That has not been run in a
+cloud session yet.
+
+What the mods docs say about cloud sessions (read 2026-11-21): the install page, "A cloud session,
+including the browser at claude.ai/code, has no plugin browser and doesn't load the plugins you
+installed on your own machine or the ones your repository's `.claude/settings.json` turns on"; the
+mods overview's cloud row, "Yes, for a plugin that reaches the cloud session" and "Not in every
+session" (https://code.claude.com/docs/en/plugins/mods/overview). Mods are on by default from
+v2.1.286; the overview's only early-access line is "If you set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS`
+during early access, remove it."
