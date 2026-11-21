@@ -122,6 +122,19 @@ describe("bundleSkills writes", () => {
       },
     ]);
   });
+
+  it("keeps a module's location in a bundle written at the root itself", async () => {
+    const root = fixture({
+      "top.mjs": `import { where } from "./lib/where.mjs";\nconsole.log(JSON.stringify({ entry: "top", ...where }));\n`,
+    });
+    await bundleSkills(plan(root, { entries: ["top.mjs"] }));
+    // Guards: from a bundle in the root folder, `where` still names lib/where.mjs.
+    expect(runNode(join(root, "top.js"), [], { cwd: root })).toEqual({
+      status: 0,
+      stdout: `${JSON.stringify(whereOf(root, "top"))}\n`,
+      stderr: "",
+    });
+  });
 });
 
 describe("bundleSkills refuses", () => {
