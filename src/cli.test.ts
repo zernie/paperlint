@@ -780,6 +780,53 @@ test("init with no path sets up the current directory, and its first paper is pa
   assert.equal(made.includes("main.tex"), false);
 });
 
+test("init --plugin turns the plugin on without a terminal; --no-plugin never asks; neither, one line", async () => {
+  const on: string[] = [];
+  const claude: ClaudeCode = {
+    present: () => true,
+    plugin: () => ({ enabled: false, version: null }),
+    enable: (at) => (on.push(at), { ok: true, ran: ["claude x"] }),
+  };
+  const run = async (flag: string[]) => {
+    const dir = writeTree(join(root, `offer${flag.join("")}`), {
+      "package.json": "{}",
+    });
+    const out = (await cli(["init", "--yes", ...flag], dir, { claude })).out;
+    return out
+      .split("\n")
+      .filter(
+        (l) =>
+          l.startsWith("Claude Code plugin") ||
+          l.startsWith("  · --no-plugin") ||
+          l.startsWith("skills and hooks (") ||
+          l === "  ✓ ran claude x",
+      );
+  };
+  assert.deepEqual(
+    [
+      await run(["--plugin"]),
+      await run(["--no-plugin"]),
+      await run([]),
+      on.length,
+    ],
+    [
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  ✓ ran claude x",
+        "skills and hooks (the plugin carries them now)",
+      ],
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  · --no-plugin — nothing asked, nothing turned on",
+      ],
+      [
+        "Claude Code plugin: not turned on — --yes was given, so nothing was asked. To turn it on: npx paperlint init --plugin",
+      ],
+      1,
+    ],
+  );
+});
+
 test("init's step 0 reads the project's own copy: this checkout is present, another version is said and kept", async () => {
   const pkg = (dir: string) => join(dir, "node_modules", "paperlint");
   const own = writeTree(join(root, "self-own"), { "package.json": "{}" });
