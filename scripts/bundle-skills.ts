@@ -24,7 +24,7 @@
  * entry keeps its own: its bundle sits where its source does. Any other use of `import.meta` is
  * refused, and so is an entry that another bundled module imports (its code would leave its file).
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -190,11 +190,20 @@ const keepOwnLocation = (
 const located = (root: string, f: OutputFile): string =>
   f.text.replaceAll(ROOT_TOKEN, posix(dirname(f.path), root) || ".");
 
-/** The paths of `paths` that git tracks in `root`; a failing git (no checkout) throws. */
+/**
+ * The paths of `paths` that git tracks in `root`. Outside a checkout (a source archive, or a
+ * git-dependency install, where npm runs `prepare` with no `.git`) nothing is tracked, so none.
+ */
 export function gitTracked(
   root: string,
   paths: readonly string[],
 ): readonly string[] {
+  const inCheckout =
+    spawnSync("git", ["rev-parse", "--is-inside-work-tree"], {
+      cwd: root,
+      stdio: "ignore",
+    }).status === 0;
+  if (!inCheckout) return [];
   const out = execFileSync("git", ["ls-files", "-z", "--", ...paths], {
     cwd: root,
     encoding: "utf8",

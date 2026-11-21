@@ -479,16 +479,29 @@ function linkTarget(entry: string): string | null {
   }
 }
 
+/** How a SKILL.md names its own directory; Claude Code substitutes the skill's path for it. */
+const SKILL_DIR_VAR = "${CLAUDE_SKILL_DIR}/";
+
 /**
  * The script paths a skill's SKILL.md names: `.claude/skills/<skill>/scripts/x.mjs` resolved from
- * the project root, anything else from the skill's own directory.
+ * the project root, `${CLAUDE_SKILL_DIR}/…` and anything else from the skill's own directory as
+ * the project sees it (the link, so a `../<sibling>/` step lands on the sibling's link).
  */
 function scriptRefs(consumer: string, entry: string): readonly ScriptRef[] {
   const body = readFileSync(join(entry, "SKILL.md"), "utf8");
-  return [...body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)].map((m) => {
+  return [
+    ...body.matchAll(
+      /((?:\$\{CLAUDE_SKILL_DIR\}\/)?[\w./-]*scripts\/[\w-]+\.m?js)\b/g,
+    ),
+  ].map((m) => {
     const raw = m[1] ?? "";
     const fromRoot = raw.startsWith(".claude/skills/");
-    const at = fromRoot ? join(consumer, raw) : join(entry, raw);
+    const at = fromRoot
+      ? join(consumer, raw)
+      : join(
+          entry,
+          raw.startsWith(SKILL_DIR_VAR) ? raw.slice(SKILL_DIR_VAR.length) : raw,
+        );
     return { raw, fromRoot, resolves: existsSync(at) };
   });
 }
@@ -728,17 +741,20 @@ function stepSkills(c: Consumer, initSaid: string): SkillView {
   return view;
 }
 
-/** Every script path the linked skills name resolves from the consumer's root. */
+/**
+ * Every script path the linked skills name resolves in the consumer's project. The guard is on
+ * the count of references, not on project-root-relative ones: skills now name their scripts
+ * through `${CLAUDE_SKILL_DIR}`, so zero root-relative references is the intended state.
+ */
 function stepSkillPaths(view: SkillView): void {
-  if (view.rootRefs > 0 && view.unresolved.length === 0) {
-    ok(
-      `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
-    );
+  const label = `all ${String(view.refs)} script path(s) resolve in the consumer's project (${String(view.rootRefs)} project-root-relative)`;
+  if (view.refs > 0 && view.unresolved.length === 0) {
+    ok(label);
   } else {
     bad(
-      `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
+      label,
       view.unresolved.slice(0, 5).join("\n") ||
-        "zero project-root-relative references — nothing was checked",
+        "zero script references — nothing was checked",
     );
   }
 }

@@ -5,7 +5,7 @@
  * checkout, as `npm run build` runs it.
  */
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -183,13 +183,16 @@ describe("bundleSkills refuses", () => {
 });
 
 describe("gitTracked", () => {
-  it("names the tracked paths of those asked, and throws outside a checkout", () => {
+  it("names the tracked paths of those asked, and none outside a checkout", () => {
     // Guards: a tracked file is reported, an absent one is not.
     expect(gitTracked(ROOT, ["package.json", "no-such-file.js"])).toEqual([
       "package.json",
     ]);
-    // Guards: no checkout is an error, never "nothing is tracked".
-    expect(() => gitTracked(useTempDir("paperlint-nogit-"), ["x"])).toThrow();
+    // Guards: a source archive or a git-dependency install has no `.git`, and npm runs
+    // `prepare` there; with no checkout no output can overwrite a tracked file.
+    const bare = useTempDir("paperlint-nogit-");
+    writeFileSync(join(bare, "x"), "");
+    expect(gitTracked(bare, ["x"])).toEqual([]);
   });
 });
 
