@@ -167,25 +167,39 @@ test("doctor and the plugin: on, it carries the skills and hooks and names init'
   );
 });
 
-test("doctor with the plugin on and settings that do not parse: no leftovers named, the run not failed", () => {
-  const root = project();
-  writeFileSync(join(root, "paperlint.json"), "{}\n");
-  mkdirSync(join(root, ".claude"), { recursive: true });
-  writeFileSync(join(root, ".claude", "settings.json"), "{ nope");
-  const lines: string[] = [];
-  const code = doctor({
-    cwd: root,
-    log: (s: string) => lines.push(s),
-    run: () => ({ status: 0 }),
-    cliPapers: join(root, "papers"),
-    plugin: { enabled: true, version: null },
-    skillLinks: () => ({ ok: false, error: "not resolved" }),
-  });
-  const out = lines.join("\n").split("\n");
-  const at = out.indexOf("Claude Code plugin (carries the skills and the hooks)");
+test("doctor with the plugin on and settings that do not parse, or cannot be read: no leftovers named, the run not failed", () => {
+  const onWith = (settings: (root: string) => void) => {
+    const root = project();
+    writeFileSync(join(root, "paperlint.json"), "{}\n");
+    mkdirSync(join(root, ".claude"), { recursive: true });
+    settings(root);
+    const lines: string[] = [];
+    const code = doctor({
+      cwd: root,
+      log: (s: string) => lines.push(s),
+      run: () => ({ status: 0 }),
+      cliPapers: join(root, "papers"),
+      plugin: { enabled: true, version: null },
+      skillLinks: () => ({ ok: false, error: "not resolved" }),
+    });
+    const out = lines.join("\n").split("\n");
+    const at = out.indexOf(
+      "Claude Code plugin (carries the skills and the hooks)",
+    );
+    return [code, out.slice(at + 1, at + 3)];
+  };
+  const quiet = [0, ["  ✓ on for this project", ""]];
   assert.deepEqual(
-    [code, out.slice(at + 1, at + 3)],
-    [0, ["  ✓ on for this project", ""]],
+    [
+      onWith((root) => {
+        writeFileSync(join(root, ".claude", "settings.json"), "{ nope");
+      }),
+      // A DIRECTORY where the file should be: reading it throws EISDIR.
+      onWith((root) => {
+        mkdirSync(join(root, ".claude", "settings.json"));
+      }),
+    ],
+    [quiet, quiet],
   );
 });
 

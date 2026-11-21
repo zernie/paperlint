@@ -134,6 +134,30 @@ describe("claudeCode — turning the plugin on", () => {
       owed: ENABLE_COMMANDS.map((c) => c.join(" ")),
     });
   });
+});
+
+describe("claudeCode — the keys, without claude", () => {
+  it("no claude: another plugin and marketplace already declared are kept", () => {
+    const s = setup(
+      {
+        "p/.claude/settings.json": JSON.stringify({
+          enabledPlugins: { "other@x": false },
+          extraKnownMarketplaces: { x: { source: { source: "git" } } },
+        }),
+      },
+      false,
+    );
+    s.cc.enable(s.root);
+    expect(
+      JSON.parse(readFileSync(join(s.root, ".claude", "settings.json"), "utf8")),
+    ).toEqual({
+      enabledPlugins: { "other@x": false, "paperlint@paperlint": true },
+      extraKnownMarketplaces: {
+        x: { source: { source: "git" } },
+        paperlint: { source: { source: "github", repo: "zernie/paperlint" } },
+      },
+    });
+  });
 
   it("no claude, and a settings file that is not an object: nothing written, the reason", () => {
     const s = setup({ "p/.claude/settings.json": "[1]" }, false);
@@ -149,11 +173,14 @@ describe("claudeCode — its defaults", () => {
   it("the real defaults: claudeCode() answers, onPath and runInherit run programs", () => {
     const dir = useTempDir("paperlint-claude-");
     writeTree(dir, { ".claude/x": "" });
+    const bare = useTempDir("paperlint-claude-bare-");
     expect([
       claudeCode().present(absolutePath(dir)),
+      // No `.claude/` here: the answer is whether `claude` runs on this machine.
+      claudeCode().present(absolutePath(bare)) === onPath("claude"),
       onPath(process.execPath),
       onPath("paperlint-no-such-program"),
       runInherit([process.execPath, "-e", "process.exit(4)"], dir),
-    ]).toEqual([true, true, false, 4]);
+    ]).toEqual([true, true, true, false, 4]);
   });
 });

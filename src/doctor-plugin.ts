@@ -12,15 +12,14 @@ export const PLUGIN_UPDATE =
 
 /** -1, 0 or 1 by the dotted numbers of two versions; a pre-release tag is ignored. */
 export function compareVersions(a: string, b: string): number {
-  const parts = (v: string): readonly number[] =>
-    v
-      .split("-", 1)
-      .join("")
-      .split(".")
-      .map((n) => Number.parseInt(n, 10) || 0);
-  const [x, y] = [parts(a), parts(b)];
-  const i = [0, 1, 2].find((k) => (x[k] ?? 0) !== (y[k] ?? 0));
-  return i === undefined ? 0 : Math.sign((x[i] ?? 0) - (y[i] ?? 0));
+  // A missing part reads as "undefined", which parses to NaN, which counts as 0.
+  const part = (v: string, k: number): number =>
+    Number.parseInt(String(v.split("-", 1).join("").split(".")[k]), 10) || 0;
+  return (
+    [0, 1, 2]
+      .map((k) => Math.sign(part(a, k) - part(b, k)))
+      .find((d) => d !== 0) ?? 0
+  );
 }
 
 export interface PluginFacts {

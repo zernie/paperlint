@@ -1,5 +1,7 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { useTempDir, writeTree } from "../test/support.ts";
 import { main, PLACEHOLDER, withVersion } from "./plugin-version.ts";
@@ -46,6 +48,18 @@ describe("plugin-version", () => {
     expect(() => withVersion("[1]", "9.9.9")).toThrow(
       "plugin.json is not a JSON object",
     );
+  });
+
+  it("run as npm runs it: a verb it does not know exits 2 and names the usage", () => {
+    const r = spawnSync(
+      process.execPath,
+      [fileURLToPath(new URL("plugin-version.ts", import.meta.url)), "pack"],
+      { encoding: "utf8" },
+    );
+    expect([r.status, r.stderr]).toEqual([
+      2,
+      "usage: node scripts/plugin-version.ts stamp|restore\n",
+    ]);
   });
 
   it("the tracked manifest carries the placeholder, as the tracked package.json does", () => {
