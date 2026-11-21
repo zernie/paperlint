@@ -1,0 +1,11 @@
+{
+  "name": "paperlint",
+  "owner": { "name": "zernie" },
+  "plugins": [
+    {
+      "name": "paperlint",
+      "description": "Skills and hooks for writing a research paper with paperlint",
+      "source": { "source": "npm", "package": "paperlint" }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "paperlint",
+  "version": "0.0.0-semantically-released",
+  "description": "Skills and hooks for writing a research paper with paperlint",
+  "skills": "./skills/",
+  "hooks": "./plugin/hooks/hooks.json"
+}
