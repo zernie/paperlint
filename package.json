@@ -23,6 +23,7 @@
     "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site"
   },
   "dependencies": {
+    "@clack/prompts": "1.9.0",
     "@eslint/markdown": "^8.0.3",
     "@eslint/plugin-kit": "^0.7.2",
     "@retorquere/bibtex-parser": "^10.0.1",

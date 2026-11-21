@@ -2391,10 +2391,13 @@ async function runInit(
     );
     return 2;
   }
+  // Loaded here, not at the top: every hook runs through this file, and none of them asks anything.
+  const { clackPrompts } = await import("./adapters/clack/index.ts");
   return await init(a.paths[0] ?? ".", {
     log,
     err,
     cwd,
+    prompts: clackPrompts(),
     yes: a.yes,
     hooks: !a.noHooks,
     paper: a.paper,

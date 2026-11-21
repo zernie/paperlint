@@ -19,7 +19,7 @@
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that paperlint did not make is reported, never replaced.
  *   hooks              WRITTEN into `.claude/settings.json` by vigiles' merge (`hooks-settings.ts`);
- *                      asked [Y/n] of a human, YES without one — the guard is what the package is
+ *                      asked of a human (Yes preselected), YES without one — the guard is what the package is
  *                      for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
  *   CI workflow        ASKED, because writing a file into `.github/` is not guessable and not
  *                      cheap to undo. Prior art: Playwright's initializer asks exactly this.
@@ -75,10 +75,42 @@ import {
 import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
 import type { NamedVenue } from "./domain/venue-name.ts";
+import type { Answer, Prompts } from "./ports/prompts.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
   "detected" | "chosen" | "not-asked" | "no-answer" | "guessed";
+
+/**
+ * 🔴 CTRL+C AT A QUESTION STOPS init THERE. Measured 2026-11-22 on a pseudo-terminal: the readline
+ * questions this replaced took Ctrl+C as "no answer", so each took its default and init went on — a
+ * Ctrl+C at "wire the hooks? [Y/n]" WIRED them, and the run exited 0. A cancel now writes nothing
+ * after the question and exits with the shell's code for an interrupt.
+ */
+export const CANCELLED_CODE = 130;
+
+/** The line a cancelled run ends with. */
+export const CANCELLED_LINE = `  ✗ cancelled — init stopped at this question, and nothing after it was written. \`npx paperlint init\` starts again`;
+
+/**
+ * One question, asked through the port. A prompt that FAILS (a stream that ended) is `null`, and
+ * its default is taken and said — the rule `askOrDefault` keeps for readline. A cancel passes through.
+ */
+export async function askOrNull<T>(
+  ask: () => Promise<Answer<T>>,
+): Promise<Answer<T> | null> {
+  try {
+    return await ask();
+  } catch {
+    return null;
+  }
+}
+
+/** The value answered, or `fallback` when the prompt failed. */
+const valueOr = <T>(a: Answer<T> | null, fallback: T): T =>
+  a?.kind === "answer" ? a.value : fallback;
+
+const cancelled = (a: Answer<unknown> | null): boolean => a?.kind === "cancel";
 
 /**
  * 🔴 A QUESTION CAN FAIL, AND ITS FAILURE MUST NOT BE THE COMMAND'S. Measured 2026-09-18 on a
@@ -161,30 +193,30 @@ export interface PapersChoice {
 export async function choosePapers(
   root: string,
   {
-    ask,
+    prompts,
     interactive,
-  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
-): Promise<PapersChoice> {
+  }: { prompts?: Prompts | undefined; interactive: boolean },
+): Promise<PapersChoice | "cancelled"> {
   const candidates = detectPapers(root);
   const first = candidates[0];
   if (first === undefined)
     return { papers: DEFAULT_PAPERS_ROOT, how: "guessed", candidates };
   if (candidates.length === 1)
     return { papers: first, how: "detected", candidates };
-  if (!interactive || !ask)
+  if (!interactive || !prompts)
     return { papers: first, how: "not-asked", candidates };
 
-  const menu = candidates
-    .map((c, i) => `    ${String(i + 1)}) ${c}`)
-    .join("\n");
-  const answer = await askOrDefault(
-    ask,
-    `  several directories look like papers roots:\n${menu}\n  which one? [1] `,
+  const answer = await askOrNull(() =>
+    prompts.select({
+      message: "several directories look like papers roots — which one?",
+      options: candidates,
+      initial: first,
+    }),
   );
-  const picked = candidates[Number((answer ?? "").trim()) - 1];
-  return picked === undefined
+  if (cancelled(answer)) return "cancelled";
+  return answer === null
     ? { papers: first, how: "no-answer", candidates }
-    : { papers: picked, how: "chosen", candidates };
+    : { papers: valueOr(answer, first), how: "chosen", candidates };
 }
 
 export type DeclarationResult =
@@ -212,7 +244,8 @@ export type DeclarationResult =
       readonly status: "unparsable";
       readonly path: string;
       readonly reason: string;
-    };
+    }
+  | { readonly status: "cancelled"; readonly path: string };
 
 /**
  * Declares the papers directory in the root `paperlint.json` — the one file the hooks, the rules
@@ -225,7 +258,7 @@ export type DeclarationResult =
  */
 export async function declarePapers(
   root: string,
-  choose: () => Promise<PapersChoice>,
+  choose: () => Promise<PapersChoice | "cancelled">,
 ): Promise<DeclarationResult> {
   const path = join(root, CONFIG_FILE);
   const raw = existsSync(path) ? readFileSync(path, "utf8") : null;
@@ -247,6 +280,7 @@ export async function declarePapers(
   // 🔴 ONLY NOW is the directory measured (or asked about). A declared one is the answer, and a
   // candidate measured beside it is a decision nobody takes.
   const choice = await choose();
+  if (choice === "cancelled") return { status: "cancelled", path };
   if (choice.papers === DEFAULT_PAPERS_ROOT)
     return { status: "default", path, papers: choice.papers, choice };
   // Two-space indent and the file's own trailing newline: a declaration is not a licence to
@@ -296,31 +330,28 @@ export function workflowYaml(): string {
   ].join("\n");
 }
 
-export type WorkflowResult = "written" | "kept" | "declined" | "not-asked";
+export type WorkflowResult =
+  "written" | "kept" | "declined" | "not-asked" | "cancelled";
 
 export async function offerWorkflow(
   root: string,
   {
-    ask,
+    prompts,
     interactive,
-  }: {
-    ask?: (q: string) => Promise<string>;
-    interactive: boolean;
-  },
+  }: { prompts?: Prompts | undefined; interactive: boolean },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
   if (existsSync(path)) return "kept";
-  if (!interactive || !ask) return "not-asked";
-  const answer = (
-    await askOrDefault(
-      ask,
-      `  add a GitHub Actions workflow that runs this in CI? [y/N] `,
-    )
-  )
-    ?.trim()
-    .toLowerCase();
-  // No answer — an empty line, or a stream that ended — is the safe default, which is "no file".
-  if (answer !== "y" && answer !== "yes") return "declined";
+  if (!interactive || !prompts) return "not-asked";
+  const answer = await askOrNull(() =>
+    prompts.confirm({
+      message: "add a GitHub Actions workflow that runs this in CI?",
+      initial: false,
+    }),
+  );
+  if (cancelled(answer)) return "cancelled";
+  // No answer — a stream that ended — is the safe default, which is "no file".
+  if (!valueOr(answer, false)) return "declined";
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, workflowYaml(), "utf8");
   return "written";
@@ -338,6 +369,7 @@ export function reportWorkflow(
       `  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`,
     );
   else if (wf === "declined") out.push(`  · declined — nothing written`);
+  else if (wf === "cancelled") return [CANCELLED_LINE];
   else
     out.push(
       `  · ${why}, so nothing was asked. Default taken: NO file written.`,
@@ -391,6 +423,7 @@ export type HooksOutcome =
   | WireResult
   | { readonly status: "skipped" }
   | { readonly status: "declined" }
+  | { readonly status: "cancelled" }
   | { readonly status: "failed"; readonly reason: string };
 
 /**
@@ -404,27 +437,26 @@ export async function offerHooks(
   {
     hooks,
     interactive,
-    ask,
+    prompts,
     merge,
   }: {
     hooks: boolean;
     interactive: boolean;
-    ask?: (q: string) => Promise<string>;
+    prompts?: Prompts | undefined;
     merge?: Merge | undefined;
   },
 ): Promise<HooksOutcome> {
   if (!hooks) return { status: "skipped" };
-  if (interactive && ask) {
-    const answer = (
-      await askOrDefault(
-        ask,
-        `  wire the paper hooks into ${SETTINGS_PATH} (committed, shared with every clone)? [Y/n] `,
-      )
-    )
-      ?.trim()
-      .toLowerCase();
-    // An empty line or a stream that ended is the stated default, which here is YES.
-    if (answer === "n" || answer === "no") return { status: "declined" };
+  if (interactive && prompts) {
+    const answer = await askOrNull(() =>
+      prompts.confirm({
+        message: `wire the paper hooks into ${SETTINGS_PATH} (committed, shared with every clone)?`,
+        initial: true,
+      }),
+    );
+    if (cancelled(answer)) return { status: "cancelled" };
+    // A stream that ended is the stated default, which here is YES.
+    if (!valueOr(answer, true)) return { status: "declined" };
   }
   try {
     // Called THROUGH the protocol object rather than as a detached method: the port is an
@@ -456,6 +488,7 @@ export function reportHooks(
     out.push(`  · --no-hooks — nothing written`);
     return out;
   }
+  if (outcome.status === "cancelled") return [CANCELLED_LINE];
   if (outcome.status === "declined") {
     out.push(
       `  · declined — nothing written. \`npx paperlint init\` again wires them later`,
@@ -552,8 +585,11 @@ export interface InitOptions {
   log?: typeof console.log;
   err?: typeof console.error;
   cwd?: string;
-  /** Asks one question. Injected so the prompt is assertable without a pseudo-terminal. */
-  ask?: (question: string) => Promise<string>;
+  /**
+   * The questions, drawn by the CLI's clack adapter (`src/adapters/clack/`). Injected so each one is
+   * assertable without a pseudo-terminal; without it nothing is asked.
+   */
+  prompts?: Prompts;
   /**
    * Whether a human is at the other end. Defaults to `interactivity()` over this process: stdin
    * AND stdout are terminals, `CI` is unset, and no `--yes`.
@@ -592,7 +628,7 @@ export interface InitOptions {
   tex?: { readonly installed: () => boolean; readonly install?: () => number };
 }
 
-/** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
+/** Reads one line from a real terminal, for `paperlint new` and the build; init asks through `Prompts`. */
 export async function askOnTerminal(question: string): Promise<string> {
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
   const { createInterface } = await import("node:readline/promises");
@@ -609,7 +645,12 @@ export async function askOnTerminal(question: string): Promise<string> {
 export const TOOLCHAIN_COST = "~270 MB, ~3 min, once";
 
 export type TexOutcome =
-  "installed" | "was-installed" | "failed" | "declined" | "not-asked";
+  | "installed"
+  | "was-installed"
+  | "failed"
+  | "declined"
+  | "not-asked"
+  | "cancelled";
 
 /**
  * TeX Live, for `paperlint build` — `paperlint lint` needs none. OFFERED to a human with its cost
@@ -619,21 +660,20 @@ export type TexOutcome =
 export async function offerTexLive(
   tex: InitOptions["tex"],
   {
-    ask,
+    prompts,
     interactive,
-  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+  }: { prompts?: Prompts | undefined; interactive: boolean },
 ): Promise<TexOutcome> {
   if (tex?.installed()) return "was-installed";
-  if (!interactive || !ask || !tex?.install) return "not-asked";
-  const answer = (
-    await askOrDefault(
-      ask,
-      `  install TeX Live now, for \`paperlint build\`? (${TOOLCHAIN_COST}) [y/N] `,
-    )
-  )
-    ?.trim()
-    .toLowerCase();
-  if (answer !== "y" && answer !== "yes") return "declined";
+  if (!interactive || !prompts || !tex?.install) return "not-asked";
+  const answer = await askOrNull(() =>
+    prompts.confirm({
+      message: `install TeX Live now, for \`paperlint build\`? (${TOOLCHAIN_COST})`,
+      initial: false,
+    }),
+  );
+  if (cancelled(answer)) return "cancelled";
+  if (!valueOr(answer, false)) return "declined";
   return tex.install() === 0 ? "installed" : "failed";
 }
 
@@ -642,6 +682,7 @@ export function reportTexLive(t: TexOutcome, why: string): string[] {
   const cmd = `npx paperlint toolchain   # ${TOOLCHAIN_COST}`;
   if (t === "was-installed") return [`  ✓ paperlint's TeX Live is installed`];
   if (t === "installed") return [`  ✓ installed`];
+  if (t === "cancelled") return [CANCELLED_LINE];
   if (t === "failed")
     return [
       `  ✗ the install failed — see above. Run it again:`,
@@ -691,6 +732,12 @@ function papersLines(decl: DeclarationResult, why: string): string[] {
   ];
 }
 
+/** A question was cancelled: say so, and stop. */
+const stop = (log: typeof console.log): number => (
+  log(CANCELLED_LINE),
+  CANCELLED_CODE
+);
+
 // Documented in README.md#-getting-started and docs/install.md — update them when this changes.
 export async function init(
   dir: string,
@@ -701,7 +748,7 @@ export async function init(
     err = console.error,
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     cwd = process.cwd(),
-    ask = askOnTerminal,
+    prompts,
     yes = false,
     hooks = true,
     merge,
@@ -731,8 +778,9 @@ export async function init(
   // ── 1. where the papers are, and 2. the declaration, in paperlint.json when not the default ─
   // The declaration is read FIRST: the directory is measured only when none is declared.
   const decl = await declarePapers(root, () =>
-    choosePapers(root, { ask, interactive }),
+    choosePapers(root, { prompts, interactive }),
   );
+  if (decl.status === "cancelled") return stop(log);
   for (const line of papersLines(decl, why)) log(line);
   log(``);
   log(`settings`);
@@ -780,7 +828,7 @@ export async function init(
   log(
     `hooks (Claude Code runs them from ${SETTINGS_PATH} — committed, shared with every clone)`,
   );
-  const hooked = await offerHooks(root, { hooks, interactive, ask, merge });
+  const hooked = await offerHooks(root, { hooks, interactive, prompts, merge });
   for (const line of reportHooks(hooked, {
     here,
     how: interactive
@@ -788,12 +836,14 @@ export async function init(
       : `default taken: YES — ${why}, so nothing was asked. \`--no-hooks\` skips this`,
   }))
     log(line);
+  if (hooked.status === "cancelled") return CANCELLED_CODE;
 
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
-  const wf = await offerWorkflow(root, { ask, interactive });
+  const wf = await offerWorkflow(root, { prompts, interactive });
   for (const line of reportWorkflow(wf, { why })) log(line);
+  if (wf === "cancelled") return CANCELLED_CODE;
 
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);
@@ -804,11 +854,16 @@ export async function init(
   // A paper that was asked for and not delivered decides the exit code (below): the doctor's
   // code can be 0, and automation would read an unfulfilled `--paper` as done.
   let paperCode = 0;
-  if (wanted === null && !hasPaper && interactive && createPaper) {
-    const answer = (
-      await askOrDefault(ask, `  create a first paper? name: [skip] `)
-    )?.trim();
-    wanted = answer ? answer : null;
+  if (wanted === null && !hasPaper && interactive && prompts && createPaper) {
+    const answer = await askOrNull(() =>
+      prompts.text({
+        message: "create a first paper? its name (an empty line skips):",
+        placeholder: "skip",
+      }),
+    );
+    if (cancelled(answer)) return stop(log);
+    const name = valueOr(answer, "").trim();
+    wanted = name ? name : null;
   }
   if (wanted !== null && createPaper) {
     const problem = nameProblem(wanted, venues);
@@ -831,8 +886,9 @@ export async function init(
   // ── 7. TeX Live — offered to a human with its cost, never installed unasked ─────────────
   log(``);
   log(`TeX Live (for \`paperlint build\`; \`paperlint lint\` needs none)`);
-  const texOutcome = await offerTexLive(opts.tex, { ask, interactive });
+  const texOutcome = await offerTexLive(opts.tex, { prompts, interactive });
   for (const line of reportTexLive(texOutcome, why)) log(line);
+  if (texOutcome === "cancelled") return CANCELLED_CODE;
 
   // ── 8. the other programs are reported, never installed ────────────────────────────────
   log(``);
