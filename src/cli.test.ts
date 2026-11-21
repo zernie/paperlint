@@ -1250,7 +1250,7 @@ test("artifact: the command is wired — an OSF upload's dry run sends nothing a
       "upload artifact.zip (15 bytes, sha256 59bd16dfc39e768f82bb8ec74467e571e80ed284683b586f077dbf1aa2483ecd) to osf project abcde",
       `then write ${join(dir, "papers/p/submission/artifact-upload.json")} with the host's hashes and 1 numbers`,
       "token: OSF_TOKEN_OSF_IO is set",
-      "DRY RUN: nothing uploaded, nothing written. Run again with --save to upload.",
+      "DRY RUN: nothing uploaded, nothing written. Run again with --save --node abcde to upload.",
     ].join("\n"),
   });
   assert.equal(existsSync(join(dir, "papers/p/submission")), false);

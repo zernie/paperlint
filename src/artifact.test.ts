@@ -273,14 +273,14 @@ test("upload: a dry run by default — it says what it would do and touches noth
     out: [
       ...PLAN,
       "token: H_TOKEN_H is set",
-      "DRY RUN: nothing uploaded, nothing written. Run again with --save to upload.",
+      "DRY RUN: nothing uploaded, nothing written. Run again with --save --node proj to upload.",
     ],
   });
   const none = await run(UPLOAD, PAPER, { env: { H_TOKEN: "old" } });
   // Guards: without its variable, the dry run says how to make one, and names the site-less one as unread.
   expect(none.out.slice(2)).toEqual([
     "H_TOKEN is set but not read: set H_TOKEN_H instead\n  1. make one: h.example/tokens\n  2. set it in your environment — never paste it into a chat: export H_TOKEN_H=<the token>",
-    "DRY RUN: nothing uploaded, nothing written. Run again with --save to upload.",
+    "DRY RUN: nothing uploaded, nothing written. Run again with --save --node proj to upload.",
   ]);
 });
 
@@ -349,6 +349,15 @@ test("upload: what stops it before the host", async () => {
     [RECORD_AT]: uploadRecordText({ ...RECORD, url: "https://h.example/f0" }),
   };
   expect((await code({ node: null }, {}, before))[0]).toBe(0);
+  // Guards: --save uploads only to a project on the command line, the one the person's yes names.
+  expect(
+    await code({ node: null, save: true }, { env: { H_TOKEN_H: "t" } }, before),
+  ).toEqual([
+    2,
+    0,
+    false,
+    "ERR paperlint artifact: --save uploads only to a project named with --node: run again with --save --node proj",
+  ]);
 });
 
 test("upload: what stops it at the host", async () => {

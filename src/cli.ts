@@ -242,6 +242,7 @@ import {
 import {
   submissionConfirm,
   UNREADABLE_INPUT,
+  type Upload,
 } from "./submission-confirm-hook.ts";
 import { leafCommandsNormalized } from "vigiles/hook";
 import {
@@ -1477,14 +1478,11 @@ export function submissionSend(
 }
 
 /**
- * The words after `artifact`, read by this CLI's own parser, for an upload: the file it uploads and
- * the paper (null for the current folder) — or null when they would not run cleanly.
+ * The words after `artifact`, read by this CLI's own parser, for an upload: the file it uploads, the
+ * paper (null for the current folder), and the host and project it goes to — or null when they would
+ * not run cleanly. `--save` uploads only to a project named on the command line (`artifact.ts`).
  */
-export function uploadSend(words: readonly string[]): {
-  readonly paper: string | null;
-  readonly pdf: null;
-  readonly artifact: string;
-} | null {
+export function uploadSend(words: readonly string[]): Upload | null {
   const a = parseArgs(["artifact", ...words]);
   const [sub, file, paper, ...rest] = a.paths;
   const clean =
@@ -1492,8 +1490,8 @@ export function uploadSend(words: readonly string[]): {
     a.unknownFlag === undefined &&
     sub === "upload" &&
     rest.length === 0;
-  return clean && file !== undefined
-    ? { paper: paper ?? null, pdf: null, artifact: file }
+  return clean && file !== undefined && a.to !== null && a.node !== null
+    ? { paper: paper ?? null, artifact: file, host: a.to, project: a.node }
     : null;
 }
 

@@ -836,7 +836,8 @@ test("the approved command start is compared as written; the host in any case", 
 
 const ZIP = new TextEncoder().encode("zip bytes");
 const ZIP_SHA = sha256Hex(ZIP).slice(0, 12);
-const UPLOAD = "npx paperlint artifact upload --to osf a.zip papers/p --save";
+const UPLOAD =
+  "npx paperlint artifact upload --to osf a.zip --node abcde papers/p --save";
 const withZip = (lines: readonly string[], command = UPLOAD) =>
   submissionConfirm(
     payload(command),
@@ -850,16 +851,17 @@ test("🔴 artifact upload --save, no yes: refused, naming the folder and the fi
       "Not run: this uploads the paper's artifact to its host, and the person has not said yes to it since the last send.",
       "paper folder: /w/papers/p",
       `artifact: a.zip, sha256 ${ZIP_SHA}`,
-      "Ask the person with AskUserQuestion first, then run this command again. In the question, give the paper folder (the full path) and the artifact's file and sha256, as written above, and the host and project the dry run names.",
+      "to: osf project abcde",
+      "Ask the person with AskUserQuestion first, then run this command again. In the question, give the paper folder (the full path), the artifact's file and sha256, and the project, as written above.",
       'Options: "Yes, upload it" and "No". One yes lets one upload through.',
     ].join("\n"),
   );
 });
 
-test("artifact upload --save runs after a yes naming its folder and sha256, once; the dry run is never gated", () => {
+test("artifact upload --save runs after a yes naming its folder, sha256 and project, once; the dry run is never gated", () => {
   const yes = question(
     "q1",
-    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA})?`,
+    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA}) to osf project abcde?`,
     "Yes, upload it",
   );
   // Guards: a yes lets it through.
@@ -880,13 +882,29 @@ test("artifact upload --save runs after a yes naming its folder and sha256, once
   ).toBe(null);
 });
 
+test("🔴 a yes to one project does not approve an upload to another", () => {
+  const yes = question(
+    "q1",
+    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA}) to osf project abcde?`,
+    "Yes, upload it",
+  );
+  const elsewhere = UPLOAD.replace("abcde", "zzzzz");
+  // Guards: the same folder and file, another --node: the yes does not cover it.
+  expect(withZip(yes, elsewhere)).toMatch(/^Not run: this uploads/u);
+  // Guards: a longer id that starts with the approved one is another project too.
+  expect(withZip(yes, UPLOAD.replace("abcde", "abcdef"))).toMatch(
+    /^Not run: this uploads/u,
+  );
+});
+
 test("artifact upload --save with a flag before the subcommand is a send too: refused without a yes, and it uses a yes up", () => {
-  const before = "npx paperlint artifact --to osf upload a.zip papers/p --save";
+  const before =
+    "npx paperlint artifact --to osf upload a.zip --node abcde papers/p --save";
   // Guards: the CLI reads the subcommand wherever the flags put it, so the hook must too.
   expect(withZip([], before)).toMatch(/^Not run: this uploads/u);
   const yes = question(
     "q1",
-    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA})?`,
+    `Upload a.zip (paper folder /w/papers/p, sha256 ${ZIP_SHA}) to project abcde?`,
     "Yes, upload it",
   );
   // Guards: it runs on a yes, and an earlier one of its kind used that yes.
@@ -899,20 +917,25 @@ test("artifact upload --save with a flag before the subcommand is a send too: re
 test("artifact upload --save of a file that is not there, or words that do not parse: refused, nothing to ask about", () => {
   // Guards: a missing file has no sha256 to ask about.
   expect(
-    withZip([], "npx paperlint artifact upload --to osf gone.zip --save"),
+    withZip(
+      [],
+      "npx paperlint artifact upload --to osf gone.zip --node abcde --save",
+    ),
   ).toBe(
     [
       "Not run: this uploads the paper's artifact to its host, and paperlint cannot find the file it uploads, so there is no sha256 to ask the person about.",
       "paper folder: /w",
       "artifact: gone.zip — NOT FOUND",
+      "to: osf project abcde",
       "Name the paper folder and the file plainly (no cd, no $…), run the dry run, and ask then.",
     ].join("\n"),
   );
-  // Guards: an upload naming no file, a stray operand, or an unknown flag is unresolved.
+  // Guards: an upload naming no file or no project, a stray operand, or an unknown flag is unresolved.
   [
-    "artifact upload --save",
-    "artifact upload a.zip p extra --save",
-    "artifact upload a.zip --nope --save",
+    "artifact upload --node abcde --save",
+    "artifact upload --to osf a.zip papers/p --save",
+    "artifact upload a.zip --node abcde p extra --save",
+    "artifact upload a.zip --node abcde --nope --save",
   ].forEach((c) => {
     expect(withZip([], `npx paperlint ${c}`)).toMatch(
       /could not resolve which PDF this send uploads/u,

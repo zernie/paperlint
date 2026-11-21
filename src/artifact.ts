@@ -280,6 +280,13 @@ async function upload(i: ArtifactInput, d: ArtifactDeps): Promise<number> {
   const x = await plan(i, d);
   if (!x.ok) return fail(x.error, d);
   const token = tokenFor(x.value.host, d);
+  // The person's yes names the project (`submission-confirm`), so `--save` takes it from the command
+  // line only, never from the record: the project the yes was given for is the one uploaded to.
+  if (i.save && i.node === null)
+    return fail(
+      `--save uploads only to a project named with --node: run again with --save --node ${x.value.target}`,
+      d,
+    );
   if (i.save)
     return token.ok
       ? send(x.value, token.value, d)
@@ -290,7 +297,7 @@ async function upload(i: ArtifactInput, d: ArtifactDeps): Promise<number> {
       : token.error.join("\n"),
   );
   d.log(
-    "DRY RUN: nothing uploaded, nothing written. Run again with --save to upload.",
+    `DRY RUN: nothing uploaded, nothing written. Run again with --save --node ${x.value.target} to upload.`,
   );
   return 0;
 }

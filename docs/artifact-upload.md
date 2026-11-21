@@ -81,13 +81,16 @@ would write and whether the token is set, and sends nothing. With `--save` it up
 of the file of the same name at the project's top level, else a new file), reads the host's hashes
 back, refuses to write a record when the host's sha256 is not the one sent (exit 1), and otherwise
 writes the same record as `record`, with the host's `id`, page and hashes. `--node` is the project's
-id (OSF: the five characters after `osf.io/`); without it, the project of an existing record's url.
+id (OSF: the five characters after `osf.io/`). The dry run may leave it out and take the project of
+an existing record's url, and then names it in its last line; `--save` uploads only to a project
+named with `--node`, so the project the person said yes to is the one the file goes to.
 
 The token is read from the environment only, never printed: `OSF_TOKEN_OSF_IO`, made at
 `osf.io/settings/tokens` with the scope `osf.full_write`. A plain `OSF_TOKEN` is not read (it is
 named when set), as `submission` names its per-site variables. In a Claude Code session with
 paperlint's hooks, `artifact upload … --save` runs only after the person's yes to a question naming
-the paper folder and the file's sha256 (`submission-confirm`, the same gate as `submission … --save`).
+the paper folder, the file's sha256 and the project (`submission-confirm`, the same gate as
+`submission … --save`).
 
 ## `paperlint artifact show`
 

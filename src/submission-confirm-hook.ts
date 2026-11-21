@@ -92,7 +92,7 @@ export type ConfirmDeps = PresetDeps & {
    */
   readonly readSend: (words: readonly string[]) => Send | null;
   /** The words after `artifact`, read the same way: the paper and the file an upload names, or null. */
-  readonly readUpload: (words: readonly string[]) => Send | null;
+  readonly readUpload: (words: readonly string[]) => Upload | null;
 };
 
 /** What Claude Code reads from a PreToolUse hook's stdout to refuse the command; the agent sees the reason. */
@@ -156,14 +156,19 @@ function isSend(l: ShellLeaf): boolean {
   );
 }
 
-/**
- * One send: the paper folder and the `--pdf` a `submission new|update` names (null for the default),
- * or, for `artifact upload`, the file it uploads in `artifact` (null for a submission).
- */
+/** One send: the paper folder and the `--pdf` a `submission new|update` names (null for the default). */
 export interface Send {
   readonly paper: string | null;
   readonly pdf: string | null;
-  readonly artifact?: string | null;
+}
+
+/** One `artifact upload --save`: the paper (null for the current folder), the file, and where it goes. */
+export interface Upload {
+  readonly paper: string | null;
+  readonly artifact: string;
+  /** The host's name (`--to`) and the project on it (`--node`). */
+  readonly host: string;
+  readonly project: string;
 }
 
 /** Programs that change the directory the rest of the command line runs in. */
@@ -177,7 +182,7 @@ const MOVES: ReadonlySet<string> = new Set(["cd", "pushd", "popd"]);
 function sendsIn(
   leaves: readonly ShellLeaf[],
   deps: Pick<ConfirmDeps, "readSend" | "readUpload">,
-): readonly (Send | null)[] {
+): readonly (Send | Upload | null)[] {
   return leaves.flatMap((l, n) => {
     const at = l.args.findIndex(
       (x, i) =>
@@ -262,10 +267,14 @@ function factsLines(
   return [...stale, bodyPages(f.value)];
 }
 
-/** What a yes to one send must name: the paper folder as the hook resolves it, and the PDF's sha256 prefix. */
+/**
+ * What a yes to one send must name: the paper folder as the hook resolves it, the file's sha256
+ * prefix, and, for an upload, the project it goes to.
+ */
 interface Named {
   readonly folder: string;
   readonly sha: string;
+  readonly project?: string;
 }
 
 /** One send, described: what a yes must name (null when the PDF is not found), and the lines for the person. */
@@ -276,30 +285,29 @@ interface Described {
   readonly upload?: true;
 }
 
-/** One upload, described: the paper, the file it uploads and its sha256. */
-function describeUpload(
-  send: Send,
-  file: string,
-  cwd: string,
-  files: Files,
-): Described {
-  const paperDir = resolve(cwd, send.paper ?? ".");
-  const bytes = files.readBytes(callerPath(resolve(cwd, file)));
+/** One upload, described: the paper, the file it uploads and its sha256, and where it goes. */
+function describeUpload(u: Upload, cwd: string, files: Files): Described {
+  const paperDir = resolve(cwd, u.paper ?? ".");
+  const bytes = files.readBytes(callerPath(resolve(cwd, u.artifact)));
   const sha = bytes === null ? null : sha256Hex(bytes).slice(0, SHA_SHOWN);
   return {
     upload: true,
-    named: sha === null ? null : { folder: paperDir, sha },
+    named: sha === null ? null : { folder: paperDir, sha, project: u.project },
     lines: [
       `paper folder: ${paperDir}`,
-      `artifact: ${file}${sha === null ? " — NOT FOUND" : `, sha256 ${sha}`}`,
+      `artifact: ${u.artifact}${sha === null ? " — NOT FOUND" : `, sha256 ${sha}`}`,
+      `to: ${u.host} project ${u.project}`,
     ],
   };
 }
 
 /** One send, described: the paper, the PDF as the command resolves it, what the build saw. */
-function describe(send: Send, cwd: string, deps: PresetDeps): Described {
-  if (typeof send.artifact === "string")
-    return describeUpload(send, send.artifact, cwd, deps.files);
+function describe(
+  send: Send | Upload,
+  cwd: string,
+  deps: PresetDeps,
+): Described {
+  if ("artifact" in send) return describeUpload(send, cwd, deps.files);
   const paperDir = resolve(cwd, send.paper ?? ".");
   const p = paperPreset(paperDir, deps);
   const own = paperPdf(
@@ -333,7 +341,7 @@ const NOT_UPLOADED = "Not run: this uploads the paper's artifact to its host";
 
 /** What to ask before an artifact upload. */
 const HOW_TO_ASK_UPLOAD = [
-  "Ask the person with AskUserQuestion first, then run this command again. In the question, give the paper folder (the full path) and the artifact's file and sha256, as written above, and the host and project the dry run names.",
+  "Ask the person with AskUserQuestion first, then run this command again. In the question, give the paper folder (the full path), the artifact's file and sha256, and the project, as written above.",
   'Options: "Yes, upload it" and "No". One yes lets one upload through.',
 ].join("\n");
 
@@ -475,11 +483,11 @@ const literal = (text: string): string =>
   text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
 /**
- * Whether a question names the folder `folder` and not a longer path that starts with it
- * (`/w/paper` is not `/w/paper2` or `/w/paper.old`), nor one it ends: the whole path, case-sensitive.
+ * Whether a question names `word` (a folder, a project id) and not a longer one that starts with it
+ * (`/w/paper` is not `/w/paper2` or `/w/paper.old`), nor one it ends: the whole word, case-sensitive.
  */
-const namesFolder = (question: string, folder: string): boolean =>
-  new RegExp(`(?<![\\w.-])${literal(folder)}(?![\\w.-])`, "u").test(question);
+const namesWhole = (question: string, word: string): boolean =>
+  new RegExp(`(?<![\\w.-])${literal(word)}(?![\\w.-])`, "u").test(question);
 
 /** A question a yes must have been given to: what a send or a portal command needs it to name. */
 type Needs = (question: string) => boolean;
@@ -504,11 +512,13 @@ function takeYes(
   return found !== undefined && isYes(found) ? new Set([...taken, at]) : null;
 }
 
-/** What a yes to one send must name: its sha256 (any case) and its folder (the whole path, as written). */
+/** What a yes to one send must name: its sha256 (any case), its folder (the whole path, as written) and its project. */
 const namesSend =
   (s: Named): Needs =>
   (question) =>
-    hasAll(question, [s.sha]) && namesFolder(question, s.folder);
+    hasAll(question, [s.sha]) &&
+    namesWhole(question, s.folder) &&
+    (s.project === undefined || namesWhole(question, s.project));
 
 /** What a yes to a command that names a portal must name: the host (any case) and the command's start, literally. */
 const namesPortal =
