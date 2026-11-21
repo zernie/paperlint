@@ -1,10 +1,10 @@
 ---
 name: argument-arc
 description: Build or repair the paper's argument architecture — the one-sentence-per-section outline, the bottom-up inevitability pass, and the name/number budget. Run it when the reader says the paper throws ideas at them, when a structural objection repeats, or before any large rewrite. Not a prose or length skill.
-allowed-tools: [Read, Write, Grep, Glob, Agent]
+allowed-tools: [Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:3a416cbcd232144a compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6a52098196a11a05 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
