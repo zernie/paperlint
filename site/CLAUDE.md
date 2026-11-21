@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:172065a53542b994 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:89320c33252078ae compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -38,7 +38,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### The Journey
 
-**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, an index of the four stops on the left and the open stop's plate on the right; on a phone each stop opens in place. One stop is open at a time, and they are never collapsed into one plain list. Findings appear only here. The author chose this index on 2026-11-19, on the quiet stone ground; what was rejected is in `site/DESIGN.md`.
+**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, an index of the four stops on the left and the open stop's plate on the right; on a phone each stop opens in place. One stop is open at a time, and they are never collapsed into one plain list. A click or the keyboard opens a stop; with a mouse (a fine pointer that can hover), resting on an entry for 120 ms opens it too, and a quick pass-over does not, so sweeping across the index does not flicker; touch keeps tap-to-open; under reduced motion the page switches without the fade. `site/test/browser/journey.browser.ts` holds both halves (the author, 2026-11-22). Findings appear only here. The author chose this index on 2026-11-19, on the quiet stone ground; what was rejected is in `site/DESIGN.md`.
 
 ### A Short Page
 

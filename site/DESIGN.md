@@ -105,7 +105,8 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
    (`src/shared/ui/wordmark.tsx`, the same component as the nav logo). Four facts. The campus
    etching as a plate, its edges masked into the paper, with no caption. There is no install
    block and there are no links.
-3. **01 Checks, on stone.** On the left, an index of the four stops; on the right, the open stop's
+3. **01 Checks, on stone.** On the left, an index of the four stops (a click, the keyboard, or a
+   mouse resting 120 ms on an entry opens it); on the right, the open stop's
    plate, a white sheet with a hairline edge. Only this section shows findings: stop 01 shows
    three real desk-reject reasons. On a phone each stop opens in place.
 4. **02 Install, on paper.** Right after the road, where a reader who has seen what paperlint

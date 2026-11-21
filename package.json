@@ -20,7 +20,7 @@
     "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines/main.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
-    "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site"
+    "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site && npm run test:browser --prefix site"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
