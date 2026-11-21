@@ -8,12 +8,8 @@ import { fencedAfter } from "@/shared/lib/readme";
 export const captions: readonly (readonly [prefix: string, caption: string])[] =
   [
     [
-      "npm i -D paperlint",
-      "Adds paperlint to this folder. Nothing runs while it installs.",
-    ],
-    [
       "npx paperlint init",
-      "Sets up the project: finds or asks where your papers live, then offers TeX Live and an automatic check on GitHub. It installs no software you did not say yes to.",
+      "Adds paperlint to this folder, then sets up the project: finds or asks where your papers live, then offers TeX Live and an automatic check on GitHub. Besides paperlint itself, it installs nothing you did not say yes to.",
     ],
     [
       "npx paperlint new",
