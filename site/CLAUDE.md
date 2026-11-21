@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:5d8fbb0a618ecadb compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:172065a53542b994 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -6,7 +6,7 @@
 
 paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
 `site/package.json` and lock, so the npm package carries none of it. `site/src/shared/lib/readme/content.ts` reads
-the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
+the per-paper commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
 tree from `docs/layout.md` the same way, and `site/src/shared/lib/readme/venues.ts` groups the shipped venues by field
 from `docs/venues.md`. `site/src/entities/finding/model/findings.ts` quotes each finding the
@@ -26,7 +26,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### The Linter First
 
-**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, what it adds, how to turn it on, and that it never changes what `paperlint lint` reports and calls no model on its own. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
+**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, first that it is opt-in and off until turned on, then what it adds, that `paperlint lint` reports the same findings with it and its hooks call no model, and how to turn it on. Its copy states facts plainly, without the 'not X but Y' pattern. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
 
 ### Modern Not 2010
 
@@ -54,7 +54,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### No Promise Beyond The Readme
 
-**Guidance only** — The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant': the README calls paperlint an aid, not a guarantee, and the page shows that sentence, read from the README.
+**Guidance only** — The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant'. The README asks the author to check the venue's own call before submitting and says a check can miss a case; the page shows that quote, read from the README.
 
 ### Only What Ships
 
@@ -62,7 +62,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### Not Scary For Non Programmers
 
-**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in terracotta, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.
+**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in the error colour, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.
 
 ### Say Latex And Peer Review
 

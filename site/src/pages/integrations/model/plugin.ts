@@ -28,7 +28,7 @@ export const pluginSteps = (
   {
     command: `/plugin marketplace add ${githubSlug(repository)}`,
     caption:
-      "Tells Claude Code where paperlint's plugin is published: this repository on GitHub. Type it inside Claude Code, not in a terminal.",
+      "Tells Claude Code where paperlint's plugin is published: this repository on GitHub. Type it in Claude Code's prompt.",
   },
   {
     command: `/plugin install ${name}@${name}`,

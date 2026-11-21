@@ -14,7 +14,6 @@ export interface Venue {
 
 /** The README's content the site shows. */
 export interface ReadmeContent {
-  readonly install: readonly string[];
   readonly lintOutput: readonly string[];
   readonly venues: readonly Venue[];
   readonly disclaimer: string;
@@ -80,14 +79,18 @@ export const tableAfter = (
     .map((line) => line.split("|").slice(1, -1).map(plain));
 };
 
-/** The README's warning that a clean run is no guarantee, as plain text, up to its licence sentence. */
+/** The README's warning to check the venue's own call, as plain text, up to its licence sentence. */
 export const disclaimer = (text: string): string => {
   const lines = text.split("\n");
   const at = lines.findIndex(
-    (line) => line.startsWith(">") && line.includes("An aid, not a guarantee"),
+    (line) =>
+      line.startsWith(">") &&
+      line.includes("Check the venue's own call before you submit."),
   );
   const rest =
-    at === -1 ? fail('no "An aid, not a guarantee" quote') : lines.slice(at);
+    at === -1
+      ? fail(`no "Check the venue's own call before you submit." quote`)
+      : lines.slice(at);
   const end = rest.findIndex((line) => !line.startsWith(">"));
   const quote = (end === -1 ? rest : rest.slice(0, end))
     .map((line) => line.replace(/^>\s?/, ""))
@@ -100,9 +103,8 @@ export const disclaimer = (text: string): string => {
   );
 };
 
-/** The README's install commands, its first lint output, its venue presets and its disclaimer. */
+/** The README's first lint output, its venue presets and its disclaimer. */
 export const readmeContent = (readme: string): ReadmeContent => {
-  const install = fencedAfter(readme, "### A new paper", "sh");
   const lintOutput = fencedAfter(
     readme,
     "the first run already catches something",
@@ -117,9 +119,6 @@ export const readmeContent = (readme: string): ReadmeContent => {
     }),
   );
   return {
-    install: install.some((line) => line.startsWith("npm i"))
-      ? install
-      : fail("no `npm i` in the install block"),
     lintOutput,
     venues: venues.length > 0 ? venues : fail("an empty venue table"),
     disclaimer: disclaimer(readme),

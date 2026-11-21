@@ -45,9 +45,22 @@ with a name that says what it is for.
 | `--color-ink-blue`         | `#305e8b` | the one accent (`primary`): the venue name, the open numeral |
 | `--color-sage`             | `#56695c` | a fact's word in the hero (5.6:1 on paper)                   |
 | `--color-sand-deep`        | `#8a6a36` | a fact's word in the hero (4.8:1 on paper)                   |
-| `--color-signal`           | `#c15f3c` | terracotta, for an error only: «error» in terminal output    |
-| `--color-error`            | `#a24a2b` | a finding's «Must fix»                                       |
-| `--color-warn`             | `#8a6a1c` | a finding's «Advice»; «warning» in terminal output           |
+| `--color-signal`           | `#c15f3c` | terracotta, for an error only (`destructive`)                |
+| `--color-error`            | `#a24a2b` | a finding's «Must fix»; «error» in terminal output (AA)      |
+| `--color-warn`             | `#846419` | a finding's «Advice»; «warning» in terminal output (AA)      |
+
+### Code
+
+Commands and JSON are highlighted by Shiki at build time (`src/shared/lib/highlight`): the page
+gets spans with these classes and no highlighter script. Arguments and JSON keys stay ink. Each
+passes AA for `text-code` on white, stone and card; the lowest ratio is on card.
+
+| token                    | value              | use                                                               | on card |
+| ------------------------ | ------------------ | ----------------------------------------------------------------- | ------- |
+| `--color-syntax-command` | `ink-blue` #305e8b | the program: `npx`, `/plugin`                                     | 5.90:1  |
+| `--color-syntax-flag`    | `sage` #56695c     | an option: `--venue`                                              | 5.12:1  |
+| `--color-syntax-string`  | `#7f6131`          | a quoted string, a JSON value, a `quoted` name in terminal output | 5.00:1  |
+| `--color-syntax-comment` | `#5f5d58`          | a comment                                                         | 5.73:1  |
 
 ### Type
 
@@ -97,23 +110,29 @@ Every gap is a multiple of 8 px (Tailwind's 2, 4, 6, 8, 12, 16 …).
    three real desk-reject reasons. On a phone each stop opens in place.
 4. **02 Install, on paper.** Right after the road, where a reader who has seen what paperlint
    catches asks how to start. The heading and «In a terminal, in the folder that holds your
-   papers» on the left; on the right the README's install commands, then «Then, for each paper»
-   and the commands that create, build and check one, each with its caption and a Copy button.
-   Last, one line: the optional Claude Code plugin, linked to `/integrations`.
+   papers» on the left; on the right the one install command, `npx paperlint init`
+   (`src/shared/config/install.ts`), then «Then, for each paper» and the README's commands that
+   create, build and check one, each with its caption and a Copy button. Last, one line: the
+   optional Claude Code plugin, linked to `/integrations`.
 5. **03 Venues, on soft sand.** The heading and a short note on the left, with the families in one
    line («And any ACM, IEEE or ACL conference, by its template»). On the right, the four fields of
    `docs/venues.md` two by two, each workshop under its conference. A name opens its format and
    page limits.
 6. **04 Questions, on paper.** The heading on the left, the folded answers on the right.
-7. **Footer, on stone.** The README's «An aid, not a guarantee», the links, «Made by zernie».
+7. **Footer, on stone.** The README's «Check the venue's own call before you submit», the links,
+   «Made by zernie».
 
 ## `/integrations`
 
 The one page that describes the Claude Code plugin (`site/CLAUDE.md`, "The Linter First"), on
 paper, with the same header and footer. On the left the label, the headline «paperlint and Claude
-Code.» and a lead saying the linter does not need it. On the right four parts under hairlines, in
-this order: the linter is deterministic; what the plugin adds; what it never does; how to turn it
-on, with the two Claude Code commands, each with its caption and a Copy button.
+Code.», then first «Optional. It stays off until you turn it on.» and a lead saying paperlint works
+on its own. On the right four parts under hairlines, in this order: the linter is fixed rules; what
+the plugin adds; what stays the same; how to turn it on, which leads with `npx paperlint init` and
+its question, then «Or add it by hand, inside Claude Code» with the two Claude Code commands. Every
+command has its caption and a Copy button. The copy states facts plainly: no «not X but Y», no
+«if you do not…»; a negative stays only where it is itself the fact («sends nothing to an AI
+model»).
 
 ## Patterns
 
@@ -124,7 +143,7 @@ on, with the two Claude Code commands, each with its caption and a Copy button.
   (`src/pages/home/model/facts.test.ts`).
 - **Finding.** «Must fix» or «Advice», a serif title, one plain sentence, then what the terminal
   says, open, in a soft stone panel in JetBrains Mono: the file and the line muted, «error» in
-  `signal` or «warning» in `warn`, the message, the rule id muted. The line wraps rather than
+  `error` or «warning» in `warn`, the message, the rule id muted. The line wraps rather than
   scrolling sideways.
 
 ## Motion

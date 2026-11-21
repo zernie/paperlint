@@ -40,9 +40,17 @@
   --color-sand-deep: #8a6a36;
   /* Text present but not chosen: a checkpoint that is not open (3.4:1 on stone, for large type). */
   --color-faint: #85827a;
-  /* A finding's level: text on its tint. */
-  --color-warn: #8a6a1c;
+  /* A finding's level: text on its tint. Each passes AA (4.5:1) for code-size text on stone, where
+     the terminal output sits: warn 4.86:1, error 5.23:1. */
+  --color-warn: #846419;
   --color-error: #a24a2b;
+  /* Highlighted code (src/shared/lib/highlight), read on white, stone and card: a program's name, an
+     option, a quoted string, a comment. Arguments stay ink. Each passes AA for code-size text on the
+     darkest of those grounds, card: 5.90, 5.12, 5.00 and 5.73 to 1. */
+  --color-syntax-command: var(--color-ink-blue);
+  --color-syntax-flag: var(--color-sage);
+  --color-syntax-string: #7f6131;
+  --color-syntax-comment: #5f5d58;
 
   /* shadcn's semantic names, mapped onto the palette. */
   --color-background: var(--color-paper);

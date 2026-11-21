@@ -1,4 +1,5 @@
-// A plain caption for each command the README shows, keyed by how the command starts. The commands
+// A plain caption for each command the README shows for one paper, keyed by how the command starts.
+// The install command and its caption are INIT in src/shared/config. The commands
 // themselves are read from README.md at build time; a command with no caption here fails the build,
 // so the page never shows a bare command (site/CLAUDE.md, "Not Scary For Non Programmers"). Each
 // caption is checked against README.md and docs/install.md.
@@ -7,14 +8,6 @@ import { fencedAfter } from "@/shared/lib/readme";
 
 export const captions: readonly (readonly [prefix: string, caption: string])[] =
   [
-    [
-      "npm i -D paperlint",
-      "Adds paperlint to this folder. Nothing runs while it installs.",
-    ],
-    [
-      "npx paperlint init",
-      "Sets up the project: finds or asks where your papers live, then offers TeX Live and an automatic check on GitHub. It installs no software you did not say yes to.",
-    ],
     [
       "npx paperlint new",
       "Creates a folder for one paper. --venue names its venue, --kind which of its page limits applies.",

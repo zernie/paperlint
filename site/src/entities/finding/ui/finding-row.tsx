@@ -3,8 +3,28 @@ import type { Explained } from "../model/explain.ts";
 const LEVEL = { error: "Must fix", warning: "Advice" } as const;
 
 /**
+ * A message with its `quoted` names in the string colour. Shiki has no grammar for ESLint's
+ * output, and the parts around the message are already split by explain.ts, so this is the one
+ * piece left: a split on the backtick.
+ */
+const Message = ({ text }: { readonly text: string }) => (
+  <>
+    {text.split("`").map((part, i) =>
+      i % 2 === 1 ? (
+        <span key={i} className="text-syntax-string">
+          `{part}`
+        </span>
+      ) : (
+        part
+      ),
+    )}
+  </>
+);
+
+/**
  * What the terminal prints for the finding, shown open on a soft stone ground: the file and the
- * line muted, the level in its colour, the message, the rule id muted.
+ * line muted, the level in its colour (error and warn, both AA on stone), the message with its
+ * quoted names, the rule id muted.
  */
 const Terminal = ({ f }: { readonly f: Explained }) => (
   <div
@@ -22,11 +42,11 @@ const Terminal = ({ f }: { readonly f: Explained }) => (
           {"  "}
         </span>
       )}
-      <span className={f.level === "error" ? "text-signal" : "text-warn"}>
+      <span className={f.level === "error" ? "text-error" : "text-warn"}>
         {f.level}
       </span>
       {"  "}
-      {f.message}
+      <Message text={f.message} />
       {"  "}
       <span className="text-muted-foreground">{f.rule}</span>
     </p>

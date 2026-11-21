@@ -5,7 +5,7 @@ export default instructionFile({
   sections: {
     "`site/`": prose`paperlint.dev: a static Next.js export (${file("site/next.config.ts")}) with its own
 ${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/src/shared/lib/readme/content.ts")} reads
-the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
+the per-paper commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
 tree from ${file("docs/layout.md")} the same way, and ${file("site/src/shared/lib/readme/venues.ts")} groups the shipped venues by field
 from ${file("docs/venues.md")}. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
@@ -22,7 +22,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
       "The page must read as a dependable tool to a working scientist, never as AI marketing. No sparkles, glow, decorative gradients, stock icons or emoji; no 'AI-powered', 'magic' or 'effortless'. Every block shows something real: a command, a real finding, a real file. Many researchers distrust AI tools, and one slop signal costs the reader's trust in the linter.",
     ),
     "the-linter-first": guidance(
-      "The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, what it adds, how to turn it on, and that it never changes what `paperlint lint` reports and calls no model on its own. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.",
+      "The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, first that it is opt-in and off until turned on, then what it adds, that `paperlint lint` reports the same findings with it and its hooks call no model, and how to turn it on. Its copy states facts plainly, without the 'not X but Y' pattern. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.",
     ),
     "modern-not-2010": guidance(
       "Editorial, in the manner of a design magazine (Kinfolk and Cereal for the air, Monocle for the structure), never a scientific journal: a large serif headline, warm paper, generous margins, the etching set like a plate. A 12-column grid, max width about 1200 px, every gap a multiple of 8 px, text left-aligned; sections are set apart by their grounds, thin rules and space, not by cards with drop shadows. The author rejected the earlier versions as looking like 2010 and then 2015 (2026-11-19). A change that shrinks the type, crowds the page or brings shadows back needs a screenshot and the author's yes. The details: `site/DESIGN.md`.",
@@ -43,13 +43,13 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
       "The hero art is an invented campus in the Stanford style (sandstone arcades, red tile roofs, palms), as an ink etching with a light wash. Never a real, recognisable building such as Hoover Tower or Memorial Church: a scientist who knows it reads an affiliation paperlint does not have. An image model draws them unasked; look before using any output.",
     ),
     "no-promise-beyond-the-readme": guidance(
-      "The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant': the README calls paperlint an aid, not a guarantee, and the page shows that sentence, read from the README.",
+      "The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant'. The README asks the author to check the venue's own call before submitting and says a check can miss a case; the page shows that quote, read from the README.",
     ),
     "only-what-ships": guidance(
       "A venue, finding, count or command on the page is read from the repository at build time or quoted with a test behind it. The prose around them is written by hand, and each sentence is checked against the rule's docs page in the same pass that writes it. The headline cycles only the venues of the README's table. A claim the code does not back (for instance findings inside an editor: `paperlint lint` builds its own ESLint config, so an editor shows none) stays off the page until it is measured.",
     ),
     "not-scary-for-non-programmers": guidance(
-      "Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in terracotta, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.",
+      "Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in the error colour, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.",
     ),
     "say-latex-and-peer-review": guidance(
       "The page says, in so many words, that paperlint is for papers written in LaTeX and that it checks them before submission to peer review. A reader who skims the hero must not have to guess either.",
