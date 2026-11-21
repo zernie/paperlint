@@ -3,7 +3,8 @@
  * PreToolUse on `Bash` (`plugin/hooks/hooks.json`): a command that sends a submission — `paperlint
  * submission new|update` with `--save` or `--submit` — runs only when the person has said yes, in an
  * `AskUserQuestion` asked since the last send, to a question naming the paper folder (its full path)
- * and the sha256 of the PDF it sends.
+ * and the sha256 of the PDF it sends. An upload of the artifact, `paperlint artifact upload … --save`,
+ * is a send too: the question names the paper folder and the sha256 of the file it uploads.
  * A command that names a portal's host runs only after a yes to a question naming that host and the
  * command's first 60 characters. Without the yes the command is refused (`"permissionDecision":
  * "deny"`), and the reason tells the agent exactly what to ask. Anything else: no output.
@@ -90,6 +91,8 @@ export type ConfirmDeps = PresetDeps & {
    * `--pdf` the send names (null for the defaults), or null when they do not parse cleanly.
    */
   readonly readSend: (words: readonly string[]) => Send | null;
+  /** The words after `artifact`, read the same way: the paper and the file an upload names, or null. */
+  readonly readUpload: (words: readonly string[]) => Upload | null;
 };
 
 /** What Claude Code reads from a PreToolUse hook's stdout to refuse the command; the agent sees the reason. */
@@ -129,20 +132,43 @@ function allLeaves(
   ];
 }
 
-/** A `paperlint submission new|update` with `--save` or `--submit`, in the words of one command. */
+/**
+ * Where a `paperlint artifact … upload … --save` stands in one command's words; -1 for none. The CLI
+ * reads the subcommand wherever the flags leave it (`artifact --to osf upload …`), so any `upload`
+ * after `artifact` counts here; `readUpload`, the CLI's own parser, then reads the words, and words
+ * it cannot read cleanly are refused rather than let through.
+ */
+const uploadAt = (l: ShellLeaf): number =>
+  l.hasFlag("save")
+    ? l.args.findIndex(
+        (x, i) => x === "artifact" && l.args.slice(i + 1).includes("upload"),
+      )
+    : -1;
+
+/** A `paperlint submission new|update` with `--save` or `--submit`, or an upload that saves, in the words of one command. */
 function isSend(l: ShellLeaf): boolean {
   const at = l.args.indexOf("submission");
   return (
-    at >= 0 &&
-    l.args.slice(at + 1).some((w) => w === "new" || w === "update") &&
-    l.hasFlag("save", "submit")
+    (at >= 0 &&
+      l.args.slice(at + 1).some((w) => w === "new" || w === "update") &&
+      l.hasFlag("save", "submit")) ||
+    uploadAt(l) >= 0
   );
 }
 
-/** One `paperlint submission new|update` send: the paper folder and `--pdf` it names; null for the default. */
+/** One send: the paper folder and the `--pdf` a `submission new|update` names (null for the default). */
 export interface Send {
   readonly paper: string | null;
   readonly pdf: string | null;
+}
+
+/** One `artifact upload --save`: the paper (null for the current folder), the file, and where it goes. */
+export interface Upload {
+  readonly paper: string | null;
+  readonly artifact: string;
+  /** The host's name (`--to`) and the project on it (`--node`). */
+  readonly host: string;
+  readonly project: string;
 }
 
 /** Programs that change the directory the rest of the command line runs in. */
@@ -155,18 +181,25 @@ const MOVES: ReadonlySet<string> = new Set(["cd", "pushd", "popd"]);
  */
 function sendsIn(
   leaves: readonly ShellLeaf[],
-  readSend: ConfirmDeps["readSend"],
-): readonly (Send | null)[] {
+  deps: Pick<ConfirmDeps, "readSend" | "readUpload">,
+): readonly (Send | Upload | null)[] {
   return leaves.flatMap((l, n) => {
     const at = l.args.findIndex(
       (x, i) =>
         x === "submission" && /^(?:new|update)$/u.test(l.args[i + 1] ?? ""),
     );
-    if (at < 0 || !l.hasFlag("save", "submit")) return [];
+    const sends = at >= 0 && l.hasFlag("save", "submit");
+    const up = uploadAt(l);
+    if (!sends && up < 0) return [];
     const moved = leaves
       .slice(0, n + 1)
       .some((x) => MOVES.has(x.head) || x.chdir !== null);
-    return [moved ? null : readSend(l.args.slice(at + 1))];
+    if (moved) return [null];
+    return [
+      sends
+        ? deps.readSend(l.args.slice(at + 1))
+        : deps.readUpload(l.args.slice(up + 1)),
+    ];
   });
 }
 
@@ -234,20 +267,47 @@ function factsLines(
   return [...stale, bodyPages(f.value)];
 }
 
-/** What a yes to one send must name: the paper folder as the hook resolves it, and the PDF's sha256 prefix. */
+/**
+ * What a yes to one send must name: the paper folder as the hook resolves it, the file's sha256
+ * prefix, and, for an upload, the project it goes to.
+ */
 interface Named {
   readonly folder: string;
   readonly sha: string;
+  readonly project?: string;
 }
 
 /** One send, described: what a yes must name (null when the PDF is not found), and the lines for the person. */
 interface Described {
   readonly named: Named | null;
   readonly lines: readonly string[];
+  /** An artifact upload, not a submission. */
+  readonly upload?: true;
+}
+
+/** One upload, described: the paper, the file it uploads and its sha256, and where it goes. */
+function describeUpload(u: Upload, cwd: string, files: Files): Described {
+  const paperDir = resolve(cwd, u.paper ?? ".");
+  const bytes = files.readBytes(callerPath(resolve(cwd, u.artifact)));
+  const sha = bytes === null ? null : sha256Hex(bytes).slice(0, SHA_SHOWN);
+  return {
+    upload: true,
+    named: sha === null ? null : { folder: paperDir, sha, project: u.project },
+    lines: [
+      `paper folder: ${paperDir}`,
+      `artifact: ${u.artifact}${sha === null ? " — NOT FOUND" : `, sha256 ${sha}`}`,
+      `to: ${u.host} project ${u.project}`,
+    ],
+  };
 }
 
 /** One send, described: the paper, the PDF as the command resolves it, what the build saw. */
-function describe(send: Send, cwd: string, deps: PresetDeps): Described {
+function describe(
+  send: Send | Upload,
+  cwd: string,
+  deps: PresetDeps,
+): Described {
+  if ("artifact" in send) return describeUpload(send, cwd, deps.files);
   const paperDir = resolve(cwd, send.paper ?? ".");
   const p = paperPreset(paperDir, deps);
   const own = paperPdf(
@@ -277,6 +337,17 @@ const UNRESOLVED =
 
 const NOT_SENT = "Not run: this sends the paper to the venue's portal";
 const NAMES_PORTAL = "Not run: this command names a venue's submission portal";
+const NOT_UPLOADED = "Not run: this uploads the paper's artifact to its host";
+
+/** What to ask before an artifact upload. */
+const HOW_TO_ASK_UPLOAD = [
+  "Ask the person with AskUserQuestion first, then run this command again. In the question, give the paper folder (the full path), the artifact's file and sha256, and the project, as written above.",
+  'Options: "Yes, upload it" and "No". One yes lets one upload through.',
+].join("\n");
+
+/** Whether every send of a command is an artifact upload: then it is asked about as one. */
+const onlyUploads = (described: readonly Described[]): boolean =>
+  described.every((d) => d.upload === true);
 
 /** What to ask, once every send's PDF is known. */
 const HOW_TO_ASK = [
@@ -412,11 +483,11 @@ const literal = (text: string): string =>
   text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 
 /**
- * Whether a question names the folder `folder` and not a longer path that starts with it
- * (`/w/paper` is not `/w/paper2` or `/w/paper.old`), nor one it ends: the whole path, case-sensitive.
+ * Whether a question names `word` (a folder, a project id) and not a longer one that starts with it
+ * (`/w/paper` is not `/w/paper2` or `/w/paper.old`), nor one it ends: the whole word, case-sensitive.
  */
-const namesFolder = (question: string, folder: string): boolean =>
-  new RegExp(`(?<![\\w.-])${literal(folder)}(?![\\w.-])`, "u").test(question);
+const namesWhole = (question: string, word: string): boolean =>
+  new RegExp(`(?<![\\w.-])${literal(word)}(?![\\w.-])`, "u").test(question);
 
 /** A question a yes must have been given to: what a send or a portal command needs it to name. */
 type Needs = (question: string) => boolean;
@@ -441,11 +512,13 @@ function takeYes(
   return found !== undefined && isYes(found) ? new Set([...taken, at]) : null;
 }
 
-/** What a yes to one send must name: its sha256 (any case) and its folder (the whole path, as written). */
+/** What a yes to one send must name: its sha256 (any case), its folder (the whole path, as written) and its project. */
 const namesSend =
   (s: Named): Needs =>
   (question) =>
-    hasAll(question, [s.sha]) && namesFolder(question, s.folder);
+    hasAll(question, [s.sha]) &&
+    namesWhole(question, s.folder) &&
+    (s.project === undefined || namesWhole(question, s.project));
 
 /** What a yes to a command that names a portal must name: the host (any case) and the command's start, literally. */
 const namesPortal =
@@ -478,18 +551,25 @@ function describedSends(
 ): readonly Described[] {
   const sends = /[`$]/u.test(command)
     ? []
-    : sendsIn(deps.shellLeaves(command), deps.readSend);
+    : sendsIn(deps.shellLeaves(command), deps);
   return (sends.length === 0 ? [null] : sends).map((x): Described =>
     x === null ? { named: null, lines: [UNRESOLVED] } : describe(x, cwd, deps),
   );
 }
 
 /** The refusal of a send whose PDF is not known or not there: there is no sha256 to ask about. */
-const noPdf = (described: readonly Described[]): readonly string[] => [
-  `${NOT_SENT}, and paperlint cannot find the PDF it uploads, so there is no sha256 to ask the person about.`,
-  ...blocks(described),
-  "Name the paper folder and the PDF plainly (no cd, no $…), build the PDF, run the dry run, and ask then.",
-];
+const noPdf = (described: readonly Described[]): readonly string[] =>
+  onlyUploads(described)
+    ? [
+        `${NOT_UPLOADED}, and paperlint cannot find the file it uploads, so there is no sha256 to ask the person about.`,
+        ...blocks(described),
+        "Name the paper folder and the file plainly (no cd, no $…), run the dry run, and ask then.",
+      ]
+    : [
+        `${NOT_SENT}, and paperlint cannot find the PDF it uploads, so there is no sha256 to ask the person about.`,
+        ...blocks(described),
+        "Name the paper folder and the PDF plainly (no cd, no $…), build the PDF, run the dry run, and ask then.",
+      ];
 
 /** The portal hosts the venue presets declare, or — when they cannot be read — none, and why. */
 interface Hosts {
@@ -523,6 +603,17 @@ const fallbackLines = (h: Hosts): readonly string[] =>
         `The venue presets could not be read (${h.failed}), so only HotCRP-hosted sites and paperlint sends are recognised until they are fixed.`,
       ];
 
+/** How a refusal opens, and what it says to ask: a portal named, a paperlint send, or only uploads. */
+function wordsFor(
+  paperlint: boolean,
+  described: readonly Described[],
+): { readonly base: string; readonly ask: readonly string[] } {
+  if (!paperlint) return { base: NAMES_PORTAL, ask: [] };
+  return onlyUploads(described)
+    ? { base: NOT_UPLOADED, ask: [HOW_TO_ASK_UPLOAD] }
+    : { base: NOT_SENT, ask: [HOW_TO_ASK] };
+}
+
 /**
  * A command that sends: let through (null) when the person said yes to it since the last send —
  * each paperlint send by its paper folder and its PDF's sha256, a yes of its own for each, a portal
@@ -537,7 +628,7 @@ function decide(
   const described = c.paperlint ? describedSends(c.text, c.cwd, deps) : [];
   const named = described.flatMap((d) => (d.named === null ? [] : [d.named]));
   if (named.length < described.length) return noPdf(described);
-  const base = c.paperlint ? NOT_SENT : NAMES_PORTAL;
+  const { base, ask } = wordsFor(c.paperlint, described);
   const read = transcriptOf(payload, deps.files);
   if (typeof read !== "string")
     return [
@@ -550,7 +641,7 @@ function decide(
   return [
     `${base}, and the person has not said yes to it since the last send.`,
     ...blocks(described),
-    ...(c.paperlint ? [HOW_TO_ASK] : []),
+    ...ask,
     ...portalLines(c.host, start),
   ];
 }
@@ -573,7 +664,9 @@ function earlierSend(
     mayHold: (text) => {
       const plain = text.replace(/["'\\]/gu, "").toLowerCase();
       return (
-        plain.includes("submission") || known.some((h) => plain.includes(h))
+        plain.includes("submission") ||
+        plain.includes("artifact") ||
+        known.some((h) => plain.includes(h))
       );
     },
     sends: (command) => {

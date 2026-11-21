@@ -6,7 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test, vi } from "vitest";
@@ -17,6 +17,7 @@ import {
   venuePreset,
   writeTree,
 } from "../test/support.ts";
+import { parseUploadRecord } from "./domain/artifact-upload.ts";
 import type { runToolchain } from "./toolchain.ts";
 import {
   chooseVenue,
@@ -1216,5 +1217,152 @@ test("versions: migrate moves an old-layout paper on disk into folders per attem
   assert.equal(
     l.out,
     "versions/lock.json records every frozen file as it stands",
+  );
+});
+
+test("artifact: the command is wired — an OSF upload's dry run sends nothing and reads the token's presence from the environment", async () => {
+  const dir = join(root, "artifact-dry-run");
+  writeTree(dir, {
+    "package.json": "{}",
+    "papers/p/artifact.zip": "artifact bytes\n",
+    "papers/p/numbersdef.tex": "\\newcommand{\\nRepos}{64}\n",
+  });
+  vi.stubEnv("OSF_TOKEN_OSF_IO", "not-printed");
+  const r = await cli(
+    [
+      "artifact",
+      "upload",
+      "--to",
+      "osf",
+      "artifact.zip",
+      "--node",
+      "abcde",
+      "--numbers=numbersdef.tex",
+    ],
+    join(dir, "papers/p"),
+  );
+  vi.unstubAllEnvs();
+  // Guards: exit 0, the plan, the token said to be set and never shown, nothing uploaded or written.
+  assert.deepEqual(r, {
+    code: 0,
+    err: "",
+    out: [
+      "upload artifact.zip (15 bytes, sha256 59bd16dfc39e768f82bb8ec74467e571e80ed284683b586f077dbf1aa2483ecd) to osf project abcde",
+      `then write ${join(dir, "papers/p/submission/artifact-upload.json")} with the host's hashes and 1 numbers`,
+      "token: OSF_TOKEN_OSF_IO is set",
+      "DRY RUN: nothing uploaded, nothing written. Run again with --save --node abcde to upload.",
+    ].join("\n"),
+  });
+  assert.equal(existsSync(join(dir, "papers/p/submission")), false);
+});
+
+test("artifact record: the rule's options from a list of blocks in the paper's paperlint.json, the same ones lint uses", async () => {
+  const dir = join(root, "artifact-blocks");
+  writeTree(dir, {
+    "package.json": "{}",
+    "papers/p/paper.tex": "\\input{numbersdef}\\nRepos\n",
+    "papers/p/artifact.zip": "artifact bytes\n",
+    "papers/p/numbersdef.tex": "\\newcommand{\\nRepos}{64}\n",
+    "papers/p/paperlint.json": JSON.stringify({
+      rules: [
+        {
+          files: ["PIPELINE-STATUS.md"],
+          rules: {
+            "artifact/upload-current": [
+              "warn",
+              { numbers: "numbersdef.tex", record: "custom/upload.json" },
+            ],
+          },
+        },
+      ],
+    }),
+  });
+  const r = await cli(
+    ["artifact", "record", "artifact.zip", "--url", "https://osf.io/abcde/"],
+    join(dir, "papers/p"),
+  );
+  // Guards: no --numbers needed, and the record goes where the rule will read it.
+  assert.equal(r.code, 0, r.err);
+  const written = parseUploadRecord(
+    readFileSync(join(dir, "papers/p/custom/upload.json"), "utf8"),
+  );
+  assert.deepEqual(written.ok && written.value.numbers, { nRepos: "64" });
+  assert.equal(
+    existsSync(join(dir, "papers/p/submission/artifact-upload.json")),
+    false,
+  );
+});
+
+test("artifact record: settings lint cannot read leave the defaults, and --numbers still records", async () => {
+  const cases = {
+    "a project paperlint.json that does not parse": {
+      "paperlint.json": "{",
+    },
+    "a paper paperlint.json naming a rule paperlint does not ship": {
+      "papers/p/paperlint.json": JSON.stringify({
+        rules: { "no/such-rule": "warn" },
+      }),
+    },
+  };
+  for (const [name, settings] of Object.entries(cases)) {
+    const dir = join(
+      root,
+      `artifact-unread-${String(Object.keys(cases).indexOf(name))}`,
+    );
+    writeTree(dir, {
+      "package.json": "{}",
+      "papers/p/paper.tex": "\\nRepos\n",
+      "papers/p/artifact.zip": "artifact bytes\n",
+      "papers/p/numbersdef.tex": "\\newcommand{\\nRepos}{64}\n",
+      ...settings,
+    });
+    const r = await cli(
+      [
+        "artifact",
+        "record",
+        "artifact.zip",
+        "--url",
+        "https://osf.io/abcde/",
+        "--numbers",
+        "numbersdef.tex",
+      ],
+      join(dir, "papers/p"),
+    );
+    // Guards: the record is written at the default path; lint, not this command, reports the settings.
+    assert.equal(r.code, 0, `${name}: ${r.err}`);
+    assert.equal(
+      existsSync(join(dir, "papers/p/submission/artifact-upload.json")),
+      true,
+      name,
+    );
+  }
+});
+
+test("parseArgs: artifact's flags, each a value", () => {
+  assert.deepEqual(
+    parseArgs([
+      "artifact",
+      "record",
+      "a.zip",
+      "--url",
+      "https://x.org",
+      "--host=zenodo",
+      "--to",
+      "osf",
+      "--node",
+      "abcde",
+      "--numbers",
+      "n.tex",
+    ]),
+    {
+      ...parseArgs([]),
+      cmd: "artifact",
+      paths: ["record", "a.zip"],
+      url: "https://x.org",
+      host: "zenodo",
+      to: "osf",
+      node: "abcde",
+      numbers: "n.tex",
+    },
   );
 });

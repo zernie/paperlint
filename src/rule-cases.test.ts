@@ -13,9 +13,11 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { omit } from "remeda";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
+import { uploadRecordText } from "./domain/artifact-upload.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { lockText, type LockEntry } from "./domain/versions.ts";
 import type { StudyMode } from "./domain/study-mode.ts";
@@ -833,7 +835,37 @@ const ARTIFACT_FILES: Readonly<Record<string, string>> = {
 const REQUIRED = ["README", "LICENSE"];
 const PROMISES = { prompts: "**/prompts/*.md" };
 
+/** A paper that prints \\nRepos from numbersdef.tex, the rule on, and an upload record of `nRepos`. */
+const withUpload = (nRepos: string): Record<string, string> =>
+  paper(tex("We read \\nRepos{} repositories."), {
+    [`${P}/paperlint.json`]: JSON.stringify({
+      rules: {
+        "artifact/upload-current": ["warn", { numbers: "numbersdef.tex" }],
+      },
+    }),
+    [`${P}/numbersdef.tex`]: "\\newcommand{\\nRepos}{64}\n",
+    [`${P}/submission/artifact-upload.json`]: uploadRecordText({
+      version: 1,
+      host: "other",
+      url: "https://example.org/artifact",
+      file: "artifact.zip",
+      uploadedAt: "2026-11-01T10:00:00Z",
+      numbers: { nRepos },
+    }),
+  });
+
 const CASES: Readonly<Record<string, RuleCases>> = {
+  // The upload was built when the paper printed 63 repositories; it prints 64 now.
+  "artifact/upload-current": {
+    reports: {
+      tree: withUpload("63"),
+      file: `${P}/PIPELINE-STATUS.md`,
+      severity: 1,
+      line: 1,
+    },
+    // The upload of the numbers the paper prints.
+    silent: withUpload("64"),
+  },
   // A paper that requires README and LICENSE of an artifact holding only a README.
   "artifact/required-files": {
     reports: {
@@ -1944,6 +1976,18 @@ describe("the term rules are off by default", () => {
     const on = await ids(paper(tex(body), TERMS_ON));
     expect(on).toContain("tex/term-before-definition");
     expect(on).toContain("tex/term-defined-twice");
+  });
+});
+
+describe("artifact/upload-current is off by default", () => {
+  it("🔴 a stale upload record says nothing until the paper turns the rule on", async () => {
+    const off = omit(withUpload("63"), [`${P}/paperlint.json`]);
+    const ids = async (tree: Record<string, string>) =>
+      (await lintTree(tree)).map((m) => m.ruleId);
+    // Guards: off means silent — the same stale record, the rule not named.
+    expect(await ids(off)).not.toContain("artifact/upload-current");
+    // Guards: and the record is not what silences it: turned on, it reports.
+    expect(await ids(withUpload("63"))).toContain("artifact/upload-current");
   });
 });
 

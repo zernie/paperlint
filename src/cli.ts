@@ -193,6 +193,10 @@ import preregCoverage from "#eslint-rules/prereg-coverage";
 import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import { EDITION_RULE_LEVELS, editionRules } from "./edition-rule.ts";
 import { ARTIFACT_RULE_LEVELS, artifactRules } from "./artifact-rules.ts";
+import { artifactUploadRules } from "./artifact-upload-rule.ts";
+import { runArtifact } from "./artifact.ts";
+import { osfHost } from "./adapters/osf/index.ts";
+import type { ArtifactHost } from "./ports/artifact-host.ts";
 import { changesRules } from "./changes-rule.ts";
 import { latexDiff, withTexBin } from "./adapters/latexdiff/index.ts";
 import { runVersions } from "./versions-command.ts";
@@ -238,6 +242,7 @@ import {
 import {
   submissionConfirm,
   UNREADABLE_INPUT,
+  type Upload,
 } from "./submission-confirm-hook.ts";
 import { leafCommandsNormalized } from "vigiles/hook";
 import {
@@ -313,6 +318,15 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission topics [paper]
                                       the topics the venue's portal offers, against the ones its
                                       preset records; exit 1 when they differ
+  npx paperlint artifact record <zip> --url <url> [--host <name>] [--numbers <file>] [paper]
+                                      write the upload record (submission/artifact-upload.json): the
+                                      zip's sha256 and md5, and the numbers the paper prints now. Any
+                                      host, no network; artifact/upload-current reads it
+  npx paperlint artifact upload --to osf <zip> [--node <id>] [paper] [--save]
+                                      upload the zip and write the same record with the host's own
+                                      hashes. A DRY RUN unless --save. Token: OSF_TOKEN_OSF_IO
+  npx paperlint artifact show [paper] the record, and match yes/no against the hashes the host holds
+                                      now, where its adapter reads them (osf)
   npx paperlint versions [show|lock|migrate|approve|diff] [paper]
                                       the paper's frozen versions, one folder per attempt:
                                       versions/<cycle>/<stage>.{pdf,tex}. show (the default): each
@@ -566,6 +580,22 @@ const today = (now = new Date()): string =>
     String(now.getDate()).padStart(2, "0"),
   ].join("-");
 
+/** What `artifact/upload-current` and `paperlint artifact record` read with. */
+const UPLOAD_RULE_DEPS = {
+  files: nodeFiles,
+  codec: sourcesCodec,
+  latex: latexReader,
+};
+
+/**
+ * The `artifact` plugin: required-files and promised on for every paper, silent for one whose
+ * paperlint.json declares no `artifact`; upload-current on for no paper until its options turn it on.
+ */
+const ARTIFACT_PLUGIN_RULES = {
+  ...artifactRules({ files: nodeFiles, listTree: nodeListTree }),
+  ...artifactUploadRules(UPLOAD_RULE_DEPS),
+};
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -641,10 +671,7 @@ export function buildConfig(
           },
         },
         repro: { rules: REPRO_RULES },
-        // On for every paper, silent for one whose paperlint.json declares no `artifact`.
-        artifact: {
-          rules: artifactRules({ files: nodeFiles, listTree: nodeListTree }),
-        },
+        artifact: { rules: ARTIFACT_PLUGIN_RULES },
         // Registered, on for no paper: `"study/declare-sample": "error"` in paperlint.json turns it on.
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
@@ -1164,6 +1191,11 @@ export function parseArgs(argv: readonly string[]): Args {
     abstract: null,
     submit: false,
     save: false,
+    url: null,
+    host: null,
+    to: null,
+    node: null,
+    numbers: null,
     hooksMode: null,
     // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
     // gate that fails on advice gets muted entirely.
@@ -1256,13 +1288,27 @@ const SWITCHES: ReadonlyMap<
 /** The flags whose value is one string field of `Args`. */
 const STRING_FLAGS: ReadonlyMap<
   string,
-  "paper" | "venue" | "kind" | "pdf" | "abstract"
+  | "paper"
+  | "venue"
+  | "kind"
+  | "pdf"
+  | "abstract"
+  | "url"
+  | "host"
+  | "to"
+  | "node"
+  | "numbers"
 > = new Map([
   ["--paper", "paper"],
   ["--venue", "venue"],
   ["--kind", "kind"],
   ["--pdf", "pdf"],
   ["--abstract", "abstract"],
+  ["--url", "url"],
+  ["--host", "host"],
+  ["--to", "to"],
+  ["--node", "node"],
+  ["--numbers", "numbers"],
 ]);
 
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
@@ -1403,6 +1449,7 @@ const IN_PROCESS_HOOKS: Readonly<
           portalHosts,
           shellLeaves: leafCommandsNormalized,
           readSend: submissionSend,
+          readUpload: uploadSend,
         });
       } catch {
         return UNREADABLE_INPUT;
@@ -1428,6 +1475,24 @@ export function submissionSend(
     a.unknownFlag === undefined &&
     a.paths.length <= 2;
   return clean ? { paper: a.paths[1] ?? null, pdf: a.pdf } : null;
+}
+
+/**
+ * The words after `artifact`, read by this CLI's own parser, for an upload: the file it uploads, the
+ * paper (null for the current folder), and the host and project it goes to — or null when they would
+ * not run cleanly. `--save` uploads only to a project named on the command line (`artifact.ts`).
+ */
+export function uploadSend(words: readonly string[]): Upload | null {
+  const a = parseArgs(["artifact", ...words]);
+  const [sub, file, paper, ...rest] = a.paths;
+  const clean =
+    a.missingValue === undefined &&
+    a.unknownFlag === undefined &&
+    sub === "upload" &&
+    rest.length === 0;
+  return clean && file !== undefined && a.to !== null && a.node !== null
+    ? { paper: paper ?? null, artifact: file, host: a.to, project: a.node }
+    : null;
 }
 
 /**
@@ -2177,6 +2242,20 @@ const SIMPLE: Readonly<
       log,
       err,
     }),
+  artifact: (a, { log, err, cwd }) =>
+    runArtifact(
+      { ...a, sub: a.paths[0], operands: a.paths.slice(1) },
+      {
+        ...UPLOAD_RULE_DEPS,
+        ruleEntry: uploadRuleEntry,
+        hosts: ARTIFACT_HOSTS,
+        env: (name) => process.env[name],
+        now: isoNow,
+        cwd,
+        log,
+        err,
+      },
+    ),
   submission: (a, { log, err, cwd }) =>
     runSubmission(
       {
@@ -2203,6 +2282,38 @@ const SIMPLE: Readonly<
         err,
       },
     ),
+};
+
+/**
+ * `artifact/upload-current`'s entry for the paper in `dir`, as ESLint computes it for the paper's
+ * `PIPELINE-STATUS.md`, where the rule runs, under the config `paperlint lint` run there would use: one answer for the rule and the commands,
+ * whichever shape the settings take (a `rules` object, a list of blocks, the project's or the
+ * paper's). Undefined when the rule is not on there or the config does not read; lint says why.
+ */
+async function uploadRuleEntry(dir: string): Promise<unknown> {
+  // Quiet: a config that does not read is lint's to report, not this command's.
+  const quiet = (): void => {};
+  const cfg = readConfig(parseArgs(["lint"]), {
+    log: quiet,
+    err: quiet,
+    cwd: dir,
+  });
+  if (cfg.code !== undefined) return undefined;
+  const engine = await paperEslint(cfg, [dir], {
+    loadTexLanguage: loadLatexLanguage,
+    fix: false,
+    stats: false,
+  });
+  if (!engine.ok) return undefined;
+  const computed = ComputedConfig.parse(
+    await engine.value.eslint.calculateConfigForFile(join(dir, STATUS_FILE)),
+  );
+  return computed?.rules?.["artifact/upload-current"];
+}
+
+/** Every artifact host paperlint has an adapter for: a new host is its folder and one line here. */
+const ARTIFACT_HOSTS: Readonly<Record<string, ArtifactHost>> = {
+  osf: osfHost(),
 };
 
 /** The adapter of each portal kind — one per kind, chosen here at the root. */

@@ -4,11 +4,14 @@ For a double-blind venue without a supplementary upload, the reproduction artifa
 on an [OSF](https://osf.io) project behind an anonymized view-only link (creating the project and
 the link: `submit-paper`, step 2). This page replaces or adds a file on that project through the
 [OSF API](https://developer.osf.io/), when the web interface is inconvenient.
+`paperlint artifact upload --to osf` does the same and writes the upload record
+([`artifact-upload.md`](artifact-upload.md)); this page is the manual way.
 
 ## The token
 
 Make a personal access token at `osf.io/settings/tokens` with the scope `osf.full_write` (a
-read-only token cannot write); it is shown once. Set it in your environment as `OSF_TOKEN`. Never
+read-only token cannot write); it is shown once. Set it in your environment as `OSF_TOKEN` for the
+lines below (`paperlint artifact upload` reads `OSF_TOKEN_OSF_IO` instead). Never
 commit it, print it or write it into a file, and delete it on the same page after the upload.
 
 ## Replace a file

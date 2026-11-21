@@ -77,7 +77,9 @@ function defDefinition(m: Macro): readonly [string, Definition["body"]][] {
 }
 
 /** `\newcommand` and its kin, read by util-macros. */
-function definitionOf(m: Macro): readonly [string, Definition["body"]][] {
+export function definitionOf(
+  m: Macro,
+): readonly [string, Definition["body"]][] {
   if (DEF_MACROS.has(m.content)) return defDefinition(m);
   // A \newcommand the parser gave no name has none here either: util-macros answers "".
   const name = newcommandMatcher(m) ? newcommandMacroToName(m) : "";
