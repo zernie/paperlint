@@ -267,9 +267,8 @@ Both workflows in full, with the TeX Live cache: [`docs/ci.md`](docs/ci.md).
 ## ❓ FAQ
 
 **Does it install anything without asking?**
-Only paperlint itself: `init` adds it to devDependencies, asking first in a terminal. TeX Live
-comes only from `paperlint toolchain`, or when you say yes in `init` or `build`. On Windows,
-install TeX Live yourself.
+Only paperlint itself, into devDependencies (asked first at a terminal). TeX Live comes only from
+`paperlint toolchain`, or a yes in `init` or `build`; on Windows, install it yourself.
 
 **Several papers for different venues in one repo?**
 Yes. Each paper names its own venue preset in its own `paperlint.json`.
