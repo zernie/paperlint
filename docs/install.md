@@ -70,7 +70,7 @@ it, and exits 130.
 | a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                               |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                                 |
 
-The last two rows are for a project without the plugin. It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
+The last two rows are for a project without the plugin. Besides paperlint itself (step 0), it installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
 gets the hooks (or the plugin's declaration); the hook commands run files inside `node_modules`, so a fresh clone needs
 `npm install` first.
 

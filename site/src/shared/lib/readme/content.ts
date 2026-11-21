@@ -117,9 +117,9 @@ export const readmeContent = (readme: string): ReadmeContent => {
     }),
   );
   return {
-    install: install.some((line) => line.startsWith("npm i"))
+    install: install.some((line) => line.startsWith("npx paperlint init"))
       ? install
-      : fail("no `npm i` in the install block"),
+      : fail("no `npx paperlint init` in the install block"),
     lintOutput,
     venues: venues.length > 0 ? venues : fail("an empty venue table"),
     disclaimer: disclaimer(readme),
