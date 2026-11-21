@@ -202,21 +202,21 @@ describe("npm run build's bundle step, on this checkout", () => {
       });
     const before = status();
     const r = runNode(join(ROOT, "scripts", "bundle-skills.ts"));
-    const listed = r.stdout
+    const listed = r.stderr
       .split("\n")
       .slice(1)
       .map((l) => l.trim())
       .filter(Boolean);
     const bundles = SKILL_ENTRIES.map((e) => e.replace(/\.(ts|mjs)$/, ".js"));
-    // Guards: the step succeeded and every entry's bundle is among what it wrote.
+    // Guards: the step succeeded, kept stdout empty (npm pack --json), and wrote every entry's bundle.
     expect({
       status: r.status,
-      stderr: r.stderr,
+      stdout: r.stdout,
       bundles: bundles.filter((b) => listed.includes(b)),
       others: listed.filter(
         (p) => !bundles.includes(p) && !p.startsWith(`${CHUNK_DIR}/`),
       ),
-    }).toEqual({ status: 0, stderr: "", bundles, others: [] });
+    }).toEqual({ status: 0, stdout: "", bundles, others: [] });
     // Guards: no tracked file changed.
     expect(status()).toBe(before);
   });

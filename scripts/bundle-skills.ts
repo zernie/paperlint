@@ -288,7 +288,8 @@ if (isMain(import.meta.url)) {
     chunkDir: CHUNK_DIR,
     tracked: gitTracked,
   });
-  console.log(
-    `bundle-skills: wrote ${String(written.length)} files\n  ${written.join("\n  ")}`,
+  // stderr: `npm pack --json` runs this as `prepare`, and its stdout must stay the JSON.
+  process.stderr.write(
+    `bundle-skills: wrote ${String(written.length)} files\n  ${written.join("\n  ")}\n`,
   );
 }
