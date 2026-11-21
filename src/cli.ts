@@ -308,10 +308,12 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint submission show [paper]
                                       the paper's submission on the venue's portal: status, title,
                                       type, topics, abstract length, the PDF the portal holds, and
-                                      whether it is the local paper.pdf (sha256)
+                                      whether it is the local paper.pdf (sha256); flags a title,
+                                      abstract or authors that are not the paper's
   npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
-                                      send the PDF (default: the paper's own), an abstract, or
-                                      "submitted". A DRY RUN unless --save: the portal checks the
+                                      send the PDF (default: the paper's own), the paper's title
+                                      and abstract each when the portal holds another (--abstract:
+                                      that file's text instead), or "submitted". A DRY RUN unless --save: the portal checks the
                                       change and keeps nothing. First prints what the venue rules find
                                       in that exact PDF, as lint does; --save refuses a PDF the last
                                       build did not measure (exit 2)

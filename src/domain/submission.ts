@@ -86,6 +86,8 @@ export interface SubmissionView {
   readonly paperType: string | null;
   readonly topics: readonly string[];
   readonly abstract: string | null;
+  /** The authors the portal records, in its order; null when it does not say. */
+  readonly authors: readonly Author[] | null;
   /** The PDF the portal holds; null when none is uploaded. */
   readonly pdf: PortalDocument | null;
   /** Unix seconds; null when not submitted or not said. */
@@ -98,6 +100,8 @@ export interface SubmissionView {
 /** A change to send. Every absent part is left as the portal has it. */
 export interface SubmissionChange {
   readonly pdf: { readonly name: string; readonly bytes: Uint8Array } | null;
+  /** The paper's title, sent when it differs from the portal's; null leaves the portal's. */
+  readonly title: string | null;
   readonly abstract: string | null;
   /** Mark the submission submitted (ready for review). */
   readonly submit: boolean;

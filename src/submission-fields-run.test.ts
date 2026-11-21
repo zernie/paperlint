@@ -42,6 +42,7 @@ test("update: the paper's fields are checked and sent with the change, and print
       7,
       {
         pdf: { name: "paper.pdf", bytes: PDF },
+        title: null,
         abstract: null,
         submit: false,
         fields: FIELDS,

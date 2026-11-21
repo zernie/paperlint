@@ -91,7 +91,15 @@ test("the dry run prints the same lines and goes on: the author reads them befor
     { sub: "update" },
     { files: paper([REVIEWED, SENT], UNANSWERED) },
   );
-  expect([r.code, r.errs, r.seen[0]?.calls.length]).toStrictEqual([0, [], 1]);
+  // The paper has a \title, so `update` reads the portal's before it sends (#619).
+  expect([r.code, r.errs, r.seen[0]?.calls]).toStrictEqual([
+    0,
+    [],
+    [
+      ["show", 7],
+      ["update", 7, expect.anything(), { save: false }],
+    ],
+  ]);
   expect(r.out.slice(2, 4)).toStrictEqual([HEADING, UNANSWERED_LINE]);
 });
 

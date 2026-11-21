@@ -203,6 +203,13 @@ test("show: GET /api/paper?p=<id>&word_limit=hard with the bearer token, parsed 
       paperType: "Example paper type",
       topics: ["Example topic one", "Example topic two"],
       abstract: "An example abstract of exactly ten words for the test.",
+      authors: [
+        {
+          name: "A. Author",
+          email: "author@example.org",
+          affiliation: "Example University",
+        },
+      ],
       pdf: {
         sha256: CASSETTE_HEX,
         hash: `sha2-${CASSETTE_HEX}`,
@@ -237,6 +244,7 @@ test("show: a submission without a PDF, fields absent, a paper type that is not 
       paperType: "2",
       topics: [],
       abstract: null,
+      authors: null,
       pdf: {
         sha256: null,
         hash: "sha2-short",
@@ -260,6 +268,25 @@ test("show: a null paper type and a null submission read as none", async () => {
   assert.deepEqual(r.ok && [r.value.paperType, r.value.pdf], [null, null]);
 });
 
+test("show: an author HotCRP names by one part, or without an email, reads with what it has", async () => {
+  answer(200, {
+    ok: true,
+    paper: {
+      pid: 7,
+      status: "draft",
+      authors: [
+        { email: "ada@example.org", family_name: "Lovelace" },
+        { given_name: "Bob" },
+      ],
+    },
+  });
+  const r = await portal().show(7);
+  assert.deepEqual(r.ok && r.value.authors, [
+    { name: "Lovelace", email: "ada@example.org", affiliation: null },
+    { name: "Bob", email: "", affiliation: null },
+  ]);
+});
+
 test("🔴 show: 401 surfaces HotCRP's own message, and the token is in no part of it", async () => {
   seen.length = 0;
   reply = { status: 401, body: cassette("get-noauth") };
@@ -278,6 +305,7 @@ test("🔴 show: 401 surfaces HotCRP's own message, and the token is in no part 
 
 const CHANGE: SubmissionChange = {
   pdf: { name: "paper.pdf", bytes: PDF },
+  title: "A New Title",
   abstract: "new abstract",
   submit: true,
   fields: {},
@@ -301,6 +329,7 @@ test("update: a dry run by default — dry_run=1, the json field, the PDF under 
     object: "paper",
     pid: 7,
     submission: { content_file: CONTENT_FIELD },
+    title: "A New Title",
     abstract: "new abstract",
     status: "submitted",
   });
@@ -573,7 +602,13 @@ test("a portal that does not answer is unreachable, with the network's words", a
 
 test("changeObject: only what changes is sent", () => {
   assert.deepEqual(
-    changeObject(7, { pdf: null, abstract: null, submit: false, fields: {} }),
+    changeObject(7, {
+      pdf: null,
+      title: null,
+      abstract: null,
+      submit: false,
+      fields: {},
+    }),
     { object: "paper", pid: 7 },
   );
 });
@@ -585,7 +620,13 @@ test("changeObject and createObject: the venue's fields go in as submission-obje
     ACMCorAut: "ada@example.org",
   };
   assert.deepEqual(
-    changeObject(7, { pdf: null, abstract: null, submit: false, fields }),
+    changeObject(7, {
+      pdf: null,
+      title: null,
+      abstract: null,
+      submit: false,
+      fields,
+    }),
     { object: "paper", pid: 7, ...fields },
   );
   const created = createObject({ ...NEW, fields });

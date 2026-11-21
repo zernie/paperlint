@@ -8,8 +8,10 @@
  * adapter per portal kind does the talking (`src/adapters/hotcrp/`).
  *
  *   show     status, id, title, paper type, topics, abstract length, the PDF the portal holds — and
- *            whether it is the local `paper.pdf`, by sha256
- *   update   send the PDF (and, if asked, an abstract, or "submitted"). A DRY RUN unless `--save`:
+ *            whether it is the local `paper.pdf`, by sha256; the paper's title, abstract and authors
+ *            where they differ
+ *   update   send the PDF, the paper's title and abstract each when the portal holds another (or
+ *            `--abstract`'s file), "submitted" if asked. A DRY RUN unless `--save`:
  *            the portal checks the change and keeps nothing
  *   topics   the topics the portal offers, against the ones the venue preset records
  *
@@ -26,6 +28,7 @@
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
  */
+import { zip } from "remeda";
 import { venueCycleOf } from "./domain/cycle.ts";
 import { basename, join, resolve } from "node:path";
 import { absolutePath } from "./domain/paths.ts";
@@ -164,8 +167,8 @@ export interface SubmissionArgs {
   /** `--pdf <file>`, relative to `cwd`; null: the paper's own PDF. */
   readonly pdf: string | null;
   /**
-   * `--abstract <file>`, relative to `cwd`; null: `update` leaves the abstract as it is, `new` reads
-   * it from the build.
+   * `--abstract <file>`, relative to `cwd`; null: `new` and `update` read the abstract from the
+   * paper's source, and `update` sends it only when the portal holds another.
    */
   readonly abstract: string | null;
   readonly submit: boolean;
@@ -372,19 +375,70 @@ export function deadlineLine(d: InForce): string {
   return `deadline      ${d.what} ${set}${also}`;
 }
 
+/** A text the paper sets, said when the portal holds another; nothing when they match or it is unread. */
+const notThePortals = (
+  label: string,
+  paper: string | null,
+  portal: string | null,
+  shown: (text: string) => string,
+): readonly string[] =>
+  paper === null || sameText(paper, portal)
+    ? []
+    : [
+        `${label} ${shown(paper)} — NOT the portal's; \`paperlint submission update\` sends it`,
+      ];
+
+const words = (text: string): string => `${String(wordCount(text))} words`;
+
+const authorText = (a: Author): string =>
+  `${a.name} <${a.email}>${a.affiliation === null ? "" : `, ${a.affiliation}`}`;
+
+/** One author on both sides: the email in any case, the name in any spacing, the affiliation. Pure. */
+const sameAuthor = ([a, b]: readonly [Author, Author]): boolean =>
+  a.email.toLowerCase() === b.email.toLowerCase() &&
+  sameText(a.name, b.name) &&
+  (a.affiliation ?? "") === (b.affiliation ?? "");
+
+/**
+ * The paper's authors (`paperlint.json`) said when the portal records others; nothing when either
+ * side names none. `update` never changes them: that is the site's, and the line says so. Pure.
+ */
+function authorsLines(
+  paper: readonly Author[] | null,
+  portal: readonly Author[] | null,
+): readonly string[] {
+  if (paper === null || portal === null) return [];
+  const same =
+    paper.length === portal.length && zip(paper, portal).every(sameAuthor);
+  return same
+    ? []
+    : [
+        `paper authors ${paper.map(authorText).join("; ")} — NOT the portal's (${portal.map(authorText).join("; ")}); \`paperlint submission update\` does not change the authors: change them on the site`,
+      ];
+}
+
 /** `show`'s report. Pure. */
 export function showLines(
   t: SubmissionTarget,
   view: SubmissionView,
-  local: { readonly shown: string; readonly sha256: Sha256 | null },
+  local: {
+    readonly shown: string;
+    readonly sha256: Sha256 | null;
+    /** The paper's own title and abstract; null when paperlint cannot read one. */
+    readonly title: string | null;
+    readonly abstract: string | null;
+  },
 ): readonly string[] {
   return [
     `submission ${String(view.id)} on ${t.portal.url} (${t.portal.kind})`,
     `status        ${view.status}${view.submittedAt === null ? "" : `, submitted ${iso(view.submittedAt)}`}`,
     `title         ${view.title ?? "—"}`,
+    ...notThePortals("paper title  ", local.title, view.title, (x) => x),
     `paper type    ${view.paperType ?? "—"}`,
     `topics        ${view.topics.length ? view.topics.join("; ") : "—"}`,
-    `abstract      ${view.abstract === null ? "—" : `${String(wordCount(view.abstract))} words`}`,
+    `abstract      ${view.abstract === null ? "—" : words(view.abstract)}`,
+    ...notThePortals("paper abstract", local.abstract, view.abstract, words),
+    ...authorsLines(t.authors, view.authors),
     pdfLine(view),
     `local PDF     ${local.shown} ${local.sha256 === null ? "(missing)" : `sha2-${local.sha256}`}`,
     matchLine(view, local.sha256),
@@ -489,9 +543,12 @@ async function runShow(
   const view = await portal.show(t.id);
   if (!view.ok) return failed(view.error, deps);
   const bytes = bytesAt(deps.files, pdfPath);
+  const text = paperText(t.paperDir, bytes, deps);
   const local = {
     shown: shownPath(deps.cwd, pdfPath),
     sha256: bytes === null ? null : sha256Hex(bytes),
+    title: text.title.ok ? text.title.value : null,
+    abstract: text.abstract.ok ? text.abstract.value : null,
   };
   // With `cycles`, the frozen versions beside the portal's copy: which is under review, which is history.
   const versions = versionLines(t.paperDir, deps);
@@ -517,15 +574,15 @@ function abstractOf(
     : ok(new TextDecoder().decode(bytes).trim());
 }
 
-/** What `update` sends: the PDF's bytes, the abstract's text, whether to mark it submitted, the fields. */
+/** What `update` sends: the PDF's bytes, the title, the abstract's text, whether to mark it submitted, the fields. */
 const changeOf = (
   a: SubmissionArgs & { readonly pdfPath: string },
   bytes: Uint8Array,
-  abstract: string | null,
+  text: { readonly title: string | null; readonly abstract: string | null },
   fields: FieldValues,
 ) => ({
   pdf: { name: basename(a.pdfPath), bytes },
-  abstract,
+  ...text,
   submit: a.submit,
   fields,
 });
@@ -619,7 +676,7 @@ const VENUE_RULES = "venue rules at their default options";
 const REBUILD_REFUSAL =
   "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
 
-/** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
+/** `update`: send the PDF, a changed title and abstract, and "submitted" when asked; a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget & { readonly id: number },
   portal: SubmissionPortal,
@@ -641,8 +698,8 @@ async function runUpdate(
   if (refused) return 2;
   const plan = planFor(t, a.save, deps);
   if (!plan.ok) return (deps.err(plan.error), 2);
-  const change = changeOf(a, bytes, abstract.value, t.fields);
-  const r = await portal.update(t.id, change, { save: a.save });
+  const sent = { a, bytes, abstract: abstract.value };
+  const r = await sendChange(t, portal, sent, deps);
   if (!r.ok) return failed(r.error, deps);
   return afterUpdate(t, r.value, sentOf(a, { shown, bytes }, plan.value), deps);
 }
@@ -653,6 +710,118 @@ const sentOf = (
   file: { readonly shown: string; readonly bytes: Uint8Array },
   plan: FreezePlan | null,
 ) => ({ ...file, save: a.save, submit: a.submit, plan });
+
+/** Two texts that differ only in spacing are one text. Pure. */
+const sameText = (paper: string, portal: string | null): boolean =>
+  portal !== null &&
+  paper.replace(/\s+/g, " ").trim() === portal.replace(/\s+/g, " ").trim();
+
+/** One text `update` may send: the text (null: none), and the line saying what happens to it. */
+interface TextChange {
+  readonly send: string | null;
+  readonly line: string;
+}
+
+/** How a text is named in `update`'s line: its label, the paper's text, and the portal's when it differs. */
+interface Shown {
+  readonly label: string;
+  readonly paper: (text: string) => string;
+  readonly portal: (text: string) => string;
+}
+
+const TITLE: Shown = {
+  label: "title         ",
+  paper: (x) => `«${x}»`,
+  portal: (x) => `«${x}»`,
+};
+
+const ABSTRACT: Shown = {
+  label: "abstract      ",
+  paper: (x) => `the paper's (${words(x)})`,
+  portal: (x) => `another (${words(x)})`,
+};
+
+/** What `update` does about one text the paper sets: sends it when the portal holds another. Pure. */
+export function textChange(
+  shown: Shown,
+  paper: Result<string, string>,
+  portal: string | null,
+): TextChange {
+  if (!paper.ok)
+    return { send: null, line: `${shown.label}not checked — ${paper.error}` };
+  return sameText(paper.value, portal)
+    ? {
+        send: null,
+        line: `${shown.label}unchanged — the portal holds ${shown.paper(paper.value)}`,
+      }
+    : {
+        send: paper.value,
+        line: `${shown.label}sends ${shown.paper(paper.value)} — the portal has ${portal === null ? "none" : shown.portal(portal)}`,
+      };
+}
+
+/** What `update` sends: the PDF and its name, `--abstract`'s text (null: the paper's is compared). */
+interface Sent {
+  readonly a: SubmissionArgs & { readonly pdfPath: string };
+  readonly bytes: Uint8Array;
+  readonly abstract: string | null;
+}
+
+/** `--abstract`'s text, sent whatever the portal holds, and said. Pure. */
+const fromFile = (sent: Sent, abstract: string): TextChange => ({
+  send: abstract,
+  line: `${ABSTRACT.label}sends ${String(sent.a.abstract)} (${words(abstract)}), from --abstract`,
+});
+
+/**
+ * The title and abstract `update` sends: the paper's, each when the portal holds another (#619);
+ * `--abstract`'s file whatever it holds. The portal is read once, and only when there is something
+ * of the paper's to compare; a failed read stops the update.
+ */
+async function textsToSend(
+  t: SubmissionTarget & { readonly id: number },
+  portal: SubmissionPortal,
+  sent: Sent,
+  deps: RunDeps,
+): Promise<
+  Result<
+    { readonly title: TextChange; readonly abstract: TextChange },
+    PortalFailure
+  >
+> {
+  const text = paperText(t.paperDir, sent.bytes, deps);
+  const read = text.title.ok || (sent.abstract === null && text.abstract.ok);
+  const view = read ? await portal.show(t.id) : ok(null);
+  if (!view.ok) return err(view.error);
+  const held = view.value;
+  return ok({
+    title: textChange(TITLE, text.title, held === null ? null : held.title),
+    abstract:
+      sent.abstract === null
+        ? textChange(
+            ABSTRACT,
+            text.abstract,
+            held === null ? null : held.abstract,
+          )
+        : fromFile(sent, sent.abstract),
+  });
+}
+
+/** The change sent, its title and abstract lines printed first: the portal's answer, or why there is none. */
+async function sendChange(
+  t: SubmissionTarget & { readonly id: number },
+  portal: SubmissionPortal,
+  sent: Sent,
+  deps: RunDeps,
+): Promise<Result<UpdateOutcome, PortalFailure>> {
+  const texts = await textsToSend(t, portal, sent, deps);
+  if (!texts.ok) return err(texts.error);
+  const { title, abstract } = texts.value;
+  logAll([title.line, abstract.line], deps);
+  const text = { title: title.send, abstract: abstract.send };
+  const change = changeOf(sent.a, sent.bytes, text, t.fields);
+  return portal.update(t.id, change, { save: sent.a.save });
+}
 
 /** The portal's answer to `update` printed, and what it kept frozen: the exit code. */
 function afterUpdate(
@@ -950,6 +1119,30 @@ function assembledPaper(
     : readPaper(join(paperDir, MAIN), new TextDecoder().decode(bytes), deps);
 }
 
+/**
+ * The paper's title (`titleOf`, falling back on the build's facts about `pdf`, none without one)
+ * and its abstract (`sourceAbstract`): what `new` sends, and what `update` and `show` compare.
+ */
+function paperText(
+  paperDir: string,
+  pdf: Uint8Array | null,
+  deps: SubmissionDeps,
+): {
+  readonly title: Result<string, string>;
+  readonly abstract: Result<string, string>;
+} {
+  const paper = assembledPaper(paperDir, deps);
+  const facts = pdf === null ? null : factsOfSent(paperDir, pdf, deps);
+  const title = titleOf(
+    paper === null
+      ? null
+      : { text: paper.text, where: (o: number) => placeIn(paper, o) },
+    deps.latex,
+    facts?.text.metadata ?? null,
+  );
+  return { title, abstract: sourceAbstract(paper, deps) };
+}
+
 /** The title and the abstract: the paper's `\title`, and `--abstract`'s file or the source's abstract. */
 function titleAndAbstract(
   a: SubmissionArgs & { readonly paperDir: string },
@@ -958,20 +1151,11 @@ function titleAndAbstract(
 ): Result<{ readonly title: string; readonly abstract: string }, string> {
   const own = abstractOf(a, deps);
   if (!own.ok) return own;
-  const paper = assembledPaper(a.paperDir, deps);
-  const metadata = factsOfSent(a.paperDir, pdf, deps)?.text.metadata ?? null;
-  const title = titleOf(
-    paper === null
-      ? null
-      : { text: paper.text, where: (o: number) => placeIn(paper, o) },
-    deps.latex,
-    metadata,
-  );
+  const text = paperText(a.paperDir, pdf, deps);
+  const title = text.title;
   if (!title.ok) return title;
   const abstract =
-    own.value === null
-      ? sourceAbstract(paper, deps)
-      : ok(own.value.replace(/\s+/g, " "));
+    own.value === null ? text.abstract : ok(own.value.replace(/\s+/g, " "));
   return abstract.ok
     ? ok({ title: title.value, abstract: abstract.value })
     : abstract;
