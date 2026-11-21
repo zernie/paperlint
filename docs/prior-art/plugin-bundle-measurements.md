@@ -233,3 +233,33 @@ mods overview's cloud row, "Yes, for a plugin that reaches the cloud session" an
 session" (https://code.claude.com/docs/en/plugins/mods/overview). Mods are on by default from
 v2.1.286; the overview's only early-access line is "If you set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS`
 during early access, remove it."
+
+### In a cloud session: measured 2026-11-21
+
+The cloud environment's setup script ran a section that wrote the probe plugin to
+`/opt/plugin-probe` and ran `claude plugin marketplace add` and `claude plugin install` (route D).
+Fresh cloud sessions on that environment then reported, verbatim:
+
+```text
+$ cat /tmp/plugin-probe-setup.log
+claude: /opt/node22/bin/claude 2.1.330 (Claude Code)
+Adding marketplace…√ Successfully added marketplace: probe-local (declared in user settings)
+Installing plugin "probe@probe-local"...√ Successfully installed plugin: probe@probe-local (scope: user)
+plugin probe installed
+
+$ cat /tmp/plugin-probe-sessionstart
+2026-11-21T21:41:10Z
+2026-11-21T21:50:43Z
+
+$ claude plugin list
+  > probe@probe-local
+    Version: 0.1.0
+    Read from: /opt/plugin-probe/plugins/probe
+    Scope: user
+    Status: √ enabled
+```
+
+and its skill list held the line "- probe:plugin-probe: Probe skill from the setup-script plugin
+test. Never use it." So a plugin installed by the setup script loads in a cloud session: its
+SessionStart hook ran at two session starts in the same container (21:41 and 21:50, one install at
+21:41), and its skill was listed under the plugin's namespace.
