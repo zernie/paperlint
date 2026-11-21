@@ -119,7 +119,7 @@ export type Reply = string | boolean | undefined | Error;
  * wrong kind for its question (a string to a confirm) fails the test rather than being coerced.
  */
 export function scriptedPrompts(
-  script: (message: string) => Reply = () => undefined,
+  script: (message: string) => Reply,
 ): Prompts & { readonly asked: string[] } {
   const asked: string[] = [];
   const reply = async <T>(
