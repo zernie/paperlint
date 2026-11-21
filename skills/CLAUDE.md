@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:7c3a2ced786e9294 compiled from skills/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:dd8a735385fbcd2d compiled from skills/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -12,7 +12,7 @@ package's location come from `skills/paper-pipeline/scripts/consumer.mjs`; the l
 
 ### Skills Ship In Skills
 
-**Guidance only** — Skills ship in `skills/`, never `.claude/skills/`. `paperlint init` symlinks each one into the consumer's `.claude/skills/<name>`; the link's directory name is the skill's name. `skills/` is the npm layout: of 855 packages scanned, 336 shipped `skills/` against 15 `.claude/skills/`. Rejected: leaving the skills for Claude Code to find inside `node_modules` (`docs/install.md`); a symlink loads at startup, deterministically. A skill for working on paperlint itself (it edits this repository's presets, tests or source) does not ship: it lives in `.claude/skills/<name>/` as a real directory, outside `files`, and no shipped skill or user doc names it (`add-venue`).
+**Guidance only** — Skills ship in `skills/`, never `.claude/skills/`. The Claude Code plugin carries `skills/` as it is (`.claude-plugin/plugin.json`); without the plugin, `paperlint init` symlinks each one into the consumer's `.claude/skills/<name>`, and the link's directory name is the skill's name. `skills/` is the npm layout: of 855 packages scanned, 336 shipped `skills/` against 15 `.claude/skills/`. Rejected: leaving the skills for Claude Code to find inside `node_modules` (`docs/install.md`); a symlink loads at startup, deterministically. A skill for working on paperlint itself (it edits this repository's presets, tests or source) does not ship: it lives in `.claude/skills/<name>/` as a real directory, outside `files`, and no shipped skill or user doc names it (`add-venue`).
 
 ### One Owner Per Job
 

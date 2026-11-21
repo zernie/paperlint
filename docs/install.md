@@ -41,8 +41,12 @@ In order:
 1. **Finds the papers directory**, or asks for it when several directories look like one.
 2. **Declares it**, in a root `paperlint.json`, only when it is not the default `papers`. A project
    on the defaults gets no config file at all.
-3. **Links each shipped skill** into `.claude/skills/<name>`, where Claude Code looks for skills.
-4. **Writes the hook commands** into `.claude/settings.json`, beside your own entries.
+3. **Offers the Claude Code plugin**, which carries the skills and the hooks and is updated with
+   paperlint ([below](#the-claude-code-plugin)). Only where Claude Code is: a `.claude/` folder, or
+   `claude` on PATH; anywhere else it says nothing.
+4. **Without the plugin, links each shipped skill** into `.claude/skills/<name>` and **writes the
+   hook commands** into `.claude/settings.json`, beside your own entries. With the plugin on, it
+   removes the links and hook commands it made earlier, so nothing is listed or run twice.
 5. **Offers a GitHub Actions workflow** that runs `npm ci`, then the action from `node_modules`.
 6. **Offers a first paper** (`paperlint new`) if the papers directory has none.
 7. **Offers TeX Live** for `paperlint build` (`paperlint toolchain`, ~270 MB, ~3 min, once), with
@@ -66,9 +70,51 @@ it, and exits 130.
 | a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                               |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                                 |
 
-It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
-gets the hooks; the hook commands run files inside `node_modules`, so a fresh clone needs
+The last two rows are for a project without the plugin. It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
+gets the hooks (or the plugin's declaration); the hook commands run files inside `node_modules`, so a fresh clone needs
 `npm install` first.
+
+## The Claude Code plugin
+
+The plugin is optional: `paperlint lint`, the build and CI work without it. It carries the 23 skills
+and the six hooks, and it is updated with the package: each release's plugin carries that release's
+version.
+
+At a terminal (shown as a terminal without Unicode draws it; others draw the same with Unicode marks):
+
+```text
+|
+*  Turn on the paperlint plugin for Claude Code? (the skills and hooks, updated with paperlint)
+|  > Yes /   No
+```
+
+| how `init` runs                                      | what happens                                                                                 |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| a human at a terminal                                | asked once, Yes preselected; No is kept, and `npx paperlint init --plugin` turns it on later |
+| no human (`--yes`, CI, an agent such as Claude Code) | nothing turned on; one line says why and names `npx paperlint init --plugin`                 |
+| `--plugin`                                           | turned on without asking, with or without a terminal                                         |
+| `--no-plugin`                                        | never asked, never turned on; the skills are linked and the hooks wired as before            |
+
+Without a human, the one line reads:
+
+```text
+Claude Code plugin: not turned on — stdout is not a terminal, so nothing was asked. To turn it on: npx paperlint init --plugin
+```
+
+**How it is turned on.** With `claude` on PATH, `init` runs Claude Code's own two commands in the
+project: `claude plugin marketplace add zernie/paperlint --scope project` and
+`claude plugin install paperlint@paperlint --scope project`. They declare the marketplace and the
+plugin in `.claude/settings.json` (commit it, and every clone is offered the plugin) and fetch it.
+Without `claude` on PATH, `init` writes the same two keys and prints the two commands to run once
+where `claude` runs: the keys alone load nothing (measured: `claude plugin list` stays empty).
+
+**In a cloud session** (Claude Code on the web) the repository's settings alone download no plugin:
+add the marketplace `zernie/paperlint` once in your claude.ai settings.
+
+**An earlier install.** Re-run `npx paperlint init` (or `npx paperlint init --plugin` without a
+terminal). Once the plugin is on, `init` removes the skill links and hook commands it made itself;
+a skill directory or hook entry of your own stays. `paperlint doctor` names any left beside the
+plugin, and a plugin whose version is not the installed paperlint's.
 
 ## Why it is shaped this way
 
@@ -85,15 +131,14 @@ is that _"the only valid use of install or preinstall scripts is for compilation
 its install script in 5.0.0 and Playwright in 1.38.0, because a failed install is cached and its
 output is hidden. An install that can fail quietly is worse than a step that says what it needs.
 
-**Hooks go into `.claude/settings.json`, not a plugin.** Claude Code documents that file as the
-way to share hooks with a team, `init` can write it, `paperlint doctor` can read it back, and it needs
-nothing installed inside Claude Code. A plugin fetched from npm gets no `node_modules` (`npm pack`
-strips the lockfile, and the host runs `npm ci` only when one is present), so it could not carry
-code that runs (probes: [`prior-art/repro/`](prior-art/repro/README.md); decision:
-[`prior-art/paper-folder-scaffolding.md`](prior-art/paper-folder-scaffolding.md) § 5). The package
-ships no plugin.
+**The plugin carries no code of its own.** A plugin fetched from npm gets no `node_modules` (`npm pack`
+strips the lockfile, and the host runs `npm ci` only when one is present; probes:
+[`prior-art/repro/`](prior-art/repro/README.md)). So the skill scripts are bundled to run without
+dependencies, and every hook command runs the project's installed
+`node_modules/paperlint/bin/paperlint.mjs`. The plugin needs the npm package in the project; the
+package does not need the plugin.
 
-**Skills are linked, not left in `node_modules`.** Claude Code finds project skills in
+**Without the plugin, skills are linked, not left in `node_modules`.** Claude Code finds project skills in
 `.claude/skills/<name>/SKILL.md` and never inside `node_modules`. The links also make the
 project-relative script paths inside the skills (`.claude/skills/paper-pipeline/scripts/x.mjs`)
 resolve.
@@ -115,7 +160,8 @@ nothing while guarding and says nothing while watching a directory that does not
 unusable, the CLI and the hooks disagree on the papers directory, or the hooks are miswired: partly wired (some
 paperlint hooks present, others missing) or any hook wired twice. A hook set wired by hand under another spelling
 counts as wired. Not wired at all, a missing external program and an unlinked skill are printed and exit 0,
-because `--no-hooks` and the skills you do not use are choices.
+because `--no-hooks` and the skills you do not use are choices. With the plugin on, the skills and
+hooks count as carried by it.
 
 **After upgrading, the first paper edit tells you which hooks to wire and which skills to link.** `init` wires the hooks once, so a release
 that ships one more leaves a project that ran `init` earlier without it, and a release that ships a skill (16.8.0 added
@@ -130,7 +176,7 @@ directory holds is your choice, and `doctor` reports it. It is said once per ins
 `paper-skills-nudge`, `paper-status-gates`) and never by a PreToolUse hook, so it cannot change an allow or a deny;
 it never blocks, and an error while checking is one stderr line. `paperlint lint` prints the same finding as one
 stderr line on every run, without changing its exit code, and the GitHub action fails on it when `check-hooks` is
-set ([`ci.md`](ci.md)). Nothing is said about hooks when none is wired (`--no-hooks`) or the settings file cannot be read, and nothing about skills when all are linked or the package does not resolve from the project.
+set ([`ci.md`](ci.md)). Nothing is said about hooks when none is wired (`--no-hooks`) or the settings file cannot be read, nothing about skills when all are linked or the package does not resolve from the project, and nothing at all while the plugin is on: it is updated with paperlint.
 
 ### How comparable tools install
 

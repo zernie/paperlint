@@ -21,7 +21,7 @@ would undo it.`,
       "`checkHookImports` (run by `hooks.harness.ts`) is a text regex. Describe a forbidden import in words; never write one, not even in a comment.",
     ),
     "one-wiring-file": guidance(
-      "The wiring is `plugin/hooks/hooks.json`. `paperlint init` merges it into the consumer's `.claude/settings.json`; there is no second copy.",
+      "The wiring is `plugin/hooks/hooks.json`. The Claude Code plugin ships it as its hooks, and `paperlint init` without the plugin merges it into the consumer's `.claude/settings.json`; there is no second copy.",
     ),
     "vigiles-moves-with-the-consumer": guidance(
       "`vigiles` moves with the consumer's pin, in one pass. A major mismatch makes `PreToolUse` refuse every command. `npm ls vigiles` compares what is installed with the manifest, not with the registry; Dependabot (`.github/dependabot.yml`) carries the registry half.",
