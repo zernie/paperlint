@@ -18,14 +18,15 @@ const read = (rel: string): string => readFileSync(root + rel, "utf8");
 
 const README = `# x
 
-> ⚠️ **An aid, not a guarantee.** A clean run can miss
-> something. Provided "as is".
+> ⚠️ **Check the venue's own call before you submit.** A check can
+> miss a case. Provided "as is".
 
 ### A new paper
 
 1. Install.
 
    \`\`\`sh
+   npm i -D paperlint
    npx paperlint init
    \`\`\`
 
@@ -47,9 +48,8 @@ After.
 `;
 
 describe("readmeContent", () => {
-  it("reads the install block, the lint output and the venue table, indentation removed", () => {
+  it("reads the lint output, the venue table and the disclaimer, indentation removed", () => {
     expect(readmeContent(README)).toEqual({
-      install: ["npx paperlint init"],
       lintOutput: ["papers/p/paper.tex", "  1:1  error  boom  pdf/fonts"],
       venues: [
         {
@@ -65,16 +65,9 @@ describe("readmeContent", () => {
           limits: "none",
         },
       ],
-      disclaimer: "An aid, not a guarantee. A clean run can miss something.",
+      disclaimer:
+        "Check the venue's own call before you submit. A check can miss a case.",
     });
-  });
-
-  it("fails the build when the install block no longer installs", () => {
-    expect(() =>
-      readmeContent(README.replace("npx paperlint init", "echo")),
-    ).toThrow(
-      "site: no `npx paperlint init` in the install block — the README or a doc changed; update site/src/shared/lib/readme/ to match",
-    );
   });
 });
 
@@ -86,9 +79,9 @@ describe("the readers' edges", () => {
       "b",
     ]);
     expect(tableAfter("## T\n| h |\n| - |\n| `x` |", "## T")).toEqual([["x"]]);
-    expect(disclaimer("> **An aid, not a guarantee.** End.")).toBe(
-      "An aid, not a guarantee. End.",
-    );
+    expect(
+      disclaimer("> **Check the venue's own call before you submit.** End."),
+    ).toBe("Check the venue's own call before you submit. End.");
   });
 
   it("fails the build when an anchor, a block or a table is gone", () => {
@@ -111,15 +104,17 @@ describe("the readers' edges", () => {
   });
 
   it("fails the build when the disclaimer is gone", () => {
-    expect(() => readmeContent(README.replace("An aid", "A help"))).toThrow(
-      'site: no "An aid, not a guarantee" quote',
-    );
+    expect(() =>
+      readmeContent(README.replace("Check the venue's own call", "Read")),
+    ).toThrow(`site: no "Check the venue's own call before you submit." quote`);
   });
 
-  it("reads the real README: the one install command the site shows", () => {
-    expect(readmeContent(read("README.md")).install).toEqual([
-      "npx paperlint init",
-    ]);
+  it("reads the real README's disclaimer, up to its licence sentence", () => {
+    const text = readmeContent(read("README.md")).disclaimer;
+    expect(
+      text.startsWith("Check the venue's own call before you submit. "),
+    ).toBe(true);
+    expect(text).not.toContain("Provided");
   });
 });
 

@@ -8,14 +8,21 @@ import assert from "node:assert/strict";
 import {
   lstatSync,
   mkdirSync,
+  readdirSync,
   readlinkSync,
   realpathSync,
+  rmSync,
   symlinkSync,
 } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
 import { useTempDir, writeTree } from "../test/support.ts";
-import { linkSkills, locatePackage, type LinkFs } from "./link-skills.ts";
+import {
+  linkSkills,
+  locatePackage,
+  unlinkSkills,
+  type LinkFs,
+} from "./link-skills.ts";
 
 const root = useTempDir("paperlint-link-skills-");
 const realFs: LinkFs = { lstatSync, realpathSync, readlinkSync, symlinkSync };
@@ -102,4 +109,30 @@ test("entries that are someone else's: a plain file, one that cannot be resolved
       reason: "an entry that cannot be resolved",
     },
   ]);
+});
+
+test("unlinkSkills: removes init's links, leaves the project's own directory and other names, names a package that does not resolve", () => {
+  const shipped = pkg("unlink", ["a", "b", "own"]);
+  const project = join(root, "unlink-project");
+  assert.ok(linkSkills(project, { locate: at(shipped) }).ok);
+  rmSync(join(project, ".claude", "skills", "own"));
+  writeTree(project, {
+    ".claude/skills/own/SKILL.md": "# mine\n",
+    ".claude/skills/other/SKILL.md": "# mine\n",
+  });
+  assert.deepEqual(
+    [
+      unlinkSkills(project, { locate: at(shipped) }),
+      readdirSync(join(project, ".claude", "skills")).sort(),
+      unlinkSkills(project, { locate: () => ({ error: "ENOENT" }) }),
+    ],
+    [
+      { ok: true, removed: ["a", "b"] },
+      ["other", "own"],
+      {
+        ok: false,
+        error: `paperlint does not resolve from ${project} (ENOENT)`,
+      },
+    ],
+  );
 });

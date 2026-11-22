@@ -94,6 +94,12 @@ async function cli(args, cwd) {
         command: (_r, spec) => ["npm", spec],
         run: () => ({ ok: true }),
       },
+      // …nor finds Claude Code: the plugin offer has its own tests.
+      claude: {
+        present: () => false,
+        plugin: () => ({ enabled: false, version: null }),
+        enable: () => ({ ok: false, reason: "the harness turns nothing on" }),
+      },
     });
     return {
       code,

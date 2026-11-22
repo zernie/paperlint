@@ -159,6 +159,7 @@ import {
   type TexRequirements,
 } from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
+import { installedPluginVersion } from "./plugin-offer.ts";
 import {
   askOnTerminal,
   askOrDefault,
@@ -250,6 +251,8 @@ import {
 } from "./link-skills.ts";
 import { projectInstall } from "./adapters/package-manager/index.ts";
 import type { ProjectInstall } from "./ports/project-install.ts";
+import { claudeCode } from "./adapters/claude-code/index.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 import {
   selfInstallStep,
   versionOf,
@@ -381,6 +384,10 @@ init:
   --yes, -y           ask nothing, take every default. Without a terminal on stdin AND stdout,
                       or with CI set, nothing is asked either
   --no-hooks          do not wire the hooks (the default without a human is to wire them)
+  --plugin            turn on the Claude Code plugin (the skills and hooks) without asking, with
+                      or without a terminal. Without a human and without this flag, init turns
+                      nothing on and prints one line saying so
+  --no-plugin         never ask about the plugin, never turn it on
   --paper <name>      create this paper too (without a human, the only way init creates one)
 
 new:
@@ -1206,6 +1213,8 @@ export function parseArgs(argv: readonly string[]): Args {
     check: false,
     yes: false,
     noHooks: false,
+    plugin: false,
+    noPlugin: false,
     allowVenueName: false,
     paper: null,
     venue: null,
@@ -1291,6 +1300,8 @@ const SWITCHES: ReadonlyMap<
   | "check"
   | "yes"
   | "noHooks"
+  | "plugin"
+  | "noPlugin"
   | "allowVenueName"
   | "submit"
   | "save"
@@ -1303,6 +1314,8 @@ const SWITCHES: ReadonlyMap<
   ["--yes", "yes"],
   ["-y", "yes"],
   ["--no-hooks", "noHooks"],
+  ["--plugin", "plugin"],
+  ["--no-plugin", "noPlugin"],
   ["--allow-venue-name", "allowVenueName"],
   ["--submit", "submit"],
   ["--save", "save"],
@@ -1593,6 +1606,8 @@ interface HookOptions {
   readonly version?: string;
   /** What `paperlint doctor` reads to find unlinked skills; the disk by default. */
   readonly skillLinks?: (root: string) => LinkReport;
+  /** Whether the Claude Code plugin is on; the disk by default. */
+  readonly claude?: ClaudeCode;
 }
 
 const readSkillLinks = (root: string): LinkReport =>
@@ -1633,6 +1648,25 @@ const packageVersion = (): string =>
       ),
     ).version;
 
+/**
+ * What the project still owes of the hooks and skills — nothing once the Claude Code plugin is on: the
+ * plugin carries both, so a project without init's links and hook entries is complete.
+ */
+function owed(
+  root: string,
+  skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
+): {
+  readonly missing: readonly string[];
+  readonly byHand: boolean;
+  readonly skills: readonly string[];
+} {
+  if (installedPluginVersion(claude.plugin(absolutePath(root))) !== null)
+    return { missing: [], byHand: false, skills: [] };
+  const { missing, byHand } = unwiredHooks(root);
+  return { missing, byHand, skills: unlinkedSkills(skillLinks(root)) };
+}
+
 interface Pending {
   readonly text: string;
   readonly root: string;
@@ -1646,8 +1680,11 @@ interface Pending {
 function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
-    const { missing, byHand } = unwiredHooks(root);
-    const skills = unlinkedSkills((io.skillLinks ?? readSkillLinks)(root));
+    const { missing, byHand, skills } = owed(
+      root,
+      io.skillLinks ?? readSkillLinks,
+      io.claude ?? claudeCode(),
+    );
     const version = io.version ?? packageVersion();
     return (missing.length === 0 && skills.length === 0) ||
       !notYetTold(nodeFiles, root, version)
@@ -1676,10 +1713,10 @@ function hooksLine(
   root: string,
   err: typeof console.error,
   skillLinks: (root: string) => LinkReport,
+  claude: ClaudeCode,
 ): void {
   try {
-    const { missing } = unwiredHooks(root);
-    const skills = unlinkedSkills(skillLinks(root));
+    const { missing, skills } = owed(root, skillLinks, claude);
     if (missing.length > 0 || skills.length > 0)
       err(lintLine(packageVersion(), missing, skills));
   } catch {
@@ -2403,11 +2440,13 @@ async function runInit(
     err,
     cwd,
     install,
+    claude,
   }: {
     log: typeof console.log;
     err: typeof console.error;
     cwd: string;
     install: ProjectInstall;
+    claude: ClaudeCode;
   },
 ): Promise<number> {
   // Deferred, not implemented: named and refused, rather than read as the directory argument.
@@ -2436,6 +2475,8 @@ async function runInit(
     prompts,
     yes: a.yes,
     hooks: !a.noHooks,
+    claude,
+    pluginFlag: a.plugin ? "plugin" : a.noPlugin ? "no-plugin" : null,
     paper: a.paper,
     createPaper: (papersRoot, name) =>
       createPaperAt(papersRoot, name, { log, err, cwd }),
@@ -2490,12 +2531,15 @@ export async function run(
     loadTexLanguage = loadLatexLanguage,
     skillLinks = readSkillLinks,
     install = projectInstall,
+    claude = claudeCode(),
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
     /** How `init` adds paperlint to a project: the package manager by default; a test hands a fake. */
     install?: ProjectInstall;
+    /** Claude Code as `init` and `doctor` see it: the disk and `claude` by default; a test hands a fake. */
+    claude?: ClaudeCode;
     /** The clock `lint` times itself with, in milliseconds; a test hands one that answers fixed values. */
     now?: () => number;
     /**
@@ -2537,17 +2581,22 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init") return await runInit(a, { log, err, cwd, install });
+  if (a.cmd === "init")
+    return await runInit(a, { log, err, cwd, install, claude });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
     const papers = cliPapers(a, cwd);
+    const projectDir = process.env["CLAUDE_PROJECT_DIR"] ?? cwd;
+    const at = absolutePath(resolve(cwd, projectDir));
     return doctor({
       log,
       cwd,
-      projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd,
+      projectDir,
       cliPapers: papers,
+      plugin: claude.present(at) ? claude.plugin(at) : null,
+      installed: packageVersion(),
     });
   }
   const simple = SIMPLE[a.cmd];
@@ -2665,7 +2714,7 @@ export async function run(
       .filter((f) => existsSync(f)),
     bodies,
   });
-  hooksLine(root, err, skillLinks);
+  hooksLine(root, err, skillLinks, claude);
   // On stderr, so `--json` leaves stdout a clean array.
   timingLines({
     files: results.length,
@@ -2872,6 +2921,10 @@ export async function lintText(
 /** The formatter `paperlint lint` prints with. */
 const LINT_FORMAT = "stylish";
 
+/** Printed under a clean `lint`, the README's disclaimer in one line. */
+const CLEAN_RUN_REMINDER =
+  "Check the venue's own call before you submit: a call can change between editions, and a check can miss a case.";
+
 /**
  * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
  * decide the exit code. Pulled out of `run` so each question has its own function.
@@ -2929,12 +2982,16 @@ async function reportLint(
     // short. The reverse order would read as "all clean — oh, and also this".
     if (structure.length > 0) log(formatStructure(structure));
     const out = await (await eslint.loadFormatter(LINT_FORMAT)).format(results);
+    const clean = out.trim() === "" && structure.length === 0;
     log(
       out.trim() ||
-        (structure.length > 0
-          ? ""
-          : `✓ ${String(results.length)} file(s) checked, no findings`),
+        (clean
+          ? `✓ ${String(results.length)} file(s) checked, no findings`
+          : ""),
     );
+    // A clean run is the one result a reader could take as a guarantee, so it, and only it,
+    // carries the README's reminder. Findings speak for themselves; --json is for machines.
+    if (clean) log(`  ${CLEAN_RUN_REMINDER}`);
   }
   if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
   // Warnings fail the run only when the threshold is named EXPLICITLY. A negative threshold means

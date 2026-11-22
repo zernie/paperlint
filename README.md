@@ -32,10 +32,9 @@ before you submit.** It comes in two parts:
 - 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
 
-> ⚠️ **An aid, not a guarantee.** A clean run does not mean your paper meets the venue's rules:
-> presets are transcribed from calls for papers that change, and any check can miss something.
-> Check against the venue's own call and template. Provided "as is", without warranty — see
-> [LICENSE](LICENSE).
+> ⚠️ **Check the venue's own call before you submit.** paperlint's venue rules are transcribed by hand
+> from each call for papers, and a call can change between editions. A check can also miss a case.
+> Provided "as is", without warranty — see [LICENSE](LICENSE).
 
 ## Contents
 
@@ -82,8 +81,8 @@ edition, and what is not shipped yet (USENIX, ICLR, IJCAI, Springer …): [`docs
 
 1. Install and set up, in one command (Node 22.13 or newer). `init` adds paperlint to your
    project's devDependencies, then asks where your papers live (default `papers/`), whether to
-   install TeX Live now, and whether to add a CI workflow; with Claude Code it also installs the
-   skills and four hooks ([what they do](docs/install.md)).
+   install TeX Live now, and whether to add a CI workflow; with Claude Code it offers the optional
+   plugin with the skills and hooks ([what they do](docs/install.md#the-claude-code-plugin)).
 
    ```sh
    npx paperlint init

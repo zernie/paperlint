@@ -60,6 +60,10 @@ export interface Args {
   yes: boolean;
   /** `--no-hooks`: `init` does not touch `.claude/settings.json`. */
   noHooks: boolean;
+  /** `--plugin`: `init` turns the Claude Code plugin on without asking. */
+  plugin: boolean;
+  /** `--no-plugin`: `init` neither asks about the plugin nor turns it on. */
+  noPlugin: boolean;
   /** `--paper <name>`: `init` creates this paper. */
   paper: string | null;
   /** `--venue <preset>` for `new`: a shipped preset name, or a path to the project's own. */

@@ -1,7 +1,8 @@
 import {
-  explain,
+  explainOutput,
   folder,
   FindingRow,
+  citeExists,
   pageLimit,
   prose,
   render,
@@ -18,15 +19,18 @@ import {
   venueGrid,
 } from "@/shared/lib/readme";
 import { glossary } from "@/shared/config";
+import { highlight } from "@/shared/lib/highlight";
+import { CodeLine } from "@/shared/ui/code-line";
 import { Term } from "@/shared/ui/hint";
 import { Faq } from "@/widgets/faq";
 import { Hero } from "@/widgets/hero";
+import { Install } from "@/widgets/install";
 import { Journey, type Stop } from "@/widgets/journey";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
 import { Venues } from "@/widgets/venues";
-import { readRepo } from "../api/read-repo.ts";
-import { perPaperSteps, withCaption } from "../model/captions.ts";
+import { readRepo } from "@/shared/api";
+import { perPaperSteps } from "../model/captions.ts";
 import { facts } from "../model/facts.ts";
 
 const README = readRepo("README.md");
@@ -44,14 +48,22 @@ const venueNames = headlineVenues(readme.venues);
 const venues = venueGrid(readRepo("docs/venues.md"), readme.venues, (id) =>
   presetName(readRepo(`presets/${id}.jsonc`)),
 );
-const firstRun = readme.lintOutput
-  .filter((l) => /^\s+\d+:\d+/.test(l))
-  .map(explain);
-const install = readme.install.map(withCaption);
+const firstRun = explainOutput(readme.lintOutput);
 const packageLicense = (
   JSON.parse(readRepo("package.json")) as { readonly license: string }
 ).license;
 const perPaper = perPaperSteps(README);
+
+/** A JSON file's contents, highlighted at build time, one block per line. */
+const Json = ({ source }: { readonly source: string }) => (
+  <>
+    {highlight(source, "json").map((line, i) => (
+      <div key={i}>
+        <CodeLine line={line} />
+      </div>
+    ))}
+  </>
+);
 
 /** A finding of findings.ts, in the shape the README's explained lint lines have. */
 const asRow = (f: Finding): Explained => ({
@@ -59,7 +71,7 @@ const asRow = (f: Finding): Explained => ({
   level: f.level,
   title: f.title,
   plain: f.plain,
-  raw: render(f),
+  message: render(f),
 });
 
 const Example = ({
@@ -82,14 +94,7 @@ const Example = ({
     )}
     <div className="border-b border-border">
       {findings.map((f) => (
-        <FindingRow
-          key={f.title}
-          level={f.level}
-          title={f.title}
-          plain={f.plain}
-          rule={f.rule}
-          raw={f.raw}
-        />
+        <FindingRow key={f.title} f={f} />
       ))}
     </div>
   </div>
@@ -103,15 +108,18 @@ const stops: readonly Stop[] = [
     title: "The venue's hard rules",
     text: (
       <>
-        The page limit for your kind of paper, the template, fonts, page size
-        and columns, a required section, and no author names in a{" "}
+        Every reference, looked up in public catalogues to show it exists. The
+        page limit for your kind of paper, the template, fonts, page size and
+        columns, a required section, and no author names in a{" "}
         <Term means={glossary.doubleBlind}>double-blind</Term> PDF. One build,
         and every check reads it.
       </>
     ),
     badge: "On by default",
     on: true,
-    example: <Example findings={[...firstRun, asRow(pageLimit)]} />,
+    example: (
+      <Example findings={[asRow(citeExists), ...firstRun, asRow(pageLimit)]} />
+    ),
   },
   {
     n: "02",
@@ -155,7 +163,11 @@ const stops: readonly Stop[] = [
     example: (
       <Example
         file="repro/studies.json"
-        code={`{ "id": "P1-S01",\n  "title": "Baseline pass rate",\n  "status": "running",\n  "plan": "plan.json" }`}
+        code={
+          <Json
+            source={`{ "id": "P1-S01",\n  "title": "Baseline pass rate",\n  "status": "running",\n  "plan": "plan.json" }`}
+          />
+        }
         findings={[asRow(study)]}
       />
     ),
@@ -171,7 +183,7 @@ const stops: readonly Stop[] = [
     example: (
       <Example
         file="paperlint.json"
-        code={`{ "rules": { "paperlint:writing": "warn" } }`}
+        code={<Json source={`{ "rules": { "paperlint:writing": "warn" } }`} />}
         findings={[asRow(prose)]}
       />
     ),
@@ -189,8 +201,9 @@ export function HomePage() {
           facts={facts(venueCount(venues), packageLicense)}
         />
         <Journey stops={stops} />
+        <Install perPaper={perPaper} />
         <Venues grid={venues} />
-        <Faq install={install} perPaper={perPaper} />
+        <Faq />
       </main>
       <SiteFooter disclaimer={readme.disclaimer} />
     </>

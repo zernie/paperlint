@@ -20,7 +20,7 @@ const TONE: Readonly<Record<HeroFact["tone"], string>> = {
 /**
  * The opening, set as a magazine's first spread: the cover line, the promise in a short lead, four
  * short facts, then the campus etching as the spread's plate. No command and no
- * links: a reader scrolls to what it checks, and the commands wait in "How do I start?".
+ * links: a reader scrolls to what it checks, and the commands wait in Install, after the checks.
  */
 export function Hero({
   venues,
@@ -33,7 +33,10 @@ export function Hero({
   return (
     <section id="top" data-test="hero" className="pb-band">
       <div className="mx-auto max-w-page px-6 pt-16 md:px-8 md:pt-24">
-        <h1 className="max-w-cover font-display text-cover text-foreground">
+        <h1
+          data-test="hero-title"
+          className="max-w-cover font-display text-cover text-foreground"
+        >
           Writing a paper for <VenueCycle names={venues} />
         </h1>
         <p className="mt-8 max-w-measure text-lead text-copy">

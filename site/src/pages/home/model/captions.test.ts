@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { fencedAfter, readmeContent } from "@/shared/lib/readme";
+import { INIT } from "@/shared/config";
+import { fencedAfter } from "@/shared/lib/readme";
 import { perPaperSteps, withCaption } from "./captions.ts";
 
 const root = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -16,17 +17,20 @@ describe("withCaption", () => {
     });
   });
 
+  it("shows the install command the README's install block runs", () => {
+    expect(fencedAfter(readme, "### A new paper", "sh")).toContain(
+      INIT.command,
+    );
+  });
+
   it("fails the build for a command with no caption", () => {
     expect(() => withCaption("npx paperlint doctor")).toThrow(
       "site: no caption for «npx paperlint doctor» — add one to site/src/pages/home/model/captions.ts",
     );
   });
 
-  it("has a caption for every command the README's install and first-run blocks show", () => {
-    const commands = [
-      ...readmeContent(readme).install,
-      ...fencedAfter(readme, "Then check it:", "sh"),
-    ];
+  it("has a caption for every command the README's first-run block shows", () => {
+    const commands = fencedAfter(readme, "Then check it:", "sh");
     expect(commands.map((c) => withCaption(c).command)).toEqual(commands);
   });
 

@@ -8,8 +8,12 @@ export interface Explained {
   readonly level: "error" | "warning";
   readonly title: string;
   readonly plain: string;
-  /** The line exactly as the README prints it, its leading indent removed. */
-  readonly raw: string;
+  /** The file the terminal names above the finding, when the output shows one. */
+  readonly file?: string;
+  /** The line and column, as `1:1`, when the output shows them. */
+  readonly at?: string;
+  /** The message exactly as the terminal prints it, between the level and the rule id. */
+  readonly message: string;
 }
 
 /** Plain words for each rule the README's first lint output shows, checked against the README and docs/rules.md. */
@@ -28,7 +32,7 @@ export const plainByRule: Readonly<
   },
 };
 
-const LINE = /^\s*\d+:\d+\s+(error|warning)\s+(.*?)\s{2,}(\S+)\s*$/;
+const LINE = /^\s*(\d+:\d+)\s+(error|warning)\s+(.*?)\s{2,}(\S+)\s*$/;
 
 const fail = (message: string): never => {
   throw new Error(`site: ${message}`);
@@ -37,8 +41,7 @@ const fail = (message: string): never => {
 /** One README lint line, explained; throws on a line it cannot read or a rule it has no words for. */
 export const explain = (line: string): Explained => {
   const m = LINE.exec(line) ?? fail(`not a lint line — «${line}»`);
-  const level = m.slice(1, 2).join("");
-  const rule = m.slice(3, 4).join("");
+  const [at = "", level = "", message = "", rule = ""] = m.slice(1);
   const words =
     plainByRule[rule] ??
     fail(
@@ -48,6 +51,30 @@ export const explain = (line: string): Explained => {
     rule,
     level: level === "warning" ? "warning" : "error",
     ...words,
-    raw: line.trim(),
+    at,
+    message,
   };
 };
+
+/**
+ * The README's lint output, explained: each finding line, with the file named on the unindented
+ * line above it, as ESLint's stylish output groups them.
+ */
+export const explainOutput = (lines: readonly string[]): readonly Explained[] =>
+  lines.reduce<{ readonly file?: string; readonly out: readonly Explained[] }>(
+    (acc, line) =>
+      line.trim() === ""
+        ? acc
+        : /^\S/.test(line)
+          ? { file: line.trim(), out: acc.out }
+          : {
+              ...acc,
+              out: [
+                ...acc.out,
+                acc.file === undefined
+                  ? explain(line)
+                  : { file: acc.file, ...explain(line) },
+              ],
+            },
+    { out: [] },
+  ).out;

@@ -4,7 +4,7 @@ description: "End-to-end playbook for submitting a peer-reviewed paper to a doub
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:567ef8c125d44ebd compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:04205ded068d1947 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -55,10 +55,11 @@ never find it.
   **MECHANICAL GATE (run it, don't eyeball) — greps the PDF text + every artifact file + inside any
   `*.zip` for the identity deny-list, exit non-zero on a hit:**
   ```
-  bash .claude/skills/submit-paper/check-deanon.sh <paper-dir> [pdf=paper.pdf]
+  bash ${CLAUDE_SKILL_DIR}/check-deanon.sh <paper-dir> [pdf=paper.pdf]
   ```
-  Must PASS (exit 0) for a double-blind submission. Deny-list: `.claude/skills/submit-paper/deanon-denylist.txt`
-  (edit as handles/repos change). It guards the
+  Must PASS (exit 0) for a double-blind submission. Deny-list: your project's
+  `.paperlint/deanon-denylist.txt`, one extended regex per line (edit as handles/repos change); it is
+  yours, so it lives in your repository, not in the package. It guards the
   single highest reject-vector (an artifact README naming real maintainers/repos is invisible to a
   paper-only read). Only run it on *double-blind* papers — a de-anonymized single-blind PDF is supposed
   to carry your name and will (correctly) fail. Canonical deny-list rationale → `paper-pipeline/references/anonymization.md`.

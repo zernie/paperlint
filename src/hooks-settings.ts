@@ -321,6 +321,55 @@ export function wireHooks(
   return { status: "written", path, names: wiring.names };
 }
 
+/**
+ * Removes the hook commands `init` wrote (the MANAGED_BY spelling) once the Claude Code plugin carries
+ * the hooks; the project's own commands stay. vigiles' merge does it: measured 2026-11-22, a merge
+ * whose map names each event with no entries drops exactly the managed commands of those events.
+ */
+export function unwireHooks(
+  root: string,
+  merge: Merge,
+  wiring: Wiring = shippedWiring(),
+):
+  | {
+      readonly status: "removed";
+      readonly path: string;
+      readonly names: readonly string[];
+    }
+  | { readonly status: "none" }
+  | {
+      readonly status: "unparsable";
+      readonly path: string;
+      readonly reason: string;
+    } {
+  const read = readSettings(root);
+  if (read.status === "unparsable") return read;
+  const names = initWiredHooks(root, wiring);
+  if (names.length === 0) return { status: "none" };
+  const none = Object.fromEntries(
+    Object.keys(wiring.compiled).map((event) => [event, []]),
+  );
+  writeFileSync(
+    read.path,
+    `${JSON.stringify(merge(read.settings, none, MANAGED_BY), null, 2)}\n`,
+    "utf8",
+  );
+  return { status: "removed", path: read.path, names };
+}
+
+/** The hooks a command of init's own spelling runs; none when the settings file cannot be read. */
+export function initWiredHooks(
+  root: string,
+  wiring: Wiring = shippedWiring(),
+): readonly string[] {
+  const read = readSettings(root);
+  return read.status === "unparsable"
+    ? []
+    : wiredCounts(read.settings, wiring.names)
+        .filter((c) => c.ours > 0)
+        .map((c) => c.name);
+}
+
 /** The consequence every report of a written hook must carry, in one place. */
 export const FRESH_CLONE_NOTE = `the commands point into node_modules/${PACKAGE_NAME}/ — in a fresh clone they cannot run until \`npm install\` has run there`;
 

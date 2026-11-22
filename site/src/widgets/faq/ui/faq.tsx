@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CommandLine } from "@/features/copy-command";
 import { glossary, NODE } from "@/shared/config";
 import {
   Accordion,
@@ -13,48 +12,12 @@ import { Term } from "@/shared/ui/hint";
 import { Reveal } from "@/shared/ui/reveal";
 import { Rubric, SectionHeading } from "@/shared/ui/section-heading";
 
-export interface Step {
-  readonly command: string;
-  readonly caption: string;
-}
-
-const Commands = ({ steps }: { readonly steps: readonly Step[] }) => (
-  <div className="flex flex-col gap-8">
-    {steps.map((s) => (
-      <CommandLine key={s.command} lines={[s.command]} caption={s.caption} />
-    ))}
-  </div>
-);
-
 /**
- * Getting started and the questions a scientist who does not program asks first, folded. Each
- * answer is checked against README.md, docs/install.md and docs/references.md.
+ * The questions a scientist who does not program asks first, folded. Each answer is checked
+ * against README.md, docs/install.md and docs/references.md.
  */
-export function Faq({
-  install,
-  perPaper,
-}: {
-  readonly install: readonly Step[];
-  readonly perPaper: readonly Step[];
-}) {
+export function Faq() {
   const questions: readonly { readonly q: string; readonly a: ReactNode }[] = [
-    {
-      q: "How do I start?",
-      a: (
-        <>
-          <p>In a terminal, in the folder that holds your papers:</p>
-          <div className="mt-6">
-            <Commands steps={install} />
-          </div>
-          <p className="mt-10 text-label font-medium text-muted-foreground uppercase">
-            Then, for each paper
-          </p>
-          <div className="mt-6">
-            <Commands steps={perPaper} />
-          </div>
-        </>
-      ),
-    },
     {
       q: "What do I need on my computer?",
       a: (
@@ -106,10 +69,10 @@ export function Faq({
     <section data-test="faq" className="py-band">
       <Reveal className="mx-auto grid max-w-page grid-cols-1 gap-x-8 gap-y-12 px-6 md:px-8 lg:grid-cols-12">
         <div className="lg:col-span-12">
-          <Rubric n="03" name="Questions" />
+          <Rubric n="04" name="Questions" />
         </div>
         <div className="lg:col-span-4">
-          <SectionHeading id="get-started">Before you install.</SectionHeading>
+          <SectionHeading id="questions">What people ask first.</SectionHeading>
         </div>
         <Accordion
           type="multiple"

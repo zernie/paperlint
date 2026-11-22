@@ -1,6 +1,6 @@
 import { AUTHOR, GITHUB, NPM } from "@/shared/config";
 
-/** The page's thin base, ink on stone: the README's "an aid, not a guarantee", the links, the licence and who made it. */
+/** The page's thin base, ink on stone: the README's "Check the venue's own call before you submit", the links, the licence and who made it. */
 export function SiteFooter({ disclaimer }: { readonly disclaimer: string }) {
   return (
     <footer

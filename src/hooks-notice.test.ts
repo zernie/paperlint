@@ -21,6 +21,7 @@ import {
   noticeText,
 } from "./hooks-notice.ts";
 import { WIRING_FILE } from "./hooks-settings.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 
 const root = useTempDir("hooks-notice-");
 
@@ -65,6 +66,25 @@ function project(name: string, settings: string | null, long = false): string {
   return dir;
 }
 
+/**
+ * Claude Code with the plugin off, whatever the machine running the tests has: the default reads the
+ * user's own settings, and a developer with the plugin on would see every notice go quiet.
+ */
+const PLUGIN_OFF: ClaudeCode = {
+  present: () => true,
+  plugin: () => ({ enabled: false, version: null }),
+  enable: () => ({ ok: false, reason: "not in this test" }),
+};
+const PLUGIN_ON: ClaudeCode = {
+  ...PLUGIN_OFF,
+  plugin: () => ({ enabled: true, version: "9.9.9" }),
+};
+/** Declared in the settings, never installed: the keys alone load nothing. */
+const PLUGIN_DECLARED: ClaudeCode = {
+  ...PLUGIN_OFF,
+  plugin: () => ({ enabled: true, version: null }),
+};
+
 /** `paperlint hook <name>` in-process on an Edit of `file`. */
 // eslint-disable-next-line max-params -- a test helper: the hook, the project, the edit and the version
 async function hook(
@@ -90,6 +110,7 @@ async function hook(
       err.push(m);
     },
     projectDir: dir,
+    claude: PLUGIN_OFF,
     version,
     ...(skillLinks === undefined ? {} : { skillLinks }),
   });
@@ -229,6 +250,7 @@ test("paperlint lint: one stderr line naming the missing hooks when partly wired
       log: () => undefined,
       err: (...a: unknown[]) => err.push(a.join(" ")),
       cwd: dir,
+      claude: PLUGIN_OFF,
     });
     return { code, err: err.filter((l) => /not wired|unwired/.test(l)) };
   };
@@ -259,6 +281,7 @@ test("a spawned PostToolUse hook: its stdout is captured and merged, its payload
         out.push(t);
       },
       projectDir: dir,
+      claude: PLUGIN_OFF,
       version: "9.9.9",
       run: (_f, _a, o) => {
         seen.push(o);
@@ -342,6 +365,7 @@ test("the check that cannot run, and a payload that cannot be read, leave the ho
     out: () => undefined,
     err: (m: string) => void said.push(m),
     projectDir: dir,
+    claude: PLUGIN_OFF,
     version: "9.9.9",
   });
   assert.equal(garbled, 0);
@@ -358,6 +382,7 @@ test("the check that cannot run, and a payload that cannot be read, leave the ho
     out: () => undefined,
     err: (m: string) => void thrown.push(m),
     projectDir: dir,
+    claude: PLUGIN_OFF,
     version: "9.9.9",
   });
   assert.equal(unread, 0);
@@ -411,11 +436,13 @@ test("paperlint lint: a settings file it cannot read is no second finding — th
     log: () => undefined,
     err: (...a: unknown[]) => void err.push(a.join(" ")),
     cwd: dir,
+    claude: PLUGIN_OFF,
   });
   const clean = await run(["lint"], {
     log: () => undefined,
     err: () => undefined,
     cwd: project("lint-unreadable-control", null),
+    claude: PLUGIN_OFF,
   });
   assert.equal(code, clean);
   assert.deepEqual(
@@ -511,6 +538,7 @@ test("paperlint lint: one stderr line names the unlinked skills, and none when t
       log: () => undefined,
       err: (...a: unknown[]) => err.push(a.join(" ")),
       cwd: dir,
+      claude: PLUGIN_OFF,
       skillLinks,
     });
     return { code, err: err.filter((l) => /not linked|not wired/.test(l)) };
@@ -545,5 +573,59 @@ test("lintLine and noticeText word skills beside hooks", () => {
   assert.match(
     noticeText("9.9.9", [], false, ["a"]),
     /skills that are not linked into \.claude\/skills\/: a\./,
+  );
+});
+
+test("the plugin on: a partly wired project with unlinked skills hears nothing, from the hook or from lint", async () => {
+  const dir = project("plugin-on", wiringWithout(["lint-edited"]));
+  const unlinked = linked(["rewrite-unclear", "missing"]);
+  // The hook speaks once per version, so the declared plugin gets a project of its own.
+  const declaredDir = project(
+    "plugin-declared",
+    wiringWithout(["lint-edited"]),
+  );
+  const hooked = async (claude: ClaudeCode, at = dir) => {
+    const out: string[] = [];
+    await runHook("lint-edited", {
+      stdin: () =>
+        JSON.stringify({
+          tool_name: "Edit",
+          tool_input: {
+            file_path: join(at, "papers/p/paper.tex"),
+            new_string: "Fine.",
+          },
+        }),
+      out: (t) => void out.push(t),
+      err: () => undefined,
+      projectDir: at,
+      version: "7.7.7",
+      skillLinks: unlinked,
+      claude,
+    });
+    return out.join("").includes("additionalContext");
+  };
+  const linted = async (claude: ClaudeCode) => {
+    const err: string[] = [];
+    await run(["lint"], {
+      log: () => undefined,
+      err: (...a: unknown[]) => err.push(a.join(" ")),
+      cwd: dir,
+      skillLinks: unlinked,
+      claude,
+    });
+    return err.filter((l) => l.includes("npx paperlint init"));
+  };
+  // Both halves: the same project with the plugin off speaks, so the silence is the plugin's.
+  // A plugin only declared carries nothing, so it speaks as off does.
+  assert.deepEqual(
+    [
+      await hooked(PLUGIN_ON),
+      await linted(PLUGIN_ON),
+      await hooked(PLUGIN_OFF),
+      (await linted(PLUGIN_OFF)).length,
+      await hooked(PLUGIN_DECLARED, declaredDir),
+      (await linted(PLUGIN_DECLARED)).length,
+    ],
+    [false, [], true, 1, true, 1],
   );
 });

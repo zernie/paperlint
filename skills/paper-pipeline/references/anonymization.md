@@ -12,9 +12,10 @@ Author/identity strings to find and remove from anything a reviewer sees:
 ```
 # Your OWN list of identifiers — names, surnames, handles, repo names, tool names, email.
 # It is CONSUMER DATA, so it lives in your repository, not in this package:
-#   .claude/skills/submit-paper/deanon-denylist.txt   (one extended regex per line)
-bash .claude/skills/submit-paper/check-deanon.sh <paper-dir>   # PDF text + artifact/ + inside *.zip
-grep -rIiE "$(grep -vE '^\s*(#|$)' .claude/skills/submit-paper/deanon-denylist.txt | paste -sd'|')" <targets>
+#   .paperlint/deanon-denylist.txt   (one extended regex per line)
+# The gate that greps PDF text + artifact/ + inside *.zip is submit-paper's check-deanon.sh
+# (its step 0 gives the command). By hand, over any other targets:
+grep -rIiE "$(grep -vE '^\s*(#|$)' .paperlint/deanon-denylist.txt | paste -sd'|')" <targets>
 ```
 
 Plus a **non-English script** in the source (an author-language fingerprint — Cyrillic in the example
