@@ -2576,6 +2576,20 @@ type LintResults = (
   structure: Readonly<ReturnType<typeof checkStructure>>,
 ) => void;
 
+/** A missing flag value must be reported before falling back to any default. */
+function argumentProblem(a: Args): string | null {
+  if (a.missingValue)
+    return (
+      `${a.missingValue} needs a value — it was given none.\n` +
+      `Without it the run would silently fall back to whatever config it discovers, which is not what the command line said.`
+    );
+  if (a.unknownFlag !== undefined)
+    return `unknown flag \`${a.unknownFlag}\` — \`paperlint --help\` lists every flag`;
+  return !a.help && a.cmd && a.cmd !== "submission" && a.allowLintErrors != null
+    ? "--allow-lint-errors is only for submission new or update with --save"
+    : null;
+}
+
 export async function run(
   argv: readonly string[],
   {
@@ -2615,30 +2629,11 @@ export async function run(
   } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
-  // The refusal must come FIRST: behind a flag without a value there is usually a typo, or a
-  // substitution in CI that collapsed into nothing, and any continuation works on something other
-  // than what was asked for.
-  if (a.missingValue) {
-    err(
-      `${a.missingValue} needs a value — it was given none.\n` +
-        `Without it the run would silently fall back to whatever config it discovers, which is ` +
-        `not what the command line said.`,
-    );
-    return 2;
-  }
-  if (a.unknownFlag !== undefined) {
-    err(
-      `unknown flag \`${a.unknownFlag}\` — \`paperlint --help\` lists every flag`,
-    );
-    return 2;
-  }
+  const problem = argumentProblem(a);
+  if (problem !== null) return (err(problem), 2);
   if (a.help || !a.cmd) {
     log(USAGE);
     return a.help ? 0 : 2;
-  }
-  if (a.allowLintErrors != null && a.cmd !== "submission") {
-    err("--allow-lint-errors is only for submission new or update with --save");
-    return 2;
   }
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the

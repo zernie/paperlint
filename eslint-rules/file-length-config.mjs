@@ -34,7 +34,7 @@ const legacyCeilings = {
   "src/claim-provenance.test.ts": 342,
   "src/cli.harness.mjs": 1628,
   "src/cli.test.ts": 1420,
-  "src/cli.ts": 2324,
+  "src/cli.ts": 2321,
   "src/domain/body-pages.test.ts": 418,
   "src/domain/cycle.test.ts": 532,
   "src/domain/cycle.ts": 357,
