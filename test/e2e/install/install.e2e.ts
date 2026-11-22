@@ -816,8 +816,7 @@ function stepImports(c: Consumer): void {
   // `paperlint/…` imports in the shipped docs' code blocks, and `paperlint/lib/<name>.mjs` /
   // `paperlint/eslint-rules/<name>.mjs` for every module shipped. Moving the sources to
   // TypeScript put the code in `dist/`; the public names must not move with it. One process
-  // imports them all, from the consumer's directory, the way a consumer's config would — AFTER
-  // `init`, because `lib/skill-corpus.mjs` reads the consumer's `.claude/skills/` when it loads.
+  // imports them all, from the consumer's directory, the way a consumer's config would.
   const docsDir = join(installed, "docs");
   const specifiers = [
     ...new Set([

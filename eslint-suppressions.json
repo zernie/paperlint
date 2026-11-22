@@ -220,24 +220,8 @@
       "count": 1
     }
   },
-  "lib/skill-checks.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    },
-    "no-restricted-imports": {
-      "count": 1
-    }
-  },
-  "lib/skill-checks.test.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "lib/skill-corpus.mjs": {
     "local/js-needs-reason": {
-      "count": 1
-    },
-    "no-restricted-imports": {
       "count": 1
     }
   },
@@ -305,17 +289,7 @@
       "count": 1
     }
   },
-  "skills/analyze-sibling-paper/analyze-sibling-paper.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/argument-arc/argument-arc.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/argument-arc/argument-arc.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -336,11 +310,6 @@
       "count": 1
     }
   },
-  "skills/build-benchmark/build-benchmark.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/build-label-page/build-label-page.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -356,17 +325,7 @@
       "count": 1
     }
   },
-  "skills/camera-ready/camera-ready.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/cold-read-diff/cold-read-diff.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/cold-read-diff/cold-read-diff.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -376,17 +335,7 @@
       "count": 1
     }
   },
-  "skills/draft-paper/draft-paper.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/extend-paper/extend-paper.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/extend-paper/extend-paper.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -396,27 +345,12 @@
       "count": 1
     }
   },
-  "skills/find-venue/find-venue.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/harden-paper/harden-paper.eval.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
   },
-  "skills/harden-paper/harden-paper.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/map-prior-work/map-prior-work.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/map-prior-work/map-prior-work.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -496,17 +430,7 @@
       "count": 1
     }
   },
-  "skills/paper-status/paper-status.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/pc-panel-review/pc-panel-review.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/pc-panel-review/pc-panel-review.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -517,11 +441,6 @@
     }
   },
   "skills/plan-paper-timeline/plan-paper-timeline.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/plan-paper-timeline/plan-paper-timeline.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -541,17 +460,7 @@
       "count": 1
     }
   },
-  "skills/research-ideate/research-ideate.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/study-accepted-papers/study-accepted-papers.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/study-accepted-papers/study-accepted-papers.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -561,17 +470,7 @@
       "count": 1
     }
   },
-  "skills/submit-paper/submit-paper.harness.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "skills/tighten-paper/tighten-paper.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/tighten-paper/tighten-paper.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -607,11 +506,6 @@
     }
   },
   "skills/verify-citations/verify-citations.eval.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "skills/verify-citations/verify-citations.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

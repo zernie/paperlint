@@ -8,9 +8,8 @@
  * pair that labels different runs refused. The commands call the COMPILED `labels.js` under the
  * skill's link, which is what runs from `node_modules` (`npm run build` makes it).
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`). Whether the skill names only
- * subcommands the script has is not tested here: the spec interpolates them from
- * `scripts/labels-commands.ts`, so a wrong one fails `tsc`.
+ * Whether the skill names only subcommands the script has is not tested here: the spec interpolates
+ * them from `scripts/labels-commands.ts`, so a wrong one fails `tsc`.
  *
  * What it does NOT prove: that a real model reads the uncertain runs in full. That is for
  * `label-agent-runs.eval.ts` and a real labelling pass.
@@ -19,14 +18,11 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { runHarnessTest, skip, type ToolCall } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
-import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
 import { claudeDir } from "#src/package-dirs";
 import { COMMANDS } from "./scripts/labels-commands.ts";
 
 const check = createChecker();
-
-await checkSkill("label-agent-runs");
 
 // ── Through the real CLI: agreement, as the skill tells an agent to compute it ───────────
 const LINK = join(claudeDir(), "skills", "label-agent-runs");
