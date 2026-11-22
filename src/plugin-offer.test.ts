@@ -118,10 +118,12 @@ describe("offerPlugin — the four paths the author named", () => {
   });
 });
 
-describe("offerPlugin — the other ways it ends", () => {
+describe("offerPlugin — --no-plugin", () => {
   it("--no-plugin: nothing asked, nothing turned on; an installed plugin stays on", async () => {
     const off = fakeClaude();
-    const installed = fakeClaude({ state: { enabled: true, version: "1.2.3" } });
+    const installed = fakeClaude({
+      state: { enabled: true, version: "1.2.3" },
+    });
     const a = asking({ flag: "no-plugin" });
     // Skipping the offer is not turning the plugin off: init must not re-create links beside it.
     expect([
@@ -138,7 +140,9 @@ describe("offerPlugin — the other ways it ends", () => {
       [],
     ]);
   });
+});
 
+describe("offerPlugin — the other ways it ends", () => {
   it("no Claude Code: silence; --plugin turns it on all the same", async () => {
     const absent = fakeClaude({ present: false });
     expect([

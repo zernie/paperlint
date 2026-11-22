@@ -149,7 +149,9 @@ describe("claudeCode — the keys, without claude", () => {
     );
     s.cc.enable(s.root);
     expect(
-      JSON.parse(readFileSync(join(s.root, ".claude", "settings.json"), "utf8")),
+      JSON.parse(
+        readFileSync(join(s.root, ".claude", "settings.json"), "utf8"),
+      ),
     ).toEqual({
       enabledPlugins: { "other@x": false, "paperlint@paperlint": true },
       extraKnownMarketplaces: {

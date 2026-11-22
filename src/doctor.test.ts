@@ -105,7 +105,7 @@ test("doctor exits non-zero when the hooks are only partly wired", () => {
 });
 
 /** Doctor's output for a project with one of init's hook commands and one present skill link. */
-const withPlugin = (plugin: DoctorOptions["plugin"]) => {
+const withPlugin = (plugin: NonNullable<DoctorOptions["plugin"]> | null) => {
   const root = project();
   writeFileSync(join(root, "paperlint.json"), "{}\n");
   mkdirSync(join(root, ".claude"), { recursive: true });

@@ -580,7 +580,10 @@ test("the plugin on: a partly wired project with unlinked skills hears nothing, 
   const dir = project("plugin-on", wiringWithout(["lint-edited"]));
   const unlinked = linked(["rewrite-unclear", "missing"]);
   // The hook speaks once per version, so the declared plugin gets a project of its own.
-  const declaredDir = project("plugin-declared", wiringWithout(["lint-edited"]));
+  const declaredDir = project(
+    "plugin-declared",
+    wiringWithout(["lint-edited"]),
+  );
   const hooked = async (claude: ClaudeCode, at = dir) => {
     const out: string[] = [];
     await runHook("lint-edited", {
