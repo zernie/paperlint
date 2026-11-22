@@ -26,7 +26,6 @@ const README = `# x
 1. Install.
 
    \`\`\`sh
-   npm i -D paperlint
    npx paperlint init
    \`\`\`
 
@@ -50,7 +49,7 @@ After.
 describe("readmeContent", () => {
   it("reads the install block, the lint output and the venue table, indentation removed", () => {
     expect(readmeContent(README)).toEqual({
-      install: ["npm i -D paperlint", "npx paperlint init"],
+      install: ["npx paperlint init"],
       lintOutput: ["papers/p/paper.tex", "  1:1  error  boom  pdf/fonts"],
       venues: [
         {
@@ -72,9 +71,9 @@ describe("readmeContent", () => {
 
   it("fails the build when the install block no longer installs", () => {
     expect(() =>
-      readmeContent(README.replace("npm i -D paperlint", "echo")),
+      readmeContent(README.replace("npx paperlint init", "echo")),
     ).toThrow(
-      "site: no `npm i` in the install block — the README or a doc changed; update site/src/shared/lib/readme/ to match",
+      "site: no `npx paperlint init` in the install block — the README or a doc changed; update site/src/shared/lib/readme/ to match",
     );
   });
 });
@@ -117,9 +116,8 @@ describe("the readers' edges", () => {
     );
   });
 
-  it("reads the real README: the two install commands the site shows", () => {
+  it("reads the real README: the one install command the site shows", () => {
     expect(readmeContent(read("README.md")).install).toEqual([
-      "npm i -D paperlint",
       "npx paperlint init",
     ]);
   });

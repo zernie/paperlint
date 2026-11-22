@@ -18,12 +18,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { FRESH_CLONE_NOTE } from "./hooks-settings.ts";
 import { load as yamlLoad } from "js-yaml";
 import { z } from "zod";
 import {
+  CANCELLED_CODE,
+  CANCELLED_LINE,
   WORKFLOW_PATH,
   choosePapers,
   declarePapers,
@@ -36,7 +38,7 @@ import {
   reportWorkflow,
   workflowYaml,
 } from "./init.ts";
-import { runNode } from "../test/support.ts";
+import { runNode, scriptedPrompts, type Reply } from "../test/support.ts";
 import { nodeFiles } from "./adapters/node/index.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { shippedVenueNames } from "./presets.ts";
@@ -94,24 +96,29 @@ describe("paperlint init — a declared papers directory", () => {
 
   it("is not asked about, even with a human at the terminal", async () => {
     const root = project();
-    const asked: string[] = [];
+    const prompts = scriptedPrompts(() => false);
     await init(root, {
       cwd: root,
       log: () => {},
       err: () => {},
       interactive: true,
-      ask: (q) => Promise.resolve((asked.push(q), "n")),
+      prompts,
       hooks: false,
       run: () => ({ status: 0 }),
       link: () => ({ ok: false, error: "not linked in this test" }),
     });
-    expect(asked.filter((q) => /papers roots/.test(q))).toEqual([]);
+    expect(prompts.asked).toEqual([
+      "add a GitHub Actions workflow that runs this in CI?",
+    ]);
   });
 
   it("without a declaration, the candidates are still measured and offered", async () => {
     const choice = await choosePapers(project(), { interactive: false });
-    expect(choice.how).toBe("not-asked");
-    expect(choice.candidates.length).toBeGreaterThan(1);
+    expect(choice).toEqual({
+      papers: "drafts",
+      how: "not-asked",
+      candidates: ["drafts", "eslint-rules/fixtures", "papers"],
+    });
   });
 });
 
@@ -161,25 +168,26 @@ describe("paperlint init — writes paperlint.json only when something differs f
 /** Runs init in a fresh directory with the given TeX Live port; what it printed and asked. */
 const texRun = async (
   tex: { installed: () => boolean; install?: () => number },
-  { interactive, answer = "" }: { interactive: boolean; answer?: string },
+  { interactive, answer }: { interactive: boolean; answer?: Reply },
 ) => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-tex-")));
   dirs.push(root);
   const out: string[] = [];
-  const asked: string[] = [];
-  await init(root, {
+  const prompts = scriptedPrompts((q) =>
+    /TeX Live/.test(q) ? answer : undefined,
+  );
+  const code = await init(root, {
     cwd: root,
     log: (s: string) => out.push(s),
     err: () => {},
     interactive,
-    ask: (q) =>
-      Promise.resolve((asked.push(q), /TeX Live/.test(q) ? answer : "")),
+    prompts,
     hooks: false,
     run: () => ({ status: 0 }),
     link: () => ({ ok: false as const, error: "not linked in this test" }),
     tex,
   });
-  return { text: out.join("\n"), asked };
+  return { text: out.join("\n"), asked: prompts.asked, code };
 };
 
 describe("paperlint init — TeX Live is offered with its cost, never installed unasked", () => {
@@ -201,10 +209,10 @@ describe("paperlint init — TeX Live is offered with its cost, never installed 
     let installs = 0;
     const r = await texRun(
       { installed: () => false, install: () => (installs++, 0) },
-      { interactive: true, answer: "y" },
+      { interactive: true, answer: true },
     );
-    expect(r.asked.find((q) => /TeX Live/.test(q))).toMatch(
-      /~270 MB, ~3 min, once\) \[y\/N\]/,
+    expect(r.asked.find((q) => /TeX Live/.test(q))).toBe(
+      "install TeX Live now, for `paperlint build`? (~270 MB, ~3 min, once)",
     );
     expect(installs).toBe(1);
     expect(r.text).not.toMatch(/next: .*\n.*npx paperlint toolchain/);
@@ -220,10 +228,24 @@ describe("paperlint init — TeX Live is offered with its cost, never installed 
     expect(r.text).toMatch(/declined — nothing installed/);
   });
 
+  it("🔴 Ctrl+C at the question installs nothing, stops init and exits 130", async () => {
+    let installs = 0;
+    const r = await texRun(
+      { installed: () => false, install: () => (installs++, 0) },
+      { interactive: true, answer: "cancel" },
+    );
+    expect([installs, r.code, r.text.split("\n").at(-1)]).toEqual([
+      0,
+      CANCELLED_CODE,
+      CANCELLED_LINE,
+    ]);
+    expect(r.text).not.toMatch(/paperlint doctor/);
+  });
+
   it("already installed: not asked about", async () => {
     const r = await texRun(
       { installed: () => true, install: () => 0 },
-      { interactive: true, answer: "y" },
+      { interactive: true, answer: true },
     );
     expect(r.asked.filter((q) => /TeX Live/.test(q))).toEqual([]);
     expect(r.text).toMatch(/✓ paperlint's TeX Live is installed/);
@@ -327,13 +349,29 @@ describe("paperlint init — how several candidate directories were decided, sai
     out.slice(out.indexOf("papers directory") + 1, out.indexOf("settings") - 1);
 
   it("picked by a human", async () => {
-    const r = await initRun(several(), {
-      interactive: true,
-      ask: () => Promise.resolve("2"),
-    });
+    const prompts = scriptedPrompts((q) =>
+      /papers roots/.test(q) ? "writing" : false,
+    );
+    const r = await initRun(several(), { interactive: true, prompts });
     expect(section(r.out)).toEqual([
       "  ✓ writing — you picked it out of 2 candidates",
     ]);
+    expect(prompts.asked[0]).toBe(
+      "several directories look like papers roots — which one?",
+    );
+  });
+
+  it("🔴 Ctrl+C at the choice writes no paperlint.json and exits 130", async () => {
+    const root = several();
+    const r = await initRun(root, {
+      interactive: true,
+      prompts: scriptedPrompts(() => "cancel"),
+    });
+    expect([r.code, r.out.slice(2)]).toEqual([
+      CANCELLED_CODE,
+      [CANCELLED_LINE],
+    ]);
+    expect(existsSync(join(root, "paperlint.json"))).toBe(false);
   });
 
   it("no terminal: the first, and the others named", async () => {
@@ -344,10 +382,12 @@ describe("paperlint init — how several candidate directories were decided, sai
     ]);
   });
 
-  it("an answer that picks nothing: the first, and said so", async () => {
+  it("a question that failed (the stream ended): the first, and said so", async () => {
     const r = await initRun(several(), {
       interactive: true,
-      ask: () => Promise.resolve("nine"),
+      prompts: scriptedPrompts((q) =>
+        /papers roots/.test(q) ? new Error("stream ended") : false,
+      ),
     });
     expect(section(r.out)[0]).toBe(
       "  ✓ drafts — 2 candidates, no answer was given, so the first one was taken",
@@ -479,7 +519,7 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
   it("TeX Live: a failed install says to run it again", async () => {
     const t = await offerTexLive(
       { installed: () => false, install: () => 1 },
-      { interactive: true, ask: () => Promise.resolve("yes") },
+      { interactive: true, prompts: scriptedPrompts(() => true) },
     );
     expect([t, reportTexLive(t, "")]).toEqual([
       "failed",
@@ -501,6 +541,26 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
     });
     expect(outcome).toEqual({ status: "failed", reason: "merge exploded" });
   });
+
+  it("hooks: a question that failed (the stream ended) takes the stated default, YES; a No declines", async () => {
+    const ask = async (reply: boolean | Error) => {
+      const root = tree({});
+      const outcome = await offerHooks(root, {
+        hooks: true,
+        interactive: true,
+        prompts: scriptedPrompts(() => reply),
+      });
+      // Each run has its own temp root: compare where it wrote, relative to that root.
+      return "path" in outcome
+        ? { ...outcome, path: relative(root, outcome.path) }
+        : outcome;
+    };
+    // Guards: the failed question wires exactly what an explicit yes wires, not a decline.
+    expect([await ask(new Error("stream ended")), await ask(false)]).toEqual([
+      await ask(true),
+      { status: "declined" },
+    ]);
+  });
 });
 
 describe("paperlint init — a first paper", () => {
@@ -508,7 +568,7 @@ describe("paperlint init — a first paper", () => {
     const made: string[] = [];
     const r = await initRun(tree({}), {
       interactive: true,
-      ask: () => Promise.resolve(""),
+      prompts: scriptedPrompts((q) => (/first paper/.test(q) ? "" : false)),
       createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
     });
     expect(made).toEqual([]);
@@ -516,17 +576,68 @@ describe("paperlint init — a first paper", () => {
       "  · none yet. `npx paperlint new <name>` or `--paper <name>` creates one",
     );
   });
+
+  it("a name typed at the prompt creates that paper", async () => {
+    const made: string[] = [];
+    await initRun(tree({}), {
+      interactive: true,
+      prompts: scriptedPrompts((q) =>
+        /first paper/.test(q) ? " draft-one " : false,
+      ),
+      createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
+    });
+    expect(made).toEqual(["draft-one"]);
+  });
+
+  it("🔴 Ctrl+C at the name creates nothing and exits 130", async () => {
+    const made: string[] = [];
+    const r = await initRun(tree({}), {
+      interactive: true,
+      prompts: scriptedPrompts((q) =>
+        /first paper/.test(q) ? "cancel" : false,
+      ),
+      createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
+    });
+    expect([made, r.code, r.out.at(-1)]).toEqual([
+      [],
+      CANCELLED_CODE,
+      CANCELLED_LINE,
+    ]);
+  });
+});
+
+describe("paperlint init — Ctrl+C at the hooks or the workflow question", () => {
+  it("🔴 at the hooks: nothing is wired, and nothing after it is asked", async () => {
+    const root = tree({});
+    const prompts = scriptedPrompts(() => "cancel");
+    const r = await initRun(root, { interactive: true, hooks: true, prompts });
+    expect([r.code, r.out.at(-1), prompts.asked.length]).toEqual([
+      CANCELLED_CODE,
+      CANCELLED_LINE,
+      1,
+    ]);
+    expect(existsSync(join(root, ".claude", "settings.json"))).toBe(false);
+  });
+
+  it("🔴 at the workflow: no file, exit 130", async () => {
+    const root = tree({});
+    const r = await initRun(root, {
+      interactive: true,
+      prompts: scriptedPrompts(() => "cancel"),
+    });
+    expect([r.code, r.out.at(-1)]).toEqual([CANCELLED_CODE, CANCELLED_LINE]);
+    expect(existsSync(join(root, WORKFLOW_PATH))).toBe(false);
+  });
 });
 
 describe("paperlint init — a first paper named after a venue", () => {
   it("--paper aisec-2026 is refused before anything is asked, and createPaper is not called", async () => {
     const made: string[] = [];
-    const asked: string[] = [];
     const r = await initRun(tree({}), {
       interactive: true,
       paper: "aisec-2026",
       venues: shippedVenueNames({ files: nodeFiles, venuesDir: presetsDir() }),
-      ask: (q) => Promise.resolve((asked.push(q), "")),
+      prompts: scriptedPrompts(() => false),
       createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
     });
     expect(made).toEqual([]);

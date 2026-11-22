@@ -42,6 +42,24 @@ const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 // loads vigiles without recording a check is reported as having verified nothing.
 const check = createChecker();
 
+/**
+ * init's `Prompts` port answered by `reply(message, options)`: a value, `undefined` (Enter: the
+ * initial value) or an Error (the stream ended). Every message asked lands in `asked`.
+ */
+const answering = (reply, asked = []) => {
+  const one = async (message, initial, options) => {
+    asked.push(message);
+    const r = reply(message, options);
+    if (r instanceof Error) throw r;
+    return { kind: "answer", value: r === undefined ? initial : r };
+  };
+  return {
+    confirm: ({ message, initial }) => one(message, initial),
+    select: ({ message, initial, options }) => one(message, initial, options),
+    text: ({ message }) => one(message, ""),
+  };
+};
+
 /** A paper.tex whose whole body is `body`. */
 const tex = (body) =>
   `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
@@ -71,6 +89,11 @@ async function cli(args, cwd) {
     const code = await run(args, {
       log: (...a) => stdout.push(a.join(" ")),
       err: (...a) => stderr.push(a.join(" ")),
+      // `init` never spawns a package manager here.
+      install: {
+        command: (_r, spec) => ["npm", spec],
+        run: () => ({ ok: true }),
+      },
     });
     return {
       code,
@@ -463,10 +486,7 @@ check(
       const asked = [];
       const wf = await offerWorkflow(dir, {
         interactive: true,
-        ask: async (q) => {
-          asked.push(q);
-          return "y";
-        },
+        prompts: answering(() => true, asked),
       });
       check(
         "saying yes WRITES the workflow",
@@ -489,7 +509,7 @@ check(
       check("the question is asked exactly once", asked.length === 1);
       const again = await offerWorkflow(dir, {
         interactive: true,
-        ask: async () => "y",
+        prompts: answering(() => true),
       });
       check(
         "an existing workflow is neither overwritten nor asked about again",
@@ -500,7 +520,7 @@ check(
       const dir = project("ci-no", { papers: ["writing"] });
       const no = await offerWorkflow(dir, {
         interactive: true,
-        ask: async () => "",
+        prompts: answering(() => undefined),
       });
       check(
         "an empty answer is a NO, and no file appears",
@@ -515,9 +535,7 @@ check(
       // i.e. the real defect would look like a hole in the test rather than a caught one.
       const aborted = await offerWorkflow(dir, {
         interactive: true,
-        ask: async () => {
-          throw new Error("Aborted with Ctrl+D");
-        },
+        prompts: answering(() => new Error("Aborted with Ctrl+D")),
       }).catch((e) => `THREW: ${e?.message ?? e}`);
       check(
         "🔴 an interrupted question does NOT crash the command — it means the default",
@@ -530,7 +548,7 @@ check(
       const dir = project("many", { papers: ["alpha", "beta"] });
       const picked = await choosePapers(dir, {
         interactive: true,
-        ask: async () => "2",
+        prompts: answering((_q, options) => options?.[1]),
       });
       check(
         "🔴 the human's answer DECIDES, it does not just decorate the output",
@@ -543,9 +561,7 @@ check(
       );
       const aborted = await choosePapers(dir, {
         interactive: true,
-        ask: async () => {
-          throw new Error("Aborted with Ctrl+D");
-        },
+        prompts: answering(() => new Error("Aborted with Ctrl+D")),
       }).catch((e) => ({
         how: `THREW: ${e?.message ?? e}`,
         papers: null,
@@ -1510,14 +1526,14 @@ console.log(
       await init(dir, {
         ...quiet,
         interactive: true,
-        ask: async (q) => {
-          asked.push(q);
-          return /\[Y\/n\]/.test(q) ? "n" : "";
-        },
+        prompts: answering(
+          (q) => (/wire the paper hooks/.test(q) ? false : undefined),
+          asked,
+        ),
       });
       check(
-        "a human is asked [Y/n] for the hooks",
-        asked.some((q) => /wire the paper hooks .*\[Y\/n\]/.test(q)),
+        "a human is asked about the hooks",
+        asked.some((q) => /wire the paper hooks/.test(q)),
       );
       check("and a no is respected", !existsSync(settings(dir)));
     }
@@ -1526,7 +1542,7 @@ console.log(
       await init(dir, {
         ...quiet,
         interactive: true,
-        ask: async () => "",
+        prompts: answering(() => undefined),
       });
       check(
         "an empty answer is the stated default, YES",
@@ -1562,11 +1578,10 @@ console.log(
         ...base,
         log: () => {},
         interactive: true,
-        ask: async (q) => {
-          asked.push(q);
-          if (/create a first paper/.test(q)) return "first";
-          return "";
-        },
+        prompts: answering(
+          (q) => (/create a first paper/.test(q) ? "first" : undefined),
+          asked,
+        ),
         createPaper: async (papersRoot, name) => {
           made.push({ papersRoot, name });
           return 0;
@@ -1619,7 +1634,7 @@ console.log(
         ...base,
         log: () => {},
         interactive: true,
-        ask: async (q) => (asked.push(q), ""),
+        prompts: answering(() => undefined, asked),
         createPaper: async () => 0,
       });
       check(

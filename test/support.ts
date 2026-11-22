@@ -23,6 +23,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll } from "vitest";
+import type { Answer, Prompts } from "../src/ports/prompts.ts";
 
 /** A fresh temp directory (realpath, so macOS /var vs /private/var never differs), removed after the file's tests. */
 export function useTempDir(prefix = "paperlint-test-"): string {
@@ -108,4 +109,38 @@ export function runNode(
 export function present<T>(value: T | null | undefined, what: string): T {
   assert.ok(value !== undefined && value !== null, `expected ${what}`);
   return value;
+}
+
+/** What a scripted question answers: a value, nothing (Enter: the initial value), the string `"cancel"`, a failure. */
+export type Reply = string | boolean | undefined | Error;
+
+/**
+ * The `Prompts` port answered by `script(message)`, recording every message in `asked`. A reply of the
+ * wrong kind for its question (a string to a confirm) fails the test rather than being coerced.
+ */
+export function scriptedPrompts(
+  script: (message: string) => Reply,
+): Prompts & { readonly asked: string[] } {
+  const asked: string[] = [];
+  const reply = async <T>(
+    message: string,
+    initial: T,
+    is: (v: unknown) => v is T,
+  ): Promise<Answer<T>> => {
+    asked.push(message);
+    const r = await Promise.resolve(script(message));
+    if (r instanceof Error) throw r;
+    if (r === "cancel") return { kind: "cancel" };
+    if (r === undefined) return { kind: "answer", value: initial };
+    assert.ok(is(r), `the reply to "${message}" is of the wrong kind`);
+    return { kind: "answer", value: r };
+  };
+  const isBoolean = (v: unknown): v is boolean => typeof v === "boolean";
+  const isString = (v: unknown): v is string => typeof v === "string";
+  return {
+    asked,
+    confirm: ({ message, initial }) => reply(message, initial, isBoolean),
+    select: ({ message, initial }) => reply(message, initial, isString),
+    text: ({ message }) => reply(message, "", isString),
+  };
 }

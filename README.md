@@ -80,12 +80,12 @@ edition, and what is not shipped yet (USENIX, ICLR, IJCAI, Springer …): [`docs
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
-1. Install (Node 22.13 or newer) and set up. `init` asks where your papers live (default
-   `papers/`), whether to install TeX Live now, and whether to add a CI workflow; with Claude Code
-   it also installs the skills and four hooks ([what they do](docs/install.md)).
+1. Install and set up, in one command (Node 22.13 or newer). `init` adds paperlint to your
+   project's devDependencies, then asks where your papers live (default `papers/`), whether to
+   install TeX Live now, and whether to add a CI workflow; with Claude Code it also installs the
+   skills and four hooks ([what they do](docs/install.md)).
 
    ```sh
-   npm i -D paperlint
    npx paperlint init
    ```
 
@@ -267,8 +267,8 @@ Both workflows in full, with the TeX Live cache: [`docs/ci.md`](docs/ci.md).
 ## ❓ FAQ
 
 **Does it install anything without asking?**
-No. TeX Live comes only from `paperlint toolchain`, or when you say yes in `init` or `build`. On
-Windows, install TeX Live yourself.
+Only paperlint itself, into devDependencies (asked first at a terminal). TeX Live comes only from
+`paperlint toolchain`, or a yes in `init` or `build`; on Windows, install it yourself.
 
 **Several papers for different venues in one repo?**
 Yes. Each paper names its own venue preset in its own `paperlint.json`.

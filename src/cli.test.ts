@@ -6,7 +6,13 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  symlinkSync,
+} from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test, vi } from "vitest";
@@ -43,7 +49,10 @@ const root = useTempDir("cli-test-");
 async function cli(
   argv: string[],
   cwd: string,
-  deps: Pick<NonNullable<Parameters<typeof run>[1]>, "loadTexLanguage"> = {},
+  deps: Pick<
+    NonNullable<Parameters<typeof run>[1]>,
+    "loadTexLanguage" | "install"
+  > = {},
 ) {
   const out: string[] = [];
   const err: string[] = [];
@@ -52,6 +61,11 @@ async function cli(
     err: (...a: unknown[]) => err.push(a.join(" ")),
     cwd,
     now: () => 0,
+    // `init` never spawns a package manager here: adding paperlint is `src/self-install.test.ts`'s.
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: true }),
+    },
     ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
@@ -737,6 +751,83 @@ test("init with no path sets up the current directory, and its first paper is pa
   for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
     assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
   assert.equal(made.includes("main.tex"), false);
+});
+
+test("init's step 0 that fails stops the run with 2: init itself never starts", async () => {
+  const dir = writeTree(join(root, "self-failed"), { "package.json": "{}" });
+  const r = await cli(["init", "--yes", "--no-hooks"], dir, {
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: false, reason: "exit 1" }),
+    },
+  });
+  assert.deepEqual(
+    {
+      code: r.code,
+      out: r.out.split("\n"),
+      paperlintJson: existsSync(join(dir, "paperlint.json")),
+    },
+    {
+      code: 2,
+      out: [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✗ npm paperlint@0.0.0-semantically-released failed (exit 1) — nothing else was done. Run it yourself, then `npx paperlint init` again",
+      ],
+      paperlintJson: false,
+    },
+  );
+});
+
+test("init's step 0 reads the project's own copy: this checkout is present, another version is said and kept", async () => {
+  const pkg = (dir: string) => join(dir, "node_modules", "paperlint");
+  const own = writeTree(join(root, "self-own"), { "package.json": "{}" });
+  mkdirSync(join(own, "node_modules"));
+  symlinkSync(dirname(import.meta.dirname), pkg(own));
+  const older = writeTree(join(root, "self-older"), {
+    "package.json": "{}",
+    "node_modules/paperlint/package.json":
+      '{"name":"paperlint","version":"0.0.1"}',
+  });
+  const unversioned = writeTree(join(root, "self-unversioned"), {
+    "package.json": "{}",
+    "node_modules/paperlint/package.json": '{"name":"paperlint"}',
+  });
+  const head = async (dir: string) =>
+    (await cli(["init", "--yes", "--no-hooks"], dir)).out
+      .split("\n")
+      .slice(0, 4);
+  assert.deepEqual(
+    [await head(own), await head(older), await head(unversioned)],
+    [
+      [
+        "",
+        "paperlint init — each decision below says HOW it was decided",
+        "",
+        "papers directory",
+      ],
+      [
+        "",
+        "paperlint in this project",
+        "  ⚠ paperlint 0.0.1 is installed in this project, and this command is 0.0.0-semantically-released: kept 0.0.1, nothing up- or downgraded",
+        "      to move the project to 0.0.0-semantically-released: npm paperlint@0.0.0-semantically-released",
+      ],
+      [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✓ added paperlint to devDependencies",
+      ],
+    ],
+  );
+  // What is added can be named instead: the install e2e adds the packed tarball.
+  vi.stubEnv("PAPERLINT_INSTALL_SPEC", "/tmp/p.tgz");
+  try {
+    assert.equal((await head(unversioned))[2], "  → npm /tmp/p.tgz");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 test("init and doctor with a declaration that names no directory: nothing to compare", async () => {
