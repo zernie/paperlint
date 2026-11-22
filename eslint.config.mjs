@@ -32,7 +32,7 @@ import { presetCardRules } from "#src/preset-card-rule";
 import { nodeFiles } from "#src/adapters/node/index";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import fileLength from "./eslint-rules/file-length-config.mjs";
+import fileLength from "./scripts/eslint-file-length.mjs";
 
 /** This repository's own rules, one plugin: `local/<rule>`. */
 const localRules = {
