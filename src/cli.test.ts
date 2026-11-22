@@ -58,7 +58,7 @@ async function cli(
   cwd: string,
   deps: Pick<
     NonNullable<Parameters<typeof run>[1]>,
-    "loadTexLanguage" | "claude"
+    "loadTexLanguage" | "claude" | "install"
   > = {},
 ) {
   const out: string[] = [];
@@ -836,6 +836,33 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
       ],
       1,
     ],
+  );
+});
+
+test("init's step 0 that fails stops the run with 2: init itself never starts", async () => {
+  const dir = writeTree(join(root, "self-failed"), { "package.json": "{}" });
+  const r = await cli(["init", "--yes", "--no-hooks"], dir, {
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: false, reason: "exit 1" }),
+    },
+  });
+  assert.deepEqual(
+    {
+      code: r.code,
+      out: r.out.split("\n"),
+      paperlintJson: existsSync(join(dir, "paperlint.json")),
+    },
+    {
+      code: 2,
+      out: [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✗ npm paperlint@0.0.0-semantically-released failed (exit 1) — nothing else was done. Run it yourself, then `npx paperlint init` again",
+      ],
+      paperlintJson: false,
+    },
   );
 });
 

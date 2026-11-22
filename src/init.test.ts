@@ -18,7 +18,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { FRESH_CLONE_NOTE } from "./hooks-settings.ts";
 import { load as yamlLoad } from "js-yaml";
@@ -540,6 +540,26 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
       },
     });
     expect(outcome).toEqual({ status: "failed", reason: "merge exploded" });
+  });
+
+  it("hooks: a question that failed (the stream ended) takes the stated default, YES; a No declines", async () => {
+    const ask = async (reply: boolean | Error) => {
+      const root = tree({});
+      const outcome = await offerHooks(root, {
+        hooks: true,
+        interactive: true,
+        prompts: scriptedPrompts(() => reply),
+      });
+      // Each run has its own temp root: compare where it wrote, relative to that root.
+      return "path" in outcome
+        ? { ...outcome, path: relative(root, outcome.path) }
+        : outcome;
+    };
+    // Guards: the failed question wires exactly what an explicit yes wires, not a decline.
+    expect([await ask(new Error("stream ended")), await ask(false)]).toEqual([
+      await ask(true),
+      { status: "declined" },
+    ]);
   });
 });
 
