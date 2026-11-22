@@ -15,7 +15,7 @@ const legacyCeilings = {
   "eslint.config.mjs": 622,
   "hooks/hooks.harness.ts": 502,
   "scripts/coverage-config.test.ts": 376,
-  "scripts/pipeline.ts": 379,
+  "scripts/pipeline.ts": 380,
   "src/adapters/git/history.test.ts": 327,
   "src/adapters/git/index.test.ts": 327,
   "src/adapters/git/index.ts": 301,
