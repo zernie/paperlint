@@ -40,8 +40,8 @@
   // the HotCRP API, there.
   "portal": { "kind": "hotcrp", "url": "https://aidc.submit.acsac.org" },
 
-  // Read from the portal's public deadlines page; the camera-ready only in its status object
-  // (`"final":{"done":1793447999}`).
+  // Read from the portal's public deadlines page. The camera-ready timestamp is the hard
+  // `final.done` value in its status object. The workshop site's earlier date is recorded in the card.
   "deadlines": [
     {
       "what": "submission",

@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:8064945a6b19d6f0 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:2f6c3c359683a7c2 compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -24,6 +24,12 @@ This file loads on every turn, so it holds only what applies to **any** change h
 ## First command in a fresh container
 
 `npm install` — not optional: `vigiles` is a real dependency, and every harness, spec and hook resolves through it. Without it, failures look like broken code rather than a missing install.
+
+## Claude Code and Codex
+
+Keep the repository instructions and maintainer skills available in both tools. This spec builds both `CLAUDE.md` and `AGENTS.md`. Use the table below for folder-specific instructions.
+
+Claude Code loads `add-venue` from `.claude/skills/` and Codex loads it from `.agents/skills/`. Edit `.claude/skills/add-venue/SKILL.md.spec.ts` and run `npx vigiles compile .claude/skills/add-venue/SKILL.md.spec.ts` followed by `npm run sync:skills` to regenerate both copies. The sync command uses Rulesync and needs Node 22.22 or later. Commit the generated Markdown with the spec. CI checks the Codex copy during `npm run fmt:check`.
 
 ## Where the other rules live
 

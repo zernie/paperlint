@@ -4,7 +4,7 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "add-venue",
   description:
-    "Add a venue paperlint does not ship: turn a conference or workshop call for papers into a venue preset for one edition (presets/<series>-<year>.jsonc) and its card (presets/<series>-<year>.md), every number with its quote and URL. Use when asked to add a venue, write a preset or a card for a conference or workshop, or turn a call for papers into a preset. NOT for choosing which venue to submit to (find-venue), NOT for submitting (submit-paper).",
+    "Create or update a conference or workshop edition in paperlint. Use for venue presets and cards (presets/<series>-<year>.jsonc and .md), including verifying changed deadlines against the call for papers and submission portal. Record the source and date for each reading. For venue selection use find-venue; for submission use submit-paper.",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebFetch"],
   body: `
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
@@ -13,6 +13,9 @@ Done for \`agent-2027\`, \`agentverify-2027\` and \`nlbse-2027\`. A shipped venu
 \`presets/<series>-<year>.jsonc\` and \`.md\`; the series is lowercase, with no publisher or
 parent-conference prefix. A venue of your own project, not shipped, is \`./venues/<series>-<year>.jsonc\` and \`.md\` (\`docs/rules.md\`, "Writing your
 own venue preset"); steps 1 to 7 are the same.
+
+For an existing edition, start with its preset and card. Recheck the affected facts using steps
+2–5, update the card and preset together, and run the checks in step 9.
 
 1. **Copy the closest pair.** \`aidc-2026\` for an IEEE workshop, \`agenticdev-2026\` for ACM. Read
    \`presets/venue-profile.schema.json\`: a key outside it fails the lint. The template family

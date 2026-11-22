@@ -13,6 +13,7 @@ import {
 } from "vigiles/spec";
 
 export default instructionFile({
+  target: ["CLAUDE.md", "AGENTS.md"],
   sections: {
     paperlint: prose`Machine-checkable gates for writing a research paper in git, extracted from a private knowledge base.
 
@@ -30,6 +31,10 @@ This file loads on every turn, so it holds only what applies to **any** change h
 **A real consumer dogfoods this package on every CI run**, so a breaking change here turns a paper pipeline red somewhere else the same day. CI runs on every pull request (${file(".github/workflows/ci.yml")}). Counts of rules, skills and hooks: measure with \`git ls-files\`.`,
 
     "First command in a fresh container": prose`${cmd("npm install")} — not optional: \`vigiles\` is a real dependency, and every harness, spec and hook resolves through it. Without it, failures look like broken code rather than a missing install.`,
+
+    "Claude Code and Codex": prose`Keep the repository instructions and maintainer skills available in both tools. This spec builds both \`CLAUDE.md\` and \`AGENTS.md\`. Use the table below for folder-specific instructions.
+
+Claude Code loads \`add-venue\` from \`.claude/skills/\` and Codex loads it from \`.agents/skills/\`. Edit ${file(".claude/skills/add-venue/SKILL.md.spec.ts")} and run ${cmd("npx vigiles compile .claude/skills/add-venue/SKILL.md.spec.ts")} followed by ${cmd("npm run sync:skills")} to regenerate both copies. The sync command uses Rulesync and needs Node 22.22 or later. Commit the generated Markdown with the spec. CI checks the Codex copy during ${cmd("npm run fmt:check")}.`,
 
     "Where the other rules live": prose`| when you are… | read | holds |
 | --- | --- | --- |

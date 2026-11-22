@@ -38,10 +38,8 @@
   // «should be performed electronically through HotCRP» (the call above).
   "portal": { "kind": "hotcrp", "url": "https://icse2027-nlbse.hotcrp.com" },
 
-  // 🔴 THE PORTAL HOLDS NO DEADLINE YET: on 2026-10-26 its status data read `"sub":{"open":false}`
-  // with no date, while the call lists 13 Nov. So these are the call's readings, in UTC at the end
-  // of the AoE day; the refresh adds the portal's the day it publishes one (the earlier binds).
-  // The competition papers' 27 Nov is in the card only: one reading per kind and source.
+  // The CFP's updated 20 Nov AoE paper deadline matches HotCRP's 21 Nov 11:59:59 UTC.
+  // The separate 27 Nov AoE deadline for tool competition and research challenge papers is in the card.
   "deadlines": [
     {
       "what": "submission",
@@ -52,10 +50,10 @@
     },
     {
       "what": "submission",
-      "at": "2026-11-14T11:59:59Z",
+      "at": "2026-11-21T11:59:59Z",
       "source": "call",
       "url": "https://conf.researchr.org/home/icse-2027/nlbse-2027",
-      "read": "2026-10-26",
+      "read": "2026-11-22",
     },
     {
       "what": "notification",

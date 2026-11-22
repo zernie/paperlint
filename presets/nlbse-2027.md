@@ -29,12 +29,11 @@ Sources read 2026-10-26: that page, the portal's
   proceedings.» (tool competitions) and «Accepted papers will appear in the NLBSE ’27 proceedings.»
   (research challenge, skill classification). IEEE comes from the ICSE page above. No archival /
   non-archival choice is mentioned.
-- **Deadlines (AoE)**: paper submission 13 Nov 2026 (marked «updated»), tool competition and
-  research challenge papers **27 Nov 2026** (marked «new»), notification 11 Dec 2026, camera-ready
-  29 Jan 2027. Only the 13 Nov line is in the preset.
-- 🔴 **Disagreement**: the call lists 13 Nov, but the portal's status data on 2026-10-26 reads
-  `"sub":{"open":false}` with no date, i.e. it was closed and showed none. The preset therefore
-  carries the call's reading until the portal publishes one.
+- **Deadlines (AoE)**: paper submission **20 Nov 2026**, tool competition and research challenge
+  papers **27 Nov 2026**, author notification 11 Dec 2026, and camera-ready 29 Jan 2027.
+  The [workshop CFP](https://conf.researchr.org/home/icse-2027/nlbse-2027) and
+  [HotCRP](https://icse2027-nlbse.hotcrp.com/deadlines) agree on the paper submission deadline,
+  2026-11-21T11:59:59Z. Both were rechecked on 2026-11-22 UTC.
 
 ## Paper kinds and limits
 
@@ -60,7 +59,8 @@ counts every page of the PDF: references that spill onto a page after a full bod
 - **The IEEE template**, through `extends: paperlint:ieee-conference` ([`ieee-conference.md`](ieee-conference.md)).
 - **Anonymous review** (`blind`), so `anonymity/identity` checks the PDF against the paper's
   declared `identity`.
-- **Portal and deadlines**: all three readings are the call's for now (see Disagreement above).
+- **Portal and deadlines**: the preset records paper submission from both sources, and notification
+  and camera-ready from the call. The separate competition and challenge deadline is listed above.
 
 ## Not verified
 

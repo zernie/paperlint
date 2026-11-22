@@ -65,10 +65,9 @@
     },
   },
 
-  // The portal's reading: `"sub":1794657599` = 2026-11-14T11:59:59Z = the end of 13 Nov AoE. It
-  // agrees with the call and with the ICSE workshops page; the organizers' email of 2026-10-23
-  // (agentverify-2027.md) says the same and that there is no separate abstract deadline, so there is no
-  // `registration`. Notification and camera-ready are the site's, at the end of the AoE day.
+  // HotCRP's submission and resubmission deadlines are the ends of 14 and 15 Nov AoE.
+  // The workshop CFP still lists 13 Nov AoE and the organizers confirmed there is no separate
+  // abstract deadline (agentverify-2027.md). Notification and camera-ready come from the workshop site.
   "deadlines": [
     {
       "what": "submission",

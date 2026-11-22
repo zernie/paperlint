@@ -9,3 +9,7 @@ fixtures/real-papers/accepted/README.md !linguist-vendored !linguist-generated
 fixtures/venue-manifest.json linguist-generated
 # Written by `npm run pipeline` from the skills' `flow` exports (scripts/pipeline.ts): not hand-written lines.
 docs/pipeline.md linguist-generated
+# Generated agent instructions and the skill mirrored by Rulesync rely on stable line endings.
+AGENTS.md text eol=lf linguist-generated
+.claude/skills/add-venue/SKILL.md text eol=lf
+.agents/skills/add-venue/SKILL.md text eol=lf linguist-generated
