@@ -1,7 +1,7 @@
 /**
- * `paper/edition-over` (`src/edition-rule.ts`) on papers held in memory beside the SHIPPED presets,
- * with the clock fixed: the warning when every deadline of the paper's edition has passed, naming
- * the newer editions of its series; silence while one is still ahead, and with nothing to judge.
+ * `paper/edition-over` (`src/edition-rule.ts`) on papers held in memory beside the preset catalog,
+ * with the clock and AIDC's deadlines fixed. The rule warns when every deadline has passed and names
+ * newer editions of the same series. It is silent while a deadline is ahead or no deadline is recorded.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,15 +13,19 @@ import {
   editionRules,
   judgeEdition,
 } from "./edition-rule.ts";
+import { frozenText } from "../test/frozen-presets.ts";
 import { venuePreset } from "../test/support.ts";
 
 const VENUES = presetsDir();
 const PAPERS = "/work/papers";
-const shipped = Object.fromEntries(
-  readdirSync(VENUES)
-    .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
-    .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f))]),
-);
+const presets = {
+  ...Object.fromEntries(
+    readdirSync(VENUES)
+      .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
+      .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f))]),
+  ),
+  [join(VENUES, "aidc-2026.jsonc")]: frozenText("aidc-2026.jsonc"),
+};
 
 /** The rule over one paper's PIPELINE-STATUS.md at the instant `now`: each message, as ESLint words it. */
 function lint(
@@ -34,7 +38,7 @@ function lint(
 ): string[] {
   const dir = `${PAPERS}/p`;
   const files = memoryFiles({
-    ...shipped,
+    ...presets,
     [`${dir}/paperlint.json`]: JSON.stringify(settings),
     ...extra,
   });
@@ -75,7 +79,7 @@ describe("paper/edition-over — every deadline of the edition has passed", () =
         "2027-01-01T00:00:00Z",
       ),
     ).toEqual([
-      'AIDC 2026 is over: every deadline its preset records has passed, the last (camera-ready) at 2026-11-09T11:59:59Z. paperlint ships no newer edition of it yet; if the paper goes elsewhere, point "extends" at that venue',
+      'AIDC 2026 is over: every deadline its preset records has passed, the last (camera-ready) at 2026-10-31T11:59:59Z. paperlint ships no newer edition of it yet; if the paper goes elsewhere, point "extends" at that venue',
     ]);
   });
 
@@ -102,12 +106,12 @@ describe("paper/edition-over — silent", () => {
     [
       "a deadline is still ahead",
       { extends: "paperlint:aidc-2026", kind: "regular" },
-      "2026-11-01T00:00:00Z",
+      "2026-10-30T00:00:00Z",
     ],
     [
       "at the last deadline's very instant",
       { extends: "paperlint:aidc-2026", kind: "regular" },
-      "2026-11-09T11:59:59Z",
+      "2026-10-31T11:59:59Z",
     ],
     [
       "an edition whose preset records no deadline",
