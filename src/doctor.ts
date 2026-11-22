@@ -367,7 +367,7 @@ export function doctor({
   // without links had no `/paper-pipeline` and nothing anywhere said so.
   const links = skillLinks(root);
   // Without Claude Code there is no plugin to speak of, so no section at all.
-  const on = plugin !== null && installedPluginVersion(plugin) !== null;
+  const on = installedPluginVersion(plugin ?? null) !== null;
   out.push(
     ...(plugin
       ? [

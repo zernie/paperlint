@@ -75,8 +75,15 @@ async function decided(asking: PluginAsking): Promise<PluginOutcome | null> {
  * nothing (they are written where `claude` is not on PATH too), so every reader that drops the old
  * wiring asks this, never `enabled` by itself.
  */
-export const installedPluginVersion = (state: PluginState): string | null =>
-  state.enabled ? state.version : null;
+export const installedPluginVersion = (
+  state: PluginState | null,
+): string | null => (state?.enabled ? state.version : null);
+
+/** The plugin's state where Claude Code runs in this project, else null. */
+const stateIn = (
+  root: AbsolutePath,
+  claude: ClaudeCode | undefined,
+): PluginState | null => (claude?.present(root) ? claude.plugin(root) : null);
 
 export async function offerPlugin(
   root: AbsolutePath,
@@ -84,9 +91,9 @@ export async function offerPlugin(
   asking: PluginAsking,
 ): Promise<PluginOutcome> {
   // `--no-plugin` skips the offer; it does not turn an installed plugin off, so that is read first.
-  const state = claude?.present(root) ? claude.plugin(root) : null;
-  const version = state && installedPluginVersion(state);
-  if (version) return { kind: "already", version };
+  const state = stateIn(root, claude);
+  const version = installedPluginVersion(state);
+  if (version !== null) return { kind: "already", version };
   if (asking.flag === "no-plugin") return { kind: "no-plugin-flag" };
   if (!claude || (!state && asking.flag !== "plugin"))
     return { kind: "no-claude" };
