@@ -361,42 +361,41 @@ function describe(
   const paperDir = resolve(cwd, send.paper ?? ".");
   const described = describePaper(send, cwd, paperDir, deps);
   const reason = send.allowLintErrors;
-  if (described.named === null || reason === undefined) return described;
+  const { named } = described;
+  if (named === null || reason === undefined) return described;
   const lint = deps.lintPaper(paperDir, cwd);
+  const paperSend = { described, named, action: described.action };
   return lint instanceof Promise
-    ? lint.then((r) =>
-        describeException(described, r, described.action, reason),
-      )
-    : describeException(described, lint, described.action, reason);
+    ? lint.then((r) => describeException(paperSend, r, reason))
+    : describeException(paperSend, lint, reason);
 }
 
 function describeException(
-  described: Described,
+  paper: {
+    readonly described: Described;
+    readonly named: Named;
+    readonly action: string;
+  },
   lint: SubmissionLintResult,
-  action: string,
   reason: string,
 ): Described {
-  if (!lint.ok) {
-    const problem = `Cannot approve a lint exception: ${lint.error}`;
+  const { described, named, action } = paper;
+  if (!lint.ok)
     return {
       ...described,
       blocked: true,
-      lines: [...described.lines, problem],
+      lines: [
+        ...described.lines,
+        `Cannot approve a lint exception: ${lint.error}`,
+      ],
     };
-  }
   const exception = lintExceptionLines(lint.value, reason);
   const details = [
     `Lint exception: ${exceptionDigest(exception)}`,
     ...exception,
   ];
   return {
-    named:
-      described.named === null
-        ? null
-        : {
-            ...described.named,
-            lintException: [`Action: ${action}`, ...details],
-          },
+    named: { ...named, lintException: [`Action: ${action}`, ...details] },
     lines: [...described.lines, lintSummary(lint.value), ...details],
   };
 }

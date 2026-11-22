@@ -35,7 +35,7 @@ function introductionOf({ sections, backMatter, end }: Outline): Span | null {
     place.kind === "at" ? [{ start: place.span.start, title }] : [],
   );
   const at = headings.findIndex(({ title }) =>
-    introductionNames.has(title.toLowerCase().split(" ")[0] ?? ""),
+    introductionNames.has(title.toLowerCase().split(" ", 1).join("")),
   );
   const heading = headings[at];
   if (heading === undefined) return null;
