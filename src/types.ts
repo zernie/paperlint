@@ -78,6 +78,8 @@ export interface Args {
   submit: boolean;
   /** `--save` for `submission update`: really change the submission; without it, a dry run. */
   save: boolean;
+  /** `--allow-lint-errors <reason>` for a submission save. */
+  allowLintErrors?: string | null;
   /** `--url`, `--host`, `--to`, `--node`, `--numbers` for `artifact`: where the upload is, and what it holds. */
   url: string | null;
   host: string | null;

@@ -32,6 +32,7 @@ import { presetCardRules } from "#src/preset-card-rule";
 import { nodeFiles } from "#src/adapters/node/index";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import fileLength from "./scripts/eslint-file-length.mjs";
 
 /** This repository's own rules, one plugin: `local/<rule>`. */
 const localRules = {
@@ -582,6 +583,7 @@ const TYPESCRIPT_ONLY = [
 ];
 
 export default [
+  ...fileLength,
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
   // `paper-stages.harness.mjs` creates a temp tree under fixtures and removes it when done,
   // while `latex-language.harness.mjs` lints the whole repository to prove its glob matches

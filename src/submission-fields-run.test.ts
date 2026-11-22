@@ -50,7 +50,7 @@ test("update: the paper's fields are checked and sent with the change, and print
       { save: false },
     ],
   ]);
-  expect(r.out.slice(2, 5)).toStrictEqual([
+  expect(r.out.slice(3, 6)).toStrictEqual([
     'field         topics: ["Group: Topic A"]',
     'field         pc_conflicts: {"pc@example.org":"collaborator"}',
     'field         ACMCorAut: "ada@example.org"',

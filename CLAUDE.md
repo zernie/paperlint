@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:66d7a4e4745e9fae compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:bd5aa64eb5260e8f compiled from CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -107,7 +107,7 @@ Before writing machinery, **run the thing you are about to replace and paste its
 
 ### An Optional Tool Stays Out Of The Way
 
-**Guidance only** — Everything opt-in (a rule off by default, a set, a command that wraps an outside service, a skill, a hook) is judged by how little it costs an author who does not use it, and one who does it their own way. Off means silent: no finding, no notice, no prompt. Turned on and missing what it needs, it says so once, naming the one command or setting that answers it. It works with the author's own tool: a wrapper (an upload, a portal) writes the same documented file the author could write by hand or by script, and the rule reads that file, not the wrapper. Lint never calls the network. Nothing opt-in fails a build or blocks a submission; it warns. The author asked for this on 2026-11-21: "good DX, as long as it stays optional" and "not being annoying".
+**Guidance only** — Everything opt-in (a rule off by default, a set, a command that wraps an outside service, a skill, a hook) is judged by how little it costs an author who does not use it, and one who does it their own way. Off means silent: no finding, no notice, no prompt. Turned on and missing what it needs, it says so once, naming the one command or setting that answers it. It works with the author's own tool: a wrapper (an upload, a portal) writes the same documented file the author could write by hand or by script, and the rule reads that file, not the wrapper. Lint never calls the network. Nothing opt-in ships at `error`: a set or rule paperlint documents as opt-in is turned on at `warn`, and only a severity the author writes can fail a build or block a submission (decided 2026-11-23, #635). The author asked for this on 2026-11-21: "good DX, as long as it stays optional" and "not being annoying".
 
 ### The Linter Is The Core
 

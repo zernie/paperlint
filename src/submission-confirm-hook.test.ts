@@ -7,6 +7,8 @@ import { expect, test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { ok } from "./domain/result.ts";
+import { submissionLint } from "./domain/submission-lint.ts";
 import type { Files } from "./ports/files.ts";
 import { leafCommandsNormalized as shellLeaves } from "vigiles/hook";
 import { submissionSend, uploadSend } from "./cli.ts";
@@ -44,6 +46,7 @@ const submissionConfirm = (
     shellLeaves,
     readSend: submissionSend,
     readUpload: uploadSend,
+    lintPaper: () => ok(submissionLint([], null)),
     ...more,
   });
 
@@ -156,11 +159,9 @@ const NOT_SENT = "Not run: this sends the paper to the venue's portal";
 const HEAD = `${NOT_SENT}, and the person has not said yes to it since the last send.`;
 /** What the agent is told to ask: the last lines of that refusal. */
 const LAST = [
-  "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
-  "- the paper folder (the full path, as written above), the PDF and its sha256 as written above (the folder path and the sha256 must both be in the question text),",
-  "- what the lines above say about the build (the body pages, or that it is stale or missing),",
-  "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
-  'Options: "Yes, send it" and "No". One yes lets one send through: ask one question per send, each naming its own folder and sha256.',
+  "Ask with AskUserQuestion. Show the action, one lint summary line from the dry run, and the full paper folder, PDF and sha256 above.",
+  "For an exception, copy the Action, Lint exception, reason and blocking errors above. Mention stale or missing build facts.",
+  'Options: "Yes, proceed" and "No". One yes covers one command.',
 ].join("\n");
 
 test("no yes: refused, telling the agent what to ask — the paper folder, the PDF and its sha256, the body pages, the venue check, yes or no", () => {
@@ -173,6 +174,7 @@ test("no yes: refused, telling the agent what to ask — the paper folder, the P
         "paper folder: /w/papers/p",
         `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
         "body pages: 4 (up to the references on page 5)",
+        "Action: Mark submission ready for review",
         LAST,
       ].join("\n"),
     },
@@ -187,6 +189,7 @@ test("a stale build is said loudly; no facts and broken facts are said too", () 
       `PDF: papers/p/paper.pdf, sha256 ${HEX.slice(0, 12)}`,
       "!! THE LAST BUILD IS NOT OF THIS PDF — the check did not see it. Rebuild (`paperlint build`) and run the dry run again.",
       "body pages: 4 (up to the references on page 5)",
+      "Action: Mark submission ready for review",
       LAST,
     ].join("\n"),
   );
@@ -221,6 +224,7 @@ test("a PDF that is not there: refused, whatever the transcript says — there i
       "PDF: gone.pdf — NOT FOUND",
       "!! THE LAST BUILD IS NOT OF THIS PDF — the check did not see it. Rebuild (`paperlint build`) and run the dry run again.",
       "body pages: 4 (up to the references on page 5)",
+      "Action: Save changes to submission",
     ),
   );
 });
@@ -523,7 +527,11 @@ const asksAbout = (folder: string, sha: string) =>
 const asks = (sha: string) => asksAbout("/w/papers/p", sha);
 
 /** The hook's answer to SEND, over the paper with this transcript. */
-const withTranscript = (lines: readonly string[], command = SEND) =>
+const withTranscript = (
+  lines: readonly string[],
+  command = SEND,
+  more: Partial<ConfirmDeps> = {},
+) =>
   submissionConfirm(
     payload(command),
     memoryFiles({
@@ -531,7 +539,66 @@ const withTranscript = (lines: readonly string[], command = SEND) =>
       "/w/papers/p/paper.pdf": PDF,
       "/w/papers/p/_build/paper.facts.json": facts(),
     }),
+    more,
   );
+
+test("the lint exception requires its current reason, action and blocking findings in the question", () => {
+  const command = `${SEND} --allow-lint-errors 'Known exception'`;
+  const lintPaper = (message: string) => () =>
+    ok(
+      submissionLint(
+        [
+          {
+            file: "paper.tex",
+            ruleId: "repro/example",
+            severity: 2,
+            line: 4,
+            column: 2,
+            message,
+          },
+        ],
+        null,
+      ),
+    );
+  const check = { lintPaper: lintPaper("Missing result") };
+  const screen = withTranscript(
+    question("q1", asks(SHA), "Yes"),
+    command,
+    check,
+  );
+  expect(screen?.hookSpecificOutput.permissionDecision).toBe("deny");
+  const shown = screen?.hookSpecificOutput.permissionDecisionReason ?? "";
+  expect(shown).toContain('Allow lint errors: "Known exception"');
+  expect(shown).toContain("  paper.tex:4:2 repro/example — Missing result");
+  const exception = shown
+    .split("\n")
+    .filter((line) =>
+      ["Action:", "Lint exception:", "Allow lint errors:", "  paper.tex:"].some(
+        (start) => line.startsWith(start),
+      ),
+    );
+  const approved = question(
+    "q2",
+    [asks(SHA), ...exception].join("\n"),
+    "Yes, proceed",
+  );
+  expect(withTranscript(approved, command, check)).toBeNull();
+  expect(
+    withTranscript(approved, command, {
+      lintPaper: lintPaper("Another result is missing"),
+    }),
+  ).not.toBeNull();
+  expect(
+    withTranscript(
+      approved,
+      command.replace("Known exception", "New reason"),
+      check,
+    ),
+  ).not.toBeNull();
+  expect(
+    withTranscript(approved, command.replace(" --submit", ""), check),
+  ).not.toBeNull();
+});
 
 test("a yes to a question naming the PDF's sha256: the send runs — the hook says nothing, so Claude Code's own permissions apply", () => {
   expect(withTranscript(question("q1", asks(SHA), "Yes, send it"))).toBe(null);

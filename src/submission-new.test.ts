@@ -24,6 +24,7 @@ import {
   DRAFT_WARNING,
   ON_THE_SITE,
   NO_ERRORS,
+  CLEAN_LINT,
 } from "../test/submission-fixtures.ts";
 
 test("new: a dry run by default — title from \\title, abstract from \\begin{abstract} with the author's macro expanded, the declared authors, the PDF", async () => {
@@ -35,6 +36,7 @@ test("new: a dry run by default — title from \\title, abstract from \\begin{ab
   expect(r.out).toStrictEqual([
     CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
     NO_ERRORS,
+    CLEAN_LINT,
     "title         Agents That Lie",
     "author 1      Ada Lovelace <ada@example.org>, Analytical",
     "author 2      Bob Bobson <bob@example.org>",
@@ -65,7 +67,7 @@ test("new --save: the id the portal chose is written into paperlint.json, and `s
   const r = await run({ sub: "new", save: true }, { files: fs });
   expect(r.code, r.errs.join("\n")).toBe(0);
   expect(r.seen[0]?.calls).toStrictEqual([["create", WANT, { save: true }]]);
-  expect(r.out.slice(7, 8)).toStrictEqual(["created submission 42"]);
+  expect(r.out).toContain("created submission 42");
   expect(r.out.slice(-2)).toStrictEqual([
     `recorded      "submission": { "id": 42 } in papers/p/paperlint.json`,
     `next          npx paperlint submission show papers/p — it should say "match yes"`,
@@ -514,7 +516,7 @@ test("new: no paper.tex — the PDF's Title stands in; without one either, the f
     },
   );
   expect(titled.code, titled.errs.join("\n")).toBe(0);
-  expect(titled.out[2]).toBe("title         From The PDF");
+  expect(titled.out).toContain("title         From The PDF");
   const noAbstract = await run(
     { sub: "new" },
     { files: newFiles({ tex: null, facts: facts({ title: "From The PDF" }) }) },

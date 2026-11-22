@@ -20,10 +20,8 @@
  * sent (`src/domain/submission-fields.ts`). A checkbox field the portal did not take is said, and
  * fails the command: HotCRP keeps an option it does not know as nothing, without an error.
  *
- * Before the portal is asked, `new` and `update` print what the venue rules find in the exact PDF
- * they send, as `paperlint lint` prints it — or "venue rules: no errors" (paperlint#264). The verdict
- * is the author's to act on; the one thing the command refuses is a `--save` whose build facts are
- * missing or about other bytes, because then nothing was checked (exit 2).
+ * Before the portal is asked, `new` and `update` check the exact PDF and run the full paper lint.
+ * A save stops on lint errors (exit 2). A reasoned `--allow-lint-errors` permits those findings.
  *
  * 🔴 THE TOKEN IS AN INPUT, AND ONLY AN INPUT. It comes from the environment (the root reads it), is
  * handed to the adapter, and never appears in anything printed here.
@@ -34,6 +32,12 @@ import { basename, join, resolve } from "node:path";
 import { absolutePath } from "./domain/paths.ts";
 import { messageOf } from "./domain/text.ts";
 import { err, ok, type Result } from "./domain/result.ts";
+import {
+  lintExceptionReason,
+  lintReportLines,
+  type PaperSections,
+} from "./domain/submission-lint.ts";
+import type { SubmissionLinter } from "./ports/submission-lint.ts";
 import { sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import {
   supportedPortal,
@@ -173,6 +177,7 @@ export interface SubmissionArgs {
   readonly abstract: string | null;
   readonly submit: boolean;
   readonly save: boolean;
+  readonly allowLintErrors?: string | undefined;
 }
 
 export interface SubmissionDeps {
@@ -192,6 +197,7 @@ export interface SubmissionDeps {
     file: string,
     messages: readonly VenueMessage[],
   ) => Promise<string>;
+  readonly lintPaper: SubmissionLinter;
   /** Parses the reviewers' points file a reviewed rejection names (`--save` stops while one is unanswered). */
   readonly yaml: ParseYaml;
   /** The instant a frozen version's lock entry records (`versions/lock.json`), ISO 8601. */
@@ -676,6 +682,29 @@ const VENUE_RULES = "venue rules at their default options";
 const REBUILD_REFUSAL =
   "refused: no build facts describe this PDF (none, unreadable, or of other bytes), so the venue rules did not see it — rebuild (`paperlint build`), run the dry run again, and read its venue check; nothing was sent";
 
+/** A dry run reports every finding. A save stops before the portal sees a request. */
+async function submissionCheck(
+  t: SubmissionTarget,
+  bytes: Uint8Array,
+  a: SubmissionArgs,
+  deps: RunDeps,
+): Promise<boolean> {
+  const venueRefused = await venueCheck(t, bytes, a.save, deps);
+  const lint = await deps.lintPaper(t.paperDir, deps.cwd);
+  if (!lint.ok) {
+    deps.err(`lint could not finish: ${lint.error}`);
+    return a.save || venueRefused;
+  }
+  logAll(lintReportLines(lint.value), deps);
+  if (lint.value.errors.length === 0) return venueRefused;
+  if (a.allowLintErrors !== undefined) {
+    deps.log(lintExceptionReason(a.allowLintErrors));
+    return venueRefused;
+  }
+  if (a.save) deps.err("refused: the paper has lint errors; nothing was sent");
+  return a.save || venueRefused;
+}
+
 /** `update`: send the PDF, a changed title and abstract, and "submitted" when asked; a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget & { readonly id: number },
@@ -693,7 +722,7 @@ async function runUpdate(
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
   deps.log(checkPdfLine(shown, t.call));
-  const refused = await venueCheck(t, bytes, a.save, deps);
+  const refused = await submissionCheck(t, bytes, a, deps);
   logAll(fieldLines(t.fields), deps);
   if (refused) return 2;
   const plan = planFor(t, a.save, deps);
@@ -1111,12 +1140,26 @@ function readyForNew(t: SubmissionTarget): Result<readonly Author[], string> {
 /** The paper as the build read it: paper.tex with the files it includes spliced in; null without one. */
 function assembledPaper(
   paperDir: string,
-  deps: SubmissionDeps,
+  deps: Pick<SubmissionDeps, "files" | "latex" | "codec">,
 ): PaperSource | null {
   const bytes = bytesAt(deps.files, join(paperDir, MAIN));
   return bytes === null
     ? null
     : readPaper(join(paperDir, MAIN), new TextDecoder().decode(bytes), deps);
+}
+
+export function submissionSections(
+  paperDir: string,
+  deps: Pick<SubmissionDeps, "files" | "latex" | "codec">,
+): PaperSections | null {
+  const paper = assembledPaper(paperDir, deps);
+  return paper === null
+    ? null
+    : {
+        paper,
+        abstract: deps.latex.abstractSpan(paper.text),
+        outline: deps.latex.outline(paper.text),
+      };
 }
 
 /**
@@ -1233,7 +1276,7 @@ async function runNew(
   if (!n.ok) return (deps.err(n.error), 2);
   const { paper, shown } = n.value;
   deps.log(checkPdfLine(shown, t.call));
-  const refused = await venueCheck(t, paper.pdf.bytes, a.save, deps);
+  const refused = await submissionCheck(t, paper.pdf.bytes, a, deps);
   logAll(newLines(paper), deps);
   if (refused) return 2;
   const plan = planFor(t, a.save, deps);
@@ -1325,6 +1368,17 @@ const writingFlags = (a: SubmissionArgs): readonly string[] =>
     a.save ? "--save" : null,
   ].filter((f) => f !== null);
 
+function lintExceptionProblem(a: SubmissionArgs): string | null {
+  const reason = a.allowLintErrors?.trim();
+  if (reason === undefined) return null;
+  return a.save &&
+    (a.sub === "new" || a.sub === "update") &&
+    reason !== "" &&
+    !reason.startsWith("--")
+    ? null
+    : "--allow-lint-errors needs a nonempty reason and --save on submission new or update";
+}
+
 /** Why the command line cannot be run as asked; null when it can. Pure. */
 export function usageProblem(a: SubmissionArgs): string | null {
   if (!isSubcommand(a.sub))
@@ -1336,7 +1390,7 @@ export function usageProblem(a: SubmissionArgs): string | null {
     return `${writing.join(", ")}: only \`submission new\` and \`submission update\` change anything; \`${a.sub}\` reads`;
   return a.sub === "new" && a.submit
     ? "--submit: `submission new` creates the submission; mark it submitted with `submission update --submit` once `show` says the portal holds this build"
-    : null;
+    : lintExceptionProblem(a);
 }
 
 /** The variables a site's token lookup reads. */

@@ -63,10 +63,13 @@ import { bodyEnd } from "./domain/body-pages.ts";
 import { fieldOf, isRecord } from "./domain/record.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { messageOf } from "./domain/text.ts";
+import { partition } from "remeda";
 import { factsPath, parseFactsText, type ReadFacts } from "./facts-file.ts";
 import type { Files } from "./ports/files.ts";
 import { paperPreset, type PresetDeps } from "./presets.ts";
 import { paperPdf } from "./submission.ts";
+import { lintExceptionLines, lintSummary } from "./domain/submission-lint.ts";
+import type { SubmissionLintResult } from "./ports/submission-lint.ts";
 
 /** One simple command of a command line, as a shell parser reads it (vigiles' `leafCommandsNormalized`). */
 interface ShellLeaf {
@@ -81,7 +84,7 @@ interface ShellLeaf {
 }
 
 /** What the hook reads: files, the shipped presets, and the portal hosts the project's venues declare. */
-export type ConfirmDeps = PresetDeps & {
+export type ConfirmDeps<T = SubmissionLintResult> = PresetDeps & {
   /** The hosts of every venue portal paperlint knows of from `cwd`: shipped and the project's own. */
   readonly portalHosts: (cwd: string) => readonly string[];
   /** Every simple command of a command line, across `&&`, `;`, `|`; none when it does not parse. */
@@ -93,7 +96,11 @@ export type ConfirmDeps = PresetDeps & {
   readonly readSend: (words: readonly string[]) => Send | null;
   /** The words after `artifact`, read the same way: the paper and the file an upload names, or null. */
   readonly readUpload: (words: readonly string[]) => Upload | null;
+  readonly lintPaper: (paperDir: string, cwd: string) => T;
 };
+
+type MaybePromise<T> = T | Promise<T>;
+type HookDeps = ConfirmDeps<MaybePromise<SubmissionLintResult>>;
 
 /** What Claude Code reads from a PreToolUse hook's stdout to refuse the command; the agent sees the reason. */
 export interface DenyOutput {
@@ -160,6 +167,8 @@ function isSend(l: ShellLeaf): boolean {
 export interface Send {
   readonly paper: string | null;
   readonly pdf: string | null;
+  readonly action: "create" | "update" | "submit";
+  readonly allowLintErrors?: string | undefined;
 }
 
 /** One `artifact upload --save`: the paper (null for the current folder), the file, and where it goes. */
@@ -275,6 +284,7 @@ interface Named {
   readonly folder: string;
   readonly sha: string;
   readonly project?: string;
+  readonly lintException?: readonly string[];
 }
 
 /** One send, described: what a yes must name (null when the PDF is not found), and the lines for the person. */
@@ -283,6 +293,7 @@ interface Described {
   readonly lines: readonly string[];
   /** An artifact upload, not a submission. */
   readonly upload?: true;
+  readonly blocked?: true;
 }
 
 /** One upload, described: the paper, the file it uploads and its sha256, and where it goes. */
@@ -302,13 +313,23 @@ function describeUpload(u: Upload, cwd: string, files: Files): Described {
 }
 
 /** One send, described: the paper, the PDF as the command resolves it, what the build saw. */
-function describe(
-  send: Send | Upload,
+const actions = {
+  create: "Create submission",
+  update: "Save changes to submission",
+  submit: "Mark submission ready for review",
+} as const;
+
+const actionAt = (send: Send, p: ReturnType<typeof paperPreset>): string => {
+  const to = p.kind === "resolved" ? p.preset.portal?.url : undefined;
+  return `${actions[send.action]}${to === undefined ? "" : ` at ${to}`}`;
+};
+
+function describePaper(
+  send: Send,
   cwd: string,
+  paperDir: string,
   deps: PresetDeps,
-): Described {
-  if ("artifact" in send) return describeUpload(send, cwd, deps.files);
-  const paperDir = resolve(cwd, send.paper ?? ".");
+): Described & { readonly action: string } {
   const p = paperPreset(paperDir, deps);
   const own = paperPdf(
     paperDir,
@@ -317,16 +338,70 @@ function describe(
   const pdf = send.pdf === null ? own : resolve(cwd, send.pdf);
   const bytes = deps.files.readBytes(callerPath(pdf));
   const sha = bytes === null ? null : sha256Hex(bytes);
+  const action = actionAt(send, p);
   return {
+    action,
     named:
       sha === null ? null : { folder: paperDir, sha: sha.slice(0, SHA_SHOWN) },
     lines: [
       `paper folder: ${paperDir}`,
       `PDF: ${send.pdf ?? join(send.paper ?? ".", relative(paperDir, own))}${sha === null ? " — NOT FOUND" : `, sha256 ${sha.slice(0, SHA_SHOWN)}`}`,
       ...factsLines(paperDir, sha, deps.files),
+      `Action: ${action}`,
     ],
   };
 }
+
+function describe(
+  send: Send | Upload,
+  cwd: string,
+  deps: HookDeps,
+): MaybePromise<Described> {
+  if ("artifact" in send) return describeUpload(send, cwd, deps.files);
+  const paperDir = resolve(cwd, send.paper ?? ".");
+  const described = describePaper(send, cwd, paperDir, deps);
+  const reason = send.allowLintErrors;
+  const { named } = described;
+  if (named === null || reason === undefined) return described;
+  const lint = deps.lintPaper(paperDir, cwd);
+  const paperSend = { described, named, action: described.action };
+  return lint instanceof Promise
+    ? lint.then((r) => describeException(paperSend, r, reason))
+    : describeException(paperSend, lint, reason);
+}
+
+function describeException(
+  paper: {
+    readonly described: Described;
+    readonly named: Named;
+    readonly action: string;
+  },
+  lint: SubmissionLintResult,
+  reason: string,
+): Described {
+  const { described, named, action } = paper;
+  if (!lint.ok)
+    return {
+      ...described,
+      blocked: true,
+      lines: [
+        ...described.lines,
+        `Cannot approve a lint exception: ${lint.error}`,
+      ],
+    };
+  const exception = lintExceptionLines(lint.value, reason);
+  const details = [
+    `Lint exception: ${exceptionDigest(exception)}`,
+    ...exception,
+  ];
+  return {
+    named: { ...named, lintException: [`Action: ${action}`, ...details] },
+    lines: [...described.lines, lintSummary(lint.value), ...details],
+  };
+}
+
+const exceptionDigest = (lines: readonly string[]): string =>
+  sha256Hex(new TextEncoder().encode(lines.join("\n"))).slice(0, SHA_SHOWN);
 
 /** How much of the sha256 the reason shows, and the question must contain. */
 const SHA_SHOWN = 12;
@@ -351,11 +426,9 @@ const onlyUploads = (described: readonly Described[]): boolean =>
 
 /** What to ask, once every send's PDF is known. */
 const HOW_TO_ASK = [
-  "Ask the person with AskUserQuestion first, then run this command again. In the question, give:",
-  "- the paper folder (the full path, as written above), the PDF and its sha256 as written above (the folder path and the sha256 must both be in the question text),",
-  "- what the lines above say about the build (the body pages, or that it is stale or missing),",
-  "- the dry run's venue check, quoted word for word (its `venue rules at their default options` line and every error under it).",
-  'Options: "Yes, send it" and "No". One yes lets one send through: ask one question per send, each naming its own folder and sha256.',
+  "Ask with AskUserQuestion. Show the action, one lint summary line from the dry run, and the full paper folder, PDF and sha256 above.",
+  "For an exception, copy the Action, Lint exception, reason and blocking errors above. Mention stale or missing build facts.",
+  'Options: "Yes, proceed" and "No". One yes covers one command.',
 ].join("\n");
 
 /** How much of a command naming a portal the question must quote. */
@@ -518,7 +591,8 @@ const namesSend =
   (question) =>
     hasAll(question, [s.sha]) &&
     namesWhole(question, s.folder) &&
-    (s.project === undefined || namesWhole(question, s.project));
+    (s.project === undefined || namesWhole(question, s.project)) &&
+    (s.lintException?.every((line) => question.includes(line.trim())) ?? true);
 
 /** What a yes to a command that names a portal must name: the host (any case) and the command's start, literally. */
 const namesPortal =
@@ -547,12 +621,12 @@ const everyNeedHasItsYes = (
 function describedSends(
   command: string,
   cwd: string,
-  deps: ConfirmDeps,
-): readonly Described[] {
+  deps: HookDeps,
+): readonly MaybePromise<Described>[] {
   const sends = /[`$]/u.test(command)
     ? []
     : sendsIn(deps.shellLeaves(command), deps);
-  return (sends.length === 0 ? [null] : sends).map((x): Described =>
+  return (sends.length === 0 ? [null] : sends).map((x) =>
     x === null ? { named: null, lines: [UNRESOLVED] } : describe(x, cwd, deps),
   );
 }
@@ -578,7 +652,7 @@ interface Hosts {
 }
 
 /** The presets' hosts; when they cannot be read, none, and why. */
-function readHosts(cwd: string, deps: ConfirmDeps): Hosts {
+function readHosts(cwd: string, deps: HookDeps): Hosts {
   try {
     return { hosts: deps.portalHosts(cwd), failed: null };
   } catch (e) {
@@ -623,9 +697,10 @@ function wordsFor(
 function decide(
   c: Command,
   payload: unknown,
-  deps: ConfirmDeps,
+  deps: HookDeps,
+  described: readonly Described[],
 ): readonly string[] | null {
-  const described = c.paperlint ? describedSends(c.text, c.cwd, deps) : [];
+  if (described.some((d) => d.blocked)) return [NOT_SENT, ...blocks(described)];
   const named = described.flatMap((d) => (d.named === null ? [] : [d.named]));
   if (named.length < described.length) return noPdf(described);
   const { base, ask } = wordsFor(c.paperlint, described);
@@ -656,7 +731,7 @@ const portalLines = (host: string | null, start: string): readonly string[] =>
 function earlierSend(
   c: Command,
   payload: unknown,
-  deps: ConfirmDeps,
+  deps: Pick<ConfirmDeps, "shellLeaves">,
 ): EarlierSend {
   const known = knownHosts(c.hosts.hosts);
   return {
@@ -715,8 +790,8 @@ function judge(
   text: string,
   cwd: string,
   payload: unknown,
-  deps: ConfirmDeps,
-): DenyOutput | null {
+  deps: HookDeps,
+): MaybePromise<DenyOutput | null> {
   const leaves = allLeaves(text, deps.shellLeaves);
   const paperlint = leaves.some(isSend);
   // The presets are read only for a command that may send: anything else pays nothing.
@@ -724,10 +799,29 @@ function judge(
   const hosts = readHosts(cwd, deps);
   const host = portalHost(leaves, hosts.hosts);
   if (!paperlint && host === null) return null;
-  const lines = decide({ text, cwd, paperlint, host, hosts }, payload, deps);
+  const described = paperlint ? describedSends(text, cwd, deps) : [];
+  const command = { text, cwd, paperlint, host, hosts };
+  const finish = (sends: readonly Described[]) =>
+    decisionOutput(command, payload, deps, sends);
+  const [ready, pending] = partition(
+    described,
+    (send): send is Described => !(send instanceof Promise),
+  );
+  return pending.length === 0
+    ? finish(ready)
+    : Promise.all(described.map((send) => Promise.resolve(send))).then(finish);
+}
+
+function decisionOutput(
+  command: Command,
+  payload: unknown,
+  deps: HookDeps,
+  sends: readonly Described[],
+): DenyOutput | null {
+  const lines = decide(command, payload, deps, sends);
   return lines === null
     ? null
-    : deny([...lines, ...fallbackLines(hosts)].join("\n"));
+    : deny([...lines, ...fallbackLines(command.hosts)].join("\n"));
 }
 
 /**
@@ -737,7 +831,15 @@ function judge(
 export function submissionConfirm(
   stdin: string,
   deps: ConfirmDeps,
-): DenyOutput | null {
+): DenyOutput | null;
+export function submissionConfirm(
+  stdin: string,
+  deps: HookDeps,
+): MaybePromise<DenyOutput | null>;
+export function submissionConfirm(
+  stdin: string,
+  deps: HookDeps,
+): MaybePromise<DenyOutput | null> {
   const payload = parsed(stdin);
   if (payload === null) return UNREADABLE_INPUT;
   const raw = fieldOf(fieldOf(payload, "tool_input"), "command");
@@ -745,11 +847,14 @@ export function submissionConfirm(
   const given = fieldOf(payload, "cwd");
   const cwd =
     typeof given === "string" && isAbsolute(given) ? given : resolve(".");
-  try {
-    return judge(text, cwd, payload, deps);
-  } catch (e) {
-    return deny(
+  const failed = (e: unknown) =>
+    deny(
       `Not run: paperlint could not check whether this command sends a paper: ${messageOf(e)}.`,
     );
+  try {
+    const verdict = judge(text, cwd, payload, deps);
+    return verdict instanceof Promise ? verdict.catch(failed) : verdict;
+  } catch (e) {
+    return failed(e);
   }
 }
