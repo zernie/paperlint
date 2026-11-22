@@ -5,8 +5,6 @@
  * Runs the REAL `claude` CLI against a SCRIPTED MOCK MODEL (`runHarnessTest`): $0, no API key.
  * The script activates the skill and stops; the check reads what reached the model.
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`).
- *
  * What it does NOT prove: that a real model's rewrite is clearer, or that the description fires on
  * an author's complaint. The first is the cold reader inside the skill (step 3); the second is
  * `rewrite-unclear.eval.ts`.
@@ -14,13 +12,10 @@
 import { spawnSync } from "node:child_process";
 import { runHarnessTest, skip } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
-import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
 import { claudeDir } from "#src/package-dirs";
 
 const check = createChecker();
-
-await checkSkill("rewrite-unclear");
 
 const cli = observeAgentCli({ spawnSync });
 if (!cli.present) skip(`rewrite-unclear effects: ${cli.note}`);

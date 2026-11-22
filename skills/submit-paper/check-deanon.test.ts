@@ -139,3 +139,168 @@ describe("check-deanon.sh — both halves of the scan", () => {
     });
   });
 });
+
+const python = (code: string, ...args: readonly string[]) =>
+  spawnSync("python3", ["-W", "ignore", "-c", code, ...args], {
+    encoding: "utf8",
+  });
+const havePython = python("").status === 0;
+const havePymupdf = havePython && python("import fitz").status === 0;
+
+/** A one-page PDF at `path` whose text is `text`. */
+const writePdf = (path: string, text: string): void => {
+  const r = python(
+    "import sys,fitz\nd=fitz.open()\np=d.new_page()\np.insert_text((72,72),sys.argv[2])\nd.save(sys.argv[1])",
+    path,
+    text,
+  );
+  expect(r.status).toBe(0);
+};
+
+/** An `artifact.zip` at `path` holding the given members. */
+const writeZip = (path: string, members: Record<string, string>): void => {
+  const r = python(
+    "import sys,json,zipfile\nwith zipfile.ZipFile(sys.argv[1],'w') as f:\n    [f.writestr(k,v) for k,v in json.loads(sys.argv[2]).items()]",
+    path,
+    JSON.stringify(members),
+  );
+  expect(r.status).toBe(0);
+};
+
+describe("check-deanon.sh — what the deny-list matches", () => {
+  const list =
+    "# fake identity\nquillfeather\n\\bmoss\\b\ngithub\\.com/quillfeather\n";
+
+  it("a word-boundary entry does not match ordinary prose that contains the word", () => {
+    const { root, paper } = project(
+      "The mossy-green plots in Figure 3 come from run.sh.",
+    );
+    mkdirSync(join(root, ".paperlint"));
+    writeFileSync(join(root, ".paperlint", "deanon-denylist.txt"), list);
+    expect(run([paper], { env: { CLAUDE_PROJECT_DIR: root } }).status).toBe(0);
+  });
+
+  it("a file whose extension no list names (.yml) is scanned like any other", () => {
+    const { root, paper } = project("Authors omitted for double-blind review.");
+    mkdirSync(join(root, ".paperlint"));
+    writeFileSync(join(root, ".paperlint", "deanon-denylist.txt"), list);
+    writeFileSync(
+      join(paper, "artifact", "config.yml"),
+      "maintainer: quillfeather\nrepo: github.com/quillfeather/toolkit\n",
+    );
+    const { status, stdout } = run([paper], {
+      env: { CLAUDE_PROJECT_DIR: root },
+    });
+    expect({
+      status,
+      leaks: stdout.split("\n").filter((l) => l.includes("LEAK")),
+    }).toEqual({
+      status: 1,
+      leaks: [
+        "  LEAK  artifact/config.yml:1:maintainer: quillfeather",
+        "  LEAK  artifact/config.yml:2:repo: github.com/quillfeather/toolkit",
+      ],
+    });
+  });
+});
+
+describe("check-deanon.sh — the bundle that gets uploaded", () => {
+  it.skipIf(!havePython)(
+    "a leak that exists only inside artifact.zip names the zip and the member",
+    () => {
+      const { root, paper } = project(
+        "Authors omitted for double-blind review.",
+      );
+      const deny = denyList(join(root, "deny.txt"));
+      writeZip(join(paper, "artifact.zip"), {
+        "artifact/README.md": "Authors omitted for double-blind review.\n",
+        "artifact/METADATA.txt": "upstream: by Quillfeather\n",
+      });
+      expect(run([paper, "paper.pdf", deny]).stdout).toContain(
+        "  LEAK  artifact.zip!artifact/METADATA.txt:1:upstream: by Quillfeather\n",
+      );
+      expect(run([paper, "paper.pdf", deny]).status).toBe(1);
+    },
+  );
+});
+
+describe("check-deanon.sh — a deny-list that cannot protect anything", () => {
+  it("a named deny-list that does not exist is exit 2, never a pass", () => {
+    const { root, paper } = project("by Quillfeather");
+    const missing = join(root, "does-not-exist.txt");
+    expect(run([paper, "paper.pdf", missing])).toEqual({
+      status: 2,
+      stdout: `FAIL: no deny-list ${missing}\n`,
+    });
+  });
+
+  it("a deny-list that is all comments is exit 2, never a pass", () => {
+    const { root, paper } = project("by Quillfeather");
+    const named = join(root, "deny.txt");
+    writeFileSync(
+      named,
+      "# emptied while chasing a false positive\n#quillfeather\n\n",
+    );
+    expect(run([paper, "paper.pdf", named])).toEqual({
+      status: 2,
+      stdout: `FAIL: deny-list ${named} has no patterns\n`,
+    });
+  });
+});
+
+describe("check-deanon.sh — the compiled PDF", () => {
+  it("an absent PDF is a warning, not silence", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    expect(run([paper, "nonexistent.pdf", deny]).stdout).toBe(
+      [
+        `== check-deanon: ${paper} (pdf=nonexistent.pdf, 1 patterns) ==`,
+        `  WARN: ${paper}/nonexistent.pdf not found — PDF not scanned`,
+        "-- summary: 0 identifier hit(s) across PDF + artifact + zip",
+        "PASS: no author-identifying strings found. Safe for double-blind.",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("a PDF that cannot be read is a warning, not a pass about a document never opened", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    writeFileSync(join(paper, "paper.pdf"), "%PDF-1.4\n% not a real pdf\n");
+    expect(run([paper, "paper.pdf", deny]).stdout).toContain(
+      "  WARN: could not extract PDF text (pymupdf missing?) — PDF not scanned\n",
+    );
+  });
+
+  it.skipIf(!havePymupdf)(
+    "an identifier compiled into the PDF text is a leak naming the PDF",
+    () => {
+      const { root, paper } = project("Authors omitted.");
+      const deny = denyList(join(root, "deny.txt"));
+      writePdf(
+        join(paper, "paper.pdf"),
+        "Anonymous submission. Tooling: Quillfeather-kit.",
+      );
+      const { status, stdout } = run([paper, "paper.pdf", deny]);
+      expect({
+        status,
+        leaks: stdout.split("\n").filter((l) => l.includes("LEAK")),
+      }).toEqual({
+        status: 1,
+        leaks: [
+          "  LEAK  PDF[paper.pdf]:1:Anonymous submission. Tooling: Quillfeather-kit.",
+        ],
+      });
+    },
+  );
+
+  it.skipIf(!havePymupdf)("a PDF with no identifier in it passes", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    writePdf(
+      join(paper, "paper.pdf"),
+      "Anonymous submission. Tooling: REDACTED for review.",
+    );
+    expect(run([paper, "paper.pdf", deny]).status).toBe(0);
+  });
+});

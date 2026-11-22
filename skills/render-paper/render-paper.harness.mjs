@@ -381,3 +381,156 @@ import {
     withGap.stdout,
   );
 }
+
+// ── THE LOG VERDICT: check-render.sh FAILS A PAPER WHOSE TEXT BLEEDS PAST THE COLUMN ─────────
+// The script reads the LaTeX log and exits 1 on a visible defect (an overfull box wider than the
+// threshold, an undefined citation or reference), 0 on a clean log, and 2 when there is no log to
+// read. `NO_COMPILE=1` skips pdflatex, so the log parser runs anywhere; the last case compiles
+// for real, and only where a TeX toolchain exists. Both halves, always: a gate that fails a clean
+// log is bypassed on deadline day, and one that passes a defective log is decoration.
+{
+  const CHECK = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "check-render.sh",
+  );
+  const dirWith = (files) => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "render-log-")));
+    for (const [name, body] of Object.entries(files))
+      writeFileSync(join(dir, name), body);
+    return dir;
+  };
+  const verdict = (dir, { threshold = "5", compile = false } = {}) => {
+    const env = { ...process.env };
+    if (compile) delete env.NO_COMPILE;
+    else env.NO_COMPILE = "1";
+    const r = spawnSync("bash", [CHECK, dir, "paper", threshold], {
+      encoding: "utf8",
+      env,
+    });
+    return { status: r.status, stdout: r.stdout };
+  };
+  const overfull = (pt) =>
+    `Overfull \\hbox (${pt}pt too wide) in paragraph at lines 4--5\n`;
+
+  const wide = verdict(dirWith({ "paper.log": overfull("12.34") }));
+  assert.equal(
+    wide.status,
+    1,
+    `a 12.34pt overfull hbox must fail:\n${wide.stdout}`,
+  );
+  assert.match(
+    wide.stdout,
+    /OVERFULL hbox\s+12\.34pt/,
+    `the overfull box was counted but not located:\n${wide.stdout}`,
+  );
+
+  const narrow = verdict(dirWith({ "paper.log": overfull("1.2") }));
+  assert.equal(
+    narrow.status,
+    0,
+    `a 1.2pt overfull is invisible in print and must not fail:\n${narrow.stdout}`,
+  );
+  assert.match(
+    narrow.stdout,
+    /1 sub-threshold/,
+    `the sub-threshold box was not counted:\n${narrow.stdout}`,
+  );
+
+  // The threshold argument has to move the line, or it is decoration.
+  const twelve = dirWith({ "paper.log": overfull("12.0") });
+  assert.equal(
+    verdict(twelve, { threshold: "5" }).status,
+    1,
+    "12pt is above a 5pt threshold",
+  );
+  assert.equal(
+    verdict(twelve, { threshold: "20" }).status,
+    0,
+    "the same 12pt box must pass at a 20pt threshold",
+  );
+
+  const undefinedCite = verdict(
+    dirWith({
+      "paper.log":
+        "LaTeX Warning: Citation `smith2020' on page 1 undefined on input line 9.\n",
+    }),
+  );
+  assert.equal(
+    undefinedCite.status,
+    1,
+    `an undefined citation prints a literal ? in the PDF and must fail:\n${undefinedCite.stdout}`,
+  );
+
+  const cleanLog = verdict(
+    dirWith({
+      "paper.log":
+        "This is pdfTeX\nOutput written on paper.pdf (8 pages, 100000 bytes).\n",
+    }),
+  );
+  assert.equal(
+    cleanLog.status,
+    0,
+    `a clean log must pass:\n${cleanLog.stdout}`,
+  );
+  assert.match(
+    cleanLog.stdout,
+    /PASS: no visible layout defects/,
+    `a clean log did not print its PASS line:\n${cleanLog.stdout}`,
+  );
+
+  // No .log and no compile: exit 2 naming the log. Exit 0 would declare a render clean without a
+  // render having happened, and exit 1 would say "defects found", which is a different story.
+  const noLog = verdict(dirWith({}), { compile: true });
+  assert.equal(
+    noLog.status,
+    2,
+    `no log to read must be exit 2:\n${noLog.stdout}`,
+  );
+  assert.match(
+    noLog.stdout,
+    /FAIL: no .*paper\.log/,
+    `the missing log was not named:\n${noLog.stdout}`,
+  );
+
+  const haveLatex =
+    spawnSync("bash", ["-c", "command -v pdflatex"], { encoding: "utf8" })
+      .status === 0;
+  if (haveLatex) {
+    const texPaper = (body, preamble = "") =>
+      dirWith({
+        "paper.tex": `\\documentclass[10pt]{article}\n${preamble}\\begin{document}\n${body}\n\\end{document}\n`,
+      });
+    const bad = verdict(
+      texPaper(
+        `\\noindent ${"A".repeat(72)}`,
+        "\\usepackage[paperwidth=6cm,paperheight=12cm,margin=1cm]{geometry}\n",
+      ),
+      { compile: true },
+    );
+    assert.equal(
+      bad.status,
+      1,
+      `a word several times the column width must fail:\n${bad.stdout}`,
+    );
+    assert.match(
+      bad.stdout,
+      /OVERFULL hbox/,
+      `the real compile reported no overfull box:\n${bad.stdout}`,
+    );
+    const good = verdict(
+      texPaper(
+        "\\noindent The gate reads the configuration and fails the build when they disagree.",
+      ),
+      { compile: true },
+    );
+    assert.equal(
+      good.status,
+      0,
+      `an ordinary paragraph must pass a real compile:\n${good.stdout}`,
+    );
+  } else {
+    console.log(
+      "  real compile (overfull word, clean paragraph): NOT VERIFIED — pdflatex is not installed; only the log parser ran.",
+    );
+  }
+}

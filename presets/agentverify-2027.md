@@ -30,8 +30,8 @@ researchr page `conf.researchr.org/home/agentverify-2027` only redirects to the 
   is offered (below).
 - **Presenting**: «At least one author of each accepted paper must register and present.» Remote
   presentation is allowed (below).
-- **Deadlines (AoE)**: submission 13 Nov 2026, reviews due 5 Dec, final notification 11 Dec 2026,
-  camera-ready 29 Jan 2027.
+- **Deadlines (AoE)**: HotCRP submission 14 Nov 2026 and resubmission 15 Nov 2026.
+  Reviews are due 5 Dec, final notification 11 Dec 2026, and camera-ready 29 Jan 2027.
 
 ## 🔴 The submission deadline moved
 
@@ -43,8 +43,12 @@ The organizers' email of 2026-10-23 (as received by an author; the email itself 
 Source: **organizers' email, 2026-10-23**. On 2026-10-26 every public source agreed with it: the
 CFP, the home page («Papers are due November 13th, 2026 (AoE)»), the ICSE workshops page («Workshop
 Papers Submission Deadline for all Workshops: 13 November 2026») and the portal (`"sub":1794657599`,
-2026-11-14T11:59:59Z). None of the pages read showed 6 November. If a cached copy of any of them
-does, the email and the live pages win.
+2026-11-14T11:59:59Z).
+
+The [workshop CFP](https://agentverify2027.github.io/cfp.html) still lists 13 Nov AoE. The
+[HotCRP deadlines page](https://icse2027-agentverify.hotcrp.com/deadlines), rechecked on
+2026-11-21 UTC, gives 2026-11-15T11:59:59Z for new submissions and 2026-11-16T11:59:59Z
+for updates to completed submissions. The preset follows the portal for both.
 
 ## Paper kinds and limits
 
@@ -63,9 +67,9 @@ body are a finding.
 - **The IEEE template**, through `extends: paperlint:ieee-conference` ([`ieee-conference.md`](ieee-conference.md)).
 - **Double-blind review** (`blind`), so `anonymity/identity` checks the PDF against the paper's
   declared `identity`.
-- **Portal and deadlines**: the submission reading is the portal's, refreshed by paperlint's
-  scheduled workflow; notification and camera-ready are the site's. No `registration`: there is no
-  abstract deadline.
+- **Portal and deadlines**: paperlint's scheduled workflow refreshes submission and resubmission
+  from HotCRP. Notification and camera-ready come from the workshop site. The organizers confirmed
+  that there is no separate abstract deadline.
 
 ## Answered by the organizers (emails to an author, not public)
 
