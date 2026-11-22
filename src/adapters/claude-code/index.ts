@@ -4,6 +4,7 @@ export {
   ENABLE_COMMANDS,
   MARKETPLACE_REPO,
   PLUGIN_ID,
+  configDirOf,
   enabledBy,
   installedVersion,
   withPlugin,
