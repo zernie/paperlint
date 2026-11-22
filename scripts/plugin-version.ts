@@ -30,10 +30,7 @@ export function withVersion(json: string, version: string): string {
 }
 
 /** `stamp`: the package's version into plugin.json; `restore`: the placeholder back. */
-export function main(
-  verb: string | undefined,
-  root: string = ROOT,
-): number {
+export function main(verb: string | undefined, root: string = ROOT): number {
   const plugin = join(root, ".claude-plugin", "plugin.json");
   const pkg: unknown = JSON.parse(
     readFileSync(join(root, "package.json"), "utf8"),

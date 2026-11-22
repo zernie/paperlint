@@ -106,7 +106,9 @@ project: `claude plugin marketplace add zernie/paperlint --scope project` and
 `claude plugin install paperlint@paperlint --scope project`. They declare the marketplace and the
 plugin in `.claude/settings.json` (commit it, and every clone is offered the plugin) and fetch it.
 Without `claude` on PATH, `init` writes the same two keys and prints the two commands to run once
-where `claude` runs: the keys alone load nothing (measured: `claude plugin list` stays empty).
+where `claude` runs: the keys alone load nothing (measured: `claude plugin list` stays empty). Until
+then the skill links and hook commands stay, and the next `npx paperlint init` where `claude` runs
+completes the install without asking again.
 
 **In a cloud session** (Claude Code on the web) the repository's settings alone download no plugin:
 add the marketplace `zernie/paperlint` once in your claude.ai settings.

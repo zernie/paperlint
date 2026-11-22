@@ -19,13 +19,17 @@ import type { ClaudeCode } from "./ports/claude-code.ts";
 
 const dir = useTempDir("paperlint-init-plugin-");
 
-/** A Claude Code that is present, off, and turns on by running two commands. */
+/** A Claude Code that is present, off (or installed at 1.0.0), and turns on by running two commands. */
 const claude = (enabled = false): ClaudeCode & { readonly on: string[] } => {
   const on: string[] = [];
   return {
     on,
     present: () => true,
-    plugin: () => ({ enabled, version: null }),
+    // Installed once both commands ran, as Claude Code then reads it.
+    plugin: (root) =>
+      enabled || on.includes(root)
+        ? { enabled: true, version: "1.0.0" }
+        : { enabled: false, version: null },
     enable: (root) => (on.push(root), { ok: true, ran: ["claude x"] }),
   };
 };
@@ -83,12 +87,12 @@ describe("init and the plugin", () => {
       pluginFlag: "plugin",
       unlink: () => ({ ok: true, removed: ["paper-pipeline"] }),
     });
-    expect([r.code, cc.on, oursWired(root), settingsOf(root)["permissions"]]).toEqual([
-      0,
-      [root],
-      0,
-      { allow: ["Bash(ls)"] },
-    ]);
+    expect([
+      r.code,
+      cc.on,
+      oursWired(root),
+      settingsOf(root)["permissions"],
+    ]).toEqual([0, [root], 0, { allow: ["Bash(ls)"] }]);
     expect(r.out).toEqual(
       expect.arrayContaining([
         "skills and hooks (the plugin carries them now)",
@@ -96,6 +100,21 @@ describe("init and the plugin", () => {
         `  ✓ removed the hook commands init wrote into ${join(".claude", "settings.json")}: ${shippedWiring().names.join(", ")}`,
       ]),
     );
+  });
+});
+
+describe("init's own doctor check sees the plugin", () => {
+  it("plugin on: the closing doctor says the plugin carries the skills and hooks, and passes", async () => {
+    const root = join(dir, "doctor-on");
+    writeTree(root, { "x.txt": "" });
+    const r = await initRun(root, { claude: claude(true) });
+    // The same project checked by `paperlint doctor` reads the plugin; init's own check must too.
+    expect([
+      r.code,
+      r.out
+        .flatMap((l) => l.split("\n"))
+        .filter((l) => l === "  ✓ carried by the plugin").length,
+    ]).toEqual([0, 2]);
   });
 });
 
@@ -109,7 +128,7 @@ describe("init and the plugin — the edges", () => {
     });
     expect(r.out).toEqual(
       expect.arrayContaining([
-        "  ✓ already on for this project",
+        "  ✓ already on for this project, version 1.0.0",
         "  ⚠ skill links not checked — paperlint does not resolve",
         "  ✓ no hook commands of init's to remove",
       ]),
@@ -143,15 +162,17 @@ describe("init and the plugin — the edges", () => {
   it("a human: asked once; Ctrl+C at the question stops init with its code", async () => {
     const root = join(dir, "f");
     writeTree(root, { "x.txt": "" });
-    const prompts = scriptedPrompts((m) => (m === PLUGIN_QUESTION ? "cancel" : undefined));
+    const prompts = scriptedPrompts((m) =>
+      m === PLUGIN_QUESTION ? "cancel" : undefined,
+    );
     const r = await initRun(root, {
       claude: claude(),
       interactive: true,
       prompts,
     });
-    expect([r.code, prompts.asked.filter((m) => m === PLUGIN_QUESTION)]).toEqual([
-      CANCELLED_CODE,
-      [PLUGIN_QUESTION],
-    ]);
+    expect([
+      r.code,
+      prompts.asked.filter((m) => m === PLUGIN_QUESTION),
+    ]).toEqual([CANCELLED_CODE, [PLUGIN_QUESTION]]);
   });
 });

@@ -58,7 +58,7 @@ async function cli(
   cwd: string,
   deps: Pick<
     NonNullable<Parameters<typeof run>[1]>,
-    "loadTexLanguage" | "claude"
+    "loadTexLanguage" | "claude" | "install"
   > = {},
 ) {
   const out: string[] = [];
@@ -508,14 +508,18 @@ test("doctor reads the plugin where Claude Code is, and says nothing of it where
   const claude: ClaudeCode = {
     ...NO_CLAUDE,
     present: () => true,
-    plugin: (at) => (read.push(at), { enabled: true, version: null }),
+    plugin: (at) => (read.push(at), { enabled: true, version: "1.0.0" }),
   };
   const head = "Claude Code plugin (carries the skills and the hooks)";
   const on = (await cli(["doctor"], dir, { claude })).out.split("\n");
   const absent = (await cli(["doctor"], dir)).out.split("\n");
   assert.deepEqual(
-    [on.slice(on.indexOf(head), on.indexOf(head) + 2), read, absent.includes(head)],
-    [[head, "  ✓ on for this project"], [dir], false],
+    [
+      on.slice(on.indexOf(head), on.indexOf(head) + 2),
+      read,
+      absent.includes(head),
+    ],
+    [[head, "  ✓ on for this project, version 1.0.0"], [dir], false],
   );
 });
 
@@ -784,7 +788,11 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
   const on: string[] = [];
   const claude: ClaudeCode = {
     present: () => true,
-    plugin: () => ({ enabled: false, version: null }),
+    // Installed once both commands ran, as Claude Code then reads it.
+    plugin: (at) =>
+      on.includes(at)
+        ? { enabled: true, version: "1.0.0" }
+        : { enabled: false, version: null },
     enable: (at) => (on.push(at), { ok: true, ran: ["claude x"] }),
   };
   const run = async (flag: string[]) => {
@@ -802,6 +810,7 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
           l === "  ✓ ran claude x",
       );
   };
+  // Each run ends with init's own doctor check, which reads the plugin as `paperlint doctor` does.
   assert.deepEqual(
     [
       await run(["--plugin"]),
@@ -814,16 +823,46 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
         "Claude Code plugin (the skills and hooks, updated with paperlint)",
         "  ✓ ran claude x",
         "skills and hooks (the plugin carries them now)",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       [
         "Claude Code plugin (the skills and hooks, updated with paperlint)",
         "  · --no-plugin — nothing asked, nothing turned on",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       [
         "Claude Code plugin: not turned on — --yes was given, so nothing was asked. To turn it on: npx paperlint init --plugin",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       1,
     ],
+  );
+});
+
+test("init's step 0 that fails stops the run with 2: init itself never starts", async () => {
+  const dir = writeTree(join(root, "self-failed"), { "package.json": "{}" });
+  const r = await cli(["init", "--yes", "--no-hooks"], dir, {
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: false, reason: "exit 1" }),
+    },
+  });
+  assert.deepEqual(
+    {
+      code: r.code,
+      out: r.out.split("\n"),
+      paperlintJson: existsSync(join(dir, "paperlint.json")),
+    },
+    {
+      code: 2,
+      out: [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✗ npm paperlint@0.0.0-semantically-released failed (exit 1) — nothing else was done. Run it yourself, then `npx paperlint init` again",
+      ],
+      paperlintJson: false,
+    },
   );
 });
 

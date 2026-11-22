@@ -33,10 +33,10 @@ export interface PluginFacts {
 }
 
 const versionLine = (
-  plugin: string | null,
+  plugin: string,
   installed: string | null,
 ): readonly string[] => {
-  if (plugin === null || installed === null) return [];
+  if (installed === null) return [];
   const order = compareVersions(plugin, installed);
   if (order === 0) return [];
   return [
@@ -68,9 +68,15 @@ export function pluginLines(f: PluginFacts): readonly string[] {
       head,
       "  · not on for this project — the skills and hooks below are init's links and commands. `npx paperlint init --plugin` turns it on",
     ];
+  // Declared but not installed: the keys alone load nothing, so init's links are not doubled.
+  if (f.state.version === null)
+    return [
+      head,
+      "  · declared in the settings, not installed — the skills and hooks below are init's links and commands until `npx paperlint init --plugin` runs where `claude` is on PATH",
+    ];
   return [
     head,
-    `  ✓ on for this project${f.state.version === null ? "" : `, version ${f.state.version}`}`,
+    `  ✓ on for this project, version ${f.state.version}`,
     ...doubled(f),
     ...versionLine(f.state.version, f.installed),
   ];

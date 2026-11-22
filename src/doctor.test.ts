@@ -105,7 +105,7 @@ test("doctor exits non-zero when the hooks are only partly wired", () => {
 });
 
 /** Doctor's output for a project with one of init's hook commands and one present skill link. */
-const withPlugin = (plugin: DoctorOptions["plugin"]) => {
+const withPlugin = (plugin: NonNullable<DoctorOptions["plugin"]> | null) => {
   const root = project();
   writeFileSync(join(root, "paperlint.json"), "{}\n");
   mkdirSync(join(root, ".claude"), { recursive: true });
@@ -144,10 +144,7 @@ test("doctor and the plugin: on, it carries the skills and hooks and names init'
   const none = withPlugin(null);
   const head = "Claude Code plugin (carries the skills and the hooks)";
   // A partly wired set fails the run without the plugin, and not with it: the plugin carries the hooks.
-  assert.deepEqual(
-    [on.code, off.code, none.code],
-    [0, 2, 2],
-  );
+  assert.deepEqual([on.code, off.code, none.code], [0, 2, 2]);
   assert.deepEqual(
     on.out.slice(on.out.indexOf(head), on.out.indexOf(head) + 4),
     [
@@ -167,6 +164,19 @@ test("doctor and the plugin: on, it carries the skills and hooks and names init'
   );
 });
 
+test("doctor with the plugin declared but not installed: the hooks are checked as without it", () => {
+  const declared = withPlugin({ enabled: true, version: null });
+  const off = withPlugin({ enabled: false, version: null });
+  // The keys alone load nothing: a partly wired set fails the run, and nothing is "carried".
+  assert.deepEqual(
+    [
+      declared.code,
+      declared.out.filter((l) => l === "  ✓ carried by the plugin").length,
+    ],
+    [off.code, 0],
+  );
+});
+
 test("doctor with the plugin on and settings that do not parse, or cannot be read: no leftovers named, the run not failed", () => {
   const onWith = (settings: (root: string) => void) => {
     const root = project();
@@ -179,7 +189,7 @@ test("doctor with the plugin on and settings that do not parse, or cannot be rea
       log: (s: string) => lines.push(s),
       run: () => ({ status: 0 }),
       cliPapers: join(root, "papers"),
-      plugin: { enabled: true, version: null },
+      plugin: { enabled: true, version: "1.0.0" },
       skillLinks: () => ({ ok: false, error: "not resolved" }),
     });
     const out = lines.join("\n").split("\n");
@@ -188,7 +198,7 @@ test("doctor with the plugin on and settings that do not parse, or cannot be rea
     );
     return [code, out.slice(at + 1, at + 3)];
   };
-  const quiet = [0, ["  ✓ on for this project", ""]];
+  const quiet = [0, ["  ✓ on for this project, version 1.0.0", ""]];
   assert.deepEqual(
     [
       onWith((root) => {

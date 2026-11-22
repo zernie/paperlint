@@ -27,14 +27,28 @@ describe("compareVersions", () => {
   });
 });
 
+describe("pluginLines — declared, not installed", () => {
+  it("declared but not installed: one line, and init's links are not called doubled — nothing loads the plugin", () => {
+    expect(
+      pluginLines(
+        facts({
+          state: { enabled: true, version: null },
+          oldLinks: ["a"],
+          oldHooks: ["h"],
+        }),
+      ),
+    ).toEqual([
+      HEAD,
+      "  · declared in the settings, not installed — the skills and hooks below are init's links and commands until `npx paperlint init --plugin` runs where `claude` is on PATH",
+    ]);
+  });
+});
+
 describe("pluginLines", () => {
   it("on and matching, with nothing of init's left: one line", () => {
-    expect([
-      pluginLines(facts()),
-      pluginLines(facts({ state: { enabled: true, version: null } })),
-    ]).toEqual([
-      [HEAD, "  ✓ on for this project, version 1.2.0"],
-      [HEAD, "  ✓ on for this project"],
+    expect(pluginLines(facts())).toEqual([
+      HEAD,
+      "  ✓ on for this project, version 1.2.0",
     ]);
   });
 

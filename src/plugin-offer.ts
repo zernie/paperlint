@@ -13,9 +13,15 @@
  *   --no-plugin        never asked, never on.
  *   once it is on      init removes the skill links and hook entries IT made: kept beside the
  *                      plugin, every skill would be listed twice and every hook would run twice.
+ *                      "On" means installed. Keys written without `claude` are only declared: the
+ *                      old wiring stays, and the next init completes the install without asking.
  */
 import type { AbsolutePath } from "./domain/paths.ts";
-import type { ClaudeCode, EnableResult } from "./ports/claude-code.ts";
+import type {
+  ClaudeCode,
+  EnableResult,
+  PluginState,
+} from "./ports/claude-code.ts";
 import type { Answer, Prompts } from "./ports/prompts.ts";
 
 /** `--plugin`, `--no-plugin`, or neither. */
@@ -24,7 +30,8 @@ export type PluginFlag = "plugin" | "no-plugin" | null;
 export type PluginOutcome =
   | { readonly kind: "no-claude" }
   | { readonly kind: "no-plugin-flag" }
-  | { readonly kind: "already"; readonly version: string | null }
+  /** Declared AND installed: Claude Code has an install of this version on record. */
+  | { readonly kind: "already"; readonly version: string }
   | {
       readonly kind: "enabled";
       readonly how: Exclude<EnableResult, { readonly ok: false }>;
@@ -63,27 +70,62 @@ async function decided(asking: PluginAsking): Promise<PluginOutcome | null> {
   return answer.value ? null : { kind: "declined" };
 }
 
+/**
+ * The plugin's version once Claude Code has installed it, else null. The settings keys alone load
+ * nothing (they are written where `claude` is not on PATH too), so every reader that drops the old
+ * wiring asks this, never `enabled` by itself.
+ */
+export const installedPluginVersion = (
+  state: PluginState | null,
+): string | null => (state?.enabled ? state.version : null);
+
+/** The plugin's state where Claude Code runs in this project, else null. */
+const stateIn = (
+  root: AbsolutePath,
+  claude: ClaudeCode | undefined,
+): PluginState | null => (claude?.present(root) ? claude.plugin(root) : null);
+
 export async function offerPlugin(
   root: AbsolutePath,
   claude: ClaudeCode | undefined,
   asking: PluginAsking,
 ): Promise<PluginOutcome> {
+  // `--no-plugin` skips the offer; it does not turn an installed plugin off, so that is read first.
+  const state = stateIn(root, claude);
+  const version = installedPluginVersion(state);
+  if (version !== null) return { kind: "already", version };
   if (asking.flag === "no-plugin") return { kind: "no-plugin-flag" };
-  if (!claude || (!claude.present(root) && asking.flag !== "plugin"))
+  if (!claude || (!state && asking.flag !== "plugin"))
     return { kind: "no-claude" };
-  const state = claude.plugin(root);
-  if (state.enabled) return { kind: "already", version: state.version };
-  const stop = await decided(asking);
+  // Declared but not installed (the keys were written where `claude` was not on PATH): the project
+  // already said yes, so nothing is asked again; enabling now completes the install.
+  const stop = state?.enabled ? null : await decided(asking);
   if (stop !== null) return stop;
-  const how = claude.enable(root);
-  return how.ok
-    ? { kind: "enabled", how }
-    : { kind: "failed", reason: how.reason };
+  return enableNow(root, claude);
 }
 
-/** The plugin is on once init is done: the old links and hook entries then go. */
+/** Why the plugin is off although both commands ran. */
+export const STILL_OFF =
+  "both commands ran, but Claude Code still reads it as off here: a more specific settings file, such as .claude/settings.local.json, turns paperlint@paperlint off. Remove that entry";
+
+/**
+ * Runs the commands, then reads what Claude Code reads: they write the project's settings, and a
+ * more specific file can still say off. Only an install that reads as on counts as on.
+ */
+function enableNow(root: AbsolutePath, claude: ClaudeCode): PluginOutcome {
+  const how = claude.enable(root);
+  if (!how.ok) return { kind: "failed", reason: how.reason };
+  if ("ran" in how && installedPluginVersion(claude.plugin(root)) === null)
+    return { kind: "failed", reason: STILL_OFF };
+  return { kind: "enabled", how };
+}
+
+/**
+ * The plugin is on once Claude Code has installed it: the old links and hook entries then go. Keys
+ * written without `claude` load nothing, so until the owed commands run the old wiring stays.
+ */
 export const pluginOn = (o: PluginOutcome): boolean =>
-  o.kind === "already" || o.kind === "enabled";
+  o.kind === "already" || (o.kind === "enabled" && "ran" in o.how);
 
 const AGAIN = "`npx paperlint init --plugin`";
 
@@ -107,10 +149,7 @@ export function reportPlugin(o: PluginOutcome): readonly string[] {
   if (o.kind === "failed")
     return [...head, `  ✗ not turned on — ${o.reason}. ${AGAIN} tries again`];
   if (o.kind === "already")
-    return [
-      ...head,
-      `  ✓ already on for this project${o.version === null ? "" : `, version ${o.version}`}`,
-    ];
+    return [...head, `  ✓ already on for this project, version ${o.version}`];
   return "ran" in o.how
     ? [...head, ...o.how.ran.map((c) => `  ✓ ran ${c}`)]
     : [

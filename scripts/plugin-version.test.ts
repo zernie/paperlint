@@ -7,7 +7,11 @@ import { useTempDir, writeTree } from "../test/support.ts";
 import { main, PLACEHOLDER, withVersion } from "./plugin-version.ts";
 
 const dir = useTempDir("paperlint-plugin-version-");
-const MANIFEST = { name: "paperlint", version: PLACEHOLDER, skills: "./skills/" };
+const MANIFEST = {
+  name: "paperlint",
+  version: PLACEHOLDER,
+  skills: "./skills/",
+};
 
 const packageAt = (name: string, pkg: object): string => {
   const root = join(dir, name);
@@ -33,12 +37,12 @@ describe("plugin-version", () => {
 
   it("a package.json without a version stamps the placeholder; an unknown verb writes nothing", () => {
     const root = packageAt("bare", { name: "x" });
-    expect([main("stamp", root), main("publish", root), main(undefined, root), manifestOf(root)]).toEqual([
-      0,
-      2,
-      2,
-      MANIFEST,
-    ]);
+    expect([
+      main("stamp", root),
+      main("publish", root),
+      main(undefined, root),
+      manifestOf(root),
+    ]).toEqual([0, 2, 2, MANIFEST]);
   });
 
   it("withVersion: the two-space form with a final newline; a manifest that is not an object is refused", () => {
@@ -65,7 +69,10 @@ describe("plugin-version", () => {
   it("the tracked manifest carries the placeholder, as the tracked package.json does", () => {
     const tracked = (file: string): unknown =>
       JSON.parse(readFileSync(new URL(`../${file}`, import.meta.url), "utf8"));
-    expect([tracked(".claude-plugin/plugin.json"), tracked("package.json")]).toEqual([
+    expect([
+      tracked(".claude-plugin/plugin.json"),
+      tracked("package.json"),
+    ]).toEqual([
       expect.objectContaining({ version: PLACEHOLDER }),
       expect.objectContaining({ version: PLACEHOLDER }),
     ]);

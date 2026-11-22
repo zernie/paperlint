@@ -1079,7 +1079,16 @@ export async function init(
   // ── 9. the install states its own condition ───────────────────────────────────────────
   log(`── paperlint doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
-  const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });
+  // Read after step 3, as `paperlint doctor` reads it: the plugin carries the skills and hooks now.
+  const at = absolutePath(root);
+  const code = doctor({
+    log,
+    cwd: root,
+    projectDir: root,
+    run,
+    cliPapers,
+    plugin: opts.claude?.present(at) ? opts.claude.plugin(at) : null,
+  });
   if (code !== 0)
     log(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
