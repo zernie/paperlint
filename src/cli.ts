@@ -159,6 +159,7 @@ import {
   type TexRequirements,
 } from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
+import { installedPluginVersion } from "./plugin-offer.ts";
 import {
   askOnTerminal,
   askOrDefault,
@@ -1660,7 +1661,7 @@ function owed(
   readonly byHand: boolean;
   readonly skills: readonly string[];
 } {
-  if (claude.plugin(absolutePath(root)).enabled)
+  if (installedPluginVersion(claude.plugin(absolutePath(root))) !== null)
     return { missing: [], byHand: false, skills: [] };
   const { missing, byHand } = unwiredHooks(root);
   return { missing, byHand, skills: unlinkedSkills(skillLinks(root)) };

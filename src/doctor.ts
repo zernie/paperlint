@@ -37,6 +37,7 @@ import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks, initWiredHooks } from "./hooks-settings.ts";
 import { pluginLines } from "./doctor-plugin.ts";
+import { installedPluginVersion } from "./plugin-offer.ts";
 import type { PluginState } from "./ports/claude-code.ts";
 import { messageOf } from "./domain/text.ts";
 import { fieldOf } from "./domain/record.ts";
@@ -366,7 +367,7 @@ export function doctor({
   // without links had no `/paper-pipeline` and nothing anywhere said so.
   const links = skillLinks(root);
   // Without Claude Code there is no plugin to speak of, so no section at all.
-  const on = plugin?.enabled === true;
+  const on = plugin !== null && installedPluginVersion(plugin) !== null;
   out.push(
     ...(plugin
       ? [

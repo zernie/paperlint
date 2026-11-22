@@ -164,6 +164,19 @@ test("doctor and the plugin: on, it carries the skills and hooks and names init'
   );
 });
 
+test("doctor with the plugin declared but not installed: the hooks are checked as without it", () => {
+  const declared = withPlugin({ enabled: true, version: null });
+  const off = withPlugin({ enabled: false, version: null });
+  // The keys alone load nothing: a partly wired set fails the run, and nothing is "carried".
+  assert.deepEqual(
+    [
+      declared.code,
+      declared.out.filter((l) => l === "  ✓ carried by the plugin").length,
+    ],
+    [off.code, 0],
+  );
+});
+
 test("doctor with the plugin on and settings that do not parse, or cannot be read: no leftovers named, the run not failed", () => {
   const onWith = (settings: (root: string) => void) => {
     const root = project();

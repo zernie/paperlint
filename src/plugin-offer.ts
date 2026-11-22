@@ -17,7 +17,11 @@
  *                      old wiring stays, and the next init completes the install without asking.
  */
 import type { AbsolutePath } from "./domain/paths.ts";
-import type { ClaudeCode, EnableResult } from "./ports/claude-code.ts";
+import type {
+  ClaudeCode,
+  EnableResult,
+  PluginState,
+} from "./ports/claude-code.ts";
 import type { Answer, Prompts } from "./ports/prompts.ts";
 
 /** `--plugin`, `--no-plugin`, or neither. */
@@ -66,20 +70,29 @@ async function decided(asking: PluginAsking): Promise<PluginOutcome | null> {
   return answer.value ? null : { kind: "declined" };
 }
 
+/**
+ * The plugin's version once Claude Code has installed it, else null. The settings keys alone load
+ * nothing (they are written where `claude` is not on PATH too), so every reader that drops the old
+ * wiring asks this, never `enabled` by itself.
+ */
+export const installedPluginVersion = (state: PluginState): string | null =>
+  state.enabled ? state.version : null;
+
 export async function offerPlugin(
   root: AbsolutePath,
   claude: ClaudeCode | undefined,
   asking: PluginAsking,
 ): Promise<PluginOutcome> {
+  // `--no-plugin` skips the offer; it does not turn an installed plugin off, so that is read first.
+  const state = claude?.present(root) ? claude.plugin(root) : null;
+  const version = state && installedPluginVersion(state);
+  if (version) return { kind: "already", version };
   if (asking.flag === "no-plugin") return { kind: "no-plugin-flag" };
-  if (!claude || (!claude.present(root) && asking.flag !== "plugin"))
+  if (!claude || (!state && asking.flag !== "plugin"))
     return { kind: "no-claude" };
-  const state = claude.plugin(root);
-  if (state.enabled && state.version !== null)
-    return { kind: "already", version: state.version };
   // Declared but not installed (the keys were written where `claude` was not on PATH): the project
   // already said yes, so nothing is asked again; enabling now completes the install.
-  const stop = state.enabled ? null : await decided(asking);
+  const stop = state?.enabled ? null : await decided(asking);
   if (stop !== null) return stop;
   const how = claude.enable(root);
   return how.ok

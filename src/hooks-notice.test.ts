@@ -79,6 +79,11 @@ const PLUGIN_ON: ClaudeCode = {
   ...PLUGIN_OFF,
   plugin: () => ({ enabled: true, version: "9.9.9" }),
 };
+/** Declared in the settings, never installed: the keys alone load nothing. */
+const PLUGIN_DECLARED: ClaudeCode = {
+  ...PLUGIN_OFF,
+  plugin: () => ({ enabled: true, version: null }),
+};
 
 /** `paperlint hook <name>` in-process on an Edit of `file`. */
 // eslint-disable-next-line max-params -- a test helper: the hook, the project, the edit and the version
@@ -574,20 +579,22 @@ test("lintLine and noticeText word skills beside hooks", () => {
 test("the plugin on: a partly wired project with unlinked skills hears nothing, from the hook or from lint", async () => {
   const dir = project("plugin-on", wiringWithout(["lint-edited"]));
   const unlinked = linked(["rewrite-unclear", "missing"]);
-  const hooked = async (claude: ClaudeCode) => {
+  // The hook speaks once per version, so the declared plugin gets a project of its own.
+  const declaredDir = project("plugin-declared", wiringWithout(["lint-edited"]));
+  const hooked = async (claude: ClaudeCode, at = dir) => {
     const out: string[] = [];
     await runHook("lint-edited", {
       stdin: () =>
         JSON.stringify({
           tool_name: "Edit",
           tool_input: {
-            file_path: join(dir, "papers/p/paper.tex"),
+            file_path: join(at, "papers/p/paper.tex"),
             new_string: "Fine.",
           },
         }),
       out: (t) => void out.push(t),
       err: () => undefined,
-      projectDir: dir,
+      projectDir: at,
       version: "7.7.7",
       skillLinks: unlinked,
       claude,
@@ -606,13 +613,16 @@ test("the plugin on: a partly wired project with unlinked skills hears nothing, 
     return err.filter((l) => l.includes("npx paperlint init"));
   };
   // Both halves: the same project with the plugin off speaks, so the silence is the plugin's.
+  // A plugin only declared carries nothing, so it speaks as off does.
   assert.deepEqual(
     [
       await hooked(PLUGIN_ON),
       await linted(PLUGIN_ON),
       await hooked(PLUGIN_OFF),
       (await linted(PLUGIN_OFF)).length,
+      await hooked(PLUGIN_DECLARED, declaredDir),
+      (await linted(PLUGIN_DECLARED)).length,
     ],
-    [false, [], true, 1],
+    [false, [], true, 1, true, 1],
   );
 });

@@ -98,11 +98,22 @@ describe("offerPlugin — the four paths the author named", () => {
 });
 
 describe("offerPlugin — the other ways it ends", () => {
-  it("--no-plugin: nothing read, nothing asked", async () => {
-    const claude = fakeClaude();
+  it("--no-plugin: nothing asked, nothing turned on; an installed plugin stays on", async () => {
+    const off = fakeClaude();
+    const installed = fakeClaude({ state: { enabled: true, version: "1.2.3" } });
     const a = asking({ flag: "no-plugin" });
-    expect([await offerPlugin(ROOT, claude, a), a.asked]).toEqual([
+    // Skipping the offer is not turning the plugin off: init must not re-create links beside it.
+    expect([
+      await offerPlugin(ROOT, off, a),
+      await offerPlugin(ROOT, installed, a),
+      a.asked,
+      off.enabled,
+      installed.enabled,
+    ]).toEqual([
       { kind: "no-plugin-flag" },
+      { kind: "already", version: "1.2.3" },
+      [],
+      [],
       [],
     ]);
   });
