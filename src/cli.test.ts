@@ -788,7 +788,11 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
   const on: string[] = [];
   const claude: ClaudeCode = {
     present: () => true,
-    plugin: () => ({ enabled: false, version: null }),
+    // Installed once both commands ran, as Claude Code then reads it.
+    plugin: (at) =>
+      on.includes(at)
+        ? { enabled: true, version: "1.0.0" }
+        : { enabled: false, version: null },
     enable: (at) => (on.push(at), { ok: true, ran: ["claude x"] }),
   };
   const run = async (flag: string[]) => {

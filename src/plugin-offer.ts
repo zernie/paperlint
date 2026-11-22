@@ -101,10 +101,23 @@ export async function offerPlugin(
   // already said yes, so nothing is asked again; enabling now completes the install.
   const stop = state?.enabled ? null : await decided(asking);
   if (stop !== null) return stop;
+  return enableNow(root, claude);
+}
+
+/** Why the plugin is off although both commands ran. */
+export const STILL_OFF =
+  "both commands ran, but Claude Code still reads it as off here: a more specific settings file, such as .claude/settings.local.json, turns paperlint@paperlint off. Remove that entry";
+
+/**
+ * Runs the commands, then reads what Claude Code reads: they write the project's settings, and a
+ * more specific file can still say off. Only an install that reads as on counts as on.
+ */
+function enableNow(root: AbsolutePath, claude: ClaudeCode): PluginOutcome {
   const how = claude.enable(root);
-  return how.ok
-    ? { kind: "enabled", how }
-    : { kind: "failed", reason: how.reason };
+  if (!how.ok) return { kind: "failed", reason: how.reason };
+  if ("ran" in how && installedPluginVersion(claude.plugin(root)) === null)
+    return { kind: "failed", reason: STILL_OFF };
+  return { kind: "enabled", how };
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   PLUGIN_QUESTION,
   pluginOn,
   reportPlugin,
+  STILL_OFF,
   type PluginAsking,
   type PluginOutcome,
 } from "./plugin-offer.ts";
@@ -19,20 +20,29 @@ const ROOT = absolutePath("/project");
 const RAN: EnableResult = { ok: true, ran: ["claude a", "claude b"] };
 
 /** A Claude Code that records every `enable`, with the state and answer a test gives it. */
+/** Installed, as Claude Code reads it once both commands ran. */
+const INSTALLED: PluginState = { enabled: true, version: "1.0.0" };
+
+/**
+ * A Claude Code whose state is `state` until `enable` runs, then `after` (installed, unless the
+ * test says what Claude Code reads instead, such as a local setting that keeps it off).
+ */
 function fakeClaude({
   present = true,
   state = { enabled: false, version: null },
   enables = RAN,
+  after = INSTALLED,
 }: {
   readonly present?: boolean;
   readonly state?: PluginState;
   readonly enables?: EnableResult;
+  readonly after?: PluginState;
 } = {}): ClaudeCode & { readonly enabled: string[] } {
   const enabled: string[] = [];
   return {
     enabled,
     present: () => present,
-    plugin: () => state,
+    plugin: () => (enabled.length > 0 ? after : state),
     enable: (root) => (enabled.push(root), enables),
   };
 }
@@ -60,6 +70,17 @@ describe("offerPlugin — the four paths the author named", () => {
       a.asked,
       claude.enabled,
     ]).toEqual([{ kind: "enabled", how: RAN }, [PLUGIN_QUESTION], [ROOT]]);
+  });
+
+  it("both commands ran, yet a more specific setting keeps it off: not turned on, and said why", async () => {
+    // `--scope project` writes .claude/settings.json; .claude/settings.local.json outranks it.
+    const claude = fakeClaude({ after: { enabled: false, version: "1.0.0" } });
+    const out = await offerPlugin(ROOT, claude, asking({ flag: "plugin" }));
+    expect([out, pluginOn(out), claude.enabled]).toEqual([
+      { kind: "failed", reason: STILL_OFF },
+      false,
+      [ROOT],
+    ]);
   });
 
   it("a human, No: asked once, nothing turned on", async () => {

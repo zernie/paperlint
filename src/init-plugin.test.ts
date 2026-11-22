@@ -25,7 +25,11 @@ const claude = (enabled = false): ClaudeCode & { readonly on: string[] } => {
   return {
     on,
     present: () => true,
-    plugin: () => ({ enabled, version: enabled ? "1.0.0" : null }),
+    // Installed once both commands ran, as Claude Code then reads it.
+    plugin: (root) =>
+      enabled || on.includes(root)
+        ? { enabled: true, version: "1.0.0" }
+        : { enabled: false, version: null },
     enable: (root) => (on.push(root), { ok: true, ran: ["claude x"] }),
   };
 };
