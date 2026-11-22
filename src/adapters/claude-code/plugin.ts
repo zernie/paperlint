@@ -6,7 +6,21 @@
  * `enabledPlugins["paperlint@paperlint"]: true` there, and records the install in
  * `~/.claude/plugins/installed_plugins.json` with its `scope`, `version` and `projectPath`.
  */
+import { join } from "node:path";
 import { fieldOf, isRecord } from "../../domain/record.ts";
+
+/**
+ * The folder Claude Code keeps the user's settings and plugins in: `CLAUDE_CONFIG_DIR` when it is
+ * set (a second profile, for one), else `~/.claude`. Both the user settings and the install record
+ * live there, so both are read from the one answer.
+ */
+export const configDirOf = (
+  env: Readonly<Record<string, string | undefined>>,
+  home: string,
+): string => {
+  const set = env["CLAUDE_CONFIG_DIR"];
+  return set === undefined || set === "" ? join(home, ".claude") : set;
+};
 
 /** `<plugin>@<marketplace>`: both are named `paperlint`. */
 export const PLUGIN_ID = "paperlint@paperlint";

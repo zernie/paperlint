@@ -16,6 +16,7 @@ import { dirname, join } from "node:path";
 import type { ClaudeCode, EnableResult } from "../../ports/claude-code.ts";
 import { isRecord } from "../../domain/record.ts";
 import {
+  configDirOf,
   ENABLE_COMMANDS,
   enabledBy,
   installedVersion,
@@ -42,8 +43,8 @@ export const runInherit = (
 ): number | null => spawnSync(file, args, { cwd, stdio: "inherit" }).status;
 
 export interface ClaudeDeps {
-  /** The user's home, where `~/.claude/` lives. */
-  readonly home: string;
+  /** Where Claude Code keeps the user's settings and plugins (`configDirOf`). */
+  readonly configDir: string;
   readonly hasClaude: () => boolean;
   readonly run: typeof runInherit;
 }
@@ -63,7 +64,7 @@ function writeKeys(root: string): string | null {
 }
 
 export const claudeCode = ({
-  home = homedir(),
+  configDir = configDirOf(process.env, homedir()),
   hasClaude = () => onPath("claude"),
   run = runInherit,
 }: Partial<ClaudeDeps> = {}): ClaudeCode => ({
@@ -73,11 +74,11 @@ export const claudeCode = ({
       [
         join(root, ".claude", "settings.local.json"),
         settingsFile(root),
-        join(home, ".claude", "settings.json"),
+        join(configDir, "settings.json"),
       ].map(readJson),
     ),
     version: installedVersion(
-      readJson(join(home, ".claude", "plugins", "installed_plugins.json")),
+      readJson(join(configDir, "plugins", "installed_plugins.json")),
       root,
     ),
   }),

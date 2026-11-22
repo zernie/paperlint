@@ -5,7 +5,9 @@ import { absolutePath } from "../../domain/paths.ts";
 import { useTempDir, writeTree } from "../../../test/support.ts";
 import {
   ENABLE_COMMANDS,
+  PLUGIN_ID,
   claudeCode,
+  configDirOf,
   enabledBy,
   installedVersion,
   onPath,
@@ -50,7 +52,7 @@ const setup = (tree: Record<string, string>, hasClaude: boolean) => {
   writeTree(dir, tree);
   const ran: string[] = [];
   const cc = claudeCode({
-    home: join(dir, "home"),
+    configDir: join(dir, "home", ".claude"),
     hasClaude: () => hasClaude,
     run: (argv, cwd) => (ran.push(`${cwd}: ${argv.join(" ")}`), 0),
   });
@@ -89,6 +91,45 @@ describe("claudeCode — reading the disk", () => {
   });
 });
 
+describe("where Claude Code keeps the user's settings and plugins", () => {
+  it("CLAUDE_CONFIG_DIR when it is set, else ~/.claude", () => {
+    expect([
+      configDirOf({ CLAUDE_CONFIG_DIR: "/profiles/work" }, "/home/a"),
+      configDirOf({}, "/home/a"),
+      configDirOf({ CLAUDE_CONFIG_DIR: "" }, "/home/a"),
+    ]).toEqual([
+      "/profiles/work",
+      join("/home/a", ".claude"),
+      join("/home/a", ".claude"),
+    ]);
+  });
+
+  it("a profile in its own folder: the user's settings and the install record are read from it", () => {
+    const dir = useTempDir("paperlint-claude-");
+    const root = join(dir, "p");
+    writeTree(dir, {
+      "p/x": "",
+      "profile/settings.json": JSON.stringify(on),
+      "profile/plugins/installed_plugins.json": JSON.stringify({
+        plugins: {
+          [PLUGIN_ID]: [
+            { scope: "project", projectPath: root, version: "2.0.0" },
+          ],
+        },
+      }),
+    });
+    const cc = claudeCode({
+      configDir: join(dir, "profile"),
+      hasClaude: () => false,
+      run: () => 0,
+    });
+    expect(cc.plugin(absolutePath(root))).toEqual({
+      enabled: true,
+      version: "2.0.0",
+    });
+  });
+});
+
 describe("claudeCode — turning the plugin on", () => {
   it("claude on PATH: its two commands run in the project, in order", () => {
     const s = setup({ "p/x": "" }, true);
@@ -100,7 +141,11 @@ describe("claudeCode — turning the plugin on", () => {
 
   it("a command that fails stops there, named", () => {
     const dir = useTempDir("paperlint-claude-");
-    const cc = claudeCode({ home: dir, hasClaude: () => true, run: () => 1 });
+    const cc = claudeCode({
+      configDir: join(dir, ".claude"),
+      hasClaude: () => true,
+      run: () => 1,
+    });
     expect(cc.enable(absolutePath(dir))).toEqual({
       ok: false,
       reason:
