@@ -99,6 +99,21 @@ describe("init and the plugin", () => {
   });
 });
 
+describe("init's own doctor check sees the plugin", () => {
+  it("plugin on: the closing doctor says the plugin carries the skills and hooks, and passes", async () => {
+    const root = join(dir, "doctor-on");
+    writeTree(root, { "x.txt": "" });
+    const r = await initRun(root, { claude: claude(true) });
+    // The same project checked by `paperlint doctor` reads the plugin; init's own check must too.
+    expect([
+      r.code,
+      r.out
+        .flatMap((l) => l.split("\n"))
+        .filter((l) => l === "  ✓ carried by the plugin").length,
+    ]).toEqual([0, 2]);
+  });
+});
+
 describe("init and the plugin — the edges", () => {
   it("already on, nothing of init's left: both said; a links check that cannot run is named", async () => {
     const root = join(dir, "c");

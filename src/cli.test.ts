@@ -806,6 +806,7 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
           l === "  ✓ ran claude x",
       );
   };
+  // Each run ends with init's own doctor check, which reads the plugin as `paperlint doctor` does.
   assert.deepEqual(
     [
       await run(["--plugin"]),
@@ -818,13 +819,16 @@ test("init --plugin turns the plugin on without a terminal; --no-plugin never as
         "Claude Code plugin (the skills and hooks, updated with paperlint)",
         "  ✓ ran claude x",
         "skills and hooks (the plugin carries them now)",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       [
         "Claude Code plugin (the skills and hooks, updated with paperlint)",
         "  · --no-plugin — nothing asked, nothing turned on",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       [
         "Claude Code plugin: not turned on — --yes was given, so nothing was asked. To turn it on: npx paperlint init --plugin",
+        "Claude Code plugin (carries the skills and the hooks)",
       ],
       1,
     ],
