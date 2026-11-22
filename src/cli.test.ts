@@ -508,14 +508,18 @@ test("doctor reads the plugin where Claude Code is, and says nothing of it where
   const claude: ClaudeCode = {
     ...NO_CLAUDE,
     present: () => true,
-    plugin: (at) => (read.push(at), { enabled: true, version: null }),
+    plugin: (at) => (read.push(at), { enabled: true, version: "1.0.0" }),
   };
   const head = "Claude Code plugin (carries the skills and the hooks)";
   const on = (await cli(["doctor"], dir, { claude })).out.split("\n");
   const absent = (await cli(["doctor"], dir)).out.split("\n");
   assert.deepEqual(
-    [on.slice(on.indexOf(head), on.indexOf(head) + 2), read, absent.includes(head)],
-    [[head, "  ✓ on for this project"], [dir], false],
+    [
+      on.slice(on.indexOf(head), on.indexOf(head) + 2),
+      read,
+      absent.includes(head),
+    ],
+    [[head, "  ✓ on for this project, version 1.0.0"], [dir], false],
   );
 });
 

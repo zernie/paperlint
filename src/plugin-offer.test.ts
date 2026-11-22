@@ -55,37 +55,41 @@ describe("offerPlugin — the four paths the author named", () => {
   it("a human, Yes (Enter takes the preselected Yes): asked once, turned on", async () => {
     const claude = fakeClaude();
     const a = asking();
-    expect([await offerPlugin(ROOT, claude, a), a.asked, claude.enabled]).toEqual([
-      { kind: "enabled", how: RAN },
-      [PLUGIN_QUESTION],
-      [ROOT],
-    ]);
+    expect([
+      await offerPlugin(ROOT, claude, a),
+      a.asked,
+      claude.enabled,
+    ]).toEqual([{ kind: "enabled", how: RAN }, [PLUGIN_QUESTION], [ROOT]]);
   });
 
   it("a human, No: asked once, nothing turned on", async () => {
     const claude = fakeClaude();
     const a = asking({ reply: false });
-    expect([await offerPlugin(ROOT, claude, a), a.asked, claude.enabled]).toEqual([
-      { kind: "declined" },
-      [PLUGIN_QUESTION],
-      [],
-    ]);
+    expect([
+      await offerPlugin(ROOT, claude, a),
+      a.asked,
+      claude.enabled,
+    ]).toEqual([{ kind: "declined" }, [PLUGIN_QUESTION], []]);
   });
 
   it("no human, --plugin: nothing asked, turned on", async () => {
     const claude = fakeClaude();
     const a = asking({ interactive: false, flag: "plugin" });
-    expect([await offerPlugin(ROOT, claude, a), a.asked, claude.enabled]).toEqual([
-      { kind: "enabled", how: RAN },
-      [],
-      [ROOT],
-    ]);
+    expect([
+      await offerPlugin(ROOT, claude, a),
+      a.asked,
+      claude.enabled,
+    ]).toEqual([{ kind: "enabled", how: RAN }, [], [ROOT]]);
   });
 
   it("no human, no flag: nothing asked, nothing turned on, the reason kept", async () => {
     const claude = fakeClaude();
     const a = asking({ interactive: false, why: "stdout is not a terminal" });
-    expect([await offerPlugin(ROOT, claude, a), a.asked, claude.enabled]).toEqual([
+    expect([
+      await offerPlugin(ROOT, claude, a),
+      a.asked,
+      claude.enabled,
+    ]).toEqual([
       { kind: "not-asked", why: "stdout is not a terminal" },
       [],
       [],
@@ -119,18 +123,22 @@ describe("offerPlugin — the other ways it ends", () => {
   it("already on: nothing asked, its version kept", async () => {
     const claude = fakeClaude({ state: { enabled: true, version: "1.2.3" } });
     const a = asking();
-    expect([await offerPlugin(ROOT, claude, a), a.asked, claude.enabled]).toEqual([
-      { kind: "already", version: "1.2.3" },
-      [],
-      [],
-    ]);
+    expect([
+      await offerPlugin(ROOT, claude, a),
+      a.asked,
+      claude.enabled,
+    ]).toEqual([{ kind: "already", version: "1.2.3" }, [], []]);
   });
 
   it("Ctrl+C at the question, a prompt that fails, a missing prompts port, an enable that fails", async () => {
     const failing = fakeClaude({ enables: { ok: false, reason: "boom" } });
     expect([
       await offerPlugin(ROOT, fakeClaude(), asking({ reply: "cancel" })),
-      await offerPlugin(ROOT, fakeClaude(), asking({ reply: new Error("tty") })),
+      await offerPlugin(
+        ROOT,
+        fakeClaude(),
+        asking({ reply: new Error("tty") }),
+      ),
       await offerPlugin(ROOT, fakeClaude(), asking({ prompts: undefined })),
       await offerPlugin(ROOT, failing, asking({ flag: "plugin" })),
     ]).toEqual([
@@ -142,28 +150,54 @@ describe("offerPlugin — the other ways it ends", () => {
   });
 });
 
-describe("pluginOn and reportPlugin", () => {
-  const HEAD = [
-    "",
-    "Claude Code plugin (the skills and hooks, updated with paperlint)",
-  ];
-  const outcomes: readonly PluginOutcome[] = [
-    { kind: "no-claude" },
-    { kind: "cancelled" },
-    { kind: "not-asked", why: "CI is set" },
-    { kind: "no-plugin-flag" },
-    { kind: "declined" },
-    { kind: "failed", reason: "boom" },
-    { kind: "already", version: null },
-    { kind: "already", version: "1.2.3" },
-    { kind: "enabled", how: RAN },
-    {
-      kind: "enabled",
-      how: { ok: true, wrote: "/project/.claude/settings.json", owed: ["c1", "c2"] },
-    },
-  ];
+describe("offerPlugin — declared, not installed", () => {
+  it("declared in settings but not installed: nothing asked, the install runs again", async () => {
+    // The keys say yes, but Claude Code has no install on record: the settings alone load nothing.
+    const declared = { enabled: true, version: null } as const;
+    const human = fakeClaude({ state: declared });
+    const noHuman = fakeClaude({ state: declared });
+    const a = asking({ reply: false });
+    expect([
+      await offerPlugin(ROOT, human, a),
+      a.asked,
+      human.enabled,
+      await offerPlugin(ROOT, noHuman, asking({ interactive: false })),
+      noHuman.enabled,
+    ]).toEqual([
+      { kind: "enabled", how: RAN },
+      [],
+      ["/project"],
+      { kind: "enabled", how: RAN },
+      ["/project"],
+    ]);
+  });
+});
 
-  it("on only once enabled or already on", () => {
+const HEAD = [
+  "",
+  "Claude Code plugin (the skills and hooks, updated with paperlint)",
+];
+const outcomes: readonly PluginOutcome[] = [
+  { kind: "no-claude" },
+  { kind: "cancelled" },
+  { kind: "not-asked", why: "CI is set" },
+  { kind: "no-plugin-flag" },
+  { kind: "declined" },
+  { kind: "failed", reason: "boom" },
+  { kind: "already", version: "1.2.3" },
+  { kind: "enabled", how: RAN },
+  {
+    kind: "enabled",
+    how: {
+      ok: true,
+      wrote: "/project/.claude/settings.json",
+      owed: ["c1", "c2"],
+    },
+  },
+];
+
+describe("pluginOn and reportPlugin", () => {
+  it("on only once installed: already on, or turned on by running claude — written keys are not on", () => {
     expect(outcomes.map(pluginOn)).toEqual([
       false,
       false,
@@ -173,8 +207,7 @@ describe("pluginOn and reportPlugin", () => {
       false,
       true,
       true,
-      true,
-      true,
+      false,
     ]);
   });
 
@@ -187,9 +220,14 @@ describe("pluginOn and reportPlugin", () => {
         "Claude Code plugin: not turned on — CI is set, so nothing was asked. To turn it on: npx paperlint init --plugin",
       ],
       [...HEAD, "  · --no-plugin — nothing asked, nothing turned on"],
-      [...HEAD, "  · declined — `npx paperlint init --plugin` turns it on later"],
-      [...HEAD, "  ✗ not turned on — boom. `npx paperlint init --plugin` tries again"],
-      [...HEAD, "  ✓ already on for this project"],
+      [
+        ...HEAD,
+        "  · declined — `npx paperlint init --plugin` turns it on later",
+      ],
+      [
+        ...HEAD,
+        "  ✗ not turned on — boom. `npx paperlint init --plugin` tries again",
+      ],
       [...HEAD, "  ✓ already on for this project, version 1.2.3"],
       [...HEAD, "  ✓ ran claude a", "  ✓ ran claude b"],
       [

@@ -45,7 +45,10 @@ const denyList = (path: string): string => {
 /** Runs the gate with no `CLAUDE_PROJECT_DIR` unless `env` sets one. */
 const run = (
   args: readonly string[],
-  { script = SCRIPT, env = {} }: { script?: string; env?: Record<string, string> } = {},
+  {
+    script = SCRIPT,
+    env = {},
+  }: { script?: string; env?: Record<string, string> } = {},
 ) => {
   const inherited = Object.fromEntries(
     Object.entries(process.env).filter(([k]) => k !== "CLAUDE_PROJECT_DIR"),

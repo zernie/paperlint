@@ -144,10 +144,7 @@ test("doctor and the plugin: on, it carries the skills and hooks and names init'
   const none = withPlugin(null);
   const head = "Claude Code plugin (carries the skills and the hooks)";
   // A partly wired set fails the run without the plugin, and not with it: the plugin carries the hooks.
-  assert.deepEqual(
-    [on.code, off.code, none.code],
-    [0, 2, 2],
-  );
+  assert.deepEqual([on.code, off.code, none.code], [0, 2, 2]);
   assert.deepEqual(
     on.out.slice(on.out.indexOf(head), on.out.indexOf(head) + 4),
     [
@@ -179,7 +176,7 @@ test("doctor with the plugin on and settings that do not parse, or cannot be rea
       log: (s: string) => lines.push(s),
       run: () => ({ status: 0 }),
       cliPapers: join(root, "papers"),
-      plugin: { enabled: true, version: null },
+      plugin: { enabled: true, version: "1.0.0" },
       skillLinks: () => ({ ok: false, error: "not resolved" }),
     });
     const out = lines.join("\n").split("\n");
@@ -188,7 +185,7 @@ test("doctor with the plugin on and settings that do not parse, or cannot be rea
     );
     return [code, out.slice(at + 1, at + 3)];
   };
-  const quiet = [0, ["  ✓ on for this project", ""]];
+  const quiet = [0, ["  ✓ on for this project, version 1.0.0", ""]];
   assert.deepEqual(
     [
       onWith((root) => {

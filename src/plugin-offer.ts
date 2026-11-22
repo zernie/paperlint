@@ -13,6 +13,8 @@
  *   --no-plugin        never asked, never on.
  *   once it is on      init removes the skill links and hook entries IT made: kept beside the
  *                      plugin, every skill would be listed twice and every hook would run twice.
+ *                      "On" means installed. Keys written without `claude` are only declared: the
+ *                      old wiring stays, and the next init completes the install without asking.
  */
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { ClaudeCode, EnableResult } from "./ports/claude-code.ts";
@@ -24,7 +26,8 @@ export type PluginFlag = "plugin" | "no-plugin" | null;
 export type PluginOutcome =
   | { readonly kind: "no-claude" }
   | { readonly kind: "no-plugin-flag" }
-  | { readonly kind: "already"; readonly version: string | null }
+  /** Declared AND installed: Claude Code has an install of this version on record. */
+  | { readonly kind: "already"; readonly version: string }
   | {
       readonly kind: "enabled";
       readonly how: Exclude<EnableResult, { readonly ok: false }>;
@@ -72,8 +75,11 @@ export async function offerPlugin(
   if (!claude || (!claude.present(root) && asking.flag !== "plugin"))
     return { kind: "no-claude" };
   const state = claude.plugin(root);
-  if (state.enabled) return { kind: "already", version: state.version };
-  const stop = await decided(asking);
+  if (state.enabled && state.version !== null)
+    return { kind: "already", version: state.version };
+  // Declared but not installed (the keys were written where `claude` was not on PATH): the project
+  // already said yes, so nothing is asked again; enabling now completes the install.
+  const stop = state.enabled ? null : await decided(asking);
   if (stop !== null) return stop;
   const how = claude.enable(root);
   return how.ok
@@ -81,9 +87,12 @@ export async function offerPlugin(
     : { kind: "failed", reason: how.reason };
 }
 
-/** The plugin is on once init is done: the old links and hook entries then go. */
+/**
+ * The plugin is on once Claude Code has installed it: the old links and hook entries then go. Keys
+ * written without `claude` load nothing, so until the owed commands run the old wiring stays.
+ */
 export const pluginOn = (o: PluginOutcome): boolean =>
-  o.kind === "already" || o.kind === "enabled";
+  o.kind === "already" || (o.kind === "enabled" && "ran" in o.how);
 
 const AGAIN = "`npx paperlint init --plugin`";
 
@@ -107,10 +116,7 @@ export function reportPlugin(o: PluginOutcome): readonly string[] {
   if (o.kind === "failed")
     return [...head, `  ✗ not turned on — ${o.reason}. ${AGAIN} tries again`];
   if (o.kind === "already")
-    return [
-      ...head,
-      `  ✓ already on for this project${o.version === null ? "" : `, version ${o.version}`}`,
-    ];
+    return [...head, `  ✓ already on for this project, version ${o.version}`];
   return "ran" in o.how
     ? [...head, ...o.how.ran.map((c) => `  ✓ ran ${c}`)]
     : [
