@@ -220,7 +220,13 @@ describe("a built paper whose files are clean", () => {
     expect({ code, out }).toEqual({
       code: 0,
       // The root file that turns the writing set on is named first, as every found config is.
-      out: ["config: paperlint.json", "✓ 3 file(s) checked, no findings"],
+      // A clean run is the one result a reader could take as a guarantee, so it, and only it,
+      // carries the README's reminder (a run with findings speaks for itself; --json never).
+      out: [
+        "config: paperlint.json",
+        "✓ 3 file(s) checked, no findings",
+        "  Check the venue's own call before you submit: a call can change between editions, and a check can miss a case.",
+      ],
     });
   });
 });

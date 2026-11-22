@@ -2921,6 +2921,10 @@ export async function lintText(
 /** The formatter `paperlint lint` prints with. */
 const LINT_FORMAT = "stylish";
 
+/** Printed under a clean `lint`, the README's disclaimer in one line. */
+const CLEAN_RUN_REMINDER =
+  "Check the venue's own call before you submit: a call can change between editions, and a check can miss a case.";
+
 /**
  * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
  * decide the exit code. Pulled out of `run` so each question has its own function.
@@ -2978,12 +2982,16 @@ async function reportLint(
     // short. The reverse order would read as "all clean — oh, and also this".
     if (structure.length > 0) log(formatStructure(structure));
     const out = await (await eslint.loadFormatter(LINT_FORMAT)).format(results);
+    const clean = out.trim() === "" && structure.length === 0;
     log(
       out.trim() ||
-        (structure.length > 0
-          ? ""
-          : `✓ ${String(results.length)} file(s) checked, no findings`),
+        (clean
+          ? `✓ ${String(results.length)} file(s) checked, no findings`
+          : ""),
     );
+    // A clean run is the one result a reader could take as a guarantee, so it, and only it,
+    // carries the README's reminder. Findings speak for themselves; --json is for machines.
+    if (clean) log(`  ${CLEAN_RUN_REMINDER}`);
   }
   if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
   // Warnings fail the run only when the threshold is named EXPLICITLY. A negative threshold means

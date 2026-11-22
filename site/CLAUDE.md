@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:04a04ceff51d6650 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:903762a91abaa0c7 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -6,7 +6,7 @@
 
 paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
 `site/package.json` and lock, so the npm package carries none of it. `site/src/shared/lib/readme/content.ts` reads
-the install commands, the lint output, the venue table and the disclaimer from the README at build time, and
+the per-paper commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
 tree from `docs/layout.md` the same way, and `site/src/shared/lib/readme/venues.ts` groups the shipped venues by field
 from `docs/venues.md`. `site/src/entities/finding/model/findings.ts` quotes each finding the
@@ -24,9 +24,9 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 **Guidance only** — The page must read as a dependable tool to a working scientist, never as AI marketing. No sparkles, glow, decorative gradients, stock icons or emoji; no 'AI-powered', 'magic' or 'effortless'. Every block shows something real: a command, a real finding, a real file. Many researchers distrust AI tools, and one slop signal costs the reader's trust in the linter.
 
-### The Linter Only
+### The Linter First
 
-**Guidance only** — The site sells the linter and the paper folder. The Claude Code skills, the hooks and anything agent-shaped are not mentioned on it, nor linked from it, until the author decides otherwise.
+**Guidance only** — The main page sells the linter and the paper folder, and never describes the skills, the hooks or anything agent-shaped. The optional Claude Code plugin is described in one place, `/integrations`, linked from the Install section and the header, and written for a researcher who distrusts AI tools: the linter is deterministic and sends nothing to a model, the plugin is optional and for people who already use Claude Code, first that it is opt-in and off until turned on, then one edit replayed with the lint-edited hook's real output (held by `src/lint-edited-site-example.test.ts`; the ask, the edit and the fix are labelled an example), then what else it adds, that `paperlint lint` reports the same findings with it and its hooks call no model, and how to turn it on. Its copy states facts plainly, without the 'not X but Y' pattern. The product is named 'Claude Code', plainly. The author decided this on 2026-11-22.
 
 ### Modern Not 2010
 
@@ -38,11 +38,11 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### The Journey
 
-**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, an index of the four stops on the left and the open stop's plate on the right; on a phone each stop opens in place. One stop is open at a time, and they are never collapsed into one plain list. Findings appear only here. The author chose this index on 2026-11-19, on the quiet stone ground; what was rejected is in `site/DESIGN.md`.
+**Guidance only** — The four checks are four stops on one road, each with its own real example: desk-reject checks, folder structure, measurements, prose, in that order (the default set first, the opt-in last). From a tablet up, an index of the four stops on the left and the open stop's plate on the right; on a phone each stop opens in place. One stop is open at a time, and they are never collapsed into one plain list. A click or the keyboard opens a stop; with a mouse (a fine pointer that can hover), resting on an entry for 120 ms opens it too, and a quick pass-over does not, so sweeping across the index does not flicker; touch keeps tap-to-open; under reduced motion the page switches without the fade. `site/test/browser/journey.browser.ts` holds both halves (the author, 2026-11-22). Findings appear only here. The author chose this index on 2026-11-19, on the quiet stone ground; what was rejected is in `site/DESIGN.md`.
 
 ### A Short Page
 
-**Guidance only** — The page is about four screens on a desktop: hero, the road, the venues, the questions, the footer. Everything past the first look is folded: a stop's panel, the exact terminal output, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for this on 2026-11-19, when the page measured 11 screens; a section that adds a screen needs a screenshot and the author's yes.
+**Guidance only** — The page stays short: hero, the road, install, the venues, the questions, the footer. Code and terminal output are shown open, never folded (the author, 2026-11-22). What is folded is prose past the first look: a stop's panel, a venue's limits, each question's answer, a term's meaning (dotted underline, opens on hover or tap). The author asked for about four screens on a desktop on 2026-11-19, when the page measured 11; a section that adds a screen needs a screenshot and the author's yes.
 
 ### Subtract First
 
@@ -54,7 +54,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### No Promise Beyond The Readme
 
-**Guidance only** — The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant': the README calls paperlint an aid, not a guarantee, and the page shows that sentence, read from the README.
+**Guidance only** — The promise is that paperlint catches what gets a paper desk-rejected, before you submit. Never 'no desk reject', 'guaranteed' or 'compliant'. The README asks the author to check the venue's own call before submitting and says a check can miss a case; the page shows that quote, read from the README.
 
 ### Only What Ships
 
@@ -62,7 +62,7 @@ below were decided with the author on 2026-11-19, over eight rounds of screensho
 
 ### Not Scary For Non Programmers
 
-**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is folded underneath; a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19.
+**Guidance only** — Many readers are scientists who do not program. Every command and every piece of terminal output comes after plain words: a finding is first a card that says what is wrong with the paper and what to do ('Seven pages of body; AIDC short papers allow six'), and the exact output is shown open underneath, in a soft stone panel (file and line muted, 'error' in the error colour, 'warning' in the warn colour, the rule id muted); a command carries a one-line caption of what it does and a Copy button. A block of code with no plain sentence before it is a defect. The author asked for this on 2026-11-19, and for open code on 2026-11-22.
 
 ### Say Latex And Peer Review
 

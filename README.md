@@ -32,10 +32,9 @@ before you submit.** It comes in two parts:
 - 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
 
-> ⚠️ **An aid, not a guarantee.** A clean run does not mean your paper meets the venue's rules:
-> presets are transcribed from calls for papers that change, and any check can miss something.
-> Check against the venue's own call and template. Provided "as is", without warranty — see
-> [LICENSE](LICENSE).
+> ⚠️ **Check the venue's own call before you submit.** paperlint's venue rules are transcribed by hand
+> from each call for papers, and a call can change between editions. A check can also miss a case.
+> Provided "as is", without warranty — see [LICENSE](LICENSE).
 
 ## Contents
 
