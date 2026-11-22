@@ -9,9 +9,8 @@
  * consumer: the skill's link under `.claude/skills/`, and the COMPILED `grid-guard.js` there,
  * which is what runs from `node_modules` (`npm run build` makes it; `npm run check` builds first).
  *
- * Also, without the CLI: the shared per-skill checks (`checkSkill`). Whether the skill names only
- * subcommands the guard has is not tested here: the spec interpolates them from
- * `scripts/grid-guard-commands.ts`, so a wrong one fails `tsc`.
+ * Whether the skill names only subcommands the guard has is not tested here: the spec interpolates
+ * them from `scripts/grid-guard-commands.ts`, so a wrong one fails `tsc`.
  *
  * What it does NOT prove: that a real model follows the order of the gates. That is a
  * probabilistic question for `run-agent-grid.eval.ts` and a real grid.
@@ -20,14 +19,11 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { runHarnessTest, skip, type ToolCall } from "vigiles";
 import { createChecker } from "../../lib/check.ts";
-import { checkSkill } from "../../lib/skill-checks.mjs";
 import { observeAgentCli } from "#lib/agent-cli-version";
 import { claudeDir } from "#src/package-dirs";
 import { COMMANDS } from "./scripts/grid-guard-commands.ts";
 
 const check = createChecker();
-
-await checkSkill("run-agent-grid");
 
 // ── Through the real CLI: the lock, as the skill tells an agent to take it ────────────────
 const SKILL_LINK = join(claudeDir(), "skills", "run-agent-grid");

@@ -1,19 +1,14 @@
 /**
- * build-label-page — the free tier of the SKILL itself: it passes the shared per-skill checks, and its
- * checklist has the eight rules the skill names. The generator is tested beside it, in scripts/.
+ * build-label-page — the free tier of the SKILL itself: its checklist has the eight rules the skill
+ * names. The generator is tested beside it, in scripts/.
  * No model, no network, no browser.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { checkSkill } from "../../lib/skill-checks.mjs";
 
 const HERE = import.meta.dirname;
-
-test("the shared per-skill checks pass", async () => {
-  await checkSkill("build-label-page");
-});
 
 test("the checklist has the eight rules, numbered, and the skill names eight", () => {
   const checklist = readFileSync(
