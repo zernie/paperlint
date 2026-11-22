@@ -38,8 +38,15 @@ import {
   toolchainTex,
 } from "./cli.ts";
 import { texInputsDir } from "./package-dirs.ts";
+import type { ClaudeCode } from "./ports/claude-code.ts";
 
 const root = useTempDir("cli-test-");
+
+const NO_CLAUDE: ClaudeCode = {
+  present: () => false,
+  plugin: () => ({ enabled: false, version: null }),
+  enable: () => assert.fail("no test here turns the plugin on for real"),
+};
 
 /**
  * `run(argv)` from `cwd`, the output as one string per stream. Its clock stands still, so `lint`'s
@@ -51,7 +58,7 @@ async function cli(
   cwd: string,
   deps: Pick<
     NonNullable<Parameters<typeof run>[1]>,
-    "loadTexLanguage" | "install"
+    "loadTexLanguage" | "claude" | "install"
   > = {},
 ) {
   const out: string[] = [];
@@ -66,6 +73,8 @@ async function cli(
       command: (_root, spec) => ["npm", spec],
       run: () => ({ ok: true }),
     },
+    // …nor finds Claude Code, unless a test hands one: the offer itself is `src/plugin-offer.test.ts`'s.
+    claude: NO_CLAUDE,
     ...deps,
   });
   return { code, out: out.join("\n"), err: err.join("\n") };
@@ -492,6 +501,28 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   );
 });
 
+test("doctor reads the plugin where Claude Code is, and says nothing of it where it is not", async () => {
+  const dir = join(root, "doctor-plugin");
+  writeTree(dir, { "paperlint.json": "{}" });
+  const read: string[] = [];
+  const claude: ClaudeCode = {
+    ...NO_CLAUDE,
+    present: () => true,
+    plugin: (at) => (read.push(at), { enabled: true, version: "1.0.0" }),
+  };
+  const head = "Claude Code plugin (carries the skills and the hooks)";
+  const on = (await cli(["doctor"], dir, { claude })).out.split("\n");
+  const absent = (await cli(["doctor"], dir)).out.split("\n");
+  assert.deepEqual(
+    [
+      on.slice(on.indexOf(head), on.indexOf(head) + 2),
+      read,
+      absent.includes(head),
+    ],
+    [[head, "  ✓ on for this project, version 1.0.0"], [dir], false],
+  );
+});
+
 test("doctor reads a broken config as 'the CLI would lint nothing' instead of stopping", async () => {
   const dir = join(root, "doctor-broken");
   writeTree(dir, { "paperlint.json": "{ not json" });
@@ -751,6 +782,61 @@ test("init with no path sets up the current directory, and its first paper is pa
   for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
     assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
   assert.equal(made.includes("main.tex"), false);
+});
+
+test("init --plugin turns the plugin on without a terminal; --no-plugin never asks; neither, one line", async () => {
+  const on: string[] = [];
+  const claude: ClaudeCode = {
+    present: () => true,
+    // Installed once both commands ran, as Claude Code then reads it.
+    plugin: (at) =>
+      on.includes(at)
+        ? { enabled: true, version: "1.0.0" }
+        : { enabled: false, version: null },
+    enable: (at) => (on.push(at), { ok: true, ran: ["claude x"] }),
+  };
+  const run = async (flag: string[]) => {
+    const dir = writeTree(join(root, `offer${flag.join("")}`), {
+      "package.json": "{}",
+    });
+    const out = (await cli(["init", "--yes", ...flag], dir, { claude })).out;
+    return out
+      .split("\n")
+      .filter(
+        (l) =>
+          l.startsWith("Claude Code plugin") ||
+          l.startsWith("  · --no-plugin") ||
+          l.startsWith("skills and hooks (") ||
+          l === "  ✓ ran claude x",
+      );
+  };
+  // Each run ends with init's own doctor check, which reads the plugin as `paperlint doctor` does.
+  assert.deepEqual(
+    [
+      await run(["--plugin"]),
+      await run(["--no-plugin"]),
+      await run([]),
+      on.length,
+    ],
+    [
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  ✓ ran claude x",
+        "skills and hooks (the plugin carries them now)",
+        "Claude Code plugin (carries the skills and the hooks)",
+      ],
+      [
+        "Claude Code plugin (the skills and hooks, updated with paperlint)",
+        "  · --no-plugin — nothing asked, nothing turned on",
+        "Claude Code plugin (carries the skills and the hooks)",
+      ],
+      [
+        "Claude Code plugin: not turned on — --yes was given, so nothing was asked. To turn it on: npx paperlint init --plugin",
+        "Claude Code plugin (carries the skills and the hooks)",
+      ],
+      1,
+    ],
+  );
 });
 
 test("init's step 0 that fails stops the run with 2: init itself never starts", async () => {

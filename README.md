@@ -82,8 +82,8 @@ edition, and what is not shipped yet (USENIX, ICLR, IJCAI, Springer …): [`docs
 
 1. Install and set up, in one command (Node 22.13 or newer). `init` adds paperlint to your
    project's devDependencies, then asks where your papers live (default `papers/`), whether to
-   install TeX Live now, and whether to add a CI workflow; with Claude Code it also installs the
-   skills and four hooks ([what they do](docs/install.md)).
+   install TeX Live now, and whether to add a CI workflow; with Claude Code it offers the optional
+   plugin with the skills and hooks ([what they do](docs/install.md#the-claude-code-plugin)).
 
    ```sh
    npx paperlint init

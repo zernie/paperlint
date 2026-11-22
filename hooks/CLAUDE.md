@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:0407b53b2036133e compiled from hooks/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:9ad080d516729f5e compiled from hooks/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -27,7 +27,7 @@ would undo it.
 
 ### One Wiring File
 
-**Guidance only** — The wiring is `plugin/hooks/hooks.json`. `paperlint init` merges it into the consumer's `.claude/settings.json`; there is no second copy.
+**Guidance only** — The wiring is `plugin/hooks/hooks.json`. The Claude Code plugin ships it as its hooks, and `paperlint init` without the plugin merges it into the consumer's `.claude/settings.json`; there is no second copy.
 
 ### Vigiles Moves With The Consumer
 

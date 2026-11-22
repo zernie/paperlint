@@ -34,6 +34,7 @@ import {
   readlinkSync,
   realpathSync,
   symlinkSync,
+  unlinkSync,
 } from "node:fs";
 /* eslint-enable boundaries/dependencies */
 import { createRequire } from "node:module";
@@ -267,6 +268,39 @@ export function linkSkills(
     home,
     ...linkAll(shipped, { spelledSkills, home, write, fs }),
   };
+}
+
+/**
+ * Removes the links `init` made — each entry that is a link and leads to the shipped skill — once the
+ * Claude Code plugin carries the skills. Anything else of the same name is the project's, and stays.
+ */
+export function unlinkSkills(
+  project: string,
+  {
+    locate = locatePackage,
+    fs = nodeLinkFs,
+    remove = unlinkSync,
+  }: {
+    readonly locate?: (p: string) => Located;
+    readonly fs?: LinkFs;
+    readonly remove?: (path: string) => void;
+  } = {},
+):
+  | { readonly ok: true; readonly removed: readonly string[] }
+  | { readonly ok: false; readonly error: string } {
+  const report = linkSkills(project, { write: false, locate, fs });
+  if (!report.ok) return report;
+  const removed = report.links
+    .filter(
+      (l) =>
+        l.status === "present" &&
+        fs.lstatSync(join(report.home, l.name)).isSymbolicLink(),
+    )
+    .map((l) => l.name);
+  removed.forEach((name) => {
+    remove(join(report.home, name));
+  });
+  return { ok: true, removed };
 }
 
 /** Every shipped skill's link, and the first one's target as the report's example. */

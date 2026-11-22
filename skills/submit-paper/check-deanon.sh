@@ -8,7 +8,7 @@
 # every artifact file (including inside artifact.zip) so "anonymized" is a checked
 # fact. Sibling to render-paper/check-render.sh. Spirit: prose isn't policy.
 #
-# Usage:  check-deanon.sh <paper-dir> [pdf=paper.pdf] [denylist=<skill>/deanon-denylist.txt]
+# Usage:  check-deanon.sh <paper-dir> [pdf=paper.pdf] [denylist=<project>/.paperlint/deanon-denylist.txt]
 #   It auto-scans, in <paper-dir>: the PDF text, everything under artifact/ (if present),
 #   and the contents of any *.zip (artifact bundles). Pass extra paths after the
 #   denylist arg to scan additional dirs/zips.
@@ -22,11 +22,26 @@ set -uo pipefail
 DIR="${1:?usage: check-deanon.sh <paper-dir> [pdf=paper.pdf] [denylist=...] [extra-paths...]}"
 PDF="${2:-paper.pdf}"
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DENY="${3:-$SKILL_DIR/deanon-denylist.txt}"
+NAMED_DENY="${3:-}"
 shift $(( $# >= 3 ? 3 : $# ))
 EXTRA=("$@")
 
 [ -d "$DIR" ]  || { echo "FAIL: no dir $DIR"; exit 2; }
+
+# The deny-list is the AUTHOR's data, so it lives in their project, never in this package: under
+# the Claude Code plugin this script runs from the plugin's own folder. The project is
+# $CLAUDE_PROJECT_DIR, else the git repository that holds <paper-dir>. Order: the list named as
+# the third argument, then <project>/.paperlint/deanon-denylist.txt, then a list beside this
+# script (the older place, when the skill was linked into .claude/skills/).
+ROOT="${CLAUDE_PROJECT_DIR:-$(git -C "$DIR" rev-parse --show-toplevel 2>/dev/null || true)}"
+PROJECT_DENY="${ROOT:-<project>}/.paperlint/deanon-denylist.txt"
+if [ -n "$NAMED_DENY" ]; then DENY="$NAMED_DENY"
+elif [ -n "$ROOT" ] && [ -f "$PROJECT_DENY" ]; then DENY="$PROJECT_DENY"
+elif [ -f "$SKILL_DIR/deanon-denylist.txt" ]; then DENY="$SKILL_DIR/deanon-denylist.txt"
+else
+  echo "FAIL: no deny-list. Write your identifiers, one extended regex per line, to $PROJECT_DENY"
+  exit 2
+fi
 [ -f "$DENY" ] || { echo "FAIL: no deny-list $DENY"; exit 2; }
 
 # Build the active pattern (strip comments/blanks).

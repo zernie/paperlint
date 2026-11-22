@@ -35,7 +35,10 @@ import {
 } from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
-import { doctorHooks } from "./hooks-settings.ts";
+import { doctorHooks, initWiredHooks } from "./hooks-settings.ts";
+import { pluginLines } from "./doctor-plugin.ts";
+import { installedPluginVersion } from "./plugin-offer.ts";
+import type { PluginState } from "./ports/claude-code.ts";
 import { messageOf } from "./domain/text.ts";
 import { fieldOf } from "./domain/record.ts";
 
@@ -240,6 +243,61 @@ function papersVerdict(
   return { lines: out, bad };
 }
 
+/** The hooks init's own commands run; none when they cannot be read (the plugin carries them anyway). */
+function oldHooksOf(root: string): readonly string[] {
+  try {
+    return initWiredHooks(root);
+  } catch {
+    return [];
+  }
+}
+
+/** init's skill links that lead to the shipped skill. */
+const presentLinks = (links: LinkReport): readonly string[] =>
+  links.ok
+    ? links.links.filter((l) => l.status === "present").map((l) => l.name)
+    : [];
+
+/** The skills section; the plugin, when it is on, carries them. */
+function skillsLines(links: LinkReport, on: boolean): readonly string[] {
+  const head = `skills (Claude Code finds project skills only in ${SKILLS_HOME}/)`;
+  if (on) return [head, `  ✓ carried by the plugin`];
+  if (!links.ok) return [head, `  ⚠ not checked — ${links.error}`];
+  const gaps = links.links.filter((l) => l.status !== "present");
+  const total = String(links.links.length);
+  const as = join(SKILLS_HOME, "<name>");
+  return gaps.length === 0
+    ? [head, `  ✓ all ${total} shipped skills are reachable as ${as}`]
+    : [
+        head,
+        `  ⚠ ${String(gaps.length)} of ${total} shipped skills are NOT reachable as ${as}:`,
+        ...gaps.map(
+          (g) =>
+            `      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`,
+        ),
+        `      \`npx paperlint init\` links the missing ones; it never replaces an entry it did not make`,
+      ];
+}
+
+/**
+ * 🔴 THE HOOKS ARE READ FROM THE FILE THAT CARRIES THEM. Until `init` wrote them into
+ * `.claude/settings.json`, the only carrier was a plugin and this section said "cannot be checked
+ * from a terminal". Hooks wired NOT AT ALL are advisory, like the skills: `--no-hooks` is a choice,
+ * not a fault. Partly wired, or wired twice, is a fault and fails the run — unless the plugin is on,
+ * which carries them.
+ */
+function hooksSection(
+  root: string,
+  on: boolean,
+): { readonly lines: readonly string[]; readonly bad: number } {
+  if (on) return { lines: [`hooks`, `  ✓ carried by the plugin`], bad: 0 };
+  try {
+    return doctorHooks(root);
+  } catch (e) {
+    return { lines: [`hooks`, `  ⚠ not checked — ${messageOf(e)}`], bad: 0 };
+  }
+}
+
 export interface DoctorOptions {
   log?: typeof console.log;
   cwd?: string;
@@ -250,6 +308,10 @@ export interface DoctorOptions {
   cliPapers?: string | null;
   /** Reads the skill links without writing any. Injected only so a test can fake the install. */
   skillLinks?: (root: string) => LinkReport;
+  /** The Claude Code plugin in this project, as the CLI read it; null where Claude Code is not. */
+  plugin?: PluginState | null;
+  /** The installed paperlint's version, compared with the plugin's; null skips the comparison. */
+  installed?: string | null;
 }
 
 /**
@@ -267,6 +329,8 @@ export function doctor({
   run = spawnSync,
   cliPapers = null,
   skillLinks = (r: string) => linkSkills(r, { write: false }),
+  plugin = null,
+  installed = null,
 }: DoctorOptions = {}): number {
   const root = projectDir ?? cwd;
   const configPath = join(root, CONFIG_FILE);
@@ -301,32 +365,24 @@ export function doctor({
   // work without it, and an entry of the same name that `init` refused to replace is the
   // consumer's own decision. What this section removes is the silence — before it, a consumer
   // without links had no `/paper-pipeline` and nothing anywhere said so.
-  out.push(
-    "",
-    `skills (Claude Code finds project skills only in ${SKILLS_HOME}/)`,
-  );
   const links = skillLinks(root);
-  if (!links.ok) out.push(`  ⚠ not checked — ${links.error}`);
-  else {
-    const gaps = links.links.filter((l) => l.status !== "present");
-    const total = String(links.links.length);
-    if (gaps.length === 0)
-      out.push(
-        `  ✓ all ${total} shipped skills are reachable as ${join(SKILLS_HOME, "<name>")}`,
-      );
-    else {
-      out.push(
-        `  ⚠ ${String(gaps.length)} of ${total} shipped skills are NOT reachable as ${join(SKILLS_HOME, "<name>")}:`,
-      );
-      for (const g of gaps)
-        out.push(
-          `      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`,
-        );
-      out.push(
-        `      \`npx paperlint init\` links the missing ones; it never replaces an entry it did not make`,
-      );
-    }
-  }
+  // Without Claude Code there is no plugin to speak of, so no section at all.
+  const on = installedPluginVersion(plugin ?? null) !== null;
+  out.push(
+    ...(plugin
+      ? [
+          "",
+          ...pluginLines({
+            state: plugin,
+            installed,
+            oldLinks: presentLinks(links),
+            oldHooks: on ? oldHooksOf(root) : [],
+          }),
+        ]
+      : []),
+    "",
+    ...skillsLines(links, on),
+  );
 
   out.push(
     "",
@@ -344,14 +400,9 @@ export function doctor({
   // `.claude/settings.json`, the only carrier was a plugin and this section said "cannot be
   // checked from a terminal". Hooks wired NOT AT ALL are advisory, like the skills: `--no-hooks`
   // is a choice, not a fault. Partly wired, or wired twice, is a fault and fails the run.
-  out.push("");
-  try {
-    const hooks = doctorHooks(root);
-    out.push(...hooks.lines);
-    bad += hooks.bad;
-  } catch (e) {
-    out.push(`hooks`, `  ⚠ not checked — ${messageOf(e)}`);
-  }
+  const hooks = hooksSection(root, on);
+  out.push("", ...hooks.lines);
+  bad += hooks.bad;
   out.push("");
   log(out.join("\n"));
   return bad > 0 ? 2 : 0;
