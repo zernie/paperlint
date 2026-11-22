@@ -29,6 +29,20 @@ export const render = (f: Finding): string =>
     .replace(/\{\{(\w+)\}\}/g, (whole, key: string) => f.values[key] ?? whole)
     .replace(/\$\{s\.(\w+)\}/g, (whole, key: string) => f.values[key] ?? whole);
 
+export const citeExists: Finding = {
+  rule: "paper/cite-exists",
+  level: "error",
+  title: "A reference that does not exist",
+  plain:
+    "The DOI of smith2025agents leads nowhere: the DOI authority has no such work. Correct the DOI, or drop the reference if the work was never published.",
+  template: "`{{key}}` does not resolve to the work cited — {{why}}",
+  values: {
+    key: "smith2025agents",
+    why: "RESOLVED_TO_NOTHING: DOI 10.1145/3700000.0000001 does not resolve at the DOI authority (doi.org handle responseCode 100 = not found) — fabrication evidence",
+  },
+  source: "src/reference-rules.ts",
+};
+
 export const pageLimit: Finding = {
   rule: "format/page-limit",
   level: "error",
@@ -81,4 +95,10 @@ export const prose: Finding = {
   source: "src/readability.ts",
 };
 
-export const all: readonly Finding[] = [pageLimit, folder, study, prose];
+export const all: readonly Finding[] = [
+  citeExists,
+  pageLimit,
+  folder,
+  study,
+  prose,
+];

@@ -1,5 +1,6 @@
 export {
   all,
+  citeExists,
   folder,
   pageLimit,
   prose,

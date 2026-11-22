@@ -16,7 +16,7 @@ describe("facts", () => {
   it("states the count and the licence it is given, and the three backed facts", () => {
     expect(facts(19, "MIT")).toEqual([
       { word: "19", label: "venue presets", tone: "accent" },
-      { word: "Offline", label: "checks run on your computer", tone: "sage" },
+      { word: "References", label: "every entry looked up", tone: "sage" },
       { word: "No AI", label: "needed", tone: "ink" },
       { word: "Free", label: "MIT licence", tone: "sand" },
     ]);
@@ -36,12 +36,10 @@ describe("facts", () => {
     expect(facts(venueCount(grid), "MIT")[0]?.word).toBe(String(shown.length));
   });
 
-  it("is still backed: lint runs offline, no AI, the MIT licence", () => {
+  it("is still backed: every reference looked up, no AI, the MIT licence", () => {
     const readme = read("README.md");
-    expect(readme).toMatch(/\|\s*`paperlint lint`\s*\|/);
-    expect(readme).toMatch(/judges what build recorded:[^|\n]*; offline \|/);
     expect(read("docs/references.md")).toContain(
-      "`paperlint lint` then reports what the check found,\noffline.",
+      "`paperlint build` checks every entry of a paper's bibliography against the services that know\nabout published work",
     );
     expect(readme).toContain("a command-line tool, no AI needed.");
     expect(

@@ -2,6 +2,7 @@ import {
   explainOutput,
   folder,
   FindingRow,
+  citeExists,
   pageLimit,
   prose,
   render,
@@ -107,15 +108,18 @@ const stops: readonly Stop[] = [
     title: "The venue's hard rules",
     text: (
       <>
-        The page limit for your kind of paper, the template, fonts, page size
-        and columns, a required section, and no author names in a{" "}
+        Every reference, looked up in public catalogues to show it exists. The
+        page limit for your kind of paper, the template, fonts, page size and
+        columns, a required section, and no author names in a{" "}
         <Term means={glossary.doubleBlind}>double-blind</Term> PDF. One build,
         and every check reads it.
       </>
     ),
     badge: "On by default",
     on: true,
-    example: <Example findings={[...firstRun, asRow(pageLimit)]} />,
+    example: (
+      <Example findings={[asRow(citeExists), ...firstRun, asRow(pageLimit)]} />
+    ),
   },
   {
     n: "02",
