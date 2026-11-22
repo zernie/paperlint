@@ -8,6 +8,7 @@ import { memoryFiles } from "../src/adapters/memory/index.ts";
 import { nodeFiles } from "../src/adapters/node/index.ts";
 import { sourcesCodec } from "../src/adapters/sources-record/index.ts";
 import { ok, type Result } from "../src/domain/result.ts";
+import { lintSummary, submissionLint } from "../src/domain/submission-lint.ts";
 import { sha256Hex } from "../src/domain/sha256.ts";
 import {
   type CreateOutcome,
@@ -23,7 +24,11 @@ import { presetsDir } from "../src/package-dirs.ts";
 import { type Files } from "../src/ports/files.ts";
 import { type LatexReader } from "../src/ports/latex.ts";
 import { type SubmissionPortal } from "../src/ports/submission-portal.ts";
-import { runSubmission, type SubmissionArgs } from "../src/submission.ts";
+import {
+  runSubmission,
+  type SubmissionArgs,
+  type SubmissionDeps,
+} from "../src/submission.ts";
 import { lintText } from "../src/cli.ts";
 import { parseYaml } from "../src/adapters/yaml/index.ts";
 import { venuePreset } from "./support.ts";
@@ -182,6 +187,7 @@ export const fakePortal = (answers: {
 
 /** What `new` and `update` print when the venue rules find nothing in the PDF they send. */
 export const NO_ERRORS = "venue rules at their default options: no errors";
+export const CLEAN_LINT = lintSummary(submissionLint([], null));
 
 /** The line `update` prints before it sends `pdf`, naming `call`. */
 export const CHECK = (pdf: string, call: string): string =>
@@ -205,6 +211,7 @@ export async function run(
     readonly portal?: ReturnType<typeof fakePortal>;
     readonly cwd?: string;
     readonly latex?: LatexReader;
+    readonly lintPaper?: SubmissionDeps["lintPaper"];
   } = {},
 ) {
   const out: string[] = [];
@@ -225,6 +232,8 @@ export async function run(
       latex: o.latex ?? latexReader,
       codec: sourcesCodec,
       lintText,
+      lintPaper:
+        o.lintPaper ?? (() => Promise.resolve(ok(submissionLint([], null)))),
       yaml: parseYaml,
       now: () => "2026-10-23T16:58:01.000Z",
       log: (l) => out.push(l),

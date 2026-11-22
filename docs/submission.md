@@ -142,8 +142,10 @@ Without `--save` it is a dry run. It prints the portal's verdict and its message
 portal would not take the change. Before sending, it asks you to open that exact PDF and check it
 against the venue's call for papers.
 
-The safe order: `new`, `new --save` once; then `show`, `update`, `update --save`, and `show` again
-until it says `match yes`. Every `--save` comes after the author has read the dry run and said yes.
+Run `new`, then `new --save` once, and check `show`. Use `update --save` to save changes and
+`update --submit --save` when the HotCRP submission is ready for review. Check `show` for both
+`status submitted` and `match yes`. A matching PDF can still be on a draft. The deadline reminder for
+drafts is tracked in [#601](https://github.com/zernie/paperlint/issues/601).
 
 ## Reading the answers
 
@@ -200,16 +202,25 @@ rejection is unanswered. And, in a paper that keeps `cycles`, `--save` when the 
 build, because the PDF and the source on disk would no longer be a pair to freeze; rebuild
 (`paperlint build`) and run the dry run again. A paper with an approved copy has a fourth: `--save`
 when the source differs from `versions/<cycle>/approved.tex`: what is sent is what was approved, so
-approve it (`paperlint versions approve`) or restore it. The dry run prints the same line. Everything
-else, including over the limit, is the person's call.
+approve it (`paperlint versions approve`) or restore it. The dry run prints the same line.
+
+Before contacting the portal, `new` and `update` also run the same lint as `paperlint lint <paper>`,
+including the paper and project configuration. The report puts abstract and introduction warnings
+first. Errors block `--save` with exit 2. A dry run reports them and still asks the portal to validate
+the request.
+
+To proceed with known lint errors, add `--allow-lint-errors "<reason>"` to `new --save` or
+`update --save`. The report and reason are printed. This applies to reported lint errors. A lint
+that could not finish and the existing submission checks still block the save.
 
 **The `submission-confirm` hook** (installed by `paperlint init`) stops any `submission new|update`
 with `--save` or `--submit` until the person has said yes to that exact PDF in that exact folder. The flow:
 
-1. Run the dry run (the same command without `--save`) and read its venue check.
-2. Ask the person with Claude Code's question tool (`AskUserQuestion`), with the options "Yes, send
-   it" and "No". The question names the paper folder (its full path, as the hook prints it), the PDF and the
-   first 12 characters of its sha256, the body pages, and quotes the dry run's venue check.
+1. Run a dry run without `--save` or `--allow-lint-errors` and read its full lint report.
+2. Ask in `AskUserQuestion` with "Yes, proceed" and "No". Show the action, the lint summary, the
+   paper's full folder path, the PDF and the first 12 characters of its SHA-256. For an exception,
+   also include the reason, blocking errors and fingerprint printed by the hook. A changed
+   exception requires fresh approval.
 3. On a yes, run the send.
 
 Without a yes, the hook stops the send and tells the agent what to ask, with the folder and the sha256 filled in.

@@ -142,9 +142,7 @@ export function formatStructure(findings: readonly StructureFinding[]): string {
  * consumer to write a second parser — and the first one who did not write it would read "there
  * are no structural findings" instead of "I do not parse them".
  */
-export function asEslintResults(
-  findings: readonly StructureFinding[],
-): unknown[] {
+export function asEslintResults(findings: readonly StructureFinding[]) {
   const byDir = new Map<string, string[]>();
   for (const f of findings)
     byDir.set(f.file, [...(byDir.get(f.file) ?? []), f.message]);
@@ -152,7 +150,7 @@ export function asEslintResults(
     filePath,
     messages: msgs.map((message: string) => ({
       ruleId: "structure/required-file",
-      severity: 2,
+      severity: 2 as const,
       message,
       line: 0,
       column: 0,

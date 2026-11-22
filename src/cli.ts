@@ -56,7 +56,7 @@ import {
   paperBodies,
   type PaperBody,
 } from "./paper-includes.ts";
-import { hasAtLeast, omit } from "remeda";
+import { hasAtLeast } from "remeda";
 import { refusalOf } from "./unowned-file.ts";
 import { ruleTimes, timingLines } from "./lint-timing.ts";
 import { prepareEngine } from "./build-engine.ts";
@@ -85,7 +85,6 @@ import {
   pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
-  type VenueMessage,
 } from "./venue-rules.ts";
 import {
   FORMAT_RULE_LEVELS,
@@ -121,7 +120,17 @@ import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
 import { bibliographyReader } from "./references.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
 import { hotcrpSite } from "./adapters/hotcrp/index.ts";
-import { runSubmission } from "./submission.ts";
+import { runSubmission, submissionSections } from "./submission.ts";
+import {
+  LINT_FORMAT,
+  isEmptyLintSet,
+  lintExitCode,
+  lintResultFor,
+  lintText,
+  printLintResults,
+  submissionLinter,
+} from "./adapters/eslint/index.ts";
+export { lintText } from "./adapters/eslint/index.ts";
 import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
 import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
@@ -266,6 +275,7 @@ import {
 import {
   submissionConfirm,
   UNREADABLE_INPUT,
+  type Send,
   type Upload,
 } from "./submission-confirm-hook.ts";
 import { leafCommandsNormalized } from "vigiles/hook";
@@ -324,7 +334,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
-  npx paperlint submission new [paper] [--abstract <file>] [--save]
+  npx paperlint submission new [paper] [--abstract <file>] [--save] [--allow-lint-errors <reason>]
                                       create the paper's submission on the venue's portal: the title
                                       and abstract from the build, the authors from paperlint.json,
                                       the PDF. A DRY RUN unless --save; a save records the new id in
@@ -335,6 +345,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       whether it is the local paper.pdf (sha256); flags a title,
                                       abstract or authors that are not the paper's
   npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
+                                      [--allow-lint-errors <reason>]
                                       send the PDF (default: the paper's own), the paper's title
                                       and abstract each when the portal holds another (--abstract:
                                       that file's text instead), or "submitted". A DRY RUN unless --save: the portal checks the
@@ -425,6 +436,7 @@ submission:
   --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
   --abstract <file>   new, update: a plain-text file whose text is sent as the abstract
   --submit            update: mark the submission submitted
+  --allow-lint-errors <reason>  permit reported lint errors on a submission --save
   --save              new, update: really create or change the submission. Without it, nothing
                       is saved
 
@@ -1329,6 +1341,7 @@ const STRING_FLAGS: ReadonlyMap<
   | "kind"
   | "pdf"
   | "abstract"
+  | "allowLintErrors"
   | "url"
   | "host"
   | "to"
@@ -1340,6 +1353,7 @@ const STRING_FLAGS: ReadonlyMap<
   ["--kind", "kind"],
   ["--pdf", "pdf"],
   ["--abstract", "abstract"],
+  ["--allow-lint-errors", "allowLintErrors"],
   ["--url", "url"],
   ["--host", "host"],
   ["--to", "to"],
@@ -1478,7 +1492,7 @@ const IN_PROCESS_HOOKS: Readonly<
   },
   // Never advisory-silent: an input it cannot read is refused, not let through.
   "submission-confirm": ({ stdin, out }) => {
-    const said = ((): ReturnType<typeof submissionConfirm> => {
+    const said = (() => {
       try {
         return submissionConfirm(stdin(), {
           ...PRESET_DEPS,
@@ -1486,13 +1500,17 @@ const IN_PROCESS_HOOKS: Readonly<
           shellLeaves: leafCommandsNormalized,
           readSend: submissionSend,
           readUpload: uploadSend,
+          lintPaper: lintSubmissionPaper,
         });
       } catch {
         return UNREADABLE_INPUT;
       }
     })();
-    if (said !== null) out(`${JSON.stringify(said)}\n`);
-    return 0;
+    const write = (result: Awaited<typeof said>) => {
+      if (result !== null) out(`${JSON.stringify(result)}\n`);
+      return 0;
+    };
+    return said instanceof Promise ? said.then(write) : write(said);
   },
 };
 
@@ -1502,16 +1520,47 @@ const IN_PROCESS_HOOKS: Readonly<
  * (a flag missing its value, an unknown flag, a stray operand), so `submission-confirm` says it
  * cannot tell rather than guess.
  */
-export function submissionSend(
-  words: readonly string[],
-): { readonly paper: string | null; readonly pdf: string | null } | null {
+export function submissionSend(words: readonly string[]): Send | null {
   const a = parseArgs(["submission", ...words]);
   const clean =
     a.missingValue === undefined &&
     a.unknownFlag === undefined &&
     a.paths.length <= 2;
-  return clean ? { paper: a.paths[1] ?? null, pdf: a.pdf } : null;
+  return clean
+    ? {
+        paper: a.paths[1] ?? null,
+        pdf: a.pdf,
+        action:
+          a.paths[0] === "new" ? "create" : a.submit ? "submit" : "update",
+        allowLintErrors: a.allowLintErrors?.trim(),
+      }
+    : null;
 }
+
+const lintSubmissionPaper = submissionLinter(
+  async (paperDir, cwd, accept) => {
+    const stderr = collector();
+    await run(["lint", paperDir], {
+      cwd,
+      log: () => {},
+      err: (line: string) => {
+        stderr.write(`${line}\n`);
+      },
+      onLintResults: (results, structure) => {
+        accept([
+          ...asEslintResults(structure).map((r) => ({
+            ...r,
+            filePath: resolve(cwd, r.filePath),
+          })),
+          ...results,
+        ]);
+      },
+    });
+    return firstLine(stderr.text());
+  },
+  (paperDir) =>
+    submissionSections(paperDir, { ...RECORD_DEPS, latex: latexReader }),
+);
 
 /**
  * The words after `artifact`, read by this CLI's own parser, for an upload: the file it uploads, the
@@ -2326,6 +2375,7 @@ const SIMPLE: Readonly<
         abstract: a.abstract,
         submit: a.submit,
         save: a.save,
+        allowLintErrors: a.allowLintErrors ?? undefined,
       },
       {
         files: nodeFiles,
@@ -2336,6 +2386,7 @@ const SIMPLE: Readonly<
         latex: latexReader,
         codec: sourcesCodec,
         lintText,
+        lintPaper: lintSubmissionPaper,
         yaml: parseYaml,
         now: isoNow,
         log,
@@ -2520,6 +2571,11 @@ const selfInstallDeps = (install: ProjectInstall): SelfInstallDeps => {
 const loadLatexLanguage = async (): Promise<unknown> =>
   (await import("#eslint-rules/latex-language")).texLanguage;
 
+type LintResults = (
+  results: readonly ESLint.LintResult[],
+  structure: Readonly<ReturnType<typeof checkStructure>>,
+) => void;
+
 export async function run(
   argv: readonly string[],
   {
@@ -2532,6 +2588,7 @@ export async function run(
     skillLinks = readSkillLinks,
     install = projectInstall,
     claude = claudeCode(),
+    onLintResults,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
@@ -2554,6 +2611,7 @@ export async function run(
     checkReferences?: CheckReferences;
     /** The skills report `lint`'s stderr line reads; a test hands a fixed one. */
     skillLinks?: (root: string) => LinkReport;
+    onLintResults?: LintResults;
   } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
@@ -2577,6 +2635,10 @@ export async function run(
   if (a.help || !a.cmd) {
     log(USAGE);
     return a.help ? 0 : 2;
+  }
+  if (a.allowLintErrors != null && a.cmd !== "submission") {
+    err("--allow-lint-errors is only for submission new or update with --save");
+    return 2;
   }
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
@@ -2683,7 +2745,7 @@ export async function run(
   try {
     results = await eslint.lintFiles(paths);
   } catch (e) {
-    if (isEmptySet(e)) results = [];
+    if (isEmptyLintSet(e)) results = [];
     else throw e;
   }
 
@@ -2713,6 +2775,7 @@ export async function run(
       .map((d) => join(d, MAIN))
       .filter((f) => existsSync(f)),
     bodies,
+    onLintResults,
   });
   hooksLine(root, err, skillLinks, claude);
   // On stderr, so `--json` leaves stdout a clean array.
@@ -2833,25 +2896,11 @@ const editLinter =
   };
 
 /** A result of the hook's new errors, with the counts the formatter prints recomputed. */
-const counted = (r: LintResult): Readonly<ESLint.LintResult> => ({
-  filePath: r.filePath,
-  // Only errors reach the formatter: the hook reports nothing else.
-  messages: r.messages.map((m) => ({
-    ruleId: m.ruleId,
-    message: m.message,
-    line: m.line,
-    column: m.column,
-    endLine: m.endLine,
-    severity: 2,
-  })),
-  suppressedMessages: [],
-  errorCount: r.messages.length,
-  fatalErrorCount: 0,
-  warningCount: 0,
-  fixableErrorCount: 0,
-  fixableWarningCount: 0,
-  usedDeprecatedRules: [],
-});
+const counted = (r: LintResult): Readonly<ESLint.LintResult> =>
+  lintResultFor(
+    r.filePath,
+    r.messages.map((m) => ({ ...m, severity: 2 })),
+  );
 
 /**
  * The first path that is a FILE paperlint does not lint, or null. ESLint would answer such a file
@@ -2873,54 +2922,6 @@ async function firstUnownedFile(
   return null;
 }
 
-/**
- * ESLint's refusals of an empty set: nothing matched (`file-not-found`), or everything that matched
- * is outside paperlint's scope (`all-matched-files-ignored` — a papers directory holding only
- * vendored scripts). Both mean "nothing was linted", which the caller reports itself.
- */
-/** What a thrown ESLint error says about itself; anything else thrown says nothing. */
-const EslintFailure = z
-  .object({
-    messageTemplate: z.string().optional(),
-    message: z.string().optional(),
-  })
-  .catch({});
-
-const isEmptySet = (e: unknown): boolean => {
-  const fail = EslintFailure.parse(e);
-  return (
-    fail.messageTemplate === "file-not-found" ||
-    fail.messageTemplate === "all-matched-files-ignored" ||
-    /No files matching/i.test(String(fail.message))
-  );
-};
-
-/**
- * Findings on one file, printed by the formatter `paperlint lint` prints with — what `paperlint
- * submission` shows of the venue rules before a send, so the two read the same.
- */
-export async function lintText(
-  file: string,
-  messages: readonly VenueMessage[],
-): Promise<string> {
-  const errorCount = messages.filter((m) => m.severity === 2).length;
-  const result: Readonly<ESLint.LintResult> = {
-    filePath: file,
-    messages: [...messages],
-    suppressedMessages: [],
-    errorCount,
-    fatalErrorCount: 0,
-    warningCount: messages.length - errorCount,
-    fixableErrorCount: 0,
-    fixableWarningCount: 0,
-    usedDeprecatedRules: [],
-  };
-  return (await new ESLint().loadFormatter(LINT_FORMAT)).format([result]);
-}
-
-/** The formatter `paperlint lint` prints with. */
-const LINT_FORMAT = "stylish";
-
 /** Printed under a clean `lint`, the README's disclaimer in one line. */
 const CLEAN_RUN_REMINDER =
   "Check the venue's own call before you submit: a call can change between editions, and a check can miss a case.";
@@ -2932,7 +2933,7 @@ const CLEAN_RUN_REMINDER =
 async function reportLint(
   eslint: ESLint,
   results: ESLint.LintResult[],
-  structure: ReturnType<typeof checkStructure>,
+  structure: Readonly<ReturnType<typeof checkStructure>>,
   {
     a,
     log,
@@ -2941,6 +2942,7 @@ async function reportLint(
     opts,
     projectPapers,
     bodies,
+    onLintResults,
   }: {
     a: Args;
     log: typeof console.log;
@@ -2950,6 +2952,7 @@ async function reportLint(
     projectPapers: readonly string[];
     /** The body files handed to ESLint, as read before the run. */
     bodies: readonly PaperBody[];
+    onLintResults: LintResults | undefined;
   },
 ): Promise<number> {
   const silent = await silentOptionalRules(
@@ -2966,46 +2969,17 @@ async function reportLint(
     return 1;
   }
 
-  if (a.json)
-    log(
-      JSON.stringify(
-        [
-          ...asEslintResults(structure),
-          ...results.map((r) => omit(r, ["stats"])),
-        ],
-        null,
-        1,
-      ),
-    );
+  if (onLintResults !== undefined) onLintResults(results, structure);
   else {
-    // Missing things are printed FIRST: they explain why the report below may be suspiciously
-    // short. The reverse order would read as "all clean — oh, and also this".
-    if (structure.length > 0) log(formatStructure(structure));
-    const out = await (await eslint.loadFormatter(LINT_FORMAT)).format(results);
-    const clean = out.trim() === "" && structure.length === 0;
-    log(
-      out.trim() ||
-        (clean
-          ? `✓ ${String(results.length)} file(s) checked, no findings`
-          : ""),
-    );
-    // A clean run is the one result a reader could take as a guarantee, so it, and only it,
-    // carries the README's reminder. Findings speak for themselves; --json is for machines.
+    const clean = await printLintResults(eslint, results, {
+      json: a.json,
+      structure: asEslintResults(structure),
+      structureText: formatStructure(structure),
+      log,
+    });
     if (clean) log(`  ${CLEAN_RUN_REMINDER}`);
   }
-  if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
-  // Warnings fail the run only when the threshold is named EXPLICITLY. A negative threshold means
-  // "do not count them at all", and that is the default.
-  if (a.maxWarnings >= 0) {
-    const warnings = results.reduce((n, r) => n + r.warningCount, 0);
-    if (warnings > a.maxWarnings) {
-      err(
-        `${String(warnings)} warning(s) exceed the --max-warnings limit of ${String(a.maxWarnings)}`,
-      );
-      return 1;
-    }
-  }
-  return 0;
+  return lintExitCode(results, structure.length > 0, a.maxWarnings, err);
 }
 
 // 🔴 `isMain`, NOT A STRING COMPARISON. The first version wrote
