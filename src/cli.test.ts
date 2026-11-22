@@ -49,7 +49,10 @@ const root = useTempDir("cli-test-");
 async function cli(
   argv: string[],
   cwd: string,
-  deps: Pick<NonNullable<Parameters<typeof run>[1]>, "loadTexLanguage"> = {},
+  deps: Pick<
+    NonNullable<Parameters<typeof run>[1]>,
+    "loadTexLanguage" | "install"
+  > = {},
 ) {
   const out: string[] = [];
   const err: string[] = [];
@@ -748,6 +751,33 @@ test("init with no path sets up the current directory, and its first paper is pa
   for (const f of ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"])
     assert.ok(made.includes(f), `${f} is missing:\n${r.out + r.err}`);
   assert.equal(made.includes("main.tex"), false);
+});
+
+test("init's step 0 that fails stops the run with 2: init itself never starts", async () => {
+  const dir = writeTree(join(root, "self-failed"), { "package.json": "{}" });
+  const r = await cli(["init", "--yes", "--no-hooks"], dir, {
+    install: {
+      command: (_root, spec) => ["npm", spec],
+      run: () => ({ ok: false, reason: "exit 1" }),
+    },
+  });
+  assert.deepEqual(
+    {
+      code: r.code,
+      out: r.out.split("\n"),
+      paperlintJson: existsSync(join(dir, "paperlint.json")),
+    },
+    {
+      code: 2,
+      out: [
+        "",
+        "paperlint in this project",
+        "  → npm paperlint@0.0.0-semantically-released",
+        "  ✗ npm paperlint@0.0.0-semantically-released failed (exit 1) — nothing else was done. Run it yourself, then `npx paperlint init` again",
+      ],
+      paperlintJson: false,
+    },
+  );
 });
 
 test("init's step 0 reads the project's own copy: this checkout is present, another version is said and kept", async () => {

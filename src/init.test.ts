@@ -542,7 +542,7 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
     expect(outcome).toEqual({ status: "failed", reason: "merge exploded" });
   });
 
-  it("hooks: a question that failed (the stream ended) takes the stated default, YES", async () => {
+  it("hooks: a question that failed (the stream ended) takes the stated default, YES; a No declines", async () => {
     const ask = async (reply: boolean | Error) => {
       const root = tree({});
       const outcome = await offerHooks(root, {
@@ -556,7 +556,10 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
         : outcome;
     };
     // Guards: the failed question wires exactly what an explicit yes wires, not a decline.
-    expect(await ask(new Error("stream ended"))).toEqual(await ask(true));
+    expect([await ask(new Error("stream ended")), await ask(false)]).toEqual([
+      await ask(true),
+      { status: "declined" },
+    ]);
   });
 });
 
