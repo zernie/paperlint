@@ -112,6 +112,22 @@ test("an open or rejected paper — still being written — adds no block", () =
   );
 });
 
+test("no cycles, or a lock that is missing or not JSON, is not a final paper", () => {
+  const dir = writeTree(join(root, "unlocked"), {
+    "none/paper.tex": "% p\n",
+    "missing/paper.tex": "% p\n",
+    "missing/paperlint.json": JSON.stringify({ cycles: [ACCEPTED] }),
+    "broken/paper.tex": "% p\n",
+    "broken/paperlint.json": JSON.stringify({ cycles: [ACCEPTED] }),
+    "broken/versions/lock.json": "{ not json",
+  });
+  assert.deepEqual(stageBlocks(join(dir, "none")), []);
+  for (const name of ["missing", "broken"])
+    assert.deepEqual(stageBlocks(join(dir, name)), [
+      { basePath: join(dir, name), rules: { "paper/edition-over": "off" } },
+    ]);
+});
+
 test("the paper's own rules come after, so an author can turn one back on", () => {
   const dir = writeTree(join(root, "own"), {
     "p/paper.tex": "% p\n",
