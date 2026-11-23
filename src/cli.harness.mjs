@@ -1239,7 +1239,7 @@ check(
     check(
       "the layout hook refuses a new stray PLAN.md on stdout as a PreToolUse deny, exit 0",
       stray.status === 0 &&
-        /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root/.test(
+        /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` does not belong at a paper folder's root/.test(
           stray.stdout,
         ),
     );
