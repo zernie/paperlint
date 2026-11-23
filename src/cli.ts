@@ -32,6 +32,7 @@ import {
   statSync,
 } from "node:fs";
 import { absolutePath } from "./domain/paths.ts";
+import { isOk } from "./domain/result.ts";
 import { stripVTControlCharacters } from "node:util";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
@@ -1053,7 +1054,7 @@ export function paperRuleBlocks(paths: readonly string[]): Parsed<PaperBlocks> {
   });
   const failed = each.find((r) => !r.ok);
   if (failed !== undefined) return failed;
-  const all = each.flatMap((r) => (r.ok ? [r.value] : []));
+  const all = each.filter(isOk).map((r) => r.value);
   return {
     ok: true,
     value: {
