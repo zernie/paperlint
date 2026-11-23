@@ -32,11 +32,19 @@ import { RULE_SETS, setMembers } from "./rule-sets.ts";
 export type Severity = "off" | "warn" | "error" | 0 | 1 | 2;
 export type RuleEntry = Severity | readonly [Severity, ...unknown[]];
 
+/** The one linter option paperlint's own blocks set: a final paper's disable comments are not "unused". */
+// A type, not an interface: it must be assignable to `ConfigBlock`'s record of linter options.
+export type StageLinterOptions = Readonly<{
+  reportUnusedDisableDirectives: "off";
+}>;
+
 /** One block of the `rules` key, parsed. `basePath` is the settings file's directory. */
 export interface RuleBlock {
   readonly basePath: string;
   readonly files?: readonly string[];
   readonly ignores?: readonly string[];
+  /** Set only by paperlint's own blocks (a paper's stage); `paperlint.json` cannot write it. */
+  readonly linterOptions?: StageLinterOptions;
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 

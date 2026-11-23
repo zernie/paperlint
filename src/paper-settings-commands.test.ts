@@ -232,23 +232,20 @@ describe("paperlint lint — the venue preset's rules", () => {
     const cfgOf = await import("./cli.ts").then((m) =>
       m.paperRuleBlocks([join(root, "papers")]),
     );
-    expect(cfgOf.ok && cfgOf.value).toEqual({
-      preset: [
-        {
-          // Scoped to the paper by `basePath` alone: which of its files the rule reaches is decided
-          // once, by narrowing to paperlint's owned scopes (#101), not by a copy of their globs.
-          basePath: join(root, "papers/a"),
-          rules: {
-            "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
-            "tex/heading-case": [
-              "error",
-              { title: "chicago-headline", headings: "chicago-headline" },
-            ],
-          },
+    expect(cfgOf.ok && cfgOf.value.preset).toEqual([
+      {
+        // Scoped to the paper by `basePath` alone: which of its files the rule reaches is decided
+        // once, by narrowing to paperlint's owned scopes (#101), not by a copy of their globs.
+        basePath: join(root, "papers/a"),
+        rules: {
+          "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
+          "tex/heading-case": [
+            "error",
+            { title: "chicago-headline", headings: "chicago-headline" },
+          ],
         },
-      ],
-      own: [],
-    });
+      },
+    ]);
   });
 
   it("🔴 an unbuilt agenticdev paper: two warnings (pdf/measured, paper/sources-fresh), and no balance error", async () => {

@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:a24e4a23a4caaf86 compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:f83563bacd9214c9 compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -43,6 +43,10 @@ the checks push every paper toward a blog post.
 ### Lint Rule Over Script
 
 **Guidance only** — A check over a syntax tree is a lint rule, not a script. It fires in the editor on save, gets the AST for free, and has a suppression syntax people already know. A script is for corpus-wide questions — index connectivity, ratios across many files. When the work has to run a program, a script may do the work and write facts to a JSON file, and a rule judges that file: the verdict still lands in the engine.
+
+### The Config Decides Where A Rule Runs
+
+**Guidance only** — A NEW decision about which files a rule runs on goes into the config, not into the rule. A rule judges its own subject wherever it is turned on; whether it applies to a paper at a given stage is a rule block the lint config builds (`paperRuleBlocks` in `src/cli.ts`): `files`, `ignores`, or a rule set to `off`, where a later block wins, as in ESLint. Example: a finished paper (accepted, camera-ready frozen) has its text and build rules turned off by `src/settled-paper.ts`, and no rule reads its cycles for that (#583, #553). Two older decisions still live inside rules and are not a precedent: `phase` set to `porting` silences the venue rules from inside them (`src/venue-rules.ts`), and the anonymity rules go quiet on an accepted cycle (`effectiveBlind`, `src/domain/cycle.ts`); #599 decides whether they move. The author decided this on 2026-11-23.
 
 ### A Rule Is Configured The Eslint Way
 

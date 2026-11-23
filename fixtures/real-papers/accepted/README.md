@@ -319,7 +319,7 @@ From the baselines (the run with `RECORDED_OPT_IN` on, as for every corpus):
 | `format/layout-override` | 1 | 2609.14098v2: `\setlength{\headheight}` |
 | `pdf/last-page-balance` | 3 | AgenticDev and ACM CCS turn it on; it says the paper was not built |
 | `pdf/measured` | 12 | every paper: not built, so the PDF rules did not run |
-| `paper/edition-over` | 1 | 2611.10830v1: «AIDC 2026 is over», its last deadline (camera-ready, 2026-11-09) passed; the rule does not look at the accepted cycle. The rule reads the clock, so `real-papers.test.ts` lints on a fixed day (2026-11-19): on the real clock `sp-2027` would add one to `preprints/2611.07576v1` on 2027-04-09 (measured with the clock set to 2027-05-01) |
+| `paper/edition-over` | 0 | 2611.10830v1 got «AIDC 2026 is over» (its last deadline, camera-ready 2026-11-09, passed) until #654: its cycle is accepted, and an accepted paper's stage turns the rule off. The rule reads the clock, so `real-papers.test.ts` lints on a fixed day (2026-11-19): on the real clock `sp-2027` would add one to `preprints/2611.07576v1` on 2027-04-09 (measured with the clock set to 2027-05-01) |
 
 Not classified yet: these are the next step's rows.
 
@@ -351,6 +351,10 @@ moved: `tex/venue-leftover` 0 → 1 on 2609.14098v2, an ACM CCS 2026 paper whose
 name that ships. `tex/template`'s style check found nothing on the 12 papers (none is on a style
 family).
 
+With the paper's stage (#654), measured 2026-11-23 by the same run: `paper/edition-over` 1 → 0 on
+each of 2611.10830v1, 2611.24376v1 and 2611.24904v1, whose cycles are accepted; an accepted paper's
+stage turns the rule off. No other count moved.
+
 ### The false positives the preprint corpus has caught, and what pins each
 
 A follow-up will replace the preprints of `preprints/` with accepted papers. Before they go,
@@ -366,7 +370,7 @@ loses no protection. What the history holds (the commits of #453 and after, the 
 | preprints (this change) | `tex/venue-leftover` reads a hand-typed reference list: «EMNLP 2023» in 2611.09709v1's `\item` list, attributed to REALM | **no** — found here, listed as a follow-up. Still reproduces after #546 (measured 2026-11-19): on `ieee-conference` «EMNLP 2023» and «EMNLP 2025» are reported as EMNLP's names, on `realm-2026` «EMNLP 2025» (its parent's previous edition) |
 | preprints (this change) | `tex/venue-leftover` reports «ACSAC» as AIDC's name (AIDC's aliases include its parent conference), on 2611.08608v1, a paper accepted at ACSAC 2026 itself | fixed by #546: ACSAC and EMNLP are presets of their own, named as `parent`; `src/tex-venue-rules.test.ts` («tex/venue-leftover — a workshop's parent conference (`parent`) is the paper's own») pins it. What is left is the next row's case: on the IEEE family the paper still gets «ACSAC» once, as ACSAC 2026; on `acsac-2026`, its label now, none |
 | accepted (this change) | a paper on a family preset that names its own venue: «ASE» in the `\acmConference` and `\acmBooktitle` lines of 2607.27374v2 and 2609.10590v1, accepted at ASE 2026 and linted on `acm-sigconf` | **no** — still reproduces after #546 (2 findings each), listed as a follow-up |
-| accepted (this change) | `paper/edition-over` reports an edition as over on a paper whose cycle was accepted at it (2611.10830v1, AIDC 2026) | **no** — found here, a candidate for the classification step |
+| accepted (this change) | `paper/edition-over` reports an edition as over on a paper whose cycle was accepted at it (2611.10830v1, AIDC 2026) | fixed by #654: an accepted paper's stage turns the rule off; `src/settled-paper.test.ts` pins it |
 | preprints (#453) | `tex/template` fired on 100 of 108 papers because every paper extended `ieee-conference` | not a rule defect: the fixture's label. Fixed by this change's relabel |
 
 The six older accepted papers (the section below) stay; the false positives they caught

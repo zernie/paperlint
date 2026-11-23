@@ -53,9 +53,10 @@ of each shipped preset's id. The clock is read once per lint by `paperlint lint`
 
 ## How to fix
 
-Point `extends` at the edition the paper goes to next, or at another venue. A paper that stays with
-the finished edition on purpose — it was accepted there, and the repository is its record — turns
-the rule off in its `paperlint.json`:
+Point `extends` at the edition the paper goes to next, or at another venue. A paper accepted at the
+edition needs nothing: when its last cycle is `accepted`, paperlint turns this rule off for it
+([the paper's stage](../../configuration.md)). Any other paper that stays with the finished edition
+on purpose — the repository is its record — turns the rule off in its `paperlint.json`:
 
 ```json
 {

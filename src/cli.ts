@@ -32,6 +32,7 @@ import {
   statSync,
 } from "node:fs";
 import { absolutePath } from "./domain/paths.ts";
+import { isOk } from "./domain/result.ts";
 import { stripVTControlCharacters } from "node:util";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
@@ -142,6 +143,7 @@ import {
   scopeToOwned,
 } from "./paper-files.ts";
 import type { PaperScope } from "./paper-files.ts";
+import { stageBlocks } from "./settled-paper.ts";
 import {
   paperPreset,
   settingsProblemLine,
@@ -1043,35 +1045,42 @@ const paperDirs = (paths: readonly string[]): readonly string[] =>
  * them. A file that does not parse, or names a rule paperlint does not ship, stops the run with one
  * line naming the file — the same strictness as the root's own `rules`.
  */
-export function paperRuleBlocks(
-  paths: readonly string[],
-): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
-  const papers = paperDirs(paths);
-  const out: { preset: RuleBlock[]; own: RuleBlock[] } = {
-    preset: [],
-    own: [],
-  };
-  for (const dir of papers) {
+export function paperRuleBlocks(paths: readonly string[]): Parsed<PaperBlocks> {
+  const each = paperDirs(paths).map((dir): Parsed<PaperBlocks> => {
     const p = paperPreset(dir, PRESET_DEPS);
-    if (p.kind === "settings-problem")
-      return { ok: false, error: settingsProblemLine(dir, p.problem) };
-    const blocks = rulesOfPaper(dir, p);
-    if (!blocks.ok) return blocks;
-    out.preset.push(...blocks.value.preset);
-    out.own.push(...blocks.value.own);
-  }
-  return { ok: true, value: out };
+    return p.kind === "settings-problem"
+      ? { ok: false, error: settingsProblemLine(dir, p.problem) }
+      : rulesOfPaper(dir, p);
+  });
+  const failed = each.find((r) => !r.ok);
+  if (failed !== undefined) return failed;
+  const all = each.filter(isOk).map((r) => r.value);
+  return {
+    ok: true,
+    value: {
+      preset: all.flatMap((b) => b.preset),
+      stage: all.flatMap((b) => b.stage),
+      own: all.flatMap((b) => b.own),
+    },
+  };
+}
+
+/** One paper's blocks, in the order `lint` applies them around the root's (most general first). */
+interface PaperBlocks {
+  readonly preset: readonly RuleBlock[];
+  readonly stage: readonly RuleBlock[];
+  readonly own: readonly RuleBlock[];
 }
 
 /**
- * One paper's blocks: its preset chain's `rules`, and its own — either `{ id: severity }` over the
+ * One paper's blocks: its preset chain's `rules`, the blocks its stage adds, and its own — either `{ id: severity }` over the
  * paper's files, or ESLint blocks with globs relative to the paper. A preset that does not resolve
  * contributes nothing here; `pdf/profile` reports it on the paper.
  */
 function rulesOfPaper(
   dir: string,
   p: Exclude<PaperPreset, { kind: "settings-problem" }>,
-): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
+): Parsed<PaperBlocks> {
   const { settings } = p;
   const fromPreset =
     p.kind === "resolved"
@@ -1100,7 +1109,13 @@ function rulesOfPaper(
     Object.keys(rules).length ? [{ basePath: dir, rules }] : [];
   return {
     ok: true,
-    value: { preset: scoped(fromPreset.value), own: [...own.value] },
+    value: {
+      preset: scoped(fromPreset.value),
+      stage: [
+        ...stageBlocks(dir, settings?.cycles ?? null, nodeFiles, SHIPPED_RULES),
+      ],
+      own: [...own.value],
+    },
   };
 }
 
@@ -2715,7 +2730,9 @@ async function paperEslint(
   }>
 > {
   // The order, most general first so the most specific wins (ESLint: a later block wins): each
-  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
+  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json → the paper's
+  // stage (src/settled-paper.ts), last because a published text has nothing left to fix whoever
+  // turned a writing rule on.
   const papers = paperRuleBlocks(paths);
   if (!papers.ok) return papers;
   const opts = {
@@ -2724,6 +2741,7 @@ async function paperEslint(
       ...papers.value.preset,
       ...(cfg.opts.rules ?? []),
       ...papers.value.own,
+      ...papers.value.stage,
     ],
   };
 
