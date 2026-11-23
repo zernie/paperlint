@@ -67,7 +67,7 @@ describe("fileHookGate — what the bin decides before it loads the CLI", () => 
       kind: "other",
     });
     expect(
-      fileHookGate(["hook", "paper-edit-guard"], stdin("x"), files),
+      fileHookGate(["hook", "submission-confirm"], stdin("x"), files),
     ).toEqual({ kind: "other" });
     expect(fileHookGate([], stdin("x"), files)).toEqual({ kind: "other" });
     // Guards: a Bash hook reads its own stdin later; reading it here would leave it nothing.

@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { test } from "vitest";
 import { z } from "zod";
 import { useTempDir, writeTree } from "../test/support.ts";
-import { run, runHook, spawnHook } from "./cli.ts";
+import { run, runHook } from "./cli.ts";
 import type { LinkReport } from "./link-skills.ts";
 import {
   NOTICE_STATE,
@@ -144,6 +144,19 @@ test("noticeText names the version and the hooks, as an instruction; mergeNotice
   });
   assert.equal(mergeNotice("not json", "N"), null);
   assert.equal(mergeNotice("[1]", "N"), null);
+  const context = (said: unknown): unknown =>
+    Notice.parse(JSON.parse(mergeNotice(JSON.stringify(said), "N") ?? ""))
+      .hookSpecificOutput;
+  assert.deepEqual(
+    [
+      context({ hookSpecificOutput: { additionalContext: "A" } }),
+      context({ hookSpecificOutput: { additionalContext: "" } }),
+    ],
+    [
+      { hookEventName: "PostToolUse", additionalContext: "A\n\nN" },
+      { hookEventName: "PostToolUse", additionalContext: "N" },
+    ],
+  );
 });
 
 test("a wired hook on a paper file: missing hook → one notice, the same version again → silent, a new version → one more", async () => {
@@ -171,7 +184,7 @@ test("a wired hook on a paper file: missing hook → one notice, the same versio
 });
 
 test("the notice rides on what the hook said: a block stays a block, and the exit stays 0", async () => {
-  const dir = project("block", wiringWithout(["paper-skills-nudge"]), true);
+  const dir = project("block", wiringWithout(["paper-folder-layout"]), true);
   const said = await hook(
     "lint-edited",
     dir,
@@ -186,7 +199,7 @@ test("the notice rides on what the hook said: a block stays a block, and the exi
   assert.match(parsed.reason, /tex\/max-sentence-words/);
   assert.match(
     Notice.parse(parsed).hookSpecificOutput.additionalContext,
-    /paper-skills-nudge/,
+    /paper-folder-layout/,
   );
 });
 
@@ -268,56 +281,6 @@ test("paperlint lint: one stderr line naming the missing hooks when partly wired
   assert.equal(partly.code, wired.code);
 });
 
-test("a spawned PostToolUse hook: its stdout is captured and merged, its payload fed on stdin; outside a paper it is fed and left alone; a failing hook's output is passed through", () => {
-  const dir = project("spawned", wiringWithout(["lint-edited"]));
-  const payload = (file: string) =>
-    JSON.stringify({ tool_input: { file_path: file } });
-  const spawn = (file: string, status = 0, stdout = "") => {
-    const seen: unknown[] = [];
-    const out: string[] = [];
-    const code = runHook("paper-skills-nudge", {
-      stdin: () => payload(file),
-      out: (t) => {
-        out.push(t);
-      },
-      projectDir: dir,
-      claude: PLUGIN_OFF,
-      version: "9.9.9",
-      run: (_f, _a, o) => {
-        seen.push(o);
-        return { status, stdout };
-      },
-    });
-    return { code, seen, out: out.join("") };
-  };
-  const nudge = JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PostToolUse",
-      additionalContext: "nudge",
-    },
-  });
-  const outside = spawn(join(dir, "notes.txt"), 0, "");
-  assert.deepEqual(outside.seen, [
-    {
-      stdio: ["pipe", "inherit", "inherit"],
-      input: payload(join(dir, "notes.txt")),
-      encoding: "utf8",
-    },
-  ]);
-  assert.equal(outside.out, "");
-  const failed = spawn(
-    join(dir, "papers/p/paper.tex"),
-    2,
-    "stdout of a refusal",
-  );
-  assert.deepEqual([failed.code, failed.out], [2, "stdout of a refusal"]);
-  const merged = spawn(join(dir, "papers/p/paper.tex"), 0, nudge);
-  const context = Notice.parse(JSON.parse(merged.out)).hookSpecificOutput
-    .additionalContext;
-  assert.match(context, /^nudge\n\n⚠ paperlint 9\.9\.9 .*lint-edited/s);
-  assert.equal(merged.code, 0);
-});
-
 test("the notice machinery never fails a hook: an unwritable state file is one stderr line, no notice, the hook's own output intact", async () => {
   const dir = project("state-blocked", wiringWithout(["lint-edited"]));
   // `node_modules/.cache` as a FILE: the state cannot be written under it.
@@ -387,22 +350,6 @@ test("the check that cannot run, and a payload that cannot be read, leave the ho
   });
   assert.equal(unread, 0);
   assert.match(thrown.join("\n"), /did not run: EAGAIN/);
-});
-
-test("spawnHook: the real spawner, once with the terminal's streams and once piped with an input", () => {
-  const print = ["-e", "process.stdin.pipe(process.stdout)"];
-  assert.deepEqual(
-    spawnHook(process.execPath, ["-e", "0"], { stdio: "inherit" }),
-    { status: 0, stdout: null },
-  );
-  assert.deepEqual(
-    spawnHook(process.execPath, print, {
-      stdio: ["pipe", "pipe", "inherit"],
-      input: "payload",
-      encoding: "utf8",
-    }),
-    { status: 0, stdout: "payload" },
-  );
 });
 
 test("a state file that is garbage, or not an object, counts as not told: the notice speaks and rewrites it", async () => {
@@ -495,9 +442,9 @@ test("an upgrade that ships a skill the project never linked: the notice names i
 });
 
 test("a project missing a hook and a skill hears both in one notice; every skill linked, or no package to read, says nothing about skills", async () => {
-  const both = project("both", wiringWithout(["lint-edited"]));
+  const both = project("both", wiringWithout(["paper-folder-layout"]));
   const said = await hook(
-    "paper-skills-nudge",
+    "lint-edited",
     both,
     join(both, "papers/p/paper.tex"),
     "Fine.",
@@ -506,7 +453,7 @@ test("a project missing a hook and a skill hears both in one notice; every skill
   );
   const text = Notice.parse(JSON.parse(said.out)).hookSpecificOutput
     .additionalContext;
-  assert.match(text, /lint-edited/);
+  assert.match(text, /paper-folder-layout/);
   assert.match(text, /rewrite-unclear/);
   const whole = project("skills-whole", wiringWithout([]));
   const file = join(whole, "papers/p/paper.tex");
@@ -567,11 +514,11 @@ test("lintLine and noticeText word skills beside hooks", () => {
     /hook lint-edited is not wired; skills a, b are not linked/,
   );
   assert.match(
-    noticeText("9.9.9", ["lint-edited"], true, ["a"]),
+    noticeText("9.9.9", ["lint-edited"], true, { skills: ["a"] }),
     /by hand.*\(init does link the skills\)/,
   );
   assert.match(
-    noticeText("9.9.9", [], false, ["a"]),
+    noticeText("9.9.9", [], false, { skills: ["a"] }),
     /skills that are not linked into \.claude\/skills\/: a\./,
   );
 });

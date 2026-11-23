@@ -154,12 +154,13 @@ resolve.
 - **What it never does:** replace an entry it did not make. Such an entry is named in the report
   and left alone, and `init` still succeeds; `paperlint doctor` repeats it as a warning.
 
-**`paperlint doctor` exists because the edit guard is silent when it works.** `paper-edit-guard` says
-nothing while guarding and says nothing while watching a directory that does not exist, so
-"installed" and "protecting you" look the same from outside. `doctor` prints the papers directory
-`paperlint lint` resolves and the one the hooks resolve, whether they match, whether the hooks are wired
-(once, twice, or not at all), and which external programs are missing. It exits 2 when the declaration is
-unusable, the CLI and the hooks disagree on the papers directory, or the hooks are miswired: partly wired (some
+**`paperlint doctor` exists because the hooks are silent when they work.** A hook says nothing
+while watching the right directory and says nothing while watching a directory that does not exist,
+so "installed" and "working" look the same from outside. `doctor` prints the papers directory that
+`paperlint lint` and the hooks read (one reader, `src/papers-roots.ts`), whether it exists while your
+papers live elsewhere, whether the hooks are wired (once, twice, or not at all), and which external programs
+are missing. It exits 2 when the declaration is unusable, the papers live outside the declared directory,
+or the hooks are miswired: partly wired (some
 paperlint hooks present, others missing) or any hook wired twice. A hook set wired by hand under another spelling
 counts as wired. Not wired at all, a missing external program and an unlinked skill are printed and exit 0,
 because `--no-hooks` and the skills you do not use are choices. With the plugin on, the skills and
@@ -168,14 +169,12 @@ hooks count as carried by it.
 **After upgrading, the first paper edit tells you which hooks to wire and which skills to link.** `init` wires the hooks once, so a release
 that ships one more leaves a project that ran `init` earlier without it, and a release that ships a skill (16.8.0 added
 `rewrite-unclear`) leaves it unlinked in `.claude/skills/`. The hooks that are wired run the new
-version's code: the first time one of them acts on a file inside a paper (an Edit or Write there, or a Read for
-`paper-skills-nudge`), it adds one instruction to the session, "paperlint 16.2.1 expects hooks that this project has not
+version's code: the first time one of them acts on a file inside a paper (an Edit or Write there), it adds one instruction to the session, "paperlint 16.2.1 expects hooks that this project has not
 wired: lint-edited. Run `npx paperlint init` now, then `npx paperlint doctor` to confirm", as Claude Code's
 `additionalContext`; shipped skills that are not linked are named in the same notice ("ships skills that are not
 linked into .claude/skills/: rewrite-unclear"). A skill is named only when it is missing: a name that your own
 directory holds is your choice, and `doctor` reports it. It is said once per installed version (remembered in
-`node_modules/.cache/paperlint/unwired-hooks.json`), only by the PostToolUse hooks (`lint-edited`,
-`paper-skills-nudge`) and never by a PreToolUse hook, so it cannot change an allow or a deny;
+`node_modules/.cache/paperlint/unwired-hooks.json`), only by the PostToolUse hook `lint-edited` and never by a PreToolUse hook, so it cannot change an allow or a deny;
 it never blocks, and an error while checking is one stderr line. `paperlint lint` prints the same finding as one
 stderr line on every run, without changing its exit code, and the GitHub action fails on it when `check-hooks` is
 set ([`ci.md`](ci.md)). Nothing is said about hooks when none is wired (`--no-hooks`) or the settings file cannot be read, nothing about skills when all are linked or the package does not resolve from the project, and nothing at all while the plugin is on: it is updated with paperlint.
@@ -240,7 +239,6 @@ Neither `paperlint lint` nor any of the five hooks loads `@ast-grep` or `typescr
 | hooks fail with `Cannot find module` in a fresh clone                                                                         | the hook commands run files in `node_modules`: run `npm install`                                                                                                                                         |
 | `paperlint: not built`                                                                                                        | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                                                                               |
 | a skill does not show up in Claude Code                                                                                       | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again                                                          |
-| **every** shell command is blocked in Claude Code                                                                             | `paper-edit-guard` cannot parse the root `paperlint.json` (merge-conflict markers, a typo), and refuses rather than guess. Fix it with a normal file edit — file edits are not blocked                   |
 | a Write of a new file is denied: "… is at the root of a paper folder" or "… is loose at the top of the paper's repro/ folder" | `paper-folder-layout` refuses to create an entry the paper layout does not allow; the reason says where it goes. Write it there. Existing files are never refused, and the hook does not see shell moves |
 | after an edit, Claude Code shows "paperlint lint-edited: the edit was kept; the errors above are the ones it introduced."     | `lint-edited` linted the file the edit wrote and `paper.tex`, and found an error the edit introduced ([layout.md](layout.md#the-lint-edited-hook)). The edit stands; fix the error it names              |
 | `paperlint: the lint-edited hook did not run: …` on stderr                                                                    | the hook could not lint (the reason follows); the edit stands. `npx paperlint lint` on the paper shows the same failure                                                                                  |

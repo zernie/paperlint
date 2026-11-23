@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:599c83e36edde981 compiled from src/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:f188d1286e5637ac compiled from src/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -65,7 +65,22 @@ report nothing — dropping it turns the fixtures `src/domain/reads-disk.ts` and
 Rejected on 2026-09-27, so not proposed again: a separate `paperlint refs` command; the slowness it
 would have moved was a cache thrown away after every build (`docs/references.md`).
 
+## Hooks
+
+The Claude Code hooks paperlint ships (`submission-confirm`, `paper-folder-layout`,
+`lint-edited`) are app functions in `src/*-hook.ts`, run in-process by `paperlint hook <name>` from the
+`IN_PROCESS_HOOKS` table in `src/cli.ts`. A bug in one does not break this repository; it breaks
+somebody else's session.
+
 ## Rules
+
+### One Wiring File
+
+**Guidance only** — The wiring is `plugin/hooks/hooks.json`. The Claude Code plugin ships it as its hooks, and `paperlint init` without the plugin merges it into the consumer's `.claude/settings.json`; there is no second copy.
+
+### In Process Hooks Frozen
+
+**Guidance only** — `IN_PROCESS_HOOKS` is a workaround: a vigiles hook program may import only `vigiles/hook`, so a hook that needs this package's code was routed around the runtime. Do not add or grow an entry; the way out is zernie/vigiles#472, then #650, which moves the hooks to `hooks/<name>.hook.mjs`. `src/in-process-hooks.test.ts` fails when a name is added. Rejected for that move, so not proposed again: a `.hook.ts` hook (it does not load from `node_modules`), and a thin consumer-side `.hook.ts` importing the logic (`vigiles compile` refuses the import).
 
 ### Layers
 

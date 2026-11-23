@@ -438,7 +438,6 @@ test("the exclude list is exactly the justified set", () => {
     "src/**/*.ts",
     "lib/**",
     "eslint-rules/**",
-    "hooks/**",
     "skills/**",
     "scripts/**",
     "eslint.config.mjs",

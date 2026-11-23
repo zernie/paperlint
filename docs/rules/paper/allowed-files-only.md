@@ -170,8 +170,7 @@ Its first step is cheap: it looks for the nearest folder above the target file t
 `PIPELINE-STATUS.md`, one file check per ancestor, and allows the call when there is none — no git,
 no settings, no lint before that. Measured on 2026-10-12: that step takes about 19 µs. The process
 around it is what every `paperlint hook` costs, the CLI's import: about 650 ms per write on the
-measuring machine, with or without a paper folder (`paper-skills-nudge`, a vigiles hook, measured 730
-to 850 ms on the same machine). The hook fails open: a payload it cannot read is reported on stderr
+measuring machine, with or without a paper folder. The hook fails open: a payload it cannot read is reported on stderr
 and the call goes ahead.
 
 A project whose papers all live under one folder can skip the process for every other write by

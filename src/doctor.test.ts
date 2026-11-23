@@ -101,7 +101,7 @@ test("doctor exits 0 when every hook is wired once, or none is (--no-hooks is a 
 
 test("doctor exits non-zero when the hooks are only partly wired", () => {
   assert.equal(exitWithHooks(allHooks.slice(1).map(hookCommand)), 2);
-  assert.equal(exitWithHooks([hookCommand("paper-edit-guard")]), 2);
+  assert.equal(exitWithHooks([hookCommand("submission-confirm")]), 2);
 });
 
 /** Doctor's output for a project with one of init's hook commands and one present skill link. */

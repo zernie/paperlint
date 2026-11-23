@@ -158,16 +158,6 @@
       "count": 1
     }
   },
-  "hooks/paper-edit-guard.hook.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
-  "hooks/paper-skills-nudge.hook.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "lib/agent-cli-version.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1
@@ -626,13 +616,13 @@
       "count": 22
     },
     "functional/no-let": {
-      "count": 5
+      "count": 4
     },
     "functional/no-loop-statements": {
       "count": 8
     },
     "functional/prefer-immutable-types": {
-      "count": 41
+      "count": 37
     },
     "no-restricted-imports": {
       "count": 1
@@ -645,7 +635,7 @@
   },
   "src/doctor.ts": {
     "functional/immutable-data": {
-      "count": 18
+      "count": 16
     },
     "functional/no-let": {
       "count": 5

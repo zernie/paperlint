@@ -327,7 +327,7 @@ export const layerBoundaries = (root) => ({
       // The package's plain-JS modules. Named so an import of one is classified, not unknown.
       {
         type: "js-module",
-        pattern: "(eslint-rules|hooks|lib|skills)",
+        pattern: "(eslint-rules|lib|skills)",
         partialMatch: false,
         capture: ["kind"],
       },

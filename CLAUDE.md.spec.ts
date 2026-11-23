@@ -39,7 +39,7 @@ Claude Code loads \`add-venue\` from \`.claude/skills/\` and Codex loads it from
     "Where the other rules live": prose`| when you are… | read | holds |
 | --- | --- | --- |
 | writing a lint rule, or a check that judges prose | [\`eslint-rules/CLAUDE.md\`](eslint-rules/CLAUDE.md) | lint rule over script, what holds each requirement of a new rule, the five writing principles |
-| writing or changing a hook | [\`hooks/CLAUDE.md\`](hooks/CLAUDE.md) | how hooks ship, and what was rejected |
+| writing or changing a hook | [\`src/CLAUDE.md\`](src/CLAUDE.md) | how hooks run and are wired, and why the in-process table is frozen |
 | writing or changing a skill | [\`skills/CLAUDE.md\`](skills/CLAUDE.md) | how skills ship |
 | in \`src/\` | [\`src/CLAUDE.md\`](src/CLAUDE.md) | the two layer axes |
 | thinking of a Claude Code plugin | [\`plugin/CLAUDE.md\`](plugin/CLAUDE.md) | why there is none, and what must be measured to bring it back |

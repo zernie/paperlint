@@ -7,7 +7,7 @@
  *
  * What each block defends against, in real life:
  *   - a SECOND copy of a hook wired by hand under another spelling: Claude Code dedupes only
- *     identical handlers, so the guard would run twice and nothing would say so;
+ *     identical handlers, so the hook would run twice and nothing would say so;
  *   - a rewrite on every `init`: the settings file is committed, so churn is a diff someone reviews
  *     for nothing — and a reformat of the user's own file is a change they did not ask for;
  *   - a doctor that says "wired" over nothing, or offers a remedy `init` then refuses to apply.
@@ -65,9 +65,8 @@ check(
 // ── the one source: plugin/hooks/hooks.json ─────────────────────────────────────────────
 const wiring = shippedWiring();
 check(
-  "the hook names are DERIVED from hooks.json — five, in its order",
-  wiring.names.join() ===
-    "paper-edit-guard,submission-confirm,paper-folder-layout,paper-skills-nudge,lint-edited",
+  "the hook names are DERIVED from hooks.json — three, in its order",
+  wiring.names.join() === "submission-confirm,paper-folder-layout,lint-edited",
 );
 // ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
 check(
@@ -76,7 +75,7 @@ check(
     wiredCounts(
       {
         hooks: {
-          PreToolUse: "npx paperlint hook paper-edit-guard",
+          PreToolUse: "npx paperlint hook submission-confirm",
           PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
           Stop: [{ hooks: [{ type: "command" }, null] }],
         },
@@ -136,28 +135,28 @@ try {
   );
 
   // ── which spelling runs which hook ─────────────────────────────────────────────────────
-  const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook paper-edit-guard`;
+  const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook submission-confirm`;
   const cases: [string, { name: string; ours: boolean } | null][] = [
-    [ours, { name: "paper-edit-guard", ours: true }],
+    [ours, { name: "submission-confirm", ours: true }],
     [
       `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook lint-edited`,
       { name: "lint-edited", ours: true },
     ],
     [
-      `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"`,
-      { name: "paper-edit-guard", ours: false },
+      `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/submission-confirm.hook.mjs"`,
+      { name: "submission-confirm", ours: false },
     ],
     [
-      `npx paperlint hook paper-skills-nudge`,
-      { name: "paper-skills-nudge", ours: false },
+      `npx paperlint hook paper-folder-layout`,
+      { name: "paper-folder-layout", ours: false },
     ],
     [
-      `npx paperlint hook paper-skills-nudge`,
-      { name: "paper-skills-nudge", ours: false },
+      `npx paperlint hook paper-folder-layout`,
+      { name: "paper-folder-layout", ours: false },
     ],
     [
-      `node /abs/proj/node_modules/paperlint/bin/paperlint.mjs hook paper-edit-guard`,
-      { name: "paper-edit-guard", ours: false },
+      `node /abs/proj/node_modules/paperlint/bin/paperlint.mjs hook submission-confirm`,
+      { name: "submission-confirm", ours: false },
     ],
     [`node my-own-lint.mjs`, null],
     [`node node_modules/paperlint/bin/paperlint.mjs lint`, null],
@@ -260,7 +259,7 @@ try {
               {
                 type: "command",
                 command:
-                  'node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"',
+                  'node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/submission-confirm.hook.mjs"',
               },
             ],
           },
@@ -278,22 +277,21 @@ try {
       "the report names the hook and the command it found",
       r.status === "foreign" &&
         r.found.length === 1 &&
-        r.found[0]?.name === "paper-edit-guard",
+        r.found[0]?.name === "submission-confirm",
     );
     check(
       "and names the hooks that are not wired in ANY form",
       r.status === "foreign" &&
-        r.missing.join() ===
-          "submission-confirm,paper-folder-layout,paper-skills-nudge,lint-edited",
+        r.missing.join() === "paper-folder-layout,lint-edited",
     );
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
     const merged = merge(handWired, wiring.compiled, MANAGED_BY);
     const c = wiredCounts(merged, wiring.names).find(
-      (c) => c.name === "paper-edit-guard",
+      (c) => c.name === "submission-confirm",
     );
     check(
-      "(control) vigiles' merge alone would wire paper-edit-guard TWICE here",
+      "(control) vigiles' merge alone would wire submission-confirm TWICE here",
       c?.ours === 1 && c.other === 1,
     );
   }
@@ -320,24 +318,24 @@ try {
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
   check(
     "wired once each → ✓ wired, with the fresh-clone consequence",
-    /✓ wired — paper-edit-guard, submission-confirm, paper-folder-layout, paper-skills-nudge, lint-edited, once each/.test(
+    /✓ wired — submission-confirm, paper-folder-layout, lint-edited, once each/.test(
       doc(wiredOnce),
     ) && /cannot run until `npm install`/.test(doc(wiredOnce)),
   );
   check(
     "nothing wired → ⚠ not wired, with the remedy",
-    /⚠ not wired — none of the 5 hooks/.test(doc({})),
+    /⚠ not wired — none of the 3 hooks/.test(doc({})),
   );
   const twice = PreToolUseSettings.parse(structuredClone(wiredOnce));
   twice.hooks.PreToolUse[0]?.hooks.push({
     type: "command",
-    command: "npx paperlint hook paper-edit-guard",
+    command: "npx paperlint hook submission-confirm",
   });
   const twiceText = doc(twice);
   check(
     "🔴 the same hook under two spellings → ⚠ wired TWICE, naming it with its count",
     /wired TWICE/.test(twiceText) &&
-      /paper-edit-guard ×2/.test(twiceText) &&
+      /submission-confirm ×2/.test(twiceText) &&
       !/✓ wired/.test(twiceText),
   );
   const handPartial = doc({
@@ -346,7 +344,7 @@ try {
         {
           matcher: "Bash",
           hooks: [
-            { type: "command", command: "npx paperlint hook paper-edit-guard" },
+            { type: "command", command: "npx paperlint hook lint-edited" },
           ],
         },
       ],
@@ -354,7 +352,7 @@ try {
   });
   check(
     "🔴 partly wired BY HAND → the remedy is NOT `npx paperlint init`, which would refuse to write",
-    /partly wired — missing: submission-confirm, paper-folder-layout, paper-skills-nudge, lint-edited/.test(
+    /partly wired — missing: submission-confirm, paper-folder-layout/.test(
       handPartial,
     ) && /writes nothing then/.test(handPartial),
   );

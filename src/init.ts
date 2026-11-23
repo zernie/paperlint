@@ -3,8 +3,8 @@
  *
  * 🔴 THE HOOKS, THE RULES AND THE CLI READ THE PAPERS DIRECTORY FROM ONE PLACE — the root
  * `paperlint.json`, or its default `papers` when the file is absent. An install that wrote it
- * anywhere else would give a `paper-edit-guard` watching a directory that does not exist — and a
- * guard watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
+ * anywhere else would give hooks watching a directory that does not exist — and a
+ * hook watching nothing is byte-identical, from outside, to a hook that is working (issue #33).
  *
  * The yardstick is how many actions happen between "I want this" and "it works": two, `npm i` and
  * this command (`docs/install.md`). Nothing is left to edit by hand.
@@ -19,8 +19,8 @@
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that paperlint did not make is reported, never replaced.
  *   hooks              WRITTEN into `.claude/settings.json` by vigiles' merge (`hooks-settings.ts`);
- *                      asked of a human (Yes preselected), YES without one — the guard is what the package is
- *                      for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
+ *                      asked of a human (Yes preselected), YES without one — checking an agent's edits is what the package
+ *                      is for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
  *   CI workflow        ASKED, because writing a file into `.github/` is not guessable and not
  *                      cheap to undo. Prior art: Playwright's initializer asks exactly this.
  *                      Without a human: NO.
@@ -442,7 +442,7 @@ export type HooksOutcome =
 
 /**
  * The hooks step: decide, then wire. `hooks: false` is `--no-hooks`. The default without a human
- * is YES — installing a package whose purpose includes an edit guard makes "yes" guessable, and
+ * is YES — installing a package whose purpose includes checking an agent's edits makes "yes" guessable, and
  * the edit is idempotent and shows up in `git diff` (the rule `docs/install.md` took from
  * Playwright: ask only about what cannot be guessed or is expensive).
  */

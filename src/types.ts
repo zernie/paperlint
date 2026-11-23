@@ -12,7 +12,7 @@ import type { RuleBlock } from "./rules-config.ts";
  */
 export interface PaperlintConfig {
   /** The paper director(ies), relative to the project root. Default `papers`. The field name is
-   * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts.
+   * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersRoots()` in src/papers-roots.ts.
    * As written in the file: `toPaths` turns a string or a list of strings into directories, and
    * reads anything else as none. */
   papersDir?: unknown;

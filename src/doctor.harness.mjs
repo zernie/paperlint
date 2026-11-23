@@ -3,7 +3,7 @@
  * file.
  *
  * 🔴 WHY A TEST MATTERS ESPECIALLY MUCH HERE. Doctor exists precisely because
- * `paper-edit-guard` cannot say "I am guarding nothing": silence is its success state. A broken
+ * a hook cannot say "I am watching nothing": silence is its success state. A broken
  * doctor has exactly the same property — it will print a cheerful list of checkmarks and never
  * notice a mismatch. That is, the check for a silent failure can itself fail silently, and only
  * this file can tell the two apart.
@@ -26,9 +26,6 @@ import { createChecker } from "../lib/check.ts";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { doctor, detectPapers, PROGRAMS, found } = await import(
   join(HERE, "doctor.ts")
-);
-const { papersRoot } = await import(
-  join(HERE, "..", "hooks", "paper-edit-guard.hook.mjs")
 );
 
 const check = createChecker();
@@ -78,33 +75,24 @@ const runDoctor = (
   const r = runDoctor(dir, { cliPapers: "papers" });
   check("a consistent install — exit ZERO", r.code === 0);
   check(
-    "and it says outright that the guarded directory is the linted one",
-    /the same directory/.test(r.out),
+    "and it names the one directory that is linted",
+    /linted\s+papers$/m.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
-// The CLI lints one directory and the hook guards another: the install that motivated doctor
-// (issue #33). Here the CLI was pointed elsewhere while the hook took the default.
+// ── II. THE VERY DEFECT: THE PAPERS LIVE SOMEWHERE THE SETTINGS DO NOT NAME ─────────────────
+// The install that motivated doctor (issue #33): nothing declared, so lint and the hooks both
+// watch `papers/`, while the papers are in another directory.
 {
   const dir = consumer({ papersDir: "writing/drafts" });
-  const r = runDoctor(dir, { cliPapers: "writing/drafts" });
+  const r = runDoctor(dir, { cliPapers: "papers" });
   check(
-    "an install that follows the docs — a FAILURE, not a cheerful report",
+    "papers outside the declared directory — a FAILURE, not a cheerful report",
     r.code === 2,
   );
   check(
-    "and BOTH directories are named, so the mismatch is visible rather than inferred",
-    /will lint\s+writing\/drafts/.test(r.out) &&
-      /will guard\s+papers/.test(r.out),
-  );
-  check(
-    "🔴 and the CONSEQUENCE is stated: writes pass the guard unseen",
-    /passes the guard unseen/.test(r.out),
-  );
-  check(
-    "the directory that does not exist is named as a guard watching nothing",
+    "the directory that does not exist is named as watched by nothing",
     /watching nothing/.test(r.out),
   );
   check(
@@ -129,23 +117,23 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── II-quater. A paperlint.json THAT DOES NOT PARSE — the guard refuses every command ─────
+// ── II-quater. A paperlint.json THAT DOES NOT PARSE — lint refuses to run ────────────────
 {
   const dir = consumer({ papersDir: "papers" });
   writeFileSync(join(dir, "paperlint.json"), '{ "papersDir": <<<<<<< HEAD\n');
   const r = runDoctor(dir, { cliPapers: "papers" });
   check("an unparsable paperlint.json — a FAILURE", r.code === 2);
   check(
-    "named, with the way out (a file edit, not a command)",
+    "named, with what it blocks",
     /✗ paperlint\.json is not valid JSON/.test(r.out) &&
-      /Edit or Write/.test(r.out),
+      /`paperlint lint` refuses to run/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
 // ── II-ter. A FRESH PROJECT WITH NO PAPERS YET IS NOT BROKEN ───────────────────────────────
 // `init --yes` declares the default and creates no paper. The declared directory does not exist,
-// and no papers live anywhere else: the guard has nothing to protect yet. A warning with the next
+// and no papers live anywhere else: there is nothing to check yet. A warning with the next
 // step, not a failure. (A missing directory while papers DO live elsewhere stays ✗ — case II.)
 {
   const dir = consumer({
@@ -164,43 +152,13 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
-{
-  const dir = consumer({ papersDir: "writing/drafts", declared: "papers" });
-  mkdirSync(join(dir, "papers"), { recursive: true });
-  const r = runDoctor(dir, { cliPapers: "writing/drafts" });
-  check("both declarations exist, but differ — a FAILURE", r.code === 2);
-  rmSync(dir, { recursive: true, force: true });
-}
-
-// ── IV. THE ROOT IS ASKED FOR FROM THE HOOK ITSELF, NOT RETOLD ─────────────────────────────
-// This is load-bearing: a copy of the logic would drift silently and print a confident wrong
-// answer.
-{
-  const dir = consumer({ papersDir: "docs/papers", declared: "docs/papers/" });
-  const r = runDoctor(dir, { cliPapers: "docs/papers" });
-  const fromHook = papersRoot(
-    JSON.stringify({ [PAPERS_DIR_FIELD]: "docs/papers/" }),
-  );
-  check("the hook itself trims the trailing slash", fromHook === "docs/papers");
-  check(
-    "and doctor prints EXACTLY what the hook returned, not its own reading",
-    new RegExp(`will guard\\s+${fromHook}$`, "m").test(r.out),
-  );
-  check(
-    "a trailing slash does not make the install look inconsistent",
-    r.code === 0,
-  );
-  rmSync(dir, { recursive: true, force: true });
-}
-
-// ── V. THE HOOK'S REFUSAL IS PASSED ALONG, NOT TURNED INTO A DIRECTORY ─────────────────────
+// ── V. A SETTING THAT NAMES NO DIRECTORY IS NAMED, NOT TURNED INTO ONE ─────────────────────
 {
   const dir = consumer({ papersDir: "papers", declared: "" });
-  const r = runDoctor(dir, { cliPapers: "papers" });
+  const r = runDoctor(dir, { cliPapers: null });
   check(
-    "an empty string in the declaration — the hook refuses, and doctor NAMES it",
-    /the guard refuses/.test(r.out),
+    "an empty string in the declaration — doctor NAMES it as no directory",
+    /name no directory/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }

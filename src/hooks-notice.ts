@@ -27,20 +27,16 @@ import { SKILLS_HOME } from "./link-skills.ts";
 import type { Files } from "./ports/files.ts";
 
 /** The hooks that may carry the notice: PostToolUse ones. A PreToolUse hook never does. */
-export const NOTICE_HOOKS: readonly string[] = [
-  "lint-edited",
-  "paper-skills-nudge",
-];
+export const NOTICE_HOOKS: readonly string[] = ["lint-edited"];
 
 /** What `paperlint hook [name]` says when it cannot run a hook: no name, or no such hook shipped. It names the remedy; the caller does not deny (#324). */
 export const hookNotRunningText = (
   name: string | undefined,
-  program: string,
   version: string,
 ): string =>
   name === undefined || name === ""
-    ? "paperlint: `hook` needs a name, e.g. `paperlint hook paper-edit-guard`; no hook is running."
-    : `paperlint: unknown hook \`${name}\` — no such program at ${program}; it is NOT running (installed: paperlint ${version}). Run \`npm install\`, or remove \`paperlint hook ${name}\` from .claude/settings.json.`;
+    ? "paperlint: `hook` needs a name, e.g. `paperlint hook lint-edited`; no hook is running."
+    : `paperlint: unknown hook \`${name}\` — this paperlint has no such hook; it is NOT running (installed: paperlint ${version}). Run \`npm install\`, or remove \`paperlint hook ${name}\` from .claude/settings.json.`;
 
 /** Where the version last told is kept, relative to the project root. */
 export const NOTICE_STATE = join(
@@ -52,25 +48,39 @@ export const NOTICE_STATE = join(
 
 const SKILLS_HOME_SHOWN = `${SKILLS_HOME}/`;
 
+/** One clause of the notice: the names after their sentence, or nothing when there are none. */
+const clause = (names: readonly string[], says: string): readonly string[] =>
+  names.length === 0 ? [] : [`${says}: ${names.join(", ")}`];
+
+/** What the project owes besides the missing hooks; the notice names each that is not empty. */
+interface Owed {
+  readonly skills?: readonly string[];
+  readonly retired?: readonly string[];
+}
+
+/** The clauses the notice joins: missing hooks, unlinked skills, retired hooks still wired. */
+const owedClauses = (missing: readonly string[], owed: Owed): string =>
+  [
+    ...clause(missing, "expects hooks that this project has not wired"),
+    ...clause(
+      owed.skills ?? [],
+      `ships skills that are not linked into ${SKILLS_HOME_SHOWN}`,
+    ),
+    ...clause(
+      owed.retired ?? [],
+      "no longer ships hooks this project still wires, which now run nothing",
+    ),
+  ].join(", and ");
+
 /** The instruction the agent reads. `byHand`: `init` writes no hooks then, so the remedy differs. */
 export const noticeText = (
   version: string,
   missing: readonly string[],
   byHand: boolean,
-  skills: readonly string[] = [],
+  owed: Owed = {},
 ): string => {
-  const what = [
-    ...(missing.length === 0
-      ? []
-      : [
-          `expects hooks that this project has not wired: ${missing.join(", ")}`,
-        ]),
-    ...(skills.length === 0
-      ? []
-      : [
-          `ships skills that are not linked into ${SKILLS_HOME_SHOWN}: ${skills.join(", ")}`,
-        ]),
-  ].join(", and ");
+  const what = owedClauses(missing, owed);
+  const skills = owed.skills ?? [];
   const handHooks = byHand && missing.length > 0;
   return (
     `⚠ paperlint ${version} ${what}. ` +

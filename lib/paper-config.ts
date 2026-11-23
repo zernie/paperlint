@@ -2,16 +2,11 @@
  * Where the consumer declares its settings — the ONE SOURCE for everything that is allowed to
  * import it.
  *
- * 🔴 WHY THIS MODULE DOES NOT REMOVE THE DUPLICATION COMPLETELY, AND THAT IS NOT AN OVERSIGHT.
- * The three hooks (`hooks/*.hook.mjs`) still have to keep their own copies of these values: a
- * compiled hook is forbidden to import anything but `vigiles/hook`, and that ban is not
- * arbitrary — a hook's capabilities equal its API surface, so allowing imports would mean
- * allowing a reach into `child_process`. The restriction is wider than strictly necessary
- * (importing plain constants adds no capability), and that is discussed in zernie/vigiles#245,
- * but until it is relaxed the hooks duplicate, and drift is caught by the cross-check in
- * `hooks/hooks.harness.ts`.
+ * 🔴 NO HOOK KEEPS A COPY. The hooks once were vigiles programs (`hooks/*.hook.mjs`), forbidden to
+ * import anything but `vigiles/hook`, so each carried its own copy of these values; they now run
+ * in-process and import from here (zernie/vigiles#245, #472 for the way back to the runtime).
  *
- * 🔴 BUT THE REST WERE DUPLICATING FOR NO REASON AT ALL. `eslint-rules/papers.mjs` and
+ * 🔴 THE REST WERE DUPLICATING FOR NO REASON AT ALL. `eslint-rules/papers.mjs` and
  * `skills/paper-pipeline/scripts/consumer.mjs` are not hooks, carry no import restriction, and
  * could always have taken the value from here. Worse, their copies were not covered by the
  * cross-check at all — it compared the three hooks against each other, while these two lived
