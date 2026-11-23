@@ -613,16 +613,16 @@
   },
   "src/cli.ts": {
     "functional/immutable-data": {
-      "count": 22
+      "count": 20
     },
     "functional/no-let": {
       "count": 4
     },
     "functional/no-loop-statements": {
-      "count": 8
+      "count": 7
     },
     "functional/prefer-immutable-types": {
-      "count": 37
+      "count": 36
     },
     "no-restricted-imports": {
       "count": 1
