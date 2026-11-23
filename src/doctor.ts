@@ -3,20 +3,18 @@
  *
  * 🔴 WHY THIS EXISTS AT ALL, when none of the eight tools surveyed for `docs/install.md` ships a
  * `doctor`. None of them needs one: a formatter that is misconfigured formats nothing and you see
- * it immediately. This package has `paper-edit-guard`, whose success state IS silence — it reports
- * nothing while guarding correctly and reports nothing while guarding a directory that does not
- * exist. From outside, "installed" and "protecting you" are the same picture.
+ * it immediately. This package has hooks whose success state IS silence: a hook watching the right
+ * directory and one watching a directory that does not exist both print nothing. From outside,
+ * "installed" and "working" are the same picture.
  *
  * Measured 2026-09-18, and this is the failure the command was written for: a consumer who follows
- * the documented install exactly — `paperlint init`, then point the config at their papers — gets a guard
- * that allows every Bash write to their paper sources. It only appears to work when the directory
+ * the documented install exactly — `paperlint init`, then point the config at their papers — gets hooks
+ * that watch the wrong directory. It only appears to work when the directory
  * path happens to contain the segment `papers`, because that is the default the hook falls back to.
  * (Issue #33.)
  *
- * 🔴 THE ROOT THE HOOK WOULD USE IS ASKED OF THE HOOK, NOT RE-DERIVED. `papersRoot` is imported
- * from `paper-edit-guard.hook.mjs` itself. A second implementation here would be a second source of
- * truth, which is the very defect this command reports — and it would drift silently, because a
- * copy that disagrees with the original still prints a confident answer.
+ * 🔴 THE CLI READS THE PAPERS DIRECTORY THROUGH ONE READER (`papersRoots`, src/papers-roots.ts); what
+ * doctor checks is that the directory exists, and that the papers do not live somewhere else.
  *
  * Prior art for the shape: `brew doctor`, `flutter doctor`, `npm doctor`, `expo-doctor`.
  */
@@ -25,14 +23,11 @@ import { type Dirent, existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
-// Types come from `paper-edit-guard.hook.d.mts`; see the block above for why the import points at
-// the hook itself rather than at a shared module.
 import {
-  papersRoot,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   CONFIG_FILE,
-} from "../hooks/paper-edit-guard.hook.mjs";
+} from "#lib/paper-config";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks, initWiredHooks } from "./hooks-settings.ts";
@@ -167,7 +162,7 @@ export function detectPapers(
 /**
  * The root `paperlint.json`'s verdict. Absent, or silent on `papersDir`, is fine: the default is
  * `papers`, and the CLI and the hooks take it alike. Only a file that does not parse is a failure —
- * the edit guard refuses every Bash command while it cannot read it.
+ * `paperlint lint` refuses to run while it cannot read it.
  */
 function declarationVerdict(raw: string | null): {
   lines: string[];
@@ -187,7 +182,7 @@ function declarationVerdict(raw: string | null): {
     return {
       lines: [
         `  ✗ ${CONFIG_FILE} is not valid JSON: ${messageOf(e)}`,
-        `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,
+        `      \`paperlint lint\` refuses to run until it parses`,
       ],
       bad: 1,
     };
@@ -204,34 +199,24 @@ function declarationVerdict(raw: string | null): {
 }
 
 /**
- * The papers-directory verdict: whether the CLI and the hooks agree, and whether the directory
- * they name exists. `bad` counts the failures.
+ * The papers-directory verdict: whether the directory the CLI and the hooks read exists, and
+ * whether the papers live somewhere else. `bad` counts the failures.
  */
 function papersVerdict(
   root: string,
-  cliPapers: string | null,
   hookSays: string | null,
 ): { lines: string[]; bad: number } {
   const out: string[] = [];
   let bad = 0;
-  if (cliPapers && hookSays) {
-    const same = resolve(root, cliPapers) === resolve(root, hookSays);
-    out.push(
-      same
-        ? `  ✓ the same directory — what is linted is what is guarded`
-        : `  ✗ DIFFERENT directories. Every Bash write to ${cliPapers} passes the guard unseen.`,
-    );
-    if (!same) bad++;
-  }
   // A declared directory that does not exist is a failure only when papers live SOMEWHERE ELSE:
-  // then every write to them passes the guard unseen (issue #33). With no papers anywhere, the
+  // then lint and the hooks watch nothing while the papers go unchecked (issue #33). With no papers anywhere, the
   // project is simply new — `init --yes` declares the default and creates no paper — and failing
   // it would teach people to ignore doctor.
   if (hookSays && !existsSync(join(root, hookSays))) {
     const guesses = detectPapers(root);
     if (guesses.length) {
       out.push(
-        `  ✗ ${hookSays} does not exist — the guard is watching nothing`,
+        `  ✗ ${hookSays} does not exist — lint and the hooks are watching nothing`,
       );
       out.push(`      papers look like they live in: ${guesses.join(", ")}`);
       bad++;
@@ -315,7 +300,7 @@ export interface DoctorOptions {
 }
 
 /**
- * @returns 2 when the guard and the linter do not agree, the declaration is unusable, or the hooks
+ * @returns 2 when the papers live outside the declared directory, the declaration is unusable, or the hooks
  * are miswired (partly wired, or one wired twice) — those are binary and are the reason this
  * command exists. A missing external program is a FACT, not a
  * verdict: it is printed and does not fail the run, because which programs you need depends on
@@ -348,16 +333,10 @@ export function doctor({
   bad += declaration.bad;
 
   out.push("", "papers directory");
-  // The hook is given what its provider gives it: the file, or `{}` when there is none.
-  const hookRoot = papersRoot(raw ?? "{}");
-  const hookSays = typeof hookRoot === "string" ? hookRoot : null;
   out.push(
-    `  the CLI will lint    ${cliPapers ?? "(nothing — no declaration found)"}`,
+    `  linted               ${cliPapers ?? "(nothing — the settings do not read or name no directory)"}`,
   );
-  out.push(
-    `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
-  );
-  const verdict = papersVerdict(root, cliPapers, hookSays);
+  const verdict = papersVerdict(root, cliPapers);
   out.push(...verdict.lines);
   bad += verdict.bad;
 

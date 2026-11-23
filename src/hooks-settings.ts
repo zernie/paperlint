@@ -289,7 +289,7 @@ export type WireResult =
  * 🔴 ANOTHER SPELLING OF THE SAME HOOK STOPS THE WRITE. vigiles' merge owns only commands whose
  * path token is MANAGED_BY; a hook wired by hand through `vigiles … run-program …/hooks/x.hook.mjs`
  * is not recognised as ours, so a merge would ADD a second copy — and Claude Code dedupes only
- * identical handlers, so the guard would run twice. Writing nothing and saying so is the only
+ * identical handlers, so the hook would run twice. Writing nothing and saying so is the only
  * answer that cannot make it worse.
  */
 export function wireHooks(

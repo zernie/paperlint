@@ -66,9 +66,6 @@ async function hookOn(file: string, newString: string): Promise<string> {
     err: (m: string) => {
       throw new Error(`the hook complained: ${m}`);
     },
-    run: () => {
-      throw new Error("an in-process hook spawns nothing");
-    },
   });
   assert.equal(code, 0);
   return out.join("");

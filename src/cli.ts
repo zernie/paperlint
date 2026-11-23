@@ -32,9 +32,7 @@ import {
   statSync,
 } from "node:fs";
 import { absolutePath } from "./domain/paths.ts";
-import { createRequire } from "node:module";
 import { stripVTControlCharacters } from "node:util";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
@@ -188,7 +186,6 @@ import {
 // and from dist/ — see CONTRIBUTING.md.
 import {
   CONFIG_FILE,
-  DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   PAPER_ONLY_KEYS,
   SETTINGS_KEYS,
@@ -240,6 +237,7 @@ import {
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
+import { papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
@@ -1427,33 +1425,10 @@ export function readConfig(
   return { opts: settings.value, configPath, root };
 }
 
-/** The papers directory field of the settings, read by its one declared name; the default when absent. */
-export function papersDirOf(opts: PaperlintConfig): unknown {
-  const declared = opts.papersDir;
-  return declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
-}
-
 /** The error for a papers directory that is missing or holds no paper. */
 export const noPapersMessage = (dir: string): string =>
   `no papers in ${dir}/ — create one with \`npx paperlint new <name>\`, or set "${PAPERS_DIR_FIELD}" ` +
   `in ${CONFIG_FILE} if your papers live elsewhere`;
-
-/** The papers directories of a read config, absolute: each relative to the project root. */
-export const papersRoots = (cfg: {
-  opts: PaperlintConfig;
-  root: string;
-}): string[] =>
-  toPaths(papersDirOf(cfg.opts)).map((rel) => resolve(cfg.root, rel));
-
-/** The papers directory may be one directory or several; both spellings normalise to a list. */
-export function toPaths(papers: unknown): string[] {
-  if (typeof papers === "string") return papers.trim() ? [papers.trim()] : [];
-  if (Array.isArray(papers))
-    return papers.filter(
-      (x): x is string => typeof x === "string" && x.trim() !== "",
-    );
-  return [];
-}
 
 /** What an in-process hook is handed: the payload, and where its output and complaints go. */
 interface HookIo {
@@ -1464,8 +1439,16 @@ interface HookIo {
 
 /**
  * Hooks that run inside this process instead of as a vigiles program, each because it must call the
- * package's own code (`src/folder-layout-hook.ts` says why for its one). Advisory: whatever goes
- * wrong, the tool call has already happened, so it says so on stderr and exits 0.
+ * package's own code (`src/folder-layout-hook.ts` says why for its one). Each exits 0; a gate
+ * refuses through its JSON, and an advisory hook that fails says so on stderr.
+ *
+ * TODO(zernie/vigiles#472, zernie/paperlint#650): this table is a workaround, not a pattern. It
+ * exists because a vigiles hook program may import only `vigiles/hook`, so a hook that needs this
+ * package's code was routed around the runtime: it gets no capability check, no state and no
+ * throttle, and the package ends up with two ways to run a hook. Do NOT add an entry and do not
+ * grow one. A hook that needs the package's code waits for vigiles#472 (a hook may declare a module
+ * of its own package); then every entry here moves to `hooks/<name>.hook.mjs` and the table is
+ * deleted (#650). `src/in-process-hooks.test.ts` fails when a name is added.
  */
 const IN_PROCESS_HOOKS: Readonly<
   Record<string, (io: HookIo) => number | Promise<number>>
@@ -1514,6 +1497,10 @@ const IN_PROCESS_HOOKS: Readonly<
     return said instanceof Promise ? said.then(write) : write(said);
   },
 };
+
+/** The names in `IN_PROCESS_HOOKS`, for the test that keeps the list from growing. */
+export const IN_PROCESS_HOOK_NAMES: readonly string[] =
+  Object.keys(IN_PROCESS_HOOKS);
 
 /**
  * The words after `submission` read by this CLI's own parser, as the command reads them: the paper
@@ -1634,18 +1621,6 @@ const firstLine = (message: string): string => message.split("\n", 1).join("");
 /** What `runHook` takes; every effect is injectable, so a test stages none of them. */
 interface HookOptions {
   readonly err?: typeof console.error;
-  /** Runs the hook with the terminal's streams: `spawnSync` is one. Only its status and stdout are read. */
-  readonly run?: (
-    file: string,
-    args: readonly string[],
-    options: {
-      readonly stdio:
-        "inherit" | readonly ["pipe", "pipe" | "inherit", "inherit"];
-      readonly input?: string;
-      readonly encoding?: "utf8";
-    },
-  ) => { readonly status: number | null; readonly stdout?: string | null };
-  readonly resolve?: (spec: string) => string;
   /** The hook's payload, as Claude Code sends it on stdin. */
   readonly stdin?: () => string;
   /** Where an in-process hook's output goes: stdout, which Claude Code reads. */
@@ -1666,22 +1641,6 @@ const readSkillLinks = (root: string): LinkReport =>
 const defaultStdin = (): string => readFileSync(0, "utf8");
 const defaultOut = (text: string): void => {
   process.stdout.write(text);
-};
-
-/** The real spawner, narrowed to what `runHook` asks of it. */
-export const spawnHook: NonNullable<HookOptions["run"]> = (file, args, o) => {
-  const r =
-    o.stdio === "inherit"
-      ? spawnSync(file, [...args], { stdio: "inherit" })
-      : spawnSync(file, [...args], {
-          stdio: [...o.stdio],
-          input: o.input,
-          encoding: "utf8",
-        });
-  return {
-    status: r.status,
-    stdout: typeof r.stdout === "string" ? r.stdout : null,
-  };
 };
 
 /** The project root the hooks are anchored to. */
@@ -1798,23 +1757,16 @@ function runHookWithNotice(
     }
   })();
   if (text === null) return runHookPlain(name, io);
-  const fed = { ...io, stdin: () => text, feed: text };
+  const fed = { ...io, stdin: () => text };
   if (!touchesAPaper(text)) return runHookPlain(name, fed);
   const printed = collector();
-  return after(
-    runHookPlain(name, {
-      ...fed,
-      out: printed.write,
-      capture: true,
-    }),
-    (code) => {
-      const said = printed.text();
-      const merged = code === 0 ? mergeNotice(said, notice.text) : null;
-      // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
-      io.out(merged !== null && remember(notice, io) ? merged : said);
-      return code;
-    },
-  );
+  return after(runHookPlain(name, { ...fed, out: printed.write }), (code) => {
+    const said = printed.text();
+    const merged = code === 0 ? mergeNotice(said, notice.text) : null;
+    // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
+    io.out(merged !== null && remember(notice, io) ? merged : said);
+    return code;
+  });
 }
 
 /** Records that the notice was given; false, with one stderr line, when it cannot be. */
@@ -1832,64 +1784,12 @@ function remember(notice: Pending, io: ResolvedHookOptions): boolean {
 
 function runHookPlain(
   name: string | undefined,
-  {
-    err = console.error,
-    run = spawnHook,
-    // The resolver is injected so that "the runtime was not found" is checked by an assert and not
-    // by deleting node_modules: a failure must be reproducible, not staged.
-    // 🔴 WE RESOLVE THE PACKAGE, NOT A FILE INSIDE IT. `require.resolve("vigiles/dist/cli.js")`
-    // DOES NOT WORK: the package's `exports` map hands out only "." and nine named subpaths, and
-    // `./dist/cli.js` — even `./package.json` — is not among them:
-    //     Package subpath './dist/cli.js' is not defined by "exports"
-    // This is neither our oversight nor their bug: a closed export map is normal practice. So we
-    // resolve the root entry ("." → dist/test.js), take its directory and put `cli.js` next to it —
-    // the very file the package itself declares as its `bin`.
-    resolve = (spec: string): string =>
-      createRequire(import.meta.url).resolve(spec),
-    stdin = defaultStdin,
-    out = defaultOut,
-    feed,
-    capture = false,
-  }: HookOptions & {
-    /** The payload already read from stdin, handed to a spawned hook on its stdin. */
-    readonly feed?: string;
-    /** Collect a spawned hook's stdout into `out` instead of letting it reach the terminal. */
-    readonly capture?: boolean;
-  } = {},
+  { err, stdin, out }: ResolvedHookOptions,
 ): number | Promise<number> {
   const inProcess = IN_PROCESS_HOOKS[name ?? ""];
   if (inProcess !== undefined) return inProcess({ err, stdin, out });
-  const program = fileURLToPath(
-    new URL(`../hooks/${name ?? ""}.hook.mjs`, import.meta.url),
-  );
-  if (!name || !existsSync(program)) {
-    err(hookNotRunningText(name, program, packageVersion()));
-    return 1; // not 2: that denies every Bash command, the fix included (#324); not 0: nobody sees it
-  }
-  let runtime;
-  try {
-    runtime = join(dirname(resolve("vigiles")), "cli.js");
-    if (!existsSync(runtime))
-      throw new Error(`resolved vigiles, but no cli.js beside it: ${runtime}`);
-  } catch {
-    err(
-      `paperlint: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
-        `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
-        `Reinstall this package so its dependencies are present.`,
-    );
-    return 1; // not 2: that would deny every Bash command; not 0: nobody would see this
-  }
-  const args = [runtime, "hook-runtime", "run-program", program];
-  const r =
-    feed === undefined
-      ? run(process.execPath, args, { stdio: "inherit" })
-      : run(process.execPath, args, {
-          stdio: ["pipe", capture ? "pipe" : "inherit", "inherit"],
-          input: feed,
-          encoding: "utf8",
-        });
-  if (capture && typeof r.stdout === "string") out(r.stdout);
-  return r.status ?? 0;
+  err(hookNotRunningText(name, packageVersion()));
+  return 1; // not 2: that denies every Bash command, the fix included (#324); not 0: nobody sees it
 }
 
 /**
@@ -2735,7 +2635,7 @@ export async function run(
   // an explicable one.
   let results: ESLint.LintResult[];
   try {
-    results = await eslint.lintFiles(paths);
+    results = await eslint.lintFiles([...paths]);
   } catch (e) {
     if (isEmptyLintSet(e)) results = [];
     else throw e;

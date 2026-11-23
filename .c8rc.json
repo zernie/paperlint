@@ -27,7 +27,6 @@
     "src/**/*.ts",
     "lib/**",
     "eslint-rules/**",
-    "hooks/**",
     "skills/**",
     "scripts/**",
     "eslint.config.mjs"

@@ -32,8 +32,9 @@ import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.ts";
 import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps, toPaths, runHook } =
-  await import(join(HERE, "cli.ts"));
+const { run, parseArgs, buildConfig, nextSteps, runHook } = await import(
+  join(HERE, "cli.ts")
+);
 const { init, choosePapers, offerWorkflow, missingPrograms, WORKFLOW_PATH } =
   await import(join(HERE, "init.ts"));
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
@@ -155,13 +156,6 @@ check(
 check(
   "the old `--options` spelling keeps working — a flag in someone else's CI is not ours to break",
   parseArgs(["lint", "--options", "o.json"]).config === "o.json",
-);
-check(
-  "the papers directory as a string and as a list normalize the same way",
-  toPaths("papers")[0] === "papers" &&
-    toPaths(["a", "b"]).length === 2 &&
-    toPaths(undefined).length === 0 &&
-    toPaths("  ").length === 0,
 );
 
 // ── config is assembled, and consumer data gets through ────────────────────────────────────
@@ -293,8 +287,8 @@ check(
 // 🔴 THE DEFECT THIS COMMAND WAS REWRITTEN FOR (issue #33, measured 09-18): init wrote
 // a separate config file with a GUESSED `"papers": "papers"` and never touched `package.json` — while the
 // three hooks read the papers directory from exactly there. A consumer who did everything by
-// the book got a `paper-edit-guard` guarding a directory that did not exist; from outside that
-// is indistinguishable from a working guard, because silence is its success state.
+// the book got hooks watching a directory that did not exist; from outside that is
+// indistinguishable from working hooks, because silence is their success state.
 //
 // ⚠️ Questions here are NOT ASKED blind: `interactive` is passed explicitly, never read from
 // stdin. A harness stuck at an input prompt is not a red test, it is the absence of any answer
@@ -381,7 +375,7 @@ check(
       );
       check(
         "and exits zero on a consistent install",
-        code === 0 && /the same directory/.test(out.text()),
+        code === 0 && /linted\s+writing\/drafts/.test(out.text()),
       );
     }
 
@@ -1164,83 +1158,24 @@ check(
   }
 }
 
-// ── `paperlint hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
-//
-// 🔴 The measurement that gave rise to this command: one tarball, two package managers.
-//     npm:  node_modules/vigiles/dist/cli.js  EXISTS
-//     pnpm: node_modules/vigiles/dist/cli.js  DOES NOT
-// The old wiring addressed the runtime from the project root and did not resolve under pnpm,
-// and `|| exit 2` on PreToolUse(Bash) turned that into a block on ANY command. The end-to-end
-// half (both installs, real processes) lives in `test/e2e/install/install.e2e.ts`; here — the verdicts.
+// ── `paperlint hook` with no name or an unknown one — said, and never a denial (#324) ─────────
 {
-  const calls = [];
-  const fake = (code) => (bin, args, opts) => {
-    calls.push({ bin, args, opts });
-    return { status: code };
-  };
   let said = "";
   const err = (...a) => {
     said += a.join(" ") + "\n";
   };
-
-  said = "";
   check(
     "no name — the right invocation is suggested, and it does not deny",
     runHook(undefined, { err }) === 1 &&
-      /paperlint hook paper-edit-guard/.test(said),
+      /paperlint hook lint-edited/.test(said),
   );
-
-  // An unknown name cannot run, the same failure as a missing runtime below, so it must not deny (#324).
   said = "";
-  const named =
-    /unknown hook `no-such-hook`.*no-such-hook\.hook\.mjs.*paperlint \d+\.\d+\.\d+.*npm install/s;
   check(
-    "an unknown hook is NAMED with its path, the installed version and the remedy, and does not deny",
-    runHook("no-such-hook", { err }) === 1 && named.test(said),
-  );
-
-  // 🔴 THE MAIN ASSERTION. A runtime that cannot be found HAS NO RIGHT to return 2: on
-  // PreToolUse that blocks any Bash command, including the one that would fix it. It must say
-  // so LOUDLY and let it through. Silent degradation is worse than an explicit one, but blocking
-  // everything is worse than both.
-  said = "";
-  calls.length = 0;
-  const brokenResolve = () => {
-    throw new Error("Cannot find module 'vigiles/dist/cli.js'");
-  };
-  const code = runHook("paper-edit-guard", {
-    err,
-    run: fake(0),
-    resolve: brokenResolve,
-  });
-  check(
-    "the runtime does not resolve — work is NOT blocked (code 1: shown to the person, not 2)",
-    code === 1,
-  );
-  check(
-    "and the complaint is LOUD: the hook is named, the effect is named, the remedy is named",
-    /paper-edit-guard/.test(said) &&
-      /is NOT running/.test(said) &&
-      /Reinstall this package/.test(said),
-  );
-  check("and the runtime was NOT started in the process", calls.length === 0);
-
-  // The hook's real verdict passes through — otherwise the guard stops being a guard.
-  calls.length = 0;
-  check(
-    "the hook's verdict passes STRAIGHT THROUGH: 2 stays 2",
-    runHook("paper-edit-guard", { err, run: fake(2) }) === 2,
-  );
-  check(
-    "and EXACTLY the runtime with this hook's program is run",
-    calls.length === 1 &&
-      calls[0].args[1] === "hook-runtime" &&
-      calls[0].args[2] === "run-program" &&
-      /paper-edit-guard\.hook\.mjs$/.test(calls[0].args[3]),
-  );
-  check(
-    "zero stays zero",
-    runHook("paper-skills-nudge", { err, run: fake(0) }) === 0,
+    "an unknown hook is NAMED with the installed version and the remedy, and does not deny",
+    runHook("no-such-hook", { err }) === 1 &&
+      /unknown hook `no-such-hook`.*no such hook.*paperlint \d+\.\d+\.\d+.*npm install/s.test(
+        said,
+      ),
   );
 }
 
@@ -1503,7 +1438,7 @@ console.log(
       check(
         "🔴 without a human the hooks default to YES — settings.json is written",
         existsSync(settings(dir)) &&
-          /hook paper-edit-guard/.test(readFileSync(settings(dir), "utf8")),
+          /hook submission-confirm/.test(readFileSync(settings(dir), "utf8")),
       );
       check(
         "and the default names the flag that changes it",

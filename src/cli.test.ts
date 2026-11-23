@@ -211,26 +211,6 @@ test("new with several papers directories says which one it used", async () => {
   );
 });
 
-test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal, both let the tool call through", () => {
-  const messages: string[] = [];
-  const noCli = runHook("paper-edit-guard", {
-    err: (m: string) => messages.push(m.split("\n")[0] ?? ""),
-    resolve: () => join(root, "nowhere", "index.js"),
-  });
-  const killed = runHook("paper-edit-guard", {
-    err: (m: string) => messages.push(m),
-    run: () => ({ status: null, signal: "SIGKILL" }),
-  });
-  assert.deepEqual(
-    { noCli, killed, messages: messages.map((m) => m.split(" from ")[0]) },
-    {
-      noCli: 1,
-      killed: 0,
-      messages: ["paperlint: the hook runtime (vigiles) is not resolvable"],
-    },
-  );
-});
-
 test("runHook paper-folder-layout: in-process, on the real disk — a refusal on stdout for a new stray file, nothing for an allowed one, a complaint and exit 0 on a broken payload", () => {
   const dir = join(root, "layout-hook");
   writeTree(dir, {
@@ -245,9 +225,6 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
       stdin: () => payload,
       out: (t) => out.push(t),
       err: (m: string) => err.push(m),
-      run: () => {
-        throw new Error("an in-process hook spawns nothing");
-      },
     });
     return { code, out, err };
   };
@@ -307,9 +284,6 @@ async function lintEditedOn(file: string, newString: string) {
     },
     err: (m: string) => {
       err.push(m);
-    },
-    run: () => {
-      throw new Error("an in-process hook spawns nothing");
     },
   });
   return { code, out: out.join(""), err };
@@ -411,9 +385,6 @@ test("runHook submission-confirm: in-process — a refusal on stdout for a send 
     const code = runHook("submission-confirm", {
       stdin,
       out: (t) => out.push(t),
-      run: () => {
-        throw new Error("an in-process hook spawns nothing");
-      },
     });
     return { code, out };
   };
@@ -530,13 +501,12 @@ test("doctor reads a broken config as 'the CLI would lint nothing' instead of st
   const lines = r.out.split("\n");
   const at = lines.indexOf("papers directory");
   assert.deepEqual(
-    { code: r.code, papers: lines.slice(at, at + 3) },
+    { code: r.code, papers: lines.slice(at, at + 2) },
     {
       code: 2,
       papers: [
         "papers directory",
-        "  the CLI will lint    (nothing — no declaration found)",
-        "  the hooks will guard (nothing — the guard refuses and says why on first use)",
+        "  linted               (nothing — the settings do not read or name no directory)",
       ],
     },
   );
@@ -924,7 +894,7 @@ test("init and doctor with a declaration that names no directory: nothing to com
   const d = await cli(["doctor"], dir);
   assert.match(
     d.out,
-    / {2}the CLI will lint {4}\(nothing — no declaration found\)/,
+    / {2}linted {15}\(nothing — the settings do not read or name no directory/,
   );
 });
 
@@ -1223,7 +1193,7 @@ test("`paperlint hook` with no name: exit 1, so it cannot deny and is shown, and
   assert.deepEqual(await cli(["hook"], root), {
     code: 1,
     out: "",
-    err: "paperlint: `hook` needs a name, e.g. `paperlint hook paper-edit-guard`; no hook is running.",
+    err: "paperlint: `hook` needs a name, e.g. `paperlint hook lint-edited`; no hook is running.",
   });
 });
 

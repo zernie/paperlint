@@ -1,5 +1,5 @@
 // Compiled to src/CLAUDE.md by `npx vigiles compile`. Edit THIS file, never the markdown.
-import { enforce, file, instructionFile, prose } from "vigiles/spec";
+import { enforce, file, guidance, instructionFile, prose } from "vigiles/spec";
 
 export default instructionFile({
   sections: {
@@ -59,8 +59,19 @@ report nothing — dropping it turns the fixtures \`src/domain/reads-disk.ts\` a
     "Readers and commands": prose`\`@retorquere/bibtex-parser\` is the one \`.bib\` reader, behind ${file("src/ports/bib-reader.ts")}.
 Rejected on 2026-09-27, so not proposed again: a separate \`paperlint refs\` command; the slowness it
 would have moved was a cache thrown away after every build (${file("docs/references.md")}).`,
+
+    Hooks: prose`The Claude Code hooks paperlint ships (\`submission-confirm\`, \`paper-folder-layout\`,
+\`lint-edited\`) are app functions in \`src/*-hook.ts\`, run in-process by \`paperlint hook <name>\` from the
+\`IN_PROCESS_HOOKS\` table in ${file("src/cli.ts")}. A bug in one does not break this repository; it breaks
+somebody else's session.`,
   },
   rules: {
+    "one-wiring-file": guidance(
+      "The wiring is `plugin/hooks/hooks.json`. The Claude Code plugin ships it as its hooks, and `paperlint init` without the plugin merges it into the consumer's `.claude/settings.json`; there is no second copy.",
+    ),
+    "in-process-hooks-frozen": guidance(
+      "`IN_PROCESS_HOOKS` is a workaround: a vigiles hook program may import only `vigiles/hook`, so a hook that needs this package's code was routed around the runtime. Do not add or grow an entry; the way out is zernie/vigiles#472, then #650, which moves the hooks to `hooks/<name>.hook.mjs`. `src/in-process-hooks.test.ts` fails when a name is added. Rejected for that move, so not proposed again: a `.hook.ts` hook (it does not load from `node_modules`), and a thin consumer-side `.hook.ts` importing the logic (`vigiles compile` refuses the import).",
+    ),
     layers: enforce(
       "eslint/boundaries/dependencies",
       "Both axes: what a layer may import, and where an effect may be written.",

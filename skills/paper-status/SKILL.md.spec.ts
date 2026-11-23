@@ -96,7 +96,6 @@ and do not report from one of them alone:
 |---|---|---|
 | **\`<paper-dir>/PIPELINE-STATUS.md\`** | were the QUALITY stages run, and what did they conclude | per-stage \`☑\`/\`◐\`/\`☐\`/\`⚠\`, dates, the one-line submit-ready verdict |
 | **\`<paper-dir>/SUBMIT-CHECKLIST.md\`** | does it comply with the VENUE's format, and is the submission mechanics understood | page limit, template, blind model, mandatory sections, portal URL, whether a supplementary-upload field exists, the deadline converted to the author's own zone |
-| **\`.claude/hooks/paper-skills-nudge.hook.ts\`** | which gates EXIST at all | the canonical pre-submit gate list — use it to spot a gate nobody has ever run, which no scorecard row will show because the row was never added |
 | \`<paper-dir>/CLAIMS.md\` | what may still be claimed | 🔴 retired claims — flag if the current text asserts one |
 | \`<paper-dir>/CLAUDE.md\` | what this venue rewards | only when it changes what to do next |
 
