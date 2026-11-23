@@ -73,8 +73,5 @@
     "src/domain/page-layout.ts",
     "eslint-rules/rule-context.ts"
   ],
-  "evalOnly": [
-    "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.ts"
-  ]
+  "evalOnly": ["lib/skill-eval-kit.mjs", "lib/skill-eval-fixture.ts"]
 }
