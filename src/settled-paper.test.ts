@@ -78,7 +78,18 @@ test("a final paper — accepted, camera-ready frozen — turns its text and bui
     assert.ok(texOff.has(id), id);
   // The record of attempts is what a final paper is judged on: whether its camera-ready came from
   // what was accepted.
-  for (const id of ["cycle/camera-ready-source", "cycle/draft-drift"])
+  for (const id of ["tex/max-sentence-words", "bib/reachable-entry"])
+    assert.ok(texOff.has(id), id);
+  // What is still delivered after the camera-ready (the talk, the public artifact) and the records
+  // (attempts, the lock, the study) keep their rules: freezing the PDF says nothing about them.
+  for (const id of [
+    "cycle/camera-ready-source",
+    "cycle/draft-drift",
+    "talk/required-files",
+    "artifact/upload-current",
+    "versions/layout",
+    "repro/study-result",
+  ])
     assert.ok(!texOff.has(id), id);
   assert.deepEqual(
     blocks.filter((b) => b.files === undefined).map((b) => b.rules),

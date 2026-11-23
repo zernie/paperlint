@@ -9,7 +9,7 @@
  *   accepted   `paper/edition-over` off: the edition being over is where an accepted paper ends up
  *   final      also every rule about the text and the build off on the paper's `.tex`: the published
  *              text and PDF are frozen in `versions/`, so "rebuild", "too long" or "not built yet" has
- *              nothing left to fix. The rules about the record of attempts (`cycle/*`) stay on
+ *              nothing left to fix. The talk, the artifact and the records keep their rules
  *
  * The blocks go after the root `paperlint.json` (a glob over every paper is more general than one
  * paper's stage) and before the paper's own, so a paper that wants a rule back on a final paper
@@ -25,12 +25,21 @@ import { readLock } from "./versions.ts";
 const PAPER_TEX = "**/*.tex";
 
 /**
- * The plugins whose rules judge the paper's RECORD of attempts, not its text or its build: they stay
- * on for a final paper, because a final paper is what they are about. `cycle/camera-ready-source`
- * asks whether the frozen camera-ready was built from what was accepted, a question that exists
- * only once the camera-ready is frozen.
+ * The plugins whose rules judge the paper's TEXT and its BUILD: what the frozen camera-ready already
+ * fixed. Only these go off on a final paper. The rest stay on, because freezing the PDF says nothing
+ * about them: the talk and the public artifact are still being delivered (`talk/*`, `artifact/*`),
+ * and the records are what a final paper is judged on (`cycle/*`, `versions/*`, `repro/*`,
+ * `study/*`). A list of what goes off, not of what stays, so a new plugin stays on until someone
+ * decides it judges the frozen text.
  */
-const RECORD_PLUGINS: readonly string[] = ["cycle"];
+const FROZEN_TEXT_PLUGINS: readonly string[] = [
+  "tex",
+  "bib",
+  "pdf",
+  "format",
+  "anonymity",
+  "paper",
+];
 
 /** The blocks for the paper in `dir`, or none while it is being written. Reads the lock through `files`. */
 export function stageBlocks(
@@ -50,7 +59,7 @@ export function stageBlocks(
   if (stage === "accepted") return [accepted];
   const textOff = Object.fromEntries(
     [...shipped]
-      .filter((id) => !RECORD_PLUGINS.some((p) => id.startsWith(`${p}/`)))
+      .filter((id) => FROZEN_TEXT_PLUGINS.some((p) => id.startsWith(`${p}/`)))
       .map((id) => [id, "off" as const]),
   );
   return [accepted, { basePath: dir, files: [PAPER_TEX], rules: textOff }];

@@ -161,10 +161,12 @@ itself. Only rules paperlint ships may be named, at every level.
 **The paper's stage** is read from its `cycles` and `versions/lock.json`; nothing new is written
 for it. An **accepted** paper turns `paper/edition-over` off: the edition being over is where an
 accepted paper ends up. A **final** paper, accepted with its `<cycle>/camera-ready.pdf` frozen
-(`paperlint versions lock`), also turns the rules about its text and build off on its `.tex`: the
-published text and PDF no longer change, so "not built yet", "rebuild" or "too long" has nothing
-left to fix. The `cycle/*` rules stay on: whether the frozen camera-ready came from what was
-accepted is a question only a final paper has. A paper that
+(`paperlint versions lock`), also turns the rules about its text and build (`tex/*`, `bib/*`,
+`pdf/*`, `format/*`, `anonymity/*`, `paper/*`) off on its `.tex`: the published text and PDF no
+longer change, so "not built yet", "rebuild" or "too long" has nothing left to fix. Every other rule
+stays on: the talk and the public artifact are still being delivered (`talk/*`, `artifact/*`), and
+whether the frozen camera-ready came from what was accepted is a question only a final paper has
+(`cycle/*`). A paper that
 is open, rejected or withdrawn is still being written, and every rule applies. A rule you want back
 on a final paper goes in that paper's own `rules`.
 
