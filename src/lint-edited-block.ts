@@ -5,6 +5,7 @@
  * its errors would never be shown again. A paper that failed is named in the block; when no paper
  * has a report, the first failure is thrown, for the hook's one line on stderr.
  */
+import { zip } from "remeda";
 import { messageOf } from "./domain/text.ts";
 
 /** What Claude Code reads from a PostToolUse hook's stdout: the reason goes next to the tool result. */
@@ -27,15 +28,15 @@ export function blockOf(
   const reports = outcomes.flatMap((r) =>
     r.status === "fulfilled" && r.value !== "" ? [r.value] : [],
   );
-  const failed = outcomes.flatMap((r, i) =>
-    r.status === "rejected" ? [{ dir: dirs[i] ?? "", why: whyOf(r) }] : [],
+  const failed = zip(outcomes, dirs).flatMap(([r, dir]) =>
+    r.status === "rejected" ? [{ dir, why: whyOf(r) }] : [],
   );
   if (reports.length === 0 && failed[0] !== undefined) throw failed[0].why;
   if (reports.length === 0) return null;
-  const notLinted = failed.map(
-    ({ dir, why }) =>
-      `paperlint lint-edited: ${dir} was not linted: ${messageOf(why).split("\n")[0] ?? ""}`,
-  );
+  const notLinted = failed.map(({ dir, why }) => {
+    const [first] = messageOf(why).split("\n");
+    return `paperlint lint-edited: ${dir} was not linted: ${String(first)}`;
+  });
   return {
     decision: "block",
     reason: `${[...reports, ...notLinted].join("\n")}\n${KEPT}`,
