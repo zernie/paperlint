@@ -250,6 +250,7 @@ import {
   noticeText,
   notYetTold,
   recordTold,
+  hookNotRunningText,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
 import {
@@ -1856,24 +1857,14 @@ function runHookPlain(
     readonly capture?: boolean;
   } = {},
 ): number | Promise<number> {
-  if (!name) {
-    err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
-    return 2;
-  }
-  const inProcess = IN_PROCESS_HOOKS[name];
+  const inProcess = IN_PROCESS_HOOKS[name ?? ""];
   if (inProcess !== undefined) return inProcess({ err, stdin, out });
   const program = fileURLToPath(
-    new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
+    new URL(`../hooks/${name ?? ""}.hook.mjs`, import.meta.url),
   );
-  if (!existsSync(program)) {
-    // A hook that cannot run must not deny: on PreToolUse(Bash) a 2 refuses every command,
-    // the `npm install` that fixes it included (#324). Same verdict as a missing runtime, below.
-    err(
-      `paperlint: unknown hook \`${name}\` — no such program at ${program}.\n` +
-        `The \`${name}\` hook is NOT running (installed: paperlint ${packageVersion()}). ` +
-        `Run \`npm install\` so node_modules matches the lockfile, or remove \`paperlint hook ${name}\` from .claude/settings.json.`,
-    );
-    return 0;
+  if (!name || !existsSync(program)) {
+    err(hookNotRunningText(name, program, packageVersion()));
+    return 0; // a 2 would deny every Bash command, the fix included (#324)
   }
   let runtime;
   try {
