@@ -5,7 +5,8 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  CURE_BY_KIND,
+  CURE_BY_DEFAULT,
+  CURE_BY_EXTENSION,
   KNOWN_CURES,
   NOTHING_DECLARED,
   PAPER_LAYOUT_TREE,
@@ -86,50 +87,54 @@ describe("judgeLayout — silent on the whole allowed set", () => {
 });
 
 describe("judgeLayout — reports", () => {
-  it("a known name with its one destination: the plan is a section of the status file", () => {
-    const [plan] = judgeLayout(
-      [file("paper.tex"), file("PLAN.md")],
-      NOTHING_DECLARED,
-    );
-    expect(plan?.name).toBe("PLAN.md");
-    expect(plan?.cure).toMatch(
-      /^a section of PIPELINE-STATUS\.md .*"Plan \/ now"/,
-    );
-  });
+  it.each([
+    ["PLAN.md", "file", "a section of PIPELINE-STATUS.md"],
+    ["Plan.md", "file", "a section of PIPELINE-STATUS.md"],
+    ["plans", "dir", "a section of PIPELINE-STATUS.md"],
+    ["DECISION-LOG.md", "file", "research/"],
+    ["EMAILS.md", "file", "submission/"],
+    ["data", "dir", "repro/data/"],
+    ["artifact", "dir", "repro/"],
+    ["archive", "dir", "extra/"],
+    ["venue-corpus", "dir", "<papers-root>/venues/<venue>/"],
+  ] as const)(
+    "a known name, %s (%s), goes to its one destination",
+    (name, kind, cure) => {
+      expect(judgeLayout([{ name, kind }], NOTHING_DECLARED)[0]?.cure).toBe(
+        cure,
+      );
+    },
+  );
 
   it.each([
-    ["DECISION-LOG.md", "file", /^research\//],
-    ["EMAILS.md", "file", /^submission\//],
-    ["data", "dir", /^repro\//],
-    ["artifact", "dir", /^repro\//],
-    [
-      "archive",
-      "dir",
-      /^versions\/ for frozen PDFs, submission\/ .*, extra\/ for the rest$/,
-    ],
-    [
-      "venue-corpus",
-      "dir",
-      /^<papers-root>\/venues\/<venue>\/, outside the paper folder/,
-    ],
-    ["plans", "dir", /^a section of PIPELINE-STATUS\.md/],
-    ["Plan.md", "file", /^a section of PIPELINE-STATUS\.md/],
-  ] as const)("%s (%s) goes to its destination", (name, kind, cure) => {
-    expect(judgeLayout([{ name, kind }], NOTHING_DECLARED)[0]?.cure).toMatch(
-      cure,
-    );
-  });
+    ["results-final-v2.csv", "repro/data/"],
+    ["plot.py", "repro/tools/"],
+    ["fig1.PNG", "figures/"],
+    ["paper-v2.pdf", "versions/"],
+    ["notes.md", "research/"],
+  ])(
+    "an unlisted file, %s, goes to the folder its extension names",
+    (name, cure) => {
+      expect(judgeLayout([file(name)], NOTHING_DECLARED)[0]?.cure).toBe(cure);
+    },
+  );
 
-  it("an unknown name gets the choice by what it is", () => {
-    expect(judgeLayout([dir("corpus")], NOTHING_DECLARED)).toEqual([
-      { name: "corpus/", kind: "dir", cure: CURE_BY_KIND },
+  it("anything else goes to extra/: an unlisted folder, a file without a known extension", () => {
+    expect(
+      judgeLayout([dir("corpus"), file("LICENSE")], NOTHING_DECLARED),
+    ).toEqual([
+      { name: "corpus/", kind: "dir", cure: CURE_BY_DEFAULT },
+      { name: "LICENSE", kind: "file", cure: CURE_BY_DEFAULT },
     ]);
+    expect(CURE_BY_DEFAULT).toBe("extra/");
   });
 
-  it("a known file name used by a folder is not that file: the choice by kind", () => {
-    expect(judgeLayout([dir("PLAN.md")], NOTHING_DECLARED)[0]?.cure).toBe(
-      CURE_BY_KIND,
-    );
+  it("a known file name, or a file extension, used by a folder is neither: extra/", () => {
+    expect(
+      judgeLayout([dir("PLAN.md"), dir("runs.csv")], NOTHING_DECLARED).map(
+        (s) => s.cure,
+      ),
+    ).toEqual([CURE_BY_DEFAULT, CURE_BY_DEFAULT]);
   });
 });
 
@@ -227,19 +232,47 @@ describe("judgeLayout — reports by name, exactly", () => {
   });
 });
 
-describe("strayMessage — stands alone for a reader with no context", () => {
-  const [plan] = judgeLayout([file("PLAN.md")], NOTHING_DECLARED);
-  const text = plan === undefined ? "" : strayMessage(plan);
+describe("strayMessage — one short line naming one destination", () => {
+  const CURES = [
+    ...new Set([
+      ...KNOWN_CURES.map((c) => c.cure),
+      ...CURE_BY_EXTENSION.map((c) => c.cure),
+      CURE_BY_DEFAULT,
+    ]),
+  ];
 
-  it("names the entry, where it goes, draws the whole layout, and links the rule's page", () => {
-    expect(text.split("\n")).toEqual([
-      `\`PLAN.md\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${KNOWN_CURES[0]?.cure ?? ""}.`,
-      "The layout (extra/ takes anything and is never judged; the build's paper.* byproducts are never reported):",
-      ...PAPER_LAYOUT_TREE.split("\n"),
-      "Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md",
-    ]);
+  it.each(CURES)(
+    "for the destination %s: one line, the entry, the destination, extra/ as the fallback, no tree",
+    (cure) => {
+      const text = strayMessage({
+        name: "results-final-v2.csv",
+        kind: "file",
+        cure,
+      });
+      expect(text).not.toContain("\n");
+      expect(text.length).toBeLessThanOrEqual(120);
+      expect(text.startsWith("`results-final-v2.csv` ")).toBe(true);
+      expect(text).toContain(cure);
+      expect(text).toContain("extra/");
+      expect(text).not.toContain("<paper>/");
+    },
+  );
+
+  it("names no destination but its own: no other folder of the layout", () => {
+    const text = strayMessage({
+      name: "x.csv",
+      kind: "file",
+      cure: "repro/data/",
+    });
+    expect(
+      CURES.filter(
+        (c) => c !== "repro/data/" && c !== "extra/" && c !== "repro/",
+      ).filter((c) => text.includes(c)),
+    ).toEqual([]);
   });
+});
 
+describe("PAPER_LAYOUT_TREE — the drawing the rule's page embeds", () => {
   it("the layout it draws holds every allowed root entry, repro/'s own layout inside", () => {
     const lines = PAPER_LAYOUT_TREE.split("\n");
     expect(lines[0]).toBe("<paper>/");

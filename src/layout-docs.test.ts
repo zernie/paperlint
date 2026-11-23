@@ -11,6 +11,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  CURE_BY_DEFAULT,
+  CURE_BY_EXTENSION,
+  KNOWN_CURES,
   PAPER_LAYOUT_TREE,
   PAPERS_LAYOUT_TREE,
 } from "./domain/paper-layout.ts";
@@ -48,5 +51,33 @@ describe("the pages draw the layout the code enforces", () => {
 
   it("a page with no block has no drawing", () => {
     expect(embedded("# a page\n")).toBeNull();
+  });
+});
+
+/** Every name and extension the finding picks a destination by, each as the page writes it in backticks. */
+const PICKED: readonly string[] = [
+  ...KNOWN_CURES.map((c) => (c.kind === "dir" ? `${c.name}/` : c.name)),
+  ...CURE_BY_EXTENSION.flatMap((c) => [...c.extensions, c.cure]),
+  CURE_BY_DEFAULT,
+].map((s) => `\`${s}\``);
+
+/** What `PICKED` the page does not name. */
+const unnamed = (page: string): readonly string[] =>
+  PICKED.filter((s) => !page.includes(s));
+
+describe("the rule's page lists every destination the one-line finding picks", () => {
+  it("paper/allowed-files-only names every known entry, extension and destination", () => {
+    expect(
+      unnamed(
+        readFileSync(
+          join(ROOT, "docs/rules/paper/allowed-files-only.md"),
+          "utf8",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("a page without the list names none of them", () => {
+    expect(unnamed("# a page\n")).toEqual(PICKED);
   });
 });

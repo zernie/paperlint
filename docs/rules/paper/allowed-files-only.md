@@ -91,38 +91,42 @@ itself.
 
 ## Examples
 
-Failing: a plan beside the paper.
+Failing: a results table beside the paper.
 
 ```text
 papers/agent-rule-drift/PIPELINE-STATUS.md
-  1:1  error  `PLAN.md` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md),
-              and that root holds only paperlint's layout. Where it goes: a section of
-              PIPELINE-STATUS.md — the paper's one live-state file holds its stages, its plan
-              ("Plan / now") and its scorecard; move what is still live there and delete the file.
-The layout (extra/ takes anything and is never judged; the build's paper.* byproducts are never reported):
-<paper>/
-├── PIPELINE-STATUS.md             ← the paper's one live-state file: stages, plan, scorecard
-…
-└── extra/                         ← anything; never judged
-Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md  paper/allowed-files-only
+  1:1  error  `results-final-v2.csv` does not belong at a paper folder's root: move it to repro/data/, or extra/.  paper/allowed-files-only
 ```
 
-Each message names the entry and where it goes, and draws the whole layout above, so it reads on its own. A
-name met in real paper folders has one destination:
+Each finding is one line naming one destination. A name met in real paper folders has its own:
 
-| entry                      | where it goes                                                                                              |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `PLAN.md`, `plans/`        | a section of `PIPELINE-STATUS.md` ("Plan / now")                                                           |
-| `DECISION-LOG.md`          | `research/`                                                                                                |
-| `EMAILS.md`                | `submission/`                                                                                              |
-| `data/`                    | `repro/data/`                                                                                              |
-| `artifact/`                | `repro/` (scripts in `repro/tools/`, data in `repro/data/`); the anonymized upload copy in `submission/`   |
-| `archive/`                 | `versions/` for frozen PDFs, `submission/` for an earlier attempt's forms and mails, `extra/` for the rest |
-| `venue-corpus/`, `venues/` | `<papers-root>/venues/<venue>/`, outside the paper folder                                                  |
+| entry                      | where it goes                     |
+| -------------------------- | --------------------------------- |
+| `PLAN.md`, `plans/`        | a section of `PIPELINE-STATUS.md` |
+| `DECISION-LOG.md`          | `research/`                       |
+| `EMAILS.md`                | `submission/`                     |
+| `data/`                    | `repro/data/`                     |
+| `artifact/`                | `repro/`                          |
+| `archive/`                 | `extra/`                          |
+| `venue-corpus/`, `venues/` | `<papers-root>/venues/<venue>/`   |
 
-Any other name gets the choice by what it is: a record or research → `research/`; about submitting
-→ `submission/`; the paper's live state → a section of `PIPELINE-STATUS.md`; reproduction → `repro/`;
-a frozen PDF of a stage → `versions/`; unclear → `extra/`.
+Any other file goes where its extension says, matched ignoring case:
+
+| extension                                                                                                                                                      | where it goes  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| data: `.tsv` `.csv` `.json` `.jsonl` `.ndjson` `.yaml` `.yml` `.xml` `.txt` `.log` `.parquet` `.sqlite` `.db` `.xlsx` `.npy` `.npz` `.pkl` `.gz` `.zip` `.tar` | `repro/data/`  |
+| scripts: `.py` `.ipynb` `.sh` `.bash` `.zsh` `.js` `.mjs` `.cjs` `.ts` `.mts` `.cts` `.r` `.jl` `.rb` `.pl` `.awk` `.sql`                                      | `repro/tools/` |
+| images: `.png` `.jpg` `.jpeg` `.gif` `.svg` `.eps`                                                                                                             | `figures/`     |
+| `.pdf`, a frozen PDF of a stage                                                                                                                                | `versions/`    |
+| notes: `.md` `.markdown`                                                                                                                                       | `research/`    |
+
+Anything else, and any folder not listed, goes to `extra/`. The finding names one folder; pick
+another when you know better: a record or research → `research/`; about submitting (forms, mails,
+checklists, portal records) → `submission/`; the paper's live state → a section of
+`PIPELINE-STATUS.md`; reproduction → `repro/`; a frozen PDF of a stage → `versions/`; unclear →
+`extra/`. An `archive/` usually splits: its frozen PDFs into `versions/`, an earlier attempt's forms
+and mails into `submission/`, the rest into `extra/`. The anonymized copy of an `artifact/` uploaded
+for review goes in `submission/`.
 
 Passing: the folder `paperlint new` writes (`PIPELINE-STATUS.md`, `paper.tex`, `paperlint.json`),
 and any folder holding only the entries above.
@@ -145,7 +149,7 @@ No rule options. The paper's `pdf`, `talk.dir` and own preset files add what the
 `plugin/hooks/hooks.json`). When an agent is about to create a file that would add an entry the
 layout does not allow — at a paper folder's root, or at the top of its `repro/`
 ([`repro/allowed-files-only`](../repro/allowed-files-only.md)) — the hook denies the call, and the reason it gives is the
-rule's own message: where the entry goes, and the layout drawn. The agent writes the file where it
+rule's own message: where the entry goes. The agent writes the file where it
 belongs instead, in the same turn. The text comes from the functions the rules report with
 (`strayTexts`, `reproTexts`); there is no second list.
 

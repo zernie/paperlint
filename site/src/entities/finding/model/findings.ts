@@ -27,7 +27,10 @@ export const render = (f: Finding): string =>
   f.template
     .replace(/\\`/g, "`")
     .replace(/\{\{(\w+)\}\}/g, (whole, key: string) => f.values[key] ?? whole)
-    .replace(/\$\{s\.(\w+)\}/g, (whole, key: string) => f.values[key] ?? whole);
+    .replace(
+      /\$\{(?:s\.)?(\w+)\}/g,
+      (whole, key: string) => f.values[key] ?? whole,
+    );
 
 export const citeExists: Finding = {
   rule: "paper/cite-exists",
@@ -60,12 +63,13 @@ export const folder: Finding = {
   level: "error",
   title: "A stray file in the paper folder",
   plain:
-    "results-final-v2.csv sits at the top of the paper folder, which holds only paperlint's layout. The message says where each kind of file goes: data behind your numbers belongs in repro/.",
+    "results-final-v2.csv sits at the top of the paper folder, which holds only paperlint's layout. The message names the one folder it goes in: data behind your numbers belongs in repro/data/.",
   template:
-    "\\`${s.name}\\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${s.cure}.",
+    "\\`${s.name}\\` does not belong at a paper folder's root: move it to ${s.cure}, or ${fallback}.",
   values: {
     name: "results-final-v2.csv",
-    cure: "decide by what it is — a record or research → research/; about submitting (forms, mails, checklists, portal records) → submission/; live state of the paper (plan, status) → a section of PIPELINE-STATUS.md; reproduction (scripts, data, the artifact) → repro/; a frozen PDF of a stage → versions/; unclear → extra/, which is never judged",
+    cure: "repro/data/",
+    fallback: "extra/",
   },
   sourced: ["cure"],
   source: "src/domain/paper-layout.ts",
