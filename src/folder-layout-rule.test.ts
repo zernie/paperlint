@@ -75,7 +75,7 @@ describe("paper/allowed-files-only — reports", () => {
       ),
     ).toEqual([
       expect.stringMatching(
-        /^`archive\/` is at the root of a paper folder.* Where it goes: versions\/ for frozen PDFs/,
+        /^`archive\/` does not belong at a paper folder's root: move it to extra\//,
       ),
     ]);
   });

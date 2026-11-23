@@ -32,6 +32,10 @@ describe("findings", () => {
     },
   );
 
+  it("fills a template literal's bare local too, the way the source names it", () => {
+    expect(render({ ...fake, template: "${b}, or ${q}" })).toBe("y, or ${q}");
+  });
+
   it("a reworded message is caught", () => {
     expect(read("README.md")).not.toContain("1 column(s), AgenticDev wants 2");
   });

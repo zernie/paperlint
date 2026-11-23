@@ -75,7 +75,7 @@ describe("paper-folder-layout hook — denies a new stray entry", () => {
       },
     });
     expect(out?.hookSpecificOutput.permissionDecisionReason).toMatch(
-      /^`PLAN\.md` is at the root of a paper folder.*\n<paper>\/\n/su,
+      /^`PLAN\.md` does not belong at a paper folder's root: move it to a section of PIPELINE-STATUS\.md[^\n]*$/u,
     );
   });
 

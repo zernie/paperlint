@@ -234,7 +234,7 @@ test("runHook paper-folder-layout: in-process, on the real disk — a refusal on
   assert.equal(stray.code, 0);
   assert.match(
     stray.out.join(""),
-    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` is at the root of a paper folder/,
+    /^\{"hookSpecificOutput":\{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"`PLAN\.md` does not belong at a paper folder's root/,
   );
   assert.deepEqual(hook(write("papers/p/NOTES.md")), {
     code: 0,

@@ -31,7 +31,14 @@
  */
 import { basename, extname } from "node:path";
 import { leaf, renderTree, type TreeNode } from "./layout-tree.ts";
-import { REPRO_DIR, REPRO_NODES } from "./repro-layout.ts";
+import {
+  DATA_EXTENSIONS,
+  NOTE_EXTENSIONS,
+  REPRO_DIR,
+  REPRO_NODES,
+  SCRIPT_EXTENSIONS,
+  TOOL_FILES,
+} from "./repro-layout.ts";
 
 /** One entry at the paper folder's root: its name, and whether it is a folder. */
 export interface LayoutEntry {
@@ -51,7 +58,7 @@ export interface Stray {
   /** The entry's name; a folder's ends in a slash. */
   readonly name: string;
   readonly kind: "file" | "dir";
-  /** Where it goes: one destination for a known name, else the choice by what it is. */
+  /** Where it goes: one destination, by its name, else by its kind, else `extra/`. */
   readonly cure: string;
 }
 
@@ -185,12 +192,10 @@ export const BUILD_BYPRODUCTS: readonly string[] = BYPRODUCT_EXTENSIONS.map(
 export const OS_FILES: readonly string[] = [".DS_Store", "Thumbs.db"];
 
 /** The live state of a paper — its stages, its plan, its scorecard — is one file. */
-const STATUS_SECTIONS =
-  'a section of PIPELINE-STATUS.md — the paper\'s one live-state file holds its stages, its plan ("Plan / now") and its scorecard; move what is still live there and delete the file';
+const STATUS_SECTIONS = "a section of PIPELINE-STATUS.md";
 
-/** The shared corpus of a venue's accepted papers. */
-const VENUE_CORPUS =
-  "<papers-root>/venues/<venue>/, outside the paper folder: one corpus per venue, shared by every paper that targets it";
+/** The shared corpus of a venue's accepted papers, outside every paper folder. */
+const VENUE_CORPUS = "<papers-root>/venues/<venue>/";
 
 /**
  * Names met in real paper folders, each with its one destination. Matched ignoring case, a file's
@@ -203,34 +208,43 @@ export const KNOWN_CURES: readonly {
 }[] = [
   { name: "PLAN.md", kind: "file", cure: STATUS_SECTIONS },
   { name: "plans", kind: "dir", cure: STATUS_SECTIONS },
-  { name: "DECISION-LOG.md", kind: "file", cure: "research/ (a dated record)" },
-  {
-    name: "EMAILS.md",
-    kind: "file",
-    cure: "submission/ (mail with the venue is about submitting)",
-  },
-  {
-    name: "data",
-    kind: "dir",
-    cure: "repro/data/ (the data behind the numbers)",
-  },
-  {
-    name: "artifact",
-    kind: "dir",
-    cure: "repro/ — its scripts in repro/tools/, its data in repro/data/; the anonymized copy uploaded for review is about submitting and goes in submission/",
-  },
-  {
-    name: "archive",
-    kind: "dir",
-    cure: "versions/ for frozen PDFs, submission/ for an earlier attempt's forms, mails and checklists, extra/ for the rest",
-  },
+  { name: "DECISION-LOG.md", kind: "file", cure: "research/" },
+  { name: "EMAILS.md", kind: "file", cure: "submission/" },
+  { name: "data", kind: "dir", cure: "repro/data/" },
+  { name: "artifact", kind: "dir", cure: "repro/" },
+  { name: "archive", kind: "dir", cure: `${ESCAPE_HATCH}/` },
   { name: "venue-corpus", kind: "dir", cure: VENUE_CORPUS },
   { name: "venues", kind: "dir", cure: VENUE_CORPUS },
 ];
 
-/** For a name nobody listed: the choice by what the material is. */
-export const CURE_BY_KIND =
-  "decide by what it is — a record or research → research/; about submitting (forms, mails, checklists, portal records) → submission/; live state of the paper (plan, status) → a section of PIPELINE-STATUS.md; reproduction (scripts, data, the artifact) → repro/; a frozen PDF of a stage → versions/; unclear → extra/, which is never judged";
+/** The extensions of the images a figure is drawn from. */
+export const IMAGE_EXTENSIONS: readonly string[] = [
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".eps",
+];
+
+/**
+ * For a file nobody listed: the folder its kind names, by its exact name or its extension (matched
+ * ignoring case). The same kinds `repro/allowed-files-only` sorts by. No `.pdf`: a root PDF may be
+ * a figure, a draft or a review, and `versions/` holds only cycle folders (`versions/layout`).
+ */
+export const CURE_BY_FILE: readonly {
+  readonly names: readonly string[];
+  readonly extensions: readonly string[];
+  readonly cure: string;
+}[] = [
+  { names: TOOL_FILES, extensions: SCRIPT_EXTENSIONS, cure: "repro/tools/" },
+  { names: [], extensions: DATA_EXTENSIONS, cure: "repro/data/" },
+  { names: [], extensions: IMAGE_EXTENSIONS, cure: "figures/" },
+  { names: [], extensions: NOTE_EXTENSIONS, cure: "research/" },
+];
+
+/** For anything else: the folder that is never judged. */
+export const CURE_BY_DEFAULT = `${ESCAPE_HATCH}/`;
 
 const isAllowedFile = (name: string, declared: Declared): boolean =>
   ROOT_FILES.includes(name) ||
@@ -244,12 +258,20 @@ const isAllowed = (e: LayoutEntry, declared: Declared): boolean =>
     ? ROOT_DIRS.includes(e.name) || declared.roots.includes(e.name)
     : isAllowedFile(e.name, declared);
 
-/** Where material like `e` belongs: its listed destination, else the choice by what it is. */
+/** Where `e` belongs: its listed destination, else its kind's folder, else `extra/`. */
 function cureFor(e: LayoutEntry): string {
   const known = KNOWN_CURES.find(
     (c) => c.kind === e.kind && c.name.toLowerCase() === e.name.toLowerCase(),
   );
-  return known === undefined ? CURE_BY_KIND : known.cure;
+  if (known !== undefined) return known.cure;
+  const ext = extname(e.name).toLowerCase();
+  const byKind =
+    e.kind === "file"
+      ? CURE_BY_FILE.find(
+          (c) => c.names.includes(e.name) || c.extensions.includes(ext),
+        )
+      : undefined;
+  return byKind?.cure ?? CURE_BY_DEFAULT;
 }
 
 /** The root entries that are not part of the layout, in the order given. Pure. */
@@ -289,7 +311,7 @@ export const PAPER_NODES: readonly TreeNode[] = [
   })),
 ];
 
-/** The drawing of the paper folder's layout: the rule's message, the hook's refusal, the rule's page. */
+/** The drawing of the paper folder's layout, which the rule's page embeds. */
 export const PAPER_LAYOUT_TREE: string = renderTree("<paper>/", PAPER_NODES);
 
 /** The folder beside the paper folders that holds one corpus of accepted papers per venue. */
@@ -326,14 +348,11 @@ export const PAPERS_LAYOUT_TREE: string = renderTree(
 
 /**
  * The one text a stray entry is reported with, by the rule `paper/allowed-files-only` and by the hook that
- * refuses to create such an entry. It stands alone: where the entry goes, and the whole layout drawn,
- * for a reader who knows nothing of paperlint.
+ * refuses to create such an entry: one line, the entry and its one destination. The layout, and how
+ * each destination is picked, are on the rule's page, which the finding's rule id names.
  */
 export function strayMessage(s: Stray): string {
-  return [
-    `\`${s.name}\` is at the root of a paper folder (the folder holding PIPELINE-STATUS.md), and that root holds only paperlint's layout. Where it goes: ${s.cure}.`,
-    `The layout (${ESCAPE_HATCH}/ takes anything and is never judged; the build's paper.* byproducts are never reported):`,
-    PAPER_LAYOUT_TREE,
-    `Rule paper/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/paper/allowed-files-only.md`,
-  ].join("\n");
+  const fallback =
+    s.cure === CURE_BY_DEFAULT ? "the folder for its kind" : CURE_BY_DEFAULT;
+  return `\`${s.name}\` does not belong at a paper folder's root: move it to ${s.cure}, or ${fallback}.`;
 }
