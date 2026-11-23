@@ -251,6 +251,7 @@ import {
   hookNotRunningText,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
+import { RETIRED_HOOKS, retiredWired } from "./retired-hooks.ts";
 import {
   linkSkills,
   locatePackage,
@@ -1669,11 +1670,13 @@ function owed(
   readonly missing: readonly string[];
   readonly byHand: boolean;
   readonly skills: readonly string[];
+  readonly retired: readonly string[];
 } {
   if (installedPluginVersion(claude.plugin(absolutePath(root))) !== null)
-    return { missing: [], byHand: false, skills: [] };
+    return { missing: [], byHand: false, skills: [], retired: [] };
   const { missing, byHand } = unwiredHooks(root);
-  return { missing, byHand, skills: unlinkedSkills(skillLinks(root)) };
+  const skills = unlinkedSkills(skillLinks(root));
+  return { missing, byHand, skills, retired: retiredWired(root) };
 }
 
 interface Pending {
@@ -1689,16 +1692,22 @@ interface Pending {
 function pendingNotice(io: ResolvedHookOptions): Pending | null {
   try {
     const root = hookRoot(io);
-    const { missing, byHand, skills } = owed(
+    const { missing, byHand, skills, retired } = owed(
       root,
       io.skillLinks ?? readSkillLinks,
       io.claude ?? claudeCode(),
     );
     const version = io.version ?? packageVersion();
-    return (missing.length === 0 && skills.length === 0) ||
+    return (missing.length === 0 &&
+      skills.length === 0 &&
+      retired.length === 0) ||
       !notYetTold(nodeFiles, root, version)
       ? null
-      : { text: noticeText(version, missing, byHand, skills), root, version };
+      : {
+          text: noticeText(version, missing, byHand, { skills, retired }),
+          root,
+          version,
+        };
   } catch (e) {
     io.err(
       `paperlint: the unwired-hooks check did not run: ${firstLine(messageOf(e))}`,
@@ -1788,6 +1797,9 @@ function runHookPlain(
 ): number | Promise<number> {
   const inProcess = IN_PROCESS_HOOKS[name ?? ""];
   if (inProcess !== undefined) return inProcess({ err, stdin, out });
+  // Removed on purpose, not mistyped: an entry `init` wrote before stays until `init` runs again, and
+  // it fires on every tool call; `doctor` and the notice name it, so each call is silent.
+  if (RETIRED_HOOKS.includes(name ?? "")) return 0;
   err(hookNotRunningText(name, packageVersion()));
   return 1; // not 2: that denies every Bash command, the fix included (#324); not 0: nobody sees it
 }

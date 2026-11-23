@@ -31,6 +31,7 @@ import {
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks, initWiredHooks } from "./hooks-settings.ts";
+import { retiredLines, retiredWired } from "./retired-hooks.ts";
 import { pluginLines } from "./doctor-plugin.ts";
 import { installedPluginVersion } from "./plugin-offer.ts";
 import type { PluginState } from "./ports/claude-code.ts";
@@ -268,8 +269,8 @@ function skillsLines(links: LinkReport, on: boolean): readonly string[] {
  * 🔴 THE HOOKS ARE READ FROM THE FILE THAT CARRIES THEM. Until `init` wrote them into
  * `.claude/settings.json`, the only carrier was a plugin and this section said "cannot be checked
  * from a terminal". Hooks wired NOT AT ALL are advisory, like the skills: `--no-hooks` is a choice,
- * not a fault. Partly wired, or wired twice, is a fault and fails the run — unless the plugin is on,
- * which carries them.
+ * not a fault. Partly wired, wired twice, or a retired hook still wired, is a fault and fails the run —
+ * unless the plugin is on, which carries them.
  */
 function hooksSection(
   root: string,
@@ -277,7 +278,12 @@ function hooksSection(
 ): { readonly lines: readonly string[]; readonly bad: number } {
   if (on) return { lines: [`hooks`, `  ✓ carried by the plugin`], bad: 0 };
   try {
-    return doctorHooks(root);
+    const wired = doctorHooks(root);
+    const retired = retiredWired(root);
+    return {
+      lines: [...wired.lines, ...retiredLines(retired)],
+      bad: wired.bad + (retired.length > 0 ? 1 : 0),
+    };
   } catch (e) {
     return { lines: [`hooks`, `  ⚠ not checked — ${messageOf(e)}`], bad: 0 };
   }

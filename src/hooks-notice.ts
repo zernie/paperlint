@@ -48,25 +48,39 @@ export const NOTICE_STATE = join(
 
 const SKILLS_HOME_SHOWN = `${SKILLS_HOME}/`;
 
+/** One clause of the notice: the names after their sentence, or nothing when there are none. */
+const clause = (names: readonly string[], says: string): readonly string[] =>
+  names.length === 0 ? [] : [`${says}: ${names.join(", ")}`];
+
+/** What the project owes besides the missing hooks; the notice names each that is not empty. */
+interface Owed {
+  readonly skills?: readonly string[];
+  readonly retired?: readonly string[];
+}
+
+/** The clauses the notice joins: missing hooks, unlinked skills, retired hooks still wired. */
+const owedClauses = (missing: readonly string[], owed: Owed): string =>
+  [
+    ...clause(missing, "expects hooks that this project has not wired"),
+    ...clause(
+      owed.skills ?? [],
+      `ships skills that are not linked into ${SKILLS_HOME_SHOWN}`,
+    ),
+    ...clause(
+      owed.retired ?? [],
+      "no longer ships hooks this project still wires, which now run nothing",
+    ),
+  ].join(", and ");
+
 /** The instruction the agent reads. `byHand`: `init` writes no hooks then, so the remedy differs. */
 export const noticeText = (
   version: string,
   missing: readonly string[],
   byHand: boolean,
-  skills: readonly string[] = [],
+  owed: Owed = {},
 ): string => {
-  const what = [
-    ...(missing.length === 0
-      ? []
-      : [
-          `expects hooks that this project has not wired: ${missing.join(", ")}`,
-        ]),
-    ...(skills.length === 0
-      ? []
-      : [
-          `ships skills that are not linked into ${SKILLS_HOME_SHOWN}: ${skills.join(", ")}`,
-        ]),
-  ].join(", and ");
+  const what = owedClauses(missing, owed);
+  const skills = owed.skills ?? [];
   const handHooks = byHand && missing.length > 0;
   return (
     `⚠ paperlint ${version} ${what}. ` +

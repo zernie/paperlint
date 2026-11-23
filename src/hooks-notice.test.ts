@@ -501,11 +501,11 @@ test("lintLine and noticeText word skills beside hooks", () => {
     /hook lint-edited is not wired; skills a, b are not linked/,
   );
   assert.match(
-    noticeText("9.9.9", ["lint-edited"], true, ["a"]),
+    noticeText("9.9.9", ["lint-edited"], true, { skills: ["a"] }),
     /by hand.*\(init does link the skills\)/,
   );
   assert.match(
-    noticeText("9.9.9", [], false, ["a"]),
+    noticeText("9.9.9", [], false, { skills: ["a"] }),
     /skills that are not linked into \.claude\/skills\/: a\./,
   );
 });
