@@ -145,7 +145,7 @@ A check runs at one of five moments:
 | what                                                                                        | kind    | when it runs                                                | what it stops                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `paper-folder-layout`                                                                       | hook    | before an agent creates a file (Edit, Write)                | a new entry the layout does not allow, at a paper's root or the top of its `repro/`; never an existing file                                                                            |
-| `lint-edited`                                                                               | hook    | after an agent edits a file of a paper (Edit, Write)        | nothing is undone: an error the edit introduced is put next to the edit's result, so the agent fixes it in the same turn                                                               |
+| `lint-edited`                                                                               | hook    | after an Edit or Write in a paper, or Bash on a `.tex`      | nothing is undone: an error the edit introduced is put next to the edit's result, so the agent fixes it in the same turn                                                               |
 | `submission-confirm`                                                                        | hook    | before an agent's shell command                             | a submission send (`--save`, `--submit`), or a command naming a portal's host, that the person has not said yes to in a question naming its PDF's sha256 (or the host and the command) |
 | [`paper/allowed-files-only`](rules/paper/allowed-files-only.md)                             | rule    | every `paperlint lint`, and CI                              | a stray file or folder at a paper's root (error)                                                                                                                                       |
 | [`repro/allowed-files-only`](rules/repro/allowed-files-only.md)                             | rule    | every `paperlint lint`, and CI                              | a loose entry at the top of `repro/`, a folder that is not a study's, a study folder without `README.md` (error)                                                                       |
@@ -175,6 +175,14 @@ so a file the lint skips (`research/notes.txt`) gets nothing. An edit of any oth
 before the CLI loads: 36–39 ms per edit against 28 ms for `node -e 0` (medians of 15, measured
 2026-11-09), where it was 662 ms while the CLI loaded on every edit.
 
+**After a shell command, too.** The same hook hangs off Bash with `"if": "Bash(*.tex*)"` in its
+wiring, so Claude Code does not even start it for a command that names no `.tex` (measured on Claude
+Code 2.1.330: `ls` and `cat Makefile` started nothing; `sed -i … paper.tex`, `/usr/bin/sed -i …` and
+`python3 -c "…paper.tex…"` started it). Started, it reads the command with vigiles' shell parser and
+lints every `.tex` the command names that is a file in a paper, as a word or as the target of a
+redirection that writes, resolved against the session's working directory; papers are linted one by
+one, each against its own snapshot.
+
 **What it lints.** The edited file and the paper's `paper.tex`, with the same ESLint, config and
 rules as `paperlint lint` on that paper: one setup serves both. Inside a paper it takes about as long
 as `paperlint lint` on that paper: 701 ms for an edit of a one-page paper, against 781 ms for
@@ -199,12 +207,19 @@ Each error is keyed by its file, rule, message and the trimmed text of the line 
 the line number, so a line inserted above an old error does not make it new. The next edit reports
 an error only when its key occurs more often than in the snapshot. A file the snapshot has not seen
 yet (the first edit in a paper) has no "before": only the errors on the lines that edit wrote are
-reported — an Edit's new text, each MultiEdit's, every line of a Write. Delete the file to start over.
+reported — an Edit's new text, each MultiEdit's, every line of a Write. A shell command has no such
+lines, so in a file the snapshot has not seen it reports nothing and only records the snapshot; the
+next change is judged against it. Delete the file to start over.
 
 **What it cannot see.**
 
-- A file written by a shell command (`sed -i`, a script, `mv`, `cp`): no Edit, no Write, no hook.
-  `paperlint lint` and CI still see it.
+- A shell command whose `.tex` is not one of its words: a path inside an interpreter's code
+  (`python3 -c "open('paper.tex')…"` starts the hook but names no `.tex` word), a relative path after
+  a `cd` in the same command, a name built at run time, a `mv` or `cp` of a file. And a write by
+  redirection alone (`cat > paper.tex <<EOF`): Claude Code leaves a redirection's target out of the
+  text the `if` matches, so the hook never starts (measured on 2.1.330,
+  [zernie/vigiles#214](https://github.com/zernie/vigiles/issues/214)). `paperlint lint` and CI still
+  see all of these.
 - The body files of a paper whose build record is stale. `_build/sources.json` hashes every file TeX
   read, so the first edit to any of them makes the record stale, and until the next
   `paperlint build` the paper is `paper.tex` alone — to this hook exactly as to `paperlint lint`

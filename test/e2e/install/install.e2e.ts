@@ -762,9 +762,10 @@ function stepSkillPaths(view: SkillView): void {
 function stepWiring(c: Consumer, initSaid: string): Settings {
   const { consumer, installed } = c;
   // 🔴 THE HOOKS ARE WIRED WHERE CLAUDE CODE READS THEM, BY init ITSELF. No `/plugin` line is
-  // typed anywhere: `init` without a terminal takes the YES default and writes the three
+  // typed anywhere: `init` without a terminal takes the YES default and writes the hook
   // commands into `.claude/settings.json` — the same commands `plugin/hooks/hooks.json`
-  // publishes, once each. Whether they RESOLVE is judged below, by running them.
+  // publishes, each as many times as it publishes it (`lint-edited` hangs off an Edit and a Bash
+  // command). Whether they RESOLVE is judged below, by running them.
   const settingsPath = join(consumer, ".claude", "settings.json");
   const wiredCommands = ((): (string | undefined)[] | { err: string } => {
     try {
@@ -784,15 +785,17 @@ function stepWiring(c: Consumer, initSaid: string): Settings {
     published.err === undefined &&
     wiredCommands.length === published.cmds.length &&
     published.cmds.every(
-      (c) => wiredCommands.filter((w) => w === c).length === 1,
+      (c) =>
+        wiredCommands.filter((w) => w === c).length ===
+        published.cmds.filter((p) => p === c).length,
     )
   ) {
     ok(
-      `\`paperlint init\` wired all ${String(wiredCommands.length)} hook command(s) into .claude/settings.json, once each`,
+      `\`paperlint init\` wired all ${String(wiredCommands.length)} hook command(s) into .claude/settings.json, as published`,
     );
   } else {
     bad(
-      "`paperlint init` wired the hooks into .claude/settings.json, once each",
+      "`paperlint init` wired the hooks into .claude/settings.json, as published",
       `${JSON.stringify(wiredCommands).slice(0, 300)}\n${initSaid}`,
     );
   }

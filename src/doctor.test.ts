@@ -92,9 +92,13 @@ const exitWithHooks = (commands: readonly string[]): number => {
 };
 
 const hookCommand = (name: string): string => `npx paperlint hook ${name}`;
-const allHooks = shippedWiring().names;
+const shipped = shippedWiring();
+/** Each shipped hook as many times as the wiring runs it: `lint-edited` after an Edit and a Bash. */
+const allHooks = shipped.names.flatMap((n) =>
+  Array.from({ length: shipped.times[n] ?? 1 }, () => n),
+);
 
-test("doctor exits 0 when every hook is wired once, or none is (--no-hooks is a choice)", () => {
+test("doctor exits 0 when every hook is wired as shipped, or none is (--no-hooks is a choice)", () => {
   assert.equal(exitWithHooks(allHooks.map(hookCommand)), 0);
   assert.equal(exitWithHooks([]), 0);
 });
@@ -102,6 +106,8 @@ test("doctor exits 0 when every hook is wired once, or none is (--no-hooks is a 
 test("doctor exits non-zero when the hooks are only partly wired", () => {
   assert.equal(exitWithHooks(allHooks.slice(1).map(hookCommand)), 2);
   assert.equal(exitWithHooks([hookCommand("submission-confirm")]), 2);
+  // Wired by an older init: every hook once, so lint-edited has one of its two commands.
+  assert.equal(exitWithHooks(shipped.names.map(hookCommand)), 2);
 });
 
 /** Doctor's output for a project with one of init's hook commands and one present skill link. */

@@ -1473,7 +1473,11 @@ const IN_PROCESS_HOOKS: Readonly<
   "lint-edited": ({ err, stdin, out }) =>
     lintEditedHook(
       stdin,
-      { files: nodeFiles, linter: editLinter(loadLatexLanguage) },
+      {
+        files: nodeFiles,
+        linter: editLinter(loadLatexLanguage),
+        shellLeaves: leafCommandsNormalized,
+      },
       { out, err },
     ),
   "paper-folder-layout": ({ err, stdin, out }) => {

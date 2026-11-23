@@ -55,7 +55,7 @@ depend on each other — and drives the installed binary:
 - `paperlint init` takes the default papers directory and writes no `paperlint.json` for it
 - `paperlint init` finishes with zero — its doctor found no discrepancy
 - `paperlint init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
-  publishes, once each — and says they need `npm install` in a fresh clone; a second `init`
+  publishes, each as often as it publishes it — and says they need `npm install` in a fresh clone; a second `init`
   leaves that file byte-identical
 - `paperlint lint` passes the staged corpus
 - `paperlint new demo` scaffolds a paper from the templates that shipped in the tarball (and the

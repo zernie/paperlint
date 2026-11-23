@@ -7,7 +7,11 @@
  * instead of at the next lint, or in CI.
  *
  * ── WHAT IT LINTS ────────────────────────────────────────────────────────────────
- * The edited file and the paper's `paper.tex`, with the ESLint `paperlint lint` builds for that paper
+ * The edited file and the paper's `paper.tex`. After a Bash command (PostToolUse on `Bash`, wired with
+ * `"if": "Bash(*.tex*)"`, so Claude Code does not even start the hook for a command that names no
+ * `.tex`): every `.tex` file the command names, as a word or as the target of a redirection that
+ * writes, read by vigiles' shell parser and resolved against the payload's `cwd`, grouped by paper. Each
+ * paper is linted with the ESLint `paperlint lint` builds for that paper
  * (`paperEslint`, src/cli.ts — one function for both, so the two cannot drift): the same config, the
  * same rules, the same body files from `_build/sources.json`. Whether the edited file is one paperlint
  * lints is ESLint's own answer (`isPathIgnored` on that config), not a second list of patterns: a
@@ -25,8 +29,13 @@
  * `_build/` is gitignored and allowed by the layout.
  *
  * ── WHAT IT CANNOT SEE ───────────────────────────────────────────────────────────
- * - A file written by a shell command (`sed -i`, a script, `mv`): no Edit or Write, no hook. The
- *   guarantee stays `paperlint lint` in CI.
+ * - A shell command whose `.tex` is not one of its words: a path inside an interpreter's code
+ *   (`python3 -c "open('p.tex')…"`), a relative path after a `cd` in the same command, a word built at
+ *   run time. And a write by redirection alone (`cat > paper.tex <<EOF`): Claude Code 2.1.330 leaves
+ *   the redirection's target out of the text the `if` matches, so the hook never starts (measured,
+ *   zernie/vigiles#214). The guarantee stays `paperlint lint` in CI.
+ * - The lines a shell command wrote: it has no patch, so in a file the snapshot has not seen it
+ *   reports nothing, and only writes the snapshot the next change is judged against.
  * - The body files of a paper whose build record is stale: `_build/sources.json` hashes every file TeX
  *   read, so the first edit to any of them makes the record stale, and from then until the next
  *   `paperlint build` the paper is `paper.tex` alone — to the hook exactly as to `paperlint lint`. A
@@ -51,6 +60,7 @@ import { SOURCES_DIR } from "./domain/sources-record.ts";
 import { fieldOf } from "./domain/record.ts";
 import { messageOf } from "./domain/text.ts";
 import type { Files } from "./ports/files.ts";
+import { shellPapers, type ShellLeaf } from "./lint-edited-shell.ts";
 
 /** The snapshot, relative to the paper folder. */
 export const SNAPSHOT_FILE = `${SOURCES_DIR}/edit-lint.json`;
@@ -87,6 +97,8 @@ export interface LintEditedDeps {
   readonly files: Files;
   /** The engine for the paper in `paperDir`; it throws when the paper's config does not read. */
   readonly linter: (paperDir: string) => Promise<PaperLinter>;
+  /** Every simple command of a Bash command line; none when it does not parse. */
+  readonly shellLeaves: (command: string) => readonly ShellLeaf[];
 }
 
 /** What Claude Code reads from a PostToolUse hook's stdout: the reason goes next to the tool result. */
@@ -273,7 +285,7 @@ function newAgainst(
 function introducedBy(
   now: readonly FileErrors[],
   before: Snapshot,
-  edited: { readonly file: string; readonly lines: readonly Lines[] },
+  linesOf: (file: string) => readonly Lines[],
 ): readonly LintResult[] {
   return now
     .map((f) => {
@@ -284,9 +296,7 @@ function introducedBy(
           seen === undefined
             ? f.errors
                 .map((e) => e.message)
-                .filter(
-                  (m) => f.file === edited.file && touches(m, edited.lines),
-                )
+                .filter((m) => touches(m, linesOf(f.file)))
             : newAgainst(f.errors, seen),
       };
     })
@@ -306,29 +316,72 @@ const nextSnapshot = (
   },
 });
 
-/** The hook: the payload of an Edit or a Write in, Claude Code's block out, or null to say nothing. */
+/** What one tool call wrote in one paper: the files, and the lines of each it says it wrote. */
+interface Written {
+  readonly dir: string;
+  readonly files: readonly string[];
+  readonly lines: (file: string, text: string) => readonly Lines[];
+}
+
+/** The file an Edit or a Write names, in its paper, with the lines it wrote. */
+function editWritten(payload: unknown, files: Files): readonly Written[] {
+  const file = writtenPath(payload);
+  const dir = file === null ? null : paperFolderOf(file, files);
+  return file === null || dir === null
+    ? []
+    : [{ dir, files: [file], lines: (_, text) => writtenLines(payload, text) }];
+}
+
+/** One paper linted for what a tool call wrote in it: the errors it introduced, and the engine to print them. */
+async function introducedIn(
+  w: Written,
+  deps: LintEditedDeps,
+): Promise<{
+  readonly linter: PaperLinter;
+  readonly shown: readonly LintResult[];
+}> {
+  const linter = await deps.linter(w.dir);
+  const asked = await Promise.all(
+    w.files.map(async (f) => ((await linter.isLinted(f)) ? [f] : [])),
+  );
+  const linted = asked.flat();
+  if (linted.length === 0) return { linter, shown: [] };
+  const main = join(w.dir, MAIN);
+  const has = deps.files.isFile(callerPath(main));
+  const results = await linter.lint(
+    unique([...linted, ...(has ? [main] : [])]),
+  );
+  const snapshot = callerPath(join(w.dir, SNAPSHOT_FILE));
+  const before = readSnapshot(deps.files, snapshot);
+  const now = results.map((r) => errorsOf(r, w.dir, deps.files));
+  const shown = introducedBy(now, before, (file) =>
+    linted.includes(file) ? w.lines(file, textOf(deps.files, file) ?? "") : [],
+  );
+  const next = JSON.stringify(nextSnapshot(before, now), null, 1);
+  deps.files.writeAtomic(snapshot, new TextEncoder().encode(`${next}\n`));
+  return { linter, shown };
+}
+
+/** The hook: the payload of an Edit, a Write or a Bash command in, Claude Code's block out, or null. */
 export async function lintEdited(
   payload: unknown,
   deps: LintEditedDeps,
 ): Promise<BlockOutput | null> {
-  const file = writtenPath(payload);
-  const dir = file === null ? null : paperFolderOf(file, deps.files);
-  if (file === null || dir === null) return null;
-  const linter = await deps.linter(dir);
-  if (!(await linter.isLinted(file))) return null;
-  const main = join(dir, MAIN);
-  const has = deps.files.isFile(callerPath(main));
-  const results = await linter.lint(unique([file, ...(has ? [main] : [])]));
-  const snapshot = callerPath(join(dir, SNAPSHOT_FILE));
-  const before = readSnapshot(deps.files, snapshot);
-  const now = results.map((r) => errorsOf(r, dir, deps.files));
-  const lines = writtenLines(payload, textOf(deps.files, file) ?? "");
-  const shown = introducedBy(now, before, { file, lines });
-  const next = JSON.stringify(nextSnapshot(before, now), null, 1);
-  deps.files.writeAtomic(snapshot, new TextEncoder().encode(`${next}\n`));
-  if (shown.length === 0) return null;
-  const report = (await linter.format(shown)).trim();
-  return { decision: "block", reason: `${report}\n${KEPT}` };
+  const written =
+    fieldOf(payload, "tool_name") === "Bash"
+      ? shellPapers(payload, deps.files, deps.shellLeaves).map((p) => ({
+          ...p,
+          lines: () => [],
+        }))
+      : editWritten(payload, deps.files);
+  const each = await Promise.all(written.map((w) => introducedIn(w, deps)));
+  const reports = await Promise.all(
+    each
+      .filter((r) => r.shown.length > 0)
+      .map(async (r) => (await r.linter.format(r.shown)).trim()),
+  );
+  if (reports.length === 0) return null;
+  return { decision: "block", reason: `${reports.join("\n")}\n${KEPT}` };
 }
 
 /**
