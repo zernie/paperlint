@@ -60,13 +60,13 @@ test("module paths: compiled and not-yet-converted modules, tests and declaratio
   };
   put("dist/lib/markdown.js");
   put("dist/lib/markdown.d.ts");
-  put("lib/trigger-ledger.mjs");
-  put("lib/trigger-ledger.harness.mjs");
+  put("lib/skill-eval-kit.mjs");
+  put("lib/skill-eval-kit.harness.mjs");
   put("lib/markdown.test.mjs");
   put("dist/eslint-rules/latex-language.js");
   assert.deepEqual(modulePaths(root), [
     "paperlint/lib/markdown.mjs",
-    "paperlint/lib/trigger-ledger.mjs",
+    "paperlint/lib/skill-eval-kit.mjs",
     "paperlint/eslint-rules/latex-language.mjs",
   ]);
   // A package with neither directory ships no module paths, rather than throwing.

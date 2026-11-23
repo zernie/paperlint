@@ -236,14 +236,6 @@
       "count": 1
     }
   },
-  "lib/trigger-ledger.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    },
-    "no-restricted-imports": {
-      "count": 1
-    }
-  },
   "scripts/eslint-report-guard.mjs": {
     "local/js-needs-reason": {
       "count": 1

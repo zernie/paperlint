@@ -451,7 +451,6 @@ test("the exclude list is exactly the justified set", () => {
   assert.deepEqual(CONFIG.evalOnly, [
     "lib/skill-eval-kit.mjs",
     "lib/skill-eval-fixture.ts",
-    "lib/trigger-ledger.mjs",
   ]);
 });
 
