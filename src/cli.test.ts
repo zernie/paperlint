@@ -1,5 +1,5 @@
 /**
- * cli.ts paths the harness (src/cli.harness.mjs) does not reach: argument parsing of the flags
+ * cli.ts paths the end-to-end test (src/cli-e2e.test.mjs) does not reach: argument parsing of the flags
  * `build`/`toolchain` take, the root settings' refusals, `build` and `new` refusing before any
  * work, the hook runner when its runtime is broken, and venue choice by path and by prefix. Each
  * case runs `run()` in-process with its own `cwd` and compares the whole code and output.

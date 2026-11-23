@@ -1,6 +1,6 @@
 /**
  * `rules-config.ts` — parsing the `rules` key into ESLint config blocks, and deriving which rules
- * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli.harness.mjs`;
+ * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli-e2e.test.mjs`;
  * this pins the parser's output shape and each refusal.
  */
 import { createChecker } from "../lib/check.ts";

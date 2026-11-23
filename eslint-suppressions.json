@@ -598,7 +598,7 @@
       "count": 33
     }
   },
-  "src/cli.harness.mjs": {
+  "src/cli-e2e.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

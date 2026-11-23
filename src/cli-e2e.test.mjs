@@ -2,6 +2,11 @@
  * Both halves for the `paperlint lint` utility, and separately — failures, each
  * of which must be EXPLAINABLE, not just nonzero.
  *
+ * An end-to-end test of paperlint's own CLI (it was `cli.harness.mjs`, named so only because
+ * `npm test` once ran `vigiles test` alone; it imports nothing from vigiles). It stays `.mjs`, in
+ * its original order, so the move from the harness is reviewable with whitespace hidden; typing it
+ * is follow-up work under #77.
+ *
  * 🔴 Two of the defects checked here the utility already had, and both were found by the
  * FIRST run, not by reading:
  *   1. `paperlint --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
@@ -12,6 +17,7 @@
  * Both are pinned down by the assertions below so there is no going back.
  */
 import { load as yamlLoad } from "js-yaml";
+import { expect, it } from "vitest";
 import {
   mkdtempSync,
   mkdirSync,
@@ -29,19 +35,28 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.ts";
-import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, runHook } = await import(
   join(HERE, "cli.ts")
 );
-const { init, choosePapers, offerWorkflow, missingPrograms, WORKFLOW_PATH } =
-  await import(join(HERE, "init.ts"));
+const {
+  init,
+  choosePapers,
+  offerWorkflow,
+  missingPrograms,
+  interactivity,
+  WORKFLOW_PATH,
+} = await import(join(HERE, "init.ts"));
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
-// Counted by vigiles too: `init` now loads `vigiles/claude-code` for its merge, and a harness that
-// loads vigiles without recording a check is reported as having verified nothing.
-const check = createChecker();
+// A failed check stops its test with the label (and the detail) as the message, as the harness's
+// own checker threw: a later check in a block never runs on a state an earlier one found wrong.
+const check = (label, cond, detail) =>
+  expect(
+    Boolean(cond),
+    detail === undefined ? label : `${label}\n${String(detail)}`,
+  ).toBe(true);
 
 /**
  * init's `Prompts` port answered by `reply(message, options)`: a value, `undefined` (Enter: the
@@ -84,10 +99,10 @@ async function cli(args, cwd) {
   // `out` stays a merged string for text assertions; `stdout` is what actually goes down a pipe.
   const stdout = [];
   const stderr = [];
-  const prev = process.cwd();
-  if (cwd) process.chdir(cwd);
   try {
     const code = await run(args, {
+      // Worker threads cannot `process.chdir`: the directory is handed to `run`.
+      ...(cwd ? { cwd } : {}),
       log: (...a) => stdout.push(a.join(" ")),
       err: (...a) => stderr.push(a.join(" ")),
       // `init` never spawns a package manager here.
@@ -119,47 +134,47 @@ async function cli(args, cwd) {
       stdout: "",
       stderr: `THREW: ${e?.message ?? e}`,
     };
-  } finally {
-    process.chdir(prev);
   }
 }
 
 // ── argument parsing ───────────────────────────────────────────────────────────────────
-check(
-  "`--help` as the first argument — is a FLAG, not a command",
-  parseArgs(["--help"]).help === true,
-);
-check(
-  "and a command is not invented in the process",
-  parseArgs(["--help"]).cmd === null,
-);
-check(
-  "the path and config are parsed",
-  (() => {
-    const a = parseArgs(["lint", "papers", "--config", "o.json", "--json"]);
-    return (
-      a.cmd === "lint" &&
-      a.paths[0] === "papers" &&
-      a.config === "o.json" &&
-      a.json === true
-    );
-  })(),
-);
-check(
-  "the default warning threshold is NEGATIVE — advice does not fail the run",
-  parseArgs(["lint"]).maxWarnings === -1,
-);
-check(
-  "and it is parsed when named explicitly",
-  parseArgs(["lint", "--max-warnings", "0"]).maxWarnings === 0,
-);
-check(
-  "the old `--options` spelling keeps working — a flag in someone else's CI is not ours to break",
-  parseArgs(["lint", "--options", "o.json"]).config === "o.json",
-);
+it("argument parsing", () => {
+  check(
+    "`--help` as the first argument — is a FLAG, not a command",
+    parseArgs(["--help"]).help === true,
+  );
+  check(
+    "and a command is not invented in the process",
+    parseArgs(["--help"]).cmd === null,
+  );
+  check(
+    "the path and config are parsed",
+    (() => {
+      const a = parseArgs(["lint", "papers", "--config", "o.json", "--json"]);
+      return (
+        a.cmd === "lint" &&
+        a.paths[0] === "papers" &&
+        a.config === "o.json" &&
+        a.json === true
+      );
+    })(),
+  );
+  check(
+    "the default warning threshold is NEGATIVE — advice does not fail the run",
+    parseArgs(["lint"]).maxWarnings === -1,
+  );
+  check(
+    "and it is parsed when named explicitly",
+    parseArgs(["lint", "--max-warnings", "0"]).maxWarnings === 0,
+  );
+  check(
+    "the old `--options` spelling keeps working — a flag in someone else's CI is not ours to break",
+    parseArgs(["lint", "--options", "o.json"]).config === "o.json",
+  );
+});
 
 // ── config is assembled, and consumer data gets through ────────────────────────────────────
-{
+it("config is assembled, and consumer data gets through", async () => {
   const cfg = buildConfig({}, null);
   // Blocks with `files` — the global `ignores` block below is not a rule block.
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
@@ -188,23 +203,23 @@ check(
     siblings.rules["sibling/frontmatter"] === "warn" &&
       siblings.ignores.some((g) => g.endsWith("siblings/README.md")),
   );
-}
+});
 
 // ── failures must be EXPLAINABLE ─────────────────────────────────────────────────────────
-{
+it("`--help` prints usage and exits zero", async () => {
   const r = await cli(["--help"]);
   check(
     "`--help` prints usage and exits zero",
     r.code === 0 && /npx paperlint lint/.test(r.out),
   );
-}
+});
 // ── ONE DECLARATION, READ BY THE SAME THING THAT WRITES IT ─────────────────────────────
 //
 // 🔴 WITHOUT THIS BLOCK `init` COULD PRODUCE A BROKEN INSTALL. It writes one declaration, into
 // the root `paperlint.json` — the file the hooks read at `$CLAUDE_PROJECT_DIR`. If the utility
 // read another file, the install command and the check command would be looking at different
 // files — exactly the defect it exists to close, just from the other side.
-{
+it("one declaration, read by the same thing that writes it", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-carrier-")));
   try {
     const paper = join(root, "papers", "p1");
@@ -280,7 +295,7 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── `init` — THREE ACTIONS INSTEAD OF NINE ────────────────────────────────────────────────
 //
@@ -293,7 +308,7 @@ check(
 // ⚠️ Questions here are NOT ASKED blind: `interactive` is passed explicitly, never read from
 // stdin. A harness stuck at an input prompt is not a red test, it is the absence of any answer
 // at all.
-{
+it("`init` \u2014 three actions instead of nine", async () => {
   const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-init-")));
   const project = (
     name,
@@ -683,15 +698,15 @@ check(
   } finally {
     rmSync(workRoot, { recursive: true, force: true });
   }
-}
-{
+});
+it("an unknown command is named", async () => {
   const r = await cli(["frobnicate"]);
   check(
     "an unknown command is NAMED",
     r.code === 2 && /unknown command `frobnicate`/.test(r.out),
   );
-}
-{
+});
+it("a flag with no value is a failure, not a silent default", async () => {
   // A flag with no value. The defect was found by the compiler while porting to TypeScript:
   // `rest[++i]` past the last argument gives undefined, and `--config` with no value silently
   // meant "no config was set" — i.e. an autodiscovered file instead of the named one.
@@ -700,8 +715,8 @@ check(
     "a flag with no value — a FAILURE, not a silent default",
     r.code === 2 && /--config needs a value/.test(r.out),
   );
-}
-{
+});
+it("`lint` with no path, no config and no papers/ refuses and names both ways out", async () => {
   // A "." default would give a green run over whatever happens to be lying around. The default
   // is `papers/`, and an empty directory with no config has none: a refusal naming BOTH ways out.
   const bare = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bare-")));
@@ -717,10 +732,10 @@ check(
   } finally {
     rmSync(bare, { recursive: true, force: true });
   }
-}
+});
 
 // ── on live files: both halves ───────────────────────────────────────────────────────
-{
+it("on live files: both halves", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-cli-")));
   try {
     const paper = join(root, "papers", "p1");
@@ -799,7 +814,7 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── THE CONFIG FINDS ITSELF, AND THE PAPERS DIRECTORY IS DECLARED IN IT ──────────────────
 //
@@ -807,7 +822,7 @@ check(
 // it via an explicit `--options`. I.e. the file the utility itself created had no effect on the
 // run — and there was no way to find that out: zero typography debt looks exactly like a
 // config that was never found.
-{
+it("the config finds itself, and the papers directory is declared in it", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-cfg-")));
   try {
     const paper = join(root, "papers", "p1");
@@ -907,14 +922,14 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── THE WARNING THRESHOLD ───────────────────────────────────────────────────────────────
 //
 // The action has a `max-warnings` input, and once the action stopped calling eslint directly,
 // the threshold had to show up here too — otherwise it would have been lost SILENTLY: the run
 // would stay green, and the consumer's setting would stop meaning anything.
-{
+it("the warning threshold", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-warn-")));
   try {
     const paper = join(root, "papers", "p1");
@@ -964,14 +979,14 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── STRUCTURE GETS THROUGH TO THE COMMAND ──────────────────────────────────────────────
 //
 // `structure.mjs` is checked separately and in full (`structure.harness.ts`). Here — exactly
 // one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
 // `run()` gives zero findings and looks like a clean corpus.
-{
+it("structure gets through to the command", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-wired-")));
   try {
     const paper = join(root, "papers", "orphan");
@@ -1042,7 +1057,7 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── THE PAPERS DO NOT HAVE TO LIVE UNDER THE CURRENT DIRECTORY (#48) ─────────────────────
 //
@@ -1055,7 +1070,7 @@ check(
 // Second half: the typography debt is keyed by the paper's path FROM THE CONFIG'S DIRECTORY
 // (`"papers/p"`). Keys are computed against ESLint's `cwd`, so a run started from a
 // subdirectory, or with `--config` from elsewhere, silently stopped honouring the debt.
-{
+it("the papers do not have to live under the current directory (#48)", async () => {
   // A message that names the paper's own `paperlint.json` names it as the reader typed it, so
   // relative to where the run started: that path is the run's, like the file paths, and is masked.
   const findings = (r) => {
@@ -1156,10 +1171,10 @@ check(
     rmSync(tree, { recursive: true, force: true });
     rmSync(elsewhere, { recursive: true, force: true });
   }
-}
+});
 
 // ── `paperlint hook` with no name or an unknown one — said, and never a denial (#324) ─────────
-{
+it("`paperlint hook` with no name or an unknown one is said, and never a denial (#324)", async () => {
   let said = "";
   const err = (...a) => {
     said += a.join(" ") + "\n";
@@ -1177,7 +1192,7 @@ check(
         said,
       ),
   );
-}
+});
 
 // ── RUNNING THROUGH A SYMLINK — the only way a consumer ever calls the utility ───────
 //
@@ -1185,7 +1200,7 @@ check(
 // against `file://${process.argv[1]}`: for a symlink those two paths are DIFFERENT, the
 // condition is false, and the utility silently exited zero. A direct `node bin/paperlint.mjs` worked
 // fine, meanwhile — i.e. the defect was invisible in exactly the way it is normally checked.
-{
+it("running through a symlink, the only way a consumer calls the utility", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-link-")));
   try {
     const link = join(root, "paperlint-shim");
@@ -1209,13 +1224,13 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // `paperlint hook paper-folder-layout` the way Claude Code runs it: the payload on stdin, the answer
 // on stdout, through the real bin. The in-process tests inject both streams; this is the one place
 // the defaults are read and written for real.
-{
+it("`paperlint hook paper-folder-layout` through the real bin", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hook-")));
   try {
     const paper = join(root, "papers", "p");
@@ -1251,14 +1266,14 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // `paperlint hook lint-edited` the way Claude Code runs it, through the real bin — and the bin's
 // fast path: an edit outside every paper is answered before the CLI (and ESLint) is ever loaded. A
 // preload records every module resolved to the CLI or into ESLint, so "never loaded" is observed,
 // and the edit inside a paper is the control that the probe sees a load when there is one.
-{
+it("`paperlint hook lint-edited` through the real bin, and its fast path", async () => {
   const root = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-lint-edited-")),
   );
@@ -1332,17 +1347,13 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
-);
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What is left after init is typed in THE SAME TERMINAL. The two `/plugin` lines are gone: the
 // hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.ts).
 
-{
+it("what is left after init is typed in the same terminal", async () => {
   const steps = nextSteps("papers");
   check(
     "🔴 no /plugin line is left — nothing is typed into another program any more",
@@ -1353,11 +1364,10 @@ console.log(
     "it names the two commands that ARE left: new and lint",
     /npx paperlint new <name>/.test(steps) && /npx paperlint lint/.test(steps),
   );
-}
+});
 
 // ── the mode decision: a human is at the other end only when EVERY signal says so ──────────
-{
-  const { interactivity } = await import(join(HERE, "init.ts"));
+it("the mode decision: a human is at the other end only when every signal says so", async () => {
   const tty = { stdinTTY: true, stdoutTTY: true, env: {}, yes: false };
   check(
     "a terminal on stdin AND stdout, no CI, no --yes → interactive",
@@ -1383,10 +1393,10 @@ console.log(
     "an empty CI variable is not CI",
     interactivity({ ...tty, env: { CI: "" } }).interactive === true,
   );
-}
+});
 
 // ── the new flags parse, and none of them becomes the directory argument ─────────────────
-{
+it("the new flags parse, and none of them becomes the directory argument", async () => {
   const a = parseArgs(["init", "--yes", "--no-hooks", "--paper", "demo"]);
   check(
     "init flags parse into fields, not into paths",
@@ -1402,10 +1412,10 @@ console.log(
     "🔴 --hooks=local is NOT implemented, and it is refused by name rather than read as a path",
     r.code === 2 && /--hooks=local is not implemented/.test(r.out),
   );
-}
+});
 
 // ── init wires the hooks, and a human can say no ─────────────────────────────────────────
-{
+it("init wires the hooks, and a human can say no", async () => {
   const root = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-init-hooks-")),
   );
@@ -1494,10 +1504,10 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── init offers a first paper only where there is none, and only to a human ─────────────
-{
+it("init offers a first paper only where there is none, and only to a human", async () => {
   const root = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-init-paper-")),
   );
@@ -1647,10 +1657,10 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── `paperlint lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
-{
+it("`paperlint lint` does not sweep the project's paper template as a paper", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-template-")));
   try {
     writeFileSync(
@@ -1689,10 +1699,10 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── `paperlint new` through the CLI: the papers directory comes from the one declaration ────────
-{
+it("`paperlint new` through the CLI: the papers directory comes from the one declaration", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-cli-")));
   try {
     const none = await cli(["new", "first"], root);
@@ -1736,10 +1746,10 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
+});
 
 // ── the settings are parsed at the boundary: unknown keys, `rules` blocks ─────────────────
-{
+it("the settings are parsed at the boundary: unknown keys, `rules` blocks", async () => {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-settings-")));
   try {
     const dir = join(root, "papers", "p");
@@ -1845,8 +1855,4 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions in total, including init's hooks and paperlint new`,
-);
+});

@@ -5,7 +5,7 @@
  *
  * The rule is read from the file's IMPORTS, parsed with the TypeScript compiler — not from its
  * folder and not from a text search: a comment or a string that mentions `runHook` is not an import,
- * and `src/cli.harness.mjs` calls a function of paperlint's own that happens to be called `runHook`.
+ * and the CLI's end-to-end test (once `cli.harness.mjs`) calls a function of paperlint's own that happens to be called `runHook`.
  *
  * Harnesses that predate the rule and import none of the three are frozen in
  * `harness-api.frozen.json` (issue #77). That list only shrinks: an entry that now imports the API,

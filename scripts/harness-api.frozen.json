@@ -23,7 +23,6 @@
     "skills/render-paper/render-paper.harness.mjs",
     "src/build-engine.harness.mjs",
     "src/build.harness.mjs",
-    "src/cli.harness.mjs",
     "src/doctor.harness.mjs",
     "src/engine.harness.mjs",
     "src/hooks-settings.harness.ts",
