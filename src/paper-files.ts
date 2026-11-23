@@ -122,6 +122,7 @@ export interface ScopedBlock {
   readonly basePath: string;
   readonly files?: readonly FilesEntry[];
   readonly ignores?: readonly string[];
+  readonly linterOptions?: RuleBlock["linterOptions"];
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 
@@ -276,6 +277,7 @@ function within(
       basePath: block.basePath,
       files,
       ...(ignores.length ? { ignores } : {}),
+      ...(block.linterOptions ? { linterOptions: block.linterOptions } : {}),
       rules,
     },
   ];

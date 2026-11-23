@@ -37,6 +37,10 @@ export interface RuleBlock {
   readonly basePath: string;
   readonly files?: readonly string[];
   readonly ignores?: readonly string[];
+  /** Set only by paperlint's own blocks (a paper's stage); `paperlint.json` cannot write it. */
+  readonly linterOptions?: {
+    readonly reportUnusedDisableDirectives: "off";
+  };
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 

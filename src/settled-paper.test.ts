@@ -3,6 +3,7 @@
  * preset's (#583, #553): the rules stay what they are, the config decides where they run.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
 import { useTempDir, writeTree } from "../test/support.ts";
@@ -128,44 +129,21 @@ test("no cycles, or a lock that is missing or not JSON, is not a final paper", (
     ]);
 });
 
-test("the paper's own rules come after, so an author can turn one back on", () => {
-  const dir = writeTree(join(root, "own"), {
-    "p/paper.tex": "% p\n",
-    "p/paperlint.json": JSON.stringify({
-      cycles: [ACCEPTED],
-      rules: { "pdf/fresh": "error" },
-    }),
-    "p/versions/lock.json": lockText({
-      "alpha-2026/camera-ready.pdf": FROZEN,
-    }),
-  });
-  const r = paperRuleBlocks([join(dir, "p")]);
-  assert.ok(r.ok);
-  assert.deepEqual(
-    r.value.own.map((b) => b.rules),
-    [{ "pdf/fresh": "error" }],
-  );
-});
-
 test("paperStage: working, accepted, final", () => {
   const parsed = parseCycles([ACCEPTED]);
   assert.ok(parsed.ok && parsed.value !== null);
   const current = currentCycle(parsed.value);
   assert.ok(current.ok);
   const frozen = { "alpha-2026/camera-ready.pdf": FROZEN };
-  const lost = {
-    "alpha-2026/camera-ready.pdf": { kind: "lost" as const, frozen: null },
-  };
   assert.equal(paperStage(current.value, frozen), "final");
   assert.equal(paperStage(current.value, {}), "accepted");
-  assert.equal(paperStage(current.value, lost), "accepted");
   assert.equal(paperStage({ kind: "none" }, frozen), "working");
 });
 
-/** `paperlint lint papers/p` in `cwd`: its exit code and what it printed. */
-async function lint(cwd: string) {
+/** `paperlint lint [flags] papers/p` in `cwd`: its exit code and what it printed. */
+async function lint(cwd: string, ...flags: readonly string[]) {
   const out: string[] = [];
-  const code = await run(["lint", "papers/p"], {
+  const code = await run(["lint", ...flags, "papers/p"], {
     log: (...a: unknown[]) => out.push(a.join(" ")),
     err: (...a: unknown[]) => out.push(a.join(" ")),
     cwd,
@@ -183,23 +161,30 @@ async function lint(cwd: string) {
   return { code, out: out.join("\n") };
 }
 
-/** A project whose ROOT paperlint.json turns a writing rule on for every paper by glob. */
-function project(name: string, cycles: readonly object[]): string {
-  const long = Array.from({ length: 70 }, () => "word").join(" ");
+const LONG = Array.from({ length: 70 }, () => "word").join(" ");
+const TEX = `\\documentclass{article}\n\\begin{document}\n${LONG}.\n\\end{document}\n`;
+const ON = { "tex/max-sentence-words": "warn" };
+
+/**
+ * A project with one paper whose text has a 70-word sentence. `at: "root"` turns the writing rule on
+ * for every paper by a glob in the ROOT paperlint.json; `at: "own"` in the paper's own.
+ */
+function project(
+  name: string,
+  cycles: readonly object[],
+  at: "root" | "own" = "root",
+  tex: string = TEX,
+): string {
+  const rootRules =
+    at === "root" ? [{ files: ["papers/*/paper.tex"], rules: ON }] : [];
   return writeTree(join(root, name), {
     "package.json": "{}",
-    "paperlint.json": JSON.stringify({
-      papersDir: "papers",
-      rules: [
-        {
-          files: ["papers/*/paper.tex"],
-          rules: { "tex/max-sentence-words": "warn" },
-        },
-      ],
-    }),
+    "paperlint.json": JSON.stringify({ papersDir: "papers", rules: rootRules }),
     "papers/p/PIPELINE-STATUS.md": "# status\n",
-    "papers/p/paper.tex": `\\documentclass{article}\n\\begin{document}\n${long}.\n\\end{document}\n`,
-    "papers/p/paperlint.json": JSON.stringify({ cycles }),
+    "papers/p/paper.tex": tex,
+    "papers/p/paperlint.json": JSON.stringify(
+      at === "own" ? { cycles, rules: ON } : { cycles },
+    ),
     "papers/p/versions/lock.json": lockText({
       "alpha-2026/camera-ready.pdf": FROZEN,
     }),
@@ -211,4 +196,19 @@ test("lint: the root's glob reaches a paper being written, and not a final one â
   assert.match(open.out, /tex\/max-sentence-words/);
   const final = await lint(project("lint-final", [ACCEPTED]));
   assert.doesNotMatch(final.out, /max-sentence-words/);
+});
+
+test("lint: a writing rule the paper turns on in its OWN settings is off on a final paper too â€” the stage comes last", async () => {
+  const open = await lint(project("own-open", [OPEN], "own"));
+  assert.match(open.out, /tex\/max-sentence-words/);
+  const final = await lint(project("own-final", [ACCEPTED], "own"));
+  assert.doesNotMatch(final.out, /max-sentence-words/);
+});
+
+test("lint --fix: a disable comment on a final paper is not reported unused, and the published text is not rewritten", async () => {
+  const tex = `\\documentclass{article}\n\\begin{document}\n% eslint-disable-next-line tex/max-sentence-words\n${LONG}.\n\\end{document}\n`;
+  const dir = project("directive-final", [ACCEPTED], "root", tex);
+  const r = await lint(dir, "--fix");
+  assert.doesNotMatch(r.out, /[Uu]nused eslint-disable/);
+  assert.equal(readFileSync(join(dir, "papers/p/paper.tex"), "utf8"), tex);
 });

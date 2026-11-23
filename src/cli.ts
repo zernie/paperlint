@@ -2729,8 +2729,9 @@ async function paperEslint(
   }>
 > {
   // The order, most general first so the most specific wins (ESLint: a later block wins): each
-  // paper's venue preset → the root paperlint.json → the paper's stage (src/settled-paper.ts) →
-  // the paper's own paperlint.json.
+  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json → the paper's
+  // stage (src/settled-paper.ts), last because a published text has nothing left to fix whoever
+  // turned a writing rule on.
   const papers = paperRuleBlocks(paths);
   if (!papers.ok) return papers;
   const opts = {
@@ -2738,8 +2739,8 @@ async function paperEslint(
     rules: [
       ...papers.value.preset,
       ...(cfg.opts.rules ?? []),
-      ...papers.value.stage,
       ...papers.value.own,
+      ...papers.value.stage,
     ],
   };
 

@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:1e873c330aa18d87 compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:f83563bacd9214c9 compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -46,7 +46,7 @@ the checks push every paper toward a blog post.
 
 ### The Config Decides Where A Rule Runs
 
-**Guidance only** — Which files a rule runs on is decided by the config, never by the rule. A rule judges its own subject wherever it is turned on; it does not look at a paper's stage, venue or cycles to decide that it does not apply there. That decision is a rule block the lint config builds (`paperRuleBlocks` in `src/cli.ts`): `files`, `ignores`, or a rule set to `off`, where a later block wins, as in ESLint. Example: a finished paper (accepted, camera-ready frozen) has its text and build rules turned off by `src/settled-paper.ts`, and no rule reads its cycles for that (#583, #553). The author decided this on 2026-11-23.
+**Guidance only** — A NEW decision about which files a rule runs on goes into the config, not into the rule. A rule judges its own subject wherever it is turned on; whether it applies to a paper at a given stage is a rule block the lint config builds (`paperRuleBlocks` in `src/cli.ts`): `files`, `ignores`, or a rule set to `off`, where a later block wins, as in ESLint. Example: a finished paper (accepted, camera-ready frozen) has its text and build rules turned off by `src/settled-paper.ts`, and no rule reads its cycles for that (#583, #553). Two older decisions still live inside rules and are not a precedent: `phase` set to `porting` silences the venue rules from inside them (`src/venue-rules.ts`), and the anonymity rules go quiet on an accepted cycle (`effectiveBlind`, `src/domain/cycle.ts`); #599 decides whether they move. The author decided this on 2026-11-23.
 
 ### A Rule Is Configured The Eslint Way
 

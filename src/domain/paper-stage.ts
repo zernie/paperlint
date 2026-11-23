@@ -17,7 +17,7 @@ import { frozenKey, type Lock } from "./versions.ts";
 
 export type PaperStage = "working" | "accepted" | "final";
 
-/** The paper's stage from its current attempt and its lock. A camera-ready recorded as lost is not frozen. Pure. */
+/** The paper's stage from its current attempt and its lock. Pure. */
 export function paperStage(current: Current, lock: Lock): PaperStage {
   if (current.kind !== "accepted") return "working";
   const key = frozenKey(current.cycle.id, "camera-ready", "pdf");

@@ -11,9 +11,10 @@
  *              text and PDF are frozen in `versions/`, so "rebuild", "too long" or "not built yet" has
  *              nothing left to fix. The talk, the artifact and the records keep their rules
  *
- * The blocks go after the root `paperlint.json` (a glob over every paper is more general than one
- * paper's stage) and before the paper's own, so a paper that wants a rule back on a final paper
- * writes it in its own `rules`, and a later block wins, as in ESLint.
+ * The blocks go LAST, after the root `paperlint.json` and after the paper's own `rules`: a writing
+ * rule turned on while the paper was written, at either level, says nothing on its published text.
+ * Nothing turns a text rule back on for a final paper; the paper is worked on again in a new cycle,
+ * and an open cycle makes it `working`.
  */
 import { paperStage } from "./domain/paper-stage.ts";
 import type { Cycles } from "./domain/cycle.ts";
@@ -62,5 +63,16 @@ export function stageBlocks(
       .filter((id) => FROZEN_TEXT_PLUGINS.some((p) => id.startsWith(`${p}/`)))
       .map((id) => [id, "off" as const]),
   );
-  return [accepted, { basePath: dir, files: [PAPER_TEX], rules: textOff }];
+  // A disable comment for a rule this block turns off suppresses nothing, and ESLint would report it
+  // as unused, and `--fix` would delete it from the published text: the trap `rulesOff` in cli.ts
+  // closes the same way.
+  return [
+    accepted,
+    {
+      basePath: dir,
+      files: [PAPER_TEX],
+      linterOptions: { reportUnusedDisableDirectives: "off" },
+      rules: textOff,
+    },
+  ];
 }
