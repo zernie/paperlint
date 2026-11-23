@@ -27,7 +27,11 @@ const Step = z.looseObject({
   name: z.string().optional(),
   run: z.string().optional(),
   uses: z.string().optional(),
+  with: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+    .optional(),
 });
+type Step = z.infer<typeof Step>;
 const Workflow = z.looseObject({
   on: z
     .looseObject({
@@ -261,6 +265,21 @@ const commandsIn = (run: string | undefined): string[][] =>
     .split(/\n|&&|\|\||;/)
     .map((c) => c.trim().split(/\s+/).filter(Boolean))
     .filter((t) => t.length > 0);
+// A step through the vigiles Action runs `vigiles <command> <paths>`, with the paths split on
+// commas and spaces the way the Action splits them (its `paths` input).
+const VIGILES_ACTION = "zernie/vigiles@";
+const stepCommands = (s: Step): string[][] =>
+  s.uses?.startsWith(VIGILES_ACTION)
+    ? [
+        [
+          "vigiles",
+          String(s.with?.["command"] ?? "lint"),
+          ...String(s.with?.["paths"] ?? "")
+            .split(/[\s,]+/)
+            .filter(Boolean),
+        ],
+      ]
+    : commandsIn(s.run);
 const stepsOf = (job: string) =>
   Object.values(workflows).flatMap((wf) => wf.jobs?.[job]?.steps ?? []);
 const startsWith = (tokens: readonly string[], prefix: readonly string[]) =>
@@ -301,7 +320,7 @@ for (const g of GATES) {
   }
   check(
     `gate «${g.name}» runs its command (${commandOf(g).join(" ")}) in a step of CI job «${g.job}»`,
-    steps.some((s) => commandsIn(s.run).some((t) => runsGate(t, g))),
+    steps.some((s) => stepCommands(s).some((t) => runsGate(t, g))),
     steps.map((s) => s.run ?? `(uses ${String(s.uses)})`).join(" | "),
   );
 }
