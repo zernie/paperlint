@@ -41,7 +41,12 @@
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */
 import { relative, sep } from "node:path";
-import type { ConfigBlock, RuleBlock, RuleEntry } from "./rules-config.ts";
+import type {
+  ConfigBlock,
+  RuleBlock,
+  RuleEntry,
+  StageLinterOptions,
+} from "./rules-config.ts";
 
 /**
  * Which papers' own files paperlint's blocks claim. `any` is the config's SHAPE, for the rule list and
@@ -122,7 +127,7 @@ export interface ScopedBlock {
   readonly basePath: string;
   readonly files?: readonly FilesEntry[];
   readonly ignores?: readonly string[];
-  readonly linterOptions?: RuleBlock["linterOptions"];
+  readonly linterOptions?: StageLinterOptions;
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 
