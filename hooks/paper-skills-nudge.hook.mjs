@@ -10,12 +10,6 @@
  * the payload: the runtime decodes the event and hands in `e.path`, so the whole family of "read
  * the wrong input / wrote the wrong field / exited the wrong code" is unrepresentable here.
  *
- * ── SPLIT FROM `paper-status-gates`, DELIBERATELY ───────────────────────────
- * This carries the STATIC checklist. The part that reads `<paper-dir>/PIPELINE-STATUS.md` and
- * surfaces unrun gates lives in `paper-status-gates.hook.mjs`, because it needs a tool run and
- * this one does not. Two hooks on one event is the honest line between a constant and an I/O,
- * not an accident of porting.
- *
  * ── DELIVERY, MEASURED (2026-09-12, vigiles 27.1.4) ─────────────────────────
  * `PostToolUse` is in the adapter's `injectableEvents`, so a `notice` on this event reaches the
  * model as `hookSpecificOutput.additionalContext` on STDOUT — 1 346 bytes on a paper edit, 0 on

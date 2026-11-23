@@ -13,7 +13,7 @@ const legacyCeilings = {
   "eslint-rules/prereg-coverage.ts": 320,
   "eslint-rules/tex-build.harness.mjs": 535,
   "eslint.config.mjs": 622,
-  "hooks/hooks.harness.ts": 502,
+  "hooks/hooks.harness.ts": 382,
   "scripts/coverage-config.test.ts": 376,
   "scripts/pipeline.ts": 380,
   "src/adapters/git/history.test.ts": 327,

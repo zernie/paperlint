@@ -171,7 +171,7 @@ test("a wired hook on a paper file: missing hook → one notice, the same versio
 });
 
 test("the notice rides on what the hook said: a block stays a block, and the exit stays 0", async () => {
-  const dir = project("block", wiringWithout(["paper-status-gates"]), true);
+  const dir = project("block", wiringWithout(["paper-skills-nudge"]), true);
   const said = await hook(
     "lint-edited",
     dir,
@@ -186,7 +186,7 @@ test("the notice rides on what the hook said: a block stays a block, and the exi
   assert.match(parsed.reason, /tex\/max-sentence-words/);
   assert.match(
     Notice.parse(parsed).hookSpecificOutput.additionalContext,
-    /paper-status-gates/,
+    /paper-skills-nudge/,
   );
 });
 

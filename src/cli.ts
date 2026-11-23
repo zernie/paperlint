@@ -250,6 +250,7 @@ import {
   noticeText,
   notYetTold,
   recordTold,
+  hookNotRunningText,
 } from "./hooks-notice.ts";
 import { unwiredHooks } from "./hooks-settings.ts";
 import {
@@ -1856,18 +1857,14 @@ function runHookPlain(
     readonly capture?: boolean;
   } = {},
 ): number | Promise<number> {
-  if (!name) {
-    err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
-    return 2;
-  }
-  const inProcess = IN_PROCESS_HOOKS[name];
+  const inProcess = IN_PROCESS_HOOKS[name ?? ""];
   if (inProcess !== undefined) return inProcess({ err, stdin, out });
   const program = fileURLToPath(
-    new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
+    new URL(`../hooks/${name ?? ""}.hook.mjs`, import.meta.url),
   );
-  if (!existsSync(program)) {
-    err(`unknown hook \`${name}\` — no such program at ${program}`);
-    return 2;
+  if (!name || !existsSync(program)) {
+    err(hookNotRunningText(name, program, packageVersion()));
+    return 1; // not 2: that denies every Bash command, the fix included (#324); not 0: nobody sees it
   }
   let runtime;
   try {
@@ -1880,7 +1877,7 @@ function runHookPlain(
         `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
         `Reinstall this package so its dependencies are present.`,
     );
-    return 0;
+    return 1; // not 2: that would deny every Bash command; not 0: nobody would see this
   }
   const args = [runtime, "hook-runtime", "run-program", program];
   const r =

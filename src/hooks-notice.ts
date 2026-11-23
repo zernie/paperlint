@@ -30,8 +30,17 @@ import type { Files } from "./ports/files.ts";
 export const NOTICE_HOOKS: readonly string[] = [
   "lint-edited",
   "paper-skills-nudge",
-  "paper-status-gates",
 ];
+
+/** What `paperlint hook [name]` says when it cannot run a hook: no name, or no such hook shipped. It names the remedy; the caller does not deny (#324). */
+export const hookNotRunningText = (
+  name: string | undefined,
+  program: string,
+  version: string,
+): string =>
+  name === undefined || name === ""
+    ? "paperlint: `hook` needs a name, e.g. `paperlint hook paper-edit-guard`; no hook is running."
+    : `paperlint: unknown hook \`${name}\` — no such program at ${program}; it is NOT running (installed: paperlint ${version}). Run \`npm install\`, or remove \`paperlint hook ${name}\` from .claude/settings.json.`;
 
 /** Where the version last told is kept, relative to the project root. */
 export const NOTICE_STATE = join(

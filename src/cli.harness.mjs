@@ -1185,17 +1185,18 @@ check(
 
   said = "";
   check(
-    "no name — a failure, and the right invocation is suggested",
-    runHook(undefined, { err }) === 2 &&
+    "no name — the right invocation is suggested, and it does not deny",
+    runHook(undefined, { err }) === 1 &&
       /paperlint hook paper-edit-guard/.test(said),
   );
 
+  // An unknown name cannot run, the same failure as a missing runtime below, so it must not deny (#324).
   said = "";
+  const named =
+    /unknown hook `no-such-hook`.*no-such-hook\.hook\.mjs.*paperlint \d+\.\d+\.\d+.*npm install/s;
   check(
-    "an unknown hook is NAMED together with the path it was looked for at",
-    runHook("no-such-hook", { err }) === 2 &&
-      /unknown hook `no-such-hook`/.test(said) &&
-      /no-such-hook\.hook\.mjs/.test(said),
+    "an unknown hook is NAMED with its path, the installed version and the remedy, and does not deny",
+    runHook("no-such-hook", { err }) === 1 && named.test(said),
   );
 
   // 🔴 THE MAIN ASSERTION. A runtime that cannot be found HAS NO RIGHT to return 2: on
@@ -1213,8 +1214,8 @@ check(
     resolve: brokenResolve,
   });
   check(
-    "the runtime does not resolve — work is NOT blocked (code 0, not 2)",
-    code === 0,
+    "the runtime does not resolve — work is NOT blocked (code 1: shown to the person, not 2)",
+    code === 1,
   );
   check(
     "and the complaint is LOUD: the hook is named, the effect is named, the remedy is named",
