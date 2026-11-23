@@ -140,19 +140,18 @@ export function hookRun(command: string): {
   return run && { name: run.name, ours: run.ours };
 }
 
-/** Every command in a settings object, with the event it hangs off. */
-export function commandsIn(
-  settings: Settings,
-): { readonly event: string; readonly command: string }[] {
-  const out: { event: string; command: string }[] = [];
-  for (const [event, entries] of Object.entries(prop(settings["hooks"]) ?? {}))
-    for (const entry of listOf(entries))
-      for (const h of listOf(prop(entry)?.["hooks"])) {
+/** Every command in a settings object, with the event and the matcher it hangs off. */
+export const commandsIn = (settings: Settings) =>
+  Object.entries(prop(settings["hooks"]) ?? {}).flatMap(([event, entries]) =>
+    listOf(entries).flatMap((entry) => {
+      const m = prop(entry)?.["matcher"];
+      const matcher = typeof m === "string" ? m : "";
+      return listOf(prop(entry)?.["hooks"]).flatMap((h) => {
         const command = prop(h)?.["command"];
-        if (typeof command === "string") out.push({ event, command });
-      }
-  return out;
-}
+        return typeof command === "string" ? [{ event, matcher, command }] : [];
+      });
+    }),
+  );
 
 /** The settings file is the user's: any level may be missing or of the wrong kind. */
 const listOf = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
@@ -218,17 +217,16 @@ export function wiredCounts(
   settings: Settings,
   names: readonly string[],
 ): readonly HookCount[] {
-  const runs = commandsIn(settings).flatMap(({ command }) => {
+  const runs = commandsIn(settings).flatMap(({ event, matcher, command }) => {
     const run = hookRun(command);
-    return run ? [run] : [];
+    return run ? [{ ...run, place: `${event} ${matcher}` }] : [];
   });
-  const count = (name: string, ours: boolean): number =>
-    runs.filter((r) => r.name === name && r.ours === ours).length;
-  return names.map((name) => ({
-    name,
-    ours: count(name, true),
-    other: count(name, false),
-  }));
+  return names.map((name) => {
+    const mine = runs.filter((r) => r.name === name);
+    const ours = mine.filter((r) => r.ours).length;
+    const places = new Set(mine.map((r) => r.place)).size;
+    return { name, ours, other: mine.length - ours, places };
+  });
 }
 
 export type SettingsRead =

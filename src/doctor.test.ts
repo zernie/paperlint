@@ -64,13 +64,20 @@ test("doctor: a settings file silent on papersDir, an occupied entry, an unreada
   assert.equal(typeof code, "number");
 });
 
-/** Doctor's exit code for a project whose `.claude/settings.json` carries the given commands. */
-const exitWithHooks = (commands: readonly string[]): number => {
+/**
+ * Doctor's exit code for a project whose `.claude/settings.json` carries the given commands, each
+ * under the matcher `matcherOf` gives it (by default a matcher of its own).
+ */
+const exitWithHooks = (
+  commands: readonly string[],
+  matcherOf: (command: string, i: number) => string = (_, i) =>
+    `Tool${String(i)}`,
+): number => {
   const root = project();
   writeFileSync(join(root, "paperlint.json"), "{}\n");
   mkdirSync(join(root, ".claude"), { recursive: true });
-  const entries = commands.map((command) => ({
-    matcher: "Bash",
+  const entries = commands.map((command, i) => ({
+    matcher: matcherOf(command, i),
     hooks: [{ type: "command", command }],
   }));
   writeFileSync(
@@ -108,6 +115,10 @@ test("doctor exits non-zero when the hooks are only partly wired", () => {
   assert.equal(exitWithHooks([hookCommand("submission-confirm")]), 2);
   // Wired by an older init: every hook once, so lint-edited has one of its two commands.
   assert.equal(exitWithHooks(shipped.names.map(hookCommand)), 2);
+  // lint-edited twice after an Edit and never after a Bash: two commands in one place are not two places.
+  const editOnly = (c: string, i: number) =>
+    c.endsWith("lint-edited") ? "Edit" : `Tool${String(i)}`;
+  assert.equal(exitWithHooks(allHooks.map(hookCommand), editOnly), 2);
 });
 
 /** Doctor's output for a project with one of init's hook commands and one present skill link. */
