@@ -224,7 +224,7 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
   assert.deepEqual(
     { noCli, killed, messages: messages.map((m) => m.split(" from ")[0]) },
     {
-      noCli: 0,
+      noCli: 1,
       killed: 0,
       messages: ["paperlint: the hook runtime (vigiles) is not resolvable"],
     },
@@ -1219,9 +1219,9 @@ test("lint with its LaTeX language missing from the install still lints the scor
   assert.match(whole.out, /missing all of `paper\.tex`/);
 });
 
-test("`paperlint hook` with no name: exit 0, so it cannot deny, and the usage names an example", async () => {
+test("`paperlint hook` with no name: exit 1, so it cannot deny and is shown, and the usage names an example", async () => {
   assert.deepEqual(await cli(["hook"], root), {
-    code: 0,
+    code: 1,
     out: "",
     err: "paperlint: `hook` needs a name, e.g. `paperlint hook paper-edit-guard`; no hook is running.",
   });

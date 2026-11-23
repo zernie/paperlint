@@ -273,7 +273,7 @@ const commandsIn = (json: z.infer<typeof HookWiring>): string[] =>
  *
  * 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
  * `Cannot find module`, while `paperlint hook` with an unresolvable runtime catches the exception
- * and complains in DIFFERENT words, returning 0 — and the test printed "all 3 commands resolve"
+ * and complains in DIFFERENT words, returning 1 (not 2) — and the test printed "all 3 commands resolve"
  * with the hooks completely broken. A false green of exactly the class this test is written for:
  * the check looked for the spelling it REMEMBERED, not for the thing itself.
  */

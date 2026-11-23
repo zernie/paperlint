@@ -1864,7 +1864,7 @@ function runHookPlain(
   );
   if (!name || !existsSync(program)) {
     err(hookNotRunningText(name, program, packageVersion()));
-    return 0; // a 2 would deny every Bash command, the fix included (#324)
+    return 1; // not 2: that denies every Bash command, the fix included (#324); not 0: nobody sees it
   }
   let runtime;
   try {
@@ -1877,7 +1877,7 @@ function runHookPlain(
         `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
         `Reinstall this package so its dependencies are present.`,
     );
-    return 0;
+    return 1; // not 2: that would deny every Bash command; not 0: nobody would see this
   }
   const args = [runtime, "hook-runtime", "run-program", program];
   const r =
