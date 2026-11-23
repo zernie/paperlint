@@ -1866,8 +1866,14 @@ function runHookPlain(
     new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
   );
   if (!existsSync(program)) {
-    err(`unknown hook \`${name}\` — no such program at ${program}`);
-    return 2;
+    // A hook that cannot run must not deny: on PreToolUse(Bash) a 2 refuses every command,
+    // the `npm install` that fixes it included (#324). Same verdict as a missing runtime, below.
+    err(
+      `paperlint: unknown hook \`${name}\` — no such program at ${program}.\n` +
+        `The \`${name}\` hook is NOT running (installed: paperlint ${packageVersion()}). ` +
+        `Run \`npm install\` so node_modules matches the lockfile, or remove \`paperlint hook ${name}\` from .claude/settings.json.`,
+    );
+    return 0;
   }
   let runtime;
   try {

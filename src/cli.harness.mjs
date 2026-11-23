@@ -1190,12 +1190,17 @@ check(
       /paperlint hook paper-edit-guard/.test(said),
   );
 
+  // An unknown name is a hook that cannot run, the same failure as a missing runtime below: on
+  // PreToolUse(Bash) a 2 would refuse every command, the `npm install` that fixes it included
+  // (#324). It is named loudly, with the path, the installed version and the remedy, and let through.
   said = "";
   check(
-    "an unknown hook is NAMED together with the path it was looked for at",
-    runHook("no-such-hook", { err }) === 2 &&
+    "an unknown hook is NAMED with its path, the installed version and the remedy, and does not deny",
+    runHook("no-such-hook", { err }) === 0 &&
       /unknown hook `no-such-hook`/.test(said) &&
-      /no-such-hook\.hook\.mjs/.test(said),
+      /no-such-hook\.hook\.mjs/.test(said) &&
+      /paperlint \d+\.\d+\.\d+/.test(said) &&
+      /npm install/.test(said),
   );
 
   // 🔴 THE MAIN ASSERTION. A runtime that cannot be found HAS NO RIGHT to return 2: on
