@@ -174,7 +174,7 @@ try {
   // future `vigiles compile`/`lint` pass would apply to the shipped artifact. It is to describe
   // a forbidden import in prose WITHOUT writing one. Anyone extending these headers: do not
   // quote an import statement in a comment here; name it in words.
-  check("there are shipped hooks to check at all", SHIPPED.length === 3);
+  check("there are shipped hooks to check at all", SHIPPED.length > 0);
   for (const f of SHIPPED) {
     const offenders = checkHookImports(readFileSync(join(HOOKS, f), "utf8"));
     check(
@@ -329,22 +329,13 @@ try {
       guarded.exitCode === 2,
     );
 
-    // The two PostToolUse hooks: still SPEAK from a foreign cwd.
+    // The PostToolUse hook: still SPEAKS from a foreign cwd.
     const nudge = adrift(
       dir,
       "paper-skills-nudge",
       onEdit(`${dir}/writing/drafts/alpha/paper.tex`),
     );
     check("drift · the skills nudge still fires", injected(nudge).length > 0);
-    const gates = adrift(
-      dir,
-      "paper-status-gates",
-      onEdit(`${dir}/writing/drafts/alpha/PIPELINE-STATUS.md`),
-    );
-    check(
-      `drift · the status-gates hook still runs (rc=${String(gates.exitCode)})`,
-      gates.exitCode === 0,
-    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -556,80 +547,6 @@ try {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VI. paper-status-gates — the tool runs, and only for a validated directory
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const fires = (label: string, p: string) => {
-      const r = at(dir, "paper-status-gates", onEdit(p));
-      check(
-        `gates FIRES on ${label} (${String(r.stderr.length)}b stderr)`,
-        /fixture verdict line/.test(r.stderr),
-      );
-      check(`gates on ${label} exits 0`, r.exitCode === 0);
-    };
-    const silent = (label: string, p: string) => {
-      const r = at(dir, "paper-status-gates", onEdit(p));
-      check(
-        `gates SILENT on ${label}`,
-        r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
-      );
-    };
-    fires("a relative paper.tex", "docs/papers/alpha/paper.tex");
-    fires("an ABSOLUTE paper.tex", join(dir, "docs/papers/alpha/paper.tex"));
-    silent("a README under the papers root", "docs/papers/README.md");
-    silent("a file outside the papers root", "README.md");
-    // 🔴 THE BOUNDARY IN `(?:^|/)`: a directory merely ENDING in the root's last segment must
-    // not smuggle a match. Without the boundary this is a hit.
-    silent(
-      "a look-alike root (`notdocs/papers/…`)",
-      "notdocs/papers/alpha/paper.tex",
-    );
-    // A `.tex` whose directory name carries a shell metacharacter cannot reach a command.
-    silent(
-      "a directory name with a shell metacharacter",
-      "docs/papers/al;pha/paper.tex",
-    );
-    // 🔴 The `??` discriminator again, for this hook's own copy of the carrier.
-    {
-      const broken = fixture(
-        { [PAPERS_DIR_FIELD]: null },
-        { papers: "papers" },
-      );
-      check(
-        "gates: an explicit null is NOT read as an absence (no fallback to the default root)",
-        at(broken, "paper-status-gates", onEdit("papers/alpha/paper.tex"))
-          .stderr.length === 0,
-      );
-    }
-    // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
-    {
-      const dotted = fixture(
-        { [PAPERS_DIR_FIELD]: "docs.v2/papers" },
-        { papers: "docs.v2/papers" },
-      );
-      check(
-        "gates: a root with a dot matches ITSELF",
-        /fixture verdict line/.test(
-          at(
-            dotted,
-            "paper-status-gates",
-            onEdit("docs.v2/papers/alpha/paper.tex"),
-          ).stderr,
-        ),
-      );
-      check(
-        "gates: …and the dot is NOT a wildcard",
-        at(
-          dotted,
-          "paper-status-gates",
-          onEdit("docsXv2/papers/alpha/paper.tex"),
-        ).stderr.length === 0,
-      );
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // VII. THE FORCED DUPLICATION — moved out, and why
   // ═══════════════════════════════════════════════════════════════════════════
   // The three hooks spell out CONFIG_KEY and DEFAULT_PAPERS_ROOT because a compiled hook may
@@ -642,61 +559,6 @@ try {
   // a hook, neither of them under any import restriction, and neither of them inside the
   // comparison. They could have drifted in silence. A check named after one part of a set
   // cannot notice the rest of the set.
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // VIII. paper-status-gates.sh — a TOOL, and it must refuse to be a hook
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const sh = (args: string) =>
-      runHook(
-        `bash ${JSON.stringify(join(HOOKS, "paper-status-gates.sh"))} ${args}`,
-        STOP,
-        {
-          cwd: dir,
-          env: { CLAUDE_PROJECT_DIR: dir },
-        },
-      );
-    const usage = sh("");
-    check(
-      "the .sh called with no --surface says it is a tool",
-      /a tool, not a hook/.test(usage.stderr),
-    );
-    check("…and still exits 0 (it must never block)", usage.exitCode === 0);
-    const good = sh("--surface alpha");
-    check(
-      "the .sh surfaces the verdict for a real paper",
-      /fixture verdict line/.test(good.stderr),
-    );
-    check(
-      "…and reads the papers root from the DECLARATION",
-      good.exitCode === 0,
-    );
-    const missing = sh("--surface nosuchpaper");
-    check(
-      "the .sh is silent for a directory with no status file",
-      missing.stderr.length === 0,
-    );
-    // 🔴 THE NASTY NAME NEEDS A REAL DIRECTORY BEHIND IT, or the assertion cannot fail. First
-    // draft just passed `a;b` and checked for silence — but a name that names nothing is silent
-    // anyway, for want of a status file, so deleting the name check would leave this harness
-    // green regardless. The fixture now contains a paper literally called `a;b` with a status file in it:
-    // with the check, silence; without it, the verdict comes out. Measured 2026-09-12.
-    mkdirSync(join(dir, "docs/papers/a;b"), { recursive: true });
-    writeFileSync(
-      join(dir, "docs/papers/a;b/PIPELINE-STATUS.md"),
-      "**Readiness verdict:** ✅ fixture verdict line\n",
-    );
-    check(
-      "the .sh's positive control: a plain name with a status file DOES surface",
-      /fixture verdict line/.test(sh("--surface alpha").stderr),
-    );
-    const nasty = sh("--surface 'a;b'");
-    check(
-      "the .sh re-rejects a name with a metacharacter EVEN THOUGH that paper exists",
-      nasty.stderr.length === 0 && nasty.exitCode === 0,
-    );
-  }
 
   console.log(`hooks.harness: ${String(check.count)} assertions passed`);
 } finally {

@@ -65,9 +65,9 @@ check(
 // ── the one source: plugin/hooks/hooks.json ─────────────────────────────────────────────
 const wiring = shippedWiring();
 check(
-  "the hook names are DERIVED from hooks.json — six, in its order",
+  "the hook names are DERIVED from hooks.json — five, in its order",
   wiring.names.join() ===
-    "paper-edit-guard,submission-confirm,paper-folder-layout,paper-skills-nudge,paper-status-gates,lint-edited",
+    "paper-edit-guard,submission-confirm,paper-folder-layout,paper-skills-nudge,lint-edited",
 );
 // ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
 check(
@@ -140,8 +140,8 @@ try {
   const cases: [string, { name: string; ours: boolean } | null][] = [
     [ours, { name: "paper-edit-guard", ours: true }],
     [
-      `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook paper-status-gates`,
-      { name: "paper-status-gates", ours: true },
+      `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook lint-edited`,
+      { name: "lint-edited", ours: true },
     ],
     [
       `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"`,
@@ -284,7 +284,7 @@ try {
       "and names the hooks that are not wired in ANY form",
       r.status === "foreign" &&
         r.missing.join() ===
-          "submission-confirm,paper-folder-layout,paper-skills-nudge,paper-status-gates,lint-edited",
+          "submission-confirm,paper-folder-layout,paper-skills-nudge,lint-edited",
     );
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
@@ -320,13 +320,13 @@ try {
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
   check(
     "wired once each → ✓ wired, with the fresh-clone consequence",
-    /✓ wired — paper-edit-guard, submission-confirm, paper-folder-layout, paper-skills-nudge, paper-status-gates, lint-edited, once each/.test(
+    /✓ wired — paper-edit-guard, submission-confirm, paper-folder-layout, paper-skills-nudge, lint-edited, once each/.test(
       doc(wiredOnce),
     ) && /cannot run until `npm install`/.test(doc(wiredOnce)),
   );
   check(
     "nothing wired → ⚠ not wired, with the remedy",
-    /⚠ not wired — none of the 6 hooks/.test(doc({})),
+    /⚠ not wired — none of the 5 hooks/.test(doc({})),
   );
   const twice = PreToolUseSettings.parse(structuredClone(wiredOnce));
   twice.hooks.PreToolUse[0]?.hooks.push({
@@ -354,7 +354,7 @@ try {
   });
   check(
     "🔴 partly wired BY HAND → the remedy is NOT `npx paperlint init`, which would refuse to write",
-    /partly wired — missing: submission-confirm, paper-folder-layout, paper-skills-nudge, paper-status-gates, lint-edited/.test(
+    /partly wired — missing: submission-confirm, paper-folder-layout, paper-skills-nudge, lint-edited/.test(
       handPartial,
     ) && /writes nothing then/.test(handPartial),
   );

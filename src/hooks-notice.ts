@@ -30,7 +30,6 @@ import type { Files } from "./ports/files.ts";
 export const NOTICE_HOOKS: readonly string[] = [
   "lint-edited",
   "paper-skills-nudge",
-  "paper-status-gates",
 ];
 
 /** Where the version last told is kept, relative to the project root. */

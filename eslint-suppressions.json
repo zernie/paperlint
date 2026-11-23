@@ -168,11 +168,6 @@
       "count": 1
     }
   },
-  "hooks/paper-status-gates.hook.mjs": {
-    "local/js-needs-reason": {
-      "count": 1
-    }
-  },
   "lib/agent-cli-version.harness.mjs": {
     "local/js-needs-reason": {
       "count": 1

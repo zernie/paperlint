@@ -65,7 +65,7 @@ it, and exits 130.
 | what                                                                 | where                   | when                                                                                                                                                                                          |
 | -------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `{ "papersDir": … }` naming your papers directory                    | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                                      |
-| the six hook commands, merged in beside your own entries             | `.claude/settings.json` | by default. A human at a terminal is asked (Yes preselected); an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| the five hook commands, merged in beside your own entries            | `.claude/settings.json` | by default. A human at a terminal is asked (Yes preselected); an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
 | a GitHub Actions workflow: `npm ci`, then `./node_modules/paperlint` | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                             |
 | a first paper, via `paperlint new`, with its layout's folders        | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                               |
 | one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                                 |
@@ -77,7 +77,7 @@ gets the hooks (or the plugin's declaration); the hook commands run files inside
 ## The Claude Code plugin
 
 The plugin is optional: `paperlint lint`, the build and CI work without it. It carries the 23 skills
-and the six hooks, and it is updated with the package: each release's plugin carries that release's
+and the five hooks, and it is updated with the package: each release's plugin carries that release's
 version.
 
 At a terminal (shown as a terminal without Unicode draws it; others draw the same with Unicode marks):
@@ -175,7 +175,7 @@ wired: lint-edited. Run `npx paperlint init` now, then `npx paperlint doctor` to
 linked into .claude/skills/: rewrite-unclear"). A skill is named only when it is missing: a name that your own
 directory holds is your choice, and `doctor` reports it. It is said once per installed version (remembered in
 `node_modules/.cache/paperlint/unwired-hooks.json`), only by the PostToolUse hooks (`lint-edited`,
-`paper-skills-nudge`, `paper-status-gates`) and never by a PreToolUse hook, so it cannot change an allow or a deny;
+`paper-skills-nudge`) and never by a PreToolUse hook, so it cannot change an allow or a deny;
 it never blocks, and an error while checking is one stderr line. `paperlint lint` prints the same finding as one
 stderr line on every run, without changing its exit code, and the GitHub action fails on it when `check-hooks` is
 set ([`ci.md`](ci.md)). Nothing is said about hooks when none is wired (`--no-hooks`) or the settings file cannot be read, nothing about skills when all are linked or the package does not resolve from the project, and nothing at all while the plugin is on: it is updated with paperlint.
@@ -227,7 +227,7 @@ are probably smaller now; re-measure before quoting them.
 | of which `typescript` (via `vigiles`)  |      23 MB |
 | of which `vigiles` itself              |       6 MB |
 
-Neither `paperlint lint` nor any of the six hooks loads `@ast-grep` or `typescript` (traced;
+Neither `paperlint lint` nor any of the five hooks loads `@ast-grep` or `typescript` (traced;
 `paper-folder-layout` on 2026-10-12: 223 CommonJS modules, none from either; `lint-edited` on
 2026-11-09, on an edit it blocked: none from either); `vigiles` itself is loaded.
 

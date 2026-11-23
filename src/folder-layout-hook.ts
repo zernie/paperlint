@@ -28,7 +28,7 @@
  * ── WHY IT IS NOT A VIGILES PROGRAM LIKE ITS NEIGHBOURS (measured 2026-10-12, vigiles 38) ──────
  * A shipped `.hook.mjs` may import nothing but `vigiles/hook` (`checkHookImports`), so it cannot call
  * this package's function; its only way to a tool is `run()`, whose output reaches stderr and never
- * the hook's answer (`paper-status-gates.hook.mjs` measured that); and a `provide()` command runs
+ * the hook's answer (measured 2026-09-12, vigiles 27); and a `provide()` command runs
  * before the reaction without the event, so it cannot know which file is written. Each of the three
  * would mean a second copy of the layout. So `paperlint hook paper-folder-layout` runs this module
  * in-process (`runHook`, src/cli.ts), behind the same wiring command as the other hooks, which is
