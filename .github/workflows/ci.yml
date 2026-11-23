@@ -201,8 +201,14 @@ jobs:
       # README.md is linted too, by name (see the same gate in scripts/check.ts). Its
       # `vigiles:symbol` marks name the functions behind `paperlint init` and `paperlint new`; if one is
       # renamed or removed, this step fails and names README.md.
+      #
+      # Through the vigiles Action rather than `npx`: after `npm ci` it runs the installed copy (the
+      # version package.json pins), so the binary is the same and the step dogfoods the Action.
       - name: vigiles lint (skills + README.md)
-        run: npx vigiles lint . README.md
+        uses: zernie/vigiles@v42.2.0
+        with:
+          command: lint
+          paths: ". README.md"
         timeout-minutes: 2
 
       # 🔴 THE GREEN-ZERO GUARD. A rule whose glob matches no file is never invoked, and a run
