@@ -105,7 +105,6 @@
     "./lib/skill-corpus.mjs": "./lib/skill-corpus.mjs",
     "./lib/skill-eval-kit.mjs": "./lib/skill-eval-kit.mjs",
     "./lib/skill-trigger-cases.mjs": "./lib/skill-trigger-cases.mjs",
-    "./lib/trigger-ledger.mjs": "./lib/trigger-ledger.mjs",
     "./lib/*.mjs": {
       "types": "./dist/lib/*.d.ts",
       "default": "./dist/lib/*.js"

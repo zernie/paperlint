@@ -52,7 +52,6 @@
     "eslint-rules/rule-context.ts",
     "lib/skill-eval-kit.mjs",
     "lib/skill-eval-fixture.ts",
-    "lib/trigger-ledger.mjs",
     "skills/**/repro/**",
     "skills/**/references/**",
     "docs/prior-art/repro/**",
@@ -76,7 +75,6 @@
   ],
   "evalOnly": [
     "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.ts",
-    "lib/trigger-ledger.mjs"
+    "lib/skill-eval-fixture.ts"
   ]
 }
