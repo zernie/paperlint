@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CURE_BY_DEFAULT,
-  CURE_BY_EXTENSION,
+  CURE_BY_FILE,
   KNOWN_CURES,
   NOTHING_DECLARED,
   PAPER_LAYOUT_TREE,
@@ -110,10 +110,11 @@ describe("judgeLayout — reports", () => {
     ["results-final-v2.csv", "repro/data/"],
     ["plot.py", "repro/tools/"],
     ["fig1.PNG", "figures/"],
-    ["paper-v2.pdf", "versions/"],
+    ["requirements.txt", "repro/tools/"],
+    ["Makefile", "repro/tools/"],
     ["notes.md", "research/"],
   ])(
-    "an unlisted file, %s, goes to the folder its extension names",
+    "an unlisted file, %s, goes to the folder its kind names",
     (name, cure) => {
       expect(judgeLayout([file(name)], NOTHING_DECLARED)[0]?.cure).toBe(cure);
     },
@@ -121,10 +122,16 @@ describe("judgeLayout — reports", () => {
 
   it("anything else goes to extra/: an unlisted folder, a file without a known extension", () => {
     expect(
-      judgeLayout([dir("corpus"), file("LICENSE")], NOTHING_DECLARED),
+      judgeLayout(
+        [dir("corpus"), file("LICENSE"), file("fig1.pdf")],
+        NOTHING_DECLARED,
+      ),
     ).toEqual([
       { name: "corpus/", kind: "dir", cure: CURE_BY_DEFAULT },
       { name: "LICENSE", kind: "file", cure: CURE_BY_DEFAULT },
+      // A root PDF may be a figure, a draft or a review: no one folder is right, and versions/ holds
+      // only cycle folders and lock.json (versions/layout).
+      { name: "fig1.pdf", kind: "file", cure: CURE_BY_DEFAULT },
     ]);
     expect(CURE_BY_DEFAULT).toBe("extra/");
   });
@@ -236,7 +243,7 @@ describe("strayMessage — one short line naming one destination", () => {
   const CURES = [
     ...new Set([
       ...KNOWN_CURES.map((c) => c.cure),
-      ...CURE_BY_EXTENSION.map((c) => c.cure),
+      ...CURE_BY_FILE.map((c) => c.cure),
       CURE_BY_DEFAULT,
     ]),
   ];

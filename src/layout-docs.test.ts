@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   CURE_BY_DEFAULT,
-  CURE_BY_EXTENSION,
+  CURE_BY_FILE,
   KNOWN_CURES,
   PAPER_LAYOUT_TREE,
   PAPERS_LAYOUT_TREE,
@@ -54,30 +54,46 @@ describe("the pages draw the layout the code enforces", () => {
   });
 });
 
-/** Every name and extension the finding picks a destination by, each as the page writes it in backticks. */
-const PICKED: readonly string[] = [
-  ...KNOWN_CURES.map((c) => (c.kind === "dir" ? `${c.name}/` : c.name)),
-  ...CURE_BY_EXTENSION.flatMap((c) => [...c.extensions, c.cure]),
-  CURE_BY_DEFAULT,
-].map((s) => `\`${s}\``);
+const tick = (s: string): string => `\`${s}\``;
 
-/** What `PICKED` the page does not name. */
-const unnamed = (page: string): readonly string[] =>
-  PICKED.filter((s) => !page.includes(s));
+/** Each destination the finding picks, with the backticked names or extensions its table row must hold. */
+const ROWS: readonly (readonly string[])[] = [
+  ...KNOWN_CURES.map((c) => [
+    tick(c.kind === "dir" ? `${c.name}/` : c.name),
+    c.cure,
+  ]),
+  ...CURE_BY_FILE.map((c) => [
+    ...c.names.map(tick),
+    ...c.extensions.map(tick),
+    tick(c.cure),
+  ]),
+  [tick(CURE_BY_DEFAULT)],
+];
+
+/** The rows no single line of the page holds whole: a row lost, or its destination swapped. */
+const unlisted = (page: string): readonly (readonly string[])[] => {
+  const lines = page.split("\n");
+  return ROWS.filter(
+    (row) => !lines.some((line) => row.every((cell) => line.includes(cell))),
+  );
+};
 
 describe("the rule's page lists every destination the one-line finding picks", () => {
-  it("paper/allowed-files-only names every known entry, extension and destination", () => {
-    expect(
-      unnamed(
-        readFileSync(
-          join(ROOT, "docs/rules/paper/allowed-files-only.md"),
-          "utf8",
-        ),
-      ),
-    ).toEqual([]);
+  const page = readFileSync(
+    join(ROOT, "docs/rules/paper/allowed-files-only.md"),
+    "utf8",
+  );
+
+  it("paper/allowed-files-only has a line per known entry and per extension group, with its destination", () => {
+    expect(unlisted(page)).toEqual([]);
   });
 
-  it("a page without the list names none of them", () => {
-    expect(unnamed("# a page\n")).toEqual(PICKED);
+  it("a page whose two destinations are swapped, or without the list, is caught", () => {
+    const swapped = page
+      .replace("| `repro/data/` |", "| @@ |")
+      .replace("| `repro/tools/` |", "| `repro/data/` |")
+      .replace("| @@ |", "| `repro/tools/` |");
+    expect(unlisted(swapped).length).toBeGreaterThan(0);
+    expect(unlisted("# a page\n")).toEqual(ROWS);
   });
 });

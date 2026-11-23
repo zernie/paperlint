@@ -37,6 +37,7 @@ import {
   REPRO_DIR,
   REPRO_NODES,
   SCRIPT_EXTENSIONS,
+  TOOL_FILES,
 } from "./repro-layout.ts";
 
 /** One entry at the paper folder's root: its name, and whether it is a folder. */
@@ -57,7 +58,7 @@ export interface Stray {
   /** The entry's name; a folder's ends in a slash. */
   readonly name: string;
   readonly kind: "file" | "dir";
-  /** Where it goes: one destination, by its name, else by its extension, else `extra/`. */
+  /** Where it goes: one destination, by its name, else by its kind, else `extra/`. */
   readonly cure: string;
 }
 
@@ -226,16 +227,20 @@ export const IMAGE_EXTENSIONS: readonly string[] = [
   ".eps",
 ];
 
-/** For a file nobody listed: the folder its extension names, matched ignoring case. */
-export const CURE_BY_EXTENSION: readonly {
+/**
+ * For a file nobody listed: the folder its kind names, by its exact name or its extension (matched
+ * ignoring case). The same kinds `repro/allowed-files-only` sorts by. No `.pdf`: a root PDF may be
+ * a figure, a draft or a review, and `versions/` holds only cycle folders (`versions/layout`).
+ */
+export const CURE_BY_FILE: readonly {
+  readonly names: readonly string[];
   readonly extensions: readonly string[];
   readonly cure: string;
 }[] = [
-  { extensions: DATA_EXTENSIONS, cure: "repro/data/" },
-  { extensions: SCRIPT_EXTENSIONS, cure: "repro/tools/" },
-  { extensions: IMAGE_EXTENSIONS, cure: "figures/" },
-  { extensions: [".pdf"], cure: "versions/" },
-  { extensions: NOTE_EXTENSIONS, cure: "research/" },
+  { names: TOOL_FILES, extensions: SCRIPT_EXTENSIONS, cure: "repro/tools/" },
+  { names: [], extensions: DATA_EXTENSIONS, cure: "repro/data/" },
+  { names: [], extensions: IMAGE_EXTENSIONS, cure: "figures/" },
+  { names: [], extensions: NOTE_EXTENSIONS, cure: "research/" },
 ];
 
 /** For anything else: the folder that is never judged. */
@@ -253,18 +258,20 @@ const isAllowed = (e: LayoutEntry, declared: Declared): boolean =>
     ? ROOT_DIRS.includes(e.name) || declared.roots.includes(e.name)
     : isAllowedFile(e.name, declared);
 
-/** Where `e` belongs: its listed destination, else its extension's folder, else `extra/`. */
+/** Where `e` belongs: its listed destination, else its kind's folder, else `extra/`. */
 function cureFor(e: LayoutEntry): string {
   const known = KNOWN_CURES.find(
     (c) => c.kind === e.kind && c.name.toLowerCase() === e.name.toLowerCase(),
   );
   if (known !== undefined) return known.cure;
   const ext = extname(e.name).toLowerCase();
-  const byExtension =
+  const byKind =
     e.kind === "file"
-      ? CURE_BY_EXTENSION.find((c) => c.extensions.includes(ext))
+      ? CURE_BY_FILE.find(
+          (c) => c.names.includes(e.name) || c.extensions.includes(ext),
+        )
       : undefined;
-  return byExtension?.cure ?? CURE_BY_DEFAULT;
+  return byKind?.cure ?? CURE_BY_DEFAULT;
 }
 
 /** The root entries that are not part of the layout, in the order given. Pure. */

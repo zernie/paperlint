@@ -3,7 +3,7 @@
  * created, not at the next lint. PreToolUse on `Edit|Write|MultiEdit` (`plugin/hooks/hooks.json`):
  * when the file about to be written does not exist yet and would add an entry the layout does not
  * allow — at a paper folder's root, or at the top of its `repro/` — the call is denied, and the
- * reason is the rule's own message: where the entry goes, and the layout drawn. The agent writes it
+ * reason is the rule's own message: where the entry goes (for `repro/`, also its layout drawn). The agent writes it
  * where it belongs instead, in the same turn.
  *
  * ── WHAT IT NEVER BLOCKS ─────────────────────────────────────────────────────────

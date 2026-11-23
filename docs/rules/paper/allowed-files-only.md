@@ -100,27 +100,26 @@ papers/agent-rule-drift/PIPELINE-STATUS.md
 
 Each finding is one line naming one destination. A name met in real paper folders has its own:
 
-| entry                      | where it goes                     |
-| -------------------------- | --------------------------------- |
-| `PLAN.md`, `plans/`        | a section of `PIPELINE-STATUS.md` |
-| `DECISION-LOG.md`          | `research/`                       |
-| `EMAILS.md`                | `submission/`                     |
-| `data/`                    | `repro/data/`                     |
-| `artifact/`                | `repro/`                          |
-| `archive/`                 | `extra/`                          |
-| `venue-corpus/`, `venues/` | `<papers-root>/venues/<venue>/`   |
+| entry                      | where it goes                   |
+| -------------------------- | ------------------------------- |
+| `PLAN.md`, `plans/`        | a section of PIPELINE-STATUS.md |
+| `DECISION-LOG.md`          | `research/`                     |
+| `EMAILS.md`                | `submission/`                   |
+| `data/`                    | `repro/data/`                   |
+| `artifact/`                | `repro/`                        |
+| `archive/`                 | `extra/`                        |
+| `venue-corpus/`, `venues/` | `<papers-root>/venues/<venue>/` |
 
-Any other file goes where its extension says, matched ignoring case:
+Any other file goes where its kind says, by its name or its extension (matched ignoring case):
 
-| extension                                                                                                                                                      | where it goes  |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| data: `.tsv` `.csv` `.json` `.jsonl` `.ndjson` `.yaml` `.yml` `.xml` `.txt` `.log` `.parquet` `.sqlite` `.db` `.xlsx` `.npy` `.npz` `.pkl` `.gz` `.zip` `.tar` | `repro/data/`  |
-| scripts: `.py` `.ipynb` `.sh` `.bash` `.zsh` `.js` `.mjs` `.cjs` `.ts` `.mts` `.cts` `.r` `.jl` `.rb` `.pl` `.awk` `.sql`                                      | `repro/tools/` |
-| images: `.png` `.jpg` `.jpeg` `.gif` `.svg` `.eps`                                                                                                             | `figures/`     |
-| `.pdf`, a frozen PDF of a stage                                                                                                                                | `versions/`    |
-| notes: `.md` `.markdown`                                                                                                                                       | `research/`    |
+| extension                                                                                                                                                                                                                                                      | where it goes  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| data: `.tsv` `.csv` `.json` `.jsonl` `.ndjson` `.yaml` `.yml` `.xml` `.txt` `.log` `.parquet` `.sqlite` `.db` `.xlsx` `.npy` `.npz` `.pkl` `.gz` `.zip` `.tar`                                                                                                 | `repro/data/`  |
+| scripts and the files that run them: `Makefile` `Dockerfile` `requirements.txt` `pyproject.toml` `uv.lock` `package.json` `package-lock.json` `.py` `.ipynb` `.sh` `.bash` `.zsh` `.js` `.mjs` `.cjs` `.ts` `.mts` `.cts` `.r` `.jl` `.rb` `.pl` `.awk` `.sql` | `repro/tools/` |
+| images: `.png` `.jpg` `.jpeg` `.gif` `.svg` `.eps`                                                                                                                                                                                                             | `figures/`     |
+| notes: `.md` `.markdown`                                                                                                                                                                                                                                       | `research/`    |
 
-Anything else, and any folder not listed, goes to `extra/`. The finding names one folder; pick
+Anything else, and any folder not listed, goes to `extra/`; so does a PDF, which may be a figure (`figures/`), a draft or a review. The finding names one folder; pick
 another when you know better: a record or research → `research/`; about submitting (forms, mails,
 checklists, portal records) → `submission/`; the paper's live state → a section of
 `PIPELINE-STATUS.md`; reproduction → `repro/`; a frozen PDF of a stage → `versions/`; unclear →
