@@ -532,14 +532,11 @@ describe("lint-edited — never in the way: the block", () => {
     const out: string[] = [];
     const { linter } = linterOf({ [MAIN]: [finding(1)] });
     const code = await lintEditedHook(
-      () =>
-        JSON.stringify({
-          tool_name: "Write",
-          tool_input: { file_path: MAIN, content: "x\n" },
-        }),
+      () => JSON.stringify(edit(MAIN, "x\n")),
       {
         files: memoryFiles({ ...PAPER, [MAIN]: "x\n" }),
         linter: () => Promise.resolve(linter),
+        shellLeaves,
       },
       { out: (t) => out.push(t), err: () => {} },
     );
