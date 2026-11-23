@@ -144,6 +144,19 @@ test("noticeText names the version and the hooks, as an instruction; mergeNotice
   });
   assert.equal(mergeNotice("not json", "N"), null);
   assert.equal(mergeNotice("[1]", "N"), null);
+  const context = (said: unknown): unknown =>
+    Notice.parse(JSON.parse(mergeNotice(JSON.stringify(said), "N") ?? ""))
+      .hookSpecificOutput;
+  assert.deepEqual(
+    [
+      context({ hookSpecificOutput: { additionalContext: "A" } }),
+      context({ hookSpecificOutput: { additionalContext: "" } }),
+    ],
+    [
+      { hookEventName: "PostToolUse", additionalContext: "A\n\nN" },
+      { hookEventName: "PostToolUse", additionalContext: "N" },
+    ],
+  );
 });
 
 test("a wired hook on a paper file: missing hook → one notice, the same version again → silent, a new version → one more", async () => {

@@ -1742,22 +1742,16 @@ function hooksLine(
   }
 }
 
-const after = (
-  code: number | Promise<number>,
-  then: (code: number) => number,
-): number | Promise<number> =>
-  typeof code === "number" ? then(code) : code.then(then);
-
 /**
  * The hook as always, with the notice added to what it printed — when its payload is about a paper's
  * file. The payload is read once and handed on; anything outside a paper, or unreadable, runs the hook
  * untouched and leaves the notice for the next edit that is about a paper.
  */
-function runHookWithNotice(
+async function runHookWithNotice(
   name: string,
   notice: Pending,
   io: ResolvedHookOptions,
-): number | Promise<number> {
+): Promise<number> {
   const text = ((): string | null => {
     try {
       return io.stdin();
@@ -1769,13 +1763,14 @@ function runHookWithNotice(
   const fed = { ...io, stdin: () => text };
   if (!touchesAPaper(text)) return runHookPlain(name, fed);
   const printed = collector();
-  return after(runHookPlain(name, { ...fed, out: printed.write }), (code) => {
-    const said = printed.text();
-    const merged = code === 0 ? mergeNotice(said, notice.text) : null;
-    // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
-    io.out(merged !== null && remember(notice, io) ? merged : said);
-    return code;
-  });
+  // The one hook that carries the notice (NOTICE_HOOKS) always exits 0 (`lintEditedHook`), so Claude
+  // Code reads what it printed, and the notice can ride on it.
+  const code = await runHookPlain(name, { ...fed, out: printed.write });
+  const said = printed.text();
+  const merged = mergeNotice(said, notice.text);
+  // Remembered BEFORE it is said: a state that cannot be written must not make the notice repeat on every edit.
+  io.out(merged !== null && remember(notice, io) ? merged : said);
+  return code;
 }
 
 /** Records that the notice was given; false, with one stderr line, when it cannot be. */
