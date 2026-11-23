@@ -69,21 +69,16 @@ check(
   wiring.names.join() === "submission-confirm,paper-folder-layout,lint-edited",
 );
 // ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
+const MALFORMED = {
+  PreToolUse: "npx paperlint hook submission-confirm",
+  PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
+  Stop: [{ hooks: [{ type: "command" }, null] }],
+};
+const zero = { ours: 0, other: 0, places: 0 };
 check(
   "an event that is not a list, an entry with no `hooks` list, a handler with no command → no commands",
-  JSON.stringify(
-    wiredCounts(
-      {
-        hooks: {
-          PreToolUse: "npx paperlint hook submission-confirm",
-          PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
-          Stop: [{ hooks: [{ type: "command" }, null] }],
-        },
-      },
-      wiring.names,
-    ),
-  ) ===
-    JSON.stringify(wiring.names.map((name) => ({ name, ours: 0, other: 0 }))),
+  JSON.stringify(wiredCounts({ hooks: MALFORMED }, wiring.names)) ===
+    JSON.stringify(wiring.names.map((name) => ({ name, ...zero }))),
 );
 {
   const file = join(tmpdir(), `paperlint-no-hooks-${String(process.pid)}.json`);
@@ -196,7 +191,7 @@ try {
       "no settings file → it is created with the four hooks",
       r.status === "written" &&
         wiredCounts(s, wiring.names).every(
-          (c) => c.ours === 1 && c.other === 0,
+          (c) => c.ours === wiring.times[c.name] && c.other === 0,
         ),
     );
     const before = text(dir);
@@ -231,8 +226,10 @@ try {
       isDeepStrictEqual(s["permissions"], { allow: ["Bash(ls:*)"] }),
     );
     check(
-      "and ours are there, once each",
-      wiredCounts(s, wiring.names).every((c) => c.ours === 1),
+      "and ours are there, each as many times as the wiring ships it",
+      wiredCounts(s, wiring.names).every(
+        (c) => c.ours === wiring.times[c.name],
+      ),
     );
   }
 
@@ -317,8 +314,8 @@ try {
   };
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
   check(
-    "wired once each → ✓ wired, with the fresh-clone consequence",
-    /✓ wired — submission-confirm, paper-folder-layout, lint-edited, once each/.test(
+    "wired as shipped → ✓ wired, with the fresh-clone consequence",
+    /✓ wired — submission-confirm, paper-folder-layout, lint-edited, each as shipped/.test(
       doc(wiredOnce),
     ) && /cannot run until `npm install`/.test(doc(wiredOnce)),
   );

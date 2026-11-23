@@ -105,6 +105,9 @@ const concernsAPaper = (stdin: () => string, files: IsFile): boolean => {
   try {
     const payload = parsed(stdin());
     if (payload === undefined) return true;
+    // A Bash payload names no file the gate could look up without a shell parser; the wiring's
+    // `"if": "Bash(*.tex*)"` already kept every command that names no `.tex` from starting the hook.
+    if (fieldOf(payload, "tool_name") === "Bash") return true;
     const file = writtenPath(payload);
     return file !== null && paperFolderOf(file, files) !== null;
   } catch {

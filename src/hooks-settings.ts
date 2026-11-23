@@ -25,6 +25,15 @@
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
+import { countBy } from "remeda";
+import {
+  overWired,
+  partlyMissing,
+  shortLabels,
+  total,
+  type HookCount,
+  type Shipped,
+} from "./hook-counts.ts";
 import { fileURLToPath } from "node:url";
 import {
   BIN_FILE,
@@ -131,19 +140,18 @@ export function hookRun(command: string): {
   return run && { name: run.name, ours: run.ours };
 }
 
-/** Every command in a settings object, with the event it hangs off. */
-export function commandsIn(
-  settings: Settings,
-): { readonly event: string; readonly command: string }[] {
-  const out: { event: string; command: string }[] = [];
-  for (const [event, entries] of Object.entries(prop(settings["hooks"]) ?? {}))
-    for (const entry of listOf(entries))
-      for (const h of listOf(prop(entry)?.["hooks"])) {
+/** Every command in a settings object, with the event and the matcher it hangs off. */
+export const commandsIn = (settings: Settings) =>
+  Object.entries(prop(settings["hooks"]) ?? {}).flatMap(([event, entries]) =>
+    listOf(entries).flatMap((entry) => {
+      const m = prop(entry)?.["matcher"];
+      const matcher = typeof m === "string" ? m : "";
+      return listOf(prop(entry)?.["hooks"]).flatMap((h) => {
         const command = prop(h)?.["command"];
-        if (typeof command === "string") out.push({ event, command });
-      }
-  return out;
-}
+        return typeof command === "string" ? [{ event, matcher, command }] : [];
+      });
+    }),
+  );
 
 /** The settings file is the user's: any level may be missing or of the wrong kind. */
 const listOf = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
@@ -175,6 +183,8 @@ export interface Wiring {
   readonly compiled: HooksMap;
   /** Derived from the commands, in order. Never empty — an empty set throws. */
   readonly names: readonly string[];
+  /** How many commands of the shipped wiring run each name (`src/hook-counts.ts`). */
+  readonly times: Shipped;
 }
 
 /**
@@ -195,14 +205,11 @@ export function shippedWiring(file: string = WIRING_FILE): Wiring {
     throw new Error(
       `${file} names no paperlint hook — there is nothing to wire`,
     );
-  return { compiled, names: [...new Set(names)] };
-}
-
-/** How many commands run one shipped hook, split by spelling. */
-export interface HookCount {
-  readonly name: string;
-  readonly ours: number;
-  readonly other: number;
+  return {
+    compiled,
+    names: [...new Set(names)],
+    times: countBy(names, (n) => n),
+  };
 }
 
 /** One count per name in `names`, in that order — a name nothing runs has zeros, never a gap. */
@@ -210,20 +217,17 @@ export function wiredCounts(
   settings: Settings,
   names: readonly string[],
 ): readonly HookCount[] {
-  const runs = commandsIn(settings).flatMap(({ command }) => {
+  const runs = commandsIn(settings).flatMap(({ event, matcher, command }) => {
     const run = hookRun(command);
-    return run ? [run] : [];
+    return run ? [{ ...run, place: `${event} ${matcher}` }] : [];
   });
-  const count = (name: string, ours: boolean): number =>
-    runs.filter((r) => r.name === name && r.ours === ours).length;
-  return names.map((name) => ({
-    name,
-    ours: count(name, true),
-    other: count(name, false),
-  }));
+  return names.map((name) => {
+    const mine = runs.filter((r) => r.name === name);
+    const ours = mine.filter((r) => r.ours).length;
+    const places = new Set(mine.map((r) => r.place)).size;
+    return { name, ours, other: mine.length - ours, places };
+  });
 }
-
-const total = (c: HookCount): number => c.ours + c.other;
 
 export type SettingsRead =
   | {
@@ -396,20 +400,11 @@ export function unwiredHooks(
   const none = { missing: [], byHand: false };
   if (read.status === "unparsable") return none;
   const counts = wiredCounts(read.settings, wiring.names);
-  const missing = partlyMissing(counts, wiring.names);
+  const missing = partlyMissing(counts, wiring.times);
   return missing.length === 0
     ? none
     : { missing, byHand: counts.some((c) => c.other > 0) };
 }
-
-/** The hooks missing from a set that is partly wired; empty when it is whole or when nothing is wired. */
-const partlyMissing = (
-  counts: readonly HookCount[],
-  names: readonly string[],
-): readonly string[] => {
-  const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
-  return missing.length === names.length ? [] : missing;
-};
 
 /**
  * `paperlint doctor`'s section. `bad` counts the states that are MISWIRED, which fail the run: a
@@ -431,10 +426,9 @@ export function doctorHooks(
     return { lines: out, bad: 0 };
   }
   const counts = wiredCounts(read.settings, wiring.names);
-  const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
-  const twice = counts.filter((c) => total(c) > 1);
-  const partly = partlyMissing(counts, wiring.names).length > 0;
-  const remedy = remedyFor(counts);
+  const short = partlyMissing(counts, wiring.times);
+  const twice = overWired(counts, wiring.times);
+  const partly = short.length > 0;
   if (twice.length > 0) {
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);
     for (const c of twice) out.push(`      ${c.name} ×${String(total(c))}`);
@@ -442,19 +436,19 @@ export function doctorHooks(
       `      keep one command per hook; \`npx paperlint init\` writes the ${MANAGED_BY} form`,
     );
   }
-  if (missing.length === wiring.names.length)
+  if (counts.every((c) => total(c) === 0))
     out.push(
       `  ⚠ not wired — none of the ${String(wiring.names.length)} hooks is in ${SETTINGS_PATH}. ` +
         `\`npx paperlint init\` wires them`,
     );
   else if (partly)
     out.push(
-      `  ⚠ partly wired — missing: ${missing.join(", ")}`,
-      `      ${remedy}`,
+      `  ⚠ partly wired — missing: ${shortLabels(counts, wiring.times).join(", ")}`,
+      `      ${remedyFor(counts)}`,
     );
   else if (twice.length === 0)
     out.push(
-      `  ✓ wired — ${wiring.names.join(", ")}, once each`,
+      `  ✓ wired — ${wiring.names.join(", ")}, each as shipped`,
       `      ${FRESH_CLONE_NOTE}`,
     );
   return { lines: out, bad: partly || twice.length > 0 ? 1 : 0 };

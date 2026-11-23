@@ -73,6 +73,9 @@ function linterOf(
   return { linter, asked };
 }
 
+/** No Edit or Write payload reaches the shell parser. */
+const shellLeaves = () => [];
+
 const edit = (file: string, newString: string) => ({
   tool_name: "Edit",
   tool_input: { file_path: file, old_string: "x", new_string: newString },
@@ -93,6 +96,7 @@ const run = (
         expect(dir).toBe(DIR);
         return Promise.resolve(linter);
       },
+      shellLeaves,
     }),
   };
 };
@@ -468,12 +472,10 @@ describe("lint-edited — quiet", () => {
   });
 
   it("outside every paper, or no path in the payload: the linter is never built", async () => {
-    const files = memoryFiles(PAPER);
     const never = () => Promise.reject(new Error("built a linter"));
-    expect(
-      await lintEdited(edit("/work/README.md", "x"), { files, linter: never }),
-    ).toBeNull();
-    expect(await lintEdited({}, { files, linter: never })).toBeNull();
+    const deps = { files: memoryFiles(PAPER), linter: never, shellLeaves };
+    expect(await lintEdited(edit("/work/README.md", "x"), deps)).toBeNull();
+    expect(await lintEdited({}, deps)).toBeNull();
   });
 });
 
@@ -482,7 +484,7 @@ const hook = async (stdin: () => string, linter: () => Promise<never>) => {
   const err: string[] = [];
   const code = await lintEditedHook(
     stdin,
-    { files: memoryFiles({ ...PAPER, [MAIN]: "x\n" }), linter },
+    { files: memoryFiles({ ...PAPER, [MAIN]: "x\n" }), linter, shellLeaves },
     { out: (t) => out.push(t), err: (m) => err.push(m) },
   );
   return { code, out, err };
@@ -530,14 +532,11 @@ describe("lint-edited — never in the way: the block", () => {
     const out: string[] = [];
     const { linter } = linterOf({ [MAIN]: [finding(1)] });
     const code = await lintEditedHook(
-      () =>
-        JSON.stringify({
-          tool_name: "Write",
-          tool_input: { file_path: MAIN, content: "x\n" },
-        }),
+      () => JSON.stringify(edit(MAIN, "x\n")),
       {
         files: memoryFiles({ ...PAPER, [MAIN]: "x\n" }),
         linter: () => Promise.resolve(linter),
+        shellLeaves,
       },
       { out: (t) => out.push(t), err: () => {} },
     );

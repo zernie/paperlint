@@ -57,6 +57,12 @@ const settingsOf = (root: string): Settings => {
   const read = readSettings(root);
   return read.status === "unparsable" ? {} : read.settings;
 };
+/** How many commands the shipped wiring has: a hook may hang off two events. */
+const shippedCommands = Object.values(shippedWiring().times).reduce(
+  (a, b) => a + b,
+  0,
+);
+
 const oursWired = (root: string): number =>
   wiredCounts(settingsOf(root), shippedWiring().names).reduce(
     (n, c) => n + c.ours,
@@ -71,7 +77,7 @@ describe("init and the plugin", () => {
     expect(r.out).toContain(
       "Claude Code plugin: not turned on — stdin is not a terminal, so nothing was asked. To turn it on: npx paperlint init --plugin",
     );
-    expect(oursWired(root)).toBe(shippedWiring().names.length);
+    expect(oursWired(root)).toBe(shippedCommands);
   });
 
   it("an existing project, re-run with --plugin: init's hook commands and links go, the project's own settings stay", async () => {
@@ -80,7 +86,7 @@ describe("init and the plugin", () => {
       ".claude/settings.json": '{ "permissions": { "allow": ["Bash(ls)"] } }',
     });
     await initRun(root);
-    expect(oursWired(root)).toBe(shippedWiring().names.length);
+    expect(oursWired(root)).toBe(shippedCommands);
     const cc = claude();
     const r = await initRun(root, {
       claude: cc,

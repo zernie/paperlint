@@ -688,13 +688,13 @@
   },
   "src/hooks-settings.ts": {
     "functional/immutable-data": {
-      "count": 8
+      "count": 7
     },
     "functional/no-loop-statements": {
-      "count": 5
+      "count": 2
     },
     "functional/prefer-immutable-types": {
-      "count": 6
+      "count": 4
     },
     "no-restricted-imports": {
       "count": 1
