@@ -61,6 +61,7 @@ import { fieldOf } from "./domain/record.ts";
 import { messageOf } from "./domain/text.ts";
 import type { Files } from "./ports/files.ts";
 import { shellPapers, type ShellLeaf } from "./lint-edited-shell.ts";
+import { blockOf, type BlockOutput } from "./lint-edited-block.ts";
 
 /** The snapshot, relative to the paper folder. */
 export const SNAPSHOT_FILE = `${SOURCES_DIR}/edit-lint.json`;
@@ -100,16 +101,6 @@ export interface LintEditedDeps {
   /** Every simple command of a Bash command line; none when it does not parse. */
   readonly shellLeaves: (command: string) => readonly ShellLeaf[];
 }
-
-/** What Claude Code reads from a PostToolUse hook's stdout: the reason goes next to the tool result. */
-export interface BlockOutput {
-  readonly decision: "block";
-  readonly reason: string;
-}
-
-/** The line after the findings: what happened to the edit, and what the findings are. */
-const KEPT =
-  "paperlint lint-edited: the edit was kept; the errors above are the ones it introduced.";
 
 /** One error as the snapshot holds it: no line number, the text of its line instead. */
 const Entry = z.object({
@@ -332,20 +323,14 @@ function editWritten(payload: unknown, files: Files): readonly Written[] {
     : [{ dir, files: [file], lines: (_, text) => writtenLines(payload, text) }];
 }
 
-/** One paper linted for what a tool call wrote in it: the errors it introduced, and the engine to print them. */
-async function introducedIn(
-  w: Written,
-  deps: LintEditedDeps,
-): Promise<{
-  readonly linter: PaperLinter;
-  readonly shown: readonly LintResult[];
-}> {
+/** One paper linted for what a tool call wrote in it: the errors it introduced, as the engine prints them ("" for none). */
+async function introducedIn(w: Written, deps: LintEditedDeps): Promise<string> {
   const linter = await deps.linter(w.dir);
   const asked = await Promise.all(
     w.files.map(async (f) => ((await linter.isLinted(f)) ? [f] : [])),
   );
   const linted = asked.flat();
-  if (linted.length === 0) return { linter, shown: [] };
+  if (linted.length === 0) return "";
   const main = join(w.dir, MAIN);
   const has = deps.files.isFile(callerPath(main));
   const results = await linter.lint(
@@ -359,7 +344,7 @@ async function introducedIn(
   );
   const next = JSON.stringify(nextSnapshot(before, now), null, 1);
   deps.files.writeAtomic(snapshot, new TextEncoder().encode(`${next}\n`));
-  return { linter, shown };
+  return shown.length === 0 ? "" : (await linter.format(shown)).trim();
 }
 
 /** The hook: the payload of an Edit, a Write or a Bash command in, Claude Code's block out, or null. */
@@ -374,14 +359,13 @@ export async function lintEdited(
           lines: () => [],
         }))
       : editWritten(payload, deps.files);
-  const each = await Promise.all(written.map((w) => introducedIn(w, deps)));
-  const reports = await Promise.all(
-    each
-      .filter((r) => r.shown.length > 0)
-      .map(async (r) => (await r.linter.format(r.shown)).trim()),
+  const each = await Promise.allSettled(
+    written.map((w) => introducedIn(w, deps)),
   );
-  if (reports.length === 0) return null;
-  return { decision: "block", reason: `${reports.join("\n")}\n${KEPT}` };
+  return blockOf(
+    each,
+    written.map((w) => w.dir),
+  );
 }
 
 /**

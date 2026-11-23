@@ -84,7 +84,7 @@ function run(
     linter: () => Promise.resolve(linter()),
     shellLeaves: leafCommandsNormalized,
   });
-  return { said, asked };
+  return { said, asked, linter: () => Promise.resolve(linter()) };
 }
 
 const KEPT =
@@ -148,6 +148,37 @@ describe("lint-edited after Bash — blocks", () => {
       reason: `${P}/paper.tex:1 ${ERROR.message}\n${Q}/paper.tex:1 ${ERROR.message}\n${KEPT}`,
     });
     expect(asked).toEqual([[`${P}/paper.tex`], [`${Q}/paper.tex`]]);
+  });
+});
+
+describe("lint-edited after Bash — one paper failing", () => {
+  it("🔴 a paper whose lint throws does not swallow another paper's block and is named; alone, it throws", async () => {
+    const files = memoryFiles({
+      [`${P}/${STATUS}`]: "# s\n",
+      [`${P}/paper.tex`]: "x\n",
+      [`${P}/${SNAPSHOT_FILE}`]: seen("paper.tex"),
+      [`${Q}/${STATUS}`]: "# s\n",
+      [`${Q}/paper.tex`]: "x\n",
+    });
+    const healthy = run(bash("true"), files, {
+      [`${P}/paper.tex`]: [finding(1)],
+    });
+    const deps = {
+      files,
+      linter: (dir: string) =>
+        dir === Q
+          ? Promise.reject(new Error("paperlint.json: bad JSON\nat line 2"))
+          : healthy.linter(),
+      shellLeaves: leafCommandsNormalized,
+    };
+    const both = bash("sed -i x papers/p/paper.tex papers/q/paper.tex");
+    expect(await lintEdited(both, deps)).toEqual({
+      decision: "block",
+      reason: `${P}/paper.tex:1 ${ERROR.message}\npaperlint lint-edited: ${Q} was not linted: paperlint.json: bad JSON\n${KEPT}`,
+    });
+    // Every paper failing: the first failure is thrown, for the hook's one line on stderr.
+    const onlyQ = bash("sed -i x papers/q/paper.tex");
+    await expect(lintEdited(onlyQ, deps)).rejects.toThrow("bad JSON");
   });
 });
 
