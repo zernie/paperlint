@@ -16,6 +16,8 @@ import type { JsonRuleContext, JsonRuleModule } from "./corpus-record-rule.ts";
 import {
   corpusStrayMessage,
   judgeCorpusLayout,
+  judgeVenues,
+  looseMessage,
   storesWithoutRecord,
   unrecordedMessage,
 } from "./domain/corpus-layout.ts";
@@ -69,6 +71,16 @@ const unrecordedTexts = (
       unrecordedMessage(relative(home, corpus).split(sep).join("/")),
     );
 
+/** The text of each file loose in a `venues/` under `deps.roots`, shown from `home`. */
+const looseTexts = (home: string, deps: CorpusLayoutDeps): readonly string[] =>
+  deps.roots
+    .map((r) => join(r, CORPORA_DIR))
+    .flatMap((venues) =>
+      judgeVenues(entriesOf(venues, deps)).map((name) =>
+        looseMessage(relative(home, venues).split(sep).join("/"), name),
+      ),
+    );
+
 /**
  * Each finding about the file being linted, by its message id. The config hands the rule two files
  * only (src/cli.ts): a corpus's `papers.json`, and the root settings file.
@@ -79,21 +91,27 @@ const findingsFor = (
 ): readonly { readonly id: string; readonly text: string }[] =>
   basename(file) === CORPUS_RECORD
     ? strayTexts(file, deps).map((text) => ({ id: "stray", text }))
-    : unrecordedTexts(dirname(file), deps).map((text) => ({
-        id: "unrecorded",
-        text,
-      }));
+    : [
+        ...unrecordedTexts(dirname(file), deps).map((text) => ({
+          id: "unrecorded",
+          text,
+        })),
+        ...looseTexts(dirname(file), deps).map((text) => ({
+          id: "loose",
+          text,
+        })),
+      ];
 
 const META: JsonRuleModule["meta"] = {
   type: "suggestion",
   docs: {
     description:
-      "the top of a venue corpus holds papers.json, MANIFEST.md, measurements.json, pdf/, text/, deep-reads/ and sources/, and a corpus that stores copies has its papers.json",
+      "the top of a venue corpus holds papers.json, MANIFEST.md, measurements.json, pdf/, text/, deep-reads/ and sources/, a corpus that stores copies has its papers.json, and venues/ holds only corpus folders and its index",
     url: rulePageUrl("corpus/allowed-files-only"),
   },
   schema: [],
   // The whole text is the domain's message (src/domain/corpus-layout.ts).
-  messages: { stray: "{{text}}", unrecorded: "{{text}}" },
+  messages: { stray: "{{text}}", unrecorded: "{{text}}", loose: "{{text}}" },
 };
 
 /** The rule, reading the corpora through `deps`. */

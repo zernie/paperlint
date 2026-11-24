@@ -138,3 +138,22 @@ export const corpusStrayMessage = (corpus: string, s: CorpusStray): string =>
 /** The text a corpus that stores copies without its record is reported with. */
 export const unrecordedMessage = (corpus: string): string =>
   `\`${corpus}/\` stores copies in pdf/ or text/ and has no ${CORPUS_RECORD}, so nothing records which paper each file is a copy of, or under which licence it is kept. What to do: write ${corpus}/${CORPUS_RECORD} (study-accepted-papers writes it; its fields are in papers.schema.json), or remove pdf/ and text/ and keep the papers' ids. ${RULE_LINE}`;
+
+/** What `venues/` may hold besides its corpus folders: an index and the agent instruction files. */
+const VENUES_FILES: readonly string[] = ["README.md", "CLAUDE.md", "AGENTS.md"];
+
+/** The files loose at the top of `venues/`, in the order given; a folder there is a corpus. Pure. */
+export const judgeVenues = (
+  entries: readonly LayoutEntry[],
+): readonly string[] =>
+  entries
+    .filter(
+      (e) =>
+        e.kind === "file" &&
+        ![...VENUES_FILES, ...OS_FILES, ...REPRO_BYPRODUCTS].includes(e.name),
+    )
+    .map((e) => e.name);
+
+/** The text a file loose in `venues/` is reported with; `venues` is the folder as the reader sees it. */
+export const looseMessage = (venues: string, name: string): string =>
+  `\`${venues}/${name}\` is a file loose in venues/, which holds one folder per venue corpus, and ${VENUES_FILES.slice(0, -1).join(", ")} or ${VENUES_FILES.slice(-1).join("")}. Where it goes: into the corpus it is about (caveats into its MANIFEST.md, saved pages into its sources/), or out of venues/ when it serves several (a script into a paper's repro/tools/, its command into each ${CORPUS_RECORD}'s \`rebuild\`). ${RULE_LINE}`;

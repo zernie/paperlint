@@ -215,7 +215,12 @@ describe("the JSON language reaches papers.json and the root paperlint.json, not
       "paperlint.json",
       RECORD,
     ]);
-    expect(r.messages.filter((m) => m.file.endsWith(".json"))).toEqual([]);
+    // Guards: no broken JSON is parsed; the one message is the stray papers.json loose in venues/.
+    expect(
+      r.messages
+        .filter((m) => m.file.endsWith(".json"))
+        .map((m) => [m.file, m.ruleId, m.messageId]),
+    ).toEqual([["paperlint.json", "corpus/allowed-files-only", "loose"]]);
   });
 });
 

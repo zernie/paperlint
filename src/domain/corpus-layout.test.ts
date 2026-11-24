@@ -10,6 +10,8 @@ import {
   FILE_CURES,
   corpusStrayMessage,
   judgeCorpusLayout,
+  judgeVenues,
+  looseMessage,
   storesWithoutRecord,
   unrecordedMessage,
 } from "./corpus-layout.ts";
@@ -91,6 +93,26 @@ describe("the messages", () => {
   it("an unrecorded corpus names the folder and both cures", () => {
     expect(unrecordedMessage("papers/venues/agent")).toBe(
       "`papers/venues/agent/` stores copies in pdf/ or text/ and has no papers.json, so nothing records which paper each file is a copy of, or under which licence it is kept. What to do: write papers/venues/agent/papers.json (study-accepted-papers writes it; its fields are in papers.schema.json), or remove pdf/ and text/ and keep the papers' ids. Rule corpus/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/corpus/allowed-files-only.md",
+    );
+  });
+});
+
+describe("judgeVenues", () => {
+  it("🔴 reports each file loose in venues/, and no corpus folder, index or byproduct", () => {
+    const entries = [
+      dir("agent"),
+      dir("scripts"),
+      ...["README.md", "CLAUDE.md", "AGENTS.md", ".DS_Store"].map(file),
+      file("codebook.md"),
+      file("check.py"),
+    ];
+    // Guards: a folder is a corpus (its own names are judged inside it); only loose files are strays.
+    expect(judgeVenues(entries)).toEqual(["codebook.md", "check.py"]);
+  });
+
+  it("says where a loose file goes, and what venues/ holds", () => {
+    expect(looseMessage("papers/venues", "check.py")).toBe(
+      "`papers/venues/check.py` is a file loose in venues/, which holds one folder per venue corpus, and README.md, CLAUDE.md or AGENTS.md. Where it goes: into the corpus it is about (caveats into its MANIFEST.md, saved pages into its sources/), or out of venues/ when it serves several (a script into a paper's repro/tools/, its command into each papers.json's `rebuild`). Rule corpus/allowed-files-only: https://github.com/zernie/paperlint/blob/main/docs/rules/corpus/allowed-files-only.md",
     );
   });
 });

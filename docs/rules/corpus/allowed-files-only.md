@@ -32,7 +32,11 @@ The rule reports:
   `papers.json`, a file named `pdf`) is a stray too;
 - a corpus that keeps `pdf/` or `text/` and has no `papers.json` (`unrecorded`). It has no file of
   its own, so the finding is on the root `paperlint.json`, which `paperlint lint` lints only when a
-  papers root holds `venues/`: a project without a corpus lints exactly what it linted before.
+  papers root holds `venues/`: a project without a corpus lints exactly what it linted before;
+- a file loose at the top of `venues/` (`loose`), on the root `paperlint.json` too. `venues/` holds one
+  folder per corpus, and `README.md`, `CLAUDE.md` or `AGENTS.md`; a file about one venue goes into
+  that corpus, and one that serves several (a script) goes out of `venues/`. A folder there is a
+  corpus, judged by the two findings above.
 
 What the operating system and interpreters leave (`.DS_Store`, `Thumbs.db`, `__pycache__/`,
 `node_modules/`: the names `paper/allowed-files-only` and `repro/allowed-files-only` never report)

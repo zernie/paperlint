@@ -159,3 +159,19 @@ describe("corpus/allowed-files-only: a corpus that stores copies with no papers.
     expect({ code: r.code, found: r.found }).toEqual({ code: 0, found: [] });
   });
 });
+
+describe("corpus/allowed-files-only: a file loose in venues/", () => {
+  it("🔴 a file loose in venues/ is reported there too; its index and corpus folders are not", async () => {
+    const r = await lint({
+      ...PAPER,
+      "paperlint.json": "{}",
+      [RECORD]: EMPTY,
+      "papers/venues/README.md": "# the corpora\n",
+      "papers/venues/codebook.md": "# codes\n",
+      "papers/venues/scripts/check.py": "print(1)\n",
+    });
+    expect(r.found).toEqual([
+      ["paperlint.json", 1, "papers/venues/codebook.md"],
+    ]);
+  });
+});
