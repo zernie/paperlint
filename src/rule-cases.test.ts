@@ -42,6 +42,8 @@ const fixture = (p: string): string =>
   readFileSync(join(ROOT, "fixtures", p), "utf8");
 
 const P = "papers/p";
+const CORPUS_RECORD = "papers/venues/agent/papers.json";
+const EMPTY_RECORD = '{"venue":"agent","editions":[],"papers":[],"rebuild":[]}';
 const STATUS = "---\nstages: []\n---\n# PIPELINE-STATUS\n";
 const tex = (body: string, cls = "\\documentclass{article}"): string =>
   `${cls}\n\\begin{document}\n${body}\n\\end{document}\n`;
@@ -1279,6 +1281,19 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/research/plan.md`]: "# plan\n",
       [`${P}/extra/PLAN.md`]: "# plan\n",
     }),
+  },
+  // A venue corpus storing a PDF its papers.json lists no paper for; silent while it stores nothing.
+  "corpus/record": {
+    reports: {
+      tree: paper(tex("x"), {
+        [CORPUS_RECORD]: EMPTY_RECORD,
+        "papers/venues/agent/pdf/a.pdf": "",
+      }),
+      file: CORPUS_RECORD,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("x"), { [CORPUS_RECORD]: EMPTY_RECORD }),
   },
   // A loose script at the top of repro/: it belongs in repro/tools/.
   "repro/allowed-files-only": {

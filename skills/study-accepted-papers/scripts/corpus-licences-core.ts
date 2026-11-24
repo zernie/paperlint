@@ -27,6 +27,7 @@ import {
 } from "#src/domain/licence";
 import {
   CORPUS_RECORD,
+  problemsText,
   type Copy,
   type KnownVersion,
   type Paper,
@@ -294,7 +295,7 @@ export function main(
   }
   const parsed = deps.codec.parse(new TextDecoder().decode(bytes));
   if (!parsed.ok) {
-    err(`corpus-licences: ${parsed.why}\n`);
+    err(`corpus-licences: ${problemsText(parsed.problems)}\n`);
     return 1;
   }
   out(listing(verdicts(parsed.corpus, UNDECLARED)));

@@ -1,8 +1,8 @@
 /**
  * A VENUE CORPUS'S RECORD — `<papers-root>/venues/<venue>/papers.json` (docs/design/venue-corpus.md,
  * decision 1; docs/venues.md): the papers a venue accepted and, for each, every copy we know of with
- * its licence. Codes and measurements stay in `measurements.json`, keyed by a paper's `key`; prose
- * stays in `MANIFEST.md`.
+ * its licence, and the facts of how the corpus was collected. Codes and measurements stay in
+ * `measurements.json`, keyed by a paper's `key`; only caveats stay prose, in an optional `MANIFEST.md`.
  *
  * The text of the file is checked once, where it enters: `VenueCorpusCodec`
  * (`src/ports/venue-corpus-codec.ts`), whose adapter holds the zod schema of this shape. The domain
@@ -43,6 +43,16 @@ export interface Edition {
   readonly read_on: string;
   /** How many it accepted, when the page says. */
   readonly accepted?: number | undefined;
+  /** What was left out of the edition and why; null when nothing was (never left out). */
+  readonly capped: string | null;
+  /** The stand-in for "strong accept" in this edition; null when it has none. */
+  readonly proxy: StrongAcceptProxy | null;
+}
+
+/** What stands in for "strong accept" (an award, an oral slot), and how many papers it marks. */
+export interface StrongAcceptProxy {
+  readonly what: string;
+  readonly papers: number;
 }
 
 /** A licence read from a source, or `NOASSERTION`: none was read. */
@@ -122,9 +132,28 @@ export interface VenueCorpus {
   readonly venue: string;
   readonly editions: readonly Edition[];
   readonly papers: readonly Paper[];
+  /** The commands that regenerate the corpus, in order; empty when none was kept. */
+  readonly rebuild: readonly string[];
+}
+
+/** Where in a `papers.json` a problem is: keys and indexes from the top; empty for the whole file. */
+export type RecordPath = readonly (string | number)[];
+
+/** One reason a `papers.json` is not a record. */
+export interface CorpusProblem {
+  readonly path: RecordPath;
+  readonly message: string;
 }
 
 /** A `papers.json`'s text, parsed: the record, or every reason it is not one. */
 export type ParsedCorpus =
   | { readonly ok: true; readonly corpus: VenueCorpus }
-  | { readonly ok: false; readonly why: string };
+  | { readonly ok: false; readonly problems: readonly CorpusProblem[] };
+
+/** A path as a message names it: `papers.0.copies`, or `(top)` for the whole file. */
+export const pathText = (path: RecordPath): string =>
+  path.length === 0 ? "(top)" : path.join(".");
+
+/** Every problem on one line, each with its path. */
+export const problemsText = (problems: readonly CorpusProblem[]): string =>
+  `${CORPUS_RECORD}: ${problems.map((p) => `${pathText(p.path)}: ${p.message}`).join("; ")}`;

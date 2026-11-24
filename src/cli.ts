@@ -36,6 +36,7 @@ import { isOk } from "./domain/result.ts";
 import { stripVTControlCharacters } from "node:util";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
+import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 import { z } from "zod";
 // Types come from consumer.d.mts beside it.
@@ -135,6 +136,7 @@ import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   ANY_PAPER,
+  corpusFiles,
   narrowToOwners,
   ownedPatterns,
   paperFiles,
@@ -239,7 +241,13 @@ import {
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
-import { papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
+import { inCorpus, papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
+import {
+  CORPUS_RECORD_RULE_LEVELS,
+  corpusRecordRules,
+} from "./corpus-record-rule.ts";
+import { CORPUS_RECORD } from "./domain/venue-corpus.ts";
+import { venueCorpusCodec } from "./adapters/venue-corpus/index.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
@@ -648,6 +656,26 @@ const TALK_RULE_DEPS = {
   listDir: nodeListDir,
 };
 
+/**
+ * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its `papers.json`, linted with
+ * ESLint's JSON language so `corpus/record` reports at the field (docs/design/venue-corpus.md,
+ * decision 4). The JSON language reaches no other file: this block alone names it.
+ */
+const corpusBlock = (papers: PaperScope): ConfigBlock => ({
+  files: corpusFiles(papers, CORPUS_RECORD),
+  plugins: {
+    json,
+    corpus: {
+      rules: corpusRecordRules({
+        entries: nodeListEntries,
+        codec: venueCorpusCodec,
+      }),
+    },
+  },
+  language: "json/json",
+  rules: CORPUS_RECORD_RULE_LEVELS,
+});
+
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
   opts: PaperlintConfig = {},
@@ -733,6 +761,7 @@ export function buildConfig(
         ...STATUS_CYCLE_RULE_LEVELS,
       },
     },
+    corpusBlock(papers),
     {
       files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
@@ -864,11 +893,12 @@ export function eslintConfig(blocks: readonly ConfigBlock[]): Linter.Config[] {
 
 /**
  * The rule ids a consumer may name in `rules`: every rule paperlint's own config defines, read off that
- * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not paperlint's.
+ * config rather than listed again. `@eslint/markdown` and `@eslint/json` are a dependency's plugins,
+ * not paperlint's.
  */
 export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
   buildConfig({}, { sentinel: "tex language" }),
-  [markdown],
+  [markdown, json],
 );
 
 /** A plugin as `rulePlugins` gives it: its rules, and for `tex` the LaTeX language when given. */
@@ -881,7 +911,7 @@ export interface RulePlugin {
  * Every plugin paperlint's config registers, ONE object per name, read off that config. In it one
  * name is bound to different objects in different blocks (`paper` beside `PIPELINE-STATUS.md` is
  * not `paper` beside `paper.tex`); here their rules are merged, so a config that lints any paper
- * file knows every rule id. `@eslint/markdown` is a dependency's plugin and is left out. The LaTeX
+ * file knows every rule id. `@eslint/markdown` and `@eslint/json` are a dependency's plugins and are left out. The LaTeX
  * language rides on `tex` when `texLanguage` is given, and that is how a consumer registers it: a
  * second `tex` plugin of its own is refused by ESLint ("Cannot redefine plugin "tex"", measured
  * with and without the language here). Without it, `tex` carries rules only.
@@ -890,7 +920,7 @@ export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
   const out: Record<string, { rules: Record<string, unknown> }> = {};
   for (const block of buildConfig({}, texLanguage ?? { sentinel: "tex" }))
     for (const [name, plugin] of Object.entries(block.plugins ?? {}))
-      if (plugin !== markdown)
+      if (plugin !== markdown && plugin !== json)
         out[name] = { rules: { ...out[name]?.rules, ...plugin.rules } };
   if (out["tex"] && texLanguage !== undefined)
     return {
@@ -1030,14 +1060,20 @@ const PAPER_TREE: PaperTree = {
   },
 };
 
-/** The papers `paths` reach: a file counts as the folder it sits in (#582). */
-const paperDirs = (paths: readonly string[]): readonly string[] =>
+/**
+ * The papers `paths` reach: a file counts as the folder it sits in (#582). A folder in a venue corpus
+ * of `roots` is none of them (#215): a `paper.tex` kept there is an accepted paper's source.
+ */
+const paperDirs = (
+  paths: readonly string[],
+  roots: readonly string[],
+): readonly string[] =>
   papersReached(
     paths.map((p) =>
       resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p),
     ),
     PAPER_TREE,
-  );
+  ).filter((d) => !inCorpus(d, roots));
 
 /**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
@@ -1045,8 +1081,11 @@ const paperDirs = (paths: readonly string[]): readonly string[] =>
  * them. A file that does not parse, or names a rule paperlint does not ship, stops the run with one
  * line naming the file — the same strictness as the root's own `rules`.
  */
-export function paperRuleBlocks(paths: readonly string[]): Parsed<PaperBlocks> {
-  const each = paperDirs(paths).map((dir): Parsed<PaperBlocks> => {
+export function paperRuleBlocks(
+  paths: readonly string[],
+  roots: readonly string[],
+): Parsed<PaperBlocks> {
+  const each = paperDirs(paths, roots).map((dir): Parsed<PaperBlocks> => {
     const p = paperPreset(dir, PRESET_DEPS);
     return p.kind === "settings-problem"
       ? { ok: false, error: settingsProblemLine(dir, p.problem) }
@@ -2737,7 +2776,8 @@ async function paperEslint(
   // paper's venue preset → the root paperlint.json → the paper's own paperlint.json → the paper's
   // stage (src/settled-paper.ts), last because a published text has nothing left to fix whoever
   // turned a writing rule on.
-  const papers = paperRuleBlocks(paths);
+  const roots = papersRoots(cfg);
+  const papers = paperRuleBlocks(paths, roots);
   if (!papers.ok) return papers;
   const opts = {
     ...cfg.opts,
@@ -2758,14 +2798,18 @@ async function paperEslint(
   // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
   // papers two levels down, which a directory's immediate papers do not.
   const bodies = texLanguage
-    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
+    ? paperBodies(paperDirs([...paths, ...roots], roots), RECORD_DEPS)
     : [];
 
   const cwd = lintRoot(cfg.root, paths);
   // The papers whose own files the config names: the ones `paths` reach and the project's. A copy of
   // a paper kept inside it (a review snapshot, a build copy) is in no such list, so no block claims
   // it (#582).
-  const claimed = papersScope(paperDirs([...paths, ...papersRoots(cfg)]), cwd);
+  const claimed = papersScope(
+    paperDirs([...paths, ...roots], roots),
+    cwd,
+    roots,
+  );
   const eslint = new ESLint({
     cwd,
     overrideConfigFile: true,

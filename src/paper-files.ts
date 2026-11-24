@@ -41,6 +41,7 @@
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */
 import { relative, sep } from "node:path";
+import { CORPORA_DIR } from "./domain/corpus-record.ts";
 import type {
   ConfigBlock,
   RuleBlock,
@@ -52,7 +53,8 @@ import type {
  * Which papers' own files paperlint's blocks claim. `any` is the config's SHAPE, for the rule list and
  * the docs: a file in any folder. `papers` is what `paperlint lint` runs on: the real papers, as glob
  * prefixes relative to ESLint's `cwd` ("" for `cwd` itself), so a copy of a paper kept inside one (a
- * review snapshot, a build copy) is claimed by no block (#582).
+ * review snapshot, a build copy) is claimed by no block (#582); and the papers roots (absolute),
+ * whose `venues/` hold the venue corpora.
  */
 export type PaperScope =
   | { readonly kind: "any" }
@@ -60,6 +62,7 @@ export type PaperScope =
       readonly kind: "papers";
       readonly cwd: string;
       readonly prefixes: readonly string[];
+      readonly roots: readonly string[];
     };
 
 export const ANY_PAPER: PaperScope = { kind: "any" };
@@ -72,14 +75,16 @@ const literalGlob = (path: string): string =>
 const posixRelative = (from: string, to: string): string =>
   relative(from, to).split(sep).join("/");
 
-/** The papers `dirs` under ESLint's `cwd`: the scope `paperlint lint` lints. Pure. */
+/** The papers `dirs` and the papers `roots` under ESLint's `cwd`: the scope `paperlint lint` lints. Pure. */
 export const papersScope = (
   dirs: readonly string[],
   cwd: string,
+  roots: readonly string[],
 ): PaperScope => ({
   kind: "papers",
   cwd,
   prefixes: dirs.map((d) => literalGlob(posixRelative(cwd, d))),
+  roots,
 });
 
 /** A glob of a paper's own file (`paper.tex`, `reviews/*.md`) in each paper of `scope`. Pure. */
@@ -90,6 +95,22 @@ export const paperFiles = (
   scope.kind === "any"
     ? [`**/${glob}`]
     : scope.prefixes.map((p) => (p === "" ? glob : `${p}/${glob}`));
+
+/**
+ * A glob of a file in each venue corpus, `<papers-root>/venues/<venue>/<glob>`; none for a root
+ * outside ESLint's `cwd`, whose files ESLint never lints. Pure.
+ */
+export const corpusFiles = (
+  scope: PaperScope,
+  glob: string,
+): readonly string[] => {
+  const inCorpus = `${CORPORA_DIR}/*/${glob}`;
+  if (scope.kind === "any") return [`**/${inCorpus}`];
+  return scope.roots
+    .map((r) => posixRelative(scope.cwd, r))
+    .filter((r) => r !== ".." && !r.startsWith("../"))
+    .map((r) => (r === "" ? inCorpus : `${literalGlob(r)}/${inCorpus}`));
+};
 
 /**
  * A glob relative to `cwd`, as the block whose `basePath` is `base` must write it — ESLint reads a

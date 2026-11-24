@@ -60,7 +60,7 @@ function paper(
 
 /** The blocks the paper's stage adds. */
 function stageBlocks(dir: string) {
-  const r = paperRuleBlocks([dir]);
+  const r = paperRuleBlocks([dir], []);
   assert.ok(r.ok, r.ok ? "" : r.error);
   return r.value.stage;
 }

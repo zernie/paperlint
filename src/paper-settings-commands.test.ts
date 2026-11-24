@@ -230,7 +230,7 @@ describe("paperlint lint — the venue preset's rules", () => {
       }),
     });
     const cfgOf = await import("./cli.ts").then((m) =>
-      m.paperRuleBlocks([join(root, "papers")]),
+      m.paperRuleBlocks([join(root, "papers")], [join(root, "papers")]),
     );
     expect(cfgOf.ok && cfgOf.value.preset).toEqual([
       {
@@ -276,7 +276,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
       }),
     });
     const blocks = await import("./cli.ts").then((m) =>
-      m.paperRuleBlocks([join(root, "papers")]),
+      m.paperRuleBlocks([join(root, "papers")], [join(root, "papers")]),
     );
     // The preset's block comes first and the paper's own after it: the later block wins.
     expect(blocks.ok && blocks.value.preset[0]?.rules).toEqual({

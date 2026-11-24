@@ -4,7 +4,12 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { papersRoots, segmentsUnder, toPaths } from "./papers-roots.ts";
+import {
+  inCorpus,
+  papersRoots,
+  segmentsUnder,
+  toPaths,
+} from "./papers-roots.ts";
 
 test("a papers directory given as a string or as a list normalises to a list; anything else to none", () => {
   assert.deepEqual(
@@ -52,5 +57,33 @@ test("a path is placed under the first directory that holds it, by its segments"
       segmentsUnder("/p/papers/..draft/paper.tex", roots),
     ],
     [["x", "paper.tex"], ["y"], null, null, null, ["..draft", "paper.tex"]],
+  );
+});
+
+test("a folder is in a venue corpus when it is `<root>/venues/<venue>/` or below it", () => {
+  const roots = ["/p/papers"];
+  assert.deepEqual(
+    [
+      "/p/papers/venues/agent",
+      "/p/papers/venues/agent/sources/x",
+      "/p/papers/venues",
+      "/p/papers/agent",
+      "/p/elsewhere/venues/agent",
+    ].map((d) => inCorpus(d, roots)),
+    [true, true, false, false, false],
+  );
+});
+
+test("🔴 a corpus under any of overlapping roots is a corpus, whichever root is listed first", () => {
+  // Guards: `papersDir: [".", "papers"]` — the corpus under the second root must still be excluded
+  // from the paper rules, not read through the first root as `papers/venues/agent`.
+  const dir = "/project/papers/venues/agent";
+  assert.deepEqual(
+    [
+      inCorpus(dir, ["/project", "/project/papers"]),
+      inCorpus(dir, ["/project/papers", "/project"]),
+      inCorpus("/project/papers/agent", ["/project", "/project/papers"]),
+    ],
+    [true, true, false],
   );
 });

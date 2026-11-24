@@ -29,12 +29,51 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "capped": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proxy": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "what": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "papers": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "what",
+                  "papers"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "edition",
           "listed_from",
-          "read_on"
+          "read_on",
+          "capped",
+          "proxy"
         ],
         "additionalProperties": false
       }
@@ -414,12 +453,20 @@
           }
         ]
       }
+    },
+    "rebuild": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     }
   },
   "required": [
     "venue",
     "editions",
-    "papers"
+    "papers",
+    "rebuild"
   ],
   "additionalProperties": false,
   "title": "A venue corpus's papers.json",

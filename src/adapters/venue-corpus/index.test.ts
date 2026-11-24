@@ -8,7 +8,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import type { Paper, VenueCorpus } from "../../domain/venue-corpus.ts";
+import {
+  problemsText,
+  type Paper,
+  type VenueCorpus,
+} from "../../domain/venue-corpus.ts";
 import {
   SCHEMA_FILE,
   venueCorpusCodec,
@@ -48,9 +52,16 @@ const EDITION = {
   listed_from: "https://conf.researchr.org/home/icse-2026/agent-2026",
   read_on: "2026-11-03",
   accepted: 27,
+  capped: null,
+  proxy: { what: "distinguished-paper award", papers: 4 },
 } as const;
 
-const RECORD = { venue: "agent", editions: [EDITION], papers: [PAPER] };
+const RECORD = {
+  venue: "agent",
+  editions: [EDITION],
+  papers: [PAPER],
+  rebuild: ["node scripts/list-accepted.mjs agent 2026"],
+};
 
 const text = (v: unknown): string => JSON.stringify(v);
 /** The record with its one paper replaced by `paper`. */
@@ -134,14 +145,27 @@ describe("a copy whose licence was never read", () => {
       corpus: { ...RECORD, papers: [{ ...PAPER, copies: [copy] }] },
     });
   });
+
+  it("🔴 the collection facts parse: what was capped, no proxy, no rebuild command", () => {
+    const facts = {
+      ...RECORD,
+      editions: [
+        { ...EDITION, capped: "the research track only, 100 of 312" },
+        { ...EDITION, edition: 2025, proxy: null },
+      ],
+      rebuild: [],
+    };
+    // Guards: each fact is a field, and "none" is null or an empty list.
+    expect(parse(text(facts))).toEqual({ ok: true, corpus: facts });
+  });
 });
 
 /** A file that is no record, and the reasons it is refused with. */
 const REFUSED: readonly (readonly [string, string, string])[] = [
   [
-    "🔴 a misspelt key in a copy",
+    "🔴 a misspelt key in a copy, at the key",
     withCopy({ ...COPY, licence: undefined, lisence: LICENCE }),
-    'papers.0.copies.0.licence: Invalid input: expected object, received undefined; papers.0.copies.0: Unrecognized key: "lisence"',
+    'papers.0.copies.0.licence: Invalid input: expected object, received undefined; papers.0.copies.0.lisence: Unrecognized key: "lisence"',
   ],
   [
     "🔴 a copy without its licence object",
@@ -156,12 +180,12 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "a misspelt key at the top level",
     text({ ...RECORD, edtions: [] }),
-    '(top): Unrecognized key: "edtions"',
+    'edtions: Unrecognized key: "edtions"',
   ],
   [
     "a misspelt key in a licence",
     withCopy({ ...COPY, licence: { ...LICENCE, read_form: "x" } }),
-    'papers.0.copies.0.licence: Unrecognized key: "read_form"',
+    'papers.0.copies.0.licence.read_form: Unrecognized key: "read_form"',
   ],
   [
     "a licence read from nowhere",
@@ -181,7 +205,7 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "a copy of unknown origin under a licence",
     withCopy({ ...COPY, version: "unknown" }),
-    'papers.0.copies.0.licence.id: Invalid input: expected "NOASSERTION"; papers.0.copies.0.licence: Unrecognized keys: "read_from", "read_on"; papers.0.copies.0: Unrecognized key: "url"',
+    'papers.0.copies.0.licence.id: Invalid input: expected "NOASSERTION"; papers.0.copies.0.licence.read_from: Unrecognized keys: "read_from", "read_on"; papers.0.copies.0.url: Unrecognized key: "url"',
   ],
   [
     "a stored copy that does not say where its bytes came from",
@@ -216,7 +240,7 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "a misspelt id",
     withPaper({ ...PAPER, ids: { dio: "10.1/x" } }),
-    'papers.0.ids: Unrecognized key: "dio"; papers.0.ids: at least one of doi, arxiv, dblp, s2, url',
+    'papers.0.ids.dio: Unrecognized key: "dio"; papers.0.ids: at least one of doi, arxiv, dblp, s2, url',
   ],
   [
     "a key that cannot name a file",
@@ -229,6 +253,21 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
     withPaper({ ...PAPER, key: "2501.15919" }),
     "papers.0.key: a letter or digit, then letters, digits, '_' or '-'",
   ],
+  [
+    "🔴 an edition that leaves out what was capped, and a proxy marking -1 papers",
+    text({
+      ...RECORD,
+      editions: [
+        { ...EDITION, capped: undefined, proxy: { what: "award", papers: -1 } },
+      ],
+    }),
+    "editions.0.capped: Invalid input: expected string, received undefined; editions.0.proxy.papers: Too small: expected number to be >=0",
+  ],
+  [
+    "🔴 a record without its rebuild commands",
+    text({ ...RECORD, rebuild: undefined }),
+    "rebuild: Invalid input: expected array, received undefined",
+  ],
 ];
 
 describe("refusing what is not a papers.json", () => {
@@ -236,13 +275,31 @@ describe("refusing what is not a papers.json", () => {
     // Guards: a broken file is named as such, not parsed as an empty record.
     expect(parse("{ venue: agent")).toEqual({
       ok: false,
-      why: "papers.json is not JSON",
+      problems: [{ path: [], message: "not JSON" }],
+    });
+  });
+
+  it("🔴 each problem carries its path, a misspelt key's ending at the key", () => {
+    // Guards: `corpus/record` walks the path to the field it reports on.
+    expect(
+      parse(withPaper({ ...PAPER, ids: { doi: "10.1/x", dio: "10.1/x" } })),
+    ).toEqual({
+      ok: false,
+      problems: [
+        {
+          path: ["papers", 0, "ids", "dio"],
+          message: 'Unrecognized key: "dio"',
+        },
+      ],
     });
   });
 
   it.each(REFUSED)("%s", (_name, file, why) => {
     // Guards: the record is refused, and the reason names the path of every problem.
-    expect(parse(file)).toEqual({ ok: false, why: `papers.json: ${why}` });
+    const parsed = parse(file);
+    expect(parsed.ok ? "parsed" : problemsText(parsed.problems)).toBe(
+      `papers.json: ${why}`,
+    );
   });
 });
 
@@ -274,6 +331,7 @@ describe("venueCorpusJsonSchema — the shipped schema file", () => {
       "venue",
       "editions",
       "papers",
+      "rebuild",
     ]);
   });
 });

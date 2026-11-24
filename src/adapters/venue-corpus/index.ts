@@ -16,7 +16,6 @@ import {
   STORED_KINDS,
 } from "../../domain/licence.ts";
 import {
-  CORPUS_RECORD,
   KEY_PATTERN,
   KNOWN_VERSIONS,
   PAPER_ID_KINDS,
@@ -26,6 +25,8 @@ import {
   type ParsedCorpus,
   type Paper,
   type PaperIds,
+  type CorpusProblem,
+  type StrongAcceptProxy,
   type VenueCorpus,
 } from "../../domain/venue-corpus.ts";
 import type { VenueCorpusCodec } from "../../ports/venue-corpus-codec.ts";
@@ -162,11 +163,18 @@ const paper = z.discriminatedUnion("group", [
   }),
 ]);
 
+const count = z.number().int().nonnegative();
+
+const proxy = z.strictObject({ what: words, papers: count });
+
+// `capped` and `proxy` are required, and "none" is null: a fact left out is not a fact recorded.
 const edition = z.strictObject({
   edition: year,
   listed_from: webUrl,
   read_on: date,
-  accepted: z.number().int().nonnegative().optional(),
+  accepted: count.optional(),
+  capped: words.nullable(),
+  proxy: proxy.nullable(),
 });
 
 /** Keys unique, editions unique, and every paper of this venue of a listed edition. */
@@ -205,6 +213,7 @@ const record = z
     venue: words,
     editions: z.array(edition),
     papers: z.array(paper),
+    rebuild: z.array(words),
   })
   .superRefine(consistent);
 
@@ -229,6 +238,7 @@ type Same<A, B> =
 export type SchemasAreTheDomain = [
   Same<z.output<typeof record>, VenueCorpus>,
   Same<z.output<typeof edition>, Edition>,
+  Same<z.output<typeof proxy>, StrongAcceptProxy>,
   Same<z.output<typeof paper>, Paper>,
   Same<z.output<typeof copy>, Copy>,
   Same<z.output<typeof licence>, Licence>,
@@ -249,17 +259,27 @@ function jsonOf(text: string): unknown {
   }
 }
 
+/**
+ * One zod issue as a problem. A misspelt key's path ends at the key (the first, when there are
+ * several), so a reader of the file lands on it rather than on the object holding it.
+ */
+const problemOf = (i: z.core.$ZodIssue): CorpusProblem => ({
+  path: [
+    ...i.path.filter((s) => typeof s !== "symbol"),
+    ...(i.code === "unrecognized_keys" ? i.keys.slice(0, 1) : []),
+  ],
+  message: i.message,
+});
+
 /** A `papers.json`'s text, parsed once at the boundary: the record, or every reason it is not one. */
 export function parseVenueCorpus(text: string): ParsedCorpus {
   const json = jsonOf(text);
   if (json === undefined)
-    return { ok: false, why: `${CORPUS_RECORD} is not JSON` };
+    return { ok: false, problems: [{ path: [], message: "not JSON" }] };
   const parsed = record.safeParse(json);
-  if (parsed.success) return { ok: true, corpus: parsed.data };
-  const reasons = parsed.error.issues.map(
-    (i) => `${i.path.length === 0 ? "(top)" : i.path.join(".")}: ${i.message}`,
-  );
-  return { ok: false, why: `${CORPUS_RECORD}: ${reasons.join("; ")}` };
+  return parsed.success
+    ? { ok: true, corpus: parsed.data }
+    : { ok: false, problems: parsed.error.issues.map(problemOf) };
 }
 
 export const venueCorpusCodec: VenueCorpusCodec = { parse: parseVenueCorpus };

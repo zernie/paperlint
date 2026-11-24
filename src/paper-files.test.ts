@@ -27,6 +27,7 @@ import {
   ownedScopes,
   paperFiles,
   papersScope,
+  corpusFiles,
   rebaseGlob,
   ruleOwners,
   scopeToOwned,
@@ -48,14 +49,15 @@ describe("the papers the config claims (#582)", () => {
       buildConfig(
         {},
         texLanguage,
-        papersScope(["/w/papers/p", "/w/papers/q"], "/w"),
+        papersScope(["/w/papers/p", "/w/papers/q"], "/w", ["/w/papers"]),
       ),
     ).filter((g) => !FRAGMENT_FILES.includes(g));
+    // Beside the papers' own files, only each venue corpus's papers.json (corpus/record).
     expect(
       claimed.filter(
         (g) => !g.startsWith("papers/p/") && !g.startsWith("papers/q/"),
       ),
-    ).toEqual([]);
+    ).toEqual(["papers/venues/*/papers.json"]);
     expect(claimed).toContain("papers/q/paper.tex");
   });
 
@@ -63,6 +65,7 @@ describe("the papers the config claims (#582)", () => {
     const scope = papersScope(
       ["/w/papers/p", "/w/papers/[draft] x*", "/w"],
       "/w",
+      ["/w", "/w/[a]", "/x/papers", "/"],
     );
     expect(paperFiles(scope, "reviews/*.md")).toEqual([
       "papers/p/reviews/*.md",
@@ -70,6 +73,12 @@ describe("the papers the config claims (#582)", () => {
       "reviews/*.md",
     ]);
     expect(paperFiles({ kind: "any" }, "paper.tex")).toEqual(["**/paper.tex"]);
+    // A papers root's corpora likewise; a root outside cwd has none ESLint could lint.
+    expect(corpusFiles(scope, "M.md")).toEqual([
+      "venues/*/M.md",
+      "\\[a\\]/venues/*/M.md",
+    ]);
+    expect(corpusFiles({ kind: "any" }, "M.md")).toEqual(["**/venues/*/M.md"]);
   });
 });
 
@@ -101,9 +110,9 @@ describe("a paper's own settings read from its folder (#582)", () => {
     const own = buildConfig(
       {},
       texLanguage,
-      papersScope(["/w/papers/a"], "/w"),
+      papersScope(["/w/papers/a"], "/w", []),
     );
-    const scope = papersScope(["/w/papers/a"], "/w");
+    const scope = papersScope(["/w/papers/a"], "/w", []);
     const block = (basePath: string) =>
       narrowToOwners(
         { basePath, rules: { "paper/stages": "warn" } },
