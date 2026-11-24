@@ -62,6 +62,10 @@ export function segmentsUnder(
  * corpus, not one of the project's papers (#215), so no paper rule judges it.
  */
 export function inCorpus(dir: string, roots: readonly string[]): boolean {
-  const [first, venue] = segmentsUnder(dir, roots) ?? [];
-  return first === CORPORA_DIR && venue !== undefined;
+  // Each root on its own: roots may overlap (`.` and `papers`), and the first that holds `dir` need
+  // not be the one whose `venues/` it is in.
+  return roots.some((root) => {
+    const [first, venue] = segmentsUnder(dir, [root]) ?? [];
+    return first === CORPORA_DIR && venue !== undefined;
+  });
 }

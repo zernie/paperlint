@@ -73,3 +73,17 @@ test("a folder is in a venue corpus when it is `<root>/venues/<venue>/` or below
     [true, true, false, false, false],
   );
 });
+
+test("🔴 a corpus under any of overlapping roots is a corpus, whichever root is listed first", () => {
+  // Guards: `papersDir: [".", "papers"]` — the corpus under the second root must still be excluded
+  // from the paper rules, not read through the first root as `papers/venues/agent`.
+  const dir = "/project/papers/venues/agent";
+  assert.deepEqual(
+    [
+      inCorpus(dir, ["/project", "/project/papers"]),
+      inCorpus(dir, ["/project/papers", "/project"]),
+      inCorpus("/project/papers/agent", ["/project", "/project/papers"]),
+    ],
+    [true, true, false],
+  );
+});
