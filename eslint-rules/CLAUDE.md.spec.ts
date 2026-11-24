@@ -37,6 +37,9 @@ the checks push every paper toward a blog post.
    tic, plus a check that no claim was softened or strengthened.`,
   },
   rules: {
+    "a-rule-id-names-its-subject": guidance(
+      "A rule id is `<family>/<rule>`: one slash, kebab-case, as ESLint's `plugin/rule`. The family is the folder or record the rule judges (`paper/`, `repro/`, `cycle/`, `corpus/`), never the kind of check and never a venue; a new family only when no existing one judges that subject. The same check keeps the same name in every family: `allowed-files-only` for a folder's whitelist of names, `record` for a record file read against its schema, `layout` for a folder's shape. So related rules sort together and a reader who knows one family can guess another's rule. The rule's page is `docs/rules/<family>/<rule>.md`, held by `src/rule-docs.test.ts`. The author asked for this on 2026-11-24.",
+    ),
     "lint-rule-over-script": guidance(
       "A check over a syntax tree is a lint rule, not a script. It fires in the editor on save, gets the AST for free, and has a suppression syntax people already know. A script is for corpus-wide questions — index connectivity, ratios across many files. When the work has to run a program, a script may do the work and write facts to a JSON file, and a rule judges that file: the verdict still lands in the engine.",
     ),

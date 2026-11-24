@@ -107,6 +107,9 @@ Before writing machinery, **run the thing you are about to replace and paste its
       "Every check — lint rule, script, hook, harness — fires on a planted defect AND stays quiet on a clean fixture, and the test goes red before the fix lands. A check only ever seen quiet is indistinguishable from a dead one.",
       { details: file("docs/testing.md") },
     ),
+    "every-prescribed-file-is-linted": guidance(
+      "Every file or folder paperlint prescribes to a project (a name a command or skill writes, or a doc tells the author to keep) has its names held by its family's `allowed-files-only` rule and its contents by a schema that a `record` rule reads, so a stray file or a misspelt key is a finding, not a silent pass. A file held only by prose or by a command at run time is a gap with an open issue. The audit of 2026-11-24 found most prescribed files only partly held; each gap's issue is linked from #516. The author asked for this on 2026-11-24.",
+    ),
     "never-the-callers-cwd": guidance(
       "No program this package ships (`bin/`, `lib/`, hooks, skill scripts) depends on the directory it is started from: resolve from `git rev-parse --show-toplevel` or from the module's own location.",
     ),
