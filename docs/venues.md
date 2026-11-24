@@ -239,6 +239,10 @@ row, from a workshop's 2026 list:
 }
 ```
 
+The example shows one of the edition's 27 rows. `accepted` is the count of the listing page's rows
+and is required: with `capped` null the record lists all 27 papers of 2026 (`accepted` and `award`
+rows together), and `corpus/record` reports an edition whose rows do not add up to it.
+
 The fields, their values and which are required are the JSON Schema
 [`skills/study-accepted-papers/papers.schema.json`](../skills/study-accepted-papers/papers.schema.json),
 generated from the parser (`src/adapters/venue-corpus/index.ts`; `npm run schema:venue-corpus`

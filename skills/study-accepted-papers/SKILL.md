@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:b702377cc26e54a2 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e956f9144d8c9170 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -108,7 +108,7 @@ as judgement, against the base rates of `references/base-rates.md`; simulated pa
 
 | what | where | why there |
 |---|---|---|
-| **the venue corpus** | `<papers-root>/venues/<venue>/` (the papers directory from the project's `paperlint.json`; the folder is the preset's series) | **shared by every paper that targets the venue**, collected once and reused by every later mode. `papers.json` (one row per paper: winners `award`, ordinary `accepted`, corpus 2 `sister`; every copy with its licence; how the corpus was collected, in fields: each edition's `listed_from`, `read_on`, `capped` and `proxy`, and `rebuild`, the commands run), `MANIFEST.md` (optional: caveats only, the prose no field holds), `measurements.json` (L0/L1 codes keyed by the row's `key`), `pdf/<key>.pdf` and `text/<key>.txt` only as the licence step below permits, `deep-reads/<key>.md`, `sources/` (saved listing and call pages). No other name. |
+| **the venue corpus** | `<papers-root>/venues/<venue>/` (the papers directory from the project's `paperlint.json`; the folder is the preset's series) | **shared by every paper that targets the venue**, collected once and reused by every later mode. `papers.json` (one row per paper: winners `award`, ordinary `accepted`, corpus 2 `sister`; every copy with its licence; how the corpus was collected, in fields: each edition's `listed_from`, `read_on`, `accepted` (the listing's row count), `capped` and `proxy`, and `rebuild`, the commands run), `MANIFEST.md` (optional: caveats only, the prose no field holds), `measurements.json` (L0/L1 codes keyed by the row's `key`), `pdf/<key>.pdf` and `text/<key>.txt` only as the licence step below permits, `deep-reads/<key>.md`, `sources/` (saved listing and call pages). No other name. |
 | **the scorecard** | the section **"Strong-accept scorecard (M1–M10)"** of the paper's `PIPELINE-STATUS.md` | a row per mechanism: status (pass / partial / fail), evidence (`file:line`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
 | **the reasoning** | `<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
 | **the stage** | the SETUP row with id `venuebar` in `PIPELINE-STATUS.md` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |

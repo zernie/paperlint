@@ -21,6 +21,7 @@ import {
   PAPER_ID_KINDS,
   type Copy,
   type Edition,
+  editionCountIssue,
   type Licence,
   type ParsedCorpus,
   type Paper,
@@ -172,7 +173,7 @@ const edition = z.strictObject({
   edition: year,
   listed_from: webUrl,
   read_on: date,
-  accepted: count.optional(),
+  accepted: count,
   capped: words.nullable(),
   proxy: proxy.nullable(),
 });
@@ -215,7 +216,19 @@ const record = z
     papers: z.array(paper),
     rebuild: z.array(words),
   })
-  .superRefine(consistent);
+  .superRefine(consistent)
+  .superRefine((r, ctx) => {
+    // Each edition's papers add up to what it accepted (the domain decides how).
+    r.editions.forEach((e, i) => {
+      const message = editionCountIssue(e, r.papers);
+      if (message !== null)
+        ctx.addIssue({
+          code: "custom",
+          path: ["editions", i, "accepted"],
+          message,
+        });
+    });
+  });
 
 // ── the schemas ARE the domain's types (as in the study registry's adapter) ──────────────────
 

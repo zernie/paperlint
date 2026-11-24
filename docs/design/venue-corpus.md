@@ -77,22 +77,23 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    }
    ```
 
-   | field                     | values                                                                                                                                                      |
-   | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `venue`                   | the corpus folder's name, which is the venue preset's series: the preset id without its year (`agent` for `paperlint:agent-2027`)                           |
-   | `editions[]`              | each edition of THIS venue the corpus covers: the year, the page that lists what it accepted, the date read; `accepted` (the count) when the page gives one |
-   | `editions[].capped`       | what was left out of the edition and why (`"the research track only, 100 of 312"`), or `null`                                                               |
-   | `editions[].proxy`        | `{ "what", "papers" }`: the stand-in for "strong accept" and how many papers it marks, or `null`                                                            |
-   | `rebuild`                 | the commands that regenerate the corpus, in order; `[]` when none was kept                                                                                  |
-   | `papers[].key`            | unique in the file; names the stored files and the measurement rows                                                                                         |
-   | `papers[].group`          | `accepted`, `award`, or `sister` (corpus 2: papers of another venue)                                                                                        |
-   | `papers[].edition`        | for `accepted` and `award`: one of `editions[].edition`                                                                                                     |
-   | `papers[].venue`, `.year` | for `sister`: the other venue and its year; `listed_from` on the row says where it was found                                                                |
-   | `papers[].ids`            | any of `doi`, `arxiv`, `dblp`, `s2`, `url` (the paper's page on the listing, when nothing else identifies it); at least one                                 |
-   | `copies[].version`        | `published`, `accepted`, `preprint` (OpenAlex's `publishedVersion` / `acceptedVersion` / `submittedVersion`), or `unknown`                                  |
-   | `copies[].licence`        | `id`, `read_from` (the page or API response it was read from, never inferred), `read_on`                                                                    |
-   | `copies[].fetched_from`   | required when `stored` is not empty: the URL the stored bytes were downloaded from                                                                          |
-   | `copies[].stored`         | what of this copy is in the corpus: `[]`, `["text"]`, `["pdf"]` or both; `"text"` covers every text variant of the paper                                    |
+   | field                     | values                                                                                                                                                            |
+   | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `venue`                   | the corpus folder's name, which is the venue preset's series: the preset id without its year (`agent` for `paperlint:agent-2027`)                                 |
+   | `editions[]`              | each edition of THIS venue the corpus covers: the year, the page that lists what it accepted, the date read; `accepted`, the count of that page's rows (required) |
+   | `editions[].capped`       | what was left out of the edition and why (`"the research track only, 100 of 312"`), or `null`                                                                     |
+   | `editions[].accepted`     | without `capped`, exactly this many of the edition's papers are listed (`accepted` and `award` rows, not `sister`); with `capped`, at most this many              |
+   | `editions[].proxy`        | `{ "what", "papers" }`: the stand-in for "strong accept" and how many papers it marks, or `null`                                                                  |
+   | `rebuild`                 | the commands that regenerate the corpus, in order; `[]` when none was kept                                                                                        |
+   | `papers[].key`            | unique in the file; names the stored files and the measurement rows                                                                                               |
+   | `papers[].group`          | `accepted`, `award`, or `sister` (corpus 2: papers of another venue)                                                                                              |
+   | `papers[].edition`        | for `accepted` and `award`: one of `editions[].edition`                                                                                                           |
+   | `papers[].venue`, `.year` | for `sister`: the other venue and its year; `listed_from` on the row says where it was found                                                                      |
+   | `papers[].ids`            | any of `doi`, `arxiv`, `dblp`, `s2`, `url` (the paper's page on the listing, when nothing else identifies it); at least one                                       |
+   | `copies[].version`        | `published`, `accepted`, `preprint` (OpenAlex's `publishedVersion` / `acceptedVersion` / `submittedVersion`), or `unknown`                                        |
+   | `copies[].licence`        | `id`, `read_from` (the page or API response it was read from, never inferred), `read_on`                                                                          |
+   | `copies[].fetched_from`   | required when `stored` is not empty: the URL the stored bytes were downloaded from                                                                                |
+   | `copies[].stored`         | what of this copy is in the corpus: `[]`, `["text"]`, `["pdf"]` or both; `"text"` covers every text variant of the paper                                          |
 
    The top level, the edition, the copy and the licence objects are strict, so a misspelt key is an error.
    A paper row keeps any further fields as they are: the consumer's scripts read about forty of them
