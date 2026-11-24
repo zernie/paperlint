@@ -88,7 +88,7 @@ describe("any other unowned file keeps the general refusal, without the glob it 
     const r = await lint(dir, "papers/a/repro/x.js");
     expect(r.code).toBe(2);
     expect(r.err).toBe(
-      "papers/a/repro/x.js is not a file paperlint lints — it lints **/PIPELINE-STATUS.md, **/reviews/*.md, **/paper.tex, **/siblings/*.md, and the .tex files a built paper.tex includes",
+      "papers/a/repro/x.js is not a file paperlint lints — it lints **/PIPELINE-STATUS.md, **/venues/*/papers.json, **/reviews/*.md, **/paper.tex, **/siblings/*.md, and the .tex files a built paper.tex includes",
     );
   });
 
