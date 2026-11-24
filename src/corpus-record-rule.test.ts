@@ -33,6 +33,7 @@ const record = (copies: readonly (readonly string[])[]): string =>
           edition: 2026,
           listed_from: "https://example.org/accepted",
           read_on: "2026-11-03",
+          accepted: 1,
           capped: null,
           proxy: null,
         },

@@ -41,8 +41,11 @@ export interface Edition {
   /** The page that lists what the edition accepted. */
   readonly listed_from: string;
   readonly read_on: string;
-  /** How many it accepted, when the page says. */
-  readonly accepted?: number | undefined;
+  /**
+   * How many it accepted: the rows of the page that lists them. Without `capped` the corpus lists
+   * exactly this many of the edition's papers; with it, at most this many.
+   */
+  readonly accepted: number;
   /** What was left out of the edition and why; null when nothing was (never left out). */
   readonly capped: string | null;
   /** The stand-in for "strong accept" in this edition; null when it has none. */
@@ -157,3 +160,25 @@ export const pathText = (path: RecordPath): string =>
 /** Every problem on one line, each with its path. */
 export const problemsText = (problems: readonly CorpusProblem[]): string =>
   `${CORPUS_RECORD}: ${problems.map((p) => `${pathText(p.path)}: ${p.message}`).join("; ")}`;
+
+/**
+ * What an edition lists against what it accepted, or null when they agree: without `capped` its
+ * papers (`accepted` and `award` rows; a `sister` is another venue's) number exactly `accepted`,
+ * with `capped` at most that many.
+ */
+export const editionCountIssue = (
+  edition: Readonly<Edition>,
+  papers: readonly Paper[],
+): string | null => {
+  const listed = papers.filter(
+    (p) => p.group !== "sister" && p.edition === edition.edition,
+  ).length;
+  const tally = `${String(listed)} papers of ${String(edition.edition)} are listed`;
+  if (edition.capped === null)
+    return listed === edition.accepted
+      ? null
+      : `${tally} and ${String(edition.accepted)} were accepted: list them all, or say in capped what was left out`;
+  return listed > edition.accepted
+    ? `${tally}, more than the ${String(edition.accepted)} it accepted`
+    : null;
+};

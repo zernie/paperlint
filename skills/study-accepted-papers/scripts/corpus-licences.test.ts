@@ -71,6 +71,7 @@ const record = (papers: readonly object[]) => ({
       edition: 2026,
       listed_from: "https://conf.researchr.org/home/icse-2026/agent-2026",
       read_on: "2026-11-03",
+      accepted: papers.length,
       capped: null,
       proxy: null,
     },

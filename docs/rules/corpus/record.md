@@ -20,6 +20,9 @@ paper which copy every stored file is and under which licence, and how the corpu
 - a copy whose `stored` names a kind whose file is not there (`missing`), at that `stored`;
 - two copies of one paper that both store one kind (`twice`), at the second copy's `stored`: one
   file is a copy of one version.
+- an edition whose papers do not add up to its `accepted` (`unparsed`, at that `accepted`): without
+  `capped` the record lists every paper the edition accepted, winners included; with `capped` it
+  lists at most that many. A list copied in half is caught here, not by the schema.
 
 A `papers.json` that is not JSON is not this rule's finding: ESLint reports it as a parse error on
 its first line. A `paper.tex` or `PIPELINE-STATUS.md` kept in a corpus (an accepted paper's source)

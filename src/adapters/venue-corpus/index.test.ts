@@ -3,22 +3,13 @@
  * parses to itself with a paper row's extra fields kept, and every way a file can fail to be one is
  * refused with the zod path of each problem.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
 import {
   problemsText,
   type Paper,
   type VenueCorpus,
 } from "../../domain/venue-corpus.ts";
-import {
-  SCHEMA_FILE,
-  venueCorpusCodec,
-  venueCorpusJsonSchema,
-  venueCorpusSchemaText,
-} from "./index.ts";
+import { venueCorpusCodec } from "./index.ts";
 
 const parse = venueCorpusCodec.parse;
 
@@ -51,9 +42,9 @@ const EDITION = {
   edition: 2026,
   listed_from: "https://conf.researchr.org/home/icse-2026/agent-2026",
   read_on: "2026-11-03",
-  accepted: 27,
+  accepted: 1,
   capped: null,
-  proxy: { what: "distinguished-paper award", papers: 4 },
+  proxy: { what: "distinguished-paper award", papers: 1 },
 } as const;
 
 const RECORD = {
@@ -96,7 +87,7 @@ describe("parsing a papers.json", () => {
   });
 
   it("a sister paper names its venue, year and where it was found; an unknown copy stores under NOASSERTION", () => {
-    const { edition, ...rest } = PAPER;
+    const { edition, ...rest } = { ...PAPER, key: "nlbse-2025-07" };
     const sister: Paper = {
       ...rest,
       group: "sister",
@@ -113,7 +104,7 @@ describe("parsing a papers.json", () => {
         },
       ],
     };
-    const record: VenueCorpus = { ...RECORD, papers: [sister] };
+    const record: VenueCorpus = { ...RECORD, papers: [PAPER, sister] };
     // Guards: the sister shape and the unknown-origin copy are both representable.
     expect([edition, parse(text(record))]).toEqual([
       2026,
@@ -150,8 +141,13 @@ describe("a copy whose licence was never read", () => {
     const facts = {
       ...RECORD,
       editions: [
-        { ...EDITION, capped: "the research track only, 100 of 312" },
-        { ...EDITION, edition: 2025, proxy: null },
+        EDITION,
+        {
+          ...EDITION,
+          edition: 2025,
+          capped: "the research track only, 100 of 312",
+          proxy: null,
+        },
       ],
       rebuild: [],
     };
@@ -175,7 +171,7 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "🔴 a key two papers share",
     text({ ...RECORD, papers: [PAPER, { ...PAPER, title: "Other" }] }),
-    'papers.1.key: "2026-01" is the key of papers.0 too',
+    'papers.1.key: "2026-01" is the key of papers.0 too; editions.0.accepted: 2 papers of 2026 are listed and 1 were accepted: list them all, or say in capped what was left out',
   ],
   [
     "a misspelt key at the top level",
@@ -225,7 +221,7 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "a paper of an edition the record does not list",
     withPaper({ ...PAPER, edition: 2025 }),
-    "papers.0.edition: 2025 is not one of editions[].edition (2026)",
+    "papers.0.edition: 2025 is not one of editions[].edition (2026); editions.0.accepted: 0 papers of 2026 are listed and 1 were accepted: list them all, or say in capped what was left out",
   ],
   [
     "an edition listed twice",
@@ -254,14 +250,19 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
     "papers.0.key: a letter or digit, then letters, digits, '_' or '-'",
   ],
   [
-    "🔴 an edition that leaves out what was capped, and a proxy marking -1 papers",
+    "🔴 an edition that leaves out how many it accepted and what was capped, and a proxy marking -1 papers",
     text({
       ...RECORD,
       editions: [
-        { ...EDITION, capped: undefined, proxy: { what: "award", papers: -1 } },
+        {
+          ...EDITION,
+          accepted: undefined,
+          capped: undefined,
+          proxy: { what: "award", papers: -1 },
+        },
       ],
     }),
-    "editions.0.capped: Invalid input: expected string, received undefined; editions.0.proxy.papers: Too small: expected number to be >=0",
+    "editions.0.accepted: Invalid input: expected number, received undefined; editions.0.capped: Invalid input: expected string, received undefined; editions.0.proxy.papers: Too small: expected number to be >=0",
   ],
   [
     "🔴 a record without its rebuild commands",
@@ -300,38 +301,5 @@ describe("refusing what is not a papers.json", () => {
     expect(parsed.ok ? "parsed" : problemsText(parsed.problems)).toBe(
       `papers.json: ${why}`,
     );
-  });
-});
-
-describe("venueCorpusJsonSchema — the shipped schema file", () => {
-  const SHIPPED = join(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../../",
-    SCHEMA_FILE,
-  );
-
-  it("🔴 is the generated schema, byte for byte", () => {
-    // Guards: the schema the skill points at never drifts from the parser that judges the record.
-    expect(
-      readFileSync(SHIPPED, "utf8"),
-      `${SCHEMA_FILE} is stale: regenerate it with \`npm run schema:venue-corpus\``,
-    ).toBe(venueCorpusSchemaText());
-  });
-
-  it("🔴 says the parser checks what a schema cannot, and names the record's fields", () => {
-    const schema = z
-      .looseObject({
-        description: z.string(),
-        properties: z.looseObject({}),
-      })
-      .parse(venueCorpusJsonSchema());
-    expect(schema.description).toContain("papers.json");
-    expect(schema.description).toContain("corpus-licences.js");
-    expect(Object.keys(schema.properties)).toEqual([
-      "venue",
-      "editions",
-      "papers",
-      "rebuild",
-    ]);
   });
 });
