@@ -97,13 +97,14 @@ paper.
 
 ## What it does not check
 
-- A corpus folder with no `papers.json`: there is no file to report on. The planned
-  `corpus/allowed-files-only` reports a corpus that stores files without one.
+- A corpus folder with no `papers.json`: there is no file to report on.
+  [`corpus/allowed-files-only`](allowed-files-only.md) reports a corpus that stores files without one.
 - Whether a stored copy's licence permits keeping it, or whether a licence was read at all: that is
   the licence rule, planned and off by default.
 - That a stored file is the copy it is attributed to; it checks that the attribution was recorded.
 - Names in the corpus folder outside `pdf/` and `text/` (`deep-reads/`, `sources/`, a stray file),
-  and folders inside `pdf/` or `text/` beyond their names: the planned `corpus/allowed-files-only`.
+  and folders inside `pdf/` or `text/` beyond their names: the top of the corpus is
+  [`corpus/allowed-files-only`](allowed-files-only.md)'s.
 - Hidden files in `pdf/` and `text/` (`.gitkeep`, `.DS_Store`): they are not copies.
 - A corpus outside `<papers-root>/venues/`.
 - `MANIFEST.md` (optional, caveats only) and `measurements.json`.

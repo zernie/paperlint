@@ -41,6 +41,7 @@
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */
 import { relative, sep } from "node:path";
+import { CONFIG_FILE } from "#lib/paper-config";
 import { CORPORA_DIR } from "./domain/corpus-record.ts";
 import type {
   ConfigBlock,
@@ -53,8 +54,9 @@ import type {
  * Which papers' own files paperlint's blocks claim. `any` is the config's SHAPE, for the rule list and
  * the docs: a file in any folder. `papers` is what `paperlint lint` runs on: the real papers, as glob
  * prefixes relative to ESLint's `cwd` ("" for `cwd` itself), so a copy of a paper kept inside one (a
- * review snapshot, a build copy) is claimed by no block (#582); and the papers roots (absolute),
- * whose `venues/` hold the venue corpora.
+ * review snapshot, a build copy) is claimed by no block (#582); the papers roots (absolute),
+ * whose `venues/` hold the venue corpora; and the project root (absolute) whose `paperlint.json`
+ * is linted, or null when it is not (no papers root holds `venues/`).
  */
 export type PaperScope =
   | { readonly kind: "any" }
@@ -63,6 +65,7 @@ export type PaperScope =
       readonly cwd: string;
       readonly prefixes: readonly string[];
       readonly roots: readonly string[];
+      readonly home: string | null;
     };
 
 export const ANY_PAPER: PaperScope = { kind: "any" };
@@ -75,17 +78,30 @@ const literalGlob = (path: string): string =>
 const posixRelative = (from: string, to: string): string =>
   relative(from, to).split(sep).join("/");
 
-/** The papers `dirs` and the papers `roots` under ESLint's `cwd`: the scope `paperlint lint` lints. Pure. */
+/**
+ * The papers `dirs` and the papers `roots` under ESLint's `cwd`, and the project root `home` whose
+ * `paperlint.json` is linted (null: none is): the scope `paperlint lint` lints. Pure.
+ */
 export const papersScope = (
   dirs: readonly string[],
   cwd: string,
   roots: readonly string[],
+  home: string | null = null,
 ): PaperScope => ({
   kind: "papers",
   cwd,
   prefixes: dirs.map((d) => literalGlob(posixRelative(cwd, d))),
   roots,
+  home,
 });
+
+/** The project's root settings file, as the glob that names it from ESLint's `cwd`; none without a `home`. Pure. */
+export const rootSettingsFile = (scope: PaperScope): readonly string[] => {
+  if (scope.kind === "any") return [CONFIG_FILE];
+  if (scope.home === null) return [];
+  const dir = posixRelative(scope.cwd, scope.home);
+  return [dir === "" ? CONFIG_FILE : `${literalGlob(dir)}/${CONFIG_FILE}`];
+};
 
 /** A glob of a paper's own file (`paper.tex`, `reviews/*.md`) in each paper of `scope`. Pure. */
 export const paperFiles = (

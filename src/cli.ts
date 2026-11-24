@@ -141,6 +141,7 @@ import {
   ownedPatterns,
   paperFiles,
   papersScope,
+  rootSettingsFile,
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
@@ -246,6 +247,11 @@ import {
   CORPUS_RECORD_RULE_LEVELS,
   corpusRecordRules,
 } from "./corpus-record-rule.ts";
+import {
+  CORPUS_LAYOUT_RULE_LEVELS,
+  corpusLayoutRules,
+} from "./corpus-layout-rule.ts";
+import { CORPORA_DIR } from "./domain/corpus-record.ts";
 import { CORPUS_RECORD } from "./domain/venue-corpus.ts";
 import { venueCorpusCodec } from "./adapters/venue-corpus/index.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
@@ -659,22 +665,35 @@ const TALK_RULE_DEPS = {
 /**
  * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its `papers.json`, linted with
  * ESLint's JSON language so `corpus/record` reports at the field (docs/design/venue-corpus.md,
- * decision 4). The JSON language reaches no other file: this block alone names it.
+ * decision 4); and the root `paperlint.json`, where `corpus/allowed-files-only` reports a corpus that
+ * has no `papers.json`. The JSON language reaches no other file: these blocks alone name it. Each
+ * registers only the rules it turns on, so a consumer's `corpus/record` never reaches the root file.
  */
-const corpusBlock = (papers: PaperScope): ConfigBlock => ({
-  files: corpusFiles(papers, CORPUS_RECORD),
-  plugins: {
-    json,
-    corpus: {
-      rules: corpusRecordRules({
-        entries: nodeListEntries,
-        codec: venueCorpusCodec,
-      }),
+const corpusBlocks = (papers: PaperScope): readonly ConfigBlock[] => {
+  const layout = corpusLayoutRules({
+    files: nodeFiles,
+    listDir: nodeListDir,
+    roots: papers.kind === "papers" ? papers.roots : [],
+  });
+  const record = corpusRecordRules({
+    entries: nodeListEntries,
+    codec: venueCorpusCodec,
+  });
+  return [
+    {
+      files: corpusFiles(papers, CORPUS_RECORD),
+      plugins: { json, corpus: { rules: { ...record, ...layout } } },
+      language: "json/json",
+      rules: { ...CORPUS_RECORD_RULE_LEVELS, ...CORPUS_LAYOUT_RULE_LEVELS },
     },
-  },
-  language: "json/json",
-  rules: CORPUS_RECORD_RULE_LEVELS,
-});
+    {
+      files: rootSettingsFile(papers),
+      plugins: { json, corpus: { rules: layout } },
+      language: "json/json",
+      rules: CORPUS_LAYOUT_RULE_LEVELS,
+    },
+  ];
+};
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
@@ -761,7 +780,7 @@ export function buildConfig(
         ...STATUS_CYCLE_RULE_LEVELS,
       },
     },
-    corpusBlock(papers),
+    ...corpusBlocks(papers),
     {
       files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
@@ -2676,7 +2695,8 @@ export async function run(
   if (!engine.ok) return (err(engine.error), 2);
   const { eslint, opts: withPapers, bodies } = engine.value;
 
-  const unowned = await firstUnownedFile(eslint, paths);
+  const linted = withRootSettings(cfg, a.paths.length === 0, paths);
+  const unowned = await firstUnownedFile(eslint, linted);
   if (unowned !== null) {
     err(
       refusalOf(
@@ -2700,7 +2720,7 @@ export async function run(
   // an explicable one.
   let results: ESLint.LintResult[];
   try {
-    results = await eslint.lintFiles([...paths]);
+    results = await eslint.lintFiles([...linted]);
   } catch (e) {
     if (isEmptyLintSet(e)) results = [];
     else throw e;
@@ -2745,6 +2765,32 @@ export async function run(
   });
   return code;
 }
+
+/**
+ * The project root whose `paperlint.json` is linted, or null: only where a papers root holds
+ * `venues/`, since that file is where `corpus/allowed-files-only` reports a corpus without
+ * `papers.json`. A project with no corpus lints exactly the files it linted before.
+ */
+const corpusHome = (cfg: {
+  readonly opts: PaperlintConfig;
+  readonly root: string;
+}): string | null =>
+  papersRoots(cfg).some((r) => existsSync(join(r, CORPORA_DIR)))
+    ? cfg.root
+    : null;
+
+/** What `paperlint lint` hands ESLint: `paths`, and the root `paperlint.json` on a run of the whole project. */
+const withRootSettings = (
+  cfg: { readonly opts: PaperlintConfig; readonly root: string },
+  wholeProject: boolean,
+  paths: readonly string[],
+): readonly string[] => {
+  const home = corpusHome(cfg);
+  const file = home === null ? null : join(home, CONFIG_FILE);
+  return wholeProject && file !== null && existsSync(file)
+    ? [...paths, file]
+    : paths;
+};
 
 /**
  * The ESLint `paperlint lint` runs over `paths`, with the config it lints them by — ONE setup for
@@ -2809,6 +2855,7 @@ async function paperEslint(
     paperDirs([...paths, ...roots], roots),
     cwd,
     roots,
+    corpusHome(cfg),
   );
   const eslint = new ESLint({
     cwd,

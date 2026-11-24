@@ -1295,6 +1295,22 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex("x"), { [CORPUS_RECORD]: EMPTY_RECORD }),
   },
+  // A note at the top of a venue corpus: its place is MANIFEST.md or deep-reads/<key>.md.
+  "corpus/allowed-files-only": {
+    reports: {
+      tree: paper(tex("x"), {
+        [CORPUS_RECORD]: EMPTY_RECORD,
+        "papers/venues/agent/notes.md": "# notes\n",
+      }),
+      file: CORPUS_RECORD,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("x"), {
+      [CORPUS_RECORD]: EMPTY_RECORD,
+      "papers/venues/agent/MANIFEST.md": "# caveats\n",
+    }),
+  },
   // A loose script at the top of repro/: it belongs in repro/tools/.
   "repro/allowed-files-only": {
     reports: {
