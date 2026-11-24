@@ -232,21 +232,12 @@ row, from a workshop's 2026 list:
 }
 ```
 
-| field                                     | values                                                                                                                                                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `venue`                                   | the corpus folder's name                                                                                                                                                    |
-| `editions[]`                              | each edition of this venue the corpus covers: `edition` (the year), `listed_from` (the page that lists what it accepted), `read_on`; `accepted` when the page gives a count |
-| `papers[].key`                            | unique in the file; a letter or digit, then letters, digits, `_` or `-`, no dot; it names the stored files and the measurement rows                                         |
-| `papers[].group`                          | `accepted`, `award`, or `sister` (a paper of another venue, corpus 2)                                                                                                       |
-| `papers[].edition`                        | for `accepted` and `award`: one of `editions[].edition`                                                                                                                     |
-| `papers[].venue`, `.year`, `.listed_from` | for `sister`: the other venue, its year, and where the paper was found                                                                                                      |
-| `papers[].title`, `.authors`, `.abstract` | the paper's metadata; `abstract` is `null` where the listing gave none                                                                                                      |
-| `papers[].ids`                            | any of `doi`, `arxiv`, `dblp`, `s2`, `url` (the paper's page on the listing, when nothing else identifies it); at least one                                                 |
-| `copies[].version`                        | `published`, `accepted`, `preprint` (OpenAlex's `publishedVersion`, `acceptedVersion`, `submittedVersion`), or `unknown`                                                    |
-| `copies[].url`                            | where the copy is; not on an `unknown` copy                                                                                                                                 |
-| `copies[].licence`                        | `id` (an SPDX id or a `LicenseRef-`), `read_from` (the page or API response it was read from), `read_on`; or `{ "id": "NOASSERTION" }` alone: it was not read               |
-| `copies[].stored`                         | what of this copy is in the corpus: `[]`, `["text"]`, `["pdf"]` or both; `"text"` covers every text variant                                                                 |
-| `copies[].fetched_from`                   | required when `stored` is not empty: the URL the stored bytes were downloaded from                                                                                          |
+The fields, their values and which are required are the JSON Schema
+[`skills/study-accepted-papers/papers.schema.json`](../skills/study-accepted-papers/papers.schema.json),
+generated from the parser (`src/adapters/venue-corpus/index.ts`; `npm run schema:venue-corpus`
+rewrites it, and a test fails when it is stale). A schema cannot say that a key is unique, that a
+paper's edition is one of `editions[].edition`, or that a copy that stores a file names where it was
+fetched from; the parser checks those and the skill's script reports each with its path.
 
 Every web address is `http` or `https`. The top level, an edition, a copy, a licence and `ids` are
 strict, so a misspelt key is an error; a paper row keeps any further field as it is, for a project's
@@ -273,11 +264,14 @@ copy is treated as not permitted.
 The skill's script prints, for each paper and each kind, the copy to keep or each copy's reason:
 
 ```text
-node <skills>/study-accepted-papers/scripts/corpus-licences.js "$(git rev-parse --show-toplevel)/<papers-root>/venues/<venue>/"
+node <skills>/study-accepted-papers/scripts/corpus-licences.js agent
 2026-01 text: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
 2026-01 pdf: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
 ```
 
+It takes the venue, and finds `<papers-root>/venues/<venue>/papers.json` itself: the project is the git
+top level of the folder it runs in, and the papers roots are `papersDir` in the project's
+`paperlint.json`. Exactly one root may hold the venue; none or several is exit 1, naming the folders.
 It parses `papers.json` first, and a record that does not parse is reported with the path of each
 problem, exit 1.
 

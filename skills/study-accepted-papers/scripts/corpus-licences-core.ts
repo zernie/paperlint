@@ -9,11 +9,14 @@
  * until then the runner judges as for a project that has not declared itself non-commercial.
  * No model, no network.
  *
- * Usage: node corpus-licences.js <corpus-dir>
- * Exit: 0 — one line per paper and kind · 1 — no papers.json there, or it does not parse · 2 — no
- * folder named.
+ * Usage: node corpus-licences.js <venue>
+ * The record is `<papers-root>/venues/<venue>/papers.json`: the project root is the git top level of
+ * the folder the command runs in, the papers roots are the project's `papersDir` (src/papers-roots.ts).
+ * Exit: 0 — one line per paper and kind · 1 — not in a git repository, no papers.json in any papers
+ * root or one in several, or it does not parse · 2 — no venue named, or not a folder name.
  */
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { CONFIG_FILE, PAPERS_DIR_FIELD } from "#lib/paper-config";
 import { callerPath } from "#src/caller-path";
 import {
   permits,
@@ -29,6 +32,7 @@ import {
   type Paper,
   type VenueCorpus,
 } from "#src/domain/venue-corpus";
+import { papersRoots } from "#src/papers-roots";
 import type { Files } from "#src/ports/files";
 import type { VenueCorpusCodec } from "#src/ports/venue-corpus-codec";
 
@@ -157,10 +161,14 @@ export const listing = (all: readonly Verdict[]): string =>
     ? `${CORPUS_RECORD} holds no paper\n`
     : `${all.map(line).join("\n")}\n`;
 
-/** What the command reads with: the disk and the record's codec. */
+/** What the command reads with: the disk, the record's codec, and where the project is. */
 export interface Deps {
   readonly files: Files;
   readonly codec: VenueCorpusCodec;
+  /** The top of the git working tree holding `cwd`, or null when `cwd` is in none. */
+  readonly projectRoot: (cwd: string) => string | null;
+  /** The folder the command was started in. */
+  readonly cwd: string;
 }
 
 /** Where the command writes: the listing, and what stops it. */
@@ -172,25 +180,96 @@ export interface Output {
 /** The project's setting the table reads, until `corpus/licence` ships it: not declared. */
 const UNDECLARED: LicenceSettings = { nonCommercial: false };
 
+/** A venue is one folder name: no separator, and not a way up. */
+const VENUE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/u;
+
+const USAGE = "usage: node corpus-licences.js <venue>\n";
+
+/** The project's `papersDir` setting, read through the disk port; absent file, default setting. */
+function settingsOf(
+  files: Files,
+  root: string,
+):
+  | { readonly ok: true; readonly opts: { readonly papersDir?: unknown } }
+  | {
+      readonly ok: false;
+      readonly why: string;
+    } {
+  const file = join(root, CONFIG_FILE);
+  const bytes = files.readBytes(callerPath(file));
+  if (bytes === null) return { ok: true, opts: {} };
+  const parsed = jsonOf(new TextDecoder().decode(bytes));
+  if (parsed === undefined) return { ok: false, why: `${file} is not JSON` };
+  return {
+    ok: true,
+    opts: isObject(parsed)
+      ? { [PAPERS_DIR_FIELD]: parsed[PAPERS_DIR_FIELD] }
+      : {},
+  };
+}
+
+const isObject = (v: unknown): v is Readonly<Record<string, unknown>> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+/** The JSON `text` holds, or undefined when it is not JSON. */
+function jsonOf(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+/** The one `papers.json` of `venue` among the project's papers roots, or why there is not exactly one. */
+function recordOf(
+  deps: Deps,
+  venue: string,
+):
+  | { readonly ok: true; readonly file: string }
+  | { readonly ok: false; readonly why: string } {
+  const root = deps.projectRoot(deps.cwd);
+  if (root === null)
+    return {
+      ok: false,
+      why: `${deps.cwd} is not inside a git repository: run it in the project`,
+    };
+  const settings = settingsOf(deps.files, root);
+  if (!settings.ok) return settings;
+  const looked = papersRoots({ opts: settings.opts, root }).map((papers) =>
+    join(papers, "venues", venue, CORPUS_RECORD),
+  );
+  const found = looked.filter((f) => deps.files.isFile(callerPath(f)));
+  const [only] = found;
+  if (only !== undefined && found.length === 1) return { ok: true, file: only };
+  return {
+    ok: false,
+    why:
+      found.length === 0
+        ? `no ${CORPUS_RECORD} for venue "${venue}": looked in ${looked.map((f) => dirname(f)).join(", ")}; write the record first`
+        : `venue "${venue}" is in more than one papers folder: ${found.map((f) => dirname(f)).join(", ")}`,
+  };
+}
+
 /** Run the command on `argv`; the exit code. */
 export function main(
   argv: readonly string[],
   deps: Deps,
   { out, err }: Output,
 ): number {
-  const [dir] = argv;
-  if (dir === undefined) {
-    err("usage: node corpus-licences.js <corpus-dir>\n");
+  const [venue, ...rest] = argv;
+  if (venue === undefined || rest.length > 0 || !VENUE.test(venue)) {
+    err(USAGE);
     return 2;
   }
-  const bytes = deps.files.readBytes(callerPath(join(dir, CORPUS_RECORD)));
-  if (bytes === null) {
-    err(
-      `corpus-licences: no ${CORPUS_RECORD} in ${dir}: write the record first\n`,
-    );
+  const at = recordOf(deps, venue);
+  if (!at.ok) {
+    err(`corpus-licences: ${at.why}\n`);
     return 1;
   }
-  const parsed = deps.codec.parse(new TextDecoder().decode(bytes));
+  const bytes = deps.files.readBytes(callerPath(at.file));
+  const parsed = deps.codec.parse(
+    new TextDecoder().decode(bytes ?? new Uint8Array()),
+  );
   if (!parsed.ok) {
     err(`corpus-licences: ${parsed.why}\n`);
     return 1;

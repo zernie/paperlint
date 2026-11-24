@@ -3,9 +3,18 @@
  * parses to itself with a paper row's extra fields kept, and every way a file can fail to be one is
  * refused with the zod path of each problem.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import type { Paper, VenueCorpus } from "../../domain/venue-corpus.ts";
-import { venueCorpusCodec } from "./index.ts";
+import {
+  SCHEMA_FILE,
+  venueCorpusCodec,
+  venueCorpusJsonSchema,
+  venueCorpusSchemaText,
+} from "./index.ts";
 
 const parse = venueCorpusCodec.parse;
 
@@ -234,5 +243,37 @@ describe("refusing what is not a papers.json", () => {
   it.each(REFUSED)("%s", (_name, file, why) => {
     // Guards: the record is refused, and the reason names the path of every problem.
     expect(parse(file)).toEqual({ ok: false, why: `papers.json: ${why}` });
+  });
+});
+
+describe("venueCorpusJsonSchema — the shipped schema file", () => {
+  const SHIPPED = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../",
+    SCHEMA_FILE,
+  );
+
+  it("🔴 is the generated schema, byte for byte", () => {
+    // Guards: the schema the skill points at never drifts from the parser that judges the record.
+    expect(
+      readFileSync(SHIPPED, "utf8"),
+      `${SCHEMA_FILE} is stale: regenerate it with \`npm run schema:venue-corpus\``,
+    ).toBe(venueCorpusSchemaText());
+  });
+
+  it("🔴 says the parser checks what a schema cannot, and names the record's fields", () => {
+    const schema = z
+      .looseObject({
+        description: z.string(),
+        properties: z.looseObject({}),
+      })
+      .parse(venueCorpusJsonSchema());
+    expect(schema.description).toContain("papers.json");
+    expect(schema.description).toContain("corpus-licences.js");
+    expect(Object.keys(schema.properties)).toEqual([
+      "venue",
+      "editions",
+      "papers",
+    ]);
   });
 });

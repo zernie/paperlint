@@ -166,8 +166,9 @@ scorecard: PIPELINE-STATUS.md#strong-accept-scorecard-m1m10
 ## The record before any PDF or text
 
 The corpus keeps third-party papers, so what it may store is decided per copy, before anything is
-downloaded or extracted. The record's fields are in \`docs/venues.md\` in the paperlint package ("The
-record, papers.json").
+downloaded or extracted. The record's fields are in \`\${CLAUDE_SKILL_DIR}/papers.schema.json\`; the
+script below refuses a record that breaks them, with the path of the field, and checks what a schema
+cannot (unique keys, a paper's edition among the listed ones, a stored copy's \`fetched_from\`).
 
 1. **A row per paper** in \`papers.json\`, with its ids, title, authors and abstract: metadata, kept
    whatever the licence.
@@ -175,8 +176,8 @@ record, papers.json").
    from the source \`docs/venues.md\` names for that kind of copy ("Where a copy's licence is read
    from"): \`read_from\` is the page or API response, \`read_on\` the date. Never the licence line
    printed inside a PDF: it can belong to another copy. No source gives it → \`{ "id": "NOASSERTION" }\`.
-3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js "$(git rev-parse --show-toplevel)/<papers-root>/venues/<venue>/"\` (an absolute path: a relative one is read from the shell's current folder).
-   Exit 1: the record does not parse; fix what it names and run it again. Exit 0: one line per paper
+3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <venue>\`.
+   Exit 1: the record does not parse, or there is not exactly one; fix what it names and run it again. Exit 0: one line per paper
    and kind (\`text\`, \`pdf\`).
 4. **Store only on a \`keep\` line**: download from that copy to \`pdf/<key>.pdf\`, or extract to
    \`text/<key>.txt\`, then add the kind to that copy's \`stored\` and set \`fetched_from\` to the URL the

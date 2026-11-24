@@ -3,6 +3,7 @@
  * the copy whose licence permits keeping it, or every copy's reason it may not be kept — and the
  * command that prints it. No model, no network.
  */
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -227,36 +228,115 @@ describe("listing — one line per paper and kind", () => {
   });
 });
 
-describe("main — the command, on a memory disk", () => {
-  const run = (argv: readonly string[], files: Record<string, string>) => {
-    const out: string[] = [];
-    const err: string[] = [];
-    const code = main(
-      argv,
-      { files: memoryFiles(files), codec: venueCorpusCodec },
-      { out: (s) => out.push(s), err: (s) => err.push(s) },
-    );
-    return { code, out: out.join(""), err: err.join("") };
-  };
+const run = (
+  argv: readonly string[],
+  files: Record<string, string>,
+  root: string | null = "/work",
+) => {
+  const out: string[] = [];
+  const err: string[] = [];
+  const code = main(
+    argv,
+    {
+      files: memoryFiles(files),
+      codec: venueCorpusCodec,
+      projectRoot: () => root,
+      cwd: "/work/papers/some-paper",
+    },
+    { out: (s) => out.push(s), err: (s) => err.push(s) },
+  );
+  return { code, out: out.join(""), err: err.join("") };
+};
+const papers = [row("c1", [published("CC-BY-4.0")])];
+const json = JSON.stringify(record(papers));
+const KEEP =
+  "c1 text: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/1\nc1 pdf: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/1\n";
 
-  it("🔴 a record that parses: its listing on stdout, exit 0", () => {
-    const papers = [row("c1", [published("CC-BY-4.0")])];
-    expect(
-      run([CORPUS], {
-        [`${CORPUS}/papers.json`]: JSON.stringify(record(papers)),
-      }),
-    ).toEqual({
+describe("main — finding the record", () => {
+  it("🔴 a venue in the default papers folder: its listing on stdout, exit 0", () => {
+    expect(run(["agent"], { [`${CORPUS}/papers.json`]: json })).toEqual({
       code: 0,
-      out: "c1 text: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/1\nc1 pdf: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/1\n",
+      out: KEEP,
       err: "",
     });
   });
 
-  it("🔴 a record that does not parse: the codec's reasons on stderr, exit 1", () => {
-    const papers = [{ ...row("bad.key", []), ids: {} }];
+  it("🔴 the papers folder is the project's papersDir, not a built path", () => {
     expect(
-      run([CORPUS], {
-        [`${CORPUS}/papers.json`]: JSON.stringify(record(papers)),
+      run(["agent"], {
+        "/work/paperlint.json": JSON.stringify({ papersDir: "research" }),
+        "/work/research/venues/agent/papers.json": json,
+      }),
+    ).toEqual({ code: 0, out: KEEP, err: "" });
+  });
+
+  it("🔴 several papers folders: the one that holds the venue is read", () => {
+    expect(
+      run(["agent"], {
+        "/work/paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
+        "/work/b/venues/agent/papers.json": json,
+      }),
+    ).toEqual({ code: 0, out: KEEP, err: "" });
+  });
+
+  it("🔴 no papers.json in any papers folder: the folders looked in, exit 1", () => {
+    expect(
+      run(["agent"], {
+        "/work/paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
+      }),
+    ).toEqual({
+      code: 1,
+      out: "",
+      err: 'corpus-licences: no papers.json for venue "agent": looked in /work/a/venues/agent, /work/b/venues/agent; write the record first\n',
+    });
+  });
+
+  it("🔴 a paperlint.json that is not JSON: named, exit 1", () => {
+    expect(run(["agent"], { "/work/paperlint.json": "{" })).toEqual({
+      code: 1,
+      out: "",
+      err: "corpus-licences: /work/paperlint.json is not JSON\n",
+    });
+  });
+
+  it("a paperlint.json that is not an object: the default papers folder", () => {
+    expect(
+      run(["agent"], {
+        "/work/paperlint.json": "[]",
+        [`${CORPUS}/papers.json`]: json,
+      }).code,
+    ).toBe(0);
+  });
+});
+
+describe("main — what stops it", () => {
+  it("🔴 two papers folders hold the venue: both named, exit 1", () => {
+    expect(
+      run(["agent"], {
+        "/work/paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
+        "/work/a/venues/agent/papers.json": json,
+        "/work/b/venues/agent/papers.json": json,
+      }),
+    ).toEqual({
+      code: 1,
+      out: "",
+      err: 'corpus-licences: venue "agent" is in more than one papers folder: /work/a/venues/agent, /work/b/venues/agent\n',
+    });
+  });
+
+  it("🔴 outside a git repository: said, exit 1", () => {
+    expect(run(["agent"], {}, null)).toEqual({
+      code: 1,
+      out: "",
+      err: "corpus-licences: /work/papers/some-paper is not inside a git repository: run it in the project\n",
+    });
+  });
+
+  it("🔴 a record that does not parse: the codec's reasons on stderr, exit 1", () => {
+    const bad = [{ ...row("bad.key", []), ids: {} }];
+    expect(
+      run(["agent"], {
+        [`${CORPUS}/papers.json`]: JSON.stringify(record(bad)),
       }),
     ).toEqual({
       code: 1,
@@ -265,34 +345,38 @@ describe("main — the command, on a memory disk", () => {
     });
   });
 
-  it("🔴 no papers.json in the folder: said, exit 1", () => {
-    expect(run([CORPUS], {})).toEqual({
-      code: 1,
-      out: "",
-      err: `corpus-licences: no papers.json in ${CORPUS}: write the record first\n`,
-    });
-  });
-
-  it("no folder named: the usage on stderr, exit 2", () => {
-    expect(run([], {})).toEqual({
+  it("🔴 no venue, a second argument, or something that is not a folder name: the usage, exit 2", () => {
+    const usage = {
       code: 2,
       out: "",
-      err: "usage: node corpus-licences.js <corpus-dir>\n",
-    });
+      err: "usage: node corpus-licences.js <venue>\n",
+    };
+    expect(run([], {})).toEqual(usage);
+    expect(run(["agent", "x"], {})).toEqual(usage);
+    expect(run(["../agent"], {})).toEqual(usage);
+    expect(run(["/abs/agent"], {})).toEqual(usage);
   });
 });
 
-describe("corpus-licences.ts — the runner on a real folder", () => {
+describe("corpus-licences.ts — the runner in a real git repository", () => {
   const dir = useTempDir();
 
-  it("🔴 lists the corpus from any cwd", () => {
+  const gitInit = () =>
+    spawnSync("git", ["init", "-q", dir], { encoding: "utf8" });
+
+  it("🔴 lists the venue's corpus from a subfolder of the project", () => {
+    gitInit();
     writeTree(dir, {
-      "papers.json": JSON.stringify(
+      "paperlint.json": JSON.stringify({ papersDir: "research" }),
+      "research/venues/agent/papers.json": JSON.stringify(
         record([row("a1", [preprint("LicenseRef-arxiv-nonexclusive-1.0")])]),
       ),
+      "research/some-paper/paper.tex": "",
     });
     const line = `none: preprint: LicenseRef-arxiv-nonexclusive-1.0: ${ARXIV_WHY}`;
-    expect(runNode(SCRIPT, [dir], { cwd: "/" })).toEqual({
+    expect(
+      runNode(SCRIPT, ["agent"], { cwd: join(dir, "research/some-paper") }),
+    ).toEqual({
       status: 0,
       stdout: `a1 text: ${line}\na1 pdf: ${line}\n`,
       stderr: "",
@@ -300,10 +384,10 @@ describe("corpus-licences.ts — the runner on a real folder", () => {
   });
 
   it("no argument: the usage on stderr, exit 2", () => {
-    expect(runNode(SCRIPT, [], { cwd: "/" })).toEqual({
+    expect(runNode(SCRIPT, [], { cwd: dir })).toEqual({
       status: 2,
       stdout: "",
-      stderr: "usage: node corpus-licences.js <corpus-dir>\n",
+      stderr: "usage: node corpus-licences.js <venue>\n",
     });
   });
 });

@@ -1,0 +1,427 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "venue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "editions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "edition": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "listed_from": {
+            "type": "string",
+            "format": "uri"
+          },
+          "read_on": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "accepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "edition",
+          "listed_from",
+          "read_on"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "papers": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "abstract": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ids": {
+                "type": "object",
+                "properties": {
+                  "doi": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "arxiv": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dblp": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "s2": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "copies": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "enum": [
+                            "published",
+                            "accepted",
+                            "preprint"
+                          ]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "licence": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "read_from": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "read_on": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "stored": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "pdf"
+                            ]
+                          }
+                        },
+                        "fetched_from": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "url",
+                        "licence",
+                        "stored"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "const": "unknown"
+                        },
+                        "licence": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "const": "NOASSERTION"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "stored": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "pdf"
+                            ]
+                          }
+                        },
+                        "fetched_from": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "licence",
+                        "stored"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "group": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "award"
+                ]
+              },
+              "edition": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "key",
+              "title",
+              "ids",
+              "copies",
+              "group",
+              "edition"
+            ],
+            "additionalProperties": {}
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "abstract": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ids": {
+                "type": "object",
+                "properties": {
+                  "doi": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "arxiv": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dblp": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "s2": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "copies": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "enum": [
+                            "published",
+                            "accepted",
+                            "preprint"
+                          ]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "licence": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "read_from": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "read_on": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "stored": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "pdf"
+                            ]
+                          }
+                        },
+                        "fetched_from": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "url",
+                        "licence",
+                        "stored"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string",
+                          "const": "unknown"
+                        },
+                        "licence": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "const": "NOASSERTION"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "stored": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "pdf"
+                            ]
+                          }
+                        },
+                        "fetched_from": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "licence",
+                        "stored"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "group": {
+                "type": "string",
+                "const": "sister"
+              },
+              "venue": {
+                "type": "string",
+                "minLength": 1
+              },
+              "year": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "listed_from": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "key",
+              "title",
+              "ids",
+              "copies",
+              "group",
+              "venue",
+              "year",
+              "listed_from"
+            ],
+            "additionalProperties": {}
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "venue",
+    "editions",
+    "papers"
+  ],
+  "additionalProperties": false,
+  "title": "A venue corpus's papers.json",
+  "description": "The record of a venue corpus, papers.json: one row per paper, every copy with its licence. This schema lists the fields; it cannot express that a key is unique, that a paper's edition is one of editions[].edition, or that a copy that stores a file names where it was fetched from. `node ${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <venue>` checks those and refuses a wrong record with the path of the field."
+}

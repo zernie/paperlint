@@ -263,3 +263,24 @@ export function parseVenueCorpus(text: string): ParsedCorpus {
 }
 
 export const venueCorpusCodec: VenueCorpusCodec = { parse: parseVenueCorpus };
+
+/** Where the shipped JSON Schema of the record sits, below the package root: in the skill that writes it. */
+export const SCHEMA_FILE = "skills/study-accepted-papers/papers.schema.json";
+
+/**
+ * The JSON Schema of a `papers.json`, generated from the parser's own shape: the fields a skill (or
+ * an editor) reads instead of a hand-written table. Shipped as `SCHEMA_FILE`; a test holds the file
+ * to this. A schema cannot say that a key is unique, that a paper's edition is a listed one, or that
+ * a stored copy names where it was fetched from: `corpus-licences.js` checks those and names the
+ * field's path.
+ */
+export const venueCorpusJsonSchema = (): unknown => ({
+  ...z.toJSONSchema(record, { io: "input", unrepresentable: "any" }),
+  title: "A venue corpus's papers.json",
+  description:
+    "The record of a venue corpus, papers.json: one row per paper, every copy with its licence. This schema lists the fields; it cannot express that a key is unique, that a paper's edition is one of editions[].edition, or that a copy that stores a file names where it was fetched from. `node ${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <venue>` checks those and refuses a wrong record with the path of the field.",
+});
+
+/** The shipped file's text: the schema, indented, with a closing newline. */
+export const venueCorpusSchemaText = (): string =>
+  `${JSON.stringify(venueCorpusJsonSchema(), null, 2)}\n`;
