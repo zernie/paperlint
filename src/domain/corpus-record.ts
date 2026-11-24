@@ -102,13 +102,10 @@ interface Claim {
 }
 
 /** The `stored` of a paper's copy (`copy` holds its index), as a path. */
-const storedAt = (paper: number, copy: readonly number[]): RecordPath => [
-  "papers",
-  paper,
-  "copies",
-  ...copy,
-  "stored",
-];
+export const storedAt = (
+  paper: number,
+  copy: readonly number[],
+): RecordPath => ["papers", paper, "copies", ...copy, "stored"];
 
 /** A paper's kind stored by more than one of its copies, reported at the second one. */
 const twice = (claims: readonly Claim[]): readonly CorpusFinding[] =>

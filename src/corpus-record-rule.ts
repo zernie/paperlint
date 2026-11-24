@@ -65,6 +65,8 @@ interface JsonDocument {
 /** What the rule uses of ESLint's context on a JSON file. */
 export interface JsonRuleContext {
   readonly filename: string;
+  /** The options the rule was configured with: what follows its severity in `["warn", { … }]`. */
+  readonly options: readonly unknown[];
   readonly sourceCode: { readonly text: string; readonly ast: JsonDocument };
   report(d: {
     readonly loc: Span;
