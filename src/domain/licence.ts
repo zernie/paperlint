@@ -16,7 +16,7 @@
 export const STORED_KINDS = ["text", "pdf"] as const;
 export type StoredKind = (typeof STORED_KINDS)[number];
 
-/** SPDX's own id for "no licence information was given": here, the licence was not read. */
+/** SPDX's keyword (not a list id) for "no licence information was given": here, the licence was not read. */
 export const NOASSERTION = "NOASSERTION";
 
 /** The project's one setting the table reads: it declares itself non-commercial. */
@@ -48,7 +48,7 @@ const ND = {
 } as const;
 
 const ARXIV = {
-  no: 'it grants arXiv alone the right to distribute: "We are thus unable to grant others the right to distribute arXiv articles"',
+  no: 'its only grant is to arXiv: "I grant arXiv.org a perpetual, non-exclusive license to distribute this article" (arxiv.org/licenses/nonexclusive-distrib/1.0/license.html), and nothing to anyone else',
 } as const;
 
 const PUBLISHER = {

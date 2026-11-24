@@ -334,9 +334,8 @@ root `paperlint.json`.
 Nothing in a corpus is a paper: a `paper.tex` kept there is an accepted paper's source, and no
 paper rule judges it. The hook that refuses misplaced files acts only inside a paper folder.
 
-[`corpus/licence`](rules/corpus/licence.md) is **off by default and in no rule set**: the same stored
-files are legal in a private repository and illegal in a public one, and the rule cannot tell which
-it is in. A project whose corpus others read turns it on with `{ "rules": { "corpus/licence": "warn" } }`
+[`corpus/licence`](rules/corpus/licence.md) is **off by default and in no rule set**: the licence question
+arises when others can read the corpus, and the rule cannot tell whether they can. A project whose corpus others read turns it on with `{ "rules": { "corpus/licence": "warn" } }`
 in its root `paperlint.json`; it reports, at the copy's `stored`, a stored kind whose licence was not
 read, is not in the licence table, or does not permit it. A non-commercial project says so with the
 rule's option, `["warn", { "nonCommercial": true }]`.

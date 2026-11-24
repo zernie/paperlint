@@ -36,8 +36,8 @@ A real consumer kept six corpora with five names for the paper list and 217 stor
 them with no licence recorded and 18 whose source nobody wrote down
 ([the design note](../../design/venue-corpus.md#measured-on-a-real-consumer-2026-11-24)). A copy
 the record does not name is a copy nobody can say may be kept. The rule holds that every stored
-file is a recorded fact; whether its licence permits keeping it is a separate question, for a
-separate rule.
+file is a recorded fact; whether its licence permits keeping it is a separate question, for
+[`corpus/licence`](licence.md), which is off by default.
 
 It is on by default because it holds for every corpus whatever the venue: a `papers.json` that
 does not parse breaks the skill that reads it, and a file the record does not name is one no reader
@@ -102,7 +102,7 @@ paper.
 - A corpus folder with no `papers.json`: there is no file to report on.
   [`corpus/allowed-files-only`](allowed-files-only.md) reports a corpus that stores files without one.
 - Whether a stored copy's licence permits keeping it, or whether a licence was read at all: that is
-  the licence rule, planned and off by default.
+  [`corpus/licence`](licence.md), off by default.
 - That a stored file is the copy it is attributed to; it checks that the attribution was recorded.
 - Names in the corpus folder outside `pdf/` and `text/` (`deep-reads/`, `sources/`, a stray file),
   and folders inside `pdf/` or `text/` beyond their names: the top of the corpus is

@@ -10,7 +10,8 @@ A venue corpus, `<papers-root>/venues/<venue>/` ([`venues.md`](../../venues.md#t
 keeps copies of other people's papers, and each stored file is a copy of one version, judged by
 that copy's licence. For every copy in `papers.json` and every kind in its `stored` (`"pdf"`,
 `"text"`) the rule asks the licence table whether that licence permits keeping that kind, and
-reports one finding per copy and kind that it does not, in four kinds:
+reports one finding per copy for each reason it refuses, naming every kind that reason stands
+against (a copy storing both kinds under a publisher's terms is one finding, not two), in four kinds:
 
 - no licence was read for the copy (`NOASSERTION`, `not-read`): the message asks for the licence
   and where it was read (`licence.id`, `read_from`, `read_on`), or for the file to go and the
@@ -19,7 +20,7 @@ reports one finding per copy and kind that it does not, in four kinds:
   read the terms of; an id it does not list permits nothing, so a typo is as loud as a licence
   nobody has looked up;
 - a licence that does not permit that kind (`forbidden`): the message quotes the table's reason
-  (the publisher grants no right to third parties; arXiv's non-exclusive licence grants arXiv alone
+  (the publisher grants no right to third parties; arXiv's non-exclusive licence grants only arXiv
   the right to distribute; ND and an extracted text);
 - a non-commercial licence in a project that has not declared itself non-commercial
   (`non-commercial-only`): the message names the option that answers it.
@@ -31,10 +32,10 @@ A real consumer kept 217 stored copies, 179 of them with no licence recorded
 [`corpus/record`](record.md) holds that every stored file is a recorded fact; whether the recorded
 licence lets it be kept is this rule's.
 
-It is **off, and in no set**, because it is the one corpus rule whose answer depends on where the
-files are. The same files are legal in a private repository and illegal in a public one, and the
-rule cannot tell which it is in; a finding a careful author could dispute does not belong in the
-default set. A project whose corpus others can read turns it on; a private one leaves it off, and
+It is **off, and in no set**, because it is the one corpus rule whose answer depends on who can
+read the files. The licence question arises when others can read the corpus, and the rule cannot
+tell whether they can; a finding a careful author could dispute does not belong in the default
+set. A project whose corpus others can read turns it on; a private one leaves it off, and
 gets no finding, no notice and no prompt. Nothing opt-in ships at `error`: turn it on with
 `"warn"`.
 
@@ -92,8 +93,10 @@ is non-commercial says so on the rule, as ESLint rules take their options:
 ```
 
 With it, the two non-commercial licences (`CC-BY-NC-4.0`, `CC-BY-NC-SA-4.0`) permit storing both
-kinds, and `CC-BY-NC-ND-4.0` its PDF. paperlint does not assume it: whether a repository is
-non-commercial is the project's to declare. A paper's own `paperlint.json` does not reach a
+kinds, and `CC-BY-NC-ND-4.0` its PDF. paperlint does not assume it. The option declares how the corpus is
+used, not who uses it: Creative Commons defines non-commercial as "not primarily intended for or
+directed towards commercial advantage or monetary compensation", and its FAQ says the definition
+"does not turn on the type of user". A paper's own `paperlint.json` does not reach a
 corpus.
 
 ## What it does not check
@@ -107,6 +110,13 @@ corpus.
 - The legal questions the table leaves open: whether an extracted text is an adaptation under ND
   (the table says no), and what counts as non-commercial.
 - A copy that stores nothing: ids and metadata are kept whatever the licence.
+- A licence's conditions on sharing. `CC-BY` and `CC-BY-SA` permit a copy on condition of
+  attribution: the creator, the licence and its URI, and a note that the material was modified.
+  `papers.json` carries the first three for each copy; an extracted text carries no note of the
+  change.
+- A permission given to the project alone (an email from the authors). It has no SPDX id, a
+  `LicenseRef-` the table does not list is `unlisted`, and `papers.json` is strict JSON, so no
+  inline disable can stand beside the copy ([#676](https://github.com/zernie/paperlint/issues/676)).
 
 ## How to fix
 

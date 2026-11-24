@@ -57,8 +57,26 @@ describe("judgeLicences", () => {
       OFF,
     );
     expect(found.map((f) => [f.at, f.stored, f.refusal.kind])).toEqual([
-      [["papers", 1, "copies", 1, "stored"], "text", "forbidden"],
-      [["papers", 1, "copies", 2, "stored"], "pdf", "unlisted"],
+      [["papers", 1, "copies", 1, "stored"], ["text"], "forbidden"],
+      [["papers", 1, "copies", 2, "stored"], ["pdf"], "unlisted"],
+    ]);
+  });
+
+  it("gives a copy one finding per reason, naming every kind it stands against", () => {
+    // Guards: two kinds refused for the same reason are one finding, not one per kind.
+    const found = judgeLicences(
+      corpus([
+        paper("a", [
+          copy("NOASSERTION", ["pdf", "text"]),
+          copy("CC-BY-NC-ND-4.0", ["pdf", "text"]),
+        ]),
+      ]),
+      OFF,
+    );
+    expect(found.map((f) => [f.at, f.stored, f.refusal.kind])).toEqual([
+      [["papers", 0, "copies", 0, "stored"], ["pdf", "text"], "not-read"],
+      [["papers", 0, "copies", 1, "stored"], ["pdf"], "non-commercial-only"],
+      [["papers", 0, "copies", 1, "stored"], ["text"], "forbidden"],
     ]);
   });
 
@@ -96,6 +114,12 @@ describe("licenceMessage: each refusal names its cure", () => {
     ],
   ])("%s", (id, text) => {
     expect(messageOf(id, ["pdf"])).toBe(text);
+  });
+
+  it("names every kind and file of a finding", () => {
+    expect(messageOf("LicenseRef-publisher", ["pdf", "text"])).toBe(
+      'a copy of `k` stores `pdf` and `text` (`pdf/<key>.pdf`, `text/<key>.txt`) under `LicenseRef-publisher`, which does not permit them: the publisher grants no right to third parties. What to do: remove the files and `"pdf"` and `"text"` from that copy\'s `stored`, and keep the paper\'s ids',
+    );
   });
 
   it("names the text file for a stored text", () => {

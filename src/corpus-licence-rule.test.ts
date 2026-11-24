@@ -119,16 +119,14 @@ describe("corpus/licence is off unless it is turned on", () => {
     ).toEqual([]);
   });
 
-  it("reports each refused kind with warn, at the copy's stored line", async () => {
+  it("reports a copy's refusal once with warn, at the copy's stored line", async () => {
+    // Guards: a copy whose two stored kinds are refused for one reason is one finding, not two.
     const tree = corpus([{ id: "LicenseRef-publisher", ...READ }]);
     const found = await licenceFindings({ ...tree, ...ON() });
     const line =
       tree[RECORD].split("\n").findIndex((l) => l.includes('"stored"')) + 1;
     expect(found.map((m) => [m.file, m.severity, m.line, m.messageId])).toEqual(
-      [
-        [RECORD, 1, line, "forbidden"],
-        [RECORD, 1, line, "forbidden"],
-      ],
+      [[RECORD, 1, line, "forbidden"]],
     );
   });
 
@@ -192,7 +190,7 @@ describe("corpus/licence: the non-commercial setting is the rule's option", () =
       (await licenceFindings({ ...nc, ...ON({ nonCommercial: false }) })).map(
         (m) => m.messageId,
       ),
-    ).toEqual(["non-commercial-only", "non-commercial-only"]);
+    ).toEqual(["non-commercial-only"]);
   });
 
   it("refuses an option the rule does not have", async () => {
