@@ -133,7 +133,7 @@ as judgement, against the base rates of \`references/base-rates.md\`; simulated 
 
 | what | where | why there |
 |---|---|---|
-| **the venue corpus** | \`<papers-root>/venues/<venue>/\` (the papers directory from the project's \`paperlint.json\`) | **shared by every paper that targets the venue**, collected once and reused by every later mode. \`MANIFEST.md\` (sources, years, what was capped, the proxy and its base rate), the winner and ordinary lists, \`measurements.json\` (L0/L1 codes, one row per paper), \`text/\` extractions, the scripts, \`deep-reads/\` (one file per paper, reusable by any paper). Corpus 2 goes in its own labelled subfolder. **PDFs are not committed**: record the IDs and the command. |
+| **the venue corpus** | \`<papers-root>/venues/<venue>/\` (the papers directory from the project's \`paperlint.json\`; the folder is the preset's series) | **shared by every paper that targets the venue**, collected once and reused by every later mode. \`papers.json\` (one row per paper: winners \`award\`, ordinary \`accepted\`, corpus 2 \`sister\`; every copy with its licence), \`MANIFEST.md\` (sources, years, what was capped, the proxy and its base rate, the commands run), \`measurements.json\` (L0/L1 codes keyed by the row's \`key\`), \`pdf/<key>.pdf\` and \`text/<key>.txt\` only as the licence step below permits, \`deep-reads/<key>.md\`, \`sources/\` (saved listing and call pages). No other name. |
 | **the scorecard** | the section **"Strong-accept scorecard (M1–M10)"** of the paper's \`PIPELINE-STATUS.md\` | a row per mechanism: status (pass / partial / fail), evidence (\`file:line\`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
 | **the reasoning** | \`<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md\` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
 | **the stage** | the SETUP row with id \`venuebar\` in \`PIPELINE-STATUS.md\` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
@@ -162,6 +162,31 @@ corpus: <papers-root>/venues/<venue>/
 scorecard: PIPELINE-STATUS.md#strong-accept-scorecard-m1m10
 ---
 \`\`\`
+
+## The record before any PDF or text
+
+The corpus keeps third-party papers, so what it may store is decided per copy, before anything is
+downloaded or extracted. The record's fields are in \`docs/venues.md\` in the paperlint package ("The
+record, papers.json").
+
+1. **A row per paper** in \`papers.json\`, with its ids, title, authors and abstract: metadata, kept
+   whatever the licence.
+2. **A copy per version you find** (the published one, the arXiv preprint), each with the licence read
+   from the source \`docs/venues.md\` names for that kind of copy ("Where a copy's licence is read
+   from"): \`read_from\` is the page or API response, \`read_on\` the date. Never the licence line
+   printed inside a PDF: it can belong to another copy. No source gives it → \`{ "id": "NOASSERTION" }\`.
+3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <papers-root>/venues/<venue>/\`.
+   Exit 1: the record does not parse; fix what it names and run it again. Exit 0: one line per paper
+   and kind (\`text\`, \`pdf\`).
+4. **Store only on a \`keep\` line**: download from that copy to \`pdf/<key>.pdf\`, or extract to
+   \`text/<key>.txt\`, then add the kind to that copy's \`stored\` and set \`fetched_from\` to the URL the
+   bytes came from. On a \`none\` line store nothing of that kind: read the copy where it is, in a
+   scratch folder outside the repository, and keep only codes, short quotes and ids. A copy refused
+   only as "permits it only in a project declared non-commercial" may be stored when the author says
+   the project is non-commercial.
+
+\`corpus/record\` and \`corpus/licence\` (not shipped yet) will hold what this step writes; until they
+ship, the script is the only check of the record.
 
 ## Before any level: pin the venue's stated bar
 
