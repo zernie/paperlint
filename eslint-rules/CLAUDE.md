@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:f83563bacd9214c9 compiled from eslint-rules/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:35cb814eec608ef3 compiled from eslint-rules/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -39,6 +39,10 @@ the checks push every paper toward a blog post.
    tic, plus a check that no claim was softened or strengthened.
 
 ## Rules
+
+### A Rule Id Names Its Subject
+
+**Guidance only** — A rule id is `<family>/<rule>`: one slash, kebab-case, as ESLint's `plugin/rule`. The family is the folder or record the rule judges (`paper/`, `repro/`, `cycle/`, `corpus/`), never the kind of check and never a venue; a new family only when no existing one judges that subject. The same check keeps the same name in every family: `allowed-files-only` for a folder's whitelist of names, `record` for a record file read against its schema, `layout` for a folder's shape. So related rules sort together and a reader who knows one family can guess another's rule. The rule's page is `docs/rules/<family>/<rule>.md`, held by `src/rule-docs.test.ts`. The author asked for this on 2026-11-24.
 
 ### Lint Rule Over Script
 
