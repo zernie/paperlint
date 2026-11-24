@@ -11,6 +11,7 @@
  */
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { DEFAULT_PAPERS_ROOT } from "#lib/paper-config";
+import { CORPORA_DIR } from "./domain/corpus-record.ts";
 
 /** The papers directory field of the settings, read by its one declared name; the default when absent. */
 export function papersDirOf(opts: { readonly papersDir?: unknown }): unknown {
@@ -53,4 +54,14 @@ export function segmentsUnder(
         !isAbsolute(rel),
     );
   return below === undefined ? null : below.split(sep);
+}
+
+/**
+ * Whether the absolute folder `dir` is a venue corpus of one of `roots`, or inside one:
+ * `<root>/venues/<venue>/` and below. A paper found there is an accepted paper's source kept in the
+ * corpus, not one of the project's papers (#215), so no paper rule judges it.
+ */
+export function inCorpus(dir: string, roots: readonly string[]): boolean {
+  const [first, venue] = segmentsUnder(dir, roots) ?? [];
+  return first === CORPORA_DIR && venue !== undefined;
 }

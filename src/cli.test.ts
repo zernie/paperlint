@@ -682,7 +682,7 @@ test("a paper's paperlint.json that does not parse stops the lint with its path"
     "p/paper.tex": "% P\n",
     "p/paperlint.json": "{ nope",
   });
-  const r = paperRuleBlocks([join(dir, "p")]);
+  const r = paperRuleBlocks([join(dir, "p")], []);
   assert.equal(r.ok, false);
   assert.match(r.error, /^.*rules-broken\/p\/paperlint\.json: /);
 });

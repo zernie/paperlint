@@ -135,6 +135,7 @@ import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   ANY_PAPER,
+  corpusFiles,
   narrowToOwners,
   ownedPatterns,
   paperFiles,
@@ -239,7 +240,13 @@ import {
   folderLayoutRules,
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
-import { papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
+import { inCorpus, papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
+import {
+  CORPUS_RECORD_RULE_LEVELS,
+  corpusRecordRules,
+} from "./corpus-record-rule.ts";
+import { CORPUS_MANIFEST } from "./domain/corpus-record.ts";
+import { venueCorpusCodec } from "./adapters/venue-corpus/index.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
@@ -648,6 +655,30 @@ const TALK_RULE_DEPS = {
   listDir: nodeListDir,
 };
 
+/**
+ * The `corpus` plugin: `corpus/record`, reading the corpora of the papers roots `paperlint lint`
+ * runs on. The config's shape (`ANY_PAPER`) has no roots.
+ */
+const corpusPlugin = (papers: PaperScope): RulePlugin => ({
+  rules: corpusRecordRules({
+    files: nodeFiles,
+    entries: nodeListEntries,
+    codec: venueCorpusCodec,
+    roots: papers.kind === "papers" ? papers.roots : [],
+  }),
+});
+
+/**
+ * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its MANIFEST.md: a rule runs only
+ * for a file that exists, and the corpus folder is not one (docs/design/venue-corpus.md).
+ */
+const corpusBlock = (papers: PaperScope, corpus: RulePlugin): ConfigBlock => ({
+  files: corpusFiles(papers, CORPUS_MANIFEST),
+  plugins: { markdown, corpus },
+  ...MARKDOWN_WITH_FRONTMATTER,
+  rules: CORPUS_RECORD_RULE_LEVELS,
+});
+
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
   opts: PaperlintConfig = {},
@@ -657,6 +688,7 @@ export function buildConfig(
   papers: PaperScope = ANY_PAPER,
 ): ConfigBlock[] {
   const own = (glob: string): readonly string[] => paperFiles(papers, glob);
+  const corpus = corpusPlugin(papers);
   const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
@@ -720,6 +752,7 @@ export function buildConfig(
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
         versions: { rules: versionLayoutRules(LAYOUT_RULE_DEPS) },
+        corpus, // a corpus without MANIFEST.md, reported once per papers root
       },
       ...md,
       rules: {
@@ -731,8 +764,10 @@ export function buildConfig(
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
         ...STATUS_CYCLE_RULE_LEVELS,
+        ...CORPUS_RECORD_RULE_LEVELS,
       },
     },
+    corpusBlock(papers, corpus),
     {
       files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
@@ -1030,14 +1065,20 @@ const PAPER_TREE: PaperTree = {
   },
 };
 
-/** The papers `paths` reach: a file counts as the folder it sits in (#582). */
-const paperDirs = (paths: readonly string[]): readonly string[] =>
+/**
+ * The papers `paths` reach: a file counts as the folder it sits in (#582). A folder in a venue corpus
+ * of `roots` is none of them (#215): a `paper.tex` kept there is an accepted paper's source.
+ */
+const paperDirs = (
+  paths: readonly string[],
+  roots: readonly string[],
+): readonly string[] =>
   papersReached(
     paths.map((p) =>
       resolve(existsSync(p) && statSync(p).isFile() ? dirname(p) : p),
     ),
     PAPER_TREE,
-  );
+  ).filter((d) => !inCorpus(d, roots));
 
 /**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
@@ -1045,8 +1086,11 @@ const paperDirs = (paths: readonly string[]): readonly string[] =>
  * them. A file that does not parse, or names a rule paperlint does not ship, stops the run with one
  * line naming the file — the same strictness as the root's own `rules`.
  */
-export function paperRuleBlocks(paths: readonly string[]): Parsed<PaperBlocks> {
-  const each = paperDirs(paths).map((dir): Parsed<PaperBlocks> => {
+export function paperRuleBlocks(
+  paths: readonly string[],
+  roots: readonly string[],
+): Parsed<PaperBlocks> {
+  const each = paperDirs(paths, roots).map((dir): Parsed<PaperBlocks> => {
     const p = paperPreset(dir, PRESET_DEPS);
     return p.kind === "settings-problem"
       ? { ok: false, error: settingsProblemLine(dir, p.problem) }
@@ -2737,7 +2781,8 @@ async function paperEslint(
   // paper's venue preset → the root paperlint.json → the paper's own paperlint.json → the paper's
   // stage (src/settled-paper.ts), last because a published text has nothing left to fix whoever
   // turned a writing rule on.
-  const papers = paperRuleBlocks(paths);
+  const roots = papersRoots(cfg);
+  const papers = paperRuleBlocks(paths, roots);
   if (!papers.ok) return papers;
   const opts = {
     ...cfg.opts,
@@ -2758,14 +2803,18 @@ async function paperEslint(
   // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
   // papers two levels down, which a directory's immediate papers do not.
   const bodies = texLanguage
-    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), RECORD_DEPS)
+    ? paperBodies(paperDirs([...paths, ...roots], roots), RECORD_DEPS)
     : [];
 
   const cwd = lintRoot(cfg.root, paths);
   // The papers whose own files the config names: the ones `paths` reach and the project's. A copy of
   // a paper kept inside it (a review snapshot, a build copy) is in no such list, so no block claims
   // it (#582).
-  const claimed = papersScope(paperDirs([...paths, ...papersRoots(cfg)]), cwd);
+  const claimed = papersScope(
+    paperDirs([...paths, ...roots], roots),
+    cwd,
+    roots,
+  );
   const eslint = new ESLint({
     cwd,
     overrideConfigFile: true,
