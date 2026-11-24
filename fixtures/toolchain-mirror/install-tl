@@ -1,5 +1,5 @@
 #!/bin/sh
-# STANDS IN FOR install-tl in src/toolchain.harness.mjs. It reads TEXDIR from the profile paperlint
+# STANDS IN FOR install-tl in src/toolchain-mirror.test.mjs. It reads TEXDIR from the profile paperlint
 # wrote and lays out a tree whose kpsewhich and tlmgr are the stubs shipped beside it, so the
 # harness drives paperlint's real download, unpack, install and verify logic without the network.
 set -eu

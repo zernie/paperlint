@@ -1,0 +1,289 @@
+/**
+ * Both halves for `paperlint doctor` — a command whose subject is the STATE OF THE INSTALL, not a
+ * file.
+ *
+ * 🔴 WHY A TEST MATTERS ESPECIALLY MUCH HERE. Doctor exists precisely because
+ * a hook cannot say "I am watching nothing": silence is its success state. A broken
+ * doctor has exactly the same property — it will print a cheerful list of checkmarks and never
+ * notice a mismatch. That is, the check for a silent failure can itself fail silently, and only
+ * this file can tell the two apart.
+ */
+import { expect, it } from "vitest";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.ts";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const { doctor, detectPapers, PROGRAMS, found } = await import(
+  join(HERE, "doctor.ts")
+);
+
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label, cond, detail) => {
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${String(detail)}`)
+    .toBeTruthy();
+};
+
+/** A consumer on disk: a papers directory, and maybe a declaration in the root paperlint.json. */
+function consumer({ papersDir, declared, makeDir = true }) {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-doctor-")));
+  if (makeDir && papersDir) {
+    mkdirSync(join(dir, papersDir, "some-paper"), { recursive: true });
+    writeFileSync(
+      join(dir, papersDir, "some-paper", "PIPELINE-STATUS.md"),
+      "# s\n",
+    );
+  }
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "consumer", version: "1.0.0" }, null, 2),
+  );
+  if (declared !== undefined)
+    writeFileSync(
+      join(dir, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: declared }, null, 2),
+    );
+  return dir;
+}
+
+/** Runs doctor in memory: all output is collected, external programs are faked so it does not depend on the machine. */
+const runDoctor = (
+  dir,
+  { cliPapers = null, have = () => 0, skillLinks } = {},
+) => {
+  const lines = [];
+  const code = doctor({
+    log: (...a) => lines.push(a.join(" ")),
+    cwd: dir,
+    projectDir: dir,
+    cliPapers,
+    run: (_bin, _args) => ({ status: have(_args?.[1]) }),
+    ...(skillLinks ? { skillLinks } : {}),
+  });
+  return { code, out: lines.join("\n") };
+};
+
+// ── I. A CONSISTENT INSTALL IS SILENT ───────────────────────────────────────────────────────
+it("I. A CONSISTENT INSTALL IS SILENT", () => {
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("a consistent install — exit ZERO", r.code === 0);
+  check(
+    "and it names the one directory that is linted",
+    /linted\s+papers$/m.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── II. THE VERY DEFECT: THE PAPERS LIVE SOMEWHERE THE SETTINGS DO NOT NAME ─────────────────
+// The install that motivated doctor (issue #33): nothing declared, so lint and the hooks both
+// watch `papers/`, while the papers are in another directory.
+it("II. THE VERY DEFECT: THE PAPERS LIVE SOMEWHERE THE SETTINGS DO NOT NAME", () => {
+  const dir = consumer({ papersDir: "writing/drafts" });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check(
+    "papers outside the declared directory — a FAILURE, not a cheerful report",
+    r.code === 2,
+  );
+  check(
+    "the directory that does not exist is named as watched by nothing",
+    /watching nothing/.test(r.out),
+  );
+  check(
+    "and it hints where the papers ACTUALLY live — measured, not guessed",
+    /papers look like they live in: writing\/drafts/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── II-bis. NO paperlint.json — EVERY DEFAULT, AND THAT IS A VALID PROJECT ─────────────────
+// The CLI and the hooks both take `papers` when nothing is declared, so they cannot disagree.
+it("II-bis. NO paperlint.json — EVERY DEFAULT, AND THAT IS A VALID PROJECT", () => {
+  const dir = consumer({ papersDir: "papers" });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("no paperlint.json — exit ZERO", r.code === 0);
+  check(
+    "and it says the defaults are in play, naming the directory",
+    /✓ no paperlint\.json — every setting has its default; papers are in "papers"/.test(
+      r.out,
+    ),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── II-quater. A paperlint.json THAT DOES NOT PARSE — lint refuses to run ────────────────
+it("II-quater. A paperlint.json THAT DOES NOT PARSE — lint refuses to run", () => {
+  const dir = consumer({ papersDir: "papers" });
+  writeFileSync(join(dir, "paperlint.json"), '{ "papersDir": <<<<<<< HEAD\n');
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("an unparsable paperlint.json — a FAILURE", r.code === 2);
+  check(
+    "named, with what it blocks",
+    /✗ paperlint\.json is not valid JSON/.test(r.out) &&
+      /`paperlint lint` refuses to run/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── II-ter. A FRESH PROJECT WITH NO PAPERS YET IS NOT BROKEN ───────────────────────────────
+// `init --yes` declares the default and creates no paper. The declared directory does not exist,
+// and no papers live anywhere else: there is nothing to check yet. A warning with the next
+// step, not a failure. (A missing directory while papers DO live elsewhere stays ✗ — case II.)
+it("II-ter. A FRESH PROJECT WITH NO PAPERS YET IS NOT BROKEN", () => {
+  const dir = consumer({
+    papersDir: "papers",
+    declared: "papers",
+    makeDir: false,
+  });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("no papers anywhere yet — NOT a failure", r.code === 0);
+  check(
+    "but it is named, with the command that creates the first paper",
+    /⚠ papers does not exist yet — no papers yet/.test(r.out) &&
+      /new <name>/.test(r.out) &&
+      !/watching nothing/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── V. A SETTING THAT NAMES NO DIRECTORY IS NAMED, NOT TURNED INTO ONE ─────────────────────
+it("V. A SETTING THAT NAMES NO DIRECTORY IS NAMED, NOT TURNED INTO ONE", () => {
+  const dir = consumer({ papersDir: "papers", declared: "" });
+  const r = runDoctor(dir, { cliPapers: null });
+  check(
+    "an empty string in the declaration — doctor NAMES it as no directory",
+    /name no directory/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── VI. EXTERNAL PROGRAMS ARE A FACT, NOT A VERDICT ─────────────────────────────────────────
+it("VI. EXTERNAL PROGRAMS ARE A FACT, NOT A VERDICT", () => {
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
+  const none = runDoctor(dir, { cliPapers: "papers", have: () => 1 });
+  check(
+    "🔴 a missing tex install does NOT fail the run — a gate on advice would mute the whole thing",
+    none.code === 0,
+  );
+  check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
+  check(
+    "and it carries a REMEDY, not just a diagnosis",
+    /npx paperlint toolchain/.test(none.out),
+  );
+  check(
+    "and the consequence: which checks silently don't run without it",
+    /nothing else spell-checks the text/.test(none.out),
+  );
+  check(
+    "the program list is DECLARED, not baked into the printing",
+    PROGRAMS.length >= 5,
+  );
+  check(
+    "no poppler row: paperlint reads PDFs with pdf.js, which it installs itself",
+    !PROGRAMS.some((p) => /^pdf(info|fonts|totext|tohtml)$/.test(p.bin)) &&
+      !/poppler/.test(none.out),
+  );
+  // Guards: banal's one system requirement is named — a missing perl reads as null geometry, silently.
+  check(
+    "a perl row, naming what goes missing and how banal gets installed",
+    /✗ perl/.test(none.out) &&
+      /paperlint toolchain \(it fetches banal\)/.test(none.out),
+    none.out,
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── VII. DETECTING THE PAPERS DIRECTORY ─────────────────────────────────────────────────────
+it("VII. DETECTING THE PAPERS DIRECTORY", () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-detect-")));
+  mkdirSync(join(dir, "writing", "drafts", "p1"), { recursive: true });
+  writeFileSync(join(dir, "writing", "drafts", "p1", "paper.tex"), "x");
+  mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), {
+    recursive: true,
+  });
+  writeFileSync(
+    join(dir, "node_modules", "pkg", "papers", "p", "paper.tex"),
+    "x",
+  );
+  const hits = detectPapers(dir);
+  check(
+    "finds the root by a marker inside a subdirectory",
+    hits.includes("writing/drafts"),
+  );
+  check(
+    "🔴 and it is the ROOT, not the paper itself — otherwise the config would point at one document",
+    !hits.includes("writing/drafts/p1"),
+  );
+  check(
+    "node_modules is not searched — someone else's papers are not ours",
+    !hits.some((h) => h.startsWith("node_modules")),
+  );
+  // A folder holding only the project's paper TEMPLATE (`paperlint new` reads `<papers>/.template/`)
+  // carries every marker, and is still not a papers root: discovery skips dot-directories.
+  mkdirSync(join(dir, "only-template", ".template"), { recursive: true });
+  writeFileSync(join(dir, "only-template", ".template", "paper.tex"), "x");
+  check(
+    "🔴 a directory whose only marked child is .template/ is NOT a papers root",
+    !detectPapers(dir).includes("only-template"),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── VII-bis. SKILLS THAT ARE NOT LINKED ARE NAMED — AND DO NOT FAIL THE RUN ─────────────────
+// Before this section a consumer without `.claude/skills/` links had no `/paper-pipeline`, and
+// nothing anywhere said so. The link state itself is `link-skills-fs.test.ts`'s subject; here
+// only doctor's REPORTING of it is judged, so the state is handed in rather than built on disk.
+it("VII-bis. SKILLS THAT ARE NOT LINKED ARE NAMED — AND DO NOT FAIL THE RUN", () => {
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
+  const state = {
+    ok: true,
+    home: join(dir, ".claude", "skills"),
+    example: "../../node_modules/paperlint/skills/a",
+    links: [
+      { name: "a", status: "present" },
+      { name: "b", status: "missing" },
+      { name: "c", status: "foreign", reason: "a directory" },
+    ],
+  };
+  const r = runDoctor(dir, { cliPapers: "papers", skillLinks: () => state });
+  check(
+    "an unlinked skill is NAMED, not summed into a checkmark",
+    /2 of 3 shipped skills are NOT reachable/.test(r.out) &&
+      /\bb — not linked/.test(r.out),
+  );
+  check(
+    "a name taken by something else says WHAT is there",
+    /\bc — a directory, not the shipped skill/.test(r.out),
+  );
+  check(
+    "🔴 an unlinked skill does NOT fail the run — lint, hooks and CI work without it",
+    r.code === 0,
+  );
+  const all = runDoctor(dir, {
+    cliPapers: "papers",
+    skillLinks: () => ({ ...state, links: [{ name: "a", status: "present" }] }),
+  });
+  check(
+    "every skill linked — one line says so",
+    /✓ all 1 shipped skills are reachable/.test(all.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// ── VIII. `found` ASKS THE SYSTEM, IT DOES NOT GUESS BY NAME ────────────────────────────────
+it("VIII. `found` ASKS THE SYSTEM, IT DOES NOT GUESS BY NAME", () => {
+  check("a program that really exists is found", found("node") === true);
+  check(
+    "a made-up one is not (otherwise the check answers the form, not the subject)",
+    found("paperlint-definitely-not-a-real-binary-xyz") === false,
+  );
+});

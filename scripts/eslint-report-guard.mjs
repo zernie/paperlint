@@ -13,7 +13,7 @@
  *
  * 🔴 IT LIVES IN A FILE, NOT INSIDE `action.yml`. An inline `node -e` blob in a composite step is
  * unreachable from a test: the only way to exercise it is to run the whole action on a runner. This
- * file is called by the action and by `action.harness.mjs` with the same arguments, so the harness
+ * file is called by the action and by `action.test.mjs` with the same arguments, so the harness
  * proves the BEHAVIOUR rather than the presence of a string in YAML.
  *
  * Usage: node scripts/eslint-report-guard.mjs <report.json> <eslint-rc> [paths] [config]

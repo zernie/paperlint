@@ -50,7 +50,7 @@ report and listed as skipped, never counted as passed. The e2e areas also run al
 Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.
 
-**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.ts` pulls the job
+**The list of gates cannot quietly fall behind CI.** `scripts/check-workflow.test.ts` pulls the job
 names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
 named with a reason for why it cannot be. Add a job and it goes red the same day, naming the job
 nobody covered — verified by adding a `windows` job and watching it fail.
@@ -199,7 +199,7 @@ A venue is a **preset**, a JSONC file in `presets/`, validated by
    markers is written by `npm run build && npx eslint --fix presets/` (the config loads the rule from
    `dist/`).
 3. **A test.** A case in `src/presets.test.ts` that `paperlint:<series>-<year>` resolves over its family with
-   the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset
+   the kinds you declared; `src/tex-requirements-tables.test.ts` already checks every shipped preset
    against the schema.
 
 `paperlint toolchain` picks the new preset's packages up by itself, and the README and

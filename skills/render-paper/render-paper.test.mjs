@@ -1,0 +1,537 @@
+/**
+ * The render gate (`check-render.sh`) — the free, deterministic tier. No model, no network.
+ *
+ * What this proves: the script finds `paper-guards.tex` through the right directories, in the
+ * right order, whatever directory it is started from. What it does NOT prove: that a real build
+ * passes; the TeX e2e suite does that. The commands are documented in `docs/render.md`.
+ */
+import assert from "node:assert/strict";
+import { it } from "vitest";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+  realpathSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { papersRoot } from "#eslint-rules/papers";
+import {
+  consumerRoot,
+  settingsOf,
+} from "../paper-pipeline/scripts/consumer.mjs";
+
+// The TeX package pins that stood here (texlive-fonts-extra, texlive-plain-generic in
+// ensure-toolchain.sh) moved with the list itself: the venue profiles declare the packages, and
+// src/tex-requirements-tables.test.ts asserts that every acmart venue declares libertine, inconsolata,
+// newtx, kastrup (binhex.tex) and fancyhdr — each proved by the file whose absence broke a build.
+
+// ── TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex` ─────────────────
+//
+// Why this is guarded by a test and not by proofreading. The reference guard is included via
+// `\input{paper-guards}` WITHOUT a path — the file is found through `TEXINPUTS`, which the caller
+// sets. An unresolved `\input` does NOT crash pdflatex: it writes a line to the log and continues,
+// meaning the PDF builds GREEN and simply stops checking for dangling `\ref`/`\cite`. So a miss in
+// this wiring is indistinguishable from success right up until the day someone finds a `??` in the
+// submitted paper.
+//
+// What's checked is the RESOLUTION, not the build: that's what `check-render.sh`'s
+// `--print-venues` mode is for — it prints the chosen directory and compiles nothing.
+//
+// What these assertions do NOT prove: that the found file is correct, that pdflatex read it, and
+// that the guard fired. That's caught by `paper-guards.tex` itself (it fails with
+// `\PackageError`) — here it's only "a directory was found, and found in the right order."
+it("TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex`", () => {
+  const HERE = dirname(fileURLToPath(import.meta.url));
+  const CHECK = join(HERE, "check-render.sh");
+  const run = (args, opts = {}) =>
+    spawnSync("bash", [CHECK, ...args], { encoding: "utf8", ...opts });
+
+  // First half — on this tree, resolution must succeed IF AND ONLY IF a candidate exists on disk:
+  // the package's own `presets/tex/`. The absence of it is PRINTED, not swallowed: "the check found
+  // nothing to check" and "the check passed" have to look different.
+  const candidates = [
+    join(HERE, "..", "..", "presets", "tex", "paper-guards.tex"),
+  ].filter((c) => existsSync(c));
+
+  const ok = run(["--print-venues"]);
+  if (candidates.length === 0) {
+    assert.notEqual(
+      ok.status,
+      0,
+      `there is NO paper-guards.tex on disk at all, but --print-venues returned 0 and printed ` +
+        `${JSON.stringify(ok.stdout.trim())}. Resolution succeeding out of nothing is exactly the ` +
+        `silent success this whole block was written to catch.`,
+    );
+    console.log(
+      `  --print-venues: NOT VERIFIED on the live tree — paper-guards.tex is absent from the ` +
+        `package's presets/tex/; only the fixtures below hold this half.`,
+    );
+  } else {
+    assert.equal(
+      ok.status,
+      0,
+      `a candidate exists on disk (${candidates[0]}), so --print-venues must resolve:\n${ok.stderr}`,
+    );
+    assert.ok(
+      existsSync(join(ok.stdout.trim(), "paper-guards.tex")),
+      `--print-venues printed ${ok.stdout.trim()}, but paper-guards.tex isn't there`,
+    );
+  }
+
+  // First half, part two — RESOLUTION DOES NOT DEPEND ON THE CURRENT DIRECTORY, and this case is
+  // written against a real regression from 09-12, not invented. `check-render.sh` itself `cd`s
+  // into the paper's directory BEFORE it looks for venues, and `gates.harness.mjs` calls it
+  // against a temporary fixture with a trimmed environment. So `git rev-parse --show-toplevel`
+  // runs in a temp directory, and `CLAUDE_PROJECT_DIR` isn't set — so the ladder found nothing,
+  // stopping a build on a test that had passed the day before. The anchor became the SCRIPT'S OWN
+  // directory: it depends on neither the cwd nor whether the caller sits inside a git tree.
+  //
+  // ⚠️ Like the first half, this case requires that at least one `paper-guards.tex` exists on
+  // disk: it checks that resolution doesn't depend on cwd, not that the file exists. With no
+  // candidate there's nothing to check, and that gets printed, not swallowed.
+  if (candidates.length > 0) {
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), "venues-cwd-")));
+    const env = { ...process.env };
+    delete env.CLAUDE_PROJECT_DIR;
+    const r = run(["--print-venues"], { cwd: outside, env });
+    assert.equal(
+      r.status,
+      0,
+      `resolution must work outside a git tree and without CLAUDE_PROJECT_DIR:\n${r.stderr}`,
+    );
+    assert.ok(
+      existsSync(join(r.stdout.trim(), "paper-guards.tex")),
+      `outside the repository, printed ${r.stdout.trim()}, but paper-guards.tex isn't there`,
+    );
+  } else {
+    console.log(
+      `  --print-venues (outside a git tree): NOT VERIFIED — no candidate on disk, see above.`,
+    );
+  }
+
+  // Second half — and it's the load-bearing one, because the silent failure lives right here.
+  // When the file is NOWHERE, the script must exit with code 2 and say why. A silent success here
+  // is exactly the defect the whole ladder was written for.
+  //
+  // 🔴 RUN AGAINST A COPY OF THE SCRIPT. Inside the package its second rung (the package it ships
+  // in) always holds the file, so "nowhere" is reachable only by moving the script out of the
+  // package: nothing resolved ⇒ exit 2 + the name of the missing file.
+  const empty = realpathSync(mkdtempSync(join(tmpdir(), "venues-none-")));
+  const lonely = join(empty, "check-render.sh");
+  copyFileSync(CHECK, lonely);
+  const none = spawnSync("bash", [lonely, "--print-venues"], {
+    encoding: "utf8",
+    cwd: empty, // outside a git tree ⇒ the package doesn't resolve
+    env: { ...process.env, CLAUDE_PROJECT_DIR: empty },
+  });
+  assert.equal(
+    none.status,
+    2,
+    "no venues anywhere ⇒ exit 2, not a silent success",
+  );
+  assert.match(
+    none.stderr,
+    /paper-guards\.tex/,
+    "the failure message must name the missing file",
+  );
+
+  // Third half — the ORDER of the rungs. The package the consumer installed, found by its name,
+  // must win over the copy this script ships in; otherwise a consumer silently builds with a stale
+  // copy. Plant a package by name beside the real script and see which one is chosen.
+  const both = realpathSync(mkdtempSync(join(tmpdir(), "venues-both-")));
+  const pkgVenues = join(both, "node_modules", "paperlint", "presets", "tex");
+  mkdirSync(pkgVenues, { recursive: true });
+  writeFileSync(
+    join(both, "node_modules", "paperlint", "package.json"),
+    JSON.stringify({
+      name: "paperlint",
+      version: "0.0.0",
+      exports: { "./*": "./*" },
+    }),
+  );
+  writeFileSync(join(pkgVenues, "paper-guards.tex"), "% from package\n");
+  const race = run(["--print-venues"], {
+    cwd: both,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: both },
+  });
+  assert.equal(
+    race.status,
+    0,
+    `both candidates are in place ⇒ resolution must succeed:\n${race.stderr}`,
+  );
+  assert.equal(
+    race.stdout.trim(),
+    pkgVenues,
+    "with both candidates present, the INSTALLED package wins, not the copy the script ships in",
+  );
+});
+
+// ── THE SAME LADDER IN THE PAPER's build.sh, AND WHY THE ASSERTION DIFFERS ───
+//
+// Before 2026-09-12 the paper's build script held a HARDCODED
+// `export TEXINPUTS="$ROOT/.claude/skills/submit-paper/references/venues:"` — an address inside
+// the skills directory that, after their move into the package, points into a void, and again
+// SILENTLY: LaTeX's reaction to a missing \input is silence, not an error.
+//
+// The `--print-venues` trick can't be repeated here: build.sh has no mode that prints the
+// decision without running pdflatex, and adding one just for the test means reshaping the
+// paper's build script around the test. So the assertion is STRUCTURAL, and it deliberately
+// anchors on the EXECUTABLE line, not on a substring anywhere: the file quotes the old path in a
+// comment explaining the fix, and a search for "is this string present" would have caught the
+// explanation instead of the defect.
+//
+// 🔴 THE SUBJECT OF THIS CHECK IS SOMEONE ELSE'S FILE, AND THAT SHAPES ITS WHOLE FORM. Before the
+// move into the package, this block read ONE hardcoded path into the first consumer's private
+// corpus. In the package no such path exists or can exist, so the property was pulled out into a
+// pure function and is proven TWICE, per the "both halves" rule:
+//
+//   1. on FIXTURES — `build-clean.sh` must pass, `build-defect.sh` must fail. This is the only
+//      half that works in a checkout of the package itself, where there are no papers at all.
+//      Without it, the check in the package would be vacuous and would print a green zero;
+//   2. on the consumer's REAL papers — via the `papers` carrier, not a path in code. There can be
+//      many consumers, each names the directory differently, and that carrier exists exactly for
+//      this.
+//
+// The counter below is printed ALWAYS and grows together with the verdict, not before it: "0
+// consumer scripts" is an honest result (in a checkout of the package itself it should be zero),
+// whereas a silently-produced "0" would be indistinguishable from a verified corpus.
+it("THE SAME LADDER IN THE PAPER's build.sh, AND WHY THE ASSERTION DIFFERS", () => {
+  const HERE = dirname(fileURLToPath(import.meta.url));
+
+  /** The property of a paper's build script. A pure function — so it can also be BROKEN. */
+  const assertLadder = (build, where) => {
+    assert.doesNotMatch(
+      build,
+      /^\s*export\s+TEXINPUTS="\$ROOT\/\.claude\//m,
+      `${where}: is assigning TEXINPUTS the hardcoded skills-directory path again`,
+    );
+    assert.match(
+      build,
+      /^\s*export\s+TEXINPUTS="\$VENUES_DIR:"/m,
+      `${where}: must set TEXINPUTS from the resolved VENUES_DIR`,
+    );
+    assert.match(
+      build,
+      /require\.resolve\("paperlint\/presets\/tex\/paper-guards\.tex"\)/,
+      `${where}: the ladder's first rung (the package) must remain`,
+    );
+    assert.match(
+      build,
+      /^\s*kpsewhich paper-guards\.tex/m,
+      `${where}: after setting TEXINPUTS, must CONFIRM that LaTeX can see the file`,
+    );
+  };
+
+  // ── First half: fixtures. Both sides, otherwise "silent" is indistinguishable from "dead."
+  const fx = join(HERE, "..", "..", "fixtures", "render-paper");
+  assertLadder(
+    readFileSync(join(fx, "build-clean.sh"), "utf8"),
+    "fixture build-clean.sh",
+  );
+  assert.throws(
+    () =>
+      assertLadder(
+        readFileSync(join(fx, "build-defect.sh"), "utf8"),
+        "fixture build-defect.sh",
+      ),
+    /TEXINPUTS/,
+    "the defective fixture must fail the check — otherwise the check isn't checking anything",
+  );
+
+  // ── Second half: the consumer's real papers, addressed via the `papers` carrier.
+  // `papersRoot()` THROWS when the directory doesn't exist; in a checkout of the package itself
+  // it doesn't, and that's not an error, it's the absence of a consumer. Catch exactly that case
+  // and say so out loud.
+  const root = (() => {
+    try {
+      return papersRoot(settingsOf(consumerRoot()), consumerRoot());
+    } catch {
+      return null;
+    }
+  })();
+
+  let checked = 0;
+  if (root) {
+    const base = join(consumerRoot(), root);
+    for (const entry of readdirSync(base, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const script = join(base, entry.name, "build.sh");
+      if (!existsSync(script)) continue;
+      // The count grows TOGETHER WITH the verdict, not ahead of it.
+      assertLadder(
+        readFileSync(script, "utf8"),
+        `${root}/${entry.name}/build.sh`,
+      );
+      checked += 1;
+    }
+  }
+
+  console.log(
+    `  build.sh ladder: 2 fixture(s) + ${checked} consumer script(s)` +
+      (root === null
+        ? " (no papers root on disk — package checkout)"
+        : ` under ${root}/`),
+  );
+});
+
+// ── AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE ─────────────────
+// `\\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
+// citation, but IEEEtran reads it as configuration and never prints a \\bibitem for it. The
+// "cited but NOT in the bibliography" check failed a real IEEE paper on exactly that key (an
+// "et al. after six authors" setting). The exemption comes only from IEEEtran's own .blg line
+// `** IEEEtran BST control entry "key" detected.`: BibTeX wrote it after parsing the build's
+// databases, so a record BibTeX never read (a .bib the build does not use, a record inside
+// `@comment{…}`) or a misspelled key exempts nothing, and a genuinely missing key is still reported.
+it("AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE", () => {
+  const HERE = dirname(fileURLToPath(import.meta.url));
+  const CHECK = join(HERE, "check-render.sh");
+  // `detected` = the keys IEEEtran reported in the .blg as control entries it read.
+  const paper = (citations, detected = ["BSTcontrol"]) => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "bstctl-")));
+    writeFileSync(
+      join(dir, "paper.tex"),
+      "\\documentclass{IEEEtran}\n\\begin{document}\n\\bstctlcite{BSTcontrol}\nText \\cite{real}.\n\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n\\end{document}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.aux"),
+      citations.map((k) => `\\citation{${k}}`).join("\n") +
+        "\n\\bibstyle{IEEEtran}\n\\bibdata{refs}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.bbl"),
+      "\\begin{thebibliography}{1}\n\\bibitem{real}\nA real reference, 2026.\n\\end{thebibliography}\n",
+    );
+    writeFileSync(
+      join(dir, "paper.blg"),
+      "This is BibTeX, Version 0.99e\nDatabase file #1: refs.bib\n-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.\n" +
+        detected
+          .map((k) => `** IEEEtran BST control entry "${k}" detected.\n`)
+          .join("") +
+        "\nDone.\n",
+    );
+    writeFileSync(
+      join(dir, "paper.log"),
+      "This is pdfTeX\nOutput written on paper.pdf (1 page, 1000 bytes).\n",
+    );
+    const r = spawnSync("bash", [CHECK, dir, "paper"], {
+      encoding: "utf8",
+      env: { ...process.env, NO_COMPILE: "1" },
+    });
+    // The script must run to its verdict: a run that stopped early prints no complaint either, and
+    // "no complaint" is what the exemption case asserts. stderr and the bash version name the cause.
+    assert.match(
+      r.stdout,
+      /^(PASS|FAIL)\b/m,
+      `check-render.sh stopped before its verdict (exit ${r.status}, ${BASH_VERSION}):\n` +
+        `--- stdout\n${r.stdout}--- stderr\n${r.stderr}`,
+    );
+    return r;
+  };
+  const BASH_VERSION = spawnSync("bash", ["--version"], {
+    encoding: "utf8",
+  }).stdout.split("\n")[0];
+
+  const ctlOnly = paper(["BSTcontrol", "real"]);
+  assert.doesNotMatch(
+    ctlOnly.stdout,
+    /CITED-BUT-ABSENT/,
+    `a control key IEEEtran reported reading was flagged as a missing reference:\n${ctlOnly.stdout}`,
+  );
+
+  // A key that starts with "-" is still a key, not a grep option.
+  const dashKey = paper(["-ctl", "real"], ["-ctl"]);
+  assert.doesNotMatch(
+    dashKey.stdout,
+    /CITED-BUT-ABSENT/,
+    `a control key starting with "-" was flagged:\n${dashKey.stdout}`,
+  );
+
+  // A misspelled \\bstctlcite key: IEEEtran detected a different key, so this one is not exempt.
+  const typo = paper(["BSTcontrl", "real"]);
+  assert.match(
+    typo.stdout,
+    /cited but NOT in the bibliography: BSTcontrl/,
+    `a \\bstctlcite key IEEEtran did not report must be flagged:\n${typo.stdout}`,
+  );
+
+  // A record BibTeX never read — in a .bib the build does not use, or inside @comment{…} — leaves
+  // no "detected" line, so the key is not exempt.
+  const unread = paper(["BSTcontrol", "real"], []);
+  assert.match(
+    unread.stdout,
+    /cited but NOT in the bibliography: BSTcontrol/,
+    `a control key IEEEtran never reported reading must be flagged:\n${unread.stdout}`,
+  );
+
+  const withGap = paper(["BSTcontrol", "real", "gone"]);
+  assert.match(
+    withGap.stdout,
+    /cited but NOT in the bibliography: gone/,
+    `a key with no \\bibitem must still be reported:\n${withGap.stdout}`,
+  );
+  assert.doesNotMatch(
+    withGap.stdout,
+    /bibliography: BSTcontrol/,
+    withGap.stdout,
+  );
+});
+
+// ── THE LOG VERDICT: check-render.sh FAILS A PAPER WHOSE TEXT BLEEDS PAST THE COLUMN ─────────
+// The script reads the LaTeX log and exits 1 on a visible defect (an overfull box wider than the
+// threshold, an undefined citation or reference), 0 on a clean log, and 2 when there is no log to
+// read. `NO_COMPILE=1` skips pdflatex, so the log parser runs anywhere; the last case compiles
+// for real, and only where a TeX toolchain exists. Both halves, always: a gate that fails a clean
+// log is bypassed on deadline day, and one that passes a defective log is decoration.
+const LOG_CHECK = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "check-render.sh",
+);
+const dirWith = (files) => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "render-log-")));
+  for (const [name, body] of Object.entries(files))
+    writeFileSync(join(dir, name), body);
+  return dir;
+};
+const verdict = (dir, { threshold = "5", compile = false } = {}) => {
+  const env = { ...process.env };
+  if (compile) delete env.NO_COMPILE;
+  else env.NO_COMPILE = "1";
+  const r = spawnSync("bash", [LOG_CHECK, dir, "paper", threshold], {
+    encoding: "utf8",
+    env,
+  });
+  return { status: r.status, stdout: r.stdout };
+};
+const overfull = (pt) =>
+  `Overfull \\hbox (${pt}pt too wide) in paragraph at lines 4--5\n`;
+
+it("the log verdict: a paper whose text bleeds past the column fails, a clean log passes", () => {
+  const wide = verdict(dirWith({ "paper.log": overfull("12.34") }));
+  assert.equal(
+    wide.status,
+    1,
+    `a 12.34pt overfull hbox must fail:\n${wide.stdout}`,
+  );
+  assert.match(
+    wide.stdout,
+    /OVERFULL hbox\s+12\.34pt/,
+    `the overfull box was counted but not located:\n${wide.stdout}`,
+  );
+
+  const narrow = verdict(dirWith({ "paper.log": overfull("1.2") }));
+  assert.equal(
+    narrow.status,
+    0,
+    `a 1.2pt overfull is invisible in print and must not fail:\n${narrow.stdout}`,
+  );
+  assert.match(
+    narrow.stdout,
+    /1 sub-threshold/,
+    `the sub-threshold box was not counted:\n${narrow.stdout}`,
+  );
+
+  // The threshold argument has to move the line, or it is decoration.
+  const twelve = dirWith({ "paper.log": overfull("12.0") });
+  assert.equal(
+    verdict(twelve, { threshold: "5" }).status,
+    1,
+    "12pt is above a 5pt threshold",
+  );
+  assert.equal(
+    verdict(twelve, { threshold: "20" }).status,
+    0,
+    "the same 12pt box must pass at a 20pt threshold",
+  );
+
+  const undefinedCite = verdict(
+    dirWith({
+      "paper.log":
+        "LaTeX Warning: Citation `smith2020' on page 1 undefined on input line 9.\n",
+    }),
+  );
+  assert.equal(
+    undefinedCite.status,
+    1,
+    `an undefined citation prints a literal ? in the PDF and must fail:\n${undefinedCite.stdout}`,
+  );
+
+  const cleanLog = verdict(
+    dirWith({
+      "paper.log":
+        "This is pdfTeX\nOutput written on paper.pdf (8 pages, 100000 bytes).\n",
+    }),
+  );
+  assert.equal(
+    cleanLog.status,
+    0,
+    `a clean log must pass:\n${cleanLog.stdout}`,
+  );
+  assert.match(
+    cleanLog.stdout,
+    /PASS: no visible layout defects/,
+    `a clean log did not print its PASS line:\n${cleanLog.stdout}`,
+  );
+
+  // No .log and no compile: exit 2 naming the log. Exit 0 would declare a render clean without a
+  // render having happened, and exit 1 would say "defects found", which is a different story.
+  const noLog = verdict(dirWith({}), { compile: true });
+  assert.equal(
+    noLog.status,
+    2,
+    `no log to read must be exit 2:\n${noLog.stdout}`,
+  );
+  assert.match(
+    noLog.stdout,
+    /FAIL: no .*paper\.log/,
+    `the missing log was not named:\n${noLog.stdout}`,
+  );
+});
+
+const haveLatex =
+  spawnSync("bash", ["-c", "command -v pdflatex"], { encoding: "utf8" })
+    .status === 0;
+// The real compile needs a TeX toolchain: without pdflatex vitest reports a skip, not a pass.
+it.skipIf(!haveLatex)(
+  "the log verdict, compiled for real: an overfull word fails, a clean paragraph passes",
+  () => {
+    const texPaper = (body, preamble = "") =>
+      dirWith({
+        "paper.tex": `\\documentclass[10pt]{article}\n${preamble}\\begin{document}\n${body}\n\\end{document}\n`,
+      });
+    const bad = verdict(
+      texPaper(
+        `\\noindent ${"A".repeat(72)}`,
+        "\\usepackage[paperwidth=6cm,paperheight=12cm,margin=1cm]{geometry}\n",
+      ),
+      { compile: true },
+    );
+    assert.equal(
+      bad.status,
+      1,
+      `a word several times the column width must fail:\n${bad.stdout}`,
+    );
+    assert.match(
+      bad.stdout,
+      /OVERFULL hbox/,
+      `the real compile reported no overfull box:\n${bad.stdout}`,
+    );
+    const good = verdict(
+      texPaper(
+        "\\noindent The gate reads the configuration and fails the build when they disagree.",
+      ),
+      { compile: true },
+    );
+    assert.equal(
+      good.status,
+      0,
+      `an ordinary paragraph must pass a real compile:\n${good.stdout}`,
+    );
+  },
+);

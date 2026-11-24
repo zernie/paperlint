@@ -209,6 +209,19 @@ const RATCHET = {
     "max-depth": 4,
   },
   "src/toolchain.ts": { "max-lines-per-function": 50 },
+  "scripts/check-workflow.test.ts": { complexity: 16 },
+  "skills/render-paper/extract-pdf-facts.test.ts": {
+    complexity: 20,
+    "max-lines-per-function": 99,
+  },
+  "src/hooks-settings.test.ts": { "max-lines-per-function": 255 },
+  "src/latex-log.test.ts": { "max-lines-per-function": 122 },
+  "src/latex-loop.test.ts": { "max-lines-per-function": 127 },
+  "src/link-skills-fs.test.ts": { "max-lines-per-function": 119 },
+  "src/structure.test.ts": {
+    complexity: 17,
+    "max-lines-per-function": 112,
+  },
 };
 
 // ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
@@ -585,8 +598,8 @@ const TYPESCRIPT_ONLY = [
 export default [
   ...fileLength,
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
-  // `paper-stages.harness.mjs` creates a temp tree under fixtures and removes it when done,
-  // while `latex-language.harness.mjs` lints the whole repository to prove its glob matches
+  // `paper-stages-rule.test.mjs` creates a temp tree under fixtures and removes it when done,
+  // while `latex-language-rules.test.mjs` lints the whole repository to prove its glob matches
   // real files. Run in parallel, ESLint enumerates a path and then reads it, and the file can
   // be gone in between: ENOENT, in a harness that has nothing to do with either.
   //

@@ -1,7 +1,7 @@
 /**
  * The report guard's listing: a file entry without `messages`, a warning, and a message with no
  * rule (ESLint's own parse errors carry `ruleId: null`). The zero-file refusal and the pass-through
- * are driven end to end by `action.harness.mjs`.
+ * are driven end to end by `action.test.mjs`.
  */
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";

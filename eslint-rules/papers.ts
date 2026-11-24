@@ -66,7 +66,7 @@
  * running that script has one net, not two.
  *
  * ⚠️ THE EXAMPLES IN THIS FILE ARE DELIBERATELY GENERIC (`docs/papers`), and that is ENFORCED
- * rather than a style preference: `papers.harness.mjs` part IV fails if the first consumer's own
+ * rather than a style preference: `papers.test.mjs` part IV fails if the first consumer's own
  * directory name appears anywhere in this package outside the test itself. It caught this very
  * docblock on 2026-09-11, where the example used the real value. An exemption list is what turns
  * such a check into decoration, so there is exactly one exemption: the file asserting it.

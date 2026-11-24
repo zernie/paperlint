@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # FIXTURE — the CLEAN half of the `build.sh` ladder assertion in
-# `skills/render-paper/render-paper.harness.mjs`.
+# `skills/render-paper/render-paper.test.mjs`.
 #
 # A paper's own build script must not hard-code a path into the agent's skills directory:
 # once the skills move into a package that address points at nothing, and LaTeX's reaction to

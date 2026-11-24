@@ -2,7 +2,7 @@
  * `paperlint toolchain` against REAL CTAN, then `paperlint build` with ONLY that
  * TeX Live reachable.
  *
- * `src/toolchain.harness.mjs` drives the installer's logic against a fake mirror on disk; this is
+ * `src/toolchain-mirror.test.mjs` drives the installer's logic against a fake mirror on disk; this is
  * the other half: the real install-tl, the real tlmgr, the real kpsewhich, and the proof that the
  * tree they produce builds an acmart paper in the venue's own fonts.
  *

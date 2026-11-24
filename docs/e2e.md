@@ -32,14 +32,14 @@ import the modules directly. Every path resolves, every dependency is already in
 file they read is the file in `git`. An end-to-end run exists because all three of those are
 assumptions that stop holding the moment somebody else installs the package.
 
-| question                                                                             | answered by                                                   |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| does this rule find this defect, and stay quiet otherwise                            | unit, beside the rule                                         |
-| does the rule run through ESLint, wired, on the file it is for                       | integration (`src/rule-cases.test.ts`)                        |
-| does the CLI pick the right script, with the right interpreter                       | integration (`src/build.harness.mjs` substitutes `spawnSync`) |
-| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e**                                                       |
-| do the paths written inside a skill resolve where the package actually lands         | **e2e**                                                       |
-| did a PDF come out, and is it typeset in the fonts the venue requires                | **e2e**                                                       |
+| question                                                                             | answered by                                                         |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| does this rule find this defect, and stay quiet otherwise                            | unit, beside the rule                                               |
+| does the rule run through ESLint, wired, on the file it is for                       | integration (`src/rule-cases.test.ts`)                              |
+| does the CLI pick the right script, with the right interpreter                       | integration (`src/build-fake-tex.test.mjs` substitutes `spawnSync`) |
+| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e**                                                             |
+| do the paths written inside a skill resolve where the package actually lands         | **e2e**                                                             |
+| did a PDF come out, and is it typeset in the fonts the venue requires                | **e2e**                                                             |
 
 The last three rows are the ones no other test can reach even in principle: the defect only exists
 once the code is somewhere else, or once a real TeX has typeset it.
@@ -153,7 +153,7 @@ within seconds; `--check` must exit 0; then the `acmart` fixture is built with P
 only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
 and no Computer Modern face. Without `PAPERLINT_TEXLIVE_DIR` its tests are skipped: installing ~270 MB
 into a home directory as a side effect of `npm run check` is the unasked install the root `CLAUDE.md` forbids.
-`src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
+`src/toolchain-mirror.test.mjs` covers the installer's logic (mirror fallback, archive check, time
 limit, verification, idempotence) against a fake mirror on disk, without the network.
 
 ## Skips are reported, never passed

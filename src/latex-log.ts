@@ -105,7 +105,7 @@ const startsPhysicalLine = (line: string, prefix: string): boolean =>
  * nearly every paper has some, and the pdf/* rules check the margins), font shape substitution
  * (usually harmless), "Rerun to get" (the loop already reruns). Those never fail a build.
  *
- * Adding one is one entry here, plus its row of cases in `latex-log.harness.ts` (the harness does
+ * Adding one is one entry here, plus its row of cases in `latex-log.test.ts` (the harness does
  * not type-check without it).
  *
  * `lost-character`: TeX prints "Missing character: There is no X in font F!" when

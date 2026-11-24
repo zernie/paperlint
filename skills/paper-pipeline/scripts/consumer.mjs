@@ -46,7 +46,7 @@
  *      is `node .claude/skills/…` typed from the repository root. `consumerRoot()`.
  *
  * ⚠️ THE EXAMPLES HERE ARE DELIBERATELY GENERIC. The first consumer's own directory names are
- * absent by the same rule `papers.harness.mjs` part IV enforces for `papers.mjs`: a package that
+ * absent by the same rule `papers.test.mjs` part IV enforces for `papers.mjs`: a package that
  * spells out one user's private tree has one user.
  */
 import {
@@ -101,13 +101,13 @@ export function consumerRoot({ env = process.env, cwd = process.cwd() } = {}) {
 /**
  * The package's npm name — the directory it lands in under `node_modules`, and the name Node
  * resolves it by. Every path into the installed package is built from this, never re-spelled;
- * `consumer.harness.mjs` checks it against `package.json`.
+ * `consumer-paths.test.mjs` checks it against `package.json`.
  */
 export const PACKAGE_NAME = "paperlint";
 
 /**
  * The package's one executable, relative to the package root — what `bin` in package.json names
- * and what every hook command runs. Named like the package; `consumer.harness.mjs` checks it
+ * and what every hook command runs. Named like the package; `consumer-paths.test.mjs` checks it
  * against the manifest, so the file and the hook commands cannot drift apart.
  */
 export const BIN_FILE = `bin/${PACKAGE_NAME}.mjs`;
