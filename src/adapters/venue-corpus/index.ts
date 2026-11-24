@@ -30,9 +30,23 @@ import {
   type StrongAcceptProxy,
   type VenueCorpus,
 } from "../../domain/venue-corpus.ts";
+import { endsInYear, SERIES_ID } from "../../domain/edition.ts";
 import type { VenueCorpusCodec } from "../../ports/venue-corpus-codec.ts";
 
 const words = z.string().min(1);
+
+// A venue is a series (`agent`, `usenix-sec`), the part of a preset's id before its year, so a
+// corpus is found from any edition of it; an edition's id or a display name here would match none.
+const series = z
+  .string()
+  .regex(
+    SERIES_ID,
+    "a venue is a series id: lowercase words and digits joined by hyphens, as in `usenix-sec`",
+  )
+  .refine(
+    (v) => !endsInYear(v),
+    "a venue is a series, not one edition: drop the year (`agent`, not `agent-2026`)",
+  );
 const date = z.iso.date();
 /** Where a page or a file was read: a web address, never a local path or another scheme. */
 const webUrl = z.url({
@@ -158,7 +172,7 @@ const paper = z.discriminatedUnion("group", [
   z.looseObject({
     ...paperFields,
     group: z.literal("sister"),
-    venue: words,
+    venue: series,
     year,
     listed_from: webUrl,
   }),
@@ -211,7 +225,7 @@ const consistent = (
 
 const record = z
   .strictObject({
-    venue: words,
+    venue: series,
     editions: z.array(edition),
     papers: z.array(paper),
     rebuild: z.array(words),

@@ -13,8 +13,14 @@
  */
 import { sortBy } from "remeda";
 
-/** A venue preset's id: a series of lowercase words and digits joined by hyphens, then `-<year>`. */
-export const EDITION_ID = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{4})$/u;
+/** A series: lowercase words and digits joined by hyphens (`icse`, `usenix-sec`). */
+const SERIES = "[a-z0-9]+(?:-[a-z0-9]+)*";
+
+/** A venue preset's id: a series, then `-<year>`. */
+export const EDITION_ID = new RegExp(`^(${SERIES})-(\\d{4})$`, "u");
+
+/** A series id's shape, the part of an edition's id before its year; whether it ends in a year is `endsInYear`. */
+export const SERIES_ID = new RegExp(`^${SERIES}$`, "u");
 
 /** An edition: its series and its year. */
 export interface Edition {

@@ -265,6 +265,31 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
     "editions.0.accepted: Invalid input: expected number, received undefined; editions.0.capped: Invalid input: expected string, received undefined; editions.0.proxy.papers: Too small: expected number to be >=0",
   ],
   [
+    "🔴 a venue that is one edition, not its series",
+    text({ ...RECORD, venue: "agent-2026" }),
+    "venue: a venue is a series, not one edition: drop the year (`agent`, not `agent-2026`)",
+  ],
+  [
+    "🔴 a venue that is a display name, and a sister's too",
+    text({
+      ...RECORD,
+      venue: "ICSE",
+      papers: [
+        PAPER,
+        {
+          ...PAPER,
+          key: "s",
+          edition: undefined,
+          group: "sister",
+          venue: "NLBSE",
+          year: 2025,
+          listed_from: "https://nlbse.github.io/2025/",
+        },
+      ],
+    }),
+    "venue: a venue is a series id: lowercase words and digits joined by hyphens, as in `usenix-sec`; papers.1.venue: a venue is a series id: lowercase words and digits joined by hyphens, as in `usenix-sec`",
+  ],
+  [
     "🔴 a record without its rebuild commands",
     text({ ...RECORD, rebuild: undefined }),
     "rebuild: Invalid input: expected array, received undefined",

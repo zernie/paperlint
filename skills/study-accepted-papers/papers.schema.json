@@ -4,7 +4,7 @@
   "properties": {
     "venue": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "editions": {
       "type": "array",
@@ -428,7 +428,7 @@
               },
               "venue": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
               },
               "year": {
                 "type": "integer",
