@@ -2746,11 +2746,13 @@ export async function run(
     err,
     where: relative(cwd, root) || ".",
     opts: withPapers,
-    // Every paper of the project, not only the ones on the command line (#103).
-    projectPapers: papersRoots(cfg)
-      .flatMap((r) => papersIn(r))
-      .map((d) => join(d, MAIN))
-      .filter((f) => existsSync(f)),
+    // Every paper and corpus record of the project, not only the ones on the command line (#103).
+    projectPapers: papersRoots(cfg).flatMap((r) => [
+      ...papersIn(r, [MAIN]).map((d) => join(d, MAIN)),
+      ...papersIn(join(r, CORPORA_DIR), [CORPUS_RECORD]).map((d) =>
+        join(d, CORPUS_RECORD),
+      ),
+    ]),
     bodies,
     onLintResults,
   });

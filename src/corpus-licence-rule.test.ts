@@ -86,14 +86,17 @@ const Results = z.array(
 );
 
 /** Every message of `corpus/licence`, with its file. */
-async function licenceFindings(tree: Readonly<Record<string, string>>) {
+async function licenceFindings(
+  tree: Readonly<Record<string, string>>,
+  paths: readonly string[] = [],
+) {
   const dir = writeTree(useTempDir("paperlint-licence-"), {
     "package.json": '{"name":"consumer","private":true}',
     ...tree,
   });
   const out: string[] = [];
   const errs: string[] = [];
-  const code = await run(["lint", "--json"], {
+  const code = await run(["lint", "--json", ...paths], {
     cwd: dir,
     log: (...a: unknown[]) => out.push(a.join(" ")),
     err: (...a: unknown[]) => errs.push(a.join(" ")),
@@ -160,6 +163,18 @@ describe("corpus/licence: turned on where there is no corpus", () => {
     await expect(licenceFindings({ ...PAPER, ...ON() })).rejects.toThrow(
       /corpus\/licence is turned on in "rules"/,
     );
+  });
+});
+
+describe("corpus/licence: a lint of one paper in a project with a corpus", () => {
+  it("🔴 runs, and judges no corpus it was not given", async () => {
+    // Guards: the rule reaches the project's corpus, so a run over one paper is not refused.
+    expect(
+      await licenceFindings(
+        { ...corpus([{ id: "LicenseRef-publisher", ...READ }]), ...ON() },
+        ["papers/p"],
+      ),
+    ).toEqual([]);
   });
 });
 
