@@ -14,11 +14,20 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
 
 ## What is decided
 
-1. **One record, `papers.json`, JSON with a schema**, beside `MANIFEST.md`. It is the list of papers and,
-   for each, every copy we know of with its licence. The schema (zod, in `src/adapters/venue-corpus/`)
-   is checked where the file is read; nothing after it re-validates (the study registry's pattern,
-   [`study-registry.md`](study-registry.md)). Codes and measurements stay in `measurements.json`, keyed by
-   the paper's `key`; prose (sources, caps, the strong-accept proxy) stays in `MANIFEST.md`.
+1. **One record, `papers.json`, JSON with a schema.** It is the list of papers and, for each, every copy
+   we know of with its licence, and it holds every fact about how the corpus was collected. The schema
+   (zod, in `src/adapters/venue-corpus/`) is checked where the file is read; nothing after it
+   re-validates (the study registry's pattern, [`study-registry.md`](study-registry.md)). Codes and
+   measurements stay in `measurements.json`, keyed by the paper's `key`.
+
+   **Why the collection facts are in the record, not in a prose `MANIFEST.md`.** Read against the four real manifests of the consumer (52 to 86
+   lines each), three of their four parts were records: a hand-kept table of the folder's files (it
+   drifts from the disk), coverage counts (computable from `papers.json`), and the sources, years,
+   proxy and rebuild commands (fields). Only the caveats were prose. So the facts move into the record:
+   an edition already carries `listed_from`, `read_on` and `accepted`; it gains `capped` (what was left
+   out and why, or null) and `proxy` (the stand-in for "strong accept" and how many papers it marks, or
+   null), and the record gains `rebuild` (the commands that regenerate it). Coverage is never stored:
+   it is counted from the rows. `MANIFEST.md` becomes optional and holds caveats only; no rule reads it.
 
    ```json
    {
@@ -140,14 +149,16 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
 
    **Where they report, and how paperlint reaches a corpus.** Today nothing under `venues/` is linted
    ([`docs/venues.md`](../venues.md#what-checks-it)): rule blocks are scoped to paper files, and a rule
-   runs only for a file that exists. PR 1b adds a block for `<papers-root>/venues/*/`, anchored on the
-   corpus's `MANIFEST.md`; a corpus folder without `MANIFEST.md` (recognised by `papers.json`, `pdf/` or
-   `text/`) is reported by the same structural pass that reports stray files in a paper folder
-   (`src/folder-layout-rule.ts`), on a file ESLint does lint. The same PR keeps the corpus out of the
-   paper rules (#215, part 1): a `paper.tex` saved in a corpus is an accepted paper's source, not one of
-   the user's papers.
+   runs only for a file that exists. `papers.json` is that file: paperlint lints it with ESLint's own
+   JSON language (`@eslint/json`), so `corpus/record` reports at the field that is wrong, by line and
+   column, and a file that is not JSON fails as ESLint's parse error (spike 2026-11-24, `@eslint/json`
+   2.1.1 on ESLint 10.10.0: a planted `"licence": 7` reported at `4:45`; a clean record silent; a cut-off
+   file `1:1 Parsing error`). A corpus folder with `pdf/` or `text/` and no `papers.json` has no file to
+   anchor on; `corpus/allowed-files-only` reports it on the project's root `paperlint.json`, which
+   `@eslint/json` also reads. The corpus is kept out of the paper rules (#215, part 1): a `paper.tex`
+   saved in a corpus is an accepted paper's source, not one of the user's papers.
 
-5. **The fixed file names**: `papers.json`, `MANIFEST.md`, `measurements.json`, `pdf/<key>.pdf`,
+5. **The fixed file names**: `papers.json`, `MANIFEST.md` (optional, caveats only), `measurements.json`, `pdf/<key>.pdf`,
    `text/<key>.txt` and `text/<key>.<variant>.txt` (one paper extracted twice, by `pdftotext` and by
    `pdfminer`, or its first page alone), `deep-reads/<key>.md`, `sources/` (saved listing and call
    pages, not judged). The author's own paper is never in a corpus: its text belongs in its paper folder.
@@ -188,13 +199,14 @@ to its paper folder. Licences that were never read stay `NOASSERTION` until PR 2
 
 ## The order of the pull requests
 
-| PR  | what                                                                                                                                                                                                                                                                                                                                                                                          | part of        |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| 1a  | the schema and its parser, the licence table, this note, `docs/venues.md` and `study-accepted-papers` rewritten to the record (decision 7)                                                                                                                                                                                                                                                    | #302           |
-| 1b  | `corpus/record` and `corpus/licence` with their pages under `docs/rules/corpus/`, linked from `docs/venues.md` and (the licence rule) `docs/optional-rules.md`; a test that every rule id has the one-slash shape of "A Rule Id Names Its Subject"; the lint block that reaches a corpus, the structural check for a corpus without `MANIFEST.md`, and the corpus kept out of the paper rules | #302, #215 (1) |
-| 2   | the venue lister #568 asks for, as a shared tested script that `study-accepted-papers` calls (not a new CLI command), writing `papers.json` rows with ids and licences                                                                                                                                                                                                                        | #568           |
-| 3   | the current cycle's venue has a corpus (matched by series, decision 1), the first of #356's three parts                                                                                                                                                                                                                                                                                       | #356 (1 of 3)  |
-| 4   | `corpus/allowed-files-only` (#500's second rule)                                                                                                                                                                                                                                                                                                                                              | #500 (1 of 2)  |
+| PR     | what                                                                                                                                                                                                                                                                                | part of        |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 1a     | the schema and its parser, the licence table, this note, `docs/venues.md` and `study-accepted-papers` rewritten to the record (decision 7)                                                                                                                                          | #302           |
+| 1b-i   | `corpus/record` on `papers.json`, linted with `@eslint/json` and reporting at the field; the record gains `capped`, `proxy` and `rebuild`; `MANIFEST.md` optional; the corpus kept out of the paper rules; the rule's page under `docs/rules/corpus/`, linked from `docs/venues.md` | #302, #215 (1) |
+| 1b-ii  | `corpus/allowed-files-only` (#500's second rule, moved up from PR 4): the corpus's fixed names, and a corpus with `pdf/` or `text/` and no `papers.json`, reported on the root `paperlint.json`; merged right after 1b-i, so a consumer meets both in one evening                   | #500 (1 of 2)  |
+| 1b-iii | `corpus/licence` (off, in no set) with its page, linked from `docs/optional-rules.md`; a test that every rule id has the one-slash shape of "A Rule Id Names Its Subject"                                                                                                           | #302           |
+| 2      | the venue lister #568 asks for, as a shared tested script that `study-accepted-papers` calls (not a new CLI command), writing `papers.json` rows with ids and licences                                                                                                              | #568           |
+| 3      | the current cycle's venue has a corpus (matched by series, decision 1), the first of #356's three parts                                                                                                                                                                             | #356 (1 of 3)  |
 
 PR 1a stands alone: a corpus written by hand, or by the skill, validates. Readers that compare a paper with
 the corpus (#608 abstract rewrites, #465 the panel's demands, a title and scope comparison) come after PR 2.
