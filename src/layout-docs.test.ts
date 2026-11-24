@@ -1,7 +1,7 @@
 /**
  * The pages draw the layout the code enforces. Each page embeds the drawing between
  * `<!-- layout:begin … -->` and `<!-- layout:end -->`, and that block must equal the render of the
- * constants that decide what is allowed (`PAPER_LAYOUT_TREE`, `REPRO_LAYOUT_TREE`, and
+ * constants that decide what is allowed (`PAPER_LAYOUT_TREE`, `REPRO_LAYOUT_TREE`, `CORPUS_LAYOUT_TREE`, and
  * `PAPERS_LAYOUT_TREE`, which draws the paper folder beside the venues' corpora) — so a page cannot
  * show an entry the rule reports, or miss one it allows. Both halves: the committed pages match, and
  * a page with one entry changed or with no block at all does not.
@@ -17,6 +17,7 @@ import {
   PAPER_LAYOUT_TREE,
   PAPERS_LAYOUT_TREE,
 } from "./domain/paper-layout.ts";
+import { CORPUS_LAYOUT_TREE } from "./domain/corpus-layout.ts";
 import { REPRO_LAYOUT_TREE } from "./domain/repro-layout.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -24,6 +25,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PAGES: readonly (readonly [string, string])[] = [
   ["docs/rules/paper/allowed-files-only.md", PAPER_LAYOUT_TREE],
   ["docs/rules/repro/allowed-files-only.md", REPRO_LAYOUT_TREE],
+  ["docs/rules/corpus/allowed-files-only.md", CORPUS_LAYOUT_TREE],
   ["docs/layout.md", PAPERS_LAYOUT_TREE],
 ];
 

@@ -9,7 +9,8 @@
  * language (`@eslint/json`): each finding at the field its path names, walked down the file's JSON
  * tree; where the path stops being in the file (a required field left out), at the deepest part
  * that is. A file that is not JSON never reaches the rule: ESLint reports its parse error. A corpus
- * folder without `papers.json` has no file to report on, and this rule says nothing about it.
+ * folder without `papers.json` has no file to report on, and this rule says nothing about it:
+ * `corpus/allowed-files-only` reports it on the root `paperlint.json` (src/corpus-layout-rule.ts).
  */
 import { dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";

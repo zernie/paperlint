@@ -115,7 +115,7 @@ describe("corpus/record: silent where nothing is wrong", () => {
   });
 
   it("🔴 is silent on a corpus folder with stored files and no papers.json", async () => {
-    // Guards: a corpus not migrated yet is corpus/allowed-files-only's to report (PR 1b-ii), not this rule's.
+    // Guards: a corpus not migrated yet is corpus/allowed-files-only's to report, not this rule's.
     const r = await lint({
       ...PAPER,
       [`${C}/MANIFEST.md`]: "# agent\n",
@@ -198,8 +198,8 @@ describe("corpus/record: each finding, at its place in papers.json", () => {
   });
 });
 
-describe("the JSON language reaches papers.json and nothing else", () => {
-  it("🔴 lints no other JSON file: the root and a paper's paperlint.json, measurements.json", async () => {
+describe("the JSON language reaches papers.json and the root paperlint.json, nothing else", () => {
+  it("🔴 lints no other JSON file: a paper's paperlint.json, measurements.json", async () => {
     const r = await lint({
       ...PAPER,
       "paperlint.json": "{}",
@@ -209,7 +209,18 @@ describe("the JSON language reaches papers.json and nothing else", () => {
       [`${C}/measurements.json`]: "{ broken",
       "papers/venues/papers.json": "{ broken",
     });
-    expect(r.files.filter((f) => f.endsWith(".json"))).toEqual([RECORD]);
+    // The root file is corpus/allowed-files-only's, for a corpus without papers.json; corpus/record
+    // is not registered on it.
+    expect(r.files.filter((f) => f.endsWith(".json"))).toEqual([
+      "paperlint.json",
+      RECORD,
+    ]);
+    // Guards: no broken JSON is parsed; the one message is the stray papers.json loose in venues/.
+    expect(
+      r.messages
+        .filter((m) => m.file.endsWith(".json"))
+        .map((m) => [m.file, m.ruleId, m.messageId]),
+    ).toEqual([["paperlint.json", "corpus/allowed-files-only", "loose"]]);
   });
 });
 

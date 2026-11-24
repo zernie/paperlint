@@ -323,19 +323,22 @@ whole site and none per paper. Where no source gives a copy's licence, it stays 
 `<papers-root>/venues/`: `paperlint lint` lints the file as JSON and reports, at the line of the field,
 a field that breaks the record's schema, a stored file no copy claims, a claimed file that is
 missing, and two copies of one paper storing one kind. A `papers.json` that is not JSON fails as a
-parse error on its first line. A corpus folder without `papers.json` is not this rule's: the planned
-`corpus/allowed-files-only` will report it. A project turns the rule off with
+parse error on its first line. A project turns the rule off with
 `{ "rules": { "corpus/record": "off" } }` in its root `paperlint.json`.
+
+[`corpus/allowed-files-only`](rules/corpus/allowed-files-only.md), on by default, holds the names
+above: an entry at the top of a corpus outside them is reported on its `papers.json`, with where it
+goes, and a corpus that keeps `pdf/` or `text/` with no `papers.json` is reported on the project's
+root `paperlint.json`.
 
 Nothing in a corpus is a paper: a `paper.tex` kept there is an accepted paper's source, and no
 paper rule judges it. The hook that refuses misplaced files acts only inside a paper folder.
 
-Two more rules of the family are planned for later releases, **not shipped yet**:
+One more rule of the family is planned for a later release, **not shipped yet**:
 
-| rule                        | will report                                                                                                                                   |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `corpus/licence`            | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read |
-| `corpus/allowed-files-only` | a name in the corpus folder outside the names above, and a corpus that stores files with no `papers.json`                                     |
+| rule             | will report                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `corpus/licence` | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read |
 
 Also checked: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes

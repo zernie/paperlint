@@ -319,8 +319,9 @@ export const VENUES_DIR = "venues";
 
 /**
  * The papers directory as the README and `docs/layout.md` draw it: the venues' corpora beside the
- * paper folders, and each paper folder with its layout. Only the paper folder's part is enforced (by
- * the two layout rules); `venues/` is drawn so a reader sees where a corpus goes, and no rule reads it.
+ * paper folders, and each paper folder with its layout. The paper folder's part is enforced by the two
+ * layout rules; each corpus in `venues/` by `corpus/record` and `corpus/allowed-files-only`, whose
+ * layout is `corpus-layout.ts`.
  */
 export const PAPERS_NODES: readonly TreeNode[] = [
   {
