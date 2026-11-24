@@ -14,6 +14,8 @@ paper which copy every stored file is and under which licence, and how the corpu
   it stands, a wrong value at its key, a required field left out at the object that should hold it.
   It is the parser the skill's script uses, so the two refuse the same record; the fields are in
   `papers.schema.json`, shipped with `study-accepted-papers`;
+- a `venue` that is not the name of the folder the record stands in (`venue`), at that field: the
+  folder is the venue preset's series, so the two say the same; rename the folder or correct the field;
 - a file in `pdf/` or `text/` that no copy's `stored` claims (`unclaimed`), including a name that
   is not `pdf/<key>.pdf`, `text/<key>.txt` or `text/<key>.<variant>.txt`: at the paper's `copies`
   when the record lists the paper, otherwise on the first line;
@@ -113,6 +115,7 @@ paper.
 
 Each finding names its cure. In short:
 
+- A `venue` that is not its folder's name: rename the folder, or correct the field.
 - A field that breaks the schema: correct it. `capped`, `proxy` and `rebuild` are required; "none"
   is `null` (`capped`, `proxy`) or `[]` (`rebuild`), never a field left out.
 - A file nobody claims: add its kind to the `stored` of the copy it was fetched from, with

@@ -23,6 +23,8 @@ export const CORPORA_DIR = "venues";
 
 /** What the rule reads of one corpus folder. */
 export interface CorpusFolder {
+  /** The corpus folder's name: the venue preset's series, which the record's `venue` must repeat. */
+  readonly folder: string;
   /** `papers.json`, as the codec parsed it. */
   readonly record: ParsedCorpus;
   /** The names in `pdf/` and in `text/`, hidden ones left out; none when the folder is absent. */
@@ -35,6 +37,11 @@ export interface CorpusFolder {
  */
 export type CorpusFinding = { readonly at: RecordPath } & (
   | { readonly kind: "unparsed"; readonly message: string }
+  | {
+      readonly kind: "venue";
+      readonly venue: string;
+      readonly folder: string;
+    }
   | {
       readonly kind: "unclaimed";
       readonly file: string;
@@ -162,11 +169,21 @@ const missing = (
       file: expectedFile(c.kind, c.key),
     }));
 
+/** The record's `venue`, when it is not the name of the folder it stands in. */
+const venueName = (
+  corpus: VenueCorpus,
+  folder: string,
+): readonly CorpusFinding[] =>
+  corpus.venue === folder
+    ? []
+    : [{ kind: "venue", at: ["venue"], venue: corpus.venue, folder }];
+
 /** What a read record says about the folder. */
 function judgeRecord(
   corpus: VenueCorpus,
-  stored: CorpusFolder["stored"],
+  folder: CorpusFolder,
 ): readonly CorpusFinding[] {
+  const { stored } = folder;
   const claims = STORED_KINDS.flatMap((kind) =>
     corpus.papers.map((p, paper) => ({
       kind,
@@ -176,6 +193,7 @@ function judgeRecord(
     })),
   );
   return [
+    ...venueName(corpus, folder.folder),
     ...twice(claims),
     ...unclaimed(claims, stored),
     ...missing(claims, stored),
@@ -185,7 +203,7 @@ function judgeRecord(
 /** Every finding about one corpus folder; none for a corpus whose record accounts for each copy. */
 export const judgeCorpus = (folder: CorpusFolder): readonly CorpusFinding[] =>
   folder.record.ok
-    ? judgeRecord(folder.record.corpus, folder.stored)
+    ? judgeRecord(folder.record.corpus, folder)
     : folder.record.problems.map((p) => ({
         kind: "unparsed",
         at: p.path,
@@ -200,6 +218,8 @@ export function corpusMessage(f: CorpusFinding): string {
   switch (f.kind) {
     case "unparsed":
       return `\`${pathText(f.at)}\`: ${f.message}. What to do: correct the field; the fields are in the JSON Schema \`papers.schema.json\` that \`study-accepted-papers\` ships`;
+    case "venue":
+      return `the record says \`"venue": "${f.venue}"\`, and its folder is \`${f.folder}\`. What to do: rename the folder to \`${f.venue}\`, or correct the field to \`${f.folder}\``;
     case "unclaimed":
       return `\`${f.file}\` is stored, and no copy in \`${CORPUS_RECORD}\` claims it${f.key === null ? `: its name is not \`pdf/<key>.pdf\`, \`text/<key>.txt\` or \`text/<key>.<variant>.txt\`` : ` (no copy of the paper \`${f.key}\` lists it in \`stored\`)`}. What to do: record it under the copy it was fetched from, with \`fetched_from\`, its licence and where the licence was read; ${KEEP_IDS}`;
     case "missing":

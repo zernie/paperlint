@@ -12,7 +12,7 @@
  * folder without `papers.json` has no file to report on, and this rule says nothing about it:
  * `corpus/allowed-files-only` reports it on the root `paperlint.json` (src/corpus-layout-rule.ts).
  */
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
   corpusMessage,
@@ -117,6 +117,7 @@ const findingsFor = (
   deps: CorpusRecordDeps,
 ): readonly CorpusFinding[] =>
   judgeCorpus({
+    folder: basename(dirname(file)),
     record: deps.codec.parse(text),
     stored: {
       pdf: visible(join(dirname(file), "pdf"), deps),
@@ -128,7 +129,7 @@ const META: FolderRuleModule["meta"] = {
   type: "suggestion",
   docs: {
     description:
-      "a venue corpus's papers.json is a record, every copy stored in pdf/ and text/ is claimed by one copy in it, and every claimed file is there",
+      "a venue corpus's papers.json is a record that names its own folder as its venue, every copy stored in pdf/ and text/ is claimed by one copy in it, and every claimed file is there",
     url: rulePageUrl("corpus/record"),
   },
   schema: [],
@@ -137,6 +138,7 @@ const META: FolderRuleModule["meta"] = {
     (
       [
         "unparsed",
+        "venue",
         "unclaimed",
         "missing",
         "twice",
