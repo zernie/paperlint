@@ -147,7 +147,7 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
 
 6. **What is a copy, and what is not.** `pdf/` and `text/` hold copies; the rule judges only them.
    Titles, abstracts, and short quotes inside codes or deep reads are metadata and quotation, not copies
-   (see the open decision on abstracts).
+   (decided below).
 
 7. **A behaviour change, said plainly.** `docs/venues.md` and `study-accepted-papers` today tell the
    skill to extract a text for every paper. From PR 1a they tell it to read the copy's licence first and
@@ -191,18 +191,31 @@ to its paper folder. Licences that were never read stay `NOASSERTION` until PR 2
 
 PR 1a stands alone: a corpus written by hand, or by the skill, validates. Readers that compare a paper with
 the corpus (#608 abstract rewrites, #465 the panel's demands, a title and scope comparison) come after PR 2.
-The source order of PR 2 (which free API gives which field) is measured before it is written; #568 found
-Semantic Scholar the only keyless lister that worked.
+The source order of PR 2 was measured on 2026-11-24, keyless, against three venues whose accepted
+lists were known (27, 16 and 34 papers):
 
-## Open decisions (the author's)
+| field                         | first source                                                                                                | then                                                                                 | never                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| the list                      | Crossref, filtered by the proceedings' full container title (ACM); the Anthology volume `.bib`/`.xml` (ACL) | OpenAlex by source id, as a cross-check; the programme page for papers without a DOI |                                                                                                                  |
+| abstract                      | the programme's paper page                                                                                  | Semantic Scholar by DOI, OpenAlex, arXiv OAI-PMH                                     | Crossref (none deposited)                                                                                        |
+| arXiv id                      | Semantic Scholar and OpenAlex, their union                                                                  |                                                                                      | Crossref `relation` (always empty)                                                                               |
+| licence of the published copy | Crossref `license[]`, every URL kept                                                                        |                                                                                      |                                                                                                                  |
+| licence of the arXiv copy     | arXiv OAI-PMH `<license>`                                                                                   |                                                                                      | OpenAlex (null for the arXiv default, once wrong), Semantic Scholar (its licence is of whichever copy it picked) |
 
-- **A copy with no licence recorded.** Proposed: a finding, like a licence that forbids it, because a check
-  that passes what it cannot see looks the same as one that checked. On the consumer above that is 179
-  findings once it migrates and opts in, until PR 2's lister fills the licences in.
-- **Titles and abstracts under a licence that allows no copying.** Every scholarly API (Crossref, Semantic
-  Scholar, arXiv) serves them openly and every corpus examined keeps them, but no source settles that
-  storing them is allowed. Proposed: kept as metadata whatever the licence, and said so in
-  `docs/venues.md`.
+Three gaps stay open: IEEE deposits no Creative Commons licence (only text-and-data-mining policy URLs), the
+ACL Anthology states one licence for the whole site and none per paper, and the licence printed inside a PDF
+can belong to another copy (an arXiv PDF printing its published version's footer), so the PDF is not a
+source. Semantic Scholar's venue search and the arXiv Atom API refused every request that day (HTTP 429),
+so neither was measured.
+
+## Decided by the author (2026-11-24)
+
+- **A copy with no licence recorded is a finding**, like a licence that forbids it: a check that passes
+  what it cannot see looks the same as one that checked. On the consumer above that is 179 findings once
+  it migrates and opts in, until PR 2's lister fills the licences in.
+- **Titles and abstracts are kept as metadata whatever the licence**, and `docs/venues.md` says so. Every
+  scholarly API (Crossref, Semantic Scholar, arXiv) serves them openly and every corpus examined keeps
+  them; no source settles that storing them is allowed.
 
 ## Rejected
 
