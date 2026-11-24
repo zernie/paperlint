@@ -308,21 +308,26 @@ whole site and none per paper. Where no source gives a copy's licence, it stays 
 
 ### What checks it
 
-**No rule reads the corpus yet.** `paperlint lint` treats a folder in the papers directory as a paper
-only when it holds `PIPELINE-STATUS.md`, `paper.tex` or `paperlint.json`, and `venues/` holds none of
-them, so nothing in it is linted. The hook that refuses misplaced files does not act there either:
-it acts only inside a paper folder. Today `papers.json` is parsed against its schema only when the
-skill's script reads it.
+[`corpus/record`](rules/corpus/record.md), on by default, reads every corpus under
+`<papers-root>/venues/` that has a `MANIFEST.md`: `paperlint lint` lints that file for it, and
+reports there a corpus that stores files in `pdf/` or `text/` without `papers.json`, a `papers.json`
+that does not parse (with the path of each wrong field), a stored file no copy claims, a claimed file
+that is missing, and two copies of one paper storing one kind. A folder under `venues/` that holds
+`papers.json`, `pdf/` or `text/` and no `MANIFEST.md` is reported on the first paper's
+`PIPELINE-STATUS.md`, since nothing else reaches it. A project turns the rule off with
+`{ "rules": { "corpus/record": "off" } }` in its root `paperlint.json`.
 
-Three rules of a family `corpus/` are planned for later releases, **not shipped yet**:
+Nothing in a corpus is a paper: a `paper.tex` kept there is an accepted paper's source, and no
+paper rule judges it. The hook that refuses misplaced files acts only inside a paper folder.
 
-| rule                        | will report                                                                                                                                                                                          |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `corpus/record`             | a corpus with `pdf/` or `text/` and no `papers.json`; a `papers.json` that does not parse; a stored file no copy claims; a copy that claims a missing file; two copies of one paper storing one kind |
-| `corpus/licence`            | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read                                                        |
-| `corpus/allowed-files-only` | a name in the corpus folder outside the names above                                                                                                                                                  |
+Two more rules of the family are planned for later releases, **not shipped yet**:
 
-What is checked today is the other side: a corpus started **inside** a paper folder. A `venues/` or
+| rule                        | will report                                                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `corpus/licence`            | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read |
+| `corpus/allowed-files-only` | a name in the corpus folder outside the names above                                                                                           |
+
+Also checked: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes
 ([the paper folder's layout](rules/paper/allowed-files-only.md)), and the hook refuses to create one.
 
