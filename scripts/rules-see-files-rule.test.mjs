@@ -1,6 +1,5 @@
 /**
  * Colocated test for `scripts/rules-see-files.mjs` — the guard against a green zero.
- * Run: `npx vigiles test scripts/rules-see-files.harness.mjs`
  *
  * 🔴 BOTH HALVES, and for this guard the order matters more than usual. Its success state is
  * silence, and silence is exactly the state it was built to distrust: a guard that has only
@@ -14,6 +13,7 @@
  *        blind one", not "complained about everything".
  */
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import { ESLint } from "eslint";
 import {
   mkdirSync,
@@ -26,17 +26,21 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+// A test here lints the whole repository: ~72 s alone, up to 224 s beside the rest of the suite
+// under coverage on 4 cores (measured 2026-11-24), so the limit only catches a hang.
+vi.setConfig({ testTimeout: 600_000 });
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const { rulesSeeFiles } = await import(join(HERE, "rules-see-files.mjs"));
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rules-see-files-")));
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => rmSync(TMP, { recursive: true, force: true }));
 
 // ═════════════════════════════════════════════════════════════════════════════
 // I. QUIET ON THIS REPOSITORY
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("I. QUIET ON THIS REPOSITORY", async () => {
   const { rules, blind, linted } = await rulesSeeFiles({ cwd: ROOT });
   assert.deepEqual(
     blind,
@@ -61,12 +65,12 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     `\`tex/future-promise\` was enabled for ${tex.files} file(s); the four fixtures alone should ` +
       "exceed that, so its glob is narrower than the test data it is supposed to cover",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // II + III. FIRES ON A PLANTED EMPTY GLOB, AND NAMES THE RIGHT RULE
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("II + III. FIRES ON A PLANTED EMPTY GLOB, AND NAMES THE RIGHT RULE", async () => {
   const project = join(TMP, "planted");
   mkdirSync(project, { recursive: true });
   writeFileSync(join(project, "probe.js"), "export const x = 1;\n");
@@ -112,4 +116,4 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "the control rule was not credited with the file it does see — the guard reports blindness " +
       "for everything rather than for the blind one",
   );
-}
+});

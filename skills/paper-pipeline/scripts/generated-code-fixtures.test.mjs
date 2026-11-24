@@ -1,7 +1,6 @@
 /**
- * generated-code.harness.mjs — the linter that reads the analysis scripts BEFORE they produce a
- * number, handed scripts that carry each defect it claims to catch.
- * `npx vigiles test .claude/skills/paper-pipeline/scripts/generated-code.harness.mjs`.
+ * generated-code-fixtures.test.mjs — the linter that reads the analysis scripts BEFORE they produce
+ * a number, handed scripts that carry each defect it claims to catch.
  *
  * WHY. `repro/` is full of scripts a model wrote, and until now nothing asked whether any of them
  * would run twice the same way or run at all on another machine. Ported from
@@ -18,12 +17,10 @@
  * neuter the whole check, so: it prints on a clean run, it prints every reason, an allowance is
  * scoped to one KIND rather than to a file, and a row naming nothing is reported.
  *
- * 🔴 Assertions run at MODULE TOP LEVEL — `vigiles test` imports the file and treats "did not
- * throw" as a pass, so an exported test object would report ✓ having run nothing.
- *
  * Every fixture is a throwaway in a temp dir; no real script is read or written.
  */
 import assert from "node:assert/strict";
+import { afterAll, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import {
   mkdtempSync,
@@ -40,8 +37,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "generated-code.mjs");
-const tmp = realpathSync(mkdtempSync(join(tmpdir(), "genrated-code-harness-")));
+const tmp = realpathSync(
+  mkdtempSync(join(tmpdir(), "generated-code-fixtures-")),
+);
 let n = 0;
+afterAll(() => {
+  rmSync(tmp, { recursive: true, force: true });
+});
 
 function run(dir, flagsOnly = true) {
   const argv = flagsOnly ? [SCRIPT, dir, "--flags-only"] : [SCRIPT, dir];
@@ -90,7 +92,7 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
 }
 
 // ── 1. NO_SEED fires ───────────────────────────────────────────────────────────────────────────
-{
+it("1. NO_SEED fires", () => {
   const r = run(
     fixture({
       scripts: {
@@ -107,13 +109,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
       r.out,
   );
   assert.equal(r.code, 1, "it reported NO_SEED and still exited 0");
-}
+});
 
 // ── 2. NO_SEED stays quiet when the script seeds ───────────────────────────────────────────────
 // Two spellings, both live in this repository. The `--seed` one is a REGRESSION TEST: the first
 // draft of the seed pattern opened with `\b`, which never matches before a hyphen preceded by a
 // quote, so `"--seed"` inside argparse was invisible and a correctly-seeded script was accused.
-{
+it("2. NO_SEED stays quiet when the script seeds", () => {
   for (const [name, src] of [
     [
       "explicit",
@@ -139,10 +141,10 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
         r.out,
     );
   }
-}
+});
 
 // ── 3. ABS_PATH fires, and names the path ──────────────────────────────────────────────────────
-{
+it("3. ABS_PATH fires, and names the path", () => {
   const r = run(
     fixture({
       scripts: {
@@ -157,13 +159,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "a script that only runs on its author's laptop shipped in the reproduction directory unremarked:\n" +
       r.out,
   );
-}
+});
 
 // ── 4. ABS_PATH stays quiet on the two strings that look like paths and are not ─────────────────
 // Both guards are lifted from `check-anon.sh` cat. 5, which learned them the hard way: without
 // case-sensitivity an Express route `/users/export` matches `/Users/`; without the left anchor a
 // third party's RELATIVE `src/pages/workspace/AGENTS.md` matches `/workspace/`.
-{
+it("4. ABS_PATH stays quiet on the two strings that look like paths and are not", () => {
   const r = run(
     fixture({
       scripts: {
@@ -178,10 +180,10 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "a lowercase route and a relative third-party path were reported as absolute local paths:\n" +
       r.out,
   );
-}
+});
 
 // ── 5. IN_PLACE fires on a literal path read then overwritten ──────────────────────────────────
-{
+it("5. IN_PLACE fires on a literal path read then overwritten", () => {
   const r = run(
     fixture({
       scripts: {
@@ -197,10 +199,10 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
       "computes on the last run's output:\n" +
       r.out,
   );
-}
+});
 
 // ── 6. IN_PLACE fires on argv, the classic form ────────────────────────────────────────────────
-{
+it("6. IN_PLACE fires on argv, the classic form", () => {
   const r = run(
     fixture({
       scripts: {
@@ -214,14 +216,14 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     /IN_PLACE\s+repro\/fix\.py — reads and then overwrites `sys\.argv\[1\]`/,
     "the argv form of an in-place rewrite was not caught:\n" + r.out,
   );
-}
+});
 
 // ── 7. IN_PLACE stays quiet on read-here-write-there, and on a reused variable name ─────────────
 // 🔴 The second fixture is the one that decided the rule's shape. Matching the OPERAND EXPRESSION
 // instead of the literal produced seventeen hits on the live repository, essentially all of them a
 // variable called `file` or `p` reused across two unrelated loops. The rule is textual and literal
 // on purpose, and the recall that costs is written into the check's own blind-spot list.
-{
+it("7. IN_PLACE stays quiet on read-here-write-there, and on a reused variable name", () => {
   const r = run(
     fixture({
       scripts: {
@@ -239,14 +241,14 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
       "or a variable name reused across two loops was mistaken for dataflow:\n" +
       r.out,
   );
-}
+});
 
 // ── 8. the bundle is NOT scanned — the boundary with check-anon.sh, asserted ────────────────────
 // 🔴 The two checks grep the same four prefixes and would be a duplicate if they read the same
 // tree. They do not: check-anon reads the SHIPPED bundle and asks whether it leaks a machine
 // layout; this reads the WORKING tree and asks whether the script is portable. If this assertion
 // ever fails, one of the two checks should be deleted rather than both kept.
-{
+it("8. the bundle is NOT scanned — the boundary with check-anon.sh, asserted", () => {
   // Silence asserted through --flags-only rather than through the header's count, so that this case
   // tests the EXCLUSION and not the count. Sharing the count assertion with case 11 meant a defect
   // in the header would be caught here instead, which reads as an off-target result and hides
@@ -268,13 +270,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "the bundle was skipped and the ledger did not say so, which makes the boundary invisible:\n" +
       r.out,
   );
-}
+});
 
 // ── 9. an allow row is scoped to ONE KIND, not to the file ─────────────────────────────────────
 // 🔴 The design point. Waving through a hard-coded path in a script must not also wave through a
 // missing seed in that same script; that is how one justified exemption becomes a file nobody
 // checks. The fixture carries BOTH defects and allows only one.
-{
+it("9. an allow row is scoped to ONE KIND, not to the file", () => {
   const src =
     'import random\nrows = random.sample(open("/home/example/x.tsv").read().split(), 3)\n';
   const r = run(
@@ -303,10 +305,10 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
       "this whole design is arranged around:\n" +
       r.out,
   );
-}
+});
 
 // ── 10. a row naming nothing on disk is reported ────────────────────────────────────────────────
-{
+it("10. a row naming nothing on disk is reported", () => {
   const r = run(
     fixture({
       scripts: { "ok.py": "print(1)\n" },
@@ -319,12 +321,12 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "a row for a script that no longer exists sat unreported, so the list never shrinks:\n" +
       r.out,
   );
-}
+});
 
 // ── 11. the ledger prints on a CLEAN run, and the header states the count ───────────────────────
 // The count matters beyond tidiness: the ledger is ~20 lines that are not findings, so a caller
 // counting output lines would read a clean paper as twenty findings.
-{
+it("11. the ledger prints on a CLEAN run, and the header states the count", () => {
   const r = run(
     fixture({
       scripts: {
@@ -360,13 +362,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "",
     "--flags-only printed something about a clean tree:\n" + q.out,
   );
-}
+});
 
 // ── 12. KNOWN GAP, asserted so it stays visible ────────────────────────────────────────────────
 // 🔴 A path held in a variable defeats IN_PLACE. This is the price paid for precision in case 7 and
 // it is written into the check's own output; asserting the CURRENT behaviour so that when the rule
 // learns dataflow, this flips and must be updated.
-{
+it("12. KNOWN GAP, asserted so it stays visible", () => {
   const r = run(
     fixture({
       scripts: {
@@ -380,7 +382,7 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     0,
     "IN_PLACE now follows a path through a variable — good; update this assertion and case 7",
   );
-}
+});
 
 // ── 13. a repro/ ONE LEVEL DOWN is found — the input that was invisible ────────────────────────
 // 🔴 The defect this case exists for, measured 2026-08-26. `<paper-e>` keeps its
@@ -389,7 +391,7 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
 // one level below, including a reproduction script hard-coding a path into ANOTHER paper's
 // directory. A guard that tests for a filename rather than for the job; the same class the
 // `numbers` CI job documents about itself and the same class as the skipped `artifact/reproduce.py`.
-{
+it("13. a repro/ ONE LEVEL DOWN is found — the input that was invisible", () => {
   // Fixture is neutral ON PURPOSE: `/home/example/x.tsv` and the label `typed-shell/repro` stood here —
   // the owner's home directory and our paper's name in test data. The check does not depend on this:
   // it needs ANY absolute path.
@@ -411,13 +413,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     1,
     "the nested tree was scanned, findings were reported, and it still exited 0",
   );
-}
+});
 
 // ── 14. no repro/ ANYWHERE says so, instead of exiting in silence ──────────────────────────────
 // The half that matters more. Silence has to mean "scanned and clean"; if it can also mean "did not
 // look", then every clean report in this pipeline is worth nothing. `--flags-only` still stays
 // quiet, because a hook that speaks when it has nothing to say is removed within a day.
-{
+it("14. no repro/ ANYWHERE says so, instead of exiting in silence", () => {
   const r = run(fixture({ at: null }), false);
   assert.equal(r.code, 0, "a paper with no repro/ is not an error:\n" + r.out);
   assert.match(
@@ -433,12 +435,12 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     "",
     "--flags-only spoke about a paper it had nothing to say about:\n" + q.out,
   );
-}
+});
 
 // ── 15. a SECOND repro/ root is named in the ledger rather than silently dropped ────────────────
 // The allow file is scoped to one root, so this check reads one. That is a defensible scope and an
 // indefensible silence: an unread tree has to be a name you can count.
-{
+it("15. a SECOND repro/ root is named in the ledger rather than silently dropped", () => {
   const d = fixture({ scripts: { "ok.py": "print(1)\n" } });
   mkdirSync(join(d, "sub", "repro"), { recursive: true });
   writeFileSync(
@@ -458,13 +460,4 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     /sub\/repro/,
     "the second root was counted but not named:\n" + r.out,
   );
-}
-
-rmSync(tmp, { recursive: true, force: true });
-console.log(
-  "✓ generated-code: unseeded randomness, a hard-coded absolute path and an in-place overwrite (literal and argv) " +
-    "each fire; a seeded script, a lowercase route, a relative third-party path, a read-here-write-there script and a reused " +
-    "variable name all stay quiet; the released bundle is left to check-anon; allowances are per-kind, printed, and reported " +
-    "when stale; the ledger prints on a clean run and the header states its count; a repro/ one level down is found, " +
-    "a paper with none says so instead of exiting silent, and a second root is named; 1 known gap recorded",
-);
+});

@@ -1,6 +1,5 @@
 /**
  * Colocated test for `eslint-rules/papers.mjs`.
- * Run: `npx vigiles test eslint-rules/papers.harness.mjs`
  *
  * FOUR PARTS:
  *   I.   THE DEFAULT AND THE DECLARATION — the two ways a root is chosen.
@@ -13,10 +12,10 @@
  *        in this package. This is the assertion that makes the package reusable, and it is the
  *        one that will fail first when someone "just hard-codes it for now".
  *
- * 🔴 Assertions live at MODULE TOP LEVEL: `vigiles test` imports the file and treats "it did
- * not throw" as success; an exported `tests` object is run by nothing.
+ * Each part is one vitest `it`; an assertion that throws fails it.
  */
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.ts";
 import {
   mkdirSync,
@@ -33,13 +32,16 @@ import { fileURLToPath } from "node:url";
 
 import { DEFAULT_PAPERS_ROOT, paperFiles, papersRoot } from "./papers.ts";
 
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "papers-root-")));
 // Registered immediately, not at the end: assertions throw, and cleanup at the bottom of a
 // file never runs in exactly the runs that are red.
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => rmSync(TMP, { recursive: true, force: true }));
 
 /** A throwaway repository with the given directories already on disk. */
 const repoWith = (...dirs) => {
@@ -53,7 +55,7 @@ const declaring = (papers) => ({ [PAPERS_DIR_FIELD]: papers });
 // ═════════════════════════════════════════════════════════════════════════════
 // I. THE DEFAULT AND THE DECLARATION
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("I. THE DEFAULT AND THE DECLARATION: a consumer that declares nothing gets the default", () => {
   const repo = repoWith(DEFAULT_PAPERS_ROOT);
   for (const [label, pkg] of [
     ["no paperlint.json at all", undefined],
@@ -65,18 +67,25 @@ const declaring = (papers) => ({ [PAPERS_DIR_FIELD]: papers });
       DEFAULT_PAPERS_ROOT,
       `${label}: a consumer that declares nothing must get the default "${DEFAULT_PAPERS_ROOT}"`,
     );
-}
+});
 
 // A declared root wins, including a nested one — the first consumer's is two levels deep, and
 // a helper that only handled a single path segment would work on every fixture and fail there.
-for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
-  const repo = repoWith(declared);
-  assert.equal(
-    papersRoot(declaring(declared), repo),
-    declared,
-    `a declared root must be returned as declared: ${declared}`,
-  );
-}
+it("I. THE DEFAULT AND THE DECLARATION: a declared root wins, including a nested one", () => {
+  for (const declared of [
+    "papers",
+    "docs/papers",
+    "writing/drafts",
+    "a/b/c/d",
+  ]) {
+    const repo = repoWith(declared);
+    assert.equal(
+      papersRoot(declaring(declared), repo),
+      declared,
+      `a declared root must be returned as declared: ${declared}`,
+    );
+  }
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // II. THE REFUSALS — and the message each one carries
@@ -84,7 +93,7 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
 // 🔴 THE CENTRAL ONE. A root that is not on disk must STOP the config from loading, because
 // the alternative is not "wrong findings" but NO findings — and a run with no findings is
 // byte-identical to a run that checked everything and passed.
-{
+it("II. THE REFUSALS: a root that is not on disk stops the config from loading", () => {
   const repo = repoWith("somewhere-else");
   assert.throws(
     () => papersRoot(declaring("writing/drafts"), repo),
@@ -114,16 +123,18 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
       e.message.includes(`{ "${PAPERS_DIR_FIELD}": "path/to/papers" }`),
     "a missing root reached by DEFAULTING must say so and show the declaration to add",
   );
-}
+});
 
 // Shapes that are present but unusable. Left unchecked, `""` is the worst of them: it makes
 // every glob `"/*/paper.tex"` — rooted at the filesystem, matching nothing, silently.
-for (const bad of ["", null, 0, false, [], {}, 42])
-  assert.throws(
-    () => papersRoot(declaring(bad), TMP),
-    (e) => e instanceof TypeError && /non-empty string/.test(e.message),
-    `a "papers" of ${JSON.stringify(bad)} must be refused as a type error, not coerced`,
-  );
+it("II. THE REFUSALS: shapes that are present but unusable", () => {
+  for (const bad of ["", null, 0, false, [], {}, 42])
+    assert.throws(
+      () => papersRoot(declaring(bad), TMP),
+      (e) => e instanceof TypeError && /non-empty string/.test(e.message),
+      `a "papers" of ${JSON.stringify(bad)} must be refused as a type error, not coerced`,
+    );
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // III. PROPERTIES NOBODY SEES
@@ -131,7 +142,7 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // 🔴 THE RETURNED ROOT MUST STAY RELATIVE. ESLint resolves `files:` globs against the config's
 // directory; an absolute path there is a different pattern with different behaviour, and the
 // breakage would show up as "the rule stopped matching", i.e. as silence.
-{
+it("III. PROPERTIES NOBODY SEES: the returned root stays relative", () => {
   const repo = repoWith("writing/drafts");
   const got = papersRoot(declaring("writing/drafts"), repo);
   assert.equal(
@@ -144,14 +155,14 @@ for (const bad of ["", null, 0, false, [], {}, 42])
     false,
     "the root must not carry the base directory",
   );
-}
+});
 
 // 🔴 `baseDir` DECIDES, NOT `process.cwd()`. This is the assertion that pins the reason the
 // parameter exists: cwd is wherever the editor, the CI step or the hook runtime happened to
 // start, and in a git worktree it can be an entirely different checkout. A helper that quietly
 // used cwd would pass every test run from the repository root and fail in exactly the setups
 // nobody runs tests in.
-{
+it("III. PROPERTIES NOBODY SEES: baseDir decides, not process.cwd()", () => {
   const real = repoWith("writing/drafts");
   const empty = repoWith("unrelated");
   assert.equal(papersRoot(declaring("writing/drafts"), real), "writing/drafts");
@@ -161,11 +172,11 @@ for (const bad of ["", null, 0, false, [], {}, 42])
     "baseDir must be what is consulted — the same declaration must fail against a base that " +
       "does not contain the root",
   );
-}
+});
 
 // Every glob set is derived from the root, and NONE of them is spelled out independently: a
 // set that forgot to interpolate would keep matching the previous consumer's layout.
-{
+it("III. PROPERTIES NOBODY SEES: every glob set is derived from the root", () => {
   const sets = paperFiles("R");
   const names = Object.keys(sets).sort();
   assert.deepEqual(
@@ -194,7 +205,7 @@ for (const bad of ["", null, 0, false, [], {}, 42])
       other[name].map((g) => g.replace(/^Q\//, "")),
       `${name}: the two roots did not produce the same shapes — something is hard-coded`,
     );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // IV. THE ACCEPTANCE CRITERION OF THE EXTRACTION
@@ -204,7 +215,7 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // read once, a test runs every time. The forbidden word is the first consumer's own directory
 // name; it may appear ONLY in this file (as the value under test) and in prose that documents
 // the decision.
-{
+it("IV. THE ACCEPTANCE CRITERION OF THE EXTRACTION: no consumer-specific path anywhere in this package", () => {
   // ⚠️ THE ONLY LEGITIMATE OCCURRENCE OF THIS WORD IN THE PACKAGE, and it is here out of
   // necessity: it is the SUBJECT of the assert. The fixtures above deliberately use neutral
   // paths (`writing/drafts`) — until 2026-09-12 they carried the consumer's real directory name,
@@ -252,4 +263,4 @@ for (const bad of ["", null, 0, false, [], {}, 42])
       `one possible user, which is the thing the extraction exists to undo. The root belongs ` +
       `in the consumer's package.json — see eslint-rules/papers.mjs`,
   );
-}
+});

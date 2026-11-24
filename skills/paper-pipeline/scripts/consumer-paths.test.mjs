@@ -1,7 +1,5 @@
 /**
- * consumer.harness.mjs — the path facts the move into a package depends on, both directions.
- *
- * `npx vigiles test skills/paper-pipeline/scripts/consumer.harness.mjs`
+ * consumer-paths.test.mjs — the path facts the move into a package depends on, both directions.
  *
  * 🔴 WHY THIS FILE IS NOT OPTIONAL. The resolutions in `consumer.mjs` all fail in the SILENT
  * direction when they are wrong: a bad main guard still exits 0, a bad root still hashes a missing directory to a stable value. None of them produce an
@@ -9,13 +7,14 @@
  * BOTH directions — fires when it should, silent when it should — because an assertion that only
  * ever sees the good case cannot tell a working resolver from a constant.
  *
- * Assertions run at module top level: `vigiles test` treats "did not throw" as a pass.
+ * Each part is one vitest `it`; an assertion that throws fails it.
  *
  * Parts VIII-X cover the fourth carrier, `scriptsRoot()`. It fails in the same silent direction
  * as the rest and worse: its value is a PREFIX a caller filters prose with, so a wrong one
  * matches nothing and every check built on it reports zero findings.
  */
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import {
   mkdirSync,
   mkdtempSync,
@@ -42,12 +41,15 @@ import {
   BIN_FILE,
 } from "./consumer.mjs";
 
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 // ── THE PACKAGE NAME HAS ONE SOURCE, AND IT MATCHES THE MANIFEST ─────────────────────────────
 // Every path into the installed package is built from PACKAGE_NAME. Two files cannot import it
 // and spell it themselves: the manifest, and the hook wiring (JSON). Both are checked here.
-{
+it("THE PACKAGE NAME HAS ONE SOURCE, AND IT MATCHES THE MANIFEST", () => {
   const root = resolve(HERE, "..", "..", "..");
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   assert.equal(
@@ -79,9 +81,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
       ),
     `every command in plugin/hooks/hooks.json runs node_modules/${PACKAGE_NAME}/${BIN_FILE}`,
   );
-}
+});
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => rmSync(TMP, { recursive: true, force: true }));
 
 /** A throwaway consumer repository with the given root `paperlint.json` settings (or none). */
 function fakeConsumer(block) {
@@ -99,47 +101,54 @@ function installedDir(root) {
 }
 
 // ── IV. `insideNodeModules` is SEGMENT-WISE, not a substring ──────────────────────────────────
-assert.equal(
-  insideNodeModules(join("a", "node_modules", "b")),
-  true,
-  "a real install went undetected",
-);
-assert.equal(
-  insideNodeModules(join("a", "my-node_modules-inspector", "b")),
-  false,
-  "a directory whose NAME merely contains `node_modules` was treated as an install — that " +
-    "consumer would be refused for a naming coincidence",
-);
-assert.equal(
-  insideNodeModules(join("a", "b")),
-  false,
-  "a plain path was reported as installed",
-);
+it("IV. `insideNodeModules` is SEGMENT-WISE, not a substring", () => {
+  assert.equal(
+    insideNodeModules(join("a", "node_modules", "b")),
+    true,
+    "a real install went undetected",
+  );
+  assert.equal(
+    insideNodeModules(join("a", "my-node_modules-inspector", "b")),
+    false,
+    "a directory whose NAME merely contains `node_modules` was treated as an install — that " +
+      "consumer would be refused for a naming coincidence",
+  );
+  assert.equal(
+    insideNodeModules(join("a", "b")),
+    false,
+    "a plain path was reported as installed",
+  );
+});
 
 // ── V. `consumerRoot` prefers the harness-provided root over the cwd ──────────────────────────
-assert.equal(
-  consumerRoot({ env: { CLAUDE_PROJECT_DIR: "/x/y" }, cwd: "/somewhere/else" }),
-  "/x/y",
-  "CLAUDE_PROJECT_DIR must win: a hook or an editor can start the process anywhere, and the cwd " +
-    "then names the wrong repository",
-);
-assert.equal(
-  consumerRoot({ env: {}, cwd: "/somewhere/else" }),
-  "/somewhere/else",
-  "without the variable the cwd is the answer — every documented invocation is typed from the root",
-);
-assert.equal(
-  consumerSkillsDir({ env: {}, cwd: "/r" }),
-  join("/r", ".claude", "skills"),
-  "the skills directory must hang off the consumer root",
-);
+it("V. `consumerRoot` prefers the harness-provided root over the cwd", () => {
+  assert.equal(
+    consumerRoot({
+      env: { CLAUDE_PROJECT_DIR: "/x/y" },
+      cwd: "/somewhere/else",
+    }),
+    "/x/y",
+    "CLAUDE_PROJECT_DIR must win: a hook or an editor can start the process anywhere, and the cwd " +
+      "then names the wrong repository",
+  );
+  assert.equal(
+    consumerRoot({ env: {}, cwd: "/somewhere/else" }),
+    "/somewhere/else",
+    "without the variable the cwd is the answer — every documented invocation is typed from the root",
+  );
+  assert.equal(
+    consumerSkillsDir({ env: {}, cwd: "/r" }),
+    join("/r", ".claude", "skills"),
+    "the skills directory must hang off the consumer root",
+  );
+});
 
 // ── VI. 🔴 `isMain` THROUGH A SYMLINK — the measurement the whole move rests on ────────────────
 // Node resolves the entry point to its REALPATH but leaves `process.argv[1]` as typed. The idiom
 // `import.meta.url === `file://${process.argv[1]}`` is therefore FALSE when a script is reached
 // through a symlink — and false silently: the process exits 0 having run no CLI at all. Nine
 // scripts in this directory are reached exactly that way by a consumer.
-{
+it("VI. `isMain` THROUGH A SYMLINK — the measurement the whole move rests on", () => {
   const root = mkdtempSync(join(TMP, "symlink-"));
   const real = join(root, "node_modules", "pkg", "scripts");
   mkdirSync(real, { recursive: true });
@@ -188,20 +197,23 @@ assert.equal(
     true,
     "the legacy guard failed even directly — the probe is wrong",
   );
-}
+});
 
 // ── VII. imported, not executed ───────────────────────────────────────────────────────────────
-assert.equal(
-  isMain(import.meta.url) && !process.argv[1].endsWith("consumer.harness.mjs"),
-  false,
-  "isMain claimed a module was the entry point while something else was",
-);
+it("VII. imported, not executed", () => {
+  assert.equal(
+    isMain(import.meta.url) &&
+      !process.argv[1].endsWith("consumer-paths.test.mjs"),
+    false,
+    "isMain claimed a module was the entry point while something else was",
+  );
+});
 
 // ── VIII. THE FOURTH CARRIER — declared wins, absent falls back to the default ────────────────
 // Both directions in one block on purpose: a resolver that returned the declaration for every
 // input and a resolver that returned the default for every input each pass HALF of this pair,
 // and half of a pair is a constant wearing a function's name.
-{
+it("VIII. THE FOURTH CARRIER — declared wins, absent falls back to the default", () => {
   const declaredRoot = fakeConsumer({ scripts: "tools/pipeline" });
   mkdirSync(join(declaredRoot, "tools", "pipeline"), { recursive: true });
 
@@ -244,10 +256,10 @@ assert.equal(
     "tools/pipeline",
     "the declaration must be read from CLAUDE_PROJECT_DIR when it is set, not from the cwd",
   );
-}
+});
 
 // ── IX. THE FOURTH CARRIER — the two refusals, each checked for its CURE ──────────────────────
-{
+it("IX. THE FOURTH CARRIER — the two refusals, each checked for its CURE", () => {
   // 1. A value that resolves inside node_modules. This is the tempting wrong fix after the move,
   //    and it is how the DEFAULT fails as well: with the process started inside the installed
   //    package and CLAUDE_PROJECT_DIR unset, the consumer root is itself under node_modules.
@@ -340,13 +352,13 @@ assert.equal(
     "an empty scripts path was accepted; it resolves to the consumer root itself, so the prefix " +
       "would match every command in every skill",
   );
-}
+});
 
 // ── X. THE PREFIX IS DERIVED, NOT RESTATED ─────────────────────────────────────────────
 // The names belong to this package; a consumer that spelled them out would keep its copy in step
 // by hand. The trailing slash on `prefix` is load-bearing: without it the prefix also matches a
 // SIBLING directory whose name merely starts with the root's.
-{
+it("X. THE PREFIX IS DERIVED, NOT RESTATED", () => {
   const s = pipelineScripts("a/b");
   // The boundary is asserted BEFORE the literal equality for the same reason part VIII reorders:
   // `assert` aborts at the first failure, and a prefix that lost its slash died on "must end in a
@@ -374,7 +386,7 @@ assert.equal(
     'a declared trailing slash doubled the separator. `"scripts": "tools/pipeline/"` is a normal ' +
       "thing to write, and the doubled prefix matches no instruction at all.",
   );
-}
+});
 
 // ── XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (paperlint#62) ────────
 // `paperlint init` installs every skill as a SYMLINK `.claude/skills/<name> -> …/skills/<name>`. A
@@ -383,7 +395,7 @@ assert.equal(
 // asked this question that way saw ZERO installed skills in every consumer and refused to start.
 // The tree below is built on disk, not faked — the property under test is how the filesystem
 // answers, and a stub would test the stub.
-{
+it("XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (paperlint#62)", () => {
   const home = join(TMP, "skills-home");
   const store = join(TMP, "skills-store");
   const skill = (dir, name) => {
@@ -458,9 +470,4 @@ assert.equal(
     "a link that cannot be resolved (ELOOP) was not refused",
   );
   rmSync(join(home, "loop"));
-}
-
-console.log(
-  "✓ consumer: three rungs each proved in both directions, node_modules refused, symlinked main guard held, " +
-    "scripts root declared/default/refused, installed skills follow links and refuse dangling ones",
-);
+});

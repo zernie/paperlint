@@ -1,7 +1,7 @@
 /**
  * `pdf-facts.ts` — pdf.js reading REAL PDFs, committed under `fixtures/pdf-facts/`.
  *
- * The pure decisions are tested in `pdf-geometry.harness.ts` with hand-written words. This file is
+ * The pure decisions are tested in `pdf-geometry.test.ts` with hand-written words. This file is
  * the other half: that the shell asks pdf.js the right questions, with the right options, and maps
  * what comes back. The expected numbers are the ones poppler reported for the same files in the
  * 2026-09-24 measurement (issue #61), so a pass here is agreement with the tool this replaced.
@@ -11,15 +11,24 @@ import { writeFileSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.ts";
+import { afterAll, expect, it, vi } from "vitest";
 import type { PdfFacts } from "./pdf-facts.ts";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = resolve(HERE, "..", "fixtures", "pdf-facts");
 const { readPdf } = await import("./pdf-facts.ts");
 const { classifyLastPage } = await import("./pdf-geometry.ts");
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  const shown = typeof detail === "string" ? detail : JSON.stringify(detail);
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${shown}`)
+    .toBe(true);
+};
 
 const read = async (name: string): Promise<PdfFacts> => {
   const r = await readPdf(join(FIX, name));
@@ -34,7 +43,7 @@ const named = (facts: PdfFacts, name: string) =>
     : undefined;
 
 // ── t3-all: every text font is Type 3 ──────────────────────────────────────────────────
-{
+it("t3-all: every text font is Type 3", async () => {
   const f = await read("t3-all.pdf");
   check(
     "t3-all: four Type 3 fonts, as poppler lists — including one no text item names",
@@ -50,10 +59,10 @@ const named = (facts: PdfFacts, name: string) =>
       Math.abs(last.columns[1] - 553.2) <= 7.2,
     JSON.stringify(last),
   );
-}
+});
 
 // ── ttf: a LuaLaTeX PDF, composite TrueType ────────────────────────────────────────────
-{
+it("ttf: a LuaLaTeX PDF, composite TrueType", async () => {
   const f = await read("ttf.pdf");
   const arsenal = named(f, "Arsenal SC Regular");
   check(
@@ -65,10 +74,10 @@ const named = (facts: PdfFacts, name: string) =>
     "ttf: two pages, and the 8-word last page is a stub",
     f.pages === 2 && classifyLastPage(f.last).kind === "stub",
   );
-}
+});
 
 // ── t3-mixed: the sub/uni bug of the poppler reader ────────────────────────────────────
-{
+it("t3-mixed: the sub/uni bug of the poppler reader", async () => {
   const f = await read("t3-mixed.pdf");
   // pdffonts prints this font as `Times-Roman  Type 1  Custom  no  no  yes`. The old reader
   // tested `yes` anywhere in the row, found the `uni` column's, and called the font embedded.
@@ -92,10 +101,10 @@ const named = (facts: PdfFacts, name: string) =>
       JSON.stringify(["embedded", "embedded", "type3", "not-embedded"]),
     JSON.stringify(f.fonts),
   );
-}
+});
 
 // ── corrupt-font: poppler says embedded, the program does not parse ────────────────────
-{
+it("corrupt-font: poppler says embedded, the program does not parse", async () => {
   const f = await read("corrupt-font.pdf");
   check(
     "corrupt-font: a font program that does not parse counts as not embedded",
@@ -103,19 +112,19 @@ const named = (facts: PdfFacts, name: string) =>
       named(f, "CMBX12")?.kind === "embedded",
     JSON.stringify(f.fonts),
   );
-}
+});
 
 // ── what cannot be read says so ─────────────────────────────────────────────────────────
-{
+it("what cannot be read says so", async () => {
   const r = await readPdf(join(FIX, "encrypted.pdf"));
   check(
     "an encrypted PDF is `encrypted`, not a crash",
     !r.ok && r.reason === "encrypted",
     JSON.stringify(r),
   );
-}
+});
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-pdf-facts-")));
-try {
+it("what cannot be read says so: a file that is not a PDF, and a missing one", async () => {
   const notPdf = join(tmp, "paper.pdf");
   writeFileSync(notPdf, "%PDF-stale\n");
   const bad = await readPdf(notPdf);
@@ -130,12 +139,13 @@ try {
     !missing.ok && missing.reason === "unreadable",
     JSON.stringify(missing),
   );
-} finally {
+});
+afterAll(() => {
   rmSync(tmp, { recursive: true, force: true });
-}
+});
 
 // ── hidden-text: the boxes banal is fed ────────────────────────────────────────────────
-{
+it("hidden-text: the boxes banal is fed", async () => {
   const f = await read("hidden-text.pdf");
   const boxes = f.layout.flatMap((p, i) =>
     p.boxes.map((b) => ({ ...b, page: i + 1 })),
@@ -179,8 +189,4 @@ try {
         Math.abs(b.size - 9.96) < 0.1,
     ) > 3000,
   );
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — pdf-facts: pdf.js on real PDFs agrees with poppler, and says what it cannot read`,
-);
+});

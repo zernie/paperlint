@@ -28,7 +28,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { recordCheck } from "vigiles";
+import { it } from "vitest";
 import { installedSkills } from "./scripts/consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -57,25 +57,6 @@ const routed = new Set(
     .filter((n) => dirs.includes(n)),
 );
 
-// ── forward: a bolded backticked token in a routing table must be a real skill ──
-// `**`name`**` is the map's own emphasis for "go run this one", so it is a claim
-// about a skill and not about `pdflatex` or `jinja2` (plain backticks, correctly
-// out of scope).
-const asserted = [...src.matchAll(/\*\*`([a-z0-9-]+)`\*\*/g)].map((m) => m[1]);
-assert.ok(
-  asserted.length > 0,
-  "found no routed skills at all — the extraction broke, not the map",
-);
-for (const name of new Set(asserted)) {
-  assert.ok(
-    dirs.includes(name),
-    `paper-pipeline routes to \`${name}\`, and no .claude/skills/${name}/SKILL.md exists. ` +
-      `The conductor points at nothing; a run following the map stalls there.`,
-  );
-  recordCheck();
-}
-
-// ── backward: every shipped skill is named somewhere in the map ──
 /** Shipped skills the conductor does NOT name, each with why. */
 const NOT_IN_MAP = new Map([
   [
@@ -84,33 +65,51 @@ const NOT_IN_MAP = new Map([
   ],
 ]);
 
-for (const name of dirs) {
-  if (name === SELF) continue;
-  if (NOT_IN_MAP.has(name)) continue;
-  assert.ok(
-    routed.has(name),
-    `${name} ships with this package and paper-pipeline never names it. A reader of the map ` +
-      `does not learn the stage exists; name it in the map, or add it to NOT_IN_MAP with a reason.`,
+// ── forward: a bolded backticked token in a routing table must be a real skill ──
+it("forward: a bolded backticked token in a routing table must be a real skill", () => {
+  // `**`name`**` is the map's own emphasis for "go run this one", so it is a claim
+  // about a skill and not about `pdflatex` or `jinja2` (plain backticks, correctly
+  // out of scope).
+  const asserted = [...src.matchAll(/\*\*`([a-z0-9-]+)`\*\*/g)].map(
+    (m) => m[1],
   );
-  recordCheck();
-}
+  assert.ok(
+    asserted.length > 0,
+    "found no routed skills at all — the extraction broke, not the map",
+  );
+  for (const name of new Set(asserted)) {
+    assert.ok(
+      dirs.includes(name),
+      `paper-pipeline routes to \`${name}\`, and no .claude/skills/${name}/SKILL.md exists. ` +
+        `The conductor points at nothing; a run following the map stalls there.`,
+    );
+  }
+});
+
+// ── backward: every shipped skill is named somewhere in the map ──
+it("backward: every shipped skill is named somewhere in the map", () => {
+  for (const name of dirs) {
+    if (name === SELF) continue;
+    if (NOT_IN_MAP.has(name)) continue;
+    assert.ok(
+      routed.has(name),
+      `${name} ships with this package and paper-pipeline never names it. A reader of the map ` +
+        `does not learn the stage exists; name it in the map, or add it to NOT_IN_MAP with a reason.`,
+    );
+  }
+});
 
 // ── the exception list must not rot, in BOTH directions ──
-for (const [name, reason] of NOT_IN_MAP) {
-  assert.ok(
-    dirs.includes(name),
-    `NOT_IN_MAP names "${name}" and no such skill ships — delete the entry. Recorded reason: "${reason}"`,
-  );
-  assert.ok(
-    !routed.has(name),
-    `NOT_IN_MAP still names "${name}", but paper-pipeline DOES name it now — delete the entry, ` +
-      `so the assertion above starts protecting this skill.`,
-  );
-  recordCheck();
-}
-
-console.log(
-  `✓ paper-pipeline routing: ${String(new Set(asserted).size)} routes resolve · ` +
-    `${String(dirs.length - NOT_IN_MAP.size - 1)} skills named · ` +
-    `${String(NOT_IN_MAP.size)} not in the map (${[...NOT_IN_MAP.keys()].join(", ")})`,
-);
+it("the exception list must not rot, in BOTH directions", () => {
+  for (const [name, reason] of NOT_IN_MAP) {
+    assert.ok(
+      dirs.includes(name),
+      `NOT_IN_MAP names "${name}" and no such skill ships — delete the entry. Recorded reason: "${reason}"`,
+    );
+    assert.ok(
+      !routed.has(name),
+      `NOT_IN_MAP still names "${name}", but paper-pipeline DOES name it now — delete the entry, ` +
+        `so the assertion above starts protecting this skill.`,
+    );
+  }
+});

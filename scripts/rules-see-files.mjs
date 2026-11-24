@@ -21,7 +21,7 @@
  * ESLint what the effective config is. A rule enabled for zero linted files is BLIND.
  *
  * Run: `node scripts/rules-see-files.mjs`  (exit 1 and a named rule when something is blind)
- * Tested by: `scripts/rules-see-files.harness.mjs` — both halves, quiet here and firing on a
+ * Tested by: `scripts/rules-see-files-rule.test.mjs` — both halves, quiet here and firing on a
  * planted empty glob.
  */
 import { ESLint } from "eslint";

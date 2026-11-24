@@ -18,7 +18,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.ts";
+import { expect, it, vi } from "vitest";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -32,7 +35,11 @@ const {
   supportedPlatform,
 } = await import(join(HERE, "engine.ts"));
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label, cond, detail) =>
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${detail}`)
+    .toBe(true);
 
 // ── 1. resolveEngine ────────────────────────────────────────────────────────────────────
 const tree = (label, missing = []) => ({ label, bin: `/${label}`, missing });
@@ -102,20 +109,22 @@ const ROWS = [
     { kind: "use-system", tree: COMPLETE_SYS },
   ],
 ];
-for (const [label, f, want] of ROWS) {
-  const got = resolveEngine(f);
+it("1. resolveEngine", () => {
+  for (const [label, f, want] of ROWS) {
+    const got = resolveEngine(f);
+    check(
+      `resolveEngine: ${label}`,
+      JSON.stringify(got) === JSON.stringify(want),
+      JSON.stringify(got),
+    );
+  }
   check(
-    `resolveEngine: ${label}`,
-    JSON.stringify(got) === JSON.stringify(want),
-    JSON.stringify(got),
+    "supportedPlatform: linux and darwin, not win32",
+    supportedPlatform("linux") &&
+      supportedPlatform("darwin") &&
+      !supportedPlatform("win32"),
   );
-}
-check(
-  "supportedPlatform: linux and darwin, not win32",
-  supportedPlatform("linux") &&
-    supportedPlatform("darwin") &&
-    !supportedPlatform("win32"),
-);
+});
 
 // ── 2. the fact readers ─────────────────────────────────────────────────────────────────
 const PKGS = {
@@ -123,47 +132,50 @@ const PKGS = {
   latex: ["latex.ltx", "article.cls"],
   libertine: ["libertine.sty"],
 };
-check(
-  "missingPackages: matched by FILE NAME of each printed path, sorted",
-  JSON.stringify(missingPackages(PKGS, "/t/tex/latex/acmart/acmart.cls\n")) ===
-    '["latex","libertine"]',
-);
-// Guards: a package counts as present only when EVERY file that proves it resolves.
-check(
-  "missingPackages: one proof of two missing is enough to count the package missing",
-  missingPackages(
-    { latex: ["latex.ltx", "article.cls"] },
-    "/t/latex.ltx\n",
-  ).includes("latex"),
-);
-check(
-  "missingPackages: all present → none",
-  missingPackages(
-    PKGS,
-    "/a/acmart.cls\n/b/latex.ltx\n/b/article.cls\n/c/libertine.sty\n",
-  ).length === 0,
-);
-check(
-  "missingTools: by executable in the bin directory",
-  JSON.stringify(
-    missingTools(
-      { texcount: ["texcount"], checkcites: ["checkcites"] },
-      "/bin",
-      (p) => p === "/bin/texcount",
-    ),
-  ) === '["checkcites"]',
-);
-check(
-  "whichOnPath: the first directory that has it; empty segments skipped",
-  whichOnPath("pdflatex", ":/a:/b:/c", (p) =>
-    ["/b/pdflatex", "/c/pdflatex"].includes(p),
-  ) === "/b",
-);
-check(
-  "whichOnPath: nowhere → null",
-  whichOnPath("pdflatex", "/a:/b", () => false) === null,
-);
-{
+it("2. the fact readers: missingPackages, missingTools, whichOnPath", () => {
+  check(
+    "missingPackages: matched by FILE NAME of each printed path, sorted",
+    JSON.stringify(
+      missingPackages(PKGS, "/t/tex/latex/acmart/acmart.cls\n"),
+    ) === '["latex","libertine"]',
+  );
+  // Guards: a package counts as present only when EVERY file that proves it resolves.
+  check(
+    "missingPackages: one proof of two missing is enough to count the package missing",
+    missingPackages(
+      { latex: ["latex.ltx", "article.cls"] },
+      "/t/latex.ltx\n",
+    ).includes("latex"),
+  );
+  check(
+    "missingPackages: all present → none",
+    missingPackages(
+      PKGS,
+      "/a/acmart.cls\n/b/latex.ltx\n/b/article.cls\n/c/libertine.sty\n",
+    ).length === 0,
+  );
+  check(
+    "missingTools: by executable in the bin directory",
+    JSON.stringify(
+      missingTools(
+        { texcount: ["texcount"], checkcites: ["checkcites"] },
+        "/bin",
+        (p) => p === "/bin/texcount",
+      ),
+    ) === '["checkcites"]',
+  );
+  check(
+    "whichOnPath: the first directory that has it; empty segments skipped",
+    whichOnPath("pdflatex", ":/a:/b:/c", (p) =>
+      ["/b/pdflatex", "/c/pdflatex"].includes(p),
+    ) === "/b",
+  );
+  check(
+    "whichOnPath: nowhere → null",
+    whichOnPath("pdflatex", "/a:/b", () => false) === null,
+  );
+});
+it("2. the fact readers: probeTree through a fake runner", () => {
   const calls = [];
   const run = (cmd, args) => {
     calls.push([cmd, args]);
@@ -181,20 +193,22 @@ check(
     "probeTree: kpsewhich's exit code is not the verdict — the printed paths are",
     JSON.stringify(missing) === '["latex","libertine"]',
   );
-}
+});
 // Guards: "could not ask" must never read as "nothing missing" — a broken tree would be used.
-check(
-  "🔴 probeTree: a kpsewhich that cannot start finds NOTHING — never 'all present'",
-  JSON.stringify(
-    probeTree("/none", PKGS, () => ({ error: new Error("ENOENT") })),
-  ) === '["acmart","latex","libertine"]',
-);
+it("2. the fact readers: a kpsewhich that cannot start finds nothing", () => {
+  check(
+    "🔴 probeTree: a kpsewhich that cannot start finds NOTHING — never 'all present'",
+    JSON.stringify(
+      probeTree("/none", PKGS, () => ({ error: new Error("ENOENT") })),
+    ) === '["acmart","latex","libertine"]',
+  );
+});
 
 // ── 3. "installed" means a regular file that can be run — on a REAL filesystem ─────────────
 // 🔴 `existsSync` says yes to a directory and to a file without the execute bit; both then fail
 // to start, while `paperlint toolchain --check` reported the tree verified. Checked on disk, not
 // through an injected predicate, because the predicate is exactly what was wrong.
-{
+it('3. "installed" means a regular file that can be run — on a REAL filesystem', () => {
   const bin = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-engine-bin-")),
   );
@@ -246,7 +260,7 @@ check(
   } finally {
     rmSync(bin, { recursive: true, force: true });
   }
-}
+});
 
 // ── missingDependencies: what an install that "continued anyway" left out ──────────────────
 // Real stdout of `tlmgr check depends` on a tree whose install-tl lost unicode-data to a mirror
@@ -256,7 +270,7 @@ const BROKEN_DEPENDS =
   "\f DEPENDS WITHOUT PACKAGES:\n" +
   "unicode-data in: collection-basic latex-bin luahbtex luatex\n" +
   "\f PACKAGES NOT IN ANY COLLECTION: acmart booktabs caption\n";
-{
+it('missingDependencies: what an install that "continued anyway" left out', () => {
   const calls = [];
   const run = (cmd, args) => {
     calls.push([cmd, args]);
@@ -280,45 +294,45 @@ const BROKEN_DEPENDS =
     JSON.stringify(missing) === '["unicode-data"]',
     JSON.stringify(missing),
   );
-}
-check(
-  "missingDependencies: packages outside any collection are not gaps",
-  JSON.stringify(
-    missingDependencies("/tl/bin", () => ({
-      stdout: "\f PACKAGES NOT IN ANY COLLECTION: acmart booktabs\n",
-      status: 2,
-    })),
-  ) === "[]",
-);
-check(
-  "missingDependencies: a clean tree has none",
-  JSON.stringify(
-    missingDependencies("/tl/bin", () => ({ stdout: "", status: 0 })),
-  ) === "[]",
-);
+});
+it("missingDependencies: the other cases", () => {
+  check(
+    "missingDependencies: packages outside any collection are not gaps",
+    JSON.stringify(
+      missingDependencies("/tl/bin", () => ({
+        stdout: "\f PACKAGES NOT IN ANY COLLECTION: acmart booktabs\n",
+        status: 2,
+      })),
+    ) === "[]",
+  );
+  check(
+    "missingDependencies: a clean tree has none",
+    JSON.stringify(
+      missingDependencies("/tl/bin", () => ({ stdout: "", status: 0 })),
+    ) === "[]",
+  );
 
-check(
-  "missingDependencies: a tlmgr that cannot start reports nothing (the tree is judged by probeTree alone)",
-  JSON.stringify(
-    missingDependencies("/tl/bin", () => ({ error: new Error("ENOENT") })),
-  ) === "[]",
-);
-check(
-  "missingDependencies: a section that runs to the end of the output, with no header after it",
-  JSON.stringify(
-    missingDependencies("/tl/bin", () => ({
-      stdout:
-        "\f DEPENDS WITHOUT PACKAGES:\nunicode-data in: latex-bin\nhyphen-base in: x",
-      status: 2,
-    })),
-  ) === '["hyphen-base","unicode-data"]',
-);
-check(
-  "a runner that returns no stdout at all: tlmgr lists nothing, kpsewhich finds nothing",
-  JSON.stringify(missingDependencies("/tl/bin", () => ({ status: 0 }))) ===
-    "[]" &&
-    JSON.stringify(probeTree("/tl/bin", PKGS, () => ({ status: 0 }))) ===
-      JSON.stringify(Object.keys(PKGS).sort()),
-);
-
-console.log(`engine: ${check.count} checks passed`);
+  check(
+    "missingDependencies: a tlmgr that cannot start reports nothing (the tree is judged by probeTree alone)",
+    JSON.stringify(
+      missingDependencies("/tl/bin", () => ({ error: new Error("ENOENT") })),
+    ) === "[]",
+  );
+  check(
+    "missingDependencies: a section that runs to the end of the output, with no header after it",
+    JSON.stringify(
+      missingDependencies("/tl/bin", () => ({
+        stdout:
+          "\f DEPENDS WITHOUT PACKAGES:\nunicode-data in: latex-bin\nhyphen-base in: x",
+        status: 2,
+      })),
+    ) === '["hyphen-base","unicode-data"]',
+  );
+  check(
+    "a runner that returns no stdout at all: tlmgr lists nothing, kpsewhich finds nothing",
+    JSON.stringify(missingDependencies("/tl/bin", () => ({ status: 0 }))) ===
+      "[]" &&
+      JSON.stringify(probeTree("/tl/bin", PKGS, () => ({ status: 0 }))) ===
+        JSON.stringify(Object.keys(PKGS).sort()),
+  );
+});

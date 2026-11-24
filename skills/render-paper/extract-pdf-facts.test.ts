@@ -10,6 +10,8 @@
  *
  * The shim imports the compiled package (`dist/`), so `npm run build` runs before this.
  */
+import { afterAll, expect, it } from "vitest";
+import { failureMessage } from "../../lib/check.ts";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -25,7 +27,6 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { createChecker } from "../../lib/check.ts";
 import type { ScriptResult } from "../../test/support.ts";
 
 /** The facts file, as far as these checks read it. */
@@ -52,7 +53,10 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const SHIM = join(HERE, "extract-pdf-facts.mjs");
 const FIX = resolve(HERE, "..", "..", "fixtures", "pdf-facts");
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  expect.soft(cond, failureMessage(label, detail)).toBeTruthy();
+};
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-extract-")));
 /**
@@ -83,7 +87,13 @@ const shim = (args: readonly string[], env: Record<string, string> = {}) =>
 const said = (r: Pick<ScriptResult, "stdout" | "stderr">) =>
   `${r.stdout}${r.stderr}`;
 
-try {
+afterAll(() => {
+  rmSync(root, { recursive: true, force: true });
+});
+const loose = join(root, "papers", "loose");
+
+// ── the exit-code contract, schema 3, and the no-no-yes font ──
+it("the exit-code contract, schema 3, and the no-no-yes font", () => {
   const paper = join(root, "papers", "mixed");
   mkdirSync(paper, { recursive: true });
   cpSync(join(FIX, "t3-mixed.pdf"), join(paper, "paper.pdf"));
@@ -188,9 +198,10 @@ try {
     missing.status === 3 && /not built/.test(said(missing)),
     said(missing),
   );
+}, 60_000);
 
-  // ── a PDF named directly, in a directory with no paperlint.json, no project dir set ──
-  const loose = join(root, "papers", "loose");
+// ── a PDF named directly, in a directory with no paperlint.json, no project dir set ──
+it("a PDF named directly, in a directory with no paperlint.json, no project dir set", () => {
   mkdirSync(loose, { recursive: true });
   cpSync(join(FIX, "t3-mixed.pdf"), join(loose, "draft.pdf"));
   const direct = shim([join(loose, "draft.pdf")], { CLAUDE_PROJECT_DIR: "" });
@@ -214,8 +225,10 @@ try {
     same.stdout.startsWith(`✅ draft.pdf → ${looseFacts} (`),
     said(same),
   );
+});
 
-  // ── a file that is not a PDF: refused, strict or not, in the words for the mode ──
+// ── a file that is not a PDF: refused, strict or not, in the words for the mode ──
+it("a file that is not a PDF: refused, strict or not, in the words for the mode", () => {
   writeFileSync(join(loose, "broken.pdf"), "not a pdf at all\n");
   const brokenStrict = shim([join(loose, "broken.pdf"), "--strict"]);
   const brokenLocal = shim([join(loose, "broken.pdf")]);
@@ -231,10 +244,4 @@ try {
       ),
     `${said(brokenStrict)}\n---\n${said(brokenLocal)}`,
   );
-} finally {
-  rmSync(root, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — extract-pdf-facts: the exit-code contract, schema 3, and the no-no-yes font`,
-);
+});

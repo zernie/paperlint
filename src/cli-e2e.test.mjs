@@ -647,7 +647,7 @@ it("`init` \u2014 three actions instead of nine", async () => {
 
     // ── 7-bis. THE SKILLS: WHAT WAS LINKED, AND WHAT WAS LEFT ALONE, BY NAME ────────────
     //
-    // The links themselves are `link-skills.harness.ts`'s subject. Here: init REPORTS them, and
+    // The links themselves are `link-skills-fs.test.ts`'s subject. Here: init REPORTS them, and
     // a name it refused to take does not turn a working install red. The state is handed in so
     // this block does not depend on a package being installed next to the temp project.
     {
@@ -983,7 +983,7 @@ it("the warning threshold", async () => {
 
 // ── STRUCTURE GETS THROUGH TO THE COMMAND ──────────────────────────────────────────────
 //
-// `structure.mjs` is checked separately and in full (`structure.harness.ts`). Here — exactly
+// `structure.mjs` is checked separately and in full (`structure.test.ts`). Here — exactly
 // one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
 // `run()` gives zero findings and looks like a clean corpus.
 it("structure gets through to the command", async () => {
@@ -1351,7 +1351,7 @@ it("`paperlint hook lint-edited` through the real bin, and its fast path", async
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What is left after init is typed in THE SAME TERMINAL. The two `/plugin` lines are gone: the
-// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.ts).
+// hooks are written into `.claude/settings.json` by init itself (hooks-settings.test.ts).
 
 it("what is left after init is typed in the same terminal", async () => {
   const steps = nextSteps("papers");

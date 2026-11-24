@@ -120,7 +120,7 @@
     ".github",
     "CLAUDE.md",
     "CONTRIBUTING.md",
-    "action.harness.mjs",
+    "action.test.mjs",
     "action.yml",
     "bin",
     "dist",

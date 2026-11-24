@@ -1,5 +1,5 @@
 {
-  "action.harness.mjs": {
+  "action.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -9,7 +9,7 @@
       "count": 1
     }
   },
-  "eslint-rules/install-path-literals.harness.mjs": {
+  "eslint-rules/install-path-literals.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -19,7 +19,7 @@
       "count": 1
     }
   },
-  "eslint-rules/latex-language.harness.mjs": {
+  "eslint-rules/latex-language-rules.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -43,7 +43,7 @@
       "count": 23
     }
   },
-  "eslint-rules/paper-stages.harness.mjs": {
+  "eslint-rules/paper-stages-rule.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -86,12 +86,12 @@
       "count": 10
     }
   },
-  "eslint-rules/papers.harness.mjs": {
+  "eslint-rules/papers.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
   },
-  "eslint-rules/pdf-last-page-balance.harness.mjs": {
+  "eslint-rules/pdf-last-page-balance.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -117,7 +117,7 @@
       "count": 3
     }
   },
-  "eslint-rules/temp-root-realpath.harness.mjs": {
+  "eslint-rules/temp-root-realpath.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -130,7 +130,7 @@
       "count": 2
     }
   },
-  "eslint-rules/tex-build.harness.mjs": {
+  "eslint-rules/tex-build.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -158,7 +158,7 @@
       "count": 1
     }
   },
-  "lib/agent-cli-version.harness.mjs": {
+  "lib/agent-cli-version.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -192,7 +192,7 @@
       "count": 5
     }
   },
-  "lib/paper-config.harness.mjs": {
+  "lib/paper-config.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -223,7 +223,7 @@
       "count": 1
     }
   },
-  "lib/skill-trigger-cases.harness.mjs": {
+  "lib/skill-trigger-cases-carrier.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -246,7 +246,7 @@
       "count": 1
     }
   },
-  "scripts/rules-see-files.harness.mjs": {
+  "scripts/rules-see-files-rule.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -347,7 +347,7 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/paper-pipeline.harness.mjs": {
+  "skills/paper-pipeline/paper-pipeline.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -362,7 +362,7 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/scripts/consumer.harness.mjs": {
+  "skills/paper-pipeline/scripts/consumer-paths.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -377,7 +377,7 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs": {
+  "skills/paper-pipeline/scripts/extract-ref-facts-cli.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -392,7 +392,7 @@
       "count": 1
     }
   },
-  "skills/paper-pipeline/scripts/generated-code.harness.mjs": {
+  "skills/paper-pipeline/scripts/generated-code-fixtures.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -427,7 +427,7 @@
       "count": 1
     }
   },
-  "skills/render-paper/render-paper.harness.mjs": {
+  "skills/render-paper/render-paper.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -563,7 +563,7 @@
       "count": 1
     }
   },
-  "src/build-engine.harness.mjs": {
+  "src/build-engine-prepare.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -579,7 +579,7 @@
       "count": 2
     }
   },
-  "src/build.harness.mjs": {
+  "src/build-fake-tex.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -620,7 +620,7 @@
       "count": 1
     }
   },
-  "src/doctor.harness.mjs": {
+  "src/doctor-install.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -668,7 +668,7 @@
       "count": 1
     }
   },
-  "src/engine.harness.mjs": {
+  "src/engine.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -750,7 +750,7 @@
       "count": 1
     }
   },
-  "src/new-paper.harness.mjs": {
+  "src/new-paper-scaffold.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }
@@ -865,7 +865,7 @@
       "count": 6
     }
   },
-  "src/toolchain.harness.mjs": {
+  "src/toolchain-mirror.test.mjs": {
     "local/js-needs-reason": {
       "count": 1
     }

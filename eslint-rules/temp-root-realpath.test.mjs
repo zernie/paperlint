@@ -1,15 +1,15 @@
 /**
  * `local/temp-root-realpath` — both halves on real ESLint, plus the corpus itself.
  *
- * 🔴 WHY THIS HARNESS EXISTS AT ALL, rather than stopping at the twenty-four fixes. The
+ * 🔴 WHY THIS TEST EXISTS AT ALL, rather than stopping at the twenty-four fixes. The
  * defect (issue #9) ONLY REPRODUCES ON macOS: there `/var` is a symlink to `/private/var`,
  * and one directory gets two spellings. On Linux `realpathSync` is the identity, so no
  * behavioral test can tell a fixed root apart from a broken one: removing the wrapper leaves
  * the run GREEN. The only check that can even go red on Linux is structural: ask the AST
  * whether the root is resolved at the point it's created. That is exactly why it is written
- * as a linter rule and not an assert inside someone's harness.
+ * as a linter rule and not an assert inside someone's test.
  *
- * ⚠️ And a boundary, so the harness isn't mistaken for more: it asserts that the IDIOM is in
+ * ⚠️ And a boundary, so this test isn't mistaken for more: it asserts that the IDIOM is in
  * place, not that macOS is now green. The latter is only checked on macOS, and CI here is one
  * `ubuntu-latest` — recorded as a known limit, not papered over.
  *
@@ -19,8 +19,12 @@
  */
 import assert from "node:assert/strict";
 import { ESLint } from "eslint";
-import { recordCheck } from "vigiles";
+import { it, vi } from "vitest";
 import localRules from "./temp-root-realpath.ts";
+
+// A test here lints the whole repository: ~72 s alone, up to 224 s beside the rest of the suite
+// under coverage on 4 cores (measured 2026-11-24), so the limit only catches a hang.
+vi.setConfig({ testTimeout: 600_000 });
 
 const eslint = new ESLint({
   overrideConfigFile: true,
@@ -45,7 +49,7 @@ const HEAD =
 const cases = [];
 
 // ── 1. FIRES: a root from `tmpdir()` with no resolve — exactly the shape from issue #9.
-{
+it("1. FIRES: a root from `tmpdir()` with no resolve — exactly the shape from issue #9", async () => {
   const m = await on(
     `${HEAD}const TMP = mkdtempSync(join(tmpdir(), "probe-"));\n`,
   );
@@ -68,11 +72,11 @@ const cases = [];
   cases.push(
     "mkdtempSync(join(tmpdir(), …)) with no resolve → a finding, the fix is in the message",
   );
-}
+});
 
 // ── 2. STAYS SILENT on the fixed form. Without this half the rule is indistinguishable
 //      from one that screams at every `mkdtempSync`.
-{
+it("2. STAYS SILENT on the fixed form", async () => {
   const m = await on(
     `${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n`,
   );
@@ -82,14 +86,14 @@ const cases = [];
     `the rule must stay silent on a resolved root, got: ${JSON.stringify(m)}`,
   );
   cases.push("realpathSync(mkdtempSync(join(tmpdir(), …))) → silence");
-}
+});
 
 // ── 3. 🔴 STAYS SILENT ON A NESTED ROOT, and this is load-bearing, not a concession. The
 //      corpus has five of these (`mkdtempSync(join(TMP, "repo-"))`); they inherit their
 //      spelling from `TMP`, which is caught at ITS OWN spot. A rule that screamed here too
 //      would demand a double resolve — and for an `error`-level rule a false positive is
 //      worse than a miss: it gets turned off.
-{
+it("3. STAYS SILENT ON A NESTED ROOT", async () => {
   const m = await on(
     `${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n` +
       `const sub = mkdtempSync(join(TMP, "repo-"));\nvoid sub;\n`,
@@ -102,12 +106,12 @@ const cases = [];
   cases.push(
     "a nested mkdtempSync(join(TMP, …)) → silence (the parent is already resolved)",
   );
-}
+});
 
 // ── 4. A COMMENT AND A STRING ARE NOT A CALL. This is exactly why the rule parses the AST: a
 //      text-based guard looking for "mkdtempSync(join(tmpdir()" would find this very file and
 //      would have to exclude itself — the class of check string-based checks are banned for here.
-{
+it("4. A COMMENT AND A STRING ARE NOT A CALL", async () => {
   const m = await on(
     `${HEAD}// mkdtempSync(join(tmpdir(), "in-a-comment-"))\n` +
       `const doc = 'mkdtempSync(join(tmpdir(), "in-a-string-"))';\nvoid doc;\n`,
@@ -118,11 +122,11 @@ const cases = [];
     `text ABOUT a call is not a call; got: ${JSON.stringify(m)}`,
   );
   cases.push("the same sequence in a comment and a string → silence");
-}
+});
 
 // ── 5. `fs.mkdtempSync` / `os.tmpdir()` through a namespace — the same thing under a
 //      different spelling.
-{
+it("5. `fs.mkdtempSync` / `os.tmpdir()` through a namespace", async () => {
   const ns =
     'import * as fs from "node:fs";\nimport * as os from "node:os";\nimport { join } from "node:path";\n';
   const bad = await on(
@@ -144,12 +148,12 @@ const cases = [];
   cases.push(
     "fs.mkdtempSync(join(os.tmpdir(), …)) is caught, fs.realpathSync(…) exempts it",
   );
-}
+});
 
 // ── 5b. `realpathSync.native(…)` resolves too — as a bare import and through a namespace. A
 //       `.native(…)` on anything else is NOT a resolve: another object, a computed member, a call
 //       result, a bare `native` function. Each of those still gets its finding.
-{
+it("5b. `realpathSync.native(…)` resolves too — as a bare import and through a namespace", async () => {
   const root = 'mkdtempSync(join(tmpdir(), "probe-"))';
   const silent = await on(
     `${HEAD}import * as fs from "node:fs";\n` +
@@ -177,11 +181,11 @@ const cases = [];
   cases.push(
     "realpathSync.native / fs.realpathSync.native exempt; keep, other.native, fs[name].native, pick().native, native do not",
   );
-}
+});
 
 // ── 5c. The walk over the arguments survives the shapes that are not plain nodes: an array hole
 //       (null) and a regex literal's `regex` object (no `type`). Neither is a `tmpdir()` call.
-{
+it("5c. The walk over the arguments survives the shapes that are not plain nodes", async () => {
   const m = await on(
     `${HEAD}const a = mkdtempSync([, /tmp/g]);\nconst b = mkdtempSync([, /x/, tmpdir()]);\n`,
   );
@@ -193,13 +197,13 @@ const cases = [];
   cases.push(
     "an array hole and a regex literal in the arguments are walked, not mistaken",
   );
-}
+});
 
 // ── 6. 🔴 THE CORPUS ITSELF IS CLEAN. The "silent" half on a made-up string says nothing
 //      about the repository: the rule could also be silent because it was never handed a
 //      single file (the recorded class — `scripts/rules-see-files.mjs`). So this check runs
 //      THE RULE OVER THE REAL TREE and requires many files, zero findings.
-{
+it("6. THE CORPUS ITSELF IS CLEAN", async () => {
   const corpus = new ESLint({ cwd: new URL("..", import.meta.url).pathname });
   const results = await corpus.lintFiles(["."]);
   const hits = results.flatMap((r) =>
@@ -218,8 +222,4 @@ const cases = [];
     `the rule was only handed ${linted} .mjs files — zero findings on an empty input is NOT cleanliness`,
   );
   cases.push(`corpus: ${linted} .mjs files, zero unresolved roots`);
-}
-
-recordCheck(cases.length);
-console.log(`local/temp-root-realpath: ${cases.length} cases:`);
-for (const c of cases) console.log(`  ok  ${c}`);
+});

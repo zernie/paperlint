@@ -50,7 +50,7 @@
   // acm-sigconf.jsonc, so acm-sigconf's list, for the same reasons (see the comments there: acmart
   // falls back to Computer Modern in silence when libertine, inconsolata or newtx is missing).
   // pbalance, filehook and zref are kept although acmsmall's one column never loads them:
-  // src/tex-requirements.harness.ts holds every preset on one template to ONE list, so two lists
+  // src/tex-requirements-tables.test.ts holds every preset on one template to ONE list, so two lists
   // for acmart cannot drift apart, and the toolchain installs acm-sigconf's anyway. Measured
   // 2026-11-19: every file the two acmsmall builds above
   // read (247, from pdflatex's -recorder list) belongs to a package of TeX Live's scheme-basic, of

@@ -16,8 +16,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
-import { recordCheck } from "vigiles";
+import { it, vi } from "vitest";
 import port, { PORT } from "./install-path-literals.ts";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 // Resolved from THIS file, never from the caller's cwd (root CLAUDE.md), and the mistake this very
 // class of bug is about.
@@ -59,7 +62,7 @@ const cases = [];
 
 // ── 1. MARKDOWN FIRES. Three carriers in one fixture: the frontmatter value, the fenced
 //      command, and an inline mention. All three are how a real skill names a script.
-{
+it("1. MARKDOWN FIRES: three carriers in one fixture", async () => {
   const m = await findings(mdLinter, join(FIX, "defect.md"), RULE_MD);
   assert.ok(m.length >= 3, `expected at least three findings, got ${m.length}`);
   assert.match(
@@ -81,11 +84,11 @@ const cases = [];
   );
   assert.ok(prefixes.has("node_modules/"), "the npm channel must be named");
   cases.push("md fires on frontmatter, fenced command and inline mention");
-}
+});
 
 // ── 2. MARKDOWN STAYS QUIET. Same skill written through the substitution, plus a
 //      repository-relative path that is identical in every channel.
-{
+it("2. MARKDOWN STAYS QUIET: the same skill written through the substitution", async () => {
   const m = await findings(mdLinter, join(FIX, "clean.md"), RULE_MD);
   assert.equal(
     m.length,
@@ -93,11 +96,11 @@ const cases = [];
     `clean fixture must be silent, got ${JSON.stringify(m)}`,
   );
   cases.push("md quiet on a skill that uses the substitution");
-}
+});
 
 // ── 3. JAVASCRIPT FIRES, in both literal forms. The template case is not decoration: a path
 //      assembled from a template is still a path, and reading only `Literal` would miss it.
-{
+it("3. JAVASCRIPT FIRES, in both literal forms", async () => {
   const m = await findings(jsLinter, join(FIX, "defect.fixture.mjs"), RULE_JS);
   assert.equal(
     m.length,
@@ -105,10 +108,10 @@ const cases = [];
     `expected one plain and one template finding, got ${m.length}`,
   );
   cases.push("js fires on a plain literal AND on a template quasi");
-}
+});
 
 // ── 4. JAVASCRIPT STAYS QUIET when the module asks the port.
-{
+it("4. JAVASCRIPT STAYS QUIET when the module asks the port", async () => {
   const m = await findings(jsLinter, join(FIX, "clean.fixture.mjs"), RULE_JS);
   assert.equal(
     m.length,
@@ -116,11 +119,11 @@ const cases = [];
     `clean module must be silent, got ${JSON.stringify(m)}`,
   );
   cases.push("js quiet on a module that asks the port");
-}
+});
 
 // ── 5. A TAGGED TEMPLATE WITH AN INVALID ESCAPE has no cooked value, only the raw one — and the
 //      path in it is still a path. (`String.raw` is exactly where such a template is legal.)
-{
+it("5. A TAGGED TEMPLATE WITH AN INVALID ESCAPE has no cooked value, only the raw one", async () => {
   const [res] = await jsLinter.lintText(
     "export const p = String.raw`node_modules/paperlint/\\unicode`;\n",
     { filePath: join(ROOT, "tagged.probe.mjs") },
@@ -132,6 +135,4 @@ const cases = [];
     `a raw-only template quasi must be read, got ${JSON.stringify(res.messages)}`,
   );
   cases.push("js fires on a tagged template whose quasi has no cooked value");
-}
-
-recordCheck(cases.length);
+});

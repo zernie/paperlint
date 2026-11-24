@@ -14,9 +14,9 @@
  *   - it never overwrites, and on an existing folder adds only what is missing;
  *   - the project's `<papers>/.template/` wins over the package, file by file.
  *
- * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
- * as a pass.
+ * The tests run in order: later ones build on the folders earlier ones made.
  */
+import { afterAll, expect, it } from "vitest";
 import {
   existsSync,
   mkdirSync,
@@ -31,7 +31,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { frontmatterBlock } from "../lib/markdown.ts";
-import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -45,9 +44,15 @@ const {
 } = await import(join(HERE, "new-paper.ts"));
 const { run } = await import(join(HERE, "cli.ts"));
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label, cond, detail) => {
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${String(detail)}`)
+    .toBeTruthy();
+};
 
 const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-")));
+const papers = join(work, "papers");
 const read = (...p) => readFileSync(join(...p), "utf8");
 const front = (text) => load(frontmatterBlock(text) ?? "") ?? {};
 
@@ -62,8 +67,12 @@ async function lint(dir) {
   return { code, text: out.join("\n") };
 }
 
-try {
-  // ── the templates are FILES in the package, one per required file ──────────────────────
+afterAll(() => {
+  rmSync(work, { recursive: true, force: true });
+});
+
+// ── the templates are FILES in the package, one per required file ──────────────────────
+it("the templates are FILES in the package, one per required file", () => {
   for (const f of [STATUS_FILE, SOURCE_FILE])
     check(
       `the package ships templates/paper/${f}`,
@@ -73,8 +82,10 @@ try {
     "🔴 the templates ship in the npm tarball — `templates` is in package.json `files`",
     JSON.parse(read(ROOT, "package.json")).files.includes("templates"),
   );
+});
 
-  // ── names ───────────────────────────────────────────────────────────────────────────
+// ── names ───────────────────────────────────────────────────────────────────────────
+it("names", () => {
   for (const ok of ["demo", "aisec-2026", "v1.2_final"])
     check(`\`${ok}\` is a valid name`, nameProblem(ok, []) === null);
   for (const bad of ["Demo", "my paper", "a/b", "../x", "", "ÿ"])
@@ -94,9 +105,10 @@ try {
     newPaper(work, "Bad", { venues: [] }).ok === false &&
       !existsSync(join(work, "Bad")),
   );
+});
 
-  // ── a fresh LaTeX paper ─────────────────────────────────────────────────────────────
-  const papers = join(work, "papers");
+// ── a fresh LaTeX paper ─────────────────────────────────────────────────────────────
+it("a fresh LaTeX paper", async () => {
   const r = newPaper(papers, "demo", { venues: [] });
   check(
     "a fresh folder gets the scorecard, a .tex source and paperlint.json, all from the package",
@@ -147,8 +159,10 @@ try {
       readFileSync(join(papers, "demo", STATUS_FILE), "utf8"),
     ),
   );
+});
 
-  // ── never overwrite; on an existing folder only the missing files ─────────────────────
+// ── never overwrite; on an existing folder only the missing files ─────────────────────
+it("never overwrite; on an existing folder only the missing files", () => {
   writeFileSync(join(papers, "demo", STATUS_FILE), "mine\n");
   const again = newPaper(papers, "demo", { venues: [] });
   check(
@@ -164,8 +178,10 @@ try {
     "a name taken by a FILE is refused, not written through",
     newPaper(papers, "afile", { venues: [] }).ok === false,
   );
+});
 
-  // ── the project's template wins, file by file ─────────────────────────────────────────
+// ── the project's template wins, file by file ─────────────────────────────────────────
+it("the project's template wins, file by file", () => {
   mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
   writeFileSync(
     join(papers, OVERRIDE_DIR, STATUS_FILE),
@@ -182,8 +198,10 @@ try {
       own.files.find((f) => f.file === STATUS_FILE)?.from === "project" &&
       own.files.find((f) => f.file === SOURCE_FILE)?.from === "package",
   );
+});
 
-  // ── a missing template is a broken install, not an empty file ─────────────────────────
+// ── a missing template is a broken install, not an empty file ─────────────────────────
+it("a missing template is a broken install, not an empty file", () => {
   const broken = newPaper(join(work, "b"), "x", {
     venues: [],
     packageTemplates: join(work, "no-such-dir"),
@@ -194,10 +212,4 @@ try {
       /no template for/.test(broken.reason) &&
       !existsSync(join(work, "b", "x")),
   );
-} finally {
-  rmSync(work, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — paperlint new scaffolds what paperlint lint accepts`,
-);
+});

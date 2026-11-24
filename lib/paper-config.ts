@@ -21,7 +21,7 @@ import { dirname, join, resolve } from "node:path";
 /**
  * The tool's name. Its settings file is named after it (`CONFIG_FILE`), its messages start with it,
  * and the hooks resolve their scripts through it. It equals the package name, and
- * `lib/paper-config.harness.mjs` checks that.
+ * `lib/paper-config.test.mjs` checks that.
  */
 export const CONFIG_KEY: string = "paperlint";
 
@@ -108,7 +108,7 @@ export const DEFAULT_PAPERS_ROOT: string = "papers";
  * This is the one place the name is spelled. Code reads the field as
  * `settings[PAPERS_DIR_FIELD]`, never by a literal, so renaming it again is a one-line change
  * here. The three hooks cannot import this module, so they keep their own copy, and
- * `lib/paper-config.harness.mjs` checks that every copy matches this one.
+ * `lib/paper-config.test.mjs` checks that every copy matches this one.
  */
 export const PAPERS_DIR_FIELD: string = "papersDir";
 
@@ -117,7 +117,7 @@ export const PAPERS_DIR_FIELD: string = "papersDir";
  * A key not listed here is REFUSED with its name, because a typo in a key otherwise reads as "not
  * set". The keys in `ROOT_ONLY_KEYS` describe the whole project and are refused in a paper's file.
  *
- * 🔴 ONE LIST, AND IT IS CHECKED AGAINST THE READERS, NOT TRUSTED. `lib/paper-config.harness.mjs`
+ * 🔴 ONE LIST, AND IT IS CHECKED AGAINST THE READERS, NOT TRUSTED. `lib/paper-config.test.mjs`
  * walks the package's source, finds every `settingsOf(…)?.<key>` read and every field of
  * `PaperlintConfig`, and requires each to be here — so a new reader that forgets this list turns
  * the harness red before a consumer's config does.

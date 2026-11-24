@@ -22,7 +22,10 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.ts";
+import { afterAll, expect, it, vi } from "vitest";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -42,7 +45,11 @@ const {
 } = await import(join(HERE, "build.ts"));
 const { texInputsDir } = await import(join(HERE, "package-dirs.ts"));
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label, cond, detail) =>
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${detail}`)
+    .toBe(true);
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
@@ -134,11 +141,14 @@ const fakeRead = async (pdf) => {
 };
 const CLEAN_TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
 
-try {
-  // ── inputs: paperlint's own TeX inputs directory, no configuration ────────────────────────────
+// Shared by the tests below, which run in order.
+let venues, facts, clean, r, bare;
+
+// ── inputs: paperlint's own TeX inputs directory, no configuration ────────────────────────────
+it("inputs: paperlint's own TeX inputs directory, no configuration", () => {
   // First: the facts below resolve a paper's venue preset in this same directory, so a wrong one
   // must be named HERE, not as a missing venue label two checks later.
-  const venues = texInputsDir();
+  venues = texInputsDir();
   check(
     "the TeX inputs directory is paperlint's own and holds paper-guards.tex",
     existsSync(join(venues, "paper-guards.tex")),
@@ -152,8 +162,10 @@ try {
     withTexInputs({ TEXINPUTS: `/mine${delimiter}` }, [venues]).TEXINPUTS ===
       `${venues}${delimiter}/mine${delimiter}`,
   );
+});
 
-  // ── facts: parsed from the paper, not configured ──────────────────────────────────────
+// ── facts: parsed from the paper, not configured ──────────────────────────────────────
+it("facts: parsed from the paper, not configured", () => {
   check(
     "documentclass and options come from the parser",
     JSON.stringify(
@@ -179,7 +191,7 @@ try {
     }),
     "build.sh": "exit 0\n",
   });
-  const facts = readFacts(venued);
+  facts = readFacts(venued);
   check(
     "the venue comes from paperlint.json",
     facts.venue === "agenticdev-2026",
@@ -189,8 +201,10 @@ try {
     JSON.stringify(facts.ignoredScripts) === JSON.stringify(["build.sh"]) &&
       IGNORED_SCRIPTS.includes("repro/build-submission.sh"),
   );
+});
 
-  // ── the plan ──────────────────────────────────────────────────────────────────────────
+// ── the plan ──────────────────────────────────────────────────────────────────────────
+it("the plan", () => {
   const plan = planFor(facts);
   check(
     "the plan has one line per step, in order, each with a why",
@@ -203,8 +217,10 @@ try {
       /article/.test(plan[1].why) &&
       /agenticdev/.test(plan[1].why),
   );
+});
 
-  // ── pdflatex arguments ────────────────────────────────────────────────────────────────
+// ── pdflatex arguments ────────────────────────────────────────────────────────────────
+it("pdflatex arguments", () => {
   check(
     "every pass is nonstop, halts on error, and reports file:line",
     ["-interaction=nonstopmode", "-halt-on-error", "-file-line-error"].every(
@@ -216,9 +232,11 @@ try {
     pdflatexArgs(true).includes("-jobname=paper") &&
       pdflatexArgs(true).at(-1) === "\\def\\finalpass{}\\input{paper.tex}",
   );
+});
 
-  // ── a clean build, with leftover scripts that must NOT run ────────────────────────────
-  const clean = paper("clean", {
+// ── a clean build, with leftover scripts that must NOT run ────────────────────────────
+it("a clean build, with leftover scripts that must NOT run", async () => {
+  clean = paper("clean", {
     "paper.tex": CLEAN_TEX,
     "build.sh": '#!/usr/bin/env bash\ntouch "$(dirname "$0")/RAN"\nexit 1\n',
     "repro/build-submission.sh":
@@ -226,7 +244,7 @@ try {
   });
   const events = [];
   const tex = fakeTex();
-  const r = await buildPaper(clean, {
+  r = await buildPaper(clean, {
     cwd: root,
     readPdf: fakeRead,
     run: (...a) => {
@@ -272,8 +290,10 @@ try {
       (c) => c.texinputs === `.${delimiter}${venues}${delimiter}`,
     ),
   );
+});
 
-  // ── the measure step: facts for the lint rules ────────────────────────────────────────
+// ── the measure step: facts for the lint rules ────────────────────────────────────────
+it("the measure step: facts for the lint rules", async () => {
   const factsFile = join(clean, "_build", "paper.facts.json");
   check(
     "measure: the plan's measure step writes the facts, and says it judges nothing",
@@ -325,8 +345,10 @@ try {
       /could not read .*pdf\.js \(unreadable\)/.test(ur.failure.lines[0]) &&
       !existsSync(join(unread, "_build", "paper.facts.json")),
   );
+});
 
-  // ── the bibtex path ───────────────────────────────────────────────────────────────────
+// ── the bibtex path ───────────────────────────────────────────────────────────────────
+it("the bibtex path", async () => {
   const cited = paper("cited", {
     "paper.tex": CLEAN_TEX,
     "refs.bib": "@misc{k, title={T}}",
@@ -353,8 +375,10 @@ try {
       btex.calls[1].bin === "bibtex" &&
       btex.calls.at(-1).args.at(-1).includes("\\finalpass"),
   );
+});
 
-  // ── a failing build: the error, its context, and NO stale PDF ─────────────────────────
+// ── a failing build: the error, its context, and NO stale PDF ─────────────────────────
+it("a failing build: the error, its context, and NO stale PDF", async () => {
   const broken = paper("broken", {
     "paper.tex": CLEAN_TEX,
     "paper.pdf": "%PDF-stale-from-yesterday",
@@ -397,8 +421,10 @@ try {
   );
   check("…and says the PDF was removed", /paper\.pdf removed/.test(shown));
   check("a failed pass is not retried", ftex.calls.length === 1);
+});
 
-  // ── pdflatex dies before writing a log ────────────────────────────────────────────────
+// ── pdflatex dies before writing a log ────────────────────────────────────────────────
+it("pdflatex dies before writing a log", async () => {
   // Seen 2026-09-26: a TeX Live whose pdflatex format was never built. pdflatex exits 1 having
   // printed the reason, and paper.log is either absent or left over from an earlier build.
   const nolog = paper("nolog", {
@@ -437,8 +463,10 @@ try {
     !shownN.includes("full log:") && shownN.includes("wrote no paper.log"),
     shownN,
   );
+});
 
-  // ── pdflatex not installed ────────────────────────────────────────────────────────────
+// ── pdflatex not installed ────────────────────────────────────────────────────────────
+it("pdflatex not installed", async () => {
   const rm = await buildPaper(clean, {
     cwd: root,
     readPdf: fakeRead,
@@ -451,8 +479,10 @@ try {
     rm.status === "failed" &&
       /pdflatex could not be started/.test(rm.failure.lines.join("\n")),
   );
+});
 
-  // ── 🔴 --dry-run runs NOTHING, checked by effect ──────────────────────────────────────
+// ── 🔴 --dry-run runs NOTHING, checked by effect ──────────────────────────────────────
+it("🔴 --dry-run runs NOTHING, checked by effect", async () => {
   const dryDir = paper("dry", {
     "paper.tex": CLEAN_TEX,
     "paper.pdf": "%PDF-untouched",
@@ -483,9 +513,11 @@ try {
       dry.dry === true &&
       /--dry-run/.test(formatResult(dry)),
   );
+});
 
-  // ── no paper.tex: a REFUSAL, not a skip ───────────────────────────────────────────────
-  const bare = paper("bare", { "PIPELINE-STATUS.md": "# x" });
+// ── no paper.tex: a REFUSAL, not a skip ───────────────────────────────────────────────
+it("no paper.tex: a REFUSAL, not a skip", async () => {
+  bare = paper("bare", { "PIPELINE-STATUS.md": "# x" });
   const ntex = fakeTex();
   const nr = await buildPaper(bare, {
     cwd: root,
@@ -508,8 +540,10 @@ try {
       /paper\.tex/.test(remedyFor([nr])),
   );
   check("on full success there is no remedy", remedyFor([r]) === "");
+});
 
-  // ── 🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers ──
+// ── 🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers ──
+it("🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers", async () => {
   // The order matters here: the up-front removal is exercised by the no-engine case below, the
   // existence check by the empty-document case, and neither depends on the other defence.
   const REMOVED =
@@ -653,8 +687,10 @@ try {
         "✗ compile: pdflatex exited 0 but wrote no paper.pdf — does the document have any pages?",
       ),
   );
+});
 
-  // ── walking the corpus ────────────────────────────────────────────────────────────────
+// ── walking the corpus ────────────────────────────────────────────────────────────────
+it("walking the corpus", () => {
   paper("not-a-paper", { "NOTES.md": "x" });
   paper(".hidden-paper", { "PIPELINE-STATUS.md": "x" });
   const found = papersIn(join(root, "papers")).map((d) => d.split("/").pop());
@@ -674,10 +710,7 @@ try {
     "a nonexistent root does not crash",
     papersIn(join(root, "nope")).length === 0,
   );
-} finally {
+});
+afterAll(() => {
   rmSync(root, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
-);
+});

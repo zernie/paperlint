@@ -16,7 +16,10 @@ import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
 import stages from "./paper-stages.ts";
-import { createChecker } from "../lib/check.ts";
+import { expect, it, vi } from "vitest";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const FIX = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -26,26 +29,19 @@ const FIX = join(
 );
 const linter = new Linter();
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label, cond, detail) =>
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${detail}`)
+    .toBe(true);
 
-// 🔴 The `n` counter is RUNNING TOTAL across the whole file, so printing it under one rule's
-// heading would credit that rule with someone else's asserts. That's exactly what happened: the
-// line about `paper/source` reported seventeen, of which ten were actually checking
-// `paper/stages`. `since()` hands back the delta for its own block, so the number describes what
-// stands next to it again.
-let mark = 0;
-const since = () => {
-  const d = check.count - mark;
-  mark = check.count;
-  return d;
-};
-
-assert.deepEqual(
-  Object.keys(stages.rules).sort(),
-  ["source", "stages"],
-  "rule set changed",
-);
-
+it("paper-stages: the rule set", () => {
+  assert.deepEqual(
+    Object.keys(stages.rules).sort(),
+    ["source", "stages"],
+    "rule set changed",
+  );
+});
 /** Findings for one fixture paper, as plain message strings. */
 function lint(name) {
   const file = join(FIX, name, "PIPELINE-STATUS.md");
@@ -74,59 +70,66 @@ function lint(name) {
 }
 
 // ── silent where it must be silent ──────────────────────────────────────────────────────
-check("declared and frozen correctly — silent", lint("ok").length === 0);
-check(
-  "nothing shipped, nothing declared — silent, a draft owes nothing",
-  lint("nothing").length === 0,
-);
-// A withdrawn version is a deliberate RECORD of a mistake; demanding a declaration for it
-// would turn that record into a finding.
-check("a STALE version needs no declaration", lint("stale").length === 0);
+it("silent where it must be silent", () => {
+  check("declared and frozen correctly — silent", lint("ok").length === 0);
+  check(
+    "nothing shipped, nothing declared — silent, a draft owes nothing",
+    lint("nothing").length === 0,
+  );
+  // A withdrawn version is a deliberate RECORD of a mistake; demanding a declaration for it
+  // would turn that record into a finding.
+  check("a STALE version needs no declaration", lint("stale").length === 0);
+});
 
 // ── direction one: a claim owes its bytes ───────────────────────────────────────────────
-const wrong = lint("wrongsize");
-check("wrong byte count is reported", wrong.length === 1);
-check(
-  "and it names BOTH numbers, not just 'mismatch'",
-  /352357/.test(wrong[0]) && /100/.test(wrong[0]),
-);
+it("direction one: a claim owes its bytes", () => {
+  const wrong = lint("wrongsize");
+  check("wrong byte count is reported", wrong.length === 1);
+  check(
+    "and it names BOTH numbers, not just 'mismatch'",
+    /352357/.test(wrong[0]) && /100/.test(wrong[0]),
+  );
 
-const missing = lint("nofile");
-check(
-  "a declared stage with no file on disk is reported",
-  missing.length === 1 && /not on disk/.test(missing[0]),
-);
+  const missing = lint("nofile");
+  check(
+    "a declared stage with no file on disk is reported",
+    missing.length === 1 && /not on disk/.test(missing[0]),
+  );
+});
 
 // ── direction two: bytes owe their declaration ──────────────────────────────────────────
 // 🔴 The live case this rule was written for: a camera-ready pdf sat frozen for 16 days while
 // the predecessor's pattern for that stage matched zero times anywhere in the file.
-const undeclared = lint("undeclared");
-check("a frozen version nobody declared is reported", undeclared.length === 1);
-check(
-  "and it names the file and the stage",
-  /2026-08-29-camera-ready\.pdf/.test(undeclared[0]) &&
-    /camera-ready/.test(undeclared[0]),
-);
+it("direction two: bytes owe their declaration", () => {
+  const undeclared = lint("undeclared");
+  check(
+    "a frozen version nobody declared is reported",
+    undeclared.length === 1,
+  );
+  check(
+    "and it names the file and the stage",
+    /2026-08-29-camera-ready\.pdf/.test(undeclared[0]) &&
+      /camera-ready/.test(undeclared[0]),
+  );
 
-// 🔴 THE ESCAPE HATCH. Without this half the whole rule is switched off by deleting the
-// frontmatter — which is the cheapest edit in the file.
-const noheader = lint("noheader");
-check(
-  "deleting the frontmatter does NOT silence the rule when bytes exist",
-  noheader.length === 1 && /ran ahead of the declaration/.test(noheader[0]),
-);
+  // 🔴 THE ESCAPE HATCH. Without this half the whole rule is switched off by deleting the
+  // frontmatter — which is the cheapest edit in the file.
+  const noheader = lint("noheader");
+  check(
+    "deleting the frontmatter does NOT silence the rule when bytes exist",
+    noheader.length === 1 && /ran ahead of the declaration/.test(noheader[0]),
+  );
+});
 
 // ── a LIST, not a map: the same stage twice ─────────────────────────────────────────────
 // One paper in the source corpus was submitted to one venue, rejected, and resubmitted to
 // another. A map keyed by stage name holds one of those; the filenames already hold both.
-check(
-  "the same stage declared twice with different dates is accepted",
-  lint("twice").length === 0,
-);
-
-console.log(
-  `✓ ${String(since())} assertions passed — paper/stages, both directions`,
-);
+it("a LIST, not a map: the same stage twice", () => {
+  check(
+    "the same stage declared twice with different dates is accepted",
+    lint("twice").length === 0,
+  );
+});
 
 // ── `paper/source`: the SOURCE is frozen on disk, and the bytes are compared ────────────
 // 🔴 This block replaced a git-based one on 2026-09-16, and the reason is a measurement, not
@@ -134,7 +137,7 @@ console.log(
 // stopped resolving inside ninety minutes of one session — squash-merge destroyed the branch
 // commits, `gc` collected them — and three of the four declared stages in the live corpus had
 // lost their source entirely. A sha is a pointer to a pointer; the outer one evaporates.
-{
+it("`paper/source`: the SOURCE is frozen on disk, and the bytes are compared", async () => {
   const { mkdtempSync, writeFileSync, mkdirSync, rmSync } =
     await import("node:fs");
   const root = mkdtempSync(join(FIX, "..", ".tmp-stages-src-"));
@@ -226,10 +229,4 @@ console.log(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
-}
-
-console.log(
-  `✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`,
-);
-
-console.log(`✓ ${String(check.count)} assertions passed in total`);
+});

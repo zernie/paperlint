@@ -8,13 +8,13 @@
  * install and verify logic — the part that decides success — and what is faked is only TeX.
  * The real TeX Live half is `test/e2e/tex/toolchain.e2e.ts`.
  *
- * Tables, in order:
+ * Run by vitest (`it` per table). Tables, in order:
  *   1. the pure pieces (year, profile, tlmgr's unknown names, cache location);
  *   2. the download: mirror fallback, archive check, the time limit;
  *   3. the command: fresh install, second run is a no-op, --check, partial add, and the three
  *      ways an install must FAIL naming the package;
  *   4. banal, the command's second half: a stand-in banal served from `file://`, never HotCRP —
- *      the installer's own tests are `banal.harness.mjs`; here only the wiring into the command.
+ *      the installer's own tests are in `src/adapters/banal/`; here only the wiring into the command.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -32,7 +32,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { createChecker } from "../lib/check.ts";
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, "..", "fixtures", "toolchain-mirror");
@@ -43,106 +46,112 @@ const B = await import(join(HERE, "adapters", "banal", "index.ts"));
 const N = await import(join(HERE, "adapters", "node", "index.ts"));
 const C = await import(join(HERE, "adapters", "curl", "index.ts"));
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label, cond, detail) =>
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${detail}`)
+    .toBe(true);
 
 // ── 1. pure pieces ──────────────────────────────────────────────────────────────────────
-check(
-  "tlYear: the year from release-texlive.txt's first line",
-  T.tlYear("TeX Live (https://tug.org/texlive) version 2026\n\nmore") ===
-    "2026",
-);
-check(
-  "tlYear: a year on a LATER line is not the release",
-  T.tlYear("something else\nversion 2026") === null,
-);
-const profile = T.tlProfile("/c/2026");
-check(
-  "tlProfile: scheme-basic, TEXDIR and every tree variable inside it, no docs, no sources",
-  profile.includes("selected_scheme scheme-basic\n") &&
-    profile.includes("TEXDIR /c/2026\n") &&
-    profile.includes("TEXMFHOME /c/2026/texmf-home\n") &&
-    profile.includes("tlpdbopt_install_docfiles 0\n") &&
-    profile.includes("tlpdbopt_install_srcfiles 0\n"),
-  profile,
-);
-check(
-  "unknownPackages: tlmgr's own wording names the package",
-  JSON.stringify(
-    T.unknownPackages(
-      "tlmgr install: package urw-base35 not present in repository.\npackage already present: acmart\n",
-    ),
-  ) === '["urw-base35"]',
-);
-check(
-  "cacheRoot: PAPERLINT_TEXLIVE_DIR wins",
-  T.cacheRoot(
-    { PAPERLINT_TEXLIVE_DIR: "/ci/tl", XDG_CACHE_HOME: "/x" },
-    "/h",
-  ) === "/ci/tl",
-);
-check(
-  "cacheRoot: then XDG_CACHE_HOME",
-  T.cacheRoot({ XDG_CACHE_HOME: "/x" }, "/h") === "/x/paperlint/texlive",
-);
-check(
-  "cacheRoot: then ~/.cache",
-  T.cacheRoot({}, "/h") === "/h/.cache/paperlint/texlive",
-);
-check(
-  "mirrorsFrom: PAPERLINT_CTAN_MIRROR is the ONLY mirror, trailing slash dropped",
-  JSON.stringify(
-    T.mirrorsFrom({ PAPERLINT_CTAN_MIRROR: "https://m/tlnet/" }),
-  ) === '["https://m/tlnet"]',
-);
-check(
-  "mirrorsFrom: several defaults, every one https",
-  T.mirrorsFrom({}).length > 1 &&
-    T.mirrorsFrom({}).every((m) => m.startsWith("https://")),
-);
-check("formatDuration", T.formatDuration(118_400) === "1m58s");
+it("1. pure pieces", () => {
+  check(
+    "tlYear: the year from release-texlive.txt's first line",
+    T.tlYear("TeX Live (https://tug.org/texlive) version 2026\n\nmore") ===
+      "2026",
+  );
+  check(
+    "tlYear: a year on a LATER line is not the release",
+    T.tlYear("something else\nversion 2026") === null,
+  );
+  const profile = T.tlProfile("/c/2026");
+  check(
+    "tlProfile: scheme-basic, TEXDIR and every tree variable inside it, no docs, no sources",
+    profile.includes("selected_scheme scheme-basic\n") &&
+      profile.includes("TEXDIR /c/2026\n") &&
+      profile.includes("TEXMFHOME /c/2026/texmf-home\n") &&
+      profile.includes("tlpdbopt_install_docfiles 0\n") &&
+      profile.includes("tlpdbopt_install_srcfiles 0\n"),
+    profile,
+  );
+  check(
+    "unknownPackages: tlmgr's own wording names the package",
+    JSON.stringify(
+      T.unknownPackages(
+        "tlmgr install: package urw-base35 not present in repository.\npackage already present: acmart\n",
+      ),
+    ) === '["urw-base35"]',
+  );
+  check(
+    "cacheRoot: PAPERLINT_TEXLIVE_DIR wins",
+    T.cacheRoot(
+      { PAPERLINT_TEXLIVE_DIR: "/ci/tl", XDG_CACHE_HOME: "/x" },
+      "/h",
+    ) === "/ci/tl",
+  );
+  check(
+    "cacheRoot: then XDG_CACHE_HOME",
+    T.cacheRoot({ XDG_CACHE_HOME: "/x" }, "/h") === "/x/paperlint/texlive",
+  );
+  check(
+    "cacheRoot: then ~/.cache",
+    T.cacheRoot({}, "/h") === "/h/.cache/paperlint/texlive",
+  );
+  check(
+    "mirrorsFrom: PAPERLINT_CTAN_MIRROR is the ONLY mirror, trailing slash dropped",
+    JSON.stringify(
+      T.mirrorsFrom({ PAPERLINT_CTAN_MIRROR: "https://m/tlnet/" }),
+    ) === '["https://m/tlnet"]',
+  );
+  check(
+    "mirrorsFrom: several defaults, every one https",
+    T.mirrorsFrom({}).length > 1 &&
+      T.mirrorsFrom({}).every((m) => m.startsWith("https://")),
+  );
+  check("formatDuration", T.formatDuration(118_400) === "1m58s");
 
-// tlmgr's two wordings for "the repository is another TeX Live year" (tlmgr.pl 7644-7648, 7655-7663).
-const OLDER =
-  "tlmgr: Local TeX Live (2026) is older than remote repository (2027).\n" +
-  "Cross release updates are only supported with\n" +
-  "  update-tlmgr-latest(.sh/.exe) -- --upgrade\n";
-const INCOMPAT = (local, remote) =>
-  "tlmgr: The TeX Live versions of the local installation\n" +
-  "and the repository are not compatible:\n" +
-  `      local: ${local}\n` +
-  ` repository: ${remote} (https://m/tlnet)\n` +
-  "Perhaps that particular CTAN mirror is outdated? Just a guess.\n";
-check(
-  "releaseGap: 'Local TeX Live (Y) is older than remote repository (Y)' — both years",
-  JSON.stringify(T.releaseGap(OLDER)) === '{"local":"2026","remote":"2027"}',
-);
-check(
-  "releaseGap: the 'not compatible' wording with a NEWER repository",
-  JSON.stringify(T.releaseGap(INCOMPAT("2026", "2027"))) ===
-    '{"local":"2026","remote":"2027"}',
-);
-// Guards: the direction of the year check — an outdated mirror would trigger a whole new install.
-check(
-  "releaseGap: a STALE mirror (repository older than the tree) is not a new release",
-  T.releaseGap(INCOMPAT("2027", "2026")) === null,
-);
-check(
-  "releaseGap: ordinary tlmgr output is not a release gap",
-  T.releaseGap(
-    "tlmgr install: package urw-base35 not present in repository.\n",
-  ) === null,
-);
-// Guards: the complete-tree preference — an interrupted new-year install would otherwise be the
-// tree the build uses.
-check(
-  "usableTree: the newest COMPLETE tree, not simply the newest",
-  T.usableTree(["2027", "2026", "2025"], (y) => y !== "2027") === "2026",
-);
-check(
-  "usableTree: nothing complete — the newest, so packages go where the next build will look",
-  T.usableTree(["2027", "2026"], () => false) === "2027",
-);
-check("usableTree: an empty cache", T.usableTree([], () => true) === null);
+  // tlmgr's two wordings for "the repository is another TeX Live year" (tlmgr.pl 7644-7648, 7655-7663).
+  const OLDER =
+    "tlmgr: Local TeX Live (2026) is older than remote repository (2027).\n" +
+    "Cross release updates are only supported with\n" +
+    "  update-tlmgr-latest(.sh/.exe) -- --upgrade\n";
+  const INCOMPAT = (local, remote) =>
+    "tlmgr: The TeX Live versions of the local installation\n" +
+    "and the repository are not compatible:\n" +
+    `      local: ${local}\n` +
+    ` repository: ${remote} (https://m/tlnet)\n` +
+    "Perhaps that particular CTAN mirror is outdated? Just a guess.\n";
+  check(
+    "releaseGap: 'Local TeX Live (Y) is older than remote repository (Y)' — both years",
+    JSON.stringify(T.releaseGap(OLDER)) === '{"local":"2026","remote":"2027"}',
+  );
+  check(
+    "releaseGap: the 'not compatible' wording with a NEWER repository",
+    JSON.stringify(T.releaseGap(INCOMPAT("2026", "2027"))) ===
+      '{"local":"2026","remote":"2027"}',
+  );
+  // Guards: the direction of the year check — an outdated mirror would trigger a whole new install.
+  check(
+    "releaseGap: a STALE mirror (repository older than the tree) is not a new release",
+    T.releaseGap(INCOMPAT("2027", "2026")) === null,
+  );
+  check(
+    "releaseGap: ordinary tlmgr output is not a release gap",
+    T.releaseGap(
+      "tlmgr install: package urw-base35 not present in repository.\n",
+    ) === null,
+  );
+  // Guards: the complete-tree preference — an interrupted new-year install would otherwise be the
+  // tree the build uses.
+  check(
+    "usableTree: the newest COMPLETE tree, not simply the newest",
+    T.usableTree(["2027", "2026", "2025"], (y) => y !== "2027") === "2026",
+  );
+  check(
+    "usableTree: nothing complete — the newest, so packages go where the next build will look",
+    T.usableTree(["2027", "2026"], () => false) === "2027",
+  );
+  check("usableTree: an empty cache", T.usableTree([], () => true) === null);
+});
 
 // ── the fake mirror ────────────────────────────────────────────────────────────────────
 const work = realpathSync(
@@ -151,45 +160,47 @@ const work = realpathSync(
 const good = join(work, "good");
 const garbage = join(work, "garbage");
 const staging = join(work, "staging", "install-tl-20260924");
-mkdirSync(staging, { recursive: true });
-mkdirSync(good);
-mkdirSync(garbage);
-for (const f of [
-  "install-tl",
-  "stub-pdflatex",
-  "stub-kpsewhich",
-  "stub-tlmgr",
-  "stub-fmtutil-sys",
-  "release-texlive.txt",
-])
-  copyFileSync(join(FIXTURE, f), join(staging, f));
-spawnSync("chmod", [
-  "+x",
-  ...[
+beforeAll(() => {
+  mkdirSync(staging, { recursive: true });
+  mkdirSync(good);
+  mkdirSync(garbage);
+  for (const f of [
     "install-tl",
     "stub-pdflatex",
     "stub-kpsewhich",
     "stub-tlmgr",
     "stub-fmtutil-sys",
-  ].map((f) => join(staging, f)),
-]);
-spawnSync(
-  "tar",
-  [
-    "czf",
-    join(good, "install-tl-unx.tar.gz"),
-    "-C",
-    dirname(staging),
-    "install-tl-20260924",
-  ],
-  { stdio: "inherit" },
-);
-copyFileSync(join(FIXTURE, "catalog.txt"), join(good, "catalog.txt"));
-copyFileSync(join(FIXTURE, "release-year"), join(good, "release-year"));
-writeFileSync(
-  join(garbage, "install-tl-unx.tar.gz"),
-  "<html>503 Service Unavailable</html>",
-);
+    "release-texlive.txt",
+  ])
+    copyFileSync(join(FIXTURE, f), join(staging, f));
+  spawnSync("chmod", [
+    "+x",
+    ...[
+      "install-tl",
+      "stub-pdflatex",
+      "stub-kpsewhich",
+      "stub-tlmgr",
+      "stub-fmtutil-sys",
+    ].map((f) => join(staging, f)),
+  ]);
+  spawnSync(
+    "tar",
+    [
+      "czf",
+      join(good, "install-tl-unx.tar.gz"),
+      "-C",
+      dirname(staging),
+      "install-tl-20260924",
+    ],
+    { stdio: "inherit" },
+  );
+  copyFileSync(join(FIXTURE, "catalog.txt"), join(good, "catalog.txt"));
+  copyFileSync(join(FIXTURE, "release-year"), join(good, "release-year"));
+  writeFileSync(
+    join(garbage, "install-tl-unx.tar.gz"),
+    "<html>503 Service Unavailable</html>",
+  );
+});
 const url = (dir) => pathToFileURL(dir).href;
 const MISSING = url(join(work, "no-such-mirror"));
 
@@ -208,7 +219,7 @@ const recorder = () => {
 };
 
 // ── 2. the download ─────────────────────────────────────────────────────────────────────
-{
+it("2. the download: download: falls through a missing mirror and a non-archive to the good one", () => {
   const lines = [];
   const { run, calls } = recorder();
   const dest = join(work, "dl.tar.gz");
@@ -249,8 +260,8 @@ const recorder = () => {
     "download: -f — an HTTP error page is a failure, not a file",
     curls.every((c) => c.args[0].includes("f")),
   );
-}
-{
+});
+it("2. the download: download: no good mirror → null, not a half file", () => {
   const lines = [];
   const got = T.downloadInstaller(
     { run: spawnSync, log: (l) => lines.push(l), env: process.env },
@@ -258,7 +269,7 @@ const recorder = () => {
     join(work, "dl2.tar.gz"),
   );
   check("download: no good mirror → null, not a half file", got === null);
-}
+});
 
 // ── 3. the command ─────────────────────────────────────────────────────────────────────
 const TEX = {
@@ -280,13 +291,14 @@ const env = {
 };
 // A stand-in banal: a Perl script that prints what banal prints for a one-page, 10 pt probe.
 const fakeBanal = join(work, "fake-banal");
-writeFileSync(
-  fakeBanal,
-  'print qq({"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}\\n);\n',
-);
+const FAKE_BANAL_SOURCE =
+  'print qq({"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}\\n);\n';
+beforeAll(() => {
+  writeFileSync(fakeBanal, FAKE_BANAL_SOURCE);
+});
 const BANAL = {
   url: url(fakeBanal),
-  sha256: createHash("sha256").update(readFileSync(fakeBanal)).digest("hex"),
+  sha256: createHash("sha256").update(FAKE_BANAL_SOURCE).digest("hex"),
 };
 /** banal's installer over the real ports, every process going through the recorder. */
 const installer = (e, source, run) => {
@@ -320,7 +332,7 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
   return { code, out: out.join("\n"), err: err.join("\n"), calls: rec.calls };
 };
 
-{
+it("3. the command: --check on an empty cache: exit 1, says nothing is installed and what the command installs", () => {
   const r = cmd({ check: true });
   check(
     "--check on an empty cache: exit 1, says nothing is installed and what the command installs",
@@ -330,8 +342,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     r.out,
   );
   check("--check changes nothing", !existsSync(join(root, "2026")));
-}
-{
+});
+it("3. the command: fresh install: exit 0", () => {
   const r = cmd();
   check("fresh install: exit 0", r.code === 0, `${r.out}\n${r.err}`);
   check(
@@ -352,8 +364,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     tlmgr.trim() === `${url(good)} acmart latex texcount`,
     tlmgr,
   );
-}
-{
+});
+it("3. the command: second run: exit 0 and says there is nothing to do", () => {
   const r = cmd();
   // Guards: idempotence — the second run must not touch the network or say it did work.
   check(
@@ -372,11 +384,11 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     !r.calls.some(installs),
     JSON.stringify(r.calls.map((c) => [c.cmd, ...c.args])),
   );
-}
+});
 // Guards: a tree with every venue package can still be broken. install-tl that lost a package
 // to a mirror prints "continuing anyway"; seen 2026-09-26 with unicode-data, after which the
 // pdflatex format was never built and every build died before writing a log.
-{
+it("3. the command: 🔴 a dropped base dependency: --check does not call the tree complete", () => {
   const tree = join(root, "2026");
   writeFileSync(join(tree, "missing-deps.txt"), "unicode-data\n");
   const check1 = cmd({ check: true });
@@ -397,16 +409,16 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     "a dropped base dependency: the tree is whole afterwards",
     readFileSync(join(tree, "missing-deps.txt"), "utf8").trim() === "",
   );
-}
-{
+});
+it("3. the command: --check on a complete tree: exit 0", () => {
   const r = cmd({ check: true });
   check(
     "--check on a complete tree: exit 0",
     r.code === 0 && r.out.includes("has all 3 declared packages"),
     r.out,
   );
-}
-{
+});
+it("3. the command: --check names the missing package WITH its proof file", () => {
   // A package declared LATER: the tree exists, so only tlmgr runs, for that package alone.
   const tex = {
     ...TEX,
@@ -431,8 +443,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
         .split("\n")
         .at(-1) === `${url(good)} libertine`,
   );
-}
-{
+});
+it("3. the command: 🔴 an unknown package name fails and is NAMED", () => {
   const r = cmd({
     tex: { ...TEX, packages: { ...TEX.packages, bogus: ["bogus.sty"] } },
   });
@@ -443,8 +455,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     r.code === 1 && r.err.includes("tlmgr does not know: bogus"),
     r.err,
   );
-}
-{
+});
+it("3. the command: 🔴 tlmgr 'installs' it but the proof file is absent: FAIL, package and file named", () => {
   const r = cmd({
     tex: { ...TEX, packages: { ...TEX.packages, liar: ["liar.sty"] } },
   });
@@ -455,8 +467,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     r.code === 1 && r.err.includes("still lacks, after tlmgr: liar (liar.sty)"),
     r.err,
   );
-}
-{
+});
+it("3. the command: 🔴 a declared tool with no executable fails, named", () => {
   // A tool whose program never appears in the bin directory.
   appendFileSync(join(good, "catalog.txt"), "checkcites checkcites.lua\n");
   const r = cmd({
@@ -467,16 +479,16 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     r.code === 1 && r.err.includes("checkcites (checkcites)"),
     r.err,
   );
-}
-{
+});
+it("3. the command: Windows: a clear refusal, nothing touched", () => {
   const r = cmd({ platform: "win32" });
   check(
     "Windows: a clear refusal, nothing touched",
     r.code === 1 && r.err.includes("Windows is not supported"),
     r.err,
   );
-}
-{
+});
+it("3. the command: install-tl failing: exit 1 and its own last lines are shown", () => {
   const fresh = join(work, "cache-fail");
   const r = cmd({
     env: {
@@ -492,8 +504,8 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
       r.err.includes("simulated failure"),
     r.err,
   );
-}
-{
+});
+it("3. the command: no mirror answers: exit 1, names the mirrors and the override", () => {
   const r = cmd({
     env: {
       ...env,
@@ -508,7 +520,7 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
       r.err.includes("PAPERLINT_CTAN_MIRROR"),
     r.err,
   );
-}
+});
 
 // ── 4. a new TeX Live year on CTAN ─────────────────────────────────────────────────────
 /**
@@ -548,7 +560,10 @@ const mirrorFor = (name, year, installerYear = year) => {
   writeFileSync(join(dir, "release-year"), `${year}\n`);
   return url(dir);
 };
-const next = mirrorFor("good2027", "2027");
+let next;
+beforeAll(() => {
+  next = mirrorFor("good2027", "2027");
+});
 const years = join(work, "cache-years");
 const withLibertine = {
   ...TEX,
@@ -563,11 +578,13 @@ const inYears = (mirror, over = {}) =>
     },
     ...over,
   });
-check(
-  "years: a 2026 tree to start from",
-  inYears(url(good)).code === 0 && existsSync(join(years, "2026")),
-);
-{
+it("4. a new TeX Live year on CTAN: years: a 2026 tree to start from", () => {
+  check(
+    "years: a 2026 tree to start from",
+    inYears(url(good)).code === 0 && existsSync(join(years, "2026")),
+  );
+});
+it("4. a new TeX Live year on CTAN: 🔴 years: a complete 2026 tree and a 2027 mirror, nothing new declared — NO upgrade", () => {
   const r = inYears(next);
   check(
     "🔴 years: a complete 2026 tree and a 2027 mirror, nothing new declared — NO upgrade",
@@ -578,8 +595,8 @@ check(
       !r.calls.some(installs),
     `${r.out}\n${JSON.stringify(r.calls.map((c) => c.cmd))}`,
   );
-}
-{
+});
+it("4. a new TeX Live year on CTAN: 🔴 years: a new package on a 2027 mirror — tlmgr's refusal installs a 2027 tree beside the old one", () => {
   const r = inYears(next, { tex: withLibertine });
   // Guards: the recovery — a new TeX Live year would fail every newly declared package, loudly and
   // forever.
@@ -608,8 +625,8 @@ check(
       r.out.includes("MB); delete that directory to free the space"),
     r.out,
   );
-}
-{
+});
+it("4. a new TeX Live year on CTAN: years: the next run uses 2027 and does nothing", () => {
   const r = inYears(next, { tex: withLibertine });
   check(
     "years: the next run uses 2027 and does nothing",
@@ -619,8 +636,8 @@ check(
       ),
     r.out,
   );
-}
-{
+});
+it("4. a new TeX Live year on CTAN: 🔴 years: mirrors that disagree about the release fail, and install-tl is not run over the old tree", () => {
   // tlmgr says 2027, but the installer the mirrors hand out is still 2026.
   const split = join(work, "cache-split");
   cmd({ env: { ...env, PAPERLINT_TEXLIVE_DIR: split } });
@@ -641,10 +658,10 @@ check(
       !r.calls.some((c) => c.cmd.endsWith("install-tl")),
     r.err,
   );
-}
+});
 
 // ── 4. banal, the second half of the command ───────────────────────────────────────────
-{
+it("4. banal, the second half of the command: banal: --check with TeX Live complete and no banal exits 1 and names banal", () => {
   const dir = join(work, "banal-4");
   const e = { ...env, PAPERLINT_BANAL_DIR: dir };
   const before = cmd({ env: e, check: true });
@@ -670,8 +687,8 @@ check(
     again.out,
   );
   check("banal: --check now passes", cmd({ env: e, check: true }).code === 0);
-}
-{
+});
+it("4. banal, the second half of the command: 🔴 banal with the wrong sha256: exit 1, the refusal named, and TeX Live still reported ready", () => {
   const r = cmd({
     env: { ...env, PAPERLINT_BANAL_DIR: join(work, "banal-bad") },
     banal: { ...BANAL, sha256: "0".repeat(64) },
@@ -685,7 +702,8 @@ check(
       r.out.includes("nothing to do"),
     `${r.out}\n${r.err}`,
   );
-}
+});
 
-rmSync(work, { recursive: true, force: true });
-console.log(`toolchain: ${check.count} checks passed`);
+afterAll(() => {
+  rmSync(work, { recursive: true, force: true });
+});

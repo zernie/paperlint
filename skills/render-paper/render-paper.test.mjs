@@ -6,6 +6,7 @@
  * passes; the TeX e2e suite does that. The commands are documented in `docs/render.md`.
  */
 import assert from "node:assert/strict";
+import { it } from "vitest";
 import {
   copyFileSync,
   existsSync,
@@ -28,7 +29,7 @@ import {
 
 // The TeX package pins that stood here (texlive-fonts-extra, texlive-plain-generic in
 // ensure-toolchain.sh) moved with the list itself: the venue profiles declare the packages, and
-// src/tex-requirements.harness.ts asserts that every acmart venue declares libertine, inconsolata,
+// src/tex-requirements-tables.test.ts asserts that every acmart venue declares libertine, inconsolata,
 // newtx, kastrup (binhex.tex) and fancyhdr — each proved by the file whose absence broke a build.
 
 // ── TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex` ─────────────────
@@ -46,7 +47,7 @@ import {
 // What these assertions do NOT prove: that the found file is correct, that pdflatex read it, and
 // that the guard fired. That's caught by `paper-guards.tex` itself (it fails with
 // `\PackageError`) — here it's only "a directory was found, and found in the right order."
-{
+it("TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex`", () => {
   const HERE = dirname(fileURLToPath(import.meta.url));
   const CHECK = join(HERE, "check-render.sh");
   const run = (args, opts = {}) =>
@@ -170,7 +171,7 @@ import {
     pkgVenues,
     "with both candidates present, the INSTALLED package wins, not the copy the script ships in",
   );
-}
+});
 
 // ── THE SAME LADDER IN THE PAPER's build.sh, AND WHY THE ASSERTION DIFFERS ───
 //
@@ -201,7 +202,7 @@ import {
 // The counter below is printed ALWAYS and grows together with the verdict, not before it: "0
 // consumer scripts" is an honest result (in a checkout of the package itself it should be zero),
 // whereas a silently-produced "0" would be indistinguishable from a verified corpus.
-{
+it("THE SAME LADDER IN THE PAPER's build.sh, AND WHY THE ASSERTION DIFFERS", () => {
   const HERE = dirname(fileURLToPath(import.meta.url));
 
   /** The property of a paper's build script. A pure function — so it can also be BROKEN. */
@@ -278,7 +279,7 @@ import {
         ? " (no papers root on disk — package checkout)"
         : ` under ${root}/`),
   );
-}
+});
 
 // ── AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE ─────────────────
 // `\\bstctlcite{key}` cites an `@IEEEtranBSTCTL{key, …}` entry, so the key lands in the .aux like any
@@ -288,7 +289,7 @@ import {
 // `** IEEEtran BST control entry "key" detected.`: BibTeX wrote it after parsing the build's
 // databases, so a record BibTeX never read (a .bib the build does not use, a record inside
 // `@comment{…}`) or a misspelled key exempts nothing, and a genuinely missing key is still reported.
-{
+it("AN IEEEtran BST CONTROL ENTRY IS NOT A MISSING REFERENCE", () => {
   const HERE = dirname(fileURLToPath(import.meta.url));
   const CHECK = join(HERE, "check-render.sh");
   // `detected` = the keys IEEEtran reported in the .blg as control entries it read.
@@ -380,7 +381,7 @@ import {
     /bibliography: BSTcontrol/,
     withGap.stdout,
   );
-}
+});
 
 // ── THE LOG VERDICT: check-render.sh FAILS A PAPER WHOSE TEXT BLEEDS PAST THE COLUMN ─────────
 // The script reads the LaTeX log and exits 1 on a visible defect (an overfull box wider than the
@@ -388,30 +389,30 @@ import {
 // read. `NO_COMPILE=1` skips pdflatex, so the log parser runs anywhere; the last case compiles
 // for real, and only where a TeX toolchain exists. Both halves, always: a gate that fails a clean
 // log is bypassed on deadline day, and one that passes a defective log is decoration.
-{
-  const CHECK = join(
-    dirname(fileURLToPath(import.meta.url)),
-    "check-render.sh",
-  );
-  const dirWith = (files) => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "render-log-")));
-    for (const [name, body] of Object.entries(files))
-      writeFileSync(join(dir, name), body);
-    return dir;
-  };
-  const verdict = (dir, { threshold = "5", compile = false } = {}) => {
-    const env = { ...process.env };
-    if (compile) delete env.NO_COMPILE;
-    else env.NO_COMPILE = "1";
-    const r = spawnSync("bash", [CHECK, dir, "paper", threshold], {
-      encoding: "utf8",
-      env,
-    });
-    return { status: r.status, stdout: r.stdout };
-  };
-  const overfull = (pt) =>
-    `Overfull \\hbox (${pt}pt too wide) in paragraph at lines 4--5\n`;
+const LOG_CHECK = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "check-render.sh",
+);
+const dirWith = (files) => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "render-log-")));
+  for (const [name, body] of Object.entries(files))
+    writeFileSync(join(dir, name), body);
+  return dir;
+};
+const verdict = (dir, { threshold = "5", compile = false } = {}) => {
+  const env = { ...process.env };
+  if (compile) delete env.NO_COMPILE;
+  else env.NO_COMPILE = "1";
+  const r = spawnSync("bash", [LOG_CHECK, dir, "paper", threshold], {
+    encoding: "utf8",
+    env,
+  });
+  return { status: r.status, stdout: r.stdout };
+};
+const overfull = (pt) =>
+  `Overfull \\hbox (${pt}pt too wide) in paragraph at lines 4--5\n`;
 
+it("the log verdict: a paper whose text bleeds past the column fails, a clean log passes", () => {
   const wide = verdict(dirWith({ "paper.log": overfull("12.34") }));
   assert.equal(
     wide.status,
@@ -491,11 +492,15 @@ import {
     /FAIL: no .*paper\.log/,
     `the missing log was not named:\n${noLog.stdout}`,
   );
+});
 
-  const haveLatex =
-    spawnSync("bash", ["-c", "command -v pdflatex"], { encoding: "utf8" })
-      .status === 0;
-  if (haveLatex) {
+const haveLatex =
+  spawnSync("bash", ["-c", "command -v pdflatex"], { encoding: "utf8" })
+    .status === 0;
+// The real compile needs a TeX toolchain: without pdflatex vitest reports a skip, not a pass.
+it.skipIf(!haveLatex)(
+  "the log verdict, compiled for real: an overfull word fails, a clean paragraph passes",
+  () => {
     const texPaper = (body, preamble = "") =>
       dirWith({
         "paper.tex": `\\documentclass[10pt]{article}\n${preamble}\\begin{document}\n${body}\n\\end{document}\n`,
@@ -528,9 +533,5 @@ import {
       0,
       `an ordinary paragraph must pass a real compile:\n${good.stdout}`,
     );
-  } else {
-    console.log(
-      "  real compile (overfull word, clean paragraph): NOT VERIFIED — pdflatex is not installed; only the log parser ran.",
-    );
-  }
-}
+  },
+);

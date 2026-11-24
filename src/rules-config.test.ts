@@ -3,19 +3,25 @@
  * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli-e2e.test.mjs`;
  * this pins the parser's output shape and each refusal.
  */
-import { createChecker } from "../lib/check.ts";
+import { failureMessage } from "../lib/check.ts";
+import { expect, it } from "vitest";
 
 const { parseRuleBlocks, shippedRuleIds, unknownKeys } =
   await import("./rules-config.ts");
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  expect.soft(cond, failureMessage(label, detail)).toBeTruthy();
+};
 
 const SHIPPED = new Set(["pdf/last-page-balance", "paper/typography"]);
 const parse = (raw: unknown) => parseRuleBlocks(raw, "S", SHIPPED, "/consumer");
 
-const none = parse(undefined);
-check("no `rules` key: no blocks", none.ok && none.value.length === 0);
-{
+it("no `rules` key: no blocks", () => {
+  const none = parse(undefined);
+  check("no `rules` key: no blocks", none.ok && none.value.length === 0);
+});
+it("a block keeps files, ignores and rules, with basePath", () => {
   const r = parse([
     {
       files: ["papers/a/**"],
@@ -35,8 +41,8 @@ check("no `rules` key: no blocks", none.ok && none.value.length === 0);
         }),
     JSON.stringify(r),
   );
-}
-{
+});
+it("the object form is one block with no `files`", () => {
   const r = parse({ "pdf/last-page-balance": "error" });
   check(
     "the object form is ONE block with no `files` — narrowed to each rule's own files later",
@@ -50,12 +56,15 @@ check("no `rules` key: no blocks", none.ok && none.value.length === 0);
         ]),
     JSON.stringify(r),
   );
-}
-check(
-  "both severity spellings are accepted",
-  parse([{ rules: { "paper/typography": 0, "pdf/last-page-balance": "warn" } }])
-    .ok,
-);
+});
+it("both severity spellings are accepted", () => {
+  check(
+    "both severity spellings are accepted",
+    parse([
+      { rules: { "paper/typography": 0, "pdf/last-page-balance": "warn" } },
+    ]).ok,
+  );
+});
 const refusals: [unknown, string][] = [
   ["pdf/last-page-balance", 'S → "rules" must be { "<rule>": "<severity>" }'],
   [{ a: 1 }, '"a" is not a rule paperlint ships'],
@@ -79,20 +88,25 @@ const refusals: [unknown, string][] = [
     'S → rules[0].rules["paper/typography"]: ["loud"] is not a severity',
   ],
 ];
-for (const [raw, says] of refusals) {
-  const r = parse(raw);
+it("every refusal names its key", () => {
+  for (const [raw, says] of refusals) {
+    const r = parse(raw);
+    check(
+      `refused, naming the key: ${says}`,
+      !r.ok && r.error.includes(says),
+      JSON.stringify(r),
+    );
+  }
+});
+it("unknown top-level keys are found by name", () => {
   check(
-    `refused, naming the key: ${says}`,
-    !r.ok && r.error.includes(says),
-    JSON.stringify(r),
+    "unknown top-level keys are found by name; the known ones are not",
+    JSON.stringify(
+      unknownKeys({ papersDir: "p", rules: [], papersDri: "x" }),
+    ) === JSON.stringify(["papersDri"]),
   );
-}
-check(
-  "unknown top-level keys are found by name; the known ones are not",
-  JSON.stringify(unknownKeys({ papersDir: "p", rules: [], papersDri: "x" })) ===
-    JSON.stringify(["papersDri"]),
-);
-{
+});
+it("shipped rule ids are read off the config's own plugins", () => {
   const foreign = { rules: { "no-html": {} } };
   const ids = shippedRuleIds(
     [
@@ -119,8 +133,4 @@ check(
       JSON.stringify(["paper/typography", "pdf/last-page-balance"]),
     JSON.stringify([...ids]),
   );
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — rules-config: blocks parsed with basePath, every refusal names its key`,
-);
+});

@@ -6,6 +6,8 @@
  * So every "found" here has a paired "not found on the neighboring directory", and the defaults
  * are separately checked against the shape of the live corpus.
  */
+import { afterAll, expect, it } from "vitest";
+import { failureMessage } from "../lib/check.ts";
 import {
   mkdtempSync,
   mkdirSync,
@@ -16,7 +18,6 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { z } from "zod";
-import { createChecker } from "../lib/check.ts";
 
 /** `asEslintResults` promises only `unknown[]`; these are the fields the checks read. */
 const EslintResults = z.array(
@@ -31,7 +32,10 @@ const EslintResults = z.array(
 const { checkStructure, formatStructure, asEslintResults, STRUCTURE_DEFAULTS } =
   await import("./structure.ts");
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  expect.soft(cond, failureMessage(label, detail)).toBeTruthy();
+};
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-struct-")));
 const papers = join(root, "papers");
@@ -45,7 +49,11 @@ const paper = (name: string, files: readonly string[]) => {
   return dir;
 };
 
-try {
+afterAll(() => {
+  rmSync(root, { recursive: true, force: true });
+});
+
+it("structure: a missing file cannot complain for itself", () => {
   paper("complete", ["PIPELINE-STATUS.md", "paper.tex", "refs.bib"]);
   // the marker is present (paper.tex), the scorecard is not — the directory is linted by ZERO
   // rules and reports clean
@@ -171,10 +179,4 @@ try {
     "and the path is RELATIVE — an absolute path to the temp directory tells the reader nothing",
     f.every((x) => !x.file.startsWith("/")),
   );
-} finally {
-  rmSync(root, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — structure: a missing file cannot complain for itself`,
-);
+});

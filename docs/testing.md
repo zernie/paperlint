@@ -51,9 +51,8 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Answers:** what does an agent see or cause? A hook's allow or deny on a given input, what a
   skill's contract promises.
 - **Lives:** `<surface>.harness.mjs` beside what it tests; it imports `runHook`, `runHarnessTest`
-  or `runEval` from vigiles. Harnesses written before this rule that import none of the three are
-  frozen in `scripts/harness-api.frozen.json`, which only shrinks (`scripts/harness-api.test.ts`,
-  #77). A new test of anything else is a unit or integration test.
+  or `runEval` from vigiles (`scripts/harness-api.test.ts` fails on a `*.harness.*` file that does
+  not). A test of anything else is a unit or integration test.
 - **Asserts through** `lib/check.mjs`: `const check = createChecker();` then
   `check(label, cond, detail)`. A failure prints the label and the detail, every call is counted.
   Do not define a local `check`.

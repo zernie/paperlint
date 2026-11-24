@@ -1,6 +1,5 @@
 /**
  * Colocated test for the LaTeX language `eslint-rules/latex-language.mjs`.
- * Run: `npx vigiles test eslint-rules/latex-language.harness.mjs`
  *
  * FIVE PARTS, AND THE ORDER IS LOAD-BEARING:
  *   0.  THE PROJECTION INVARIANT — length, line count and newline offsets equal the source.
@@ -23,7 +22,7 @@
  *    V. CONFIG — the language is wired to `.tex`, and the glob it is wired on is NOT EMPTY.
  *
  * ⚠️ WHAT WAS LOST WHEN THIS TEST LEFT THE PRIVATE CORPUS BEHIND, stated rather than glossed.
- * The original harness drove SIX rule modules (walls, prose, claims, structure, craft,
+ * The original test drove SIX rule modules (walls, prose, claims, structure, craft,
  * registry) through this language and froze their finding counts on three real papers
  * (35 · 52 · 15 at the 2026-08-27 measurement, later 32 · 53 · 20 after captions became
  * visible on 2026-09-06). None of those modules was extracted, and the papers are private, so:
@@ -37,11 +36,11 @@
  * That last gap is why part II asserts the projection DIRECTLY on `texToMdast`, rather than
  * inferring it from someone's finding count.
  *
- * 🔴 Assertions live at MODULE TOP LEVEL: `vigiles test` imports the file and treats "it did
- * not throw" as success; an exported `tests` object is run by nothing.
+ * The parts are `it` blocks in file order: each one runs, and fails, on its own.
  */
 import { ESLint } from "eslint";
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import {
   existsSync,
   mkdirSync,
@@ -58,19 +57,24 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, ".."); // eslint-rules → repository root
 const LANG = join(HERE, "latex-language.ts");
-assert.ok(existsSync(LANG), `no entry point for the test: ${LANG}`);
+// A test here lints the whole repository: ~72 s alone, up to 224 s beside the rest of the suite
+// under coverage on 4 cores (measured 2026-11-24), so the limit only catches a hang.
+vi.setConfig({ testTimeout: 600_000 });
 
 const { texLanguage, texToMdast } = await import(LANG);
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "latex-language-")));
-// Cleanup is registered IMMEDIATELY, not at the end of the file: assertions throw, and an
-// `rmSync` at the bottom never runs in exactly the runs that are red.
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => {
+  rmSync(TMP, { recursive: true, force: true });
+});
 
 const CLEAN_FIXTURE = join(ROOT, "fixtures/latex-language/clean.tex");
 const DEFECT_FIXTURE = join(ROOT, "fixtures/latex-language/defect.tex");
-for (const f of [CLEAN_FIXTURE, DEFECT_FIXTURE])
-  assert.ok(existsSync(f), `missing fixture: ${f}`);
+it("the entry point and both fixtures exist", () => {
+  assert.ok(existsSync(LANG), `no entry point for the test: ${LANG}`);
+  for (const f of [CLEAN_FIXTURE, DEFECT_FIXTURE])
+    assert.ok(existsSync(f), `missing fixture: ${f}`);
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 0. THE PROJECTION INVARIANT
@@ -105,8 +109,12 @@ function project(label, src) {
 
 const CLEAN_SRC = readFileSync(CLEAN_FIXTURE, "utf8");
 const DEFECT_SRC = readFileSync(DEFECT_FIXTURE, "utf8");
-const clean = project("fixtures/latex-language/clean.tex", CLEAN_SRC);
-const defect = project("fixtures/latex-language/defect.tex", DEFECT_SRC);
+let clean;
+let defect;
+it("0. THE PROJECTION INVARIANT holds on both fixtures", () => {
+  clean = project("fixtures/latex-language/clean.tex", CLEAN_SRC);
+  defect = project("fixtures/latex-language/defect.tex", DEFECT_SRC);
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // I. QUIET ON A CORRECT INPUT — through the repository's real config
@@ -130,12 +138,14 @@ async function lintTex(file) {
   }));
 }
 
-assert.deepEqual(
-  await lintTex(CLEAN_FIXTURE),
-  [],
-  "a CORRECT LaTeX paper produced findings — a check that fails a correct input gets switched " +
-    "off the same day",
-);
+it("I. QUIET ON A CORRECT INPUT, through the repository's real config", async () => {
+  assert.deepEqual(
+    await lintTex(CLEAN_FIXTURE),
+    [],
+    "a CORRECT LaTeX paper produced findings — a check that fails a correct input gets switched " +
+      "off the same day",
+  );
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // II. THE PROJECTION ACTUALLY DID ITS WORK
@@ -145,7 +155,7 @@ assert.deepEqual(
 // thing a mutation of that property kills.
 const headings = (root) => root.children.filter((c) => c.type === "heading");
 
-{
+it("II. headings: synthesised Abstract and References, real sections, ATX projection", () => {
   const titles = headings(clean.root).map((h) => h.title);
   // 🔴 SYNTHESIS. Neither `Abstract` nor `References` is written as a heading anywhere in the
   // fixture: the abstract is an environment, the bibliography is a macro. Measured on the
@@ -180,9 +190,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     /^##\s+Introduction\s*$/m,
     "`\\section{Introduction}` did not project to an ATX heading",
   );
-}
+});
 
-{
+it("II. the preamble cut-off", () => {
   // 🔴 THE PREAMBLE CUT-OFF. Nothing before `\begin{document}` is a node of the document.
   // Without the cut-off, one real paper of the source corpus got a FALSE `## References` on
   // line 178 — its bibliography "began" before the introduction, so the whole paper fell into
@@ -227,9 +237,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       8,
     "References was synthesised in the preamble rather than at the document's bibliography",
   );
-}
+});
 
-{
+it("II. the preamble is blanked", () => {
   // THE PREAMBLE IS BLANKED. Everything before `\begin{document}` is markup, and if it stays
   // visible the package list and the author macros become prose.
   const preEnd =
@@ -243,9 +253,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     CLEAN_SRC.includes("\\usepackage{natbib}"),
     "the fixture lost its preamble content — the assertion above no longer has a subject",
   );
-}
+});
 
-{
+it("II. captions and footnotes are prose", () => {
   // 🔴 CAPTIONS AND FOOTNOTES ARE PROSE, AND THIS WAS A DOUBLE LOCK. Until 2026-09-06 the text
   // inside `\caption{}` / `\footnote{}` was invisible to every prose rule reading `.tex`: it
   // was blanked once as an opaque macro argument, and again as part of the surrounding
@@ -276,9 +286,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       !projectedFloat.includes(markup),
       `float markup «${markup}» survived into the prose projection`,
     );
-}
+});
 
-{
+it("II. opaque macros: name and argument are blanked", () => {
   // OPAQUE MACROS: name AND argument are blanked. A `\cite` key or a `\label` is not English.
   for (const token of ["someone2020", "sec:intro", "acmart", "sigconf"])
     assert.ok(
@@ -290,9 +300,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       CLEAN_SRC.includes("\\label{sec:intro}"),
     "the fixture lost its opaque macros — the assertion above no longer has a subject",
   );
-}
+});
 
-{
+it("II. math is blanked", () => {
   // MATH IS BLANKED — inline and display alike. A formula is not a sentence, and a word counter
   // that eats `E = m c^2` reports prose that was never written.
   assert.ok(
@@ -307,9 +317,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     CLEAN_SRC.includes("E = m c^2") && CLEAN_SRC.includes("$n = 10$"),
     "the fixture lost its math — the assertion above no longer has a subject",
   );
-}
+});
 
-{
+it("II. texttt becomes inline code, with the same character count", () => {
   // `\texttt{X}` → `` `X` ``: the same character count, so offsets do not move. It is the only
   // markdown markup the projection can reproduce without shifting — `**` needs TWO characters
   // after the content, and LaTeX leaves only `}`.
@@ -317,9 +327,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     clean.text.includes("`shadow-budget`"),
     "`\\texttt{X}` no longer projects to a backticked span",
   );
-}
+});
 
-{
+it("II. a bold lead-in at column 1 becomes a strong node", () => {
   // 🔴 A BOLD LEAD-IN AT COLUMN 1 becomes a `strong` node, and its `**` are written IN PLACE OF
   // `\te` rather than before the content. A downstream block-note rule locates a lead-in by the
   // OFFSET of the line's first non-space character; leave spaces at the start of the line and
@@ -344,9 +354,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     text.split("\n").some((l) => l.startsWith("**")),
     "the `**` were not written at the start of the line — a note above the block cannot bind",
   );
-}
+});
 
-{
+it("II. comments, and both of their edges", () => {
   // 🔴 COMMENTS, AND BOTH OF THEIR EDGES. unified-latex includes the TRAILING newline in a
   // comment while mdast does not; and a comment that follows a line of text directly comes back
   // with a position starting at the PREVIOUS newline rather than at `%`. Consumers recognise a
@@ -380,7 +390,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     "the comment node ends on a newline — its RIGHT edge swallowed the line break, so the gap " +
       "between the note and what it annotates is empty and the note never binds",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // III. FIRES ON A PLANTED DEFECT
@@ -389,7 +399,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 // repository is `tex/future-promise`, and it reads the file from disk rather than the
 // projection. So this run proves the language parses the document and ESLint dispatches through
 // it — the projection's own both-halves are part II, asserted directly.
-{
+it("III. FIRES ON A PLANTED DEFECT: defect.tex through the real config", async () => {
   const ms = await lintTex(DEFECT_FIXTURE);
   assert.ok(
     ms.length >= 1,
@@ -411,7 +421,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     defect.text.includes("The full table will be released later."),
     "the caption carrying the defect is invisible in the projection",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // IV. THE LANGUAGE'S BOUNDARIES — pinned by assertions, not only by prose
@@ -420,7 +430,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 // "fixed" unnoticed, or gets quoted as current a year after it went away. The assertions below
 // describe CURRENT behaviour. Each is an invitation to rewrite the language's header, not a ban
 // on changing the code.
-{
+it("IV. boundary 2: escaped characters are lost together with the macro name", () => {
   // BOUNDARY 2: escaped characters are lost together with the macro name.
   const { text } = texToMdast(
     "\\documentclass{article}\n\\begin{document}\n" +
@@ -432,8 +442,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     "the projection of escaped characters changed — rewrite boundary 2 in the language header:\n" +
       text,
   );
-}
-{
+});
+it("IV. boundary 4: the contents of an input file are invisible", () => {
   // BOUNDARY 4: `\input{}` — the contents of the included file are invisible.
   const dir = join(TMP, "input-boundary");
   mkdirSync(join(dir, "sections"), { recursive: true });
@@ -454,8 +464,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     !text.includes("solver"),
     "the contents of `\\input{}` became visible — boundary 4 in the language header is stale",
   );
-}
-{
+});
+it("IV. boundary 5: appendix is inexpressible in a length-preserving projection", () => {
   // BOUNDARY 5: `\appendix` is inexpressible in a length-preserving projection (9 characters
   // against the 11 of `## Appendix`).
   const src = [
@@ -474,9 +484,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     !titles.some((t) => /^Appendix/.test(t)),
     "`\\appendix` started producing a heading — boundary 5 in the language header is stale",
   );
-}
-{
-  // 🔴 BOUNDARY 13, found 2026-09-11 BY THIS HARNESS, by an assertion that expected the
+});
+it("IV. boundary 13: citep and citet leak their key", () => {
+  // 🔴 BOUNDARY 13, found 2026-09-11 BY THIS TEST, by an assertion that expected the
   // opposite: `\citep{}` / `\citet{}` leak their key into the prose, while `\cite{}` does not.
   // All three are listed in OPAQUE, but OPAQUE blanks a macro name plus the arguments
   // unified-latex ATTACHED to it, and unified-latex has no signature for the natbib pair — so
@@ -499,8 +509,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     keyed("citet").includes("keyABC"),
     "`\\citet{}` stopped leaking its key — boundary 13 was fixed; rewrite it in the language header",
   );
-}
-{
+});
+it("IV. boundary 8: an inline eslint config does not work inside .tex", async () => {
   // BOUNDARY 8: an inline `% eslint {...}` config does NOT work inside `.tex`
   // (`applyInlineConfig` returns empty), while `% eslint-disable-next-line` DOES.
   // ⚠️ This one runs on an in-process config rather than the repository's, and deliberately:
@@ -563,12 +573,12 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     [],
     "`% eslint-disable-next-line` stopped working inside `.tex` — boundary 8 is stale",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // V. CONFIG — the language is wired, over a NON-EMPTY glob
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("V. CONFIG: the language is wired, over a non-empty glob", async () => {
   const config = (await import(join(ROOT, "eslint.config.mjs"))).default;
   const tex = config.find((b) => b.language === "tex/latex");
   assert.ok(
@@ -596,4 +606,4 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       "are four, so the language was invoked on less than its own test data: " +
       seen.join(", "),
   );
-}
+});

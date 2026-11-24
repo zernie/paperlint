@@ -8,6 +8,7 @@
  *   2. prepareEngine: use the cache · use the system · refuse without a human · ask, decline,
  *      accept and install · dry-run never asks or installs.
  */
+import { afterAll, beforeAll, expect, it } from "vitest";
 import {
   chmodSync,
   mkdirSync,
@@ -19,70 +20,81 @@ import {
 import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const E = await import(join(HERE, "build-engine.ts"));
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label, cond, detail) => {
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${String(detail)}`)
+    .toBeTruthy();
+};
 
 // ── 1. texts ────────────────────────────────────────────────────────────────────────────
-const noCache = {
-  supported: true,
-  cache: null,
-  system: null,
-  interactive: true,
-  required: ["acmart", "libertine"],
-};
-check(
-  "question: no TeX Live at all — size, time, and where it goes",
-  E.question(noCache, "/c") ===
-    "TeX Live is not installed (needed to compile paper.tex, ~230 MB, ~2 min). Install it now into /c? [Y/n] ",
-);
-check(
-  "question: a partial cache — only its gaps are offered",
-  E.question(
-    { ...noCache, cache: { label: "c", bin: "/c/b", missing: ["kastrup"] } },
-    "/c",
-  ) === "TeX Live in /c lacks 1 package(s): kastrup. Install them now? [Y/n] ",
-);
-const refused = E.refusal(
-  { kind: "refuse", reason: "not-installed", missing: ["acmart", "libertine"] },
-  {
-    ...noCache,
-    interactive: false,
-    system: { label: "s", bin: "/usr/bin", missing: ["cm-super"] },
-  },
-);
-// Guards: the one line a CI log shows — without `npx paperlint toolchain` in it, the reader does not know
-// the cure.
-check(
-  "refusal: ONE line naming `npx paperlint toolchain`, the missing packages, and why the system TeX was passed over",
-  !refused.includes("\n") &&
-    refused.includes("run `npx paperlint toolchain`") &&
-    refused.includes("missing: 2 package(s): acmart, libertine") &&
-    refused.includes("/usr/bin/pdflatex lacks: cm-super"),
-  refused,
-);
-check(
-  "refusal on an unsupported platform says so",
-  E.refusal(
-    { kind: "refuse", reason: "unsupported", missing: ["x"] },
-    noCache,
-  ).includes("Windows is not supported"),
-);
-for (const [a, yes] of [
-  // Guards: the default answer — [Y/n] promises that Enter installs.
-  ["", true],
-  ["y", true],
-  ["YES", true],
-  [" y ", true],
-  ["n", false],
-  ["no", false],
-  ["maybe", false],
-  [null, false],
-])
-  check(`isYes(${JSON.stringify(a)}) is ${yes}`, E.isYes(a) === yes);
+it("1. texts: the question, the refusal line, what counts as yes", () => {
+  const noCache = {
+    supported: true,
+    cache: null,
+    system: null,
+    interactive: true,
+    required: ["acmart", "libertine"],
+  };
+  check(
+    "question: no TeX Live at all — size, time, and where it goes",
+    E.question(noCache, "/c") ===
+      "TeX Live is not installed (needed to compile paper.tex, ~230 MB, ~2 min). Install it now into /c? [Y/n] ",
+  );
+  check(
+    "question: a partial cache — only its gaps are offered",
+    E.question(
+      { ...noCache, cache: { label: "c", bin: "/c/b", missing: ["kastrup"] } },
+      "/c",
+    ) ===
+      "TeX Live in /c lacks 1 package(s): kastrup. Install them now? [Y/n] ",
+  );
+  const refused = E.refusal(
+    {
+      kind: "refuse",
+      reason: "not-installed",
+      missing: ["acmart", "libertine"],
+    },
+    {
+      ...noCache,
+      interactive: false,
+      system: { label: "s", bin: "/usr/bin", missing: ["cm-super"] },
+    },
+  );
+  // Guards: the one line a CI log shows — without `npx paperlint toolchain` in it, the reader does not know
+  // the cure.
+  check(
+    "refusal: ONE line naming `npx paperlint toolchain`, the missing packages, and why the system TeX was passed over",
+    !refused.includes("\n") &&
+      refused.includes("run `npx paperlint toolchain`") &&
+      refused.includes("missing: 2 package(s): acmart, libertine") &&
+      refused.includes("/usr/bin/pdflatex lacks: cm-super"),
+    refused,
+  );
+  check(
+    "refusal on an unsupported platform says so",
+    E.refusal(
+      { kind: "refuse", reason: "unsupported", missing: ["x"] },
+      noCache,
+    ).includes("Windows is not supported"),
+  );
+  for (const [a, yes] of [
+    // Guards: the default answer — [Y/n] promises that Enter installs.
+    ["", true],
+    ["y", true],
+    ["YES", true],
+    [" y ", true],
+    ["n", false],
+    ["no", false],
+    ["maybe", false],
+    [null, false],
+  ])
+    check(`isYes(${JSON.stringify(a)}) is ${yes}`, E.isYes(a) === yes);
+});
 
 // ── 2. prepareEngine ────────────────────────────────────────────────────────────────────
 const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-engine-h-")));
@@ -101,10 +113,16 @@ const texAt = (dir) => {
   chmodSync(join(dir, "pdflatex"), 0o755);
   return dir;
 };
-const cacheBin = texAt(join(work, "cache", "2026", "bin", "x86_64-linux"));
-const sysBin = texAt(join(work, "usr", "bin"));
-const emptyBin = join(work, "nothing");
-mkdirSync(emptyBin);
+let cacheBin;
+let sysBin;
+let emptyBin;
+beforeAll(() => {
+  cacheBin = texAt(join(work, "cache", "2026", "bin", "x86_64-linux"));
+  sysBin = texAt(join(work, "usr", "bin"));
+  emptyBin = join(work, "nothing");
+  mkdirSync(emptyBin);
+});
+afterAll(() => {});
 
 /** kpsewhich answers per tree: `found[bin]` is what it prints. */
 const fakeRun = (found) => (cmd) => ({
@@ -144,7 +162,7 @@ const envWith = (cacheRoot, path) => ({
   PATH: path,
 });
 
-{
+it("a complete cache: used, named, and PATH starts with its bin", async () => {
   const x = await go({
     env: envWith(join(work, "cache"), sysBin),
     run: fakeRun({ [cacheBin]: ALL, [sysBin]: ALL }),
@@ -158,8 +176,8 @@ const envWith = (cacheRoot, path) => ({
       x.r.env.PATH.split(delimiter)[0] === cacheBin,
     `${x.out} ${JSON.stringify(x.r)}`,
   );
-}
-{
+});
+it("🔴 two years, the newer incomplete: the newest COMPLETE one builds", async () => {
   // Two TeX Live years in the cache: a 2027 install that stopped after install-tl, and 2026.
   const years = join(work, "years");
   const old = texAt(join(years, "2026", "bin", "x86_64-linux"));
@@ -186,8 +204,8 @@ const envWith = (cacheRoot, path) => ({
     y.r.ok && y.r.env.PATH.split(delimiter)[0] === cut,
     y.out,
   );
-}
-{
+});
+it("a partial cache, a complete system TeX: the system one, PATH untouched", async () => {
   const x = await go({
     env: envWith(join(work, "cache"), sysBin),
     run: fakeRun({ [cacheBin]: "/t/acmart.cls\n", [sysBin]: ALL }),
@@ -201,8 +219,8 @@ const envWith = (cacheRoot, path) => ({
       x.r.env.PATH === sysBin,
     x.out,
   );
-}
-{
+});
+it("🔴 no human, nothing qualifies: refused in one line, NOTHING asked, NOTHING installed", async () => {
   const x = await go({
     env: envWith(join(work, "none"), `${emptyBin}${delimiter}${sysBin}`),
     run: fakeRun({ [sysBin]: "/t/acmart.cls\n" }),
@@ -220,8 +238,8 @@ const envWith = (cacheRoot, path) => ({
       x.installs() === 0,
     x.err,
   );
-}
-{
+});
+it("a terminal, declined: asked ONCE, nothing installed, refusal printed", async () => {
   const x = await go({
     env: envWith(join(work, "none"), emptyBin),
     run: fakeRun({}),
@@ -236,8 +254,8 @@ const envWith = (cacheRoot, path) => ({
       x.err.includes("npx paperlint toolchain"),
     JSON.stringify(x),
   );
-}
-{
+});
+it("a question that cannot be answered (Ctrl+D) is a no, not a crash", async () => {
   const x = await go({
     env: envWith(join(work, "none"), emptyBin),
     run: fakeRun({}),
@@ -250,10 +268,10 @@ const envWith = (cacheRoot, path) => ({
     "a question that cannot be answered (Ctrl+D) is a no, not a crash",
     !x.r.ok && x.installs() === 0,
   );
-}
+});
 // The accept path needs the fake kpsewhich to answer for a tree that appears DURING the run.
 const x_run = { found: {} };
-{
+it("a terminal, Enter (default yes): installs once, then builds with the cache", async () => {
   const fresh = join(work, "fresh2");
   const x = await go({
     env: envWith(fresh, emptyBin),
@@ -277,8 +295,8 @@ const x_run = { found: {} };
       basename(x.r.env.PATH.split(delimiter)[0]) === "x86_64-linux",
     `${x.out}\n${x.err}`,
   );
-}
-{
+});
+it("an install that fails stops the build", async () => {
   const x = await go({
     env: envWith(join(work, "none"), emptyBin),
     run: fakeRun({}),
@@ -287,8 +305,8 @@ const x_run = { found: {} };
     onInstall: () => ({ ok: false }),
   });
   check("an install that fails stops the build", !x.r.ok && x.installs() === 1);
-}
-{
+});
+it("--dry-run: prints what would stop the build, never asks, never installs", async () => {
   const x = await go({
     env: envWith(join(work, "none"), emptyBin),
     run: fakeRun({}),
@@ -304,7 +322,6 @@ const x_run = { found: {} };
       x.out.includes("engine: none — a real run would stop here"),
     x.out,
   );
-}
+});
 
 rmSync(work, { recursive: true, force: true });
-console.log(`build-engine: ${check.count} checks passed`);

@@ -1,7 +1,7 @@
 /**
  * `paperlint build` against a REAL `pdflatex`, from source to finished PDF.
  *
- * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
+ * 🔴 HOW THIS DIFFERS FROM `src/build-fake-tex.test.mjs`, AND WHY BOTH ARE NEEDED. That harness
  * substitutes a fake TeX for `spawnSync`: it checks the shell's DECISIONS — what runs, in which
  * order, with which TEXINPUTS, and what is left on disk. Not one of its assertions can say that a
  * PDF came out at the end, let alone WHICH one. Here is the other half: paperlint compiles each fixture

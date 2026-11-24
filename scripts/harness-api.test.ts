@@ -6,10 +6,6 @@
  * The rule is read from the file's IMPORTS, parsed with the TypeScript compiler — not from its
  * folder and not from a text search: a comment or a string that mentions `runHook` is not an import,
  * and the CLI's end-to-end test (once `cli.harness.mjs`) calls a function of paperlint's own that happens to be called `runHook`.
- *
- * Harnesses that predate the rule and import none of the three are frozen in
- * `harness-api.frozen.json` (issue #77). That list only shrinks: an entry that now imports the API,
- * or that no longer exists, has to leave it.
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -18,16 +14,8 @@ import { basename, dirname, join } from "node:path";
 import { test } from "vitest";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import { z } from "zod";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const FROZEN: readonly string[] = z
-  .object({ harnesses: z.array(z.string()) })
-  .parse(
-    JSON.parse(
-      readFileSync(join(ROOT, "scripts", "harness-api.frozen.json"), "utf8"),
-    ),
-  ).harnesses;
 
 /** vigiles' agent-testing API — what a harness exists to call. */
 export const AGENT_API = new Set(["runHook", "runHarnessTest", "runEval"]);
@@ -84,26 +72,12 @@ export function importsAgentApi(fileName: string, source: string): boolean {
   return found;
 }
 
-/** Harness-named files, among `paths`, that import none of the API and are not frozen. */
-export function misnamed(
-  files: ReadonlyMap<string, string>,
-  frozen: readonly string[],
-): string[] {
+/** Harness-named files, among `paths`, that import none of the API. */
+export function misnamed(files: ReadonlyMap<string, string>): string[] {
   return [...files]
-    .filter(([p]) => isHarnessName(p) && !frozen.includes(p))
+    .filter(([p]) => isHarnessName(p))
     .filter(([p, src]) => !importsAgentApi(p, src))
     .map(([p]) => p);
-}
-
-/** Frozen entries that must leave: gone from the tree, or now importing the API. */
-export function mustLeave(
-  files: ReadonlyMap<string, string>,
-  frozen: readonly string[],
-): string[] {
-  return frozen.filter((f) => {
-    const src = files.get(f);
-    return src === undefined || importsAgentApi(f, src);
-  });
 }
 
 /** Every harness-named file git knows about (tracked, or new and not ignored), with its source. */
@@ -120,14 +94,9 @@ function harnessesOnDisk(): Map<string, string> {
   );
 }
 
-test("every harness imports vigiles' agent-testing API, or is on the frozen list", () => {
+test("every harness imports vigiles' agent-testing API", () => {
   // Guards: the rule on the real tree — a new plain test named `*.harness.*` turns this red.
-  assert.deepEqual(misnamed(harnessesOnDisk(), FROZEN), []);
-});
-
-test("the frozen list only shrinks", () => {
-  // Guards: a renamed, deleted or converted harness must leave the list, or it stops meaning anything.
-  assert.deepEqual(mustLeave(harnessesOnDisk(), FROZEN), []);
+  assert.deepEqual(misnamed(harnessesOnDisk()), []);
 });
 
 test("both halves, on planted files", () => {
@@ -143,15 +112,7 @@ test("both halves, on planted files", () => {
     ["src/z.test.ts", plain],
   ]);
   // Guards: the fire half — a plain test named as a harness fails EVEN inside skills/.
-  assert.deepEqual(misnamed(files, []), ["skills/x/x.harness.ts"]);
-  // Guards: a file that is on the list but now imports the API has to leave it.
-  assert.deepEqual(mustLeave(files, ["src/y.harness.mjs"]), [
-    "src/y.harness.mjs",
-  ]);
-  // Guards: an entry whose file is gone has to leave it.
-  assert.deepEqual(mustLeave(files, ["gone.harness.mjs"]), [
-    "gone.harness.mjs",
-  ]);
+  assert.deepEqual(misnamed(files), ["skills/x/x.harness.ts"]);
 });
 
 test("an import is what counts — not a mention, not a same-named local function", () => {

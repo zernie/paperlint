@@ -1,6 +1,6 @@
 /**
  * Colocated test of the `extract-ref-facts.mjs` extractor.
- * Run: `npx vigiles test .claude/skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs`
+ * Each numbered part is one vitest `it`; an assertion that throws fails it.
  *
  * ORDER IS LOAD-BEARING: first we prove that on CORRECT input the extractor returns the facts it
  * promises, and only then — that on broken input it refuses to write. An extractor that silently
@@ -17,10 +17,10 @@
  * a real request. A test that needs the internet is skipped in CI, and a skipped check
  * is indistinguishable from one that passed.
  *
- * 🔴 Assertions — AT MODULE TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
- * as success, so an exported test object would report ✓ without running anything.
+ * 🔴 Assertions are plain `assert` calls inside each `it`: a throw fails that test.
  */
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
@@ -44,6 +44,9 @@ import { absolutePath } from "#src/domain/paths";
 import { sha256Hex } from "#src/domain/sha256";
 import { serializeSourcesRecord } from "#src/domain/sources-record";
 import { consumerRoot } from "./consumer.mjs";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = consumerRoot();
@@ -111,13 +114,13 @@ function built(dir) {
 }
 // Cleanup is attached IMMEDIATELY: assertions throw, and "rmSync at end of file" does not execute precisely in those
 // runs that are red.
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => rmSync(TMP, { recursive: true, force: true }));
 
 // ── 1. DEFECT #1: the `.bib` a paper declares is opened ──────────────────────
 //
 // The build recorded that bibtex opened `refs.bib`, and `bibliographyAt` opens it. A fixture paper
 // holds the frozen real `.bib`, so the leg is proven on a real file in every checkout.
-{
+it("1. DEFECT #1: the `.bib` a paper declares is opened", () => {
   const dir = join(TMP, "declares-real-bib");
   mkdirSync(dir, { recursive: true });
   writeFileSync(
@@ -144,7 +147,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
       `${paper}: neither a bibliography nor a reason`,
     );
   }
-}
+});
 
 // ── 2. DEFECT #2: real .bib parses, and entry count matches ───────
 //
@@ -152,7 +155,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 // field, and a hand-written fixture almost certainly would close the entry on its own line — that is,
 // the test would pass but the corpus would not. The expected count comes from the file itself (`^@`), not
 // hardcoded: a constant grows stale on the first added entry.
-{
+it("2. DEFECT #2: real .bib parses, and entry count matches", () => {
   // Counter of parsed sources, checked after the loop: a check that prints "passed"
   // but says nothing about HOW MANY files it opened — this is a counter that counts what it ignores.
   let parsed = 0;
@@ -194,7 +197,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "parsed ZERO .bib files. This is not 'nothing to check', but 'check did not find its subject': " +
       "the frozen fixture fixtures/real-bib/refs.bib must always lie in the repository.",
   );
-}
+});
 
 // ── 3b. INSTITUTION DOES NOT DISAPPEAR ──────────────────────────────────────────────
 //
@@ -203,7 +206,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 // Measurement 17.09 on real aisec-2026: eleven entries out of fifty-one came back
 // with `authors = []`, because joinName didn't know this form. Failure toward SILENCE — checking against
 // such entries found nothing and looked like passing.
-{
+it("3b. INSTITUTION DOES NOT DISAPPEAR", () => {
   const bib = `@misc{inst,
   author={{Adversa AI}},
   title={A Report}, year={2026}}
@@ -217,13 +220,13 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     `institution lost or torn apart: ${JSON.stringify(es.map((e) => e.authors))}`,
   );
   assert.equal(es[0].truncated, false, "institution is not `and others`");
-}
+});
 
 // ── 3c. …AND SINGLE BRACE STILL PARSES AS PERSON ─────────────
 //
 // Second half. Without it the fix above is indistinguishable from "stopped parsing names at all":
 // single brace — ordinary author, and order "LastName, FirstName" must be unwound.
-{
+it("3c. …AND SINGLE BRACE STILL PARSES AS PERSON", () => {
   const bib = `@misc{human, author={Adversa, Alice}, title={T}, year={2026}}`;
   const [e] = factsOf(bib);
   assert.deepEqual(
@@ -231,13 +234,13 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     ["Alice Adversa"],
     `single brace must parse as person: ${JSON.stringify(e.authors)}`,
   );
-}
+});
 
 // ── 3. DEFECT #3: name from .bib is converted to order "FirstName LastName" ─────────────
 //
 // In BibTeX they write `Jimenez, Carlos E.`, and the "last alphabetic token" of such a string is `e`.
 // The rule compares exactly the last token, so order must be unwound HERE.
-{
+it('3. DEFECT #3: name from .bib is converted to order "FirstName LastName"', () => {
   const bib = `@inproceedings{k1,
   author={Jimenez, Carlos E. and Di Penta, Massimiliano and others},
   title={A Title}, booktitle={ICLR}, year={2024}, note={arXiv:2310.06770}}`;
@@ -253,28 +256,28 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "`and others` is et al. in BibTeX format, and it must be marked as truncation",
   );
   assert.deepEqual(X.extractIds(e), { arxiv: ["2310.06770"], doi: [] });
-}
+});
 
 // ── 4. arXiv-DOI goes to arXiv, NOT to CrossRef ───────────────────────────────
 //
 // Measurement 26.08: `api.crossref.org/works/10.48550%2FarXiv.2107.03374` → HTTP 404 "Resource not
 // found" on a completely real DOI in <paper-b>/refs.bib. Asking CrossRef,
 // gate `id-resolves` would declare the correct entry broken.
-{
+it("4. arXiv-DOI goes to arXiv, NOT to CrossRef", () => {
   assert.equal(X.routeOf("doi:10.48550/arXiv.2107.03374").registry, "arxiv");
   assert.ok(
     X.routeOf("doi:10.48550/arXiv.2107.03374").url.includes("2107.03374"),
   );
   assert.equal(X.routeOf("doi:10.1145/3597503.3623333").registry, "crossref");
   assert.equal(X.routeOf("arxiv:2310.06770").registry, "arxiv");
-}
+});
 
 // ── 5. registry readers work on RAW bodies ─────────────────────────────
 //
 // Cache stores raw responses precisely for this: every fabricated title this base
 // shipped was found by reading the registry's response. A cache of parsed entries would leave readers
 // uncovered, appearing covered.
-{
+it("5. registry readers work on RAW bodies", () => {
   const atom = `<?xml version='1.0' encoding='UTF-8'?>
 <feed xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
   <entry>
@@ -316,10 +319,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
   assert.equal(c.year, "2018");
   assert.deepEqual(c.authors, ["Liebig", "von Rhein"]);
-}
+});
 
 // ── 6. recording facts: registry response → record, and UNparsed response is also a fact ─
-{
+it("6. recording facts: registry response → record, and UNparsed response is also a fact", () => {
   const key = "arxiv:2310.06770";
   const ok = X.recordFrom(key, {
     httpStatus: 200,
@@ -346,10 +349,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     broken.parse_error,
     "unreadable response must leave reason, not silently disappear",
   );
-}
+});
 
 // ── 7. CLI: ZERO ENTRIES — REFUSAL, not empty facts ─────────────────────────
-{
+it("7. CLI: ZERO ENTRIES — REFUSAL, not empty facts", async () => {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "empty");
   mkdirSync(dir, { recursive: true });
@@ -377,10 +380,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     !existsSync(join(dir, "_build", "refs.facts.json")),
     "facts with empty list written to disk — would be read as clean bibliography",
   );
-}
+});
 
 // ── 8. CLI: no source — also refusal, not silence ─────────────────────────
-{
+it("8. CLI: no source — also refusal, not silence", async () => {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "nosrc");
   mkdirSync(dir, { recursive: true });
@@ -394,10 +397,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     /no paper\.tex/u.test(r.stderr),
     `message must say what is missing: ${r.stderr}`,
   );
-}
+});
 
 // ── 9. end-to-end: real paper → facts, freshness is computed ───────────────
-{
+it("9. end-to-end: real paper → facts, freshness is computed", async () => {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "e2e");
   mkdirSync(join(dir, "repro", "data"), { recursive: true });
@@ -437,9 +440,4 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     createHash("sha256").update(paper).digest("hex"),
     "source sha256 does not match — rule `fresh` could not catch stale facts",
   );
-}
-
-console.log(
-  "✓ extract-ref-facts: the declared refs.bib is opened, both real .bib parse completely, name order unwound, " +
-    "arXiv-DOI does not go to CrossRef, registry readers run on raw bodies, zero entries = refusal",
-);
+});

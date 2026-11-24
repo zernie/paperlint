@@ -1,6 +1,5 @@
 /**
  * Colocated test for `eslint-rules/pdf-last-page-balance.mjs` (`pdf/last-page-balance`).
- * Run: `npx vigiles test eslint-rules/pdf-last-page-balance.harness.mjs`
  *
  * The rule is driven the way a consumer drives it: through paperlint's own `buildConfig`, with the
  * rule turned on by a `rules` block in the settings — not through a config invented here. Each
@@ -24,7 +23,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import { texLanguage } from "./latex-language.ts";
-import { createChecker } from "../lib/check.ts";
+import { afterAll, expect, it, vi } from "vitest";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { parseFacts, judgeColumns, DEFAULT_TOLERANCE_PT } = await import(
@@ -32,7 +34,11 @@ const { parseFacts, judgeColumns, DEFAULT_TOLERANCE_PT } = await import(
 );
 const { buildConfig } = await import(join(HERE, "..", "src", "cli.ts"));
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label, cond, detail) =>
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${detail}`)
+    .toBe(true);
 
 const TEX =
   "% a paper\n\\documentclass[sigconf]{acmart}\n\\begin{document}x\\end{document}\n";
@@ -93,8 +99,11 @@ async function lint(
 }
 const only = (msgs) => msgs.filter((m) => m.ruleId === "pdf/last-page-balance");
 
-try {
-  // ── pure: parsing the facts and judging the columns ──────────────────────────────────
+// Set by the "fires" test, read by the "quiet" one: the tests run in order.
+let unb;
+
+// ── pure: parsing the facts and judging the columns ──────────────────────────────────
+it("pure: parsing the facts and judging the columns", () => {
   check(
     "parseFacts: a schema-1 file is refused by name",
     parseFacts(JSON.stringify({ schema: 1 })).messageId === "schema",
@@ -115,9 +124,11 @@ try {
         ?.messageId === "unbalanced",
   );
   check("the default tolerance is 120 pt", DEFAULT_TOLERANCE_PT === 120);
+});
 
-  // ── fires ───────────────────────────────────────────────────────────────────────────
-  const unb = paper("unbalanced", facts(MEASURED(621.5, 264.8)));
+// ── fires ───────────────────────────────────────────────────────────────────────────
+it("fires", async () => {
+  unb = paper("unbalanced", facts(MEASURED(621.5, 264.8)));
   const u = only(await lint([join(unb, "paper.tex")]));
   check(
     "🔴 an unbalanced last page is a finding, with both heights and the difference",
@@ -179,8 +190,10 @@ try {
     "schema-1 facts are refused, not read with new meanings",
     only(await lint([join(old, "paper.tex")]))[0]?.messageId === "schema",
   );
+});
 
-  // ── the facts' optional spellings, and a paper.tex the rule cannot place the finding in ──
+// ── the facts' optional spellings, and a paper.tex the rule cannot place the finding in ──
+it("the facts' optional spellings, and a paper.tex the rule cannot place the finding in", async () => {
   check(
     "parseFacts: no schema at all, or JSON null, is schema `null` — named, not crashed on",
     parseFacts("{}").data?.got === "null" &&
@@ -239,8 +252,10 @@ try {
     mem.length === 1 && mem[0].line === 1 && mem[0].messageId === "unbalanced",
     JSON.stringify(fromMemory.messages),
   );
+});
 
-  // ── quiet ───────────────────────────────────────────────────────────────────────────
+// ── quiet ───────────────────────────────────────────────────────────────────────────
+it("quiet", async () => {
   const bal = paper("balanced", facts(MEASURED(464.2, 461.5)));
   const stub = paper("stub", facts({ kind: "stub", words: 12 }));
   const review = paper("review", facts({ kind: "review", line_numbers: 60 }));
@@ -260,10 +275,7 @@ try {
     "🔴 OFF BY DEFAULT: with no `rules` block, an unbalanced paper gets no finding",
     only(await lint([join(unb, "paper.tex")], [])).length === 0,
   );
-} finally {
+});
+afterAll(() => {
   rmSync(root, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — pdf/last-page-balance: fires on unbalanced and unjudgeable, quiet on balanced/stub/review/off`,
-);
+});

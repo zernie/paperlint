@@ -1,6 +1,5 @@
 /**
  * Colocated test for `eslint-rules/tex-build.mjs` (`tex/future-promise`).
- * Run: `npx vigiles test eslint-rules/tex-build.harness.mjs`
  *
  * FIVE PARTS, AND THE ORDER IS LOAD-BEARING:
  *   I.   FIXTURES ON DISK — `fixtures/tex-build/clean.tex` must be silent, `defect.tex` must
@@ -50,11 +49,11 @@
  * is what the corpus actually looks like today"; they reproduce the mechanism only. The
  * measurements from those runs are kept in the comments, the papers are not.
  *
- * 🔴 Assertions live at MODULE TOP LEVEL: `vigiles test` imports the file and treats "it did
- * not throw" as success; an exported `tests` object is run by nothing.
+ * The parts are `it` blocks in file order: each one runs, and fails, on its own.
  */
 import { ESLint } from "eslint";
 import assert from "node:assert/strict";
+import { afterAll, it, vi } from "vitest";
 import {
   existsSync,
   mkdirSync,
@@ -69,24 +68,29 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+// A test here lints the whole repository: ~72 s alone, up to 224 s beside the rest of the suite
+// under coverage on 4 cores (measured 2026-11-24), so the limit only catches a hang.
+vi.setConfig({ testTimeout: 600_000 });
 const ROOT = join(HERE, ".."); // eslint-rules → repository root
 const RULES = join(HERE, "tex-build.ts");
-assert.ok(existsSync(RULES), `no entry point for the test: ${RULES}`);
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "tex-build-")));
-// Cleanup is registered IMMEDIATELY, not at the end of the file: assertions throw, and an
-// `rmSync` at the bottom never runs in exactly the runs that are red.
-process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
+afterAll(() => {
+  rmSync(TMP, { recursive: true, force: true });
+});
 
 const { texLanguage } = await import(join(HERE, "latex-language.ts"));
 const texBuild = (await import(RULES)).default;
 
 // A new rule with no declared severity must not slip through unnoticed.
-assert.deepEqual(
-  Object.keys(texBuild).sort(),
-  ["acm-frontmatter-override", "future-promise"],
-  "the module's rule set changed — update the config and this harness",
-);
+it("the module's rule set is the one the config declares", () => {
+  assert.ok(existsSync(RULES), `no entry point for the test: ${RULES}`);
+  assert.deepEqual(
+    Object.keys(texBuild).sort(),
+    ["acm-frontmatter-override", "future-promise"],
+    "the module's rule set changed — update the config and this test",
+  );
+});
 
 const makeEslint = (cwd) =>
   new ESLint({
@@ -158,92 +162,96 @@ const CLEAN_FIXTURE = join(ROOT, "fixtures/tex-build/clean.tex");
 const DEFECT_FIXTURE = join(ROOT, "fixtures/tex-build/defect.tex");
 const real = new ESLint({ cwd: ROOT });
 
-for (const f of [CLEAN_FIXTURE, DEFECT_FIXTURE])
-  assert.ok(existsSync(f), `missing fixture: ${f}`);
+it("I. FIXTURES ON DISK, THROUGH THE REPOSITORY'S OWN CONFIG", async () => {
+  for (const f of [CLEAN_FIXTURE, DEFECT_FIXTURE])
+    assert.ok(existsSync(f), `missing fixture: ${f}`);
 
-assert.deepEqual(
-  await lintTex(real, CLEAN_FIXTURE),
-  [],
-  "fixtures/tex-build/clean.tex produced findings — a check that fails a correct input gets " +
-    "switched off the same day",
-);
+  assert.deepEqual(
+    await lintTex(real, CLEAN_FIXTURE),
+    [],
+    "fixtures/tex-build/clean.tex produced findings — a check that fails a correct input gets " +
+      "switched off the same day",
+  );
 
-// 🔴 AND THE REASON FOR THAT ZERO IS CHECKED SEPARATELY. "Zero because the build is clean" and
-// "zero because the build is exempt as review mode" are indistinguishable from the outside; the
-// only thing telling them apart is that the exemption sign is genuinely absent from the file.
-// Without this assertion, someone editing the fixture into a review build would turn the quiet
-// half into a tautology and nothing would notice.
-assert.doesNotMatch(
-  readFileSync(CLEAN_FIXTURE, "utf8"),
-  /^[^%\n]*(?:\\documentclass\[[^\]]*\breview\b|printacmref=false)/m,
-  "fixtures/tex-build/clean.tex became a review build — its zero stopped meaning `the rule ran " +
-    "and found nothing` and started meaning `the rule was exempt`",
-);
+  // 🔴 AND THE REASON FOR THAT ZERO IS CHECKED SEPARATELY. "Zero because the build is clean" and
+  // "zero because the build is exempt as review mode" are indistinguishable from the outside; the
+  // only thing telling them apart is that the exemption sign is genuinely absent from the file.
+  // Without this assertion, someone editing the fixture into a review build would turn the quiet
+  // half into a tautology and nothing would notice.
+  assert.doesNotMatch(
+    readFileSync(CLEAN_FIXTURE, "utf8"),
+    /^[^%\n]*(?:\\documentclass\[[^\]]*\breview\b|printacmref=false)/m,
+    "fixtures/tex-build/clean.tex became a review build — its zero stopped meaning `the rule ran " +
+      "and found nothing` and started meaning `the rule was exempt`",
+  );
 
-// The frozen finding set of the defect fixture: not "some findings", but exactly these two,
-// at these addresses, with these captured substrings.
-assert.deepEqual(
-  await lintTex(real, DEFECT_FIXTURE),
-  [
-    {
-      rule: "tex/future-promise",
-      line: 15,
-      column: 59,
-      text: "at camera-ready",
-    },
-    {
-      rule: "tex/future-promise",
-      line: 22,
-      column: 52,
-      text: "will be made publicly available",
-    },
-  ],
-  "fixtures/tex-build/defect.tex: the finding set drifted from the frozen measurement",
-);
+  // The frozen finding set of the defect fixture: not "some findings", but exactly these two,
+  // at these addresses, with these captured substrings.
+  assert.deepEqual(
+    await lintTex(real, DEFECT_FIXTURE),
+    [
+      {
+        rule: "tex/future-promise",
+        line: 15,
+        column: 59,
+        text: "at camera-ready",
+      },
+      {
+        rule: "tex/future-promise",
+        line: 22,
+        column: 52,
+        text: "will be made publicly available",
+      },
+    ],
+    "fixtures/tex-build/defect.tex: the finding set drifted from the frozen measurement",
+  );
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // II. QUIET ON A CORRECT INPUT — each reason for the silence on its own
 // ═════════════════════════════════════════════════════════════════════════════
-assert.deepEqual(
-  await findings("clean-build", build("We measured how often a rule fails.")),
-  [],
-  "a build with no promises must be silent",
-);
-
-// A promise made DURING PEER REVIEW is true and ordinary. This is not leniency, it is the
-// subject: the defect is only a promise that outlived its own delivery.
-for (const [label, cls] of [
-  ["review option", "\\documentclass[sigconf,review]{acmart}"],
-  [
-    "printacmref=false",
-    "\\documentclass[sigconf]{acmart}\n\\settopmatter{printacmref=false}",
-  ],
-])
+it("II. QUIET ON A CORRECT INPUT, each reason for the silence on its own", async () => {
   assert.deepEqual(
-    await findings(
-      `review-${label}`,
-      build("The harness ships at camera-ready.", { cls }),
-    ),
+    await findings("clean-build", build("We measured how often a rule fails.")),
     [],
-    `${label}: a review build must be exempt`,
+    "a build with no promises must be silent",
   );
 
-// 🔴 A LaTeX COMMENT IS A LEGITIMATE PLACE FOR THESE WORDS. Author notes of the form
-// `% camera-ready blocker` live in real sources, and a finding on them would be exactly the
-// false positive that kills a check.
-assert.deepEqual(
-  await findings(
-    "promise-in-comment",
-    build("% blocker: the harness ships at camera-ready."),
-  ),
-  [],
-  "a promise inside a LaTeX comment is not a finding",
-);
+  // A promise made DURING PEER REVIEW is true and ordinary. This is not leniency, it is the
+  // subject: the defect is only a promise that outlived its own delivery.
+  for (const [label, cls] of [
+    ["review option", "\\documentclass[sigconf,review]{acmart}"],
+    [
+      "printacmref=false",
+      "\\documentclass[sigconf]{acmart}\n\\settopmatter{printacmref=false}",
+    ],
+  ])
+    assert.deepEqual(
+      await findings(
+        `review-${label}`,
+        build("The harness ships at camera-ready.", { cls }),
+      ),
+      [],
+      `${label}: a review build must be exempt`,
+    );
+
+  // 🔴 A LaTeX COMMENT IS A LEGITIMATE PLACE FOR THESE WORDS. Author notes of the form
+  // `% camera-ready blocker` live in real sources, and a finding on them would be exactly the
+  // false positive that kills a check.
+  assert.deepEqual(
+    await findings(
+      "promise-in-comment",
+      build("% blocker: the harness ships at camera-ready."),
+    ),
+    [],
+    "a promise inside a LaTeX comment is not a finding",
+  );
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // III. FIRES ON A PLANTED DEFECT
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("III. FIRES ON A PLANTED DEFECT: the defect printed in an accepted camera-ready", async () => {
   // THE defect: the line printed in an accepted camera-ready on 2026-08-24 in both of the most
   // read positions, while the Availability paragraph three lines below said the opposite.
   const ms = await findings(
@@ -265,40 +273,42 @@ assert.deepEqual(
     "We report the finding (full harness ".length + 1,
     "the column must point at the start of the match",
   );
-}
+});
 
 // Every branch of the promise vocabulary gets its own input. Without that, "a vocabulary of six
 // forms" is a claim verified by one of the six.
-for (const [sentence, want] of [
-  ["The harness ships at camera-ready.", "at camera-ready"],
-  ["The harness ships at the camera ready stage.", "at the camera ready"],
-  ["Upon acceptance we open the repository.", "Upon acceptance"],
-  ["On acceptance we open the repository.", "On acceptance"],
-  ["The harness will be released later.", "will be released"],
-  ["The harness will be published later.", "will be published"],
-  [
-    "The data will be made publicly available.",
-    "will be made publicly available",
-  ],
-  ["The data will be made available.", "will be made available"],
-  ["The harness will be public.", "will be public"],
-  ["The harness will be open-sourced.", "will be open-sourced"],
-]) {
-  const ms = await findings(`vocab-${want}`, build(sentence));
-  assert.equal(
-    ms.length,
-    1,
-    `vocabulary branch «${want}» did not fire on «${sentence}»`,
-  );
-  assert.equal(
-    ms[0].text,
-    want,
-    `vocabulary branch «${want}» caught the wrong substring`,
-  );
-}
+it("III. every branch of the promise vocabulary fires", async () => {
+  for (const [sentence, want] of [
+    ["The harness ships at camera-ready.", "at camera-ready"],
+    ["The harness ships at the camera ready stage.", "at the camera ready"],
+    ["Upon acceptance we open the repository.", "Upon acceptance"],
+    ["On acceptance we open the repository.", "On acceptance"],
+    ["The harness will be released later.", "will be released"],
+    ["The harness will be published later.", "will be published"],
+    [
+      "The data will be made publicly available.",
+      "will be made publicly available",
+    ],
+    ["The data will be made available.", "will be made available"],
+    ["The harness will be public.", "will be public"],
+    ["The harness will be open-sourced.", "will be open-sourced"],
+  ]) {
+    const ms = await findings(`vocab-${want}`, build(sentence));
+    assert.equal(
+      ms.length,
+      1,
+      `vocabulary branch «${want}» did not fire on «${sentence}»`,
+    );
+    assert.equal(
+      ms[0].text,
+      want,
+      `vocabulary branch «${want}» caught the wrong substring`,
+    );
+  }
+});
 
 // Two promises on different lines do not collapse into one (the rule reports EVERY place).
-{
+it("IV. two promises on different lines do not collapse into one", async () => {
   const ms = await findings(
     "two-lines",
     build(
@@ -310,7 +320,7 @@ for (const [sentence, want] of [
     ["4:Upon acceptance", "5:will be made publicly available"],
     "two promises on different lines must give two findings with their own addresses",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // IV. PROPERTIES NOBODY "SEES", WITHOUT WHICH THE RULE LIES
@@ -323,7 +333,7 @@ for (const [sentence, want] of [
 // ⚠️ The live half of this assertion (reading the real paper) did not come along with the
 // extraction — the paper is private. What is left is the synthetic half, which pins the
 // mechanism but no longer proves the case still occurs in the wild.
-{
+it("IV. a commented-out review class does not make a build a review build", async () => {
   const ms = await findings(
     "commented-out-review-class",
     build("The harness ships at camera-ready.", {
@@ -335,11 +345,11 @@ for (const [sentence, want] of [
     1,
     "a commented-out review class exempted the build — the `^[^%\\n]*` anchor was lost",
   );
-}
+});
 
 // An escaped `\%` is NOT a comment: a line where a percent sign precedes a promise must still
 // be checked in full.
-{
+it("IV. an escaped percent is not a comment", async () => {
   const ms = await findings(
     "escaped-percent",
     build("We cover 95\\% of cases and the harness will be published later."),
@@ -350,11 +360,11 @@ for (const [sentence, want] of [
     "`\\%` ate the rest of the line — the promise behind it went invisible",
   );
   assert.equal(ms[0].text, "will be published");
-}
+});
 
 // No file on disk (a run through stdin): the rule stays quiet rather than judging content it
 // never saw.
-{
+it("IV. no file on disk: the rule stays quiet", async () => {
   const [res] = await makeEslint(TMP).lintText(
     build("The harness ships at camera-ready."),
     { filePath: join(TMP, "no-such-dir", "paper.tex") },
@@ -370,12 +380,12 @@ for (const [sentence, want] of [
     "the rule reads the file FROM DISK (the preamble is blanked in the projection), and on a " +
       "path with no file it must stay quiet rather than judge",
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // V. CONFIG — the rule is on, at the measured severity, over a NON-EMPTY glob
 // ═════════════════════════════════════════════════════════════════════════════
-{
+it("V. CONFIG: the rule is on, at the measured severity, over a non-empty glob", async () => {
   const config = (await import(join(ROOT, "eslint.config.mjs"))).default;
   const tex = config.find((b) => b.rules?.["tex/future-promise"]);
   assert.ok(
@@ -411,7 +421,7 @@ for (const [sentence, want] of [
       "invoked, and this run's zero findings mean nothing. Files linted: " +
       seen.join(", "),
   );
-}
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // VI. tex/acm-frontmatter-override — the module's second rule, tested end to end
@@ -460,18 +470,21 @@ const acm = (
     "",
   ].join("\n");
 
-// ── VI.I FIXTURES ON DISK, THROUGH THE REPOSITORY'S OWN CONFIG ───────────────
 const FM_CLEAN = join(ROOT, "fixtures/tex-build/frontmatter-clean.tex");
 const FM_DEFECT = join(ROOT, "fixtures/tex-build/frontmatter-defect.tex");
-for (const f of [FM_CLEAN, FM_DEFECT])
-  assert.ok(existsSync(f), `missing fixture: ${f}`);
 
-assert.deepEqual(
-  await lintTex(real, FM_CLEAN),
-  [],
-  "fixtures/tex-build/frontmatter-clean.tex produced findings — a check that fails a correct " +
-    "input gets switched off the same day",
-);
+// ── VI.I FIXTURES ON DISK, THROUGH THE REPOSITORY'S OWN CONFIG ───────────────
+it("VI.I FIXTURES ON DISK, THROUGH THE REPOSITORY'S OWN CONFIG", async () => {
+  for (const f of [FM_CLEAN, FM_DEFECT])
+    assert.ok(existsSync(f), `missing fixture: ${f}`);
+
+  assert.deepEqual(
+    await lintTex(real, FM_CLEAN),
+    [],
+    "fixtures/tex-build/frontmatter-clean.tex produced findings — a check that fails a correct " +
+      "input gets switched off the same day",
+  );
+});
 
 // 🔴 AND THE REASONS FOR THAT ZERO, EACH CHECKED SEPARATELY. Three different edits to the
 // fixture would turn its silence into a tautology, and from the outside all three look the
@@ -481,7 +494,7 @@ assert.deepEqual(
 //   (c) the commented override block disappears → the comment-blanking half of the rule stops
 //       being exercised at all, and that half is the one that protects the accepted sibling
 //       paper of the source corpus, which keeps exactly such a block as a record.
-{
+it("VI.I the reasons for the quiet fixture's zero, each checked separately", () => {
   const src = readFileSync(FM_CLEAN, "utf8");
   assert.match(
     src,
@@ -502,151 +515,159 @@ assert.deepEqual(
       "is the fixture's point: it proves a finding is not raised on an author's record of what " +
       "the preamble used to do. Without it the quiet half no longer exercises comment blanking",
   );
-}
+});
 
 // The frozen finding set of the defect fixture: not "some findings", but exactly these three,
 // at these addresses, with these captured macros.
-assert.deepEqual(
-  await lintTex(real, FM_DEFECT),
-  [
-    {
-      rule: "tex/acm-frontmatter-override",
-      line: 10,
-      column: 1,
-      text: "\\setcopyright{none}",
-    },
-    {
-      rule: "tex/acm-frontmatter-override",
-      line: 11,
-      column: 1,
-      text: "\\renewcommand\\footnotetextcopyrightpermission",
-    },
-    {
-      rule: "tex/acm-frontmatter-override",
-      line: 12,
-      column: 1,
-      text: "\\pagestyle{plain}",
-    },
-  ],
-  "fixtures/tex-build/frontmatter-defect.tex: the finding set drifted from the frozen measurement",
-);
+it("VI.I the frozen finding set of the defect fixture", async () => {
+  assert.deepEqual(
+    await lintTex(real, FM_DEFECT),
+    [
+      {
+        rule: "tex/acm-frontmatter-override",
+        line: 10,
+        column: 1,
+        text: "\\setcopyright{none}",
+      },
+      {
+        rule: "tex/acm-frontmatter-override",
+        line: 11,
+        column: 1,
+        text: "\\renewcommand\\footnotetextcopyrightpermission",
+      },
+      {
+        rule: "tex/acm-frontmatter-override",
+        line: 12,
+        column: 1,
+        text: "\\pagestyle{plain}",
+      },
+    ],
+    "fixtures/tex-build/frontmatter-defect.tex: the finding set drifted from the frozen measurement",
+  );
+});
 
 // ── VI.II QUIET ON A CORRECT INPUT — each reason for the silence on its own ──
-assert.deepEqual(
-  await fmFindings("plain-acmart", acm("\\setcopyright{cc}")),
-  [],
-  "an acmart build that leaves the front matter alone must be silent",
-);
-
-// OUTSIDE acmart every one of these macros is an ordinary, correct line. `\pagestyle{plain}`
-// in an `article` is not a defect in any sense, and a rule that said so would be switched off
-// by the first person who writes a non-ACM document.
-for (const cls of [
-  "\\documentclass{article}",
-  "\\documentclass[11pt]{report}",
-  "\\documentclass[conference]{IEEEtran}",
-])
+it("VI.II QUIET ON A CORRECT INPUT, each reason for the silence on its own", async () => {
   assert.deepEqual(
-    await fmFindings(
-      `non-acmart-${cls.slice(-12)}`,
-      acm("\\pagestyle{plain}", { cls }),
-    ),
+    await fmFindings("plain-acmart", acm("\\setcopyright{cc}")),
     [],
-    `${cls}: the macros only mean something inside acmart — outside it the rule must not fire`,
+    "an acmart build that leaves the front matter alone must be silent",
   );
 
-// `nonacm` is acmart's OWN way of saying "this is not going to an ACM venue", and in that mode
-// the class disables the ACM Reference Format itself (acmart.cls:110-121). A build that says
-// so the supported way is exempt — otherwise the rule would punish the very escape hatch its
-// own message recommends.
-for (const cls of [
-  "\\documentclass[sigconf,nonacm]{acmart}",
-  "\\documentclass[nonacm,screen]{acmart}",
-])
+  // OUTSIDE acmart every one of these macros is an ordinary, correct line. `\pagestyle{plain}`
+  // in an `article` is not a defect in any sense, and a rule that said so would be switched off
+  // by the first person who writes a non-ACM document.
+  for (const cls of [
+    "\\documentclass{article}",
+    "\\documentclass[11pt]{report}",
+    "\\documentclass[conference]{IEEEtran}",
+  ])
+    assert.deepEqual(
+      await fmFindings(
+        `non-acmart-${cls.slice(-12)}`,
+        acm("\\pagestyle{plain}", { cls }),
+      ),
+      [],
+      `${cls}: the macros only mean something inside acmart — outside it the rule must not fire`,
+    );
+
+  // `nonacm` is acmart's OWN way of saying "this is not going to an ACM venue", and in that mode
+  // the class disables the ACM Reference Format itself (acmart.cls:110-121). A build that says
+  // so the supported way is exempt — otherwise the rule would punish the very escape hatch its
+  // own message recommends.
+  for (const cls of [
+    "\\documentclass[sigconf,nonacm]{acmart}",
+    "\\documentclass[nonacm,screen]{acmart}",
+  ])
+    assert.deepEqual(
+      await fmFindings(
+        `nonacm-${cls.length}`,
+        acm("\\setcopyright{none}\n\\pagestyle{plain}", { cls }),
+      ),
+      [],
+      `${cls}: a declared non-ACM build must be exempt`,
+    );
+
+  // A LaTeX COMMENT IS A LEGITIMATE PLACE FOR THESE MACROS — and not a hypothetical one: the
+  // accepted paper of the source corpus keeps the whole block commented out as a record of what
+  // it used to do. Measured 2026-09-11 on the real files: the rejected paper yields three
+  // findings (181,182,183), the accepted one yields ZERO with the same three macros present as
+  // comments.
   assert.deepEqual(
     await fmFindings(
-      `nonacm-${cls.length}`,
-      acm("\\setcopyright{none}\n\\pagestyle{plain}", { cls }),
+      "override-in-comment",
+      acm(
+        "% was: \\setcopyright{none} + \\pagestyle{plain}\n\\setcopyright{cc}",
+      ),
     ),
     [],
-    `${cls}: a declared non-ACM build must be exempt`,
+    "a commented-out override must not fire — an author's record of a removed line is not the line",
   );
 
-// A LaTeX COMMENT IS A LEGITIMATE PLACE FOR THESE MACROS — and not a hypothetical one: the
-// accepted paper of the source corpus keeps the whole block commented out as a record of what
-// it used to do. Measured 2026-09-11 on the real files: the rejected paper yields three
-// findings (181,182,183), the accepted one yields ZERO with the same three macros present as
-// comments.
-assert.deepEqual(
-  await fmFindings(
-    "override-in-comment",
-    acm("% was: \\setcopyright{none} + \\pagestyle{plain}\n\\setcopyright{cc}"),
-  ),
-  [],
-  "a commented-out override must not fire — an author's record of a removed line is not the line",
-);
-
-// 🔴 AND THE SAME FOR THE ARMING SIDE, which is the half a simpler implementation gets wrong:
-// a `\documentclass` quoted inside a comment must not turn a non-acmart file into an acmart
-// one. Here the REAL class is `article`, and only the comment says `acmart`.
-assert.deepEqual(
-  await fmFindings(
-    "acmart-only-in-comment",
-    acm("% was: \\documentclass[sigconf]{acmart}\n\\pagestyle{plain}", {
-      cls: "\\documentclass{article}",
-    }),
-  ),
-  [],
-  "a `\\documentclass{acmart}` quoted in a comment must not arm the rule on a non-acmart build",
-);
+  // 🔴 AND THE SAME FOR THE ARMING SIDE, which is the half a simpler implementation gets wrong:
+  // a `\documentclass` quoted inside a comment must not turn a non-acmart file into an acmart
+  // one. Here the REAL class is `article`, and only the comment says `acmart`.
+  assert.deepEqual(
+    await fmFindings(
+      "acmart-only-in-comment",
+      acm("% was: \\documentclass[sigconf]{acmart}\n\\pagestyle{plain}", {
+        cls: "\\documentclass{article}",
+      }),
+    ),
+    [],
+    "a `\\documentclass{acmart}` quoted in a comment must not arm the rule on a non-acmart build",
+  );
+});
 
 // ── VI.III FIRES ON A PLANTED DEFECT — one input per member of the set ───────
-for (const [line, want] of [
-  ["\\setcopyright{none}", "\\setcopyright{none}"],
-  ["\\setcopyright{ none }", "\\setcopyright{ none }"],
-  [
-    "\\renewcommand\\footnotetextcopyrightpermission[1]{}",
-    "\\renewcommand\\footnotetextcopyrightpermission",
-  ],
-  [
-    "\\renewcommand{\\footnotetextcopyrightpermission}[1]{}",
-    "\\renewcommand{\\footnotetextcopyrightpermission",
-  ],
-  ["\\pagestyle{plain}", "\\pagestyle{plain}"],
-  ["\\pagestyle{empty}", "\\pagestyle{empty}"],
-  ["\\thispagestyle{empty}", "\\thispagestyle{empty}"],
-]) {
-  const got = await fmFindings(`fire-${want.slice(1, 20)}`, acm(line));
-  assert.deepEqual(
-    got.map((f) => f.text),
-    [want],
-    `«${line}» must produce exactly one finding capturing «${want}» — got ${JSON.stringify(got)}`,
-  );
-}
+it("VI.III FIRES ON A PLANTED DEFECT, one input per member of the set", async () => {
+  for (const [line, want] of [
+    ["\\setcopyright{none}", "\\setcopyright{none}"],
+    ["\\setcopyright{ none }", "\\setcopyright{ none }"],
+    [
+      "\\renewcommand\\footnotetextcopyrightpermission[1]{}",
+      "\\renewcommand\\footnotetextcopyrightpermission",
+    ],
+    [
+      "\\renewcommand{\\footnotetextcopyrightpermission}[1]{}",
+      "\\renewcommand{\\footnotetextcopyrightpermission",
+    ],
+    ["\\pagestyle{plain}", "\\pagestyle{plain}"],
+    ["\\pagestyle{empty}", "\\pagestyle{empty}"],
+    ["\\thispagestyle{empty}", "\\thispagestyle{empty}"],
+  ]) {
+    const got = await fmFindings(`fire-${want.slice(1, 20)}`, acm(line));
+    assert.deepEqual(
+      got.map((f) => f.text),
+      [want],
+      `«${line}» must produce exactly one finding capturing «${want}» — got ${JSON.stringify(got)}`,
+    );
+  }
 
-// The stage does NOT exempt, and this is the assertion that pins the measurement the rule's
-// comment rests on. The obvious design — "only flag these in review mode, the class handles
-// it" — is wrong in BOTH directions, so both directions are frozen here: a review build fires,
-// and so does a camera-ready one. `acmart.cls:93-99`: the `review` option turns on line
-// numbers and `\@ACM@printfoliostrue`, and touches neither the copyright statement nor the
-// permission footnote.
-for (const cls of [
-  "\\documentclass[sigconf,review,anonymous]{acmart}",
-  "\\documentclass[sigconf,screen]{acmart}",
-  "\\documentclass[manuscript]{acmart}",
-])
-  assert.deepEqual(
-    (
-      await fmFindings(
-        `stage-${cls.length}`,
-        acm("\\setcopyright{none}", { cls }),
-      )
-    ).map((f) => f.text),
-    ["\\setcopyright{none}"],
-    `${cls}: the finding must not depend on the build stage — the overrides strip the same ` +
-      "furniture in every mode, and in a camera-ready that is worse, because that is the " +
-      "version the digital library keeps",
-  );
+  // The stage does NOT exempt, and this is the assertion that pins the measurement the rule's
+  // comment rests on. The obvious design — "only flag these in review mode, the class handles
+  // it" — is wrong in BOTH directions, so both directions are frozen here: a review build fires,
+  // and so does a camera-ready one. `acmart.cls:93-99`: the `review` option turns on line
+  // numbers and `\@ACM@printfoliostrue`, and touches neither the copyright statement nor the
+  // permission footnote.
+  for (const cls of [
+    "\\documentclass[sigconf,review,anonymous]{acmart}",
+    "\\documentclass[sigconf,screen]{acmart}",
+    "\\documentclass[manuscript]{acmart}",
+  ])
+    assert.deepEqual(
+      (
+        await fmFindings(
+          `stage-${cls.length}`,
+          acm("\\setcopyright{none}", { cls }),
+        )
+      ).map((f) => f.text),
+      ["\\setcopyright{none}"],
+      `${cls}: the finding must not depend on the build stage — the overrides strip the same ` +
+        "furniture in every mode, and in a camera-ready that is worse, because that is the " +
+        "version the digital library keeps",
+    );
+});
 
 // ── VI.IV PROPERTIES NOBODY "SEES", WITHOUT WHICH THE RULE LIES ─────────────
 // 🔴 THE MODULE-LEVEL REGEXES ARE `/g`, SO THEY CARRY `lastIndex`. Without the reset in the
@@ -654,7 +675,7 @@ for (const cls of [
 // file's match ended — i.e. findings would depend on the ORDER files were linted in, which is
 // the exact class of defect that made the previous implementation read the wrong `.tex`. Two
 // runs of the same input through the same process must agree.
-{
+it("VI.IV the module-level regexes carry no lastIndex across files", async () => {
   const once = (
     await fmFindings("lastindex-a", acm("\\setcopyright{none}"))
   ).map((f) => f.text);
@@ -667,11 +688,11 @@ for (const cls of [
     "the second lint in the same process disagreed with the first — a `/g` regex kept its " +
       "`lastIndex` across files, and findings became order-dependent",
   );
-}
+});
 
 // TWO OVERRIDES ON ONE LINE are two findings, at two columns. A rule reporting once per line
 // would silently under-count a compacted preamble.
-{
+it("VI.IV two overrides on one line are two findings", async () => {
   const got = await fmFindings(
     "two-on-one-line",
     acm("\\setcopyright{none}\\pagestyle{plain}"),
@@ -684,13 +705,13 @@ for (const cls of [
     ],
     "two overrides on one line must produce two findings at two columns",
   );
-}
+});
 
 // 🔴 AND TWO MATCHES OF THE **SAME** PATTERN ON ONE LINE, which the case above cannot reach:
 // there each finding comes from a different entry of the table, so a rule that took only the
 // FIRST match per pattern would still produce two. `\pagestyle` and `\thispagestyle` are one
 // regex, so this is the only input that distinguishes `while (re.exec(...))` from `if`.
-{
+it("VI.IV two matches of the same pattern on one line", async () => {
   const got = await fmFindings(
     "same-pattern-twice",
     acm("\\pagestyle{plain}\\thispagestyle{empty}"),
@@ -704,12 +725,12 @@ for (const cls of [
     "two matches of the SAME pattern on one line must both be reported — the rule stopped at " +
       "the first match per pattern",
   );
-}
+});
 
 // A FILE THE RULE CANNOT READ MUST BE SILENT, NOT THROWN. The rule reads from disk because the
 // language's projection blanks the preamble; the price is that a run with no real file behind
 // it (stdin, a deleted path) has nothing to judge, and judging nothing must not crash the lint.
-{
+it("VI.IV a file the rule cannot read is silent, not thrown", async () => {
   const dir = join(TMP, "unreadable");
   mkdirSync(dir, { recursive: true });
   const file = join(dir, "paper.tex");
@@ -730,10 +751,10 @@ for (const cls of [
     [],
     "a file that cannot be read made the rule throw — an unreadable path must be silent, not fatal",
   );
-}
+});
 
 // ── VI.V CONFIG — the rule is on, at the measured severity ───────────────────
-{
+it("VI.V CONFIG: the rule is on, at the measured severity", async () => {
   const config = (await import(join(ROOT, "eslint.config.mjs"))).default;
   const tex = config.find((b) => b.rules?.["tex/acm-frontmatter-override"]);
   assert.ok(
@@ -750,4 +771,4 @@ for (const cls of [
       "construction, so `error` would only mean `npx eslint .` exits non-zero on a healthy " +
       "checkout. A consumer linting a real paper sets `error`",
   );
-}
+});

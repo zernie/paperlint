@@ -11,9 +11,9 @@
  *
  * The fixture package keeps its skills where the real one does, under `SHIPPED_SKILLS_DIR` from
  * consumer.mjs — the same constant the linker and the install e2e read.
- *
- * Run:    node src/link-skills.harness.ts
  */
+import { afterAll, describe, expect, it } from "vitest";
+import { failureMessage } from "../lib/check.ts";
 import {
   existsSync,
   mkdirSync,
@@ -27,7 +27,6 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
-import { createChecker } from "../lib/check.ts";
 import type { LinkReport } from "./link-skills.ts";
 
 const { linkSkills, locatePackage, shippedSkills } =
@@ -35,7 +34,10 @@ const { linkSkills, locatePackage, shippedSkills } =
 const { SHIPPED_SKILLS_DIR: SHIPS, PACKAGE_NAME: PKG } =
   await import("../skills/paper-pipeline/scripts/consumer.mjs");
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  expect.soft(cond, failureMessage(label, detail)).toBeTruthy();
+};
 
 const SKILLS = ["alpha", "beta", "gamma"];
 const work = realpathSync(
@@ -92,9 +94,13 @@ const linksOf = (report: LinkReport) => (report.ok ? report.links : []);
 const status = (report: LinkReport, name: string) =>
   linksOf(report).find((l) => l.name === name);
 
-try {
+afterAll(() => {
+  rmSync(work, { recursive: true, force: true });
+});
+
+describe("link-skills: the skills are where Claude Code looks", () => {
   // ── I. A FRESH npm CONSUMER: EVERY DECLARED SKILL IS LINKED, AND ONLY SKILLS ───────────
-  {
+  it("I. A FRESH npm CONSUMER: EVERY DECLARED SKILL IS LINKED, AND ONLY SKILLS", () => {
     const dir = consumer("npm");
     const r = linkSkills(dir);
     check(
@@ -120,10 +126,10 @@ try {
       !isAbsolute(target) &&
         target === join("..", "..", "node_modules", PKG, SHIPS, "alpha"),
     );
-  }
+  });
 
   // ── II. A SECOND RUN CHANGES NOTHING ──────────────────────────────────────────────────
-  {
+  it("II. A SECOND RUN CHANGES NOTHING", () => {
     const dir = join(work, "npm");
     const before = SKILLS.map((s) => readlinkSync(join(home(dir), s)));
     const r = linkSkills(dir);
@@ -135,10 +141,10 @@ try {
       "and leaves the links byte for byte as they were",
       SKILLS.every((s, i) => readlinkSync(join(home(dir), s)) === before[i]),
     );
-  }
+  });
 
   // ── III. A NAME THAT IS ALREADY TAKEN IS SOMEONE ELSE'S ───────────────────────────────
-  {
+  it("III. A NAME THAT IS ALREADY TAKEN IS SOMEONE ELSE'S", () => {
     const dir = consumer("foreign");
     mkdirSync(join(home(dir), "alpha"), { recursive: true });
     writeFileSync(join(home(dir), "alpha", "SKILL.md"), "mine\n");
@@ -165,10 +171,10 @@ try {
         /^a link to /.test(status(r, "beta")?.reason ?? "") &&
         /^a dangling link to /.test(status(r, "gamma")?.reason ?? ""),
     );
-  }
+  });
 
   // ── IV. pnpm: THE LINK GOES THROUGH THE PROJECT'S OWN SPELLING ─────────────────────────
-  {
+  it("IV. pnpm: THE LINK GOES THROUGH THE PROJECT'S OWN SPELLING", () => {
     const dir = consumer("pnpm", "pnpm");
     const located = locatePackage(dir);
     check(
@@ -187,10 +193,10 @@ try {
       "and SKILL.md is reachable through both hops",
       SKILLS.every((s) => existsSync(join(home(dir), s, "SKILL.md"))),
     );
-  }
+  });
 
   // ── V. NOT INSTALLED IN THIS PROJECT — NOTHING IS LINKED, AND IT SAYS WHY ──────────────
-  {
+  it("V. NOT INSTALLED IN THIS PROJECT — NOTHING IS LINKED, AND IT SAYS WHY", () => {
     const dir = consumer("bare", "none");
     const r = linkSkills(dir);
     check(
@@ -198,10 +204,10 @@ try {
       !r.ok && /does not resolve from/.test(r.error),
     );
     check("and nothing is created", !existsSync(join(dir, ".claude")));
-  }
+  });
 
   // ── VI. doctor's READ WRITES NOTHING ───────────────────────────────────────────────────
-  {
+  it("VI. doctor's READ WRITES NOTHING", () => {
     const dir = consumer("readonly");
     const r = linkSkills(dir, { write: false });
     check(
@@ -210,11 +216,11 @@ try {
         SKILLS.every((s) => status(r, s)?.status === "missing") &&
         !existsSync(home(dir)),
     );
-  }
+  });
 
   // ── VI-bis. LINKS LEFT BY AN INSTALL UNDER THE OLD NAME ARE REPLACED, NOT SKIPPED ─────
   // ── VII. A PACKAGE WITHOUT ITS SKILLS DIRECTORY IS AN ERROR, NOT ZERO SKILLS ─────────
-  {
+  it("VII. A PACKAGE WITHOUT ITS SKILLS DIRECTORY IS AN ERROR, NOT ZERO SKILLS", () => {
     const pkg = join(work, "no-skills");
     writePackage(pkg);
     rmSync(join(pkg, SHIPS), { recursive: true, force: true });
@@ -223,11 +229,5 @@ try {
       "no skills directory — an error that names it, not an empty list",
       "error" in s && s.error.includes(join(pkg, SHIPS)),
     );
-  }
-} finally {
-  rmSync(work, { recursive: true, force: true });
-}
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — link-skills: the skills are where Claude Code looks`,
-);
+  });
+});

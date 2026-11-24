@@ -11,16 +11,19 @@
  * the job names OUT OF `.github/workflows/ci.yml` and require every one to be accounted for.
  * Add a job to CI and this goes red the same day, naming the job nobody covered.
  *
- * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
- * as a pass.
+ * Each part below is one vitest `it`; the checks inside it are soft, so one failure does not hide
+ * the ones after it.
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { z } from "zod";
-import { createChecker } from "../lib/check.ts";
+import { expect, it, vi } from "vitest";
 import type { Gate } from "./check.ts";
+
+// Several tests here run real ESLint, spawn processes or walk the repository.
+vi.setConfig({ testTimeout: 120_000 });
 
 /** A workflow file, as far as these checks read it. `on` is a plain key: js-yaml reads YAML 1.2. */
 const Step = z.looseObject({
@@ -67,48 +70,56 @@ const ROOT = dirname(HERE);
 const { GATES, NOT_COVERED, outcome, skippedIn, commandOf } =
   await import("./check.ts");
 
-const check = createChecker();
+/** One soft assertion: a failed check does not stop the checks after it in the same test. */
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  const shown = typeof detail === "string" ? detail : JSON.stringify(detail);
+  expect
+    .soft(cond, detail === undefined ? label : `${label}\n${shown}`)
+    .toBe(true);
+};
 
 // ── the workflow is the ORACLE, not a copy of it ───────────────────────────────────────────
 // A skip is a THIRD outcome. Folding it into "pass" printed "all gates passed" on a machine where
 // the e2e never ran (Codex review on #45); folding it into "fail" would make the command red for
 // anyone without pnpm or TeX, and it would be ignored. The count is vitest's own, from its report.
-check("exit 0 of a plain gate is a pass", outcome(0) === "pass");
-check(
-  "exit 0 of a vitest gate whose report counts no skip is a pass",
-  outcome(0, { skipped: 0 }) === "pass",
-);
-check(
-  "exit 0 of a vitest gate whose report counts skipped tests is a SKIP — neither a pass nor a failure",
-  outcome(0, { skipped: 2 }) === "skip",
-);
-check(
-  "🔴 exit 0 of a vitest gate with no readable report is a FAILURE — an unread count cannot be a pass",
-  outcome(0, { skipped: null }) === "fail",
-);
-check(
-  "any nonzero exit is a failure, skips or not",
-  outcome(1) === "fail" &&
-    outcome(2, { skipped: 0 }) === "fail" &&
-    outcome(1, { skipped: 3 }) === "fail",
-);
-check(
-  "a process killed by a signal (status null) is a failure, not a skip",
-  outcome(null) === "fail",
-);
-check(
-  "skippedIn counts skipped and todo tests from vitest's JSON report",
-  skippedIn(
-    JSON.stringify({ numTotalTests: 9, numPendingTests: 3, numTodoTests: 1 }),
-  ) === 4 &&
-    skippedIn(JSON.stringify({ numPendingTests: 0, numTodoTests: 0 })) === 0,
-);
-check(
-  "skippedIn: no report, not JSON, or not vitest's shape is null — never zero",
-  skippedIn(null) === null &&
-    skippedIn("not json") === null &&
-    skippedIn("{}") === null,
-);
+it("the workflow is the ORACLE, not a copy of it: the gate outcomes", () => {
+  check("exit 0 of a plain gate is a pass", outcome(0) === "pass");
+  check(
+    "exit 0 of a vitest gate whose report counts no skip is a pass",
+    outcome(0, { skipped: 0 }) === "pass",
+  );
+  check(
+    "exit 0 of a vitest gate whose report counts skipped tests is a SKIP — neither a pass nor a failure",
+    outcome(0, { skipped: 2 }) === "skip",
+  );
+  check(
+    "🔴 exit 0 of a vitest gate with no readable report is a FAILURE — an unread count cannot be a pass",
+    outcome(0, { skipped: null }) === "fail",
+  );
+  check(
+    "any nonzero exit is a failure, skips or not",
+    outcome(1) === "fail" &&
+      outcome(2, { skipped: 0 }) === "fail" &&
+      outcome(1, { skipped: 3 }) === "fail",
+  );
+  check(
+    "a process killed by a signal (status null) is a failure, not a skip",
+    outcome(null) === "fail",
+  );
+  check(
+    "skippedIn counts skipped and todo tests from vitest's JSON report",
+    skippedIn(
+      JSON.stringify({ numTotalTests: 9, numPendingTests: 3, numTodoTests: 1 }),
+    ) === 4 &&
+      skippedIn(JSON.stringify({ numPendingTests: 0, numTodoTests: 0 })) === 0,
+  );
+  check(
+    "skippedIn: no report, not JSON, or not vitest's shape is null — never zero",
+    skippedIn(null) === null &&
+      skippedIn("not json") === null &&
+      skippedIn("{}") === null,
+  );
+});
 
 // Every workflow, not just ci.yml: a harness reading one file would stop seeing a job added to
 // another without a sound. (macOS lived in platform.yml from 2026-09-23 to 2026-09-24; it is now
@@ -125,10 +136,12 @@ const workflows = Object.fromEntries(
 const ciJobs = Object.values(workflows).flatMap((wf) =>
   Object.keys(wf.jobs ?? {}),
 );
-check(
-  "the workflows parse and declare jobs — without this every assertion below is vacuous",
-  ciJobs.length > 0 && "ci.yml" in workflows,
-);
+it("the workflow is the ORACLE, not a copy of it: the workflows parse and declare jobs", () => {
+  check(
+    "the workflows parse and declare jobs — without this every assertion below is vacuous",
+    ciJobs.length > 0 && "ci.yml" in workflows,
+  );
+});
 
 // ── macOS: a cell of the TeX job, on every push ─────────────────────────────────────────
 // install-tl-unx must work there, and issue #9 appears there alone. The trigger used to be a
@@ -137,58 +150,64 @@ const prTypes = (wf: Workflow | undefined): string[] =>
   wf?.on?.pull_request?.types ?? [];
 const buildOs =
   workflows["ci.yml"]?.jobs?.["build-e2e"]?.strategy?.matrix?.os ?? [];
-check(
-  "build-e2e runs on Linux AND macOS — one job, two operating systems",
-  buildOs.includes("ubuntu-latest") && buildOs.includes("macos-latest"),
-  JSON.stringify(buildOs),
-);
-const unitMacos = workflows["ci.yml"]?.jobs?.["unit-macos"];
-check(
-  "unit-macos runs npm test on macOS in two shards — issue #9's platform, beside the TeX cell, every test once",
-  unitMacos?.["runs-on"] === "macos-latest" &&
-    JSON.stringify(unitMacos.strategy?.matrix?.shard) === "[1,2]" &&
-    (unitMacos.steps ?? []).some(
-      (s) => s.run?.trim() === "npm test -- --shard=${{ matrix.shard }}/2",
-    ),
-  JSON.stringify({
-    on: unitMacos?.["runs-on"] ?? null,
-    shard: unitMacos?.strategy?.matrix?.shard ?? null,
-  }),
-);
-check(
-  "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",
-  Object.values(workflows).every((wf) => !prTypes(wf).includes("labeled")),
-);
-check(
-  "ci.yml listens to ready_for_review — otherwise marking a draft ready runs NOTHING",
-  prTypes(workflows["ci.yml"]).includes("ready_for_review"),
-);
+it("macOS: a cell of the TeX job, on every push", () => {
+  check(
+    "build-e2e runs on Linux AND macOS — one job, two operating systems",
+    buildOs.includes("ubuntu-latest") && buildOs.includes("macos-latest"),
+    JSON.stringify(buildOs),
+  );
+  const unitMacos = workflows["ci.yml"]?.jobs?.["unit-macos"];
+  check(
+    "unit-macos runs npm test on macOS in two shards — issue #9's platform, beside the TeX cell, every test once",
+    unitMacos?.["runs-on"] === "macos-latest" &&
+      JSON.stringify(unitMacos.strategy?.matrix?.shard) === "[1,2]" &&
+      (unitMacos.steps ?? []).some(
+        (s) => s.run?.trim() === "npm test -- --shard=${{ matrix.shard }}/2",
+      ),
+    JSON.stringify({
+      on: unitMacos?.["runs-on"] ?? null,
+      shard: unitMacos?.strategy?.matrix?.shard ?? null,
+    }),
+  );
+  check(
+    "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",
+    Object.values(workflows).every((wf) => !prTypes(wf).includes("labeled")),
+  );
+  check(
+    "ci.yml listens to ready_for_review — otherwise marking a draft ready runs NOTHING",
+    prTypes(workflows["ci.yml"]).includes("ready_for_review"),
+  );
+});
 
 // ── HALF ONE: every CI job is accounted for ────────────────────────────────────────────────
-const covered = new Set(GATES.map((g) => g.job).filter(Boolean));
-for (const job of ciJobs) {
-  check(
-    `CI job «${job}» is either reproduced by a gate or named in NOT_COVERED with a reason — ` +
-      `an unexplained gap is indistinguishable from an oversight`,
-    covered.has(job) || typeof NOT_COVERED[job] === "string",
-  );
-}
+it("HALF ONE: every CI job is accounted for", () => {
+  const covered = new Set(GATES.map((g) => g.job).filter(Boolean));
+  for (const job of ciJobs) {
+    check(
+      `CI job «${job}» is either reproduced by a gate or named in NOT_COVERED with a reason — ` +
+        `an unexplained gap is indistinguishable from an oversight`,
+      covered.has(job) || typeof NOT_COVERED[job] === "string",
+    );
+  }
+});
 
 // ── HALF TWO: the list names nothing that does not exist ───────────────────────────────────
-// A dead job name is worse than a missing one: it reads as coverage and delivers nothing.
-for (const g of GATES) {
-  if (g.job === null) continue;
-  check(
-    `gate «${g.name}» names a job that really exists in a workflow (${g.job})`,
-    ciJobs.includes(g.job),
-  );
-}
-for (const job of Object.keys(NOT_COVERED)) {
-  check(
-    `NOT_COVERED names a job that really exists in a workflow (${job})`,
-    ciJobs.includes(job),
-  );
-}
+it("HALF TWO: the list names nothing that does not exist", () => {
+  // A dead job name is worse than a missing one: it reads as coverage and delivers nothing.
+  for (const g of GATES) {
+    if (g.job === null) continue;
+    check(
+      `gate «${g.name}» names a job that really exists in a workflow (${g.job})`,
+      ciJobs.includes(g.job),
+    );
+  }
+  for (const job of Object.keys(NOT_COVERED)) {
+    check(
+      `NOT_COVERED names a job that really exists in a workflow (${job})`,
+      ciJobs.includes(job),
+    );
+  }
+});
 
 // ── HALF THREE: every gate is runnable ─────────────────────────────────────────────────────
 // A gate whose script or file was renamed fails at the moment someone runs it — which is
@@ -197,56 +216,61 @@ const scripts =
   PackageJson.parse(
     JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")),
   ).scripts ?? {};
-for (const g of GATES) {
-  check(
-    `gate «${g.name}» says how to run it in exactly one way (script or run)`,
-    Boolean(g.script) !== Array.isArray(g.run),
-  );
-  if (g.script) {
+it("HALF THREE: every gate is runnable", () => {
+  for (const g of GATES) {
     check(
-      `gate «${g.name}» maps to a script that exists (npm run ${g.script})`,
-      typeof scripts[g.script] === "string",
+      `gate «${g.name}» says how to run it in exactly one way (script or run)`,
+      Boolean(g.script) !== Array.isArray(g.run),
     );
-    continue;
+    if (g.script) {
+      check(
+        `gate «${g.name}» maps to a script that exists (npm run ${g.script})`,
+        typeof scripts[g.script] === "string",
+      );
+      continue;
+    }
+    // A `run` gate names files and programs directly. Every file it names must be on disk, and
+    // every program other than `node` must be installed in node_modules/.bin.
+    const argv = commandOf(g);
+    const files = argv.filter((a) => /\.[cm]?[jt]s$/.test(a));
+    const programs = [argv[0]];
+    // Guards: a gate runs SOMETHING — a script of ours, or an installed program such as `tsc`.
+    check(
+      `gate «${g.name}» runs files that exist (${files.join(", ")})`,
+      (files.length > 0 || programs.some((p) => p !== "node")) &&
+        files.every((f) => existsSync(join(ROOT, f))),
+    );
+    check(
+      `gate «${g.name}» runs programs that are installed (${programs.join(", ")})`,
+      programs.every(
+        (p) =>
+          p === "node" || existsSync(join(ROOT, "node_modules", ".bin", p)),
+      ),
+    );
   }
-  // A `run` gate names files and programs directly. Every file it names must be on disk, and
-  // every program other than `node` must be installed in node_modules/.bin.
-  const argv = commandOf(g);
-  const files = argv.filter((a) => /\.[cm]?[jt]s$/.test(a));
-  const programs = [argv[0]];
-  // Guards: a gate runs SOMETHING — a script of ours, or an installed program such as `tsc`.
+  for (const g of GATES.filter((x) => x.vitest)) {
+    // Guards: the skip count is read from vitest's JSON report, so the script must BE a vitest run.
+    check(
+      `gate «${g.name}» is marked vitest, and its script is a vitest run (npm run ${String(g.script)})`,
+      (scripts[g.script ?? ""] ?? "").startsWith("vitest run"),
+    );
+  }
   check(
-    `gate «${g.name}» runs files that exist (${files.join(", ")})`,
-    (files.length > 0 || programs.some((p) => p !== "node")) &&
-      files.every((f) => existsSync(join(ROOT, f))),
+    "`check` itself is wired as a script, or nobody can run any of this",
+    typeof scripts.check === "string",
   );
-  check(
-    `gate «${g.name}» runs programs that are installed (${programs.join(", ")})`,
-    programs.every(
-      (p) => p === "node" || existsSync(join(ROOT, "node_modules", ".bin", p)),
-    ),
-  );
-}
-for (const g of GATES.filter((x) => x.vitest)) {
-  // Guards: the skip count is read from vitest's JSON report, so the script must BE a vitest run.
-  check(
-    `gate «${g.name}» is marked vitest, and its script is a vitest run (npm run ${String(g.script)})`,
-    (scripts[g.script ?? ""] ?? "").startsWith("vitest run"),
-  );
-}
-check(
-  "`check` itself is wired as a script, or nobody can run any of this",
-  typeof scripts.check === "string",
-);
+});
 
 // ── HALF FOUR: a local-only gate must say WHY ──────────────────────────────────────────────
 // Without this, `job: null` becomes the quiet way to drop something out of CI.
-for (const g of GATES.filter((g) => g.job === null)) {
-  check(
-    `local-only gate «${g.name}» carries a reason`,
-    typeof g.reason === "string" && g.reason.length > 20,
-  );
-}
+it("HALF FOUR: a local-only gate must say WHY", () => {
+  for (const g of GATES.filter((g) => g.job === null)) {
+    check(
+      `local-only gate «${g.name}» carries a reason`,
+      typeof g.reason === "string" && g.reason.length > 20,
+    );
+  }
+});
 
 // ── HALF FIVE: the gate's command RUNS in the job it names ─────────────────────────────────
 // Half two proves the job exists; it does not prove the job runs the gate. `the tests type-check`
@@ -278,33 +302,35 @@ const runsGate = (tokens: readonly string[], g: Gate): boolean => {
     (tokens[0] === "npx" && startsWith(tokens.slice(1), argv))
   );
 };
-for (const g of GATES) {
-  if (g.job === null) continue;
-  const steps = stepsOf(g.job);
-  const { inCi } = g;
-  if (inCi) {
-    // A gate CI runs as a side effect of another step, through an npm lifecycle script: the step
-    // it names must exist in the job and install the package (npm runs lifecycle scripts there),
-    // and the lifecycle script must be the gate's own command, so the two cannot drift apart.
-    const step = steps.find((s) => s.name === inCi.step);
-    const tokens = commandsIn(step?.run)[0] ?? [];
+it("HALF FIVE: the gate's command RUNS in the job it names", () => {
+  for (const g of GATES) {
+    if (g.job === null) continue;
+    const steps = stepsOf(g.job);
+    const { inCi } = g;
+    if (inCi) {
+      // A gate CI runs as a side effect of another step, through an npm lifecycle script: the step
+      // it names must exist in the job and install the package (npm runs lifecycle scripts there),
+      // and the lifecycle script must be the gate's own command, so the two cannot drift apart.
+      const step = steps.find((s) => s.name === inCi.step);
+      const tokens = commandsIn(step?.run)[0] ?? [];
+      check(
+        `gate «${g.name}» runs in CI job «${g.job}» through step «${inCi.step}», whose ${inCi.lifecycle} script is the gate's command`,
+        step !== undefined &&
+          tokens[0] === "npm" &&
+          ["ci", "install"].includes(tokens[1] ?? "") &&
+          typeof scripts[g.script] === "string" &&
+          scripts[inCi.lifecycle] === scripts[g.script],
+        JSON.stringify({ run: step?.run, lifecycle: scripts[inCi.lifecycle] }),
+      );
+      continue;
+    }
     check(
-      `gate «${g.name}» runs in CI job «${g.job}» through step «${inCi.step}», whose ${inCi.lifecycle} script is the gate's command`,
-      step !== undefined &&
-        tokens[0] === "npm" &&
-        ["ci", "install"].includes(tokens[1] ?? "") &&
-        typeof scripts[g.script] === "string" &&
-        scripts[inCi.lifecycle] === scripts[g.script],
-      JSON.stringify({ run: step?.run, lifecycle: scripts[inCi.lifecycle] }),
+      `gate «${g.name}» runs its command (${commandOf(g).join(" ")}) in a step of CI job «${g.job}»`,
+      steps.some((s) => commandsIn(s.run).some((t) => runsGate(t, g))),
+      steps.map((s) => s.run ?? `(uses ${String(s.uses)})`).join(" | "),
     );
-    continue;
   }
-  check(
-    `gate «${g.name}» runs its command (${commandOf(g).join(" ")}) in a step of CI job «${g.job}»`,
-    steps.some((s) => commandsIn(s.run).some((t) => runsGate(t, g))),
-    steps.map((s) => s.run ?? `(uses ${String(s.uses)})`).join(" | "),
-  );
-}
+});
 
 // ── the e2e runs are found by vitest's projects, never listed ──────────────────────────────
 // A list of e2e files is a second copy of the directory, and the three copies that existed
@@ -313,31 +339,30 @@ const namesE2eFile = (run: string | undefined): string[] =>
   commandsIn(run)
     .flat()
     .filter((t) => /(^|\/)test\/e2e\//.test(t));
-check(
-  "no npm script names a file under test/e2e/ — the vitest projects find them",
-  Object.values(scripts).flatMap(namesE2eFile).length === 0,
-  JSON.stringify(scripts),
-);
-check(
-  "no workflow step names a file under test/e2e/",
-  Object.values(workflows)
-    .flatMap((wf) => Object.values(wf.jobs ?? {}))
-    .flatMap((j) => j.steps ?? [])
-    .flatMap((st) => namesE2eFile(st.run)).length === 0,
-);
-check(
-  "no gate names a file under test/e2e/",
-  GATES.flatMap((g) => commandOf(g).filter((t) => t.includes("test/e2e/")))
-    .length === 0,
-);
+it("the e2e runs are found by vitest's projects, never listed", () => {
+  check(
+    "no npm script names a file under test/e2e/ — the vitest projects find them",
+    Object.values(scripts).flatMap(namesE2eFile).length === 0,
+    JSON.stringify(scripts),
+  );
+  check(
+    "no workflow step names a file under test/e2e/",
+    Object.values(workflows)
+      .flatMap((wf) => Object.values(wf.jobs ?? {}))
+      .flatMap((j) => j.steps ?? [])
+      .flatMap((st) => namesE2eFile(st.run)).length === 0,
+  );
+  check(
+    "no gate names a file under test/e2e/",
+    GATES.flatMap((g) => commandOf(g).filter((t) => t.includes("test/e2e/")))
+      .length === 0,
+  );
+});
 
 // ── and the tail is not optional ───────────────────────────────────────────────────────────
-check(
-  "NOT_COVERED is non-empty — if it ever is, either CI shrank or someone silenced the tail",
-  Object.keys(NOT_COVERED).length > 0,
-);
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — npm run check: ${String(GATES.length)} gates, ` +
-    `${String(ciJobs.length)} CI job(s) all accounted for`,
-);
+it("and the tail is not optional", () => {
+  check(
+    "NOT_COVERED is non-empty — if it ever is, either CI shrank or someone silenced the tail",
+    Object.keys(NOT_COVERED).length > 0,
+  );
+});

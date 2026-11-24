@@ -4,9 +4,10 @@
  * Every page here is written by hand as words, because the cases that matter are pages the fixture
  * corpus does not contain. Each column case reproduces an error the poppler-based measurement made
  * on 2026-08-29 (the midpoint cut, the review build, years mistaken for line numbers), ported from
- * the harness of the function this replaces.
+ * the test of the function this replaces.
  */
-import { createChecker } from "../lib/check.ts";
+import { failureMessage } from "../lib/check.ts";
+import { expect, it } from "vitest";
 import type { RawFont } from "./pdf-geometry.ts";
 
 const {
@@ -19,7 +20,10 @@ const {
   STUB_WORDS,
 } = await import("./pdf-geometry.ts");
 
-const check = createChecker();
+// A failed check is recorded and the rest of the test keeps running.
+const check = (label: string, cond: unknown, detail?: unknown): void => {
+  expect.soft(cond, failureMessage(label, detail)).toBeTruthy();
+};
 
 /** A row of stacked words: `n` of them from `top` downwards, `step` apart. */
 interface Row {
@@ -50,7 +54,7 @@ const page = (rows: readonly Row[], widthPt = W) => ({
 });
 
 // ── the last page's columns ─────────────────────────────────────────────────────────────
-{
+it("the last page's columns", () => {
   const p = classifyLastPage(
     page([
       { x: 54, top: 60, n: 40 },
@@ -61,8 +65,8 @@ const page = (rows: readonly Row[], widthPt = W) => ({
     "balanced: two identical columns measure identical heights",
     p.kind === "measured" && p.columns[0] === 400 && p.columns[1] === 400,
   );
-}
-{
+});
+it("unbalanced: the 300 pt difference shows up as heights 600 / 300", () => {
   const p = classifyLastPage(
     page([
       { x: 54, top: 60, n: 60 },
@@ -73,8 +77,8 @@ const page = (rows: readonly Row[], widthPt = W) => ({
     "unbalanced: the 300 pt difference shows up as heights 600 / 300",
     p.kind === "measured" && p.columns[0] === 600 && p.columns[1] === 300,
   );
-}
-{
+});
+it("midpoint: an empty right column measures 0 — the split is the page's middle, not the words'", () => {
   // 🔴 Split at the PAGE's middle. Only the left column is filled, lines span 54…300, and a page
   // number sits centred at the bottom: the words' own midpoint would fall inside the left column.
   const rows = [];
@@ -87,8 +91,8 @@ const page = (rows: readonly Row[], widthPt = W) => ({
     "midpoint: an empty right column measures 0 — the split is the page's middle, not the words'",
     p.kind === "measured" && p.columns[1] === 0 && p.columns[0] > 600,
   );
-}
-{
+});
+it("review (left margin): numbered lines make a review build, which is not measured", () => {
   const body = [
     { x: 54, top: 60, n: 60 },
     { x: 320, top: 60, n: 10 },
@@ -120,8 +124,8 @@ const page = (rows: readonly Row[], widthPt = W) => ({
       classifyLastPage(page([...body, { x: 20, top: 60, n: 5, text: "7" }]))
         .kind === "review",
   );
-}
-{
+});
+it("years in the body are not line numbers — a bibliography stays measured", () => {
   const p = classifyLastPage(
     page([
       { x: 54, top: 60, n: 40, text: "2024" },
@@ -132,8 +136,8 @@ const page = (rows: readonly Row[], widthPt = W) => ({
     "years in the body are not line numbers — a bibliography stays measured",
     p.kind === "measured",
   );
-}
-{
+});
+it("stub: a page with fewer than 60 words is a stub, with its word count", () => {
   const stub = classifyLastPage(page([{ x: 54, top: 60, n: STUB_WORDS - 1 }]));
   check(
     "stub: a page with fewer than 60 words is a stub, with its word count",
@@ -144,21 +148,23 @@ const page = (rows: readonly Row[], widthPt = W) => ({
     classifyLastPage(page([{ x: 54, top: 60, n: STUB_WORDS }])).kind ===
       "measured",
   );
-}
-check(
-  "a page with no width is a caller's defect: it throws, it is not a measurement",
-  (() => {
-    try {
-      classifyLastPage(page([{ x: 54, top: 60, n: 70 }], 0));
-      return false;
-    } catch (e) {
-      return e instanceof RangeError;
-    }
-  })(),
-);
+});
+it("a page with no width is a caller's defect: it throws, it is not a measurement", () => {
+  check(
+    "a page with no width is a caller's defect: it throws, it is not a measurement",
+    (() => {
+      try {
+        classifyLastPage(page([{ x: 54, top: 60, n: 70 }], 0));
+        return false;
+      } catch (e) {
+        return e instanceof RangeError;
+      }
+    })(),
+  );
+});
 
 // ── words from a text run ───────────────────────────────────────────────────────────────
-{
+it("words from a text run", () => {
   const ws = wordsOf({
     text: "ab  cd",
     x: 100,
@@ -180,7 +186,7 @@ check(
     "a word spans ascent above the baseline to descent below it",
     ws[0]?.y0 === 192 && ws[0].y1 === 202,
   );
-}
+});
 
 // ── fonts ───────────────────────────────────────────────────────────────────────────────
 const font = (over: Partial<RawFont>): RawFont => ({
@@ -192,42 +198,56 @@ const font = (over: Partial<RawFont>): RawFont => ({
   missingFile: false,
   ...over,
 });
-check(
-  "an embedded font: the subset tag is dropped, the program named",
-  JSON.stringify(fontFact(font({}))) ===
-    JSON.stringify({
-      kind: "embedded",
-      name: "LinLibertineT",
-      program: "Type1C",
-    }),
-);
-check(
-  "🔴 a font with no usable program is NOT embedded — whatever else the PDF says about it",
-  fontFact(font({ name: "Times-Roman", subtype: undefined, missingFile: true }))
-    .kind === "not-embedded",
-);
-check(
-  "a Type 3 font is its own kind, named Type3",
-  JSON.stringify(fontFact(font({ isType3Font: true, name: "" }))) ===
-    JSON.stringify({ kind: "type3", name: "Type3" }),
-);
-check(
-  "programs: composite TrueType, CFF-in-CID, OpenType, and an unknown one kept verbatim",
-  programOf("CIDFontType2", undefined) === "CIDTrueType" &&
-    programOf("CIDFontType0", "CIDFontType0C") === "CIDType0C" &&
-    programOf("CIDFontType0", undefined) === "CIDType0" &&
-    programOf("TrueType", "OpenType") === "OpenType" &&
-    programOf("MMType1", undefined) === "MMType1" &&
-    programOf(undefined, undefined) === "unknown:undefined/undefined",
-);
-check(
-  "the type column keeps poppler's spelling, which consumers match on",
-  popplerType({ kind: "type3", name: "Type3" }) === "Type 3" &&
-    popplerType(fontFact(font({}))) === "Type 1C" &&
-    popplerType({ kind: "embedded", name: "x", program: "unknown:Foo/Bar" }) ===
-      "unknown:Foo/Bar",
-);
-{
+it("an embedded font: the subset tag is dropped, the program named", () => {
+  check(
+    "an embedded font: the subset tag is dropped, the program named",
+    JSON.stringify(fontFact(font({}))) ===
+      JSON.stringify({
+        kind: "embedded",
+        name: "LinLibertineT",
+        program: "Type1C",
+      }),
+  );
+});
+it("🔴 a font with no usable program is NOT embedded — whatever else the PDF says about it", () => {
+  check(
+    "🔴 a font with no usable program is NOT embedded — whatever else the PDF says about it",
+    fontFact(
+      font({ name: "Times-Roman", subtype: undefined, missingFile: true }),
+    ).kind === "not-embedded",
+  );
+});
+it("a Type 3 font is its own kind, named Type3", () => {
+  check(
+    "a Type 3 font is its own kind, named Type3",
+    JSON.stringify(fontFact(font({ isType3Font: true, name: "" }))) ===
+      JSON.stringify({ kind: "type3", name: "Type3" }),
+  );
+});
+it("programs: composite TrueType, CFF-in-CID, OpenType, and an unknown one kept verbatim", () => {
+  check(
+    "programs: composite TrueType, CFF-in-CID, OpenType, and an unknown one kept verbatim",
+    programOf("CIDFontType2", undefined) === "CIDTrueType" &&
+      programOf("CIDFontType0", "CIDFontType0C") === "CIDType0C" &&
+      programOf("CIDFontType0", undefined) === "CIDType0" &&
+      programOf("TrueType", "OpenType") === "OpenType" &&
+      programOf("MMType1", undefined) === "MMType1" &&
+      programOf(undefined, undefined) === "unknown:undefined/undefined",
+  );
+});
+it("the type column keeps poppler's spelling, which consumers match on", () => {
+  check(
+    "the type column keeps poppler's spelling, which consumers match on",
+    popplerType({ kind: "type3", name: "Type3" }) === "Type 3" &&
+      popplerType(fontFact(font({}))) === "Type 1C" &&
+      popplerType({
+        kind: "embedded",
+        name: "x",
+        program: "unknown:Foo/Bar",
+      }) === "unknown:Foo/Bar",
+  );
+});
+it("fonts: each font once, in the order pages first drew them", () => {
   const r = fontsOf([
     { hasText: true, fonts: [font({ id: "a" }), font({ id: "b", name: "B" })] },
     { hasText: true, fonts: [font({ id: "a" })] },
@@ -236,8 +256,8 @@ check(
     "fonts: each font once, in the order pages first drew them",
     r.kind === "drawn" && r.list.length === 2 && r.list[1]?.name === "B",
   );
-}
-{
+});
+it("🔴 text on a page with no font is a FAILED READ, naming the page — not an empty list", () => {
   const r = fontsOf([
     { hasText: true, fonts: [font({ id: "a" })] },
     { hasText: true, fonts: [] },
@@ -246,12 +266,10 @@ check(
     "🔴 text on a page with no font is a FAILED READ, naming the page — not an empty list",
     r.kind === "zero-fonts-on-text" && r.pages.join() === "2",
   );
-}
-check(
-  "no page draws text and there are no fonts: that is `no-text`, not a failure",
-  fontsOf([{ hasText: false, fonts: [] }]).kind === "no-text",
-);
-
-console.log(
-  `✓ ${String(check.count)} assertions passed — pdf-geometry: columns, stub/review, words from runs, fonts`,
-);
+});
+it("no page draws text and there are no fonts: that is `no-text`, not a failure", () => {
+  check(
+    "no page draws text and there are no fonts: that is `no-text`, not a failure",
+    fontsOf([{ hasText: false, fonts: [] }]).kind === "no-text",
+  );
+});
