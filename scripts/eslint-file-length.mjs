@@ -12,7 +12,7 @@ const legacyCeilings = {
   "eslint-rules/prereg-coverage.test.ts": 407,
   "eslint-rules/prereg-coverage.ts": 320,
   "eslint-rules/tex-build.test.mjs": 557,
-  "eslint.config.mjs": 635,
+  "eslint.config.mjs": 636,
   "scripts/coverage-config.test.ts": 376,
   "scripts/pipeline.ts": 380,
   "src/adapters/git/history.test.ts": 327,

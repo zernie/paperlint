@@ -1,131 +1,133 @@
 /**
  * `corpus/record` — every copy a venue corpus stores in `pdf/` and `text/` is accounted for by its
  * `papers.json` (docs/design/venue-corpus.md, decision 4; docs/rules/corpus/record.md). What is
- * judged is `src/domain/corpus-record.ts`; this file lists the corpus, reads the record through the
- * codec, and reports.
+ * judged is `src/domain/corpus-record.ts`; this file reads the record through the codec, lists the
+ * corpus, and reports.
  *
  * ── WHERE IT REPORTS ─────────────────────────────────────────────────────────────
- * A rule runs only for a file ESLint lints, and a corpus folder is not one. Two anchors:
- *   - `<papers-root>/venues/<venue>/MANIFEST.md`, which `buildConfig` lints for this rule alone:
- *     the findings about that corpus, on its first line.
- *   - the `PIPELINE-STATUS.md` of the first paper (by name) in a papers root: a folder under that
- *     root's `venues/` that holds a corpus (`papers.json`, `pdf/`, `text/`) and no `MANIFEST.md`,
- *     which no block can reach. Once per root, not once per paper; the listing is the one the
- *     layout rule (`src/folder-layout-rule.ts`) uses for a paper folder's strays.
+ * On `<papers-root>/venues/<venue>/papers.json`, which `buildConfig` lints with ESLint's JSON
+ * language (`@eslint/json`): each finding at the field its path names, walked down the file's JSON
+ * tree; where the path stops being in the file (a required field left out), at the deepest part
+ * that is. A file that is not JSON never reaches the rule: ESLint reports its parse error. A corpus
+ * folder without `papers.json` has no file to report on, and this rule says nothing about it.
  */
-import { basename, dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import {
-  CORPORA_DIR,
-  CORPUS_MANIFEST,
-  corpusMarkers,
   corpusMessage,
   judgeCorpus,
   type CorpusFinding,
-  type RecordState,
 } from "./domain/corpus-record.ts";
-import { STATUS_FILE } from "./domain/paper-folder.ts";
-import { CORPUS_RECORD } from "./domain/venue-corpus.ts";
-import type {
-  FolderRuleContext,
-  FolderRuleModule,
-} from "./folder-venue-rule.ts";
-import type { Files } from "./ports/files.ts";
-import type { DirEntry, ListEntries } from "./ports/list-entries.ts";
+import type { RecordPath } from "./domain/venue-corpus.ts";
+import type { FolderRuleModule } from "./folder-venue-rule.ts";
+import type { ListEntries } from "./ports/list-entries.ts";
 import type { VenueCorpusCodec } from "./ports/venue-corpus-codec.ts";
 import { rulePageUrl } from "./venue-rules.ts";
 
-/** What the rule reads with, and the papers roots whose `venues/` it looks in (absolute). */
+/** What the rule reads with. */
 export interface CorpusRecordDeps {
-  readonly files: Files;
   readonly entries: ListEntries;
   readonly codec: VenueCorpusCodec;
-  readonly roots: readonly string[];
 }
 
-/** The entries of `dir` a person put there: hidden ones (`.DS_Store`, `.gitkeep`) are not copies. */
-const visible = (dir: string, deps: CorpusRecordDeps): readonly DirEntry[] =>
-  deps
-    .entries(callerPath(dir))
-    .filter((e) => !e.name.startsWith("."))
-    .toSorted((a, b) => a.name.localeCompare(b.name));
-
-/** `papers.json` of the corpus in `dir`, parsed once by the codec. */
-function recordOf(dir: string, deps: CorpusRecordDeps): RecordState {
-  const at = callerPath(join(dir, CORPUS_RECORD));
-  const bytes = deps.files.isFile(at) ? deps.files.readBytes(at) : null;
-  if (bytes === null) return { kind: "absent" };
-  const parsed = deps.codec.parse(new TextDecoder().decode(bytes));
-  return parsed.ok
-    ? { kind: "read", corpus: parsed.corpus }
-    : { kind: "unreadable", why: parsed.why };
+interface Position {
+  readonly line: number;
+  readonly column: number;
 }
 
-/** The findings about the corpus whose `MANIFEST.md` is in `dir`. */
-const corpusFindings = (
-  dir: string,
-  deps: CorpusRecordDeps,
-): readonly CorpusFinding[] =>
-  judgeCorpus({
-    record: recordOf(dir, deps),
-    stored: {
-      pdf: visible(join(dir, "pdf"), deps).map((e) => e.name),
-      text: visible(join(dir, "text"), deps).map((e) => e.name),
-    },
-  });
+/** A span of the file, as ESLint's JSON language gives it. */
+interface Span {
+  readonly start: Position;
+  readonly end: Position;
+}
 
-/** The folders of a papers root that are papers, as the anchor counts them: those with a scorecard. */
-const papersOf = (root: string, deps: CorpusRecordDeps): readonly string[] =>
-  visible(root, deps)
-    .filter(
-      (e) =>
-        e.kind === "dir" &&
-        deps.files.isFile(callerPath(join(root, e.name, STATUS_FILE))),
-    )
-    .map((e) => e.name);
+/** A node of ESLint's JSON tree, as far as walking a path needs: an object's members, an array's elements. */
+interface JsonNode {
+  readonly loc: Span;
+  readonly members?: readonly {
+    readonly loc: Span;
+    readonly name: { readonly value: string };
+    readonly value: JsonNode;
+  }[];
+  readonly elements?: readonly {
+    readonly loc: Span;
+    readonly value: JsonNode;
+  }[];
+}
 
-/** The corpora of the root holding the paper in `dir` that have no `MANIFEST.md`, when `dir` is its first paper. */
-function unanchored(
-  dir: string,
-  deps: CorpusRecordDeps,
-): readonly CorpusFinding[] {
-  const root = dirname(dir);
-  if (!deps.roots.some((r) => resolve(r) === root)) return [];
-  if (papersOf(root, deps)[0] !== basename(dir)) return [];
-  const corpora = join(root, CORPORA_DIR);
-  return visible(corpora, deps)
-    .filter((e) => e.kind === "dir")
-    .map((e) => ({
-      folder: `${CORPORA_DIR}/${e.name}`,
-      entries: visible(join(corpora, e.name), deps),
-    }))
-    .filter((c) => !c.entries.some((e) => e.name === CORPUS_MANIFEST))
-    .map((c) => ({ ...c, markers: corpusMarkers(c.entries) }))
-    .filter((c) => c.markers.length > 0)
-    .map((c) => ({
-      kind: "no-manifest",
-      folder: c.folder,
-      markers: c.markers,
-    }));
+/** The tree of the whole file. */
+interface JsonDocument {
+  readonly loc: Span;
+  readonly body: JsonNode;
+}
+
+/** What the rule uses of ESLint's context on a JSON file. */
+export interface JsonRuleContext {
+  readonly filename: string;
+  readonly sourceCode: { readonly text: string; readonly ast: JsonDocument };
+  report(d: {
+    readonly loc: Span;
+    readonly messageId: string;
+    readonly data: Readonly<Record<string, string>>;
+  }): void;
+}
+
+export interface JsonRuleModule {
+  readonly meta: FolderRuleModule["meta"];
+  create(context: JsonRuleContext): { Document?: () => void };
+}
+
+/** Where the walk is: the node reached and the span to report, or only the span once the path left the file. */
+interface Walk {
+  readonly node: JsonNode | null;
+  readonly loc: Span;
 }
 
 /**
- * The findings for the file ESLint handed the rule: a corpus's `MANIFEST.md`, or a paper's
- * `PIPELINE-STATUS.md` (the only two files the config registers the rule for).
+ * One step of a path: a key to the member of that name (the last of them, as `JSON.parse` keeps it),
+ * whose whole `"key": value` is reported; an index to that element.
  */
+const step = (at: Walk, segment: string | number): Walk => {
+  const next =
+    typeof segment === "number"
+      ? at.node?.elements?.[segment]
+      : at.node?.members?.findLast((m) => m.name.value === segment);
+  return next === undefined
+    ? { node: null, loc: at.loc }
+    : { node: next.value, loc: next.loc };
+};
+
+/** The span of the field `path` names; the whole file for an empty path. */
+export const spanAt = (doc: JsonDocument, path: RecordPath): Span =>
+  path.reduce<Walk>(step, { node: doc.body, loc: doc.loc }).loc;
+
+/** The entries of `dir` a person put there: hidden ones (`.DS_Store`, `.gitkeep`) are not copies. */
+const visible = (dir: string, deps: CorpusRecordDeps): readonly string[] =>
+  deps
+    .entries(callerPath(dir))
+    .filter((e) => !e.name.startsWith("."))
+    .map((e) => e.name)
+    .toSorted((a, b) => a.localeCompare(b));
+
+/** The findings about the corpus whose `papers.json` is `file`, holding `text`. */
 const findingsFor = (
   file: string,
+  text: string,
   deps: CorpusRecordDeps,
 ): readonly CorpusFinding[] =>
-  basename(file) === CORPUS_MANIFEST
-    ? corpusFindings(dirname(file), deps)
-    : unanchored(dirname(file), deps);
+  judgeCorpus({
+    record: deps.codec.parse(text),
+    stored: {
+      pdf: visible(join(dirname(file), "pdf"), deps),
+      text: visible(join(dirname(file), "text"), deps),
+    },
+  });
 
 const META: FolderRuleModule["meta"] = {
   type: "suggestion",
   docs: {
     description:
-      "every copy a venue corpus stores in pdf/ and text/ is claimed by one copy in its papers.json, and every claimed file is there",
+      "a venue corpus's papers.json is a record, every copy stored in pdf/ and text/ is claimed by one copy in it, and every claimed file is there",
     url: rulePageUrl("corpus/record"),
   },
   schema: [],
@@ -133,12 +135,10 @@ const META: FolderRuleModule["meta"] = {
   messages: Object.fromEntries(
     (
       [
-        "no-record",
         "unparsed",
         "unclaimed",
         "missing",
         "twice",
-        "no-manifest",
       ] satisfies readonly CorpusFinding["kind"][]
     ).map((id) => [id, "{{text}}"]),
   ),
@@ -147,17 +147,17 @@ const META: FolderRuleModule["meta"] = {
 /** The rule, reading the corpus through `deps`. */
 export function corpusRecordRules(
   deps: CorpusRecordDeps,
-): Readonly<Record<"record", FolderRuleModule>> {
+): Readonly<Record<"record", JsonRuleModule>> {
   return {
     record: {
       meta: META,
-      create(context: FolderRuleContext) {
+      create(context) {
         return {
-          root() {
-            const at = context.sourceCode.getLocFromIndex(0);
-            findingsFor(context.filename, deps).forEach((f) => {
+          Document() {
+            const { text, ast } = context.sourceCode;
+            findingsFor(context.filename, text, deps).forEach((f) => {
               context.report({
-                loc: { start: at, end: at },
+                loc: spanAt(ast, f.at),
                 messageId: f.kind,
                 data: { text: corpusMessage(f) },
               });
@@ -169,7 +169,7 @@ export function corpusRecordRules(
   };
 }
 
-/** On by default, on every corpus's `MANIFEST.md` and every paper's `PIPELINE-STATUS.md`. */
+/** On by default, on every corpus's `papers.json`. */
 export const CORPUS_RECORD_RULE_LEVELS: Readonly<
   Record<"corpus/record", "error">
 > = { "corpus/record": "error" };

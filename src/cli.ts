@@ -36,6 +36,7 @@ import { isOk } from "./domain/result.ts";
 import { stripVTControlCharacters } from "node:util";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
+import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 import { z } from "zod";
 // Types come from consumer.d.mts beside it.
@@ -245,7 +246,7 @@ import {
   CORPUS_RECORD_RULE_LEVELS,
   corpusRecordRules,
 } from "./corpus-record-rule.ts";
-import { CORPUS_MANIFEST } from "./domain/corpus-record.ts";
+import { CORPUS_RECORD } from "./domain/venue-corpus.ts";
 import { venueCorpusCodec } from "./adapters/venue-corpus/index.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
@@ -656,26 +657,22 @@ const TALK_RULE_DEPS = {
 };
 
 /**
- * The `corpus` plugin: `corpus/record`, reading the corpora of the papers roots `paperlint lint`
- * runs on. The config's shape (`ANY_PAPER`) has no roots.
+ * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its `papers.json`, linted with
+ * ESLint's JSON language so `corpus/record` reports at the field (docs/design/venue-corpus.md,
+ * decision 4). The JSON language reaches no other file: this block alone names it.
  */
-const corpusPlugin = (papers: PaperScope): RulePlugin => ({
-  rules: corpusRecordRules({
-    files: nodeFiles,
-    entries: nodeListEntries,
-    codec: venueCorpusCodec,
-    roots: papers.kind === "papers" ? papers.roots : [],
-  }),
-});
-
-/**
- * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its MANIFEST.md: a rule runs only
- * for a file that exists, and the corpus folder is not one (docs/design/venue-corpus.md).
- */
-const corpusBlock = (papers: PaperScope, corpus: RulePlugin): ConfigBlock => ({
-  files: corpusFiles(papers, CORPUS_MANIFEST),
-  plugins: { markdown, corpus },
-  ...MARKDOWN_WITH_FRONTMATTER,
+const corpusBlock = (papers: PaperScope): ConfigBlock => ({
+  files: corpusFiles(papers, CORPUS_RECORD),
+  plugins: {
+    json,
+    corpus: {
+      rules: corpusRecordRules({
+        entries: nodeListEntries,
+        codec: venueCorpusCodec,
+      }),
+    },
+  },
+  language: "json/json",
   rules: CORPUS_RECORD_RULE_LEVELS,
 });
 
@@ -688,7 +685,6 @@ export function buildConfig(
   papers: PaperScope = ANY_PAPER,
 ): ConfigBlock[] {
   const own = (glob: string): readonly string[] => paperFiles(papers, glob);
-  const corpus = corpusPlugin(papers);
   const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
@@ -752,7 +748,6 @@ export function buildConfig(
         study: { rules: preregCoverage.rules },
         cycle: { rules: CYCLE_STATUS_RULES },
         versions: { rules: versionLayoutRules(LAYOUT_RULE_DEPS) },
-        corpus, // a corpus without MANIFEST.md, reported once per papers root
       },
       ...md,
       rules: {
@@ -764,10 +759,9 @@ export function buildConfig(
         ...FOLDER_LAYOUT_RULE_LEVELS,
         ...REPRO_RULE_LEVELS,
         ...STATUS_CYCLE_RULE_LEVELS,
-        ...CORPUS_RECORD_RULE_LEVELS,
       },
     },
-    corpusBlock(papers, corpus),
+    corpusBlock(papers),
     {
       files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
@@ -899,11 +893,12 @@ export function eslintConfig(blocks: readonly ConfigBlock[]): Linter.Config[] {
 
 /**
  * The rule ids a consumer may name in `rules`: every rule paperlint's own config defines, read off that
- * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not paperlint's.
+ * config rather than listed again. `@eslint/markdown` and `@eslint/json` are a dependency's plugins,
+ * not paperlint's.
  */
 export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
   buildConfig({}, { sentinel: "tex language" }),
-  [markdown],
+  [markdown, json],
 );
 
 /** A plugin as `rulePlugins` gives it: its rules, and for `tex` the LaTeX language when given. */
@@ -916,7 +911,7 @@ export interface RulePlugin {
  * Every plugin paperlint's config registers, ONE object per name, read off that config. In it one
  * name is bound to different objects in different blocks (`paper` beside `PIPELINE-STATUS.md` is
  * not `paper` beside `paper.tex`); here their rules are merged, so a config that lints any paper
- * file knows every rule id. `@eslint/markdown` is a dependency's plugin and is left out. The LaTeX
+ * file knows every rule id. `@eslint/markdown` and `@eslint/json` are a dependency's plugins and are left out. The LaTeX
  * language rides on `tex` when `texLanguage` is given, and that is how a consumer registers it: a
  * second `tex` plugin of its own is refused by ESLint ("Cannot redefine plugin "tex"", measured
  * with and without the language here). Without it, `tex` carries rules only.
@@ -925,7 +920,7 @@ export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
   const out: Record<string, { rules: Record<string, unknown> }> = {};
   for (const block of buildConfig({}, texLanguage ?? { sentinel: "tex" }))
     for (const [name, plugin] of Object.entries(block.plugins ?? {}))
-      if (plugin !== markdown)
+      if (plugin !== markdown && plugin !== json)
         out[name] = { rules: { ...out[name]?.rules, ...plugin.rules } };
   if (out["tex"] && texLanguage !== undefined)
     return {

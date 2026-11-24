@@ -1,32 +1,29 @@
 # corpus/record
 
-**Level:** error, on by default · **Reads:** the listing of a venue corpus's `pdf/` and `text/`, and
-its `papers.json` · **Reported on:** the first line of the corpus's `MANIFEST.md`, once per finding;
-a corpus without `MANIFEST.md` on the first line of the first paper's `PIPELINE-STATUS.md` in the
-same papers directory
+**Level:** error, on by default · **Reads:** a venue corpus's `papers.json`, and the listing of its
+`pdf/` and `text/` · **Reported on:** `papers.json`, at the line of the field each finding names
 
 ## What it catches
 
 A venue corpus, `<papers-root>/venues/<venue>/` ([`venues.md`](../../venues.md#the-corpus-of-accepted-papers)),
 keeps copies of accepted papers in `pdf/` and `text/`. Its record, `papers.json`, says for each
-paper which copy every stored file is and under which licence. The rule reports a stored file the
-record does not account for, and a record that does not match the folder:
+paper which copy every stored file is and under which licence, and how the corpus was collected.
+`paperlint lint` lints `papers.json` with ESLint's JSON language, and the rule reports:
 
-- a corpus that stores files in `pdf/` or `text/` and has no `papers.json` (`no-record`, one
-  finding naming every stored file);
-- a `papers.json` that does not parse, with the path of each field that is wrong, first problem first
-  (`unparsed`). It is the parser the skill's script uses, so the two refuse the same record; the
-  fields are in `papers.schema.json`, shipped with `study-accepted-papers`;
+- a field that does not match the record's schema (`unparsed`), at that field: a misspelt key where
+  it stands, a wrong value at its key, a required field left out at the object that should hold it.
+  It is the parser the skill's script uses, so the two refuse the same record; the fields are in
+  `papers.schema.json`, shipped with `study-accepted-papers`;
 - a file in `pdf/` or `text/` that no copy's `stored` claims (`unclaimed`), including a name that
-  is not `pdf/<key>.pdf`, `text/<key>.txt` or `text/<key>.<variant>.txt`;
-- a copy whose `stored` names a kind whose file is not there (`missing`);
-- two copies of one paper that both store one kind (`twice`): one file is a copy of one version;
-- a folder under `venues/` that holds `papers.json`, `pdf/` or `text/` and no `MANIFEST.md`
-  (`no-manifest`). paperlint reaches a corpus through its `MANIFEST.md`, so such a corpus is not
-  checked at all until it has one.
+  is not `pdf/<key>.pdf`, `text/<key>.txt` or `text/<key>.<variant>.txt`: at the paper's `copies`
+  when the record lists the paper, otherwise on the first line;
+- a copy whose `stored` names a kind whose file is not there (`missing`), at that `stored`;
+- two copies of one paper that both store one kind (`twice`), at the second copy's `stored`: one
+  file is a copy of one version.
 
-A `paper.tex` or `PIPELINE-STATUS.md` kept in a corpus (an accepted paper's source) is not one of the
-project's papers: no paper rule judges it.
+A `papers.json` that is not JSON is not this rule's finding: ESLint reports it as a parse error on
+its first line. A `paper.tex` or `PIPELINE-STATUS.md` kept in a corpus (an accepted paper's source)
+is not one of the project's papers: no paper rule judges it.
 
 ## Why
 
@@ -43,19 +40,24 @@ knows the meaning of. It is silent in a project with no `venues/`.
 
 ## Examples
 
-Failing: a PDF stored with no record.
+Failing: a date written as a number.
 
 ```text
-papers/venues/agent/MANIFEST.md
-  1:1  error  the corpus stores `pdf/2026-01.pdf` and has no `papers.json`, so nothing records what
-              each file is a copy of or under which licence. What to do: write `papers.json`
-              (`study-accepted-papers` writes it): a row per paper, and for each stored file the copy
-              it was fetched from, with `fetched_from`, its licence and where the licence was read; or
-              remove the file and keep the paper's ids in `papers.json`, which is all a corpus needs to
-              measure against it  corpus/record
+papers/venues/agent/papers.json
+  27:13  error  `papers.0.copies.0.licence.read_on`: Invalid input: expected string, received number.
+                What to do: correct the field; the fields are in the JSON Schema `papers.schema.json`
+                that `study-accepted-papers` ships  corpus/record
 ```
 
-Passing: the same PDF claimed by the copy it was downloaded from.
+Failing: a copy claims a PDF that is not there.
+
+```text
+papers/venues/agent/papers.json
+  30:11  error  a copy of `2026-01` stores `pdf` in `papers.json`, and `pdf/2026-01.pdf` is not there.
+                What to do: put the file back, or remove `"pdf"` from that copy's `stored`  corpus/record
+```
+
+Passing: the PDF claimed by the copy it was downloaded from, and the file in `pdf/2026-01.pdf`.
 
 ```json
 {
@@ -87,32 +89,31 @@ No rule options. The rule is on for every corpus; a project turns it off in its 
 { "rules": { "corpus/record": "off" } }
 ```
 
-A paper's own `paperlint.json` does not reach a corpus's `MANIFEST.md`: the corpus belongs to the
-venue, not to one paper. (It does reach its own `PIPELINE-STATUS.md`, so the first paper's setting
-also silences the report of a corpus without `MANIFEST.md`.)
+A paper's own `paperlint.json` does not reach a corpus: the corpus belongs to the venue, not to one
+paper.
 
 ## What it does not check
 
+- A corpus folder with no `papers.json`: there is no file to report on. The planned
+  `corpus/allowed-files-only` reports a corpus that stores files without one.
 - Whether a stored copy's licence permits keeping it, or whether a licence was read at all: that is
   the licence rule, planned and off by default.
 - That a stored file is the copy it is attributed to; it checks that the attribution was recorded.
 - Names in the corpus folder outside `pdf/` and `text/` (`deep-reads/`, `sources/`, a stray file),
   and folders inside `pdf/` or `text/` beyond their names: the planned `corpus/allowed-files-only`.
 - Hidden files in `pdf/` and `text/` (`.gitkeep`, `.DS_Store`): they are not copies.
-- A corpus outside `<papers-root>/venues/`, and a corpus without `MANIFEST.md` when the run lints no
-  paper of that papers directory (`paperlint lint papers/other-root`).
-- `MANIFEST.md`'s and `measurements.json`'s contents.
+- A corpus outside `<papers-root>/venues/`.
+- `MANIFEST.md` (optional, caveats only) and `measurements.json`.
 
 ## How to fix
 
 Each finding names its cure. In short:
 
-- Stored copies with no record: write `papers.json`, a row per paper, and for each stored file add
-  its kind to the `stored` of the copy it was fetched from, with `fetched_from`, its licence and
-  where the licence was read. `study-accepted-papers` writes the record. Where the licence was never
-  read, the copy is `"version": "unknown"` with `"licence": { "id": "NOASSERTION" }`.
-- A file nobody claims: record it as above, or remove it and keep the paper's ids.
+- A field that breaks the schema: correct it. `capped`, `proxy` and `rebuild` are required; "none"
+  is `null` (`capped`, `proxy`) or `[]` (`rebuild`), never a field left out.
+- A file nobody claims: add its kind to the `stored` of the copy it was fetched from, with
+  `fetched_from`, its licence and where the licence was read (`"version": "unknown"` with
+  `"licence": { "id": "NOASSERTION" }` where the licence was never read); or remove the file and
+  keep the paper's ids.
 - A claimed file that is missing: put it back, or remove the kind from that copy's `stored`.
 - Two copies storing one kind: keep the kind on the copy the file was fetched from.
-- No `MANIFEST.md`: write it, with the corpus's sources and years, or move the folder out of
-  `venues/`.

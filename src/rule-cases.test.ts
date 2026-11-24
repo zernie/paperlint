@@ -42,8 +42,8 @@ const fixture = (p: string): string =>
   readFileSync(join(ROOT, "fixtures", p), "utf8");
 
 const P = "papers/p";
-const CORPUS = "papers/venues/agent";
-const MANIFEST = `${CORPUS}/MANIFEST.md`;
+const CORPUS_RECORD = "papers/venues/agent/papers.json";
+const EMPTY_RECORD = '{"venue":"agent","editions":[],"papers":[],"rebuild":[]}';
 const STATUS = "---\nstages: []\n---\n# PIPELINE-STATUS\n";
 const tex = (body: string, cls = "\\documentclass{article}"): string =>
   `${cls}\n\\begin{document}\n${body}\n\\end{document}\n`;
@@ -1282,18 +1282,18 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/extra/PLAN.md`]: "# plan\n",
     }),
   },
-  // A venue corpus storing a PDF with no papers.json; silent while it stores nothing.
+  // A venue corpus storing a PDF its papers.json lists no paper for; silent while it stores nothing.
   "corpus/record": {
     reports: {
       tree: paper(tex("x"), {
-        [MANIFEST]: "# a\n",
-        [`${CORPUS}/pdf/a.pdf`]: "",
+        [CORPUS_RECORD]: EMPTY_RECORD,
+        "papers/venues/agent/pdf/a.pdf": "",
       }),
-      file: MANIFEST,
+      file: CORPUS_RECORD,
       severity: 2,
       line: 1,
     },
-    silent: paper(tex("x"), { [MANIFEST]: "# a\n" }),
+    silent: paper(tex("x"), { [CORPUS_RECORD]: EMPTY_RECORD }),
   },
   // A loose script at the top of repro/: it belongs in repro/tools/.
   "repro/allowed-files-only": {

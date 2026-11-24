@@ -168,8 +168,8 @@ what is missing.
 
 ```text
 <papers-root>/venues/<venue>/
-├── papers.json            ← the record: every paper, and every copy of it with its licence
-├── MANIFEST.md            ← the sources, the years, what was capped, the stand-in for "strong accept" and how often it occurs
+├── papers.json            ← the record: every paper and every copy of it with its licence; the sources, years, what was capped, the stand-in for "strong accept", the commands that rebuild it
+├── MANIFEST.md            ← optional: caveats only, the prose no field holds
 ├── measurements.json      ← the codes of L0 and L1, one row per paper, keyed by its key
 ├── pdf/<key>.pdf          ← a paper's PDF, only when a copy's licence permits keeping it
 ├── text/<key>.txt         ← its extracted text, on the same condition
@@ -180,10 +180,14 @@ what is missing.
 
 These are all the names a corpus holds. The award winners and the ordinary accepted papers are rows
 of `papers.json` (`group` `award` and `accepted`), and so are the papers of other venues, corpus 2
-(`group` `sister`): one record, the corpora told apart by a field. The commands that fetched and
-measured are named in `MANIFEST.md`; the scripts are not kept in the corpus. The author's own paper
-is never in a corpus: its text belongs in its paper folder. A mechanism the venue adds to the generic
-ten (M1–M10, kept beside the skill), or one that does not hold there, is written in `MANIFEST.md`.
+(`group` `sister`): one record, the corpora told apart by a field. How the corpus was collected is
+in the record too: each edition's `capped` (what was left out and why, `null` when nothing was) and
+`proxy` (the stand-in for "strong accept" and how many papers it marks, `null` when there is none),
+and `rebuild`, the commands that fetched and measured (the scripts are not kept in the corpus).
+Coverage is never written down: it is counted from the rows. `MANIFEST.md` is optional and holds
+caveats only, such as a mechanism the venue adds to the generic ten (M1–M10, kept beside the skill)
+or one that does not hold there; no rule reads it. The author's own paper is never in a corpus: its
+text belongs in its paper folder.
 
 ### The record, `papers.json`
 
@@ -198,7 +202,9 @@ row, from a workshop's 2026 list:
       "edition": 2026,
       "listed_from": "https://conf.researchr.org/home/icse-2026/agent-2026",
       "read_on": "2026-11-03",
-      "accepted": 27
+      "accepted": 27,
+      "capped": null,
+      "proxy": null
     }
   ],
   "papers": [
@@ -228,7 +234,8 @@ row, from a workshop's 2026 list:
         }
       ]
     }
-  ]
+  ],
+  "rebuild": []
 }
 ```
 
@@ -308,13 +315,12 @@ whole site and none per paper. Where no source gives a copy's licence, it stays 
 
 ### What checks it
 
-[`corpus/record`](rules/corpus/record.md), on by default, reads every corpus under
-`<papers-root>/venues/` that has a `MANIFEST.md`: `paperlint lint` lints that file for it, and
-reports there a corpus that stores files in `pdf/` or `text/` without `papers.json`, a `papers.json`
-that does not parse (with the path of each wrong field), a stored file no copy claims, a claimed file
-that is missing, and two copies of one paper storing one kind. A folder under `venues/` that holds
-`papers.json`, `pdf/` or `text/` and no `MANIFEST.md` is reported on the first paper's
-`PIPELINE-STATUS.md`, since nothing else reaches it. A project turns the rule off with
+[`corpus/record`](rules/corpus/record.md), on by default, reads every corpus's `papers.json` under
+`<papers-root>/venues/`: `paperlint lint` lints the file as JSON and reports, at the line of the field,
+a field that breaks the record's schema, a stored file no copy claims, a claimed file that is
+missing, and two copies of one paper storing one kind. A `papers.json` that is not JSON fails as a
+parse error on its first line. A corpus folder without `papers.json` is not this rule's: the planned
+`corpus/allowed-files-only` will report it. A project turns the rule off with
 `{ "rules": { "corpus/record": "off" } }` in its root `paperlint.json`.
 
 Nothing in a corpus is a paper: a `paper.tex` kept there is an accepted paper's source, and no
@@ -325,7 +331,7 @@ Two more rules of the family are planned for later releases, **not shipped yet**
 | rule                        | will report                                                                                                                                   |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `corpus/licence`            | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read |
-| `corpus/allowed-files-only` | a name in the corpus folder outside the names above                                                                                           |
+| `corpus/allowed-files-only` | a name in the corpus folder outside the names above, and a corpus that stores files with no `papers.json`                                     |
 
 Also checked: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes

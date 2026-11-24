@@ -11,33 +11,30 @@ import { STORED_KINDS, type StoredKind } from "./licence.ts";
 import {
   CORPUS_RECORD,
   KEY_PATTERN,
+  pathText,
   type Paper,
+  type ParsedCorpus,
+  type RecordPath,
   type VenueCorpus,
 } from "./venue-corpus.ts";
 
 /** The folder in a papers root that holds one corpus per venue. */
 export const CORPORA_DIR = "venues";
 
-/** The file paperlint reaches a corpus by: a rule runs only for a file that exists. */
-export const CORPUS_MANIFEST = "MANIFEST.md";
-
-/** `papers.json` as the rule read it. */
-export type RecordState =
-  | { readonly kind: "absent" }
-  | { readonly kind: "unreadable"; readonly why: string }
-  | { readonly kind: "read"; readonly corpus: VenueCorpus };
-
 /** What the rule reads of one corpus folder. */
 export interface CorpusFolder {
-  readonly record: RecordState;
+  /** `papers.json`, as the codec parsed it. */
+  readonly record: ParsedCorpus;
   /** The names in `pdf/` and in `text/`, hidden ones left out; none when the folder is absent. */
   readonly stored: Readonly<Record<StoredKind, readonly string[]>>;
 }
 
-/** One finding; `file` is relative to the corpus folder, `folder` to the papers root. */
-export type CorpusFinding =
-  | { readonly kind: "no-record"; readonly files: readonly string[] }
-  | { readonly kind: "unparsed"; readonly why: string }
+/**
+ * One finding, with `at`, the path in `papers.json` it is reported at (empty: the whole file);
+ * `file` is relative to the corpus folder.
+ */
+export type CorpusFinding = { readonly at: RecordPath } & (
+  | { readonly kind: "unparsed"; readonly message: string }
   | {
       readonly kind: "unclaimed";
       readonly file: string;
@@ -55,11 +52,7 @@ export type CorpusFinding =
       readonly stored: StoredKind;
       readonly copies: readonly number[];
     }
-  | {
-      readonly kind: "no-manifest";
-      readonly folder: string;
-      readonly markers: readonly string[];
-    };
+);
 
 const keyOrNull = (key: string): string | null =>
   KEY_PATTERN.test(key) ? key : null;
@@ -93,25 +86,36 @@ const expectedFile = (kind: StoredKind, key: string): string =>
 const storing = (p: Paper, kind: StoredKind): readonly number[] =>
   p.copies.flatMap((c, i) => (c.stored.includes(kind) ? [i] : []));
 
-/** Which copies of one paper store one kind. */
+/** Which copies of one paper (the `paper`-th of the record) store one kind. */
 interface Claim {
   readonly kind: StoredKind;
   readonly key: string;
+  readonly paper: number;
   readonly copies: readonly number[];
 }
 
-/** A paper's kind stored by more than one of its copies. */
+/** The `stored` of a paper's copy (`copy` holds its index), as a path. */
+const storedAt = (paper: number, copy: readonly number[]): RecordPath => [
+  "papers",
+  paper,
+  "copies",
+  ...copy,
+  "stored",
+];
+
+/** A paper's kind stored by more than one of its copies, reported at the second one. */
 const twice = (claims: readonly Claim[]): readonly CorpusFinding[] =>
   claims
     .filter((c) => c.copies.length > 1)
     .map((c) => ({
       kind: "twice",
+      at: storedAt(c.paper, c.copies.slice(1, 2)),
       key: c.key,
       stored: c.kind,
       copies: c.copies,
     }));
 
-/** A stored file no copy claims. */
+/** A stored file no copy claims: at its paper's copies when the record lists the paper, else on the file. */
 const unclaimed = (
   claims: readonly Claim[],
   stored: CorpusFolder["stored"],
@@ -127,10 +131,17 @@ const unclaimed = (
       )
       .map((f) => ({
         kind: "unclaimed",
+        at: atPaper(claims, f.key),
         file: `${kind}/${f.name}`,
         key: f.key,
       })),
   );
+
+/** The copies of the paper `key` names, as a path; the whole file when no paper has that key. */
+const atPaper = (claims: readonly Claim[], key: string | null): RecordPath => {
+  const claim = claims.find((c) => c.key === key);
+  return claim === undefined ? [] : ["papers", claim.paper, "copies"];
+};
 
 /** A claimed kind with no file of its paper's key. */
 const missing = (
@@ -145,6 +156,7 @@ const missing = (
     )
     .map((c) => ({
       kind: "missing",
+      at: storedAt(c.paper, c.copies.slice(0, 1)),
       key: c.key,
       stored: c.kind,
       file: expectedFile(c.kind, c.key),
@@ -156,7 +168,12 @@ function judgeRecord(
   stored: CorpusFolder["stored"],
 ): readonly CorpusFinding[] {
   const claims = STORED_KINDS.flatMap((kind) =>
-    corpus.papers.map((p) => ({ kind, key: p.key, copies: storing(p, kind) })),
+    corpus.papers.map((p, paper) => ({
+      kind,
+      key: p.key,
+      paper,
+      copies: storing(p, kind),
+    })),
   );
   return [
     ...twice(claims),
@@ -166,40 +183,14 @@ function judgeRecord(
 }
 
 /** Every finding about one corpus folder; none for a corpus whose record accounts for each copy. */
-export function judgeCorpus(folder: CorpusFolder): readonly CorpusFinding[] {
-  const files = STORED_KINDS.flatMap((kind) =>
-    folder.stored[kind].map((name) => `${kind}/${name}`),
-  );
-  switch (folder.record.kind) {
-    case "absent":
-      return files.length === 0 ? [] : [{ kind: "no-record", files }];
-    case "unreadable":
-      return [{ kind: "unparsed", why: folder.record.why }];
-    case "read":
-      return judgeRecord(folder.record.corpus, folder.stored);
-  }
-}
-
-/** An entry of a folder, as far as telling a corpus apart needs. */
-export interface CorpusEntry {
-  readonly name: string;
-  readonly kind: string;
-}
-
-/** What makes a folder under `venues/` a corpus: `papers.json`, `pdf/`, `text/`; the ones present. */
-export const corpusMarkers = (
-  entries: readonly CorpusEntry[],
-): readonly string[] => [
-  ...(entries.some((e) => e.name === CORPUS_RECORD && e.kind === "file")
-    ? [CORPUS_RECORD]
-    : []),
-  ...STORED_KINDS.filter((k) =>
-    entries.some((e) => e.name === k && e.kind === "dir"),
-  ).map((k) => `${k}/`),
-];
-
-const list = (names: readonly string[]): string =>
-  names.map((n) => `\`${n}\``).join(", ");
+export const judgeCorpus = (folder: CorpusFolder): readonly CorpusFinding[] =>
+  folder.record.ok
+    ? judgeRecord(folder.record.corpus, folder.stored)
+    : folder.record.problems.map((p) => ({
+        kind: "unparsed",
+        at: p.path,
+        message: p.message,
+      }));
 
 const KEEP_IDS =
   "or remove the file and keep the paper's ids in `papers.json`, which is all a corpus needs to measure against it";
@@ -207,17 +198,13 @@ const KEEP_IDS =
 /** The text of a finding: what is wrong, then what to do. */
 export function corpusMessage(f: CorpusFinding): string {
   switch (f.kind) {
-    case "no-record":
-      return `the corpus stores ${list(f.files)} and has no \`${CORPUS_RECORD}\`, so nothing records what each file is a copy of or under which licence. What to do: write \`${CORPUS_RECORD}\` (\`study-accepted-papers\` writes it): a row per paper, and for each stored file the copy it was fetched from, with \`fetched_from\`, its licence and where the licence was read; ${KEEP_IDS}`;
     case "unparsed":
-      return `${f.why}. What to do: correct each field the path names; the fields are in the JSON Schema \`papers.schema.json\` that \`study-accepted-papers\` ships`;
+      return `\`${pathText(f.at)}\`: ${f.message}. What to do: correct the field; the fields are in the JSON Schema \`papers.schema.json\` that \`study-accepted-papers\` ships`;
     case "unclaimed":
       return `\`${f.file}\` is stored, and no copy in \`${CORPUS_RECORD}\` claims it${f.key === null ? `: its name is not \`pdf/<key>.pdf\`, \`text/<key>.txt\` or \`text/<key>.<variant>.txt\`` : ` (no copy of the paper \`${f.key}\` lists it in \`stored\`)`}. What to do: record it under the copy it was fetched from, with \`fetched_from\`, its licence and where the licence was read; ${KEEP_IDS}`;
     case "missing":
       return `a copy of \`${f.key}\` stores \`${f.stored}\` in \`${CORPUS_RECORD}\`, and \`${f.file}\` is not there. What to do: put the file back, or remove \`"${f.stored}"\` from that copy's \`stored\``;
     case "twice":
       return `copies ${f.copies.join(" and ")} of \`${f.key}\` both store \`${f.stored}\`, and one stored file is a copy of one version. What to do: keep \`"${f.stored}"\` in the \`stored\` of the copy the file was fetched from, and remove it from the other`;
-    case "no-manifest":
-      return `\`${f.folder}/\` holds ${list(f.markers)} and no \`${CORPUS_MANIFEST}\`, and paperlint reaches a corpus through its \`${CORPUS_MANIFEST}\`, so nothing in it is checked. What to do: write \`${f.folder}/${CORPUS_MANIFEST}\` with the corpus's sources and years (\`study-accepted-papers\` writes it), or move the folder out of \`${CORPORA_DIR}/\``;
   }
 }

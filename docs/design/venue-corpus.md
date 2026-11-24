@@ -26,8 +26,11 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    proxy and rebuild commands (fields). Only the caveats were prose. So the facts move into the record:
    an edition already carries `listed_from`, `read_on` and `accepted`; it gains `capped` (what was left
    out and why, or null) and `proxy` (the stand-in for "strong accept" and how many papers it marks, or
-   null), and the record gains `rebuild` (the commands that regenerate it). Coverage is never stored:
-   it is counted from the rows. `MANIFEST.md` becomes optional and holds caveats only; no rule reads it.
+   null), and the record gains `rebuild` (the commands that regenerate it). All three are required:
+   "none" is written as `null` or `[]`, never left out, so a fact not recorded cannot pass for "nothing
+   capped" (decided by the author 2026-11-24; no `papers.json` existed yet to keep valid). Coverage is
+   never stored: it is counted from the rows. `MANIFEST.md` becomes optional and holds caveats only;
+   no rule reads it.
 
    ```json
    {
@@ -37,7 +40,9 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
          "edition": 2026,
          "listed_from": "https://conf.researchr.org/home/icse-2026/agent-2026",
          "read_on": "2026-11-03",
-         "accepted": 27
+         "accepted": 27,
+         "capped": null,
+         "proxy": null
        }
      ],
      "papers": [
@@ -67,7 +72,8 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
            }
          ]
        }
-     ]
+     ],
+     "rebuild": []
    }
    ```
 
@@ -75,6 +81,9 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
    | `venue`                   | the corpus folder's name, which is the venue preset's series: the preset id without its year (`agent` for `paperlint:agent-2027`)                           |
    | `editions[]`              | each edition of THIS venue the corpus covers: the year, the page that lists what it accepted, the date read; `accepted` (the count) when the page gives one |
+   | `editions[].capped`       | what was left out of the edition and why (`"the research track only, 100 of 312"`), or `null`                                                               |
+   | `editions[].proxy`        | `{ "what", "papers" }`: the stand-in for "strong accept" and how many papers it marks, or `null`                                                            |
+   | `rebuild`                 | the commands that regenerate the corpus, in order; `[]` when none was kept                                                                                  |
    | `papers[].key`            | unique in the file; names the stored files and the measurement rows                                                                                         |
    | `papers[].group`          | `accepted`, `award`, or `sister` (corpus 2: papers of another venue)                                                                                        |
    | `papers[].edition`        | for `accepted` and `award`: one of `editions[].edition`                                                                                                     |
@@ -127,11 +136,11 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    projects: every corpus needs its structure held, and only a corpus that others can read needs its
    licences judged.
 
-   | rule                        | reports                                                                                                                                                                                                                                                                             | default        |
-   | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-   | `corpus/allowed-files-only` | a name in the corpus folder outside the fixed names (decision 5), any extension, plus names the settings add (#500's second rule, renamed from `venue/allowed-files-only`)                                                                                                          | on             |
-   | `corpus/record`             | a corpus with `pdf/` or `text/` and no `papers.json`; a `papers.json` that does not parse, with the zod path of the first problem; a file in `pdf/` or `text/` that no copy's `stored` claims; a copy whose `stored` names a missing file; two copies of one paper storing one kind | on             |
-   | `corpus/licence`            | a stored file whose copy has no licence recorded (`NOASSERTION`, decided by the author 2026-11-24), or whose licence does not permit that kind (decision 3), including an id outside the table and an NC licence in a project not declared non-commercial                           | off, in no set |
+   | rule                        | reports                                                                                                                                                                                                                                                            | default        |
+   | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
+   | `corpus/allowed-files-only` | a name in the corpus folder outside the fixed names (decision 5), any extension, plus names the settings add (#500's second rule, renamed from `venue/allowed-files-only`); a corpus with `pdf/` or `text/` and no `papers.json`                                   | on             |
+   | `corpus/record`             | a field of `papers.json` that breaks the schema, at that field; a file in `pdf/` or `text/` that no copy's `stored` claims; a copy whose `stored` names a missing file; two copies of one paper storing one kind (a file that is not JSON is ESLint's parse error) | on             |
+   | `corpus/licence`            | a stored file whose copy has no licence recorded (`NOASSERTION`, decided by the author 2026-11-24), or whose licence does not permit that kind (decision 3), including an id outside the table and an NC licence in a project not declared non-commercial          | off, in no set |
 
    Each finding names its cure: record the licence and where it was read, or remove the file and keep
    the ids.

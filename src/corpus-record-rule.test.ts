@@ -1,7 +1,7 @@
 /**
- * `corpus/record` through `paperlint lint`, the way a consumer runs it: the block that reaches a
- * corpus by its `MANIFEST.md`, a corpus without one reported on the first paper's
- * `PIPELINE-STATUS.md`, and a `paper.tex` kept in a corpus judged by no paper rule (#215).
+ * `corpus/record` through `paperlint lint`, the way a consumer runs it: the block that lints a
+ * corpus's `papers.json` as JSON and reports at the field, no other JSON file reached, and a
+ * `paper.tex` kept in a corpus judged by no paper rule (#215).
  */
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -15,7 +15,7 @@ const PAPER = {
   "papers/p/paper.tex": TEX,
 };
 const C = "papers/venues/agent";
-const MANIFEST = `${C}/MANIFEST.md`;
+const RECORD = `${C}/papers.json`;
 
 const copy = (stored: readonly string[]) => ({
   version: "published",
@@ -25,26 +25,33 @@ const copy = (stored: readonly string[]) => ({
   ...(stored.length > 0 ? { fetched_from: "https://doi.org/10.1/x" } : {}),
 });
 const record = (copies: readonly (readonly string[])[]): string =>
-  JSON.stringify({
-    venue: "agent",
-    editions: [
-      {
-        edition: 2026,
-        listed_from: "https://example.org/accepted",
-        read_on: "2026-11-03",
-      },
-    ],
-    papers: [
-      {
-        key: "a",
-        edition: 2026,
-        group: "accepted",
-        title: "A",
-        ids: { doi: "10.1/x" },
-        copies: copies.map(copy),
-      },
-    ],
-  });
+  JSON.stringify(
+    {
+      venue: "agent",
+      editions: [
+        {
+          edition: 2026,
+          listed_from: "https://example.org/accepted",
+          read_on: "2026-11-03",
+          capped: null,
+          proxy: null,
+        },
+      ],
+      papers: [
+        {
+          key: "a",
+          edition: 2026,
+          group: "accepted",
+          title: "A",
+          ids: { doi: "10.1/x" },
+          copies: copies.map(copy),
+        },
+      ],
+      rebuild: [],
+    },
+    null,
+    2,
+  );
 
 const Results = z.array(
   z.looseObject({
@@ -54,6 +61,7 @@ const Results = z.array(
         ruleId: z.string().nullable(),
         messageId: z.string().optional(),
         line: z.number().optional(),
+        column: z.number().optional(),
         message: z.string(),
       }),
     ),
@@ -82,11 +90,22 @@ async function lint(tree: Readonly<Record<string, string>>) {
   };
 }
 
+/** Every message on a file of the corpus. */
+const onCorpus = async (tree: Readonly<Record<string, string>>) =>
+  (await lint(tree)).messages.filter((m) => m.file.startsWith(C));
+
 /** The corpus findings: where each is reported and which one it is. */
 const corpusFindings = async (tree: Readonly<Record<string, string>>) =>
-  (await lint(tree)).messages
+  (await onCorpus(tree))
     .filter((m) => m.ruleId === "corpus/record")
     .map((m) => ({ file: m.file, line: m.line, messageId: m.messageId }));
+
+/** The line of `text` holding the `nth` occurrence of `needle`, counted from 1. */
+const lineOf = (text: string, needle: string, nth = 1): number =>
+  text
+    .split("\n")
+    .flatMap((l, i) => (l.includes(needle) ? [i + 1] : []))
+    .at(nth - 1) ?? 0;
 
 describe("corpus/record: silent where nothing is wrong", () => {
   it("🔴 is silent on a project with no venues/ at all", async () => {
@@ -94,64 +113,73 @@ describe("corpus/record: silent where nothing is wrong", () => {
     expect(await corpusFindings(PAPER)).toEqual([]);
   });
 
+  it("🔴 is silent on a corpus folder with stored files and no papers.json", async () => {
+    // Guards: a corpus not migrated yet is corpus/allowed-files-only's to report (PR 1b-ii), not this rule's.
+    const r = await lint({
+      ...PAPER,
+      [`${C}/MANIFEST.md`]: "# agent\n",
+      [`${C}/pdf/a.pdf`]: "%PDF",
+      [`${C}/text/a.txt`]: "a",
+    });
+    expect(r.files.filter((f) => f.startsWith("papers/venues/"))).toEqual([]);
+    expect(r.messages.filter((m) => m.file.startsWith(C))).toEqual([]);
+  });
+
   it("is silent on a corpus whose stored files are each claimed by one copy", async () => {
     const r = await lint({
       ...PAPER,
-      [MANIFEST]: "# agent\n",
-      [`${C}/papers.json`]: record([["pdf", "text"], []]),
+      [RECORD]: record([["pdf", "text"], []]),
       [`${C}/pdf/a.pdf`]: "%PDF",
       [`${C}/text/a.txt`]: "a",
       [`${C}/text/a.pdfminer.txt`]: "a",
       [`${C}/measurements.json`]: "[]",
     });
-    // Guards: the block reaches the corpus (its MANIFEST.md is linted), and finds nothing.
-    expect(r.files).toContain(MANIFEST);
-    expect(r.messages.filter((m) => m.ruleId === "corpus/record")).toEqual([]);
+    // Guards: the block reaches the corpus (its papers.json is linted), and finds nothing.
+    expect(r.files).toContain(RECORD);
+    expect(r.messages.filter((m) => m.file.startsWith(C))).toEqual([]);
   });
 });
 
-describe("corpus/record: each finding, on the corpus's MANIFEST.md", () => {
-  it("reports stored copies with no papers.json, on MANIFEST.md", async () => {
-    expect(
-      await corpusFindings({
-        ...PAPER,
-        [MANIFEST]: "# agent\n",
-        [`${C}/pdf/a.pdf`]: "%PDF",
-      }),
-    ).toEqual([{ file: MANIFEST, line: 1, messageId: "no-record" }]);
-  });
-
-  it("reports a papers.json that does not parse, naming the field's path", async () => {
-    const r = await lint({
+describe("corpus/record: each finding, at its place in papers.json", () => {
+  it("🔴 reports a field that breaks the schema at that field's line", async () => {
+    const text = record([["pdf"]]).replace('"fetched_from"', '"fetched"');
+    const found = await onCorpus({
       ...PAPER,
-      [MANIFEST]: "# agent\n",
-      [`${C}/papers.json`]: record([["pdf"]]).replace(
-        '"fetched_from"',
-        '"fetched"',
-      ),
+      [RECORD]: text,
       [`${C}/pdf/a.pdf`]: "%PDF",
     });
-    const found = r.messages.filter((m) => m.ruleId === "corpus/record");
-    expect(found.map((m) => [m.file, m.messageId])).toEqual([
-      [MANIFEST, "unparsed"],
+    // Guards: the required key is reported on its copy (the line opening it), the misspelt one where it stands.
+    expect(found.map((m) => [m.line, m.column, m.messageId])).toEqual([
+      [lineOf(text, '"version"') - 1, 9, "unparsed"],
+      [lineOf(text, '"fetched"'), 11, "unparsed"],
     ]);
-    // Guards: the path comes from the codec, so the author finds the field.
-    expect(found[0]?.message).toContain("papers.0.copies.0");
+    expect(found.map((m) => m.message.split(":")[0])).toEqual([
+      "`papers.0.copies.0.fetched_from`",
+      "`papers.0.copies.0.fetched`",
+    ]);
+  });
+
+  it("reports a papers.json that is not JSON as ESLint's parse error", async () => {
+    const found = await onCorpus({ ...PAPER, [RECORD]: '{ "venue": ' });
+    expect(found.map((m) => [m.ruleId, m.line])).toEqual([[null, 1]]);
   });
 
   it("reports an unclaimed file, a missing file and two copies storing one kind", async () => {
+    const text = record([["pdf"], ["pdf", "text"]]);
+    // The second copy's `stored` holds both the second "pdf" and the "text" whose file is absent.
+    const second = lineOf(text, '"stored"', 2);
     expect(
       await corpusFindings({
         ...PAPER,
-        [MANIFEST]: "# agent\n",
-        [`${C}/papers.json`]: record([["pdf"], ["pdf", "text"]]),
+        [RECORD]: text,
         [`${C}/pdf/a.pdf`]: "%PDF",
         [`${C}/pdf/b.pdf`]: "%PDF",
       }),
     ).toEqual([
-      { file: MANIFEST, line: 1, messageId: "twice" },
-      { file: MANIFEST, line: 1, messageId: "unclaimed" },
-      { file: MANIFEST, line: 1, messageId: "missing" },
+      // A file of no listed paper is reported on the record's first line.
+      { file: RECORD, line: 1, messageId: "unclaimed" },
+      { file: RECORD, line: second, messageId: "twice" },
+      { file: RECORD, line: second, messageId: "missing" },
     ]);
   });
 
@@ -162,34 +190,25 @@ describe("corpus/record: each finding, on the corpus's MANIFEST.md", () => {
         "paperlint.json": JSON.stringify({
           rules: { "corpus/record": "off" },
         }),
-        [MANIFEST]: "# agent\n",
+        [RECORD]: record([]),
         [`${C}/pdf/a.pdf`]: "%PDF",
-        "papers/venues/other/pdf/a.pdf": "%PDF",
       }),
     ).toEqual([]);
   });
 });
 
-describe("a corpus folder without MANIFEST.md", () => {
-  it("is reported once, on the first paper's PIPELINE-STATUS.md", async () => {
-    expect(
-      await corpusFindings({
-        ...PAPER,
-        "papers/q/PIPELINE-STATUS.md": STATUS,
-        "papers/q/paper.tex": TEX,
-        // A paper below a group folder is no root's paper: it anchors nothing.
-        "papers/group/r/PIPELINE-STATUS.md": STATUS,
-        "papers/group/r/paper.tex": TEX,
-        "papers/venues/agent/pdf/a.pdf": "%PDF",
-        "papers/venues/notes/README.md": "# not a corpus\n",
-      }),
-    ).toEqual([
-      {
-        file: "papers/p/PIPELINE-STATUS.md",
-        line: 1,
-        messageId: "no-manifest",
-      },
-    ]);
+describe("the JSON language reaches papers.json and nothing else", () => {
+  it("🔴 lints no other JSON file: the root and a paper's paperlint.json, measurements.json", async () => {
+    const r = await lint({
+      ...PAPER,
+      "paperlint.json": "{}",
+      "papers/p/paperlint.json": "{}",
+      "papers/p/data.json": "{ broken",
+      [RECORD]: record([]),
+      [`${C}/measurements.json`]: "{ broken",
+      "papers/venues/papers.json": "{ broken",
+    });
+    expect(r.files.filter((f) => f.endsWith(".json"))).toEqual([RECORD]);
   });
 });
 
@@ -197,13 +216,13 @@ describe("a paper.tex kept in a corpus (#215)", () => {
   it("🔴 is judged by no paper rule, and the corpus still is", async () => {
     const r = await lint({
       ...PAPER,
-      [MANIFEST]: "# agent\n",
+      [RECORD]: record([]),
       [`${C}/paper.tex`]: TEX,
       [`${C}/PIPELINE-STATUS.md`]: "no frontmatter\n",
       [`${C}/sources/x/paper.tex`]: TEX,
     });
     expect(r.files.filter((f) => f.startsWith("papers/venues/"))).toEqual([
-      MANIFEST,
+      RECORD,
     ]);
   });
 });

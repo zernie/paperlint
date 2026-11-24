@@ -267,6 +267,7 @@ export const IO_MODULES = [
  */
 export const TOOL_PACKAGES = [
   "@clack/prompts", // the terminal questions of `paperlint init`
+  "@eslint/json", // ESLint's JSON language
   "@eslint/markdown", // ESLint's Markdown language
   "@eslint/plugin-kit",
   "@retorquere/bibtex-parser", // BibTeX

@@ -133,7 +133,7 @@ as judgement, against the base rates of \`references/base-rates.md\`; simulated 
 
 | what | where | why there |
 |---|---|---|
-| **the venue corpus** | \`<papers-root>/venues/<venue>/\` (the papers directory from the project's \`paperlint.json\`; the folder is the preset's series) | **shared by every paper that targets the venue**, collected once and reused by every later mode. \`papers.json\` (one row per paper: winners \`award\`, ordinary \`accepted\`, corpus 2 \`sister\`; every copy with its licence), \`MANIFEST.md\` (sources, years, what was capped, the proxy and its base rate, the commands run), \`measurements.json\` (L0/L1 codes keyed by the row's \`key\`), \`pdf/<key>.pdf\` and \`text/<key>.txt\` only as the licence step below permits, \`deep-reads/<key>.md\`, \`sources/\` (saved listing and call pages). No other name. |
+| **the venue corpus** | \`<papers-root>/venues/<venue>/\` (the papers directory from the project's \`paperlint.json\`; the folder is the preset's series) | **shared by every paper that targets the venue**, collected once and reused by every later mode. \`papers.json\` (one row per paper: winners \`award\`, ordinary \`accepted\`, corpus 2 \`sister\`; every copy with its licence; how the corpus was collected, in fields: each edition's \`listed_from\`, \`read_on\`, \`capped\` and \`proxy\`, and \`rebuild\`, the commands run), \`MANIFEST.md\` (optional: caveats only, the prose no field holds), \`measurements.json\` (L0/L1 codes keyed by the row's \`key\`), \`pdf/<key>.pdf\` and \`text/<key>.txt\` only as the licence step below permits, \`deep-reads/<key>.md\`, \`sources/\` (saved listing and call pages). No other name. |
 | **the scorecard** | the section **"Strong-accept scorecard (M1–M10)"** of the paper's \`PIPELINE-STATUS.md\` | a row per mechanism: status (pass / partial / fail), evidence (\`file:line\`), owner, plan or "accept ceiling". **The only place the verdicts live**; update it there. |
 | **the reasoning** | \`<paper>/reviews/<YYYY-MM-DD>-study-accepted-<venue>-<mode>.md\` | a dated report per run, with frontmatter (below). It keeps the reasoning, the selection and the per-mechanism argument, and **points to the scorecard section; it never copies the table**. |
 | **the stage** | the SETUP row with id \`venuebar\` in \`PIPELINE-STATUS.md\` (the id is kept for existing scorecards) | status, date, the mode and depth run, and a link to the report. One row, updated by every mode. |
@@ -170,24 +170,30 @@ downloaded or extracted. The record's fields are in \`\${CLAUDE_SKILL_DIR}/paper
 script below refuses a record that breaks them, with the path of the field, and checks what a schema
 cannot (unique keys, a paper's edition among the listed ones, a stored copy's \`fetched_from\`).
 
-1. **A row per paper** in \`papers.json\`, with its ids, title, authors and abstract: metadata, kept
+1. **The collection facts** in \`papers.json\`, never in \`MANIFEST.md\`: per edition \`capped\` (what
+   was left out and why, \`null\` when nothing was) and \`proxy\` (\`{ "what", "papers" }\`, the stand-in
+   for "strong accept" and how many papers it marks, \`null\` when there is none); for the record
+   \`rebuild\`, the commands that regenerate it (\`[]\` when none). All three are required; coverage is
+   counted from the rows, never written.
+2. **A row per paper** in \`papers.json\`, with its ids, title, authors and abstract: metadata, kept
    whatever the licence.
-2. **A copy per version you find** (the published one, the arXiv preprint), each with the licence read
+3. **A copy per version you find** (the published one, the arXiv preprint), each with the licence read
    from the source \`docs/venues.md\` names for that kind of copy ("Where a copy's licence is read
    from"): \`read_from\` is the page or API response, \`read_on\` the date. Never the licence line
    printed inside a PDF: it can belong to another copy. No source gives it → \`{ "id": "NOASSERTION" }\`.
-3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <venue>\`.
+4. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <venue>\`.
    Exit 1: the record does not parse, or there is not exactly one; fix what it names and run it again. Exit 0: one line per paper
    and kind (\`text\`, \`pdf\`).
-4. **Store only on a \`keep\` line**: download from that copy to \`pdf/<key>.pdf\`, or extract to
+5. **Store only on a \`keep\` line**: download from that copy to \`pdf/<key>.pdf\`, or extract to
    \`text/<key>.txt\`, then add the kind to that copy's \`stored\` and set \`fetched_from\` to the URL the
    bytes came from. On a \`none\` line store nothing of that kind: read the copy where it is, in a
    scratch folder outside the repository, and keep only codes, short quotes and ids. A copy refused
    only as "permits it only in a project declared non-commercial" may be stored when the author says
    the project is non-commercial.
 
-\`corpus/record\` and \`corpus/licence\` (not shipped yet) will hold what this step writes; until they
-ship, the script is the only check of the record.
+\`paperlint lint\` checks the record with \`corpus/record\`, at the line of each wrong field; whether a
+stored copy's licence permits it is \`corpus/licence\` (not shipped yet), so until then the script is
+the only check of that.
 
 ## Before any level: pin the venue's stated bar
 

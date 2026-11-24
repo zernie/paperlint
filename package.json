@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@clack/prompts": "1.9.0",
+    "@eslint/json": "^2.1.1",
     "@eslint/markdown": "^8.0.3",
     "@eslint/plugin-kit": "^0.7.2",
     "@retorquere/bibtex-parser": "^10.0.1",

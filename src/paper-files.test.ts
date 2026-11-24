@@ -52,12 +52,12 @@ describe("the papers the config claims (#582)", () => {
         papersScope(["/w/papers/p", "/w/papers/q"], "/w", ["/w/papers"]),
       ),
     ).filter((g) => !FRAGMENT_FILES.includes(g));
-    // Beside the papers' own files, only each venue corpus's MANIFEST.md (corpus/record).
+    // Beside the papers' own files, only each venue corpus's papers.json (corpus/record).
     expect(
       claimed.filter(
         (g) => !g.startsWith("papers/p/") && !g.startsWith("papers/q/"),
       ),
-    ).toEqual(["papers/venues/*/MANIFEST.md"]);
+    ).toEqual(["papers/venues/*/papers.json"]);
     expect(claimed).toContain("papers/q/paper.tex");
   });
 

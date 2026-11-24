@@ -71,15 +71,18 @@ const record = (papers: readonly object[]) => ({
       edition: 2026,
       listed_from: "https://conf.researchr.org/home/icse-2026/agent-2026",
       read_on: "2026-11-03",
+      capped: null,
+      proxy: null,
     },
   ],
   papers,
+  rebuild: [],
 });
 
 /** The record parsed by the real codec, as the command reads it. */
 const corpus = (papers: readonly object[]): VenueCorpus => {
   const parsed = venueCorpusCodec.parse(JSON.stringify(record(papers)));
-  if (!parsed.ok) throw new Error(parsed.why);
+  if (!parsed.ok) throw new Error(JSON.stringify(parsed.problems));
   return parsed.corpus;
 };
 
