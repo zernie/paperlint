@@ -6,7 +6,8 @@
  *
  * The text of the file is checked once, where it enters: `VenueCorpusCodec`
  * (`src/ports/venue-corpus-codec.ts`), whose adapter holds the zod schema of this shape. The domain
- * holds the value. The top level, an edition, a copy, its licence and a paper's ids are strict; a paper
+ * holds the value: only the codec mints one, so a value built by hand can hold what the schema
+ * refuses (a stored copy without `fetched_from`, a key with a slash). The top level, an edition, a copy, its licence and a paper's ids are strict; a paper
  * row keeps any further field as it is, because a consumer's own scripts read them.
  *
  * 🔴 A licence belongs to a copy, not to a paper (decision 2): the same paper is often CC BY in the
@@ -57,7 +58,10 @@ export type Licence =
 
 /** What of a copy is in the corpus, and where its bytes came from. */
 interface Storage {
-  /** Each kind at most once; `text` covers every text variant of the paper. */
+  /**
+   * Each kind at most once per copy (two copies of one paper storing one kind is `corpus/record`'s
+   * finding); `text` covers every text variant of the paper.
+   */
   readonly stored: readonly StoredKind[];
   /** Present whenever `stored` is not empty. */
   readonly fetched_from?: string | undefined;
@@ -92,7 +96,8 @@ interface PaperFields {
   readonly title: string;
   readonly authors?: readonly string[] | undefined;
   /** Kept as metadata whatever the copies' licences. */
-  readonly abstract?: string | undefined;
+  /** `null` where the listing gave none. */
+  readonly abstract?: string | null | undefined;
   /** At least one. */
   readonly ids: PaperIds;
   readonly copies: readonly Copy[];

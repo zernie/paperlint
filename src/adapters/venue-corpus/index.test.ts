@@ -66,6 +66,15 @@ describe("parsing a papers.json", () => {
     });
   });
 
+  it("🔴 an abstract a listing left null parses as null", () => {
+    const row = { ...PAPER, abstract: null };
+    // Guards: scraped listings leave the abstract null (8 of 16 rows of one real corpus); null is not refused.
+    expect(parse(withPaper(row))).toEqual({
+      ok: true,
+      corpus: { ...RECORD, papers: [row] },
+    });
+  });
+
   it("a sister paper names its venue, year and where it was found; an unknown copy stores under NOASSERTION", () => {
     const { edition, ...rest } = PAPER;
     const sister: Paper = {
@@ -169,6 +178,11 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
     "a stored copy that does not say where its bytes came from",
     withCopy({ ...COPY, fetched_from: undefined }),
     "papers.0.copies.0.fetched_from: a copy that stores a file names where it was fetched from",
+  ],
+  [
+    "a copy fetched from somewhere that is not a web address",
+    withCopy({ ...COPY, fetched_from: "file:///home/me/x.pdf" }),
+    "papers.0.copies.0.fetched_from: an http or https address",
   ],
   [
     "a kind stored twice by one copy",

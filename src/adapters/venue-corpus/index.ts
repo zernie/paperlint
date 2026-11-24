@@ -32,6 +32,11 @@ import type { VenueCorpusCodec } from "../../ports/venue-corpus-codec.ts";
 
 const words = z.string().min(1);
 const date = z.iso.date();
+/** Where a page or a file was read: a web address, never a local path or another scheme. */
+const webUrl = z.url({
+  protocol: /^https?$/u,
+  error: "an http or https address",
+});
 
 /** The index of each value that occurs earlier in `values`, with the index of its first. */
 const repeats = (
@@ -52,7 +57,7 @@ const notRead = z.strictObject({ id: z.literal(NOASSERTION) });
 const licence = z
   .strictObject({
     id: licenceId,
-    read_from: z.url().optional(),
+    read_from: webUrl.optional(),
     read_on: date.optional(),
   })
   .transform((l, ctx): Licence => {
@@ -75,7 +80,7 @@ const licence = z
 
 const storage = {
   stored: z.array(z.enum(STORED_KINDS)),
-  fetched_from: z.url().optional(),
+  fetched_from: webUrl.optional(),
 };
 
 /** Each kind at most once, and a stored copy names where its bytes came from. */
@@ -102,7 +107,7 @@ const copy = z.discriminatedUnion("version", [
   z
     .strictObject({
       version: z.enum(KNOWN_VERSIONS),
-      url: z.url(),
+      url: webUrl,
       licence,
       ...storage,
     })
@@ -122,7 +127,7 @@ const ids = z
     arxiv: words.optional(),
     dblp: words.optional(),
     s2: words.optional(),
-    url: z.url().optional(),
+    url: webUrl.optional(),
   })
   .refine(
     (i) => Object.values(i).some((v) => v !== undefined),
@@ -135,7 +140,7 @@ const paperFields = {
     .regex(KEY_PATTERN, "a letter or digit, then letters, digits, '_' or '-'"),
   title: words,
   authors: z.array(words).optional(),
-  abstract: z.string().optional(),
+  abstract: z.string().nullable().optional(),
   ids,
   copies: z.array(copy),
 };
@@ -153,13 +158,13 @@ const paper = z.discriminatedUnion("group", [
     group: z.literal("sister"),
     venue: words,
     year,
-    listed_from: z.url(),
+    listed_from: webUrl,
   }),
 ]);
 
 const edition = z.strictObject({
   edition: year,
-  listed_from: z.url(),
+  listed_from: webUrl,
   read_on: date,
   accepted: z.number().int().nonnegative().optional(),
 });
