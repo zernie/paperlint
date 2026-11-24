@@ -10,13 +10,12 @@
  * `EXEMPT` with the reason; a case for a rule that is not registered fails too. A `_build/` file a
  * rule reads is planted as the build would write it — no pdflatex, no network.
  */
-import { mkdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { omit } from "remeda";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
-import { run, rulePlugins } from "./cli.ts";
+import { rulePlugins } from "./cli.ts";
 import { uploadRecordText } from "./domain/artifact-upload.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { lockText, type LockEntry } from "./domain/versions.ts";
@@ -32,7 +31,8 @@ import {
   type IndexInput,
 } from "./domain/study-registry.ts";
 import { recordText } from "../test/recorded-fixture.ts";
-import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
+import { lintTree } from "../test/lint-report.ts";
+import { venuePreset } from "../test/support.ts";
 
 /** No plan and no history: the index with every mode column `—`. */
 const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
@@ -1709,44 +1709,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
 const EXEMPT: Readonly<Record<string, string>> = {};
 
 // ── the run ─────────────────────────────────────────────────────────────────────────────────────
-
-const LintResults = z.array(
-  z.looseObject({
-    filePath: z.string(),
-    messages: z.array(
-      z.looseObject({
-        ruleId: z.string().nullable(),
-        severity: z.number(),
-        line: z.number().optional(),
-        message: z.string(),
-      }),
-    ),
-  }),
-);
-type Message = z.infer<typeof LintResults>[number]["messages"][number] & {
-  readonly file: string;
-};
-
-/** `paperlint lint --json` over the tree, in-process through the CLI: every message, by file. */
-async function lintTree(
-  tree: Record<string, string | Uint8Array>,
-  emptyDirs: readonly string[] = [],
-): Promise<Message[]> {
-  const dir = writeTree(useTempDir("paperlint-rule-cases-"), {
-    "package.json": '{"name":"consumer","private":true}',
-    ...tree,
-  });
-  emptyDirs.forEach((d) => mkdirSync(join(dir, d), { recursive: true }));
-  const out: string[] = [];
-  await run(["lint", "--json"], {
-    cwd: dir,
-    log: (...a: unknown[]) => out.push(a.join(" ")),
-    err: () => undefined,
-  });
-  return LintResults.parse(JSON.parse(out.join("\n"))).flatMap((r) =>
-    r.messages.map((m) => ({ ...m, file: r.filePath.slice(dir.length + 1) })),
-  );
-}
 
 /** Every rule id the registry holds. */
 const registered = Object.entries(rulePlugins()).flatMap(([plugin, p]) =>
