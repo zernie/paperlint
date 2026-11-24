@@ -112,20 +112,33 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    finding that names the setting. SPDX ids where SPDX has one; `LicenseRef-…` where it has none, as SPDX
    and REUSE prescribe. A version of a CC licence other than 4.0 gets its row when a corpus meets it.
 
-4. **One rule judges the stored copies, `venue/stored-copies`.** It reads `papers.json` and the listing of
-   the corpus's `pdf/` and `text/`, and reports:
-   - a corpus with `pdf/` or `text/` and no `papers.json` (one finding, as the study registry reports
-     study folders without `studies.json`);
-   - a `papers.json` that does not parse, with the zod path of the first problem;
-   - a file in `pdf/` or `text/` that no copy's `stored` claims;
-   - a copy whose `stored` names a file that is not there, or two copies of one paper storing one kind;
-   - a stored file whose copy's licence does not permit that kind (decision 3), including an id outside
-     the table and an NC licence in a project not declared non-commercial.
+4. **Three rules, one family, `corpus/`.** The family is the folder they judge, as `paper/`, `repro/` and
+   `versions/` are; the names follow the ones those families already use (`paper/allowed-files-only`,
+   `cycle/record`). Structure and licence are separate rules because they are needed by different
+   projects: every corpus needs its structure held, and only a corpus that others can read needs its
+   licences judged.
+
+   | rule                        | reports                                                                                                                                                                                                                                                                             | default        |
+   | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+   | `corpus/allowed-files-only` | a name in the corpus folder outside the fixed names (decision 5), any extension, plus names the settings add (#500's second rule, renamed from `venue/allowed-files-only`)                                                                                                          | on             |
+   | `corpus/record`             | a corpus with `pdf/` or `text/` and no `papers.json`; a `papers.json` that does not parse, with the zod path of the first problem; a file in `pdf/` or `text/` that no copy's `stored` claims; a copy whose `stored` names a missing file; two copies of one paper storing one kind | on             |
+   | `corpus/licence`            | a stored file whose copy has no licence recorded (`NOASSERTION`, decided by the author 2026-11-24), or whose licence does not permit that kind (decision 3), including an id outside the table and an NC licence in a project not declared non-commercial                           | off, in no set |
 
    Each finding names its cure: record the licence and where it was read, or remove the file and keep
    the ids.
 
-   **Where it reports, and how paperlint reaches a corpus.** Today nothing under `venues/` is linted
+   **Why the two structure rules are on by default.** They hold for every corpus whatever the venue and
+   whoever reads the repository: a `papers.json` that does not parse breaks the skill that reads it, and
+   a stray file is a file no reader knows the meaning of. They are silent where no corpus exists.
+
+   **Why the licence rule is off and in no set.** The same stored files are illegal in a public
+   repository and legal in a private one, and the rule cannot tell which it is in; that is a finding a
+   careful author can dispute ("The Default Set Is What The Venue Decides"). A project whose corpus
+   others read turns it on; a private one leaves it off. It belongs to none of today's sets
+   (`paperlint:writing` is about prose); when #524 adds `recommended` and `strict`, it is a candidate
+   for one of them.
+
+   **Where they report, and how paperlint reaches a corpus.** Today nothing under `venues/` is linted
    ([`docs/venues.md`](../venues.md#what-checks-it)): rule blocks are scoped to paper files, and a rule
    runs only for a file that exists. PR 1b adds a block for `<papers-root>/venues/*/`, anchored on the
    corpus's `MANIFEST.md`; a corpus folder without `MANIFEST.md` (recognised by `papers.json`, `pdf/` or
@@ -133,12 +146,6 @@ pull requests that follow. It is the base for #302, #568, #356, #500, #215, #608
    (`src/folder-layout-rule.ts`), on a file ESLint does lint. The same PR keeps the corpus out of the
    paper rules (#215, part 1): a `paper.tex` saved in a corpus is an accepted paper's source, not one of
    the user's papers.
-
-   **Off by default; opt-in at `warn`.** The same stored files are illegal in a public repository and
-   legal in a private one, and the rule cannot tell which it is in; that is a finding a careful author
-   can dispute, so by "The Default Set Is What The Venue Decides" it is not in the default set, and by
-   "An Optional Tool Stays Out Of The Way" an opt-in rule ships at `warn`. A project whose corpus is
-   public turns it on, at `error` if it chooses.
 
 5. **The fixed file names**: `papers.json`, `MANIFEST.md`, `measurements.json`, `pdf/<key>.pdf`,
    `text/<key>.txt` and `text/<key>.<variant>.txt` (one paper extracted twice, by `pdftotext` and by
@@ -181,13 +188,13 @@ to its paper folder. Licences that were never read stay `NOASSERTION` until PR 2
 
 ## The order of the pull requests
 
-| PR  | what                                                                                                                                                                   | part of        |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| 1a  | the schema and its parser, the licence table, this note, `docs/venues.md` and `study-accepted-papers` rewritten to the record (decision 7)                             | #302           |
-| 1b  | `venue/stored-copies`, the lint block that reaches a corpus, the structural check for a corpus without `MANIFEST.md`, and the corpus kept out of the paper rules       | #302, #215 (1) |
-| 2   | the venue lister #568 asks for, as a shared tested script that `study-accepted-papers` calls (not a new CLI command), writing `papers.json` rows with ids and licences | #568           |
-| 3   | the current cycle's venue has a corpus (matched by series, decision 1), the first of #356's three parts                                                                | #356 (1 of 3)  |
-| 4   | `venue/allowed-files-only` (#500's second rule)                                                                                                                        | #500 (1 of 2)  |
+| PR  | what                                                                                                                                                                            | part of        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 1a  | the schema and its parser, the licence table, this note, `docs/venues.md` and `study-accepted-papers` rewritten to the record (decision 7)                                      | #302           |
+| 1b  | `corpus/record` and `corpus/licence`, the lint block that reaches a corpus, the structural check for a corpus without `MANIFEST.md`, and the corpus kept out of the paper rules | #302, #215 (1) |
+| 2   | the venue lister #568 asks for, as a shared tested script that `study-accepted-papers` calls (not a new CLI command), writing `papers.json` rows with ids and licences          | #568           |
+| 3   | the current cycle's venue has a corpus (matched by series, decision 1), the first of #356's three parts                                                                         | #356 (1 of 3)  |
+| 4   | `corpus/allowed-files-only` (#500's second rule)                                                                                                                                | #500 (1 of 2)  |
 
 PR 1a stands alone: a corpus written by hand, or by the skill, validates. Readers that compare a paper with
 the corpus (#608 abstract rewrites, #465 the panel's demands, a title and scope comparison) come after PR 2.
