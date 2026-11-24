@@ -198,7 +198,13 @@ const REFUSED: readonly (readonly [string, string, string])[] = [
   [
     "a key that cannot name a file",
     withPaper({ ...PAPER, key: "../x" }),
-    "papers.0.key: a letter or digit, then letters, digits, '.', '_' or '-'",
+    "papers.0.key: a letter or digit, then letters, digits, '_' or '-'",
+  ],
+  [
+    // Guards: text/<key>.<variant>.txt splits at the first dot, so a dotted key would read as a variant.
+    "a key with a dot",
+    withPaper({ ...PAPER, key: "2501.15919" }),
+    "papers.0.key: a letter or digit, then letters, digits, '_' or '-'",
   ],
 ];
 

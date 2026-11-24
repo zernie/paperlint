@@ -28,8 +28,11 @@ export type KnownVersion = (typeof KNOWN_VERSIONS)[number];
 /** The ids a paper may carry; `url` is its page on the listing, when nothing else identifies it. */
 export const PAPER_ID_KINDS = ["doi", "arxiv", "dblp", "s2", "url"] as const;
 
-/** A key names the stored files (`pdf/<key>.pdf`) and the measurement rows: one path segment. */
-export const KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/u;
+/**
+ * A key names the stored files (`pdf/<key>.pdf`) and the measurement rows: one path segment, with
+ * no dot, because `text/<key>.<variant>.txt` is read up to the first dot. An arXiv id goes in `ids`.
+ */
+export const KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/u;
 
 /** One edition of this venue the corpus covers. */
 export interface Edition {

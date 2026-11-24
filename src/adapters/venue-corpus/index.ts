@@ -132,10 +132,7 @@ const ids = z
 const paperFields = {
   key: z
     .string()
-    .regex(
-      KEY_PATTERN,
-      "a letter or digit, then letters, digits, '.', '_' or '-'",
-    ),
+    .regex(KEY_PATTERN, "a letter or digit, then letters, digits, '_' or '-'"),
   title: words,
   authors: z.array(words).optional(),
   abstract: z.string().optional(),
