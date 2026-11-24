@@ -11,7 +11,13 @@ import { memoryFiles } from "#src/adapters/memory/index";
 import { venueCorpusCodec } from "#src/adapters/venue-corpus/index";
 import type { VenueCorpus } from "#src/domain/venue-corpus";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { listing, main, verdicts } from "./corpus-licences-core.ts";
+import type { Command, ProcessExit } from "#src/ports/process";
+import {
+  gitTopLevel,
+  listing,
+  main,
+  verdicts,
+} from "./corpus-licences-core.ts";
 
 const SCRIPT = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -355,6 +361,92 @@ describe("main — what stops it", () => {
     expect(run(["agent", "x"], {})).toEqual(usage);
     expect(run(["../agent"], {})).toEqual(usage);
     expect(run(["/abs/agent"], {})).toEqual(usage);
+  });
+});
+
+/** A git that answers every command with `exit`, and keeps what it was asked. */
+const fakeGit = (exit: ProcessExit) => {
+  const asked: Command[] = [];
+  return {
+    asked,
+    git: {
+      run: (c: Command) => {
+        asked.push(c);
+        return exit;
+      },
+    },
+  };
+};
+const exited = (status: number, stdout: string): ProcessExit => ({
+  kind: "exited",
+  status,
+  stdout,
+  stderr: "",
+});
+
+describe("gitTopLevel", () => {
+  it("🔴 inside a repository: the top level git prints, trimmed", () => {
+    const { git, asked } = fakeGit(exited(0, "/work\n"));
+    expect(gitTopLevel(git, "/usr/bin", "/work/papers")).toBe("/work");
+    // Guards: git is given only the caller's PATH and runs in the caller's folder.
+    expect(asked).toEqual([
+      {
+        file: "git",
+        args: ["rev-parse", "--show-toplevel"],
+        env: { PATH: "/usr/bin" },
+        timeoutMs: 10_000,
+        cwd: "/work/papers",
+      },
+    ]);
+  });
+
+  it("outside a repository (git exits non-zero): null", () => {
+    expect(gitTopLevel(fakeGit(exited(128, "")).git, "/usr/bin", "/tmp")).toBe(
+      null,
+    );
+  });
+
+  it("git exits 0 but prints nothing: null", () => {
+    expect(gitTopLevel(fakeGit(exited(0, "\n")).git, "/usr/bin", "/tmp")).toBe(
+      null,
+    );
+  });
+
+  it("git did not exit (killed by its timeout): null", () => {
+    const killed: ProcessExit = {
+      kind: "signalled",
+      signal: "SIGTERM",
+      stdout: "",
+      stderr: "",
+    };
+    expect(gitTopLevel(fakeGit(killed).git, "/usr/bin", "/tmp")).toBe(null);
+  });
+
+  it("no PATH in the caller's environment: git is given an empty one", () => {
+    const { git, asked } = fakeGit(exited(0, "/work\n"));
+    gitTopLevel(git, undefined, "/work");
+    expect(asked.map((c) => c.env)).toEqual([{ PATH: "" }]);
+  });
+});
+
+describe("main — a record that cannot be read", () => {
+  it("🔴 a file that is listed but unreadable: exit 1, the path on stderr", () => {
+    const files = memoryFiles({ [`${CORPUS}/papers.json`]: json });
+    const err: string[] = [];
+    const code = main(
+      ["agent"],
+      {
+        files: { ...files, readBytes: () => null },
+        codec: venueCorpusCodec,
+        projectRoot: () => "/work",
+        cwd: "/work",
+      },
+      { out: () => undefined, err: (s) => err.push(s) },
+    );
+    expect({ code, err: err.join("") }).toEqual({
+      code: 1,
+      err: `corpus-licences: ${CORPUS}/papers.json could not be read\n`,
+    });
   });
 });
 

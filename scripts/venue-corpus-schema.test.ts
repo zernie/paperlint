@@ -23,4 +23,17 @@ describe("venue-corpus-schema.ts", () => {
     ).toEqual({ status: 0, stdout: "", stderr: "" });
     expect(readFileSync(out, "utf8")).toBe(venueCorpusSchemaText());
   });
+
+  it("no output file, or more than one: the usage, exit 2, nothing written", () => {
+    const usage = {
+      status: 2,
+      stdout: "",
+      stderr: "usage: node venue-corpus-schema.ts <output-file>\n",
+    };
+    const opts = { nodeArgs: ["--conditions=paperlint-source"] };
+    expect(runNode(SCRIPT, [], opts)).toEqual(usage);
+    expect(runNode(SCRIPT, [join(dir, "a"), join(dir, "b")], opts)).toEqual(
+      usage,
+    );
+  });
 });

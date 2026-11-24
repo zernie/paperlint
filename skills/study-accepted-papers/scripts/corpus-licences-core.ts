@@ -34,6 +34,7 @@ import {
 } from "#src/domain/venue-corpus";
 import { papersRoots } from "#src/papers-roots";
 import type { Files } from "#src/ports/files";
+import type { RunProcess } from "#src/ports/process";
 import type { VenueCorpusCodec } from "#src/ports/venue-corpus-codec";
 
 /** Why one copy may not be kept as one kind. */
@@ -171,6 +172,26 @@ export interface Deps {
   readonly cwd: string;
 }
 
+/**
+ * `git rev-parse --show-toplevel` in `cwd`: the project's root, or null outside a repository (or
+ * when git did not run). `path` is the caller's PATH, the only variable git is given.
+ */
+export function gitTopLevel(
+  git: RunProcess,
+  path: string | undefined,
+  cwd: string,
+): string | null {
+  const r = git.run({
+    file: "git",
+    args: ["rev-parse", "--show-toplevel"],
+    env: { PATH: path ?? "" },
+    timeoutMs: 10_000,
+    cwd: callerPath(cwd),
+  });
+  const top = r.kind === "exited" && r.status === 0 ? r.stdout.trim() : "";
+  return top === "" ? null : top;
+}
+
 /** Where the command writes: the listing, and what stops it. */
 export interface Output {
   readonly out: (s: string) => void;
@@ -267,9 +288,11 @@ export function main(
     return 1;
   }
   const bytes = deps.files.readBytes(callerPath(at.file));
-  const parsed = deps.codec.parse(
-    new TextDecoder().decode(bytes ?? new Uint8Array()),
-  );
+  if (bytes === null) {
+    err(`corpus-licences: ${at.file} could not be read\n`);
+    return 1;
+  }
+  const parsed = deps.codec.parse(new TextDecoder().decode(bytes));
   if (!parsed.ok) {
     err(`corpus-licences: ${parsed.why}\n`);
     return 1;
