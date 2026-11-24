@@ -27,6 +27,7 @@ const FILE_NOTES: readonly (readonly [string, string])[] = [
   [CORPUS_RECORD, "the record: every paper, each copy of it and its licence"],
   ["MANIFEST.md", "optional: caveats only, the prose no field holds"],
   ["measurements.json", "the codes of L0 and L1, one row per paper, by key"],
+  [".gitignore", "optional: keeps the stored copies out of git"],
 ];
 const DIR_NOTES: readonly (readonly [string, string])[] = [
   ["pdf", "pdf/<key>.pdf, when a copy's licence permits it"],

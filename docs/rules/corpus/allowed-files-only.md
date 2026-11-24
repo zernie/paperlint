@@ -16,6 +16,7 @@ holds seven names and nothing else:
 ├── papers.json        ← the record: every paper, each copy of it and its licence
 ├── MANIFEST.md        ← optional: caveats only, the prose no field holds
 ├── measurements.json  ← the codes of L0 and L1, one row per paper, by key
+├── .gitignore         ← optional: keeps the stored copies out of git
 ├── pdf/               ← pdf/<key>.pdf, when a copy's licence permits it
 ├── text/              ← text/<key>.txt and text/<key>.<variant>.txt
 ├── deep-reads/        ← deep-reads/<key>.md, one per paper read in full

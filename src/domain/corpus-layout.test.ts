@@ -31,6 +31,11 @@ describe("judgeCorpusLayout", () => {
     ).toEqual([]);
   });
 
+  it("🔴 a .gitignore that keeps the stored copies out of git is no stray", () => {
+    // Guards: a public repository keeps a corpus's pdf/ out of git with it (no false red).
+    expect(judgeCorpusLayout([...SEVEN, file(".gitignore")])).toEqual([]);
+  });
+
   it("🔴 reports each stray once, by kind, in the order given", () => {
     // One file per entry of FILE_CURES, in its order.
     const names = [
