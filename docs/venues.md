@@ -273,7 +273,7 @@ copy is treated as not permitted.
 The skill's script prints, for each paper and each kind, the copy to keep or each copy's reason:
 
 ```text
-node <skills>/study-accepted-papers/scripts/corpus-licences.js <papers-root>/venues/<venue>/
+node <skills>/study-accepted-papers/scripts/corpus-licences.js "$(git rev-parse --show-toplevel)/<papers-root>/venues/<venue>/"
 2026-01 text: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
 2026-01 pdf: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
 ```

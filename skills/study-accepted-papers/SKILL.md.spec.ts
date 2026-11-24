@@ -175,7 +175,7 @@ record, papers.json").
    from the source \`docs/venues.md\` names for that kind of copy ("Where a copy's licence is read
    from"): \`read_from\` is the page or API response, \`read_on\` the date. Never the licence line
    printed inside a PDF: it can belong to another copy. No source gives it → \`{ "id": "NOASSERTION" }\`.
-3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js <papers-root>/venues/<venue>/\`.
+3. **Run** \`node \${CLAUDE_SKILL_DIR}/scripts/corpus-licences.js "$(git rev-parse --show-toplevel)/<papers-root>/venues/<venue>/"\` (an absolute path: a relative one is read from the shell's current folder).
    Exit 1: the record does not parse; fix what it names and run it again. Exit 0: one line per paper
    and kind (\`text\`, \`pdf\`).
 4. **Store only on a \`keep\` line**: download from that copy to \`pdf/<key>.pdf\`, or extract to
