@@ -465,6 +465,13 @@ jobs:
                                               : "DIVERGE — this is the platform this job exists for");
           '
 
+      # Shard 1 runs the harnesses (scripts/test.ts), and since vigiles 49 `--min=1` counts only
+      # files that RAN: without the agent binary all four skip and the shard fails (run 45346444793).
+      - name: the agent binary the harnesses drive
+        if: matrix.shard == 1
+        run: npm i -g @anthropic-ai/claude-code
+        timeout-minutes: 3
+
       # Issue #9: `npm test` was red ONLY on macOS.
       - name: npm test (macOS), shard ${{ matrix.shard }} of 2
         run: npm test -- --shard=${{ matrix.shard }}/2
