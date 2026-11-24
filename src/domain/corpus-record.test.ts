@@ -37,7 +37,7 @@ const folder = (
   record: CorpusFolder["record"],
   pdf: readonly string[] = [],
   text: readonly string[] = [],
-): CorpusFolder => ({ record, stored: { pdf, text } });
+): CorpusFolder => ({ folder: "agent", record, stored: { pdf, text } });
 
 const read = (papers: readonly Paper[]): CorpusFolder["record"] => ({
   ok: true,
@@ -61,6 +61,12 @@ describe("storedKey: the paper a stored file's name belongs to", () => {
 });
 
 describe("judgeCorpus", () => {
+  it("names a record whose venue is not its folder's name, at the venue field", () => {
+    expect(judgeCorpus({ ...folder(read([])), folder: "other" })).toEqual([
+      { kind: "venue", at: ["venue"], venue: "agent", folder: "other" },
+    ]);
+  });
+
   it("is silent when every stored file is claimed by exactly one copy and exists", () => {
     expect(
       judgeCorpus(

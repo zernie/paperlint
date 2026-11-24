@@ -243,10 +243,8 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import { inCorpus, papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
-import {
-  CORPUS_RECORD_RULE_LEVELS,
-  corpusRecordRules,
-} from "./corpus-record-rule.ts";
+import { CORPUS_RECORD_RULE_LEVELS } from "./corpus-record-rule.ts";
+import { corpusJsonRules, corpusRecords } from "./corpus-json-rules.ts";
 import {
   CORPUS_LAYOUT_RULE_LEVELS,
   corpusLayoutRules,
@@ -675,7 +673,8 @@ const corpusBlocks = (papers: PaperScope): readonly ConfigBlock[] => {
     listDir: nodeListDir,
     roots: papers.kind === "papers" ? papers.roots : [],
   });
-  const record = corpusRecordRules({
+  // `corpus/licence` is registered with them and on for no corpus: `"warn"` in the root paperlint.json turns it on.
+  const record = corpusJsonRules({
     entries: nodeListEntries,
     codec: venueCorpusCodec,
   });
@@ -1045,7 +1044,8 @@ export async function silentOptionalRules(
   const probes = [
     ...new Set(files.filter((p) => basename(p) === MAIN)),
   ].flatMap((f) => [f, join(dirname(f), STATUS_FILE), ...bodyFiles(f)]);
-  for (const probe of probes) {
+  // A corpus rule is reached through the record it judges, not through a paper.
+  for (const probe of [...probes, ...corpusRecords(files)]) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(
       await eslint.calculateConfigForFile(probe),
@@ -2746,11 +2746,13 @@ export async function run(
     err,
     where: relative(cwd, root) || ".",
     opts: withPapers,
-    // Every paper of the project, not only the ones on the command line (#103).
-    projectPapers: papersRoots(cfg)
-      .flatMap((r) => papersIn(r))
-      .map((d) => join(d, MAIN))
-      .filter((f) => existsSync(f)),
+    // Every paper and corpus record of the project, not only the ones on the command line (#103).
+    projectPapers: papersRoots(cfg).flatMap((r) => [
+      ...papersIn(r, [MAIN]).map((d) => join(d, MAIN)),
+      ...papersIn(join(r, CORPORA_DIR), [CORPUS_RECORD]).map((d) =>
+        join(d, CORPUS_RECORD),
+      ),
+    ]),
     bodies,
     onLintResults,
   });

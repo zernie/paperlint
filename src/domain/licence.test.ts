@@ -25,7 +25,7 @@ const both = (id: string, settings = COMMERCIAL) =>
 const PERMITTED = { kind: "permitted" } as const;
 const NC_ONLY = { kind: "non-commercial-only" } as const;
 const ARXIV_WHY =
-  'it grants arXiv alone the right to distribute: "We are thus unable to grant others the right to distribute arXiv articles"';
+  'its only grant is to arXiv: "I grant arXiv.org a perpetual, non-exclusive license to distribute this article" (arxiv.org/licenses/nonexclusive-distrib/1.0/license.html), and nothing to anyone else';
 const ND_WHY =
   "ND permits reproduction in unmodified form; whether an extracted text is an adaptation is unsettled";
 

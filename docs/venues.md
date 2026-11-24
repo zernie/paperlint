@@ -268,9 +268,9 @@ for the other papers it keeps the ids. What each licence permits is one table, i
 (decision 3). In short: CC0 1.0, CC BY 4.0 and CC BY-SA 4.0 permit both; an ND licence permits the
 PDF and not an extracted text; an NC licence permits only in a project declared non-commercial; arXiv's
 non-exclusive licence, a publisher's own and a licence not read (`NOASSERTION`) permit neither; and an
-id the table does not list, another CC version included, permits nothing. The
-setting by which a project declares itself non-commercial is not shipped yet: until it is, an NC
-copy is treated as not permitted.
+id the table does not list, another CC version included, permits nothing. A project declares itself
+non-commercial with the option of [`corpus/licence`](rules/corpus/licence.md),
+`["warn", { "nonCommercial": true }]`; without it an NC copy is treated as not permitted.
 
 The skill's script prints, for each paper and each kind, the copy to keep or each copy's reason:
 
@@ -334,11 +334,11 @@ root `paperlint.json`.
 Nothing in a corpus is a paper: a `paper.tex` kept there is an accepted paper's source, and no
 paper rule judges it. The hook that refuses misplaced files acts only inside a paper folder.
 
-One more rule of the family is planned for a later release, **not shipped yet**:
-
-| rule             | will report                                                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `corpus/licence` | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read |
+[`corpus/licence`](rules/corpus/licence.md) is **off by default and in no rule set**: the licence question
+arises when others can read the corpus, and the rule cannot tell whether they can. A project whose corpus others read turns it on with `{ "rules": { "corpus/licence": "warn" } }`
+in its root `paperlint.json`; it reports, at the copy's `stored`, a stored kind whose licence was not
+read, is not in the licence table, or does not permit it. A non-commercial project says so with the
+rule's option, `["warn", { "nonCommercial": true }]`.
 
 Also checked: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes

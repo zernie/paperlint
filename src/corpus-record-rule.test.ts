@@ -184,6 +184,18 @@ describe("corpus/record: each finding, at its place in papers.json", () => {
     ]);
   });
 
+  it("🔴 reports a venue that is not its folder's name at the venue field", async () => {
+    const text = record([]).replace('"venue": "agent"', '"venue": "agnet"');
+    const found = await onCorpus({ ...PAPER, [RECORD]: text });
+    // Guards: the folder is the preset's series, so the field must say the same; reported where it is written.
+    expect(found.map((m) => [m.ruleId, m.line, m.column, m.messageId])).toEqual(
+      [["corpus/record", lineOf(text, '"venue"'), 3, "venue"]],
+    );
+    expect(found.map((m) => m.message)).toEqual([
+      'the record says `"venue": "agnet"`, and its folder is `agent`. What to do: rename the folder to `agnet`, or correct the field to `agent`',
+    ]);
+  });
+
   it("is turned off in the root paperlint.json by one line", async () => {
     expect(
       await corpusFindings({

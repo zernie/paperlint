@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:e956f9144d8c9170 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:d159bd885a6beed8 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -167,8 +167,9 @@ cannot (unique keys, a paper's edition among the listed ones, a stored copy's `f
    the project is non-commercial.
 
 `paperlint lint` checks the record with `corpus/record`, at the line of each wrong field; whether a
-stored copy's licence permits it is `corpus/licence` (not shipped yet), so until then the script is
-the only check of that.
+stored copy's licence permits it is `corpus/licence`, off by default: a project whose corpus others read
+turns it on with `"warn"` in its root `paperlint.json`. The script above asks the same licence table
+when you store.
 
 ## Before any level: pin the venue's stated bar
 

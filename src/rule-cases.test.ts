@@ -33,6 +33,7 @@ import {
 import { recordText } from "../test/recorded-fixture.ts";
 import { lintTree } from "../test/lint-report.ts";
 import { venuePreset } from "../test/support.ts";
+import { CORPUS_CASES, type RuleCases } from "../test/rule-cases-corpus.ts";
 
 /** No plan and no history: the index with every mode column `—`. */
 const NO_FACTS: IndexInput = { plans: new Map(), history: new Map() };
@@ -42,8 +43,6 @@ const fixture = (p: string): string =>
   readFileSync(join(ROOT, "fixtures", p), "utf8");
 
 const P = "papers/p";
-const CORPUS_RECORD = "papers/venues/agent/papers.json";
-const EMPTY_RECORD = '{"venue":"agent","editions":[],"papers":[],"rebuild":[]}';
 const STATUS = "---\nstages: []\n---\n# PIPELINE-STATUS\n";
 const tex = (body: string, cls = "\\documentclass{article}"): string =>
   `${cls}\n\\begin{document}\n${body}\n\\end{document}\n`;
@@ -573,19 +572,6 @@ const onTalk = (
 });
 
 // ── the case table ─────────────────────────────────────────────────────────────────────────────
-
-interface Reports {
-  readonly tree: Record<string, string | Uint8Array>;
-  /** The file the finding is on, relative to the project. */
-  readonly file: string;
-  readonly severity: 1 | 2;
-  readonly line: number;
-}
-interface RuleCases {
-  readonly reports: Reports;
-  /** A tree on which the rule says nothing, on any file. */
-  readonly silent: Record<string, string | Uint8Array>;
-}
 
 const TEX_FILE = `${P}/paper.tex`;
 
@@ -1282,35 +1268,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       [`${P}/extra/PLAN.md`]: "# plan\n",
     }),
   },
-  // A venue corpus storing a PDF its papers.json lists no paper for; silent while it stores nothing.
-  "corpus/record": {
-    reports: {
-      tree: paper(tex("x"), {
-        [CORPUS_RECORD]: EMPTY_RECORD,
-        "papers/venues/agent/pdf/a.pdf": "",
-      }),
-      file: CORPUS_RECORD,
-      severity: 2,
-      line: 1,
-    },
-    silent: paper(tex("x"), { [CORPUS_RECORD]: EMPTY_RECORD }),
-  },
-  // A note at the top of a venue corpus: its place is MANIFEST.md or deep-reads/<key>.md.
-  "corpus/allowed-files-only": {
-    reports: {
-      tree: paper(tex("x"), {
-        [CORPUS_RECORD]: EMPTY_RECORD,
-        "papers/venues/agent/notes.md": "# notes\n",
-      }),
-      file: CORPUS_RECORD,
-      severity: 2,
-      line: 1,
-    },
-    silent: paper(tex("x"), {
-      [CORPUS_RECORD]: EMPTY_RECORD,
-      "papers/venues/agent/MANIFEST.md": "# caveats\n",
-    }),
-  },
+  ...CORPUS_CASES,
   // A loose script at the top of repro/: it belongs in repro/tools/.
   "repro/allowed-files-only": {
     reports: {

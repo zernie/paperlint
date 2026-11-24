@@ -192,8 +192,9 @@ cannot (unique keys, a paper's edition among the listed ones, a stored copy's \`
    the project is non-commercial.
 
 \`paperlint lint\` checks the record with \`corpus/record\`, at the line of each wrong field; whether a
-stored copy's licence permits it is \`corpus/licence\` (not shipped yet), so until then the script is
-the only check of that.
+stored copy's licence permits it is \`corpus/licence\`, off by default: a project whose corpus others read
+turns it on with \`"warn"\` in its root \`paperlint.json\`. The script above asks the same licence table
+when you store.
 
 ## Before any level: pin the venue's stated bar
 
