@@ -137,7 +137,8 @@ merged 2026-10-27 09:35 UTC, the wait for review included), AIDC with the IEEE f
 
 `<papers-root>` is the papers directory: `papersDir` in the project's `paperlint.json`, default
 `papers/`. The corpus lives there, beside the paper folders and not inside any of them, because it
-belongs to the venue: every paper aimed at that venue reads the same one.
+belongs to the venue: every paper aimed at that venue reads the same one. The corpus folder is named
+after the venue preset's series, the preset id without its year: `agent` for `paperlint:agent-2027`.
 
 ```text
 <papers-root>/
@@ -151,12 +152,12 @@ belongs to the venue: every paper aimed at that venue reads the same one.
 The skill `study-accepted-papers` makes it, the first time it runs for that venue. It always asks
 which mode to run, and suggests one from what exists:
 
-| mode     | when                                           | stage    | what it adds to the corpus                                  |
-| -------- | ---------------------------------------------- | -------- | ----------------------------------------------------------- |
-| A idea   | a target venue and an idea; no `paper.tex` yet | 2 venue  | the winner and ordinary lists, their measurements (L0, L1)  |
-| B design | a planned claim and measurements; no text yet  | 2 venue  | the same, if not there yet                                  |
-| C draft  | the paper's text exists                        | 5 review | the deep reads (L2), one file per paper                     |
-| D final  | near-final text, the deadline close            | 5 review | nothing new; it compares wording against the closest papers |
+| mode     | when                                           | stage    | what it adds to the corpus                                                  |
+| -------- | ---------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| A idea   | a target venue and an idea; no `paper.tex` yet | 2 venue  | the rows of the award winners and the ordinary papers, their codes (L0, L1) |
+| B design | a planned claim and measurements; no text yet  | 2 venue  | the same, if not there yet                                                  |
+| C draft  | the paper's text exists                        | 5 review | the deep reads (L2), one file per paper                                     |
+| D final  | near-final text, the deadline close            | 5 review | nothing new; it compares wording against the closest papers                 |
 
 So the corpus usually appears at stage 2, right after `find-venue` and before the study is
 designed, when what the venue rewards can still shape the study. A paper that first runs the skill
@@ -167,21 +168,134 @@ what is missing.
 
 ```text
 <papers-root>/venues/<venue>/
-├── MANIFEST.md        ← the sources, the years, what was capped, the stand-in for "strong accept" and how often it occurs
-├── the winner and ordinary lists
-├── measurements.json  ← the codes of L0 and L1, one row per paper
-├── text/              ← the text extracted from each paper
-├── deep-reads/        ← one file per paper read in full (L2), usable by any paper
-├── the scripts that fetched and measured
-└── a labelled subfolder for corpus 2: award papers on the topic at other venues
+├── papers.json            ← the record: every paper, and every copy of it with its licence
+├── MANIFEST.md            ← the sources, the years, what was capped, the stand-in for "strong accept" and how often it occurs
+├── measurements.json      ← the codes of L0 and L1, one row per paper, keyed by its key
+├── pdf/<key>.pdf          ← a paper's PDF, only when a copy's licence permits keeping it
+├── text/<key>.txt         ← its extracted text, on the same condition
+├── text/<key>.<variant>.txt ← a second extraction of the same paper (another extractor, the first page alone)
+├── deep-reads/<key>.md    ← one file per paper read in full (L2), usable by any paper
+└── sources/               ← the listing and call pages as they were read
 ```
 
-Only `MANIFEST.md`, `measurements.json`, `text/` and `deep-reads/` have fixed names; the lists, the
-scripts and the corpus-2 folder are named by whoever runs the skill. The PDFs are not committed: the
-manifest records each paper's identifier and the command that fetches it.
+These are all the names a corpus holds. The award winners and the ordinary accepted papers are rows
+of `papers.json` (`group` `award` and `accepted`), and so are the papers of other venues, corpus 2
+(`group` `sister`): one record, the corpora told apart by a field. The commands that fetched and
+measured are named in `MANIFEST.md`; the scripts are not kept in the corpus. The author's own paper
+is never in a corpus: its text belongs in its paper folder. A mechanism the venue adds to the generic
+ten (M1–M10, kept beside the skill), or one that does not hold there, is written in `MANIFEST.md`.
 
-A mechanism the venue adds to the generic ten (M1–M10, kept beside the skill), or one that does not
-hold there, is written in `MANIFEST.md`.
+### The record, `papers.json`
+
+One row per paper, and in it every copy of the paper we know of with that copy's licence. A real
+row, from a workshop's 2026 list:
+
+```json
+{
+  "venue": "agent",
+  "editions": [
+    {
+      "edition": 2026,
+      "listed_from": "https://conf.researchr.org/home/icse-2026/agent-2026",
+      "read_on": "2026-11-03",
+      "accepted": 27
+    }
+  ],
+  "papers": [
+    {
+      "key": "2026-01",
+      "edition": 2026,
+      "group": "accepted",
+      "title": "A Catalogue of Evaluation Metrics for LLM-Based Multi-Agent Frameworks in Software Engineering",
+      "authors": [
+        "Ingrid Lima",
+        "Vitor Linhares",
+        "Anderson Martins Gomes",
+        "Paulo Maia"
+      ],
+      "abstract": "LLM-based Multi-Agent (LMA) frameworks have recently gained traction …",
+      "ids": { "doi": "10.1145/3786167.3788430" },
+      "copies": [
+        {
+          "version": "published",
+          "url": "https://doi.org/10.1145/3786167.3788430",
+          "licence": {
+            "id": "CC-BY-4.0",
+            "read_from": "https://api.crossref.org/works/10.1145/3786167.3788430",
+            "read_on": "2026-11-03"
+          },
+          "stored": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+The fields, their values and which are required are the JSON Schema
+[`skills/study-accepted-papers/papers.schema.json`](../skills/study-accepted-papers/papers.schema.json),
+generated from the parser (`src/adapters/venue-corpus/index.ts`; `npm run schema:venue-corpus`
+rewrites it, and a test fails when it is stale). A schema cannot say that a key is unique, that a
+paper's edition is one of `editions[].edition`, or that a copy that stores a file names where it was
+fetched from; the parser checks those and the skill's script reports each with its path.
+
+Every web address is `http` or `https`. The top level, an edition, a copy, a licence and `ids` are
+strict, so a misspelt key is an error; a paper row keeps any further field as it is, for a project's
+own scripts. A copy whose origin nobody recorded is `unknown`, and its licence can only be
+`NOASSERTION`. The paths of stored files are not written in the record: they follow from `key`.
+
+### Licences: what a corpus may keep
+
+A licence belongs to a **copy**, not to a paper. The same paper is often CC BY in the proceedings and
+under arXiv's non-exclusive licence as a preprint, and a stored file is a copy of one version, so it
+is judged by that version's licence.
+
+Before it downloads a PDF or extracts a text, `study-accepted-papers` reads each copy's licence,
+writes it in `papers.json`, and keeps a PDF or a text only when a copy's licence permits that kind;
+for the other papers it keeps the ids. What each licence permits is one table, in paperlint's
+`src/domain/licence.ts`, with its reasons in [the design note](design/venue-corpus.md#what-is-decided)
+(decision 3). In short: CC0 1.0, CC BY 4.0 and CC BY-SA 4.0 permit both; an ND licence permits the
+PDF and not an extracted text; an NC licence permits only in a project declared non-commercial; arXiv's
+non-exclusive licence, a publisher's own and a licence not read (`NOASSERTION`) permit neither; and an
+id the table does not list, another CC version included, permits nothing. The
+setting by which a project declares itself non-commercial is not shipped yet: until it is, an NC
+copy is treated as not permitted.
+
+The skill's script prints, for each paper and each kind, the copy to keep or each copy's reason:
+
+```text
+node <skills>/study-accepted-papers/scripts/corpus-licences.js agent
+2026-01 text: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
+2026-01 pdf: keep the published copy (CC-BY-4.0), https://doi.org/10.1145/3786167.3788430
+```
+
+It takes the venue, and finds `<papers-root>/venues/<venue>/papers.json` itself: the project is the git
+top level of the folder it runs in, and the papers roots are `papersDir` in the project's
+`paperlint.json`. Exactly one root may hold the venue; none or several is exit 1, naming the folders.
+It parses `papers.json` first, and a record that does not parse is reported with the path of each
+problem, exit 1.
+
+**Titles and abstracts are kept as metadata whatever the licence.** Every scholarly API (Crossref,
+Semantic Scholar, arXiv) serves them openly; they are not copies. Neither are the short quotes inside
+the codes or a deep read.
+
+### Where a copy's licence is read from
+
+Measured on 2026-11-24, without API keys, on three venues whose accepted lists were known (27, 16 and
+34 papers). `read_from` names the page or the API response the licence was read from:
+
+| what                          | read it from                                                                                                | then                                                                                 | never                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| the list                      | Crossref, filtered by the proceedings' full container title (ACM); the Anthology volume `.bib`/`.xml` (ACL) | OpenAlex by source id, as a cross-check; the programme page for papers without a DOI |                                                                                                                  |
+| abstract                      | the programme's paper page                                                                                  | Semantic Scholar by DOI, OpenAlex, arXiv OAI-PMH                                     | Crossref (none deposited)                                                                                        |
+| arXiv id                      | Semantic Scholar and OpenAlex, their union                                                                  |                                                                                      | Crossref `relation` (always empty)                                                                               |
+| licence of the published copy | Crossref `license[]`, every URL kept                                                                        |                                                                                      |                                                                                                                  |
+| licence of the arXiv copy     | arXiv OAI-PMH `<license>`                                                                                   |                                                                                      | OpenAlex (null for the arXiv default, once wrong), Semantic Scholar (its licence is of whichever copy it picked) |
+
+**The licence line printed inside a PDF is not a source**: it can belong to another copy (an arXiv
+PDF printing its published version's footer). Two gaps stay open: IEEE deposits no Creative Commons
+licence (only text-and-data-mining policy URLs), and the ACL Anthology states one licence for the
+whole site and none per paper. Where no source gives a copy's licence, it stays `NOASSERTION`.
 
 ### Who reads it
 
@@ -197,9 +311,18 @@ hold there, is written in `MANIFEST.md`.
 **No rule reads the corpus yet.** `paperlint lint` treats a folder in the papers directory as a paper
 only when it holds `PIPELINE-STATUS.md`, `paper.tex` or `paperlint.json`, and `venues/` holds none of
 them, so nothing in it is linted. The hook that refuses misplaced files does not act there either:
-it acts only inside a paper folder.
+it acts only inside a paper folder. Today `papers.json` is parsed against its schema only when the
+skill's script reads it.
 
-What is checked is the other side: a corpus started **inside** a paper folder. A `venues/` or
+Three rules of a family `corpus/` are planned for later releases, **not shipped yet**:
+
+| rule                        | will report                                                                                                                                                                                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `corpus/record`             | a corpus with `pdf/` or `text/` and no `papers.json`; a `papers.json` that does not parse; a stored file no copy claims; a copy that claims a missing file; two copies of one paper storing one kind |
+| `corpus/licence`            | a stored file whose copy's licence was not read, or does not permit that kind; planned off by default, for a project whose corpus others read                                                        |
+| `corpus/allowed-files-only` | a name in the corpus folder outside the names above                                                                                                                                                  |
+
+What is checked today is the other side: a corpus started **inside** a paper folder. A `venues/` or
 `venue-corpus/` folder at a paper's root is reported, with this place as where it goes
 ([the paper folder's layout](rules/paper/allowed-files-only.md)), and the hook refuses to create one.
 

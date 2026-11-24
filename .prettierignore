@@ -42,3 +42,6 @@ site/.next/
 site/out/
 site/next-env.d.ts
 site/coverage/
+
+# Written by `npm run schema:venue-corpus` from the record's parser; a test holds it to those exact bytes.
+skills/study-accepted-papers/papers.schema.json
