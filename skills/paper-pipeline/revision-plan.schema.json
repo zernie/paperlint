@@ -54,7 +54,7 @@
             },
             "stands_in_for": {
               "type": "string",
-              "pattern": "\\S"
+              "minLength": 1
             }
           },
           "required": [
@@ -73,7 +73,7 @@
             },
             "why": {
               "type": "string",
-              "pattern": "\\S"
+              "minLength": 1
             }
           },
           "required": [
@@ -113,15 +113,7 @@
             },
             "evidence": {
               "type": "string",
-              "minLength": 1,
-              "allOf": [
-                {
-                  "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
-                },
-                {
-                  "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
-                }
-              ]
+              "minLength": 1
             }
           },
           "required": [
@@ -146,7 +138,7 @@
               },
               "what": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               },
               "from": {
                 "oneOf": [
@@ -185,21 +177,13 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1,
-                        "allOf": [
-                          {
-                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
-                          },
-                          {
-                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
-                          }
-                        ]
+                        "minLength": 1
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "pattern": "\\S"
+                            "minLength": 1
                           },
                           {
                             "type": "integer",
@@ -267,7 +251,7 @@
               },
               "what": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               },
               "from": {
                 "oneOf": [
@@ -306,21 +290,13 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1,
-                        "allOf": [
-                          {
-                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
-                          },
-                          {
-                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
-                          }
-                        ]
+                        "minLength": 1
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "pattern": "\\S"
+                            "minLength": 1
                           },
                           {
                             "type": "integer",
@@ -368,7 +344,7 @@
               },
               "evidence": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               }
             },
             "required": [
@@ -390,7 +366,7 @@
               },
               "what": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               },
               "from": {
                 "oneOf": [
@@ -429,21 +405,13 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1,
-                        "allOf": [
-                          {
-                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
-                          },
-                          {
-                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
-                          }
-                        ]
+                        "minLength": 1
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "pattern": "\\S"
+                            "minLength": 1
                           },
                           {
                             "type": "integer",
@@ -491,7 +459,7 @@
               },
               "reason": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               },
               "kind": {
                 "type": "string",
@@ -521,7 +489,7 @@
               },
               "what": {
                 "type": "string",
-                "pattern": "\\S"
+                "minLength": 1
               },
               "from": {
                 "oneOf": [
@@ -560,21 +528,13 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1,
-                        "allOf": [
-                          {
-                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
-                          },
-                          {
-                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
-                          }
-                        ]
+                        "minLength": 1
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "pattern": "\\S"
+                            "minLength": 1
                           },
                           {
                             "type": "integer",
@@ -648,5 +608,5 @@
   ],
   "additionalProperties": false,
   "title": "A paper's revision-plan.json",
-  "description": "The paper's revision plan for its current cycle: the accepted papers it is held against (bar), whether evidence is still being gathered (measurement), and the closed list of what remains (remaining). This schema lists the fields; it cannot express that each row's id is unique, which the lint rule revision-plan/record checks with the rest."
+  "description": "The paper's revision plan for its current cycle: the accepted papers it is held against (bar), whether evidence is still being gathered (measurement), and the closed list of what remains (remaining). This schema lists the fields; it cannot express that each row's id is unique or that a path stays inside the paper folder, which the lint rule revision-plan/record checks with the rest."
 }

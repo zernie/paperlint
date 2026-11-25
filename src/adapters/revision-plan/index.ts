@@ -8,6 +8,7 @@
 import { z } from "zod";
 import { CYCLE_ID_PATTERN, cycleId } from "../../domain/cycle.ts";
 import { SERIES_ID } from "../../domain/edition.ts";
+import { isInside } from "../../domain/study-registry.ts";
 import {
   DROP_KINDS,
   ROW_ID_PATTERN,
@@ -19,8 +20,7 @@ import {
 } from "../../domain/revision-plan.ts";
 import type { RevisionPlanCodec } from "../../ports/revision-plan-codec.ts";
 
-// A pattern rather than `trim().min(1)`, so the JSON Schema refuses a whitespace-only text too.
-const words = z.string().regex(/\S/u, "a non-empty text").trim();
+const words = z.string().trim().min(1, "a non-empty text");
 const date = z.iso.date();
 
 // The pattern first, so the JSON Schema carries it; then the id, minted by the cycle's own function.
@@ -39,22 +39,13 @@ const series = z
     "a venue corpus's series: its folder under venues/, as in `usenix-sec`",
   );
 
-/**
- * A file of the paper, relative to its folder: never absolute (`/…`, `C:…`) and never above it. Patterns
- * rather than refinements, so the JSON Schema an editor validates against refuses the same paths.
- */
+/** A file of the paper, relative to its folder: never absolute (`/…`, `C:…`) and never above it. */
 const paperFile = z
   .string()
   .min(1, "a path relative to the paper folder")
-  .regex(
-    // No leading slash, no drive letter, no backslash anywhere.
-    /^(?![A-Za-z]:)(?!\/)[^\\]*$/u,
-    "a path relative to the paper folder, with `/` between its parts",
-  )
-  // No `..` as a whole part of the path.
-  .regex(
-    /^(?!(?:.*\/)?\.\.(?:\/|$))/u,
-    "a file inside the paper folder: no `..`",
+  .refine(
+    isInside,
+    "a path inside the paper folder: relative, with `/` between its parts, never above it",
   );
 
 /** A discriminated union whose unknown or missing tag names the tags it takes. */
@@ -225,13 +216,14 @@ export const SCHEMA_FILE = "skills/paper-pipeline/revision-plan.schema.json";
 /**
  * The JSON Schema of a `revision-plan.json`, generated from the parser's own shape: what an editor
  * completes and a skill reads instead of a hand-written table. Shipped as `SCHEMA_FILE`; a test holds
- * the file to this. A schema cannot say that each row's id is unique: `revision-plan/record` does.
+ * the file to this. A schema cannot say that each row's id is unique or that a path stays inside the paper
+ * folder: `revision-plan/record` does.
  */
 export const revisionPlanJsonSchema = (): unknown => ({
   ...z.toJSONSchema(plan, { io: "input", unrepresentable: "any" }),
   title: "A paper's revision-plan.json",
   description:
-    "The paper's revision plan for its current cycle: the accepted papers it is held against (bar), whether evidence is still being gathered (measurement), and the closed list of what remains (remaining). This schema lists the fields; it cannot express that each row's id is unique, which the lint rule revision-plan/record checks with the rest.",
+    "The paper's revision plan for its current cycle: the accepted papers it is held against (bar), whether evidence is still being gathered (measurement), and the closed list of what remains (remaining). This schema lists the fields; it cannot express that each row's id is unique or that a path stays inside the paper folder, which the lint rule revision-plan/record checks with the rest.",
 });
 
 /** The shipped file's text: the schema, indented, with a closing newline. */
