@@ -73,19 +73,19 @@ scan() { # scan <label> <file-or-textfile>
   fi
 }
 
-# 1. PDF text (via pymupdf — the same dep the page images use, docs/render.md)
+# 1. PDF text, read with pdf.js by scripts/pdf-text.js (a bundle with pdf.js inside: nothing to
+# install). A PDF that cannot be read stops the gate with exit 2: a pass about a document the gate
+# never opened is the one answer it must not give.
+READER="$SKILL_DIR/scripts/pdf-text.js"
 if [ -f "$DIR/$PDF" ]; then
-  if python3 - "$DIR/$PDF" "$TMP/pdf.txt" <<'PY' 2>/dev/null
-import sys
-try:
-    import fitz
-except Exception:
-    sys.exit(3)
-d = fitz.open(sys.argv[1])
-open(sys.argv[2], "w").write("".join(p.get_text() for p in d))
-PY
-  then scan "PDF[$PDF]" "$TMP/pdf.txt"
-  else echo "  WARN: could not extract PDF text (pymupdf missing?) — PDF not scanned"; fi
+  why=""
+  if [ ! -f "$READER" ]; then why="no $READER (npm run build writes it)"
+  elif ! node "$READER" "$DIR/$PDF" >"$TMP/pdf.txt" 2>"$TMP/pdf.err"; then why="$(head -n 1 "$TMP/pdf.err")"; fi
+  if [ -n "$why" ]; then
+    echo "FAIL: the PDF's text could not be read, so it was not scanned: $why"
+    exit 2
+  fi
+  scan "PDF[$PDF]" "$TMP/pdf.txt"
 else
   echo "  WARN: $DIR/$PDF not found — PDF not scanned"
 fi

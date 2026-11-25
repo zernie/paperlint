@@ -17,8 +17,19 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
+import { onePagePdf } from "../../test/support.ts";
 
-const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "check-deanon.sh");
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SCRIPT = join(HERE, "check-deanon.sh");
+/** An AES-256 encrypted PDF (fixtures/pdf-facts/README.md). */
+const ENCRYPTED = join(
+  HERE,
+  "..",
+  "..",
+  "fixtures",
+  "pdf-facts",
+  "encrypted.pdf",
+);
 const made: string[] = [];
 afterEach(() => {
   made.splice(0).forEach((d) => {
@@ -145,17 +156,6 @@ const python = (code: string, ...args: readonly string[]) =>
     encoding: "utf8",
   });
 const havePython = python("").status === 0;
-const havePymupdf = havePython && python("import fitz").status === 0;
-
-/** A one-page PDF at `path` whose text is `text`. */
-const writePdf = (path: string, text: string): void => {
-  const r = python(
-    "import sys,fitz\nd=fitz.open()\np=d.new_page()\np.insert_text((72,72),sys.argv[2])\nd.save(sys.argv[1])",
-    path,
-    text,
-  );
-  expect(r.status).toBe(0);
-};
 
 /** An `artifact.zip` at `path` holding the given members. */
 const writeZip = (path: string, members: Record<string, string>): void => {
@@ -263,44 +263,88 @@ describe("check-deanon.sh — the compiled PDF", () => {
     );
   });
 
-  it("a PDF that cannot be read is a warning, not a pass about a document never opened", () => {
+  // Guards: a PDF the gate cannot read is a failure of the gate, never a pass about a document it
+  // did not open.
+});
+
+describe("check-deanon.sh — a PDF it cannot read", () => {
+  it("a PDF that cannot be read is exit 2, naming the PDF and pdf.js's reason", () => {
     const { root, paper } = project("Authors omitted.");
     const deny = denyList(join(root, "deny.txt"));
     writeFileSync(join(paper, "paper.pdf"), "%PDF-1.4\n% not a real pdf\n");
-    expect(run([paper, "paper.pdf", deny]).stdout).toContain(
-      "  WARN: could not extract PDF text (pymupdf missing?) — PDF not scanned\n",
-    );
+    expect(run([paper, "paper.pdf", deny])).toEqual({
+      status: 2,
+      stdout: [
+        `== check-deanon: ${paper} (pdf=paper.pdf, 1 patterns) ==`,
+        `FAIL: the PDF's text could not be read, so it was not scanned: could not read ${paper}/paper.pdf with pdf.js (unreadable): InvalidPDFException: Invalid PDF structure.`,
+        "",
+      ].join("\n"),
+    });
   });
 
-  it.skipIf(!havePymupdf)(
-    "an identifier compiled into the PDF text is a leak naming the PDF",
-    () => {
-      const { root, paper } = project("Authors omitted.");
-      const deny = denyList(join(root, "deny.txt"));
-      writePdf(
-        join(paper, "paper.pdf"),
-        "Anonymous submission. Tooling: Quillfeather-kit.",
-      );
-      const { status, stdout } = run([paper, "paper.pdf", deny]);
-      expect({
-        status,
-        leaks: stdout.split("\n").filter((l) => l.includes("LEAK")),
-      }).toEqual({
-        status: 1,
-        leaks: [
-          "  LEAK  PDF[paper.pdf]:1:Anonymous submission. Tooling: Quillfeather-kit.",
-        ],
-      });
-    },
-  );
-
-  it.skipIf(!havePymupdf)("a PDF with no identifier in it passes", () => {
+  it("an encrypted PDF is exit 2 as well: its text cannot be scanned", () => {
     const { root, paper } = project("Authors omitted.");
     const deny = denyList(join(root, "deny.txt"));
-    writePdf(
+    copyFileSync(ENCRYPTED, join(paper, "paper.pdf"));
+    const { status, stdout } = run([paper, "paper.pdf", deny]);
+    expect({ status, fail: stdout.split("\n")[1] }).toEqual({
+      status: 2,
+      fail: `FAIL: the PDF's text could not be read, so it was not scanned: could not read ${paper}/paper.pdf with pdf.js (encrypted): PasswordException: No password given`,
+    });
+  });
+
+  it("without its text reader beside it, the gate is exit 2, not a pass", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    writeFileSync(join(paper, "paper.pdf"), onePagePdf(["Anonymous."]));
+    const lone = join(root, "lone");
+    mkdirSync(lone);
+    copyFileSync(SCRIPT, join(lone, "check-deanon.sh"));
+    const { status, stdout } = run([paper, "paper.pdf", deny], {
+      script: join(lone, "check-deanon.sh"),
+    });
+    expect({ status, fail: stdout.split("\n")[1] }).toEqual({
+      status: 2,
+      fail: `FAIL: the PDF's text could not be read, so it was not scanned: no ${lone}/scripts/pdf-text.js (npm run build writes it)`,
+    });
+  });
+});
+
+describe("check-deanon.sh — the text of the compiled PDF", () => {
+  it("an identifier compiled into the PDF text is a leak naming the PDF and its line", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    writeFileSync(
       join(paper, "paper.pdf"),
-      "Anonymous submission. Tooling: REDACTED for review.",
+      onePagePdf(["Anonymous submission.", "Tooling: Quillfeather-kit."]),
     );
-    expect(run([paper, "paper.pdf", deny]).status).toBe(0);
+    expect(run([paper, "paper.pdf", deny])).toEqual({
+      status: 1,
+      stdout: [
+        `== check-deanon: ${paper} (pdf=paper.pdf, 1 patterns) ==`,
+        "  LEAK  PDF[paper.pdf]:2:Tooling: Quillfeather-kit.",
+        "-- summary: 1 identifier hit(s) across PDF + artifact + zip",
+        "FAIL: de-anonymization leak(s) above — scrub before submitting double-blind.",
+        "",
+      ].join("\n"),
+    });
+  });
+
+  it("a PDF with no identifier in it passes", () => {
+    const { root, paper } = project("Authors omitted.");
+    const deny = denyList(join(root, "deny.txt"));
+    writeFileSync(
+      join(paper, "paper.pdf"),
+      onePagePdf(["Anonymous submission. Tooling: REDACTED for review."]),
+    );
+    expect(run([paper, "paper.pdf", deny])).toEqual({
+      status: 0,
+      stdout: [
+        `== check-deanon: ${paper} (pdf=paper.pdf, 1 patterns) ==`,
+        "-- summary: 0 identifier hit(s) across PDF + artifact + zip",
+        "PASS: no author-identifying strings found. Safe for double-blind.",
+        "",
+      ].join("\n"),
+    });
   });
 });

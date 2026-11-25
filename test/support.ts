@@ -144,3 +144,33 @@ export function scriptedPrompts(
     text: ({ message }) => reply(message, "", isString),
   };
 }
+
+/**
+ * A one-page PDF whose only text is `lines`, one per line, in Helvetica (not embedded): the
+ * smallest PDF pdf.js reads as text, written here so a test needs no PDF library. The cross-reference
+ * offsets are counted from the bytes, so a reader that checks them finds them right.
+ */
+export function onePagePdf(lines: readonly string[]): string {
+  const escaped = lines.map((l) => `(${l.replace(/[\\()]/g, "\\$&")}) Tj T*`);
+  const stream = `BT /F1 11 Tf 13 TL 72 720 Td ${escaped.join(" ")} ET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${String(stream.length)} >>\nstream\n${stream}\nendstream`,
+  ];
+  const head = "%PDF-1.4\n";
+  const bodies = objects.map(
+    (o, i) => `${String(i + 1)} 0 obj\n${o}\nendobj\n`,
+  );
+  const offsets = bodies.map(
+    (_, i) => head.length + bodies.slice(0, i).join("").length,
+  );
+  const xref = [
+    `xref\n0 ${String(objects.length + 1)}\n0000000000 65535 f \n`,
+    ...offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`),
+  ].join("");
+  const start = head.length + bodies.join("").length;
+  return `${head}${bodies.join("")}${xref}trailer\n<< /Size ${String(objects.length + 1)} /Root 1 0 R >>\nstartxref\n${String(start)}\n%%EOF\n`;
+}
