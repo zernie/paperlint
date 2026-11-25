@@ -126,7 +126,7 @@ describe("what a set refuses, and where else it is written", () => {
     const r = parse({ "paperlint:strict": "warn" });
     expect(r.ok).toBe(false);
     expect(r.ok ? "" : r.error).toMatch(
-      /^S: "paperlint:strict" is not a rule paperlint ships — known: .*; rule sets: paperlint:writing$/,
+      /^S: "paperlint:strict" is not a rule paperlint ships — known: .*; rule sets: paperlint:writing, paperlint:revision-plan$/,
     );
   });
 
