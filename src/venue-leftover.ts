@@ -179,7 +179,7 @@ function matchesIn(
 /**
  * Each place the rendered text names another venue than the paper's edition — a name as a whole
  * word, case and all, judged with the year beside it (`namesAnotherEdition`), in the `places` the
- * rule reads (`leftover-scope.ts`). A family preset names no venue, so nothing is another venue:
+ * rule reads (`leftoverPlaces`). A family preset names no venue, so nothing is another venue:
  * silent.
  */
 export function judgeLeftover(

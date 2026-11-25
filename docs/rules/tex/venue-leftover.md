@@ -26,7 +26,7 @@ It runs only when the paper extends a venue preset. A template family (`paperlin
 
 The body is off by default because related work names venues with recent years on every page:
 «Lam et al. (CodeCrash, NeurIPS 2025)», «A separate ASE 2026 study examines …». On the 206 papers of
-the real-paper corpus, every one of the 17 findings the rule gave in the body or under a family preset
+the real-paper corpus, every one of the 18 findings the rule gave in the body or under a family preset
 was such a citation or the paper's own venue line; with this scope it gives none. A leftover from an
 earlier submission sits in the author block, the venue line, a footnote on the title page or the
 abstract, which the default still reads.
@@ -79,7 +79,10 @@ the definition, whether or not the macro is used: the rule does not expand macro
 ```
 
 What the machine cannot see: a venue without a shipped preset; a leftover in the body, unless
-`body` is on; a year written apart from the name
+`body` is on; an abstract set as `\section*{Abstract}` (the front matter ends at the first section,
+starred or not, so such an abstract is body); a `\section` token that is no heading
+(`\titlespacing*{\section}`, `\let\oldsection\section`) standing before the abstract, which ends the
+front matter early; a year written apart from the name
 («MSR, in 2027»); a name split by markup (`\textbf{AI}Sec`); a venue named in a sentence on purpose,
 which only a disable directive tells apart.
 
