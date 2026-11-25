@@ -19,7 +19,8 @@ import {
 } from "../../domain/revision-plan.ts";
 import type { RevisionPlanCodec } from "../../ports/revision-plan-codec.ts";
 
-const words = z.string().trim().min(1, "a non-empty text");
+// A pattern rather than `trim().min(1)`, so the JSON Schema refuses a whitespace-only text too.
+const words = z.string().regex(/\S/u, "a non-empty text").trim();
 const date = z.iso.date();
 
 // The pattern first, so the JSON Schema carries it; then the id, minted by the cycle's own function.
@@ -38,16 +39,21 @@ const series = z
     "a venue corpus's series: its folder under venues/, as in `usenix-sec`",
   );
 
-/** A file of the paper, relative to its folder: never absolute and never above it. */
+/**
+ * A file of the paper, relative to its folder: never absolute (`/…`, `C:…`) and never above it. Patterns
+ * rather than refinements, so the JSON Schema an editor validates against refuses the same paths.
+ */
 const paperFile = z
   .string()
   .min(1, "a path relative to the paper folder")
-  .refine(
-    (p) => !p.startsWith("/") && !p.includes("\\"),
+  .regex(
+    // No leading slash, no drive letter, no backslash anywhere.
+    /^(?![A-Za-z]:)(?!\/)[^\\]*$/u,
     "a path relative to the paper folder, with `/` between its parts",
   )
-  .refine(
-    (p) => !p.split("/").includes(".."),
+  // No `..` as a whole part of the path.
+  .regex(
+    /^(?!(?:.*\/)?\.\.(?:\/|$))/u,
     "a file inside the paper folder: no `..`",
   );
 

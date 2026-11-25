@@ -54,7 +54,7 @@
             },
             "stands_in_for": {
               "type": "string",
-              "minLength": 1
+              "pattern": "\\S"
             }
           },
           "required": [
@@ -73,7 +73,7 @@
             },
             "why": {
               "type": "string",
-              "minLength": 1
+              "pattern": "\\S"
             }
           },
           "required": [
@@ -113,7 +113,15 @@
             },
             "evidence": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "allOf": [
+                {
+                  "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
+                },
+                {
+                  "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
+                }
+              ]
             }
           },
           "required": [
@@ -138,7 +146,7 @@
               },
               "what": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               },
               "from": {
                 "oneOf": [
@@ -177,13 +185,21 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1
+                        "minLength": 1,
+                        "allOf": [
+                          {
+                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
+                          },
+                          {
+                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
+                          }
+                        ]
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": "\\S"
                           },
                           {
                             "type": "integer",
@@ -251,7 +267,7 @@
               },
               "what": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               },
               "from": {
                 "oneOf": [
@@ -290,13 +306,21 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1
+                        "minLength": 1,
+                        "allOf": [
+                          {
+                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
+                          },
+                          {
+                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
+                          }
+                        ]
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": "\\S"
                           },
                           {
                             "type": "integer",
@@ -344,7 +368,7 @@
               },
               "evidence": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               }
             },
             "required": [
@@ -366,7 +390,7 @@
               },
               "what": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               },
               "from": {
                 "oneOf": [
@@ -405,13 +429,21 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1
+                        "minLength": 1,
+                        "allOf": [
+                          {
+                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
+                          },
+                          {
+                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
+                          }
+                        ]
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": "\\S"
                           },
                           {
                             "type": "integer",
@@ -459,7 +491,7 @@
               },
               "reason": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               },
               "kind": {
                 "type": "string",
@@ -489,7 +521,7 @@
               },
               "what": {
                 "type": "string",
-                "minLength": 1
+                "pattern": "\\S"
               },
               "from": {
                 "oneOf": [
@@ -528,13 +560,21 @@
                       },
                       "file": {
                         "type": "string",
-                        "minLength": 1
+                        "minLength": 1,
+                        "allOf": [
+                          {
+                            "pattern": "^(?![A-Za-z]:)(?!\\/)[^\\\\]*$"
+                          },
+                          {
+                            "pattern": "^(?!(?:.*\\/)?\\.\\.(?:\\/|$))"
+                          }
+                        ]
                       },
                       "finding": {
                         "anyOf": [
                           {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": "\\S"
                           },
                           {
                             "type": "integer",

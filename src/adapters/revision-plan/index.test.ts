@@ -91,6 +91,27 @@ const DEFECTS: readonly (readonly [string, string, readonly unknown[]])[] = [
     ["measurement", "evidence"],
   ],
   [
+    "a drive-qualified evidence path",
+    planWith({ measurement: { ...ENOUGH, evidence: "C:/outside/notes.md" } }),
+    ["measurement", "evidence"],
+  ],
+  [
+    "a finding file with a drive letter",
+    withRow(1, {
+      ...R2,
+      from: { kind: "finding", file: "C:/reviews/a.md", finding: 3 },
+    }),
+    ["remaining", 1, "from", "file"],
+  ],
+  [
+    "a finding file with a backslash",
+    withRow(1, {
+      ...R2,
+      from: { kind: "finding", file: "reviews\\a.md", finding: 3 },
+    }),
+    ["remaining", 1, "from", "file"],
+  ],
+  [
     "a done row without evidence",
     withRow(2, { ...R3, evidence: undefined }),
     ["remaining", 2, "evidence"],
