@@ -1408,13 +1408,20 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       }),
     }),
   },
-  // EMNLP 2026, a shipped venue (REALM's conference), named with its year in a BlindConf paper's text.
+  // EMNLP 2026, a shipped venue (REALM's conference), named with its year in a BlindConf paper's
+  // front matter: the default reads prose before the first \section only (#552).
   "tex/venue-leftover": {
     reports: {
-      tree: blind("First written for EMNLP 2026."),
+      tree: paper(
+        tex(
+          `First written for EMNLP 2026.\n\\section{Introduction}\nText.\n${STATEMENT}`,
+          IEEE,
+        ),
+        BLIND_PAPER,
+      ),
       file: TEX_FILE,
       severity: 1,
-      line: 4,
+      line: 3,
     },
     silent: blind("Text."),
   },
