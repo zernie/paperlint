@@ -171,6 +171,7 @@ test("--changed: vitest runs only the unit tests the branch affects, on the SOUR
         "--coverage.provider=v8",
         "--coverage.reporter=text",
         "--coverage.skipFull",
+        "--coverage.reportOnFailure",
       ],
       nodeOptions: "--conditions=paperlint-source",
     },
