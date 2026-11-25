@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:0f74ef7b0488f6e2 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7603a4ee3cd7aada compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -22,7 +22,10 @@ prose-only read can.
 
 ## How to run it
 
-1. **Get the venue rubric + bar** (fetch the CFP; quote the criteria). Calibrate to the *track*: a
+0. **Read the revision plan:** `node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>`, read as `paper-pipeline` says ("The revision plan").
+   Its `scope:` lines are the venue's call: hand them to every seat. A must-fix no row covers is
+   reported as a proposal, not a blocker.
+1. **Get the venue rubric + bar** (fetch the CFP for what the `scope:` lines do not give; quote the criteria). Calibrate to the *track*: a
    WIP/short/workshop bar rewards promise and discussion value; a full-paper/top-tier bar demands
    completeness. Do not import top-tier standards into a WIP review.
    **Then load the venue's measured bar** per `paper-pipeline/references/venue-bar.md`: read

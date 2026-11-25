@@ -70,7 +70,8 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
    type fit, **indexed? (Y/N + where)**, double-blind, remote, selectivity, computed rank.
 2. **Keep/switch recommendation** — the top-ranked venue with the one-line reason, and (if the paper
    already has a target) an explicit **keep** or **switch** verdict against it. Note the intended
-   \`extend-paper\` upgrade target for later.
+   \`extend-paper\` upgrade target for later. After a **switch**, the paper's revision plan is for the
+   old cycle: say that it must be rewritten for the new one (\`paper-pipeline\`, "The revision plan").
 
 ## Rules
 - Fetch every CFP fact from the real page; never invent a deadline, page limit, or indexing status.

@@ -47,6 +47,7 @@ export const SKILL_ENTRIES: readonly string[] = [
   "skills/cold-read-diff/scripts/cold-read.ts",
   "skills/label-agent-runs/scripts/labels.ts",
   "skills/paper-pipeline/scripts/extract-ref-facts.mjs",
+  "skills/paper-pipeline/scripts/revision-plan.ts",
   "skills/pc-panel-review/scripts/prior-reviews.ts",
   "skills/run-agent-grid/scripts/grid-guard.ts",
   "skills/study-accepted-papers/scripts/corpus-licences.ts",

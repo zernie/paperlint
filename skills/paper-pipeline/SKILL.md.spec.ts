@@ -193,6 +193,30 @@ how a day disappears and the same paper ships.
 decides. Order is
 **final review → harden → submit**.
 
+## The revision plan — what is left, read before any review
+
+\`<paper-dir>/revision-plan.json\` is the author's closed list of what is left this cycle (its format:
+\`docs/configuration.md\` in the package). Every skill that reviews, cuts or judges readiness runs, first:
+
+\`\`\`bash
+node \${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>
+\`\`\`
+
+The one place its lines are read; every other skill points here.
+
+- \`plan: none written\` — work as the rest of this skill says. At the start of a cycle, offer to write
+  one; it is the author's list, written on his yes.
+- \`… rewrite the plan for it\` or \`stop: unknown\` — the plan is for an earlier cycle: say so, and judge
+  nothing against it until the author rewrites it. \`plan: unreadable\` — show its lines; he fixes the file.
+- \`scope:\` — the venue's call, verbatim, from its preset: what every reviewer seat is given as the
+  venue's statement of what it is for.
+- \`measurement: enough\` — no new study, experiment or data: only the text changes.
+- \`rows added after the plan was written: N\` — say N to the author when it is above 0.
+- The rows and \`stop:\` — what is left. \`stop: met\` closes the list; \`paperlint lint decides R…\` rows
+  close when \`npx paperlint lint\` reports nothing for the rule named on the row.
+- **A finding that no row covers is a proposal:** record it \`open\` in its review's frontmatter, and it
+  stops nothing until the author adds a row. Whether a finding is about a row is a reader's judgement.
+
 ## The final review — once, in this order, then closed
 
 The one place this order is written; every other skill points here.
@@ -209,9 +233,10 @@ The one place this order is written; every other skill points here.
   receives only those still open; he decides the panel's after step 3. The write happens once, after
   step 3: every accepted fix in one pass, a sentence through \`rewrite-unclear\`, a cut on his yes. A
   decided finding is not raised again in this review.
-- **Blockers** are a closed list, frozen when the review closes: the panel's consensus must-fixes and
-  the cold read's \`CANNOT PARSE\` rows. Each stops submission until \`fixed\` or \`wontfix\` with
-  \`note: "waived by the author: <reason>"\`.
+- **Blockers** are a closed list, frozen when the review closes. With a revision plan, they are its
+  rows: a must-fix or a \`CANNOT PARSE\` row no row covers is a proposal ("The revision plan"). Without
+  one, they are the panel's consensus must-fixes and the cold read's \`CANNOT PARSE\` rows. Each stops
+  submission until \`fixed\` or \`wontfix\` with \`note: "waived by the author: <reason>"\`.
 - **At most one confirmation, and only when the author asks for it:** he names the pass, and it runs once
   on what changed. No pass schedules another, and none reruns because a score is low.
 - **Then the review is closed,** whatever the scores; a blocker still \`open\` stays open into the checklist.

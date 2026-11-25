@@ -43,7 +43,8 @@ than shave a clause. A tighten pass performed inside a single section, under pre
 counter, is not this skill; it is the damage this skill exists to undo.
 
 If you are invoked while the author is still adding material, say so and decline the pass. The right
-answer is "not yet", not a smaller cut.
+answer is "not yet", not a smaller cut. Run \`node \${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>\` first (\`paper-pipeline\`, "The revision
+plan"): \`measurement: open\` means material may still be added, so say so before cutting.
 
 ## 🏗 START WITH THE SHAPE — weigh every section before judging it
 
