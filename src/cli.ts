@@ -136,12 +136,10 @@ import type { PortalSite } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   ANY_PAPER,
-  corpusFiles,
   narrowToOwners,
   ownedPatterns,
   paperFiles,
   papersScope,
-  rootSettingsFile,
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
@@ -243,15 +241,11 @@ import {
 } from "./folder-layout-rule.ts";
 import { folderLayoutHook } from "./folder-layout-hook.ts";
 import { inCorpus, papersDirOf, papersRoots, toPaths } from "./papers-roots.ts";
-import { CORPUS_RECORD_RULE_LEVELS } from "./corpus-record-rule.ts";
-import { corpusJsonRules, corpusRecords } from "./corpus-json-rules.ts";
-import {
-  CORPUS_LAYOUT_RULE_LEVELS,
-  corpusLayoutRules,
-} from "./corpus-layout-rule.ts";
+import { isOn, jsonRecordBlocks, jsonRecords } from "./json-record-blocks.ts";
 import { CORPORA_DIR } from "./domain/corpus-record.ts";
 import { CORPUS_RECORD } from "./domain/venue-corpus.ts";
 import { venueCorpusCodec } from "./adapters/venue-corpus/index.ts";
+import { revisionPlanCodec } from "./adapters/revision-plan/index.ts";
 import { paperFolderOf, writtenPath } from "./domain/paper-folder.ts";
 import { papersReached, type PaperTree } from "./domain/paper-dirs.ts";
 import {
@@ -660,38 +654,12 @@ const TALK_RULE_DEPS = {
   listDir: nodeListDir,
 };
 
-/**
- * A venue corpus, `<papers-root>/venues/<venue>/`, reached through its `papers.json`, linted with
- * ESLint's JSON language so `corpus/record` reports at the field (docs/design/venue-corpus.md,
- * decision 4); and the root `paperlint.json`, where `corpus/allowed-files-only` reports a corpus that
- * has no `papers.json`. The JSON language reaches no other file: these blocks alone name it. Each
- * registers only the rules it turns on, so a consumer's `corpus/record` never reaches the root file.
- */
-const corpusBlocks = (papers: PaperScope): readonly ConfigBlock[] => {
-  const layout = corpusLayoutRules({
-    files: nodeFiles,
-    listDir: nodeListDir,
-    roots: papers.kind === "papers" ? papers.roots : [],
-  });
-  // `corpus/licence` is registered with them and on for no corpus: `"warn"` in the root paperlint.json turns it on.
-  const record = corpusJsonRules({
-    entries: nodeListEntries,
-    codec: venueCorpusCodec,
-  });
-  return [
-    {
-      files: corpusFiles(papers, CORPUS_RECORD),
-      plugins: { json, corpus: { rules: { ...record, ...layout } } },
-      language: "json/json",
-      rules: { ...CORPUS_RECORD_RULE_LEVELS, ...CORPUS_LAYOUT_RULE_LEVELS },
-    },
-    {
-      files: rootSettingsFile(papers),
-      plugins: { json, corpus: { rules: layout } },
-      language: "json/json",
-      rules: CORPUS_LAYOUT_RULE_LEVELS,
-    },
-  ];
+/** What the JSON records' blocks read with (src/json-record-blocks.ts). */
+const JSON_RECORD_DEPS = {
+  json,
+  layout: { files: nodeFiles, listDir: nodeListDir },
+  corpus: { entries: nodeListEntries, codec: venueCorpusCodec },
+  plan: revisionPlanCodec,
 };
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -779,7 +747,7 @@ export function buildConfig(
         ...STATUS_CYCLE_RULE_LEVELS,
       },
     },
-    ...corpusBlocks(papers),
+    ...jsonRecordBlocks(papers, opts.rules ?? [], JSON_RECORD_DEPS),
     {
       files: own("reviews/*.md"),
       plugins: { markdown, review: reviewFrontmatter },
@@ -974,12 +942,6 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
   ]);
 }
 
-/** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
-const isOn = (entry: unknown): boolean => {
-  const sev: unknown = Array.isArray(entry) ? entry[0] : entry;
-  return sev !== undefined && sev !== "off" && sev !== 0;
-};
-
 /**
  * Rules paperlint ships and turns on for no file itself — the ones a consumer opts into with `rules`.
  * Derived: every shipped rule that no block of paperlint's own config names.
@@ -1044,8 +1006,8 @@ export async function silentOptionalRules(
   const probes = [
     ...new Set(files.filter((p) => basename(p) === MAIN)),
   ].flatMap((f) => [f, join(dirname(f), STATUS_FILE), ...bodyFiles(f)]);
-  // A corpus rule is reached through the record it judges, not through a paper.
-  for (const probe of [...probes, ...corpusRecords(files)]) {
+  // A JSON record's rule is reached through the record it judges, not through paper.tex.
+  for (const probe of [...probes, ...jsonRecords(files)]) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(
       await eslint.calculateConfigForFile(probe),

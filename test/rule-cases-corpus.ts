@@ -1,5 +1,7 @@
+import { lineOf, PLAN, planText } from "./revision-plan-fixture.ts";
+
 /**
- * The both-halves cases of the `corpus/` rules, for `src/rule-cases.test.ts`: a tree on which the rule
+ * The both-halves cases of the JSON records' rules (`corpus/`, `revision-plan/`), for `src/rule-cases.test.ts`: a tree on which the rule
  * reports, and one on which it is silent. Kept here, apart from that file's table, so the table does
  * not grow with every rule of the family.
  */
@@ -67,6 +69,17 @@ const UNREAD = JSON.stringify(
   null,
   2,
 );
+const PLAN_ON = {
+  "paperlint.json": '{"rules":{"paperlint:revision-plan":"warn"}}',
+};
+const PLAN_FILE = "papers/p/revision-plan.json";
+const NO_EVIDENCE = planText({
+  ...PLAN,
+  remaining: PLAN.remaining.map((r) =>
+    r.state === "done" ? { ...r, evidence: undefined } : r,
+  ),
+});
+
 const LICENCE_ON = { "paperlint.json": '{"rules":{"corpus/licence":"warn"}}' };
 
 export const CORPUS_CASES: Readonly<Record<string, RuleCases>> = {
@@ -112,5 +125,19 @@ export const CORPUS_CASES: Readonly<Record<string, RuleCases>> = {
       [RECORD]: EMPTY,
       "papers/venues/agent/MANIFEST.md": "# caveats\n",
     }),
+  },
+  // A paper's revision plan whose done row gives no evidence, the set turned on.
+  "revision-plan/record": {
+    reports: {
+      tree: project({
+        ...PLAN_ON,
+        [PLAN_FILE]: NO_EVIDENCE,
+      }),
+      file: PLAN_FILE,
+      severity: 1,
+      // A field left out is reported at the row that should hold it: its opening line.
+      line: lineOf(NO_EVIDENCE, '"id": "R3"') - 1,
+    },
+    silent: project({ ...PLAN_ON, [PLAN_FILE]: planText() }),
   },
 };

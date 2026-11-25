@@ -53,6 +53,20 @@ writing, not a number the venue states.
   and `tex/term-defined-twice`, which read `\emph` as a definition and, on a paper that does not
   mark definitions that way, report that they check nothing. Turn them on by name.
 
+## The revision-plan set: `paperlint:revision-plan`
+
+A paper that keeps a `revision-plan.json` (its bar, whether evidence is still being gathered, and the
+closed list of what remains this cycle) turns on the rules that read it in one line. Off, the file is
+not read at all.
+
+```json
+{ "rules": { "paperlint:revision-plan": "warn" } }
+```
+
+| rule                                                    | what it flags                                                                        |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [`revision-plan/record`](rules/revision-plan/record.md) | a field of `revision-plan.json` that breaks the plan's shape, reported at that field |
+
 ## The other optional rules
 
 | rule                                                                                      | what it checks                                                                                                             | who needs it                                                                                                                                                                                                  |
