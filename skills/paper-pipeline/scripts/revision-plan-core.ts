@@ -108,8 +108,13 @@ const fitLine = (plan: RevisionPlan, fit: CycleFit): string => {
   }
 };
 
-/** The scope lines: the call's sentences verbatim, from the paper's venue preset. */
-export const scopeLines = (p: PaperPreset): readonly string[] => {
+/**
+ * The scope lines: the call's sentences verbatim, from the paper's venue preset. A `paperlint.json`
+ * that does not parse never gets here: `report` stops on it first, and the type says so.
+ */
+export const scopeLines = (
+  p: Exclude<PaperPreset, { kind: "settings-problem" }>,
+): readonly string[] => {
   switch (p.kind) {
     case "none":
       return ["scope: no venue — paperlint.json names no preset"];
@@ -118,14 +123,14 @@ export const scopeLines = (p: PaperPreset): readonly string[] => {
         ? [
             `scope: none recorded — ${p.preset.id} has no \`scope\` in its preset (add-venue)`,
           ]
-        : scopeOf(p.preset.scope);
-    case "settings-problem":
+        : scopeText(p.preset.scope);
     case "preset-problem":
       return [];
   }
 };
 
-const scopeOf = (s: VenueScope): readonly string[] => [
+/** One venue scope as lines: its address and reading date, each sentence quoted, then its topics. */
+export const scopeText = (s: VenueScope): readonly string[] => [
   `scope: ${s.url} (read ${s.read})`,
   ...s.sentences.map((t) => `  > ${t}`),
   ...(s.topics.length === 0

@@ -11,7 +11,13 @@ import { nodeFiles } from "#src/adapters/node/index";
 import { revisionPlanCodec } from "#src/adapters/revision-plan/index";
 import { presetsDir } from "#src/package-dirs";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
-import { main, report, stopOf, type Deps } from "./revision-plan-core.ts";
+import {
+  main,
+  report,
+  scopeText,
+  stopOf,
+  type Deps,
+} from "./revision-plan-core.ts";
 
 const SCRIPT = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -147,6 +153,60 @@ describe("report: a plan for the current cycle", () => {
       "rows added after the plan was written: 0",
     ]);
     expect(r.lines.at(-1)).toBe("stop: met — every row is done or dropped");
+  });
+});
+
+describe("report: the bar and stop line variants", () => {
+  it("names the series a proxy bar stands in for", () => {
+    const dir = paper("proxy", {
+      "paperlint.json": { cycles: [LANGCODE] },
+      "revision-plan.json": {
+        ...PLAN,
+        bar: { kind: "proxy", series: "acl", stands_in_for: "LangCode" },
+      },
+    });
+    expect(report(dir, DEPS).lines[1]).toBe(
+      "bar: the accepted papers of acl, standing in for LangCode",
+    );
+  });
+  it("names only what lint decides when no row is open", () => {
+    const dir = paper("by-rule-only", {
+      "paperlint.json": { cycles: [LANGCODE] },
+      "revision-plan.json": {
+        ...PLAN,
+        remaining: ROWS.filter((row) => row.id !== "R4"),
+      },
+    });
+    expect(report(dir, DEPS).lines.at(-1)).toBe(
+      "stop: not met — paperlint lint decides R2",
+    );
+  });
+
+  it("names only the open rows when no row is left to lint", () => {
+    const dir = paper("open-only", {
+      "paperlint.json": { cycles: [LANGCODE] },
+      "revision-plan.json": {
+        ...PLAN,
+        remaining: ROWS.filter((row) => row.id !== "R2"),
+      },
+    });
+    expect(report(dir, DEPS).lines.at(-1)).toBe("stop: not met — open R4");
+  });
+});
+
+describe("scopeText", () => {
+  it("prints no topics heading for a scope that lists none", () => {
+    expect(
+      scopeText({
+        url: "https://example.org/cfp",
+        read: "2026-11-25",
+        sentences: ["Papers on code."],
+        topics: [],
+      }),
+    ).toEqual([
+      "scope: https://example.org/cfp (read 2026-11-25)",
+      "  > Papers on code.",
+    ]);
   });
 });
 
@@ -315,11 +375,12 @@ describe("the command", () => {
     expect(err.join("").startsWith("plan: unreadable")).toBe(true);
   });
 
-  it("asks for the paper folder with exit 2", () => {
-    const err: string[] = [];
-    expect(
-      main([], DEPS, { out: () => undefined, err: (s) => err.push(s) }),
-    ).toBe(2);
-    expect(err).toEqual(["usage: node revision-plan.js <paper-dir>\n"]);
+  it("asks for the paper folder on stderr with exit 2, as a process", () => {
+    const r = runNode(SCRIPT, [], { cwd: "/" });
+    expect({ status: r.status, stdout: r.stdout, stderr: r.stderr }).toEqual({
+      status: 2,
+      stdout: "",
+      stderr: "usage: node revision-plan.js <paper-dir>\n",
+    });
   });
 });
