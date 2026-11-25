@@ -32,7 +32,7 @@ measurement is not enough to move them here.
 <!-- prettier-ignore-start -->
 <!-- Generated from acl-latex.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:acl-latex`** — template family, no venue of its own · extended by `paperlint:emnlp-2026`, `paperlint:realm-2026`
+**`paperlint:acl-latex`** — template family, no venue of its own · extended by `paperlint:emnlp-2026`, `paperlint:langcode-2027`, `paperlint:naacl-2027`, `paperlint:realm-2026`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

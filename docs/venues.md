@@ -65,10 +65,12 @@ MSR is held beside ICSE, but it is a conference of its own, not a workshop, so i
 
 **Natural language processing**
 
-| edition                | parent                 | family                | what is checked                                 |
-| ---------------------- | ---------------------- | --------------------- | ----------------------------------------------- |
-| `paperlint:emnlp-2026` | —                      | `paperlint:acl-latex` | the class line and packages (minimal preset)    |
-| `paperlint:realm-2026` | `paperlint:emnlp-2026` | `paperlint:acl-latex` | the workshop's format; no page limit (its card) |
+| edition                   | parent                 | family                | what is checked                                 |
+| ------------------------- | ---------------------- | --------------------- | ----------------------------------------------- |
+| `paperlint:emnlp-2026`    | —                      | `paperlint:acl-latex` | the class line and packages (minimal preset)    |
+| `paperlint:realm-2026`    | `paperlint:emnlp-2026` | `paperlint:acl-latex` | the workshop's format; no page limit (its card) |
+| `paperlint:naacl-2027`    | —                      | `paperlint:acl-latex` | the class line and packages (minimal preset)    |
+| `paperlint:langcode-2027` | `paperlint:naacl-2027` | `paperlint:acl-latex` | the workshop's call; no page limit (its card)   |
 
 **Machine learning and AI**
 

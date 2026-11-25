@@ -4,7 +4,7 @@ description: Create or update a conference or workshop edition in paperlint. Use
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebFetch]
 ---
 
-<!-- vigiles:sha256:85845681d36e79e3 compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a7bec2c6a92d0e8b compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
 
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 
@@ -40,11 +40,13 @@ For an existing edition, start with its preset and card. Recheck the affected fa
    `"parent": "paperlint:<conference>-<year>"` of its own year; a parent not shipped yet gets a
    minimal preset (name, aliases, url, the family its call names, no limits) whose card says only
    the format is checked.
-7. **Register the name where shipped presets are listed**, or tests fail: `src/presets.test.ts`,
-   `src/preset-card-rule.test.ts`, `src/tex-venue-rules.test.ts`, `src/venue-rules.test.ts`,
-   `src/paper-settings-commands.test.ts`, the count in `test/preset-cards.test.ts`, and its row in
-   `docs/venues.md` (checked by `test/venues-doc.test.ts`). Then
-   `npx prettier --write` on what you wrote.
+7. **Register the name where shipped presets are listed**, or tests fail: its label and year in
+   `test/shipped-venues.ts`, `src/presets.test.ts`, `src/preset-card-rule.test.ts`,
+   `src/venue-rules.test.ts`, `src/paper-settings-commands.test.ts`, the count in
+   `test/preset-cards.test.ts`, and its row in `docs/venues.md` (checked by
+   `test/venues-doc.test.ts`). A venue records the call's `scope` (its scope sentences and topic
+   list, verbatim, with the URL and the day); a call that states none puts the edition in
+   `WITHOUT_SCOPE` in `src/presets-scope.test.ts`. Then `npx prettier --write` on what you wrote.
 8. **A portal's form fields** (`"submission_fields"`): record them only from a logged-in read of
    the form, never from memory or from another venue's preset. Each field gets the kind that matches
    its control (`docs/submission.md` lists them: `checkbox`, `choice` for a dropdown or radio

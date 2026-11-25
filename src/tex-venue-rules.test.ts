@@ -19,6 +19,7 @@ import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { venuePreset } from "../test/support.ts";
+import { shippedVenuesExcept } from "../test/shipped-venues.ts";
 import {
   lint,
   PAPER,
@@ -1433,32 +1434,9 @@ describe("otherVenues", () => {
     const aidc = resolvePreset("paperlint:aidc-2026", from, deps);
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
+    // aidc's own chain (AIDC over ieee-conference) and REALM, which does not resolve here, are left out.
     expect(otherVenues(aidc.value, deps).map((o) => [o.label, o.year])).toEqual(
-      [
-        ["AAAI", 2027],
-        ["aaai-press", null],
-        ["acl-latex", null],
-        ["acm-acmsmall", null],
-        ["acm-sigconf", null],
-        ["ACSAC", 2026],
-        ["AGENT", 2027],
-        ["AgenticDev", 2026],
-        ["AGENTVERIFY", 2027],
-        ["AISec", 2026],
-        ["ASE", 2026],
-        ["ACM CCS", 2026],
-        ["EMNLP", 2026],
-        ["FSE", 2027],
-        ["ICML", 2027],
-        ["icml-style", null],
-        ["ICSE", 2027],
-        ["ICSE", 2028],
-        ["MSR", 2027],
-        ["NeurIPS", 2026],
-        ["neurips-style", null],
-        ["NLBSE", 2027],
-        ["IEEE S&P", 2027],
-      ],
+      shippedVenuesExcept("AIDC", "ieee-conference", "REALM"),
     );
   });
 });
