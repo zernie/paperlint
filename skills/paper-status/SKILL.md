@@ -4,7 +4,7 @@ description: Answer "what's the status of the paper?" in one pass — MEASURE wh
 allowed-tools: [Bash, Read, Grep, Glob]
 ---
 
-<!-- vigiles:sha256:5ecfb3138808a249 compiled from skills/paper-status/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6e99938b691306d5 compiled from skills/paper-status/SKILL.md.spec.ts -->
 
 # paper-status — state, measured before it is narrated
 
@@ -51,6 +51,7 @@ cd <paper-dir>
 bash repro/tools/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
 git status --porcelain                      # uncommitted work
 git log --oneline @{u}..HEAD                # unpushed commits
+node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js .   # what is left this cycle (paper-pipeline, "The revision plan")
 npx paperlint lint                          # every error is a blocker
 ```
 

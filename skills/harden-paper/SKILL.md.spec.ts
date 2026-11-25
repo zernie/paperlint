@@ -38,6 +38,8 @@ the author decides what to apply. "Nothing fails" is a valid result.
    again, and fix nothing. No closed review fails this item. Count its blockers (the panel's consensus
    must-fixes and the cold read's \`CANNOT PARSE\` rows) by \`status\` in the reports' frontmatter:
    \`fixed\`, waived (\`wontfix\` with a \`waived by the author\` note), \`open\`. Any \`open\` one fails.
+   With a revision plan, the blockers are its rows instead: \`node \${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>\`; anything but \`stop: met\`
+   fails this item, and its line names the rows still open (\`paper-pipeline\`, "The revision plan").
 3. **Citations and the nearest neighbour.** \`verify-citations\` ran on the current bibliography
    (\`paper/refs-checked\` warns when it did not). \`map-prior-work\`'s record exists
    (\`siblings/README.md\` and its sweep file) and names the closest match with a disposition:

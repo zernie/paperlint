@@ -58,6 +58,7 @@ cd <paper-dir>
 bash repro/tools/build-submission.sh 2>&1 | grep -Ei 'body pages|VERDICT|Overfull|undefined|anonymity'
 git status --porcelain                      # uncommitted work
 git log --oneline @{u}..HEAD                # unpushed commits
+node \${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js .   # what is left this cycle (paper-pipeline, "The revision plan")
 npx paperlint lint                          # every error is a blocker
 \`\`\`
 

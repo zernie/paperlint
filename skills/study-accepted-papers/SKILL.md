@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:d159bd885a6beed8 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2c262b64bc221a8a compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — what this venue rewards, measured on its own papers
 
@@ -101,7 +101,10 @@ quotes verbatim with page numbers.
 
 Score the paper against M1–M10 (`references/mechanisms.md`), with evidence as `file:line` in the paper
 source. Every `fail` gets an owner and either a plan or an explicit **"accept ceiling"** with the
-reason: a ceiling written down is a decision, a silent fail is a hole. Probabilities are a band, marked
+reason: a ceiling written down is a decision, a silent fail is a hole. When the paper has a
+revision plan (`paper-pipeline`, "The revision plan"), a ceiling is proposed to the author as a
+`dropped` row with `kind: "accepted-cap"`, and a lever as a finding in this run's report; neither is
+written into the plan without his yes. Probabilities are a band, marked
 as judgement, against the base rates of `references/base-rates.md`; simulated panels run hot.
 
 ## Where the results go — one home per fact

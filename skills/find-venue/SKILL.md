@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by whether
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:784a0e1bfaa6e736 compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3a2832a42e4f4dbb compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what makes a publication, then keep or switch
 
@@ -61,7 +61,8 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
    type fit, **indexed? (Y/N + where)**, double-blind, remote, selectivity, computed rank.
 2. **Keep/switch recommendation** — the top-ranked venue with the one-line reason, and (if the paper
    already has a target) an explicit **keep** or **switch** verdict against it. Note the intended
-   `extend-paper` upgrade target for later.
+   `extend-paper` upgrade target for later. After a **switch**, the paper's revision plan is for the
+   old cycle: say that it must be rewritten for the new one (`paper-pipeline`, "The revision plan").
 
 ## Rules
 - Fetch every CFP fact from the real page; never invent a deadline, page limit, or indexing status.

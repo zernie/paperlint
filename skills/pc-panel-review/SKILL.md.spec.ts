@@ -41,7 +41,10 @@ prose-only read can.
 
 ## How to run it
 
-1. **Get the venue rubric + bar** (fetch the CFP; quote the criteria). Calibrate to the *track*: a
+0. **Read the revision plan:** \`node \${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>\`, read as \`paper-pipeline\` says ("The revision plan").
+   Its \`scope:\` lines are the venue's call: hand them to every seat. A must-fix no row covers is
+   reported as a proposal, not a blocker.
+1. **Get the venue rubric + bar** (fetch the CFP for what the \`scope:\` lines do not give; quote the criteria). Calibrate to the *track*: a
    WIP/short/workshop bar rewards promise and discussion value; a full-paper/top-tier bar demands
    completeness. Do not import top-tier standards into a WIP review.
    **Then load the venue's measured bar** per \`paper-pipeline/references/venue-bar.md\`: read
