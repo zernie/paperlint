@@ -139,7 +139,11 @@ export function corpusLayoutRules(
   };
 }
 
-/** On by default, on every corpus's `papers.json` and the root `paperlint.json`. */
+/**
+ * On by default, on every corpus's `papers.json` and the root `paperlint.json`, at `warn`: a corpus
+ * folder made before `papers.json` existed is a migration to do, not a broken build. Raising it to
+ * `error` is a major release.
+ */
 export const CORPUS_LAYOUT_RULE_LEVELS: Readonly<
-  Record<"corpus/allowed-files-only", "error">
-> = { "corpus/allowed-files-only": "error" };
+  Record<"corpus/allowed-files-only", "warn">
+> = { "corpus/allowed-files-only": "warn" };
