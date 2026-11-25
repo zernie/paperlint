@@ -84,6 +84,9 @@ function shardOf(arg: string): Shard | null {
  * a threshold would turn a sound branch red. The gate stays CI's `coverage` job. It costs ~30 s
  * (166 s against 135 s on 207 test files, measured 2026-11-09), and it shows a missed branch before
  * CI does: twice on 2026-11-08 a full run failed on a branch this report names in seconds.
+ * `reportOnFailure`: vitest prints no coverage at all when any test fails, so one test that fails
+ * for the container alone (2026-11-25: `crop_quote` without PyMuPDF) hid the whole report, and the
+ * gaps it would have named reached CI (#690).
  */
 const CHANGED = "--changed";
 const CHANGED_VITEST = [
@@ -93,6 +96,7 @@ const CHANGED_VITEST = [
   "--coverage.provider=v8",
   "--coverage.reporter=text",
   "--coverage.skipFull",
+  "--coverage.reportOnFailure",
 ] as const;
 
 /** What the arguments say: the shard, `--changed` and the harness runner's own, or the argument that is no shard. */
