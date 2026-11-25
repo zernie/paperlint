@@ -3,119 +3,30 @@
  * memory beside the SHIPPED presets, so a preset edit that breaks a check shows here. Each rule has
  * both halves: the finding a planted defect produces, and the silence of a conforming source.
  */
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { sourcesCodec } from "./adapters/sources-record/index.ts";
-import { presetsDir } from "./package-dirs.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
-  cyclePortRules,
   judgeRequiredSections,
-  judgeLeftover,
   judgeStyle,
   judgeTemplate,
   otherStyles,
   otherVenues,
   FORMAT_RULE_LEVELS,
-  formatRules,
   TEX_VENUE_RULE_LEVELS,
-  texVenueRules,
 } from "./tex-venue-rules.ts";
 import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
 import { builtPaper } from "../test/recorded-fixture.ts";
 import { venuePreset } from "../test/support.ts";
-
-const VENUES = presetsDir();
-const PAPER = "/work/papers/p";
-/** What the rules read with besides the files: the presets, the LaTeX reader, the record's schema. */
-const READERS = { venuesDir: VENUES, latex: latexReader, codec: sourcesCodec };
-const shipped = Object.fromEntries(
-  readdirSync(VENUES)
-    .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
-    .map((f) => [join(VENUES, f), readFileSync(join(VENUES, f))]),
-);
-
-interface Finding {
-  readonly rule: string;
-  readonly messageId: string;
-  readonly message: string;
-  readonly line: number;
-}
-
-/** The line and 1-based column of an offset, as ESLint's text source code gives them. */
-const locOf = (src: string) => (i: number) => {
-  const before = src.slice(0, i).split("\n");
-  return { line: before.length, column: (before.at(-1) ?? "").length + 1 };
-};
-
-/**
- * Every venue-conformance rule over one `paper.tex`, the way ESLint runs them: `create`, then
- * `root`. `settings` is the paper's paperlint.json (absent: no file); `extra` more files.
- */
-function lint(
-  tex: string,
-  settings: object | undefined,
-  {
-    filename = `${PAPER}/paper.tex`,
-    extra = {},
-    raw = true,
-  }: {
-    filename?: string;
-    extra?: Record<string, string>;
-    /** false: the source code carries no `raw` (not the `.tex` language's), only `text`. */
-    raw?: boolean;
-  } = {},
-): Finding[] {
-  const files = memoryFiles({
-    ...shipped,
-    ...(settings === undefined
-      ? {}
-      : { [`${PAPER}/paperlint.json`]: JSON.stringify(settings) }),
-    ...extra,
-  });
-  const out: Finding[] = [];
-  const deps = { files, ...READERS };
-  for (const [id, rule] of [
-    ...Object.entries(texVenueRules(deps)).map(
-      ([n, r]) => [`tex/${n}`, r] as const,
-    ),
-    ...Object.entries(formatRules(deps)).map(
-      ([n, r]) => [`format/${n}`, r] as const,
-    ),
-    ...Object.entries(cyclePortRules(deps)).map(
-      ([n, r]) => [`cycle/${n}`, r] as const,
-    ),
-  ]) {
-    const visitor = rule.create({
-      filename,
-      sourceCode: {
-        text: tex,
-        ...(raw ? { raw: tex } : {}),
-        getLocFromIndex: locOf(tex),
-      },
-      report: (d) =>
-        out.push({
-          rule: id,
-          // A finding from an included file arrives as a whole message, its file at the front.
-          messageId: "messageId" in d ? d.messageId : "(message)",
-          message:
-            "messageId" in d
-              ? Object.entries(d.data ?? {}).reduce(
-                  (m, [k, v]) => m.replaceAll(`{{${k}}}`, String(v)),
-                  rule.meta.messages[d.messageId] ??
-                    `(no message ${d.messageId})`,
-                )
-              : d.message,
-          line: d.loc.start.line,
-        }),
-    });
-    visitor.root?.();
-  }
-  return out;
-}
+import {
+  lint,
+  PAPER,
+  READERS,
+  shipped,
+  VENUES,
+  type Finding,
+} from "../test/venue-rules-lint.ts";
 
 const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
@@ -1127,6 +1038,55 @@ describe("tex/venue-leftover — another venue named in the text", () => {
   });
 });
 
+describe("tex/venue-leftover — where a leftover is looked for (#552)", () => {
+  const ACM = { extends: "paperlint:acm-sigconf", kind: "research" };
+  const ASE_LINE =
+    "\\acmConference[ASE '26]{Proceedings of the 41st IEEE/ACM International Conference on Automated Software Engineering}{October 12--16, 2026}{Munich, Germany}";
+  const CITED =
+    "\\section{Introduction}\nLam~et~al.\\ (\\emph{CodeCrash}, NeurIPS 2025) report a drop.\n\\section{Conclusion}\nText.\n";
+
+  it("a family preset names no venue, so nothing is another venue: silent", () => {
+    // Guards: an ASE paper on the generic ACM template was told its own \\acmConference is a leftover.
+    const tex = paper(
+      "\\documentclass[sigconf]{acmart}",
+      `${ASE_LINE}\n${BODY}`,
+    );
+    expect(leftovers(lint(tex, ACM))).toEqual([]);
+  });
+
+  it("a venue named in the body after the first section is related work by default: silent", () => {
+    // Guards: a CCS paper citing «(CodeCrash, NeurIPS 2025)» was told it is a leftover.
+    expect(leftovers(lint(aidcPaper(`${CITED}${STATEMENT}`), AIDC))).toEqual(
+      [],
+    );
+  });
+
+  it("with `body: true` the body is read too, and the same citation is reported", () => {
+    const fs = leftovers(
+      lint(aidcPaper(`${CITED}${STATEMENT}`), AIDC, {
+        options: [{ body: true }],
+      }),
+    );
+    expect(fs.map((f) => f.line)).toEqual([5]);
+  });
+
+  it("the front matter is read whatever the option: the author block's leftover is still reported", () => {
+    // Guards: narrowing the prose scan must not lose the leftover a reviewer reads before the abstract.
+    expect(
+      leftovers(
+        lint(aidcPaper(`${INSTITUTION}\n${BODY}${STATEMENT}`), AIDC),
+      ).map((f) => f.line),
+    ).toEqual([4, 4]);
+  });
+
+  it("a venue command after the first section still counts: it states the paper's venue", () => {
+    const tex = aidcPaper(
+      `${BODY}\\acmConference[AISec '26]{AISec}{2026}{Salt Lake City}\n${STATEMENT}`,
+    );
+    expect(leftovers(lint(tex, AIDC)).length).toBeGreaterThan(0);
+  });
+});
+
 describe("tex/venue-leftover — a workshop's parent conference (`parent`) is the paper's own", () => {
   const agenticdev = (text: string) =>
     paper("\\documentclass[sigconf]{acmart}", `${text}\nText.`);
@@ -1388,43 +1348,17 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
     ).toEqual([]);
   });
 
-  it("under a family, a venue that extends it is another venue", () => {
-    // ieee-conference is on aidc's chain, so under the family aidc is ANOTHER venue.
+  it("under a family, no venue is another venue: the family names none, so it is silent", () => {
+    // Guards: «Accepted at AAAI 2026» on the generic AAAI template, and an ASE paper's own
+    // \\acmConference on the generic ACM one, were reported as leftovers (#552). A family cannot
+    // know which venue the paper is for, so it has nothing to compare a name with.
     const tex = paper(
       "\\documentclass[conference]{IEEEtran}",
       "Accepted at AIDC 2026. Formerly at AISec 2026.",
     );
     expect(
-      leftovers(lint(tex, { extends: "paperlint:ieee-conference" }))
-        .map((f) => /«(.*?)»/u.exec(f.message)?.[1])
-        .sort(),
-    ).toEqual(["AIDC", "AISec"]);
-  });
-});
-
-describe("tex/venue-leftover, judged on places the parser did not give", () => {
-  const files = memoryFiles(shipped);
-  const aidc = resolvePreset("paperlint:aidc-2026", `${PAPER}/paperlint.json`, {
-    files,
-    venuesDir: VENUES,
-  });
-  const preset = aidc.ok ? aidc.value : null;
-
-  it("a venue line with no place holds no name; a parent's name no shipped venue carries is shown as written", () => {
-    expect(preset).not.toBeNull();
-    if (preset === null) return;
-    const src = "Unlike AISec, and Gone 2025.";
-    const runs = latexReader.renderedRuns(src);
-    // The line is unplaced, so «AISec» without a year stands in prose: silent.
-    const found = judgeLeftover(
-      runs,
-      [{ kind: "unplaced" }],
-      { ...preset, parentNames: ["Gone"] },
-      [],
-    );
-    expect(found.map((f) => f.data)).toEqual([
-      { name: "Gone", other: "Gone 2025", venue: "AIDC 2026" },
-    ]);
+      leftovers(lint(tex, { extends: "paperlint:ieee-conference" })),
+    ).toEqual([]);
   });
 });
 

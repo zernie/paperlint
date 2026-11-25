@@ -6,7 +6,6 @@
   "findings": {
     "paper/allowed-files-only": 2,
     "pdf/measured": 1,
-    "tex/template": 1,
-    "tex/venue-leftover": 1
+    "tex/template": 1
   }
 }

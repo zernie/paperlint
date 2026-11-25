@@ -29,7 +29,8 @@ import { basename, dirname } from "node:path";
 import { venuesNamedBy, type NamedIn } from "./domain/venue-name.ts";
 import { editionLabel } from "./domain/edition.ts";
 import { folderNamesOf, paperPreset, type Preset } from "./presets.ts";
-import { otherVenues, type OtherVenue } from "./tex-venue-rules.ts";
+import { otherVenues } from "./tex-venue-rules.ts";
+import type { OtherVenue } from "./venue-leftover.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
 /** The file the rule reports on: one per paper folder. */
