@@ -4,7 +4,7 @@ description: "Use when asking \"is this paper actually ready to submit?\" / \"wh
 allowed-tools: [Read, Write, Grep, Glob, Bash, Skill]
 ---
 
-<!-- vigiles:sha256:b29039fb9780ada5 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7fd6cca5d1633e4b compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the submit checklist
 
@@ -27,8 +27,10 @@ the author decides what to apply. "Nothing fails" is a valid result.
    again, and fix nothing. No closed review fails this item. Count its blockers (the panel's consensus
    must-fixes and the cold read's `CANNOT PARSE` rows) by `status` in the reports' frontmatter:
    `fixed`, waived (`wontfix` with a `waived by the author` note), `open`. Any `open` one fails.
-   With a revision plan, the blockers are its rows instead: `node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>`; anything but `stop: met`
-   fails this item, and its line names the rows still open (`paper-pipeline`, "The revision plan").
+   With a revision plan, the blockers are its rows instead: `node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/revision-plan.js <paper-dir>`, read as
+   `paper-pipeline` says ("The revision plan"). A row its `stop:` line names `open` fails this item; a row it
+   leaves to lint passes when item 1's run reports nothing for the rule on the row; `stop: unknown` or
+   `stop: unreadable` fails.
 3. **Citations and the nearest neighbour.** `verify-citations` ran on the current bibliography
    (`paper/refs-checked` warns when it did not). `map-prior-work`'s record exists
    (`siblings/README.md` and its sweep file) and names the closest match with a disposition:
