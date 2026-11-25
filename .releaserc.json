@@ -8,6 +8,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "analyzeCommitsCmd": "node scripts/release-type.ts ${lastRelease.gitTag}"
+      }
+    ],
+    [
       "@semantic-release/release-notes-generator",
       {
         "preset": "conventionalcommits"
