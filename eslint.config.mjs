@@ -147,9 +147,6 @@ const RATCHET = {
   "skills/assess-novelty/scripts/check_novelty_coverage.test.ts": {
     "max-lines-per-function": 131,
   },
-  "skills/assess-novelty/scripts/crop_quote.test.ts": {
-    "max-lines-per-function": 96,
-  },
   "skills/assess-novelty/scripts/novelty_candidates.test.ts": {
     "max-lines-per-function": 179,
   },

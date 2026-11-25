@@ -98,11 +98,6 @@ jobs:
         run: npm ci
         timeout-minutes: 5
 
-      # skills/assess-novelty/scripts/crop_quote.py reads PDFs with PyMuPDF (python3 ships on the runners).
-      - name: PyMuPDF for the novelty scripts
-        run: python3 -m pip install --break-system-packages pymupdf
-        timeout-minutes: 3
-
       # Harnesses. `--min=1` is inside the script: it refuses a run where NOTHING matched.
       #
       # 🔴 WHAT IT DOES NOT DO, contrary to what was written here before 17.09: it does NOT protect
@@ -367,11 +362,6 @@ jobs:
         run: npm ci
         timeout-minutes: 8
 
-      # skills/assess-novelty/scripts/crop_quote.py reads PDFs with PyMuPDF (python3 ships on the runners).
-      - name: PyMuPDF for the novelty scripts
-        run: python3 -m pip install --break-system-packages pymupdf
-        timeout-minutes: 3
-
       # The cache key is what the install depends on: the runner and the declared packages (every
       # venue profile, the base set included). NOT the TeX Live year, and not the calendar year that
       # used to stand in for it: the calendar says nothing about CTAN's release, and a restored tree
@@ -444,11 +434,6 @@ jobs:
       - name: npm ci
         run: npm ci
         timeout-minutes: 8
-
-      # skills/assess-novelty/scripts/crop_quote.py reads PDFs with PyMuPDF (python3 ships on the runners).
-      - name: PyMuPDF for the novelty scripts
-        run: python3 -m pip install --break-system-packages pymupdf
-        timeout-minutes: 3
 
       # Issue #9's distinction: prints BOTH spellings of the temp root. If they match, this machine
       # is not the platform the macOS cell exists for, and green below says nothing about it.

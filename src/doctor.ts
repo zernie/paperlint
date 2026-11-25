@@ -96,8 +96,7 @@ export const PROGRAMS: readonly Program[] = [
     from: "your system",
     without:
       "the analysis and report scripts and the novelty checks (assess-novelty) do not start",
-    install:
-      "apt-get install -y python3; crop_quote.py also needs PyMuPDF: pip install pymupdf",
+    install: "apt-get install -y python3",
   },
 ];
 

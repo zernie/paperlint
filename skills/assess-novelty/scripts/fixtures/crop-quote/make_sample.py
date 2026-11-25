@@ -1,4 +1,4 @@
-"""Writes sample.pdf, the crop_quote.harness.ts fixture. Run once; the PDF is committed so the test needs no reportlab.
+"""Writes sample.pdf, the crop_quote.test.ts fixture. Run once; the PDF is committed so the test needs no reportlab.
 
 Page 1 states a sentence the way an abstract does; page 2 repeats it in the body (the case where the first hit
 is the wrong one), holds one sentence found nowhere else, and splits a word across a line with a hyphen.

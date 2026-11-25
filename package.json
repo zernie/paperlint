@@ -52,7 +52,16 @@
     "vigiles": "^49.1.0",
     "zod": "^4.6.5"
   },
+  "peerDependencies": {
+    "@napi-rs/canvas": "^1.2.1"
+  },
+  "peerDependenciesMeta": {
+    "@napi-rs/canvas": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.2.1",
     "@semantic-release/commit-analyzer": "13.0.1",
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/release-notes-generator": "14.1.1",

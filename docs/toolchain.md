@@ -17,7 +17,7 @@ after deciding to use the tool, not before.
 | `checkcites`         | TeX Live (`paperlint toolchain`) | your own citation checks             | nothing asks whether a bibliography entry is uncited                  |
 | `latexdiff`          | TeX Live (`paperlint toolchain`) | `paperlint versions diff`            | the command exits 2 with one line saying so                           |
 | `java`               | any JRE (21 works)               | TeXtidote (`ensure-checkers.sh`)     | TeXtidote does not run, and **nothing else spell-checks the text**    |
-| `python3`            | your system                      | assess-novelty, the analysis scripts | those scripts do not start (`crop_quote.py` also needs `pymupdf`)     |
+| `python3`            | your system                      | assess-novelty, the analysis scripts | those scripts do not start                                            |
 | `tlmgr`              | TeX Live                         | the TeX installer itself             | you cannot add a TeX package                                          |
 | `banal`              | HotCRP (`paperlint toolchain`)   | `paperlint build`, extract-pdf-facts | page size, columns and font sizes are `null` in the facts file        |
 | `perl`               | your system (macOS has it)       | banal                                | banal cannot run — the same `null`, and `paperlint toolchain` refuses |

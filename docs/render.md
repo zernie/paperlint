@@ -68,12 +68,21 @@ or any undefined reference, citation or control sequence. It warns on a literal 
 
 ## Pages as images
 
-Reading the pages needs [PyMuPDF](https://pymupdf.readthedocs.io/) (`pip install pymupdf`):
+Drawing the pages needs [`@napi-rs/canvas`](https://www.npmjs.com/package/@napi-rs/canvas)
+(`npm install --save-dev @napi-rs/canvas`); the PDF is read by `unpdf`, which paperlint already
+installs (if it does not resolve from your project root, install it the same way). From the project root:
 
 ```sh
-python3 -c "import fitz; d=fitz.open('paper.pdf'); \
-  [d[i].get_pixmap(dpi=200).save(f'p{i+1}.png') for i in range(d.page_count)]; \
-  print('rendered', d.page_count)"
+node --input-type=module -e "
+import { readFileSync, writeFileSync } from 'node:fs';
+import { getDocumentProxy, renderPageAsImage } from 'unpdf';
+const data = readFileSync('paper.pdf');
+const { numPages } = await getDocumentProxy(new Uint8Array(data));
+for (let p = 1; p <= numPages; p++)
+  writeFileSync('p' + p + '.png', Buffer.from(await renderPageAsImage(new Uint8Array(data), p,
+    { canvasImport: () => import('@napi-rs/canvas'), scale: 200 / 72 })));
+console.log('rendered', numPages);
+"
 ```
 
 200 DPI reads on a phone; 150 is a quick preview, 300 a print check. Write the images outside the
