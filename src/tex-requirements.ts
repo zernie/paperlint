@@ -34,16 +34,18 @@ import {
   type VenueTalk,
   type VenueTalkJson,
 } from "./domain/talk.ts";
+import {
+  submissionFieldsOf,
+  type SubmissionFieldsJson,
+} from "./domain/preset-submission-fields.ts";
+import {
+  scopeOf,
+  type VenueScope,
+  type VenueScopeJson,
+} from "./domain/venue-scope.ts";
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
-import {
-  RESERVED_FIELD_KEYS,
-  reservedKey,
-  declareField,
-  type FieldDeclaration,
-  type FieldJson,
-  type VenueFields,
-} from "./domain/submission-fields.ts";
+import type { VenueFields } from "./domain/submission-fields.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -231,6 +233,8 @@ export interface PresetFile {
   readonly registerAnchors: readonly RegisterAnchor[] | null;
   /** What the venue asks a presenter to send; null when the file has no `talk` block. */
   readonly talk: VenueTalk | null;
+  /** What the call says the venue is for, verbatim; null when the file records none. */
+  readonly scope: VenueScope | null;
   /** Where the venue takes submissions (`paperlint submission`); null when the file does not say. */
   readonly portal: VenuePortal | null;
   /** The edition's deadlines as they were read; null when the file names none (a child's list replaces its parent's). */
@@ -315,43 +319,7 @@ interface PresetBodyJson {
   readonly portal?: VenuePortal;
   readonly deadlines?: readonly Reading[];
   readonly submission_fields?: SubmissionFieldsJson;
-}
-
-/** A preset's `submission_fields` after the schema accepted it. */
-interface SubmissionFieldsJson {
-  readonly source: VenueFields["source"];
-  readonly url: string;
-  readonly read: string;
-  readonly fields: Readonly<Record<string, FieldJson>>;
-}
-
-/** A preset's `submission_fields`, or null when it records none; a reserved field name, or a field that contradicts its kind, is refused. */
-function submissionFieldsOf(
-  j: SubmissionFieldsJson | undefined,
-  file: string,
-): VenueFields | null {
-  if (j === undefined) return null;
-  const reserved = reservedKey(Object.keys(j.fields));
-  if (reserved !== null)
-    throw new Error(
-      `${file}: "submission_fields" names "${reserved}", which paperlint sends itself (${RESERVED_FIELD_KEYS.join(", ")}) — a field of that name would overwrite it`,
-    );
-  const declared = Object.entries(j.fields).map(
-    ([key, f]) => [key, declareField(f)] as const,
-  );
-  const fields: readonly (readonly [string, FieldDeclaration])[] =
-    declared.flatMap(([key, d]) => (d.ok ? [[key, d.value] as const] : []));
-  const errors = declared.flatMap(([key, d]) =>
-    d.ok ? [] : [`field "${key}": ${d.error}`],
-  );
-  if (errors.length > 0)
-    throw new Error(`${file}: "submission_fields" ${errors.join("; ")}`);
-  return {
-    source: j.source,
-    url: j.url,
-    read: j.read,
-    fields: Object.fromEntries(fields),
-  };
+  readonly scope?: VenueScopeJson;
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -565,6 +533,7 @@ export function parsePreset(
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
+    scope: scopeOf(j.scope),
     ...portalBlocks(j, file),
   };
 }

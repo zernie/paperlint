@@ -271,13 +271,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, langcode-2027, msr-2027, naacl-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
+      /acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, langcode-2027, msr-2027, naacl-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     [
       "paperlint.json that is not JSON",

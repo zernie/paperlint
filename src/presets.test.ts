@@ -11,6 +11,7 @@ import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { frozenText } from "../test/frozen-presets.ts";
+import { SHIPPED_VENUES, shippedVenuesExcept } from "../test/shipped-venues.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { parsePreset } from "./tex-requirements.ts";
 import {
@@ -471,10 +472,20 @@ const DECLARED = {
     url: "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
   },
   "ieee-conference.jsonc": { type: "family" },
+  "langcode-2027.jsonc": {
+    type: "venue",
+    name: "LangCode",
+    url: "https://langcode2027.github.io/",
+  },
   "msr-2027.jsonc": {
     type: "venue",
     name: "MSR",
     url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
+  },
+  "naacl-2027.jsonc": {
+    type: "venue",
+    name: "NAACL",
+    url: "https://2027.naacl.org/calls/main_conference_papers/",
   },
   "neurips-style.jsonc": { type: "family" },
   "neurips-2026.jsonc": {
@@ -767,7 +778,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /aaai-2027, aaai-press, acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, msr-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
+      /aaai-2027, aaai-press, acl-latex, acm-acmsmall, acm-sigconf, acsac-2026, agent-2027, agenticdev-2026, agentverify-2027, aidc-2026, aisec-2026, ase-2026, ccs-2026, emnlp-2026, fse-2027, icml-2027, icml-style, icse-2027, icse-2028, ieee-conference, langcode-2027, msr-2027, naacl-2027, neurips-2026, neurips-style, nlbse-2027, realm-2026, sp-2027/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -1062,34 +1073,9 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
   it("every shipped preset, by its label and the names along its chain", () => {
     const names = shippedVenueNames(deps());
     // A venue is labelled by its `name`, a family by its file name.
-    expect(names.map((n) => n.label)).toEqual([
-      "AAAI",
-      "aaai-press",
-      "acl-latex",
-      "acm-acmsmall",
-      "acm-sigconf",
-      "ACSAC",
-      "AGENT",
-      "AgenticDev",
-      "AGENTVERIFY",
-      "AIDC",
-      "AISec",
-      "ASE",
-      "ACM CCS",
-      "EMNLP",
-      "FSE",
-      "ICML",
-      "icml-style",
-      "ICSE",
-      "ICSE",
-      "ieee-conference",
-      "MSR",
-      "NeurIPS",
-      "neurips-style",
-      "NLBSE",
-      "REALM",
-      "IEEE S&P",
-    ]);
+    expect(names.map((n) => n.label)).toEqual(
+      SHIPPED_VENUES.map(([label]) => label),
+    );
     // AISec's parent conference is its `parent`, not an alias: ACM CCS is named by ccs alone.
     expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(["AISec"]);
     // The year is the id's: two editions of one series share a name and differ by year.
@@ -1113,33 +1099,7 @@ describe("shippedVenueNames — what does not resolve", () => {
     );
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
-    ).toEqual([
-      "AAAI",
-      "aaai-press",
-      "acl-latex",
-      "acm-acmsmall",
-      "acm-sigconf",
-      "ACSAC",
-      "AGENT",
-      "AgenticDev",
-      "AGENTVERIFY",
-      "AIDC",
-      "AISec",
-      "ASE",
-      "ACM CCS",
-      "EMNLP",
-      "FSE",
-      "ICML",
-      "icml-style",
-      "ICSE",
-      "ICSE",
-      "ieee-conference",
-      "MSR",
-      "NeurIPS",
-      "neurips-style",
-      "NLBSE",
-      "IEEE S&P",
-    ]);
+    ).toEqual(shippedVenuesExcept("REALM").map(([label]) => label));
   });
 });
 
@@ -1222,6 +1182,7 @@ describe("a workshop's parent is the edition of its own year", () => {
       ["agentverify-2027", "paperlint:icse-2027"],
       ["aidc-2026", "paperlint:acsac-2026"],
       ["aisec-2026", "paperlint:ccs-2026"],
+      ["langcode-2027", "paperlint:naacl-2027"],
       ["nlbse-2027", "paperlint:icse-2027"],
       ["realm-2026", "paperlint:emnlp-2026"],
     ]);

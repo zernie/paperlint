@@ -184,7 +184,8 @@ describe("venueGrid", () => {
     expect(nested[0]).toContainEqual(["ASE 2026", ["AgenticDev"]]);
     expect(nested[1]).toContainEqual(["ACM CCS 2026", ["AISec"]]);
     expect(nested[1]).toContainEqual(["ACSAC 2026", ["AIDC"]]);
-    expect(nested[2]).toEqual([["EMNLP 2026", ["REALM"]]]);
+    expect(nested[2]).toContainEqual(["EMNLP 2026", ["REALM"]]);
+    expect(nested[2]).toContainEqual(["NAACL 2027", ["LangCode"]]);
     const agent = grid.fields[0]?.conferences
       .flatMap((c) => c.workshops)
       .find((w) => w.id === "agent-2027");

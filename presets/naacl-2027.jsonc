@@ -1,0 +1,19 @@
+// NAACL 2027 (the Annual Conference of the Nations of the Americas Chapter of the ACL) — a MINIMAL
+// venue preset: the conference LangCode 2027 is held at, so the workshop can name it as its
+// `parent`. It carries the edition's names and its template family, and no page limit. Its card:
+// `naacl-2027.md`.
+//
+// Verbatim from https://2027.naacl.org/calls/main_conference_papers/ (fetched 2026-11-25): «NAACL
+// 2027 will take place in San Francisco, California, USA, from June 1 to June 5, 2027.», «Both long
+// and short paper submissions should follow all of the ARR submission requirements and policies,
+// including: Long Papers (8 pages) and Short Papers (4 pages)».
+{
+  "type": "venue",
+  "name": "NAACL",
+  // The call quoted above.
+  "url": "https://2027.naacl.org/calls/main_conference_papers/",
+  "extends": "paperlint:acl-latex",
+
+  // What the conference is called in a paper's text (tex/venue-leftover).
+  "aliases": ["NAACL"],
+}

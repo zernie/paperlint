@@ -1,0 +1,106 @@
+// LangCode 2027 (the First Language and Code Workshop), a workshop at NAACL 2027 — a VENUE preset
+// over the ACL family. The class line and the TeX packages come from acl-latex.jsonc; this file adds
+// what LangCode's call sets. Its card, in prose: `langcode-2027.md` beside this file.
+//
+// Verbatim from https://langcode2027.github.io/submission/ (fetched 2026-11-25):
+//   «Long (8 pages), short (4 pages), or a system paper for a shared task (4 pages). References don't count.»
+//   «Use the official template as is. Don't change margins, fonts, or spacing.»
+//   «Add a Limitations section — Place it after the conclusion. It's required, and it doesn't count toward your pages.»
+//   «Make it anonymous — Remove names and affiliations, cite your own work in the third person, and anonymize code links.»
+//   «Not counted toward the limit: references, the required Limitations section, the optional
+//    Ethical Considerations section, and appendices.»
+//   «Subject to change. Deadlines are 11:59 PM UTC-12.»
+// and from https://langcode2027.github.io/ (same day): «Co-located with NAACL 2027», «All accepted
+// papers are archival and appear in the LangCode 2027 proceedings in the ACL Anthology.»
+{
+  "type": "venue",
+  "name": "LangCode",
+  // The call quoted above.
+  "url": "https://langcode2027.github.io/",
+  "extends": "paperlint:acl-latex",
+
+  // A workshop (`"workshop": true`): the schema then requires its `parent`, the edition of the
+  // conference it is held at, and paperlint refuses a parent of another year.
+  "workshop": true,
+
+  // The conference it is held at: «Co-located with NAACL 2027» (the call above).
+  "parent": "paperlint:naacl-2027",
+
+  // «Make it anonymous — Remove names and affiliations …» (the submission page above).
+  "blind": true,
+
+  // «Add a Limitations section … It's required» (the submission page above). No `position`: the
+  // call puts it «after the conclusion», and the optional Ethical Considerations section may follow
+  // it, so it need not be the last section.
+  "required_sections": [{ "title": "Limitations" }],
+
+  // What the call says the workshop is for: its headline, and its five areas with their topics
+  // (https://langcode2027.github.io/, «We invite submissions across five areas, including but not
+  // limited to:»). Each topic is written «<area>: <topic>», the area's heading joined to its line.
+  "scope": {
+    "url": "https://langcode2027.github.io/",
+    "read": "2026-11-25",
+    "sentences": [
+      "Towards secure, trustworthy, robust, and multilingual code generation.",
+      "We invite submissions across five areas, including but not limited to:",
+    ],
+    "topics": [
+      "Secure Code Generation: Vulnerability-aware training and decoding",
+      "Secure Code Generation: Guardrails: input filtering, output auditing, policy enforcement",
+      "Secure Code Generation: Adversarial attacks: jailbreaks, prompt injection, obfuscation",
+      "Secure Code Generation: Safety of agentic coding systems",
+      "Trustworthiness: Explainability and interpretability of code models",
+      "Trustworthiness: Calibration, uncertainty, and hallucination",
+      "Trustworthiness: Contamination-aware benchmarks and evaluation",
+      "Trustworthiness: Human–CodeLLM and agent alignment",
+      "Robustness: Paraphrasing, dialectal variation, and code-mixed prompts",
+      "Robustness: Low-resource, emerging, legacy, and domain-specific languages",
+      "Robustness: Adaptation to new languages and distribution shift",
+      "Multilinguality: Generation, explanation, and documentation from non-English prompts",
+      "Multilinguality: Cross-lingual transfer to new natural languages",
+      "Multilinguality: Data curation for underrepresented languages",
+      "Applications: Efficient code models for low-compute settings",
+      "Applications: Deploying code models across languages and communities",
+      "Applications: CodeLLMs in computing education",
+    ],
+  },
+
+  // The call's dates, AoE («11:59 PM UTC-12»), in UTC at the end of the AoE day. No portal
+  // reading: the call names OpenReview, and no reading of its deadline was taken.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2027-02-06T11:59:59Z",
+      "source": "call",
+      "url": "https://langcode2027.github.io/submission/",
+      "read": "2026-11-25",
+    },
+    {
+      "what": "notification",
+      "at": "2027-03-27T11:59:59Z",
+      "source": "call",
+      "url": "https://langcode2027.github.io/submission/",
+      "read": "2026-11-25",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2027-04-17T11:59:59Z",
+      "source": "call",
+      "url": "https://langcode2027.github.io/submission/",
+      "read": "2026-11-25",
+    },
+  ],
+
+  "format": {
+    // 🔴 THE PAGE LIMITS ARE NOT GATED. The limit counts content only and leaves out «the required
+    // Limitations section, the optional Ethical Considerations section», which stand between the
+    // conclusion and the references. format/page-limit's body count runs to the references or the
+    // appendix, so it would count them as body and report a paper inside the limit (the same
+    // measurement as realm-2026.jsonc). The kinds exist so a paper can name its own.
+    "kinds": {
+      "long": {},
+      "short": {},
+      "system": {},
+    },
+  },
+}
