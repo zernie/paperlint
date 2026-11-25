@@ -61,6 +61,7 @@ creates one.
     ├── CLAIMS.md                      ← the claims ledger
     ├── NOTES.md                       ← each number in the paper → the data it comes from
     ├── SUBMIT-CHECKLIST.md            ← the venue's format and submission mechanics
+    ├── revision-plan.json             ← the current cycle's bar and the closed list of what remains
     ├── .gitignore                     ← keeps the build's byproducts out of git
     ├── paper.pdf                      ← the built PDF
     ├── *.tex *.bib *.cls *.sty *.bst  ← what TeX and bibtex look up beside paper.tex
