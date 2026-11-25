@@ -1,6 +1,6 @@
 # corpus/allowed-files-only
 
-**Level:** error, on by default · **Reads:** the listing of each venue corpus's top · **Reported
+**Level:** warn, on by default · **Reads:** the listing of each venue corpus's top · **Reported
 on:** the corpus's `papers.json`, first line, once per stray entry; the project's root
 `paperlint.json`, first line, once per corpus that stores copies without `papers.json`
 
@@ -51,7 +51,8 @@ name, a page saved beside it, or notes on one paper at the top are files nobody 
 of. A corpus that stores copies with no record is one where nobody can say what each file is a copy
 of, or whether its licence lets the project keep it, and [`corpus/record`](record.md) has no file to
 read. It is on by default because this holds for every corpus whatever the venue; it is silent in a
-project with no `venues/`.
+project with no `venues/`. It warns rather than fails: a corpus folder made before `papers.json`
+existed is a migration to do, not a broken build.
 
 ## Examples
 
@@ -59,14 +60,14 @@ Failing: a note at the top of a corpus, and PDFs kept with no record.
 
 ```text
 papers/venues/agent/papers.json
-  1:1  error  `venues/agent/notes.md` is not one of the names a venue corpus holds. Where it goes:
-              MANIFEST.md when it is a caveat about the whole corpus; deep-reads/<key>.md when it is
-              about one paper.  corpus/allowed-files-only
+  1:1  warning  `venues/agent/notes.md` is not one of the names a venue corpus holds. Where it goes:
+                MANIFEST.md when it is a caveat about the whole corpus; deep-reads/<key>.md when it is
+                about one paper.  corpus/allowed-files-only
 
 paperlint.json
-  1:1  error  `papers/venues/other/` stores copies in pdf/ or text/ and has no papers.json, so nothing
-              records which paper each file is a copy of, or under which licence it is kept.
-              corpus/allowed-files-only
+  1:1  warning  `papers/venues/other/` stores copies in pdf/ or text/ and has no papers.json, so nothing
+                records which paper each file is a copy of, or under which licence it is kept.
+                corpus/allowed-files-only
 ```
 
 Passing: the seven names, the optional ones left out or not.

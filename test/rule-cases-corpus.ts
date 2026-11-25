@@ -105,7 +105,7 @@ export const CORPUS_CASES: Readonly<Record<string, RuleCases>> = {
         "papers/venues/agent/notes.md": "# notes\n",
       }),
       file: RECORD,
-      severity: 2,
+      severity: 1,
       line: 1,
     },
     silent: project({
