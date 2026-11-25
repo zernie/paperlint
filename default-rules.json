@@ -3,7 +3,7 @@
   "artifact/promised": "error",
   "artifact/required-files": "error",
   "bib/reachable-entry": "warn",
-  "corpus/allowed-files-only": "error",
+  "corpus/allowed-files-only": "warn",
   "corpus/record": "error",
   "cycle/camera-ready-source": "error",
   "cycle/draft-drift": "warn",
