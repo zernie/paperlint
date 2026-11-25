@@ -15,3 +15,4 @@ AGENTS.md text eol=lf linguist-generated
 .agents/skills/add-venue/SKILL.md text eol=lf linguist-generated
 # Written by `npm run schema:venue-corpus` from the record's parser: not hand-written lines.
 skills/study-accepted-papers/papers.schema.json linguist-generated
+skills/paper-pipeline/revision-plan.schema.json linguist-generated

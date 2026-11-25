@@ -43,6 +43,7 @@ describe("judgeLayout — silent on the whole allowed set", () => {
         "CLAIMS.md",
         "NOTES.md",
         "SUBMIT-CHECKLIST.md",
+        "revision-plan.json",
         ".gitignore",
         "paper.pdf",
         "numbers.tex",

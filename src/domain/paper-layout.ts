@@ -90,6 +90,10 @@ export const ROOT_FILE_NOTES: readonly Noted[] = [
     name: "SUBMIT-CHECKLIST.md",
     note: "the venue's format and submission mechanics",
   },
+  {
+    name: "revision-plan.json",
+    note: "the current cycle's bar and the closed list of what remains",
+  },
   { name: ".gitignore", note: "keeps the build's byproducts out of git" },
   { name: "paper.pdf", note: "the built PDF" },
 ];
