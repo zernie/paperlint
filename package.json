@@ -20,6 +20,7 @@
     "check": "node scripts/check.ts",
     "pipeline": "node scripts/pipeline.ts",
     "refresh-deadlines": "node --conditions=paperlint-source scripts/refresh-deadlines/main.ts",
+    "schema:revision-plan": "node --conditions=paperlint-source scripts/revision-plan-schema.ts skills/paper-pipeline/revision-plan.schema.json",
     "schema:venue-corpus": "node --conditions=paperlint-source scripts/venue-corpus-schema.ts skills/study-accepted-papers/papers.schema.json",
     "sync:skills": "node scripts/sync-skills.ts",
     "fmt": "prettier --write .",
