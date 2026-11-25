@@ -387,6 +387,62 @@ deadlines from its call, `"source": "call"`, and re-read the call yourself.
 deadlines in order, the evidence on disk — and gives the same answer tomorrow for the same files.
 How many days are left is a status view's or a calendar's question, not a gate's.
 
+## A paper's `revision-plan.json`: what is left before submitting
+
+A paper may keep a `revision-plan.json` in its folder: for the current cycle, which accepted papers it
+is held against (`bar`), whether new evidence is still being gathered (`measurement`), and the closed
+list of what remains before it is submitted (`remaining`). "Done" is that list: a review finding outside
+it is a proposal until the author adds a row
+([#502](https://github.com/zernie/paperlint/issues/502)).
+
+```json
+{
+  "cycle": "langcode-2027",
+  "written": "2026-11-25",
+  "bar": {
+    "kind": "none",
+    "why": "a first edition: no accepted papers to read yet"
+  },
+  "measurement": { "kind": "open" },
+  "remaining": [
+    {
+      "id": "R1",
+      "what": "a Limitations section after the conclusion",
+      "from": { "kind": "venue" },
+      "added": "2026-11-25",
+      "state": "by-rule",
+      "rule": "tex/required-section"
+    },
+    {
+      "id": "R2",
+      "what": "a second model family",
+      "from": { "kind": "author" },
+      "added": "2026-11-26",
+      "state": "dropped",
+      "reason": "out of budget before the deadline; the threats section says so",
+      "kind": "accepted-cap"
+    }
+  ]
+}
+```
+
+| field         | holds                                                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cycle`       | the cycle the plan is for, as `cycles[].id` in the paper's `paperlint.json` names it                                                                                                                                                                                                              |
+| `written`     | the day the plan was written                                                                                                                                                                                                                                                                      |
+| `bar`         | `corpus` (a venue corpus's `series` and `editions`), `proxy` (another venue's corpus `series`, and what it `stands_in_for`), or `none` with `why`                                                                                                                                                 |
+| `measurement` | `open`, or `enough` with `since` and the paper's `evidence` file                                                                                                                                                                                                                                  |
+| `remaining`   | the rows: each with `id`, `what`, `from` (`author`, `venue`, a review `finding` by `file` and id, or `prior-reviews` of a `cycle`), `added`, and a `state`: `todo`, `doing`, `done` with `evidence`, `dropped` with `reason` and `kind` (`not-doing` or `accepted-cap`), or `by-rule` with `rule` |
+
+Every object is strict, so a misspelt key is an error, not a field nobody reads. A path names a file
+inside the paper folder: never absolute and never through `..`. The fields, their values and which
+are required are the JSON Schema
+[`skills/paper-pipeline/revision-plan.schema.json`](../skills/paper-pipeline/revision-plan.schema.json),
+generated from the parser (`src/adapters/revision-plan/index.ts`; `npm run schema:revision-plan`
+rewrites it, and a test fails when it is stale): point an editor at it for completion. A schema
+cannot say that each row's id is unique, that the cycle is the current one, or that a named file
+exists. No rule reads the file yet.
+
 ## Records in frontmatter, checked by shipped JSON Schemas
 
 Two kinds of file under a paper keep a record in their YAML frontmatter, and paperlint validates
