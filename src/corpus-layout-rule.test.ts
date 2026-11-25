@@ -113,8 +113,10 @@ describe("corpus/allowed-files-only: a corpus that stores copies with no papers.
       "papers/venues/kept/papers.json": EMPTY.replace("agent", "kept"),
       "papers/venues/kept/pdf/.gitkeep": "",
     });
+    // Guards: a corpus folder made before papers.json existed warns and never fails the build (v20.6.0
+    // shipped this rule at error in a minor release, which turned such a consumer red).
     expect({ code: r.code, found: r.found }).toEqual({
-      code: 1,
+      code: 0,
       found: [
         ["paperlint.json", 1, "papers/venues/agent/"],
         ["paperlint.json", 1, "papers/venues/other/"],
