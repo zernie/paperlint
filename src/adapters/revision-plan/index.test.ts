@@ -67,7 +67,8 @@ const DEFECTS: readonly (readonly [string, string, readonly unknown[]])[] = [
   [
     "a corpus bar with no edition",
     planWith({ bar: { kind: "corpus", series: "agent", editions: [] } }),
-    ["bar", "editions"],
+    // The first edition is the one missing: `editions` is a tuple with a rest element.
+    ["bar", "editions", 0],
   ],
   ["no bar, without why", planWith({ bar: { kind: "none" } }), ["bar", "why"]],
   [

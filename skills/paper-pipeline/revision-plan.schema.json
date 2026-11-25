@@ -25,13 +25,20 @@
               "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
             },
             "editions": {
-              "minItems": 1,
               "type": "array",
+              "prefixItems": [
+                {
+                  "type": "integer",
+                  "minimum": 1900,
+                  "maximum": 2999
+                }
+              ],
               "items": {
                 "type": "integer",
                 "minimum": 1900,
                 "maximum": 2999
-              }
+              },
+              "minItems": 1
             }
           },
           "required": [

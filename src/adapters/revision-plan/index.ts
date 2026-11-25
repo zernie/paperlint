@@ -64,6 +64,9 @@ const oneOf = <
     error: `"${key}" is one of ${tags.map((t) => `"${t}"`).join(", ")}`,
   });
 
+/** A year a venue corpus covers. */
+const edition = z.int().min(1900).max(2999);
+
 const bar = oneOf(
   "kind",
   ["corpus", "proxy", "none"],
@@ -71,9 +74,11 @@ const bar = oneOf(
     z.strictObject({
       kind: z.literal("corpus"),
       series,
-      editions: z
-        .array(z.int().min(1900).max(2999))
-        .nonempty("at least one edition the corpus covers"),
+      // A tuple with a rest element, not `.array().nonempty()`: zod 4 infers the latter as
+      // `number[]`, which the domain's `[number, ...number[]]` refuses.
+      editions: z.tuple([edition], edition, {
+        error: "at least one edition the corpus covers",
+      }),
     }),
     z.strictObject({
       kind: z.literal("proxy"),
