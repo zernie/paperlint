@@ -180,11 +180,11 @@ it("config is assembled, and consumer data gets through", async () => {
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
     "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
-    Array.isArray(cfg) && ruleBlocks(cfg).length === 5,
+    Array.isArray(cfg) && ruleBlocks(cfg).length === 6,
   );
   check(
     "with a LaTeX language two blocks are added: paper.tex, and the files it includes",
-    ruleBlocks(buildConfig({}, {})).length === 7,
+    ruleBlocks(buildConfig({}, {})).length === 8,
   );
   check(
     "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",

@@ -53,9 +53,17 @@ export const WRITING_SET: readonly string[] = [
   "tex/max-caption-words",
 ];
 
+/**
+ * `paperlint:revision-plan` — the rules that read a paper's `revision-plan.json` (#502). A plan is a
+ * way of working the author chooses, so its rules are off until the author, or the skill that writes
+ * the plan, turns the set on.
+ */
+export const REVISION_PLAN_SET: readonly string[] = ["revision-plan/record"];
+
 /** Every set, by the name written in `rules`. */
 export const RULE_SETS: ReadonlyMap<string, readonly string[]> = new Map([
   [`${SET_PREFIX}writing`, WRITING_SET],
+  [`${SET_PREFIX}revision-plan`, REVISION_PLAN_SET],
 ]);
 
 /** The members of the set `name`, or null when `name` names no set. */

@@ -51,3 +51,10 @@ export const PLAN = {
 /** A plan as its file holds it: indented, one field per line, so a finding's line names its field. */
 export const planText = (plan: unknown = PLAN): string =>
   `${JSON.stringify(plan, null, 2)}\n`;
+
+/** The line of `text` holding the `nth` occurrence of `needle`, counted from 1; 0 when there is none. */
+export const lineOf = (text: string, needle: string, nth = 1): number =>
+  text
+    .split("\n")
+    .flatMap((l, i) => (l.includes(needle) ? [i + 1] : []))
+    .at(nth - 1) ?? 0;

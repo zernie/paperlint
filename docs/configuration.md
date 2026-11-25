@@ -441,7 +441,8 @@ are required are the JSON Schema
 generated from the parser (`src/adapters/revision-plan/index.ts`; `npm run schema:revision-plan`
 rewrites it, and a test fails when it is stale): point an editor at it for completion. A schema
 cannot say that each row's id is unique, that a path stays inside the paper folder, that the cycle
-is the current one, or that a named file exists. No rule reads the file yet.
+is the current one, or that a named file exists. [`revision-plan/record`](rules/revision-plan/record.md),
+in the opt-in set `paperlint:revision-plan`, reports every field that breaks the shape, at that field.
 
 ## Records in frontmatter, checked by shipped JSON Schemas
 

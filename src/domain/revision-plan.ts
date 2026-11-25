@@ -125,3 +125,7 @@ export interface PlanProblem {
 export type ParsedPlan =
   | { readonly ok: true; readonly plan: RevisionPlan }
   | { readonly ok: false; readonly problems: readonly PlanProblem[] };
+
+/** A problem as the one line `revision-plan/record` reports at its field. Pure. */
+export const planProblemText = (p: PlanProblem): string =>
+  `\`${p.path.length === 0 ? "(top)" : p.path.join(".")}\`: ${p.message}. What to do: correct the field; the fields are in the JSON Schema \`revision-plan.schema.json\` that \`paper-pipeline\` ships`;

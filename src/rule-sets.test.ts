@@ -8,7 +8,12 @@ import { describe, expect, it } from "vitest";
 import { OPTIONAL_RULES, SHIPPED_RULES } from "./cli.ts";
 import { presetProblemText } from "./presets.ts";
 import { parseRuleBlocks, parseRuleEntries } from "./rules-config.ts";
-import { RULE_SETS, setMembers, WRITING_SET } from "./rule-sets.ts";
+import {
+  REVISION_PLAN_SET,
+  RULE_SETS,
+  setMembers,
+  WRITING_SET,
+} from "./rule-sets.ts";
 
 const parse = (v: unknown) => parseRuleEntries(v, "S", SHIPPED_RULES);
 const atWarn = Object.fromEntries(WRITING_SET.map((id) => [id, "warn"]));
@@ -30,7 +35,10 @@ describe("paperlint:writing", () => {
       "tex/max-sentence-words",
       "tex/max-caption-words",
     ]);
-    expect([...RULE_SETS.keys()]).toEqual(["paperlint:writing"]);
+    expect([...RULE_SETS.keys()]).toEqual([
+      "paperlint:writing",
+      "paperlint:revision-plan",
+    ]);
   });
 
   it.each(WRITING_SET)(
@@ -45,6 +53,22 @@ describe("paperlint:writing", () => {
     expect(setMembers("paperlint:strict")).toBeNull();
     expect(setMembers("constructor")).toBeNull();
   });
+});
+
+describe("paperlint:revision-plan", () => {
+  it("holds the rules that read a paper's revision plan", () => {
+    expect(setMembers("paperlint:revision-plan")).toEqual([
+      "revision-plan/record",
+    ]);
+  });
+
+  it.each(REVISION_PLAN_SET)(
+    "%s is a shipped rule that is off by default",
+    (id) => {
+      expect(SHIPPED_RULES.has(id)).toBe(true);
+      expect(OPTIONAL_RULES.has(id)).toBe(true);
+    },
+  );
 });
 
 describe("a set in the `rules` key expands where it is written", () => {
@@ -102,7 +126,7 @@ describe("what a set refuses, and where else it is written", () => {
     const r = parse({ "paperlint:strict": "warn" });
     expect(r.ok).toBe(false);
     expect(r.ok ? "" : r.error).toMatch(
-      /^S: "paperlint:strict" is not a rule paperlint ships — known: .*; rule sets: paperlint:writing$/,
+      /^S: "paperlint:strict" is not a rule paperlint ships — known: .*; rule sets: paperlint:writing, paperlint:revision-plan$/,
     );
   });
 
