@@ -12,6 +12,25 @@ It only knows the venues paperlint ships a preset for, by each preset's `name` a
 year of each edition, which is the preset's id (`icse-2028` is ICSE 2028). A venue with no preset is
 not recognized.
 
+It runs only when the paper extends a venue preset. A template family (`paperlint:acm-sigconf`,
+`paperlint:ieee-conference`) names no venue, so no venue is "another" one, and the rule is silent.
+
+## Where it looks
+
+| part of the paper                                                | read                         |
+| ---------------------------------------------------------------- | ---------------------------- |
+| a venue-stating command (`\acmConference` …), wherever it stands | always                       |
+| the front matter: everything before the first `\section`         | always                       |
+| the body: from the first `\section` on                           | only with `{ "body": true }` |
+| a paper with no `\section`                                       | all of it, as front matter   |
+
+The body is off by default because related work names venues with recent years on every page:
+«Lam et al. (CodeCrash, NeurIPS 2025)», «A separate ASE 2026 study examines …». On the 206 papers of
+the real-paper corpus, every one of the 17 findings the rule gave in the body or under a family preset
+was such a citation or the paper's own venue line; with this scope it gives none. A leftover from an
+earlier submission sits in the author block, the venue line, a footnote on the title page or the
+abstract, which the default still reads.
+
 ## When a name counts
 
 A venue preset is one edition, and its year has one source: the id. A name never carries a year
@@ -31,7 +50,7 @@ year: any year beside another venue's name counts, and its own names never do.
 ACL's template has no venue-stating command; IEEEtran states the venue, when at all, in the
 `\IEEEpubid` copyright line.
 
-It reads the whole paper — `paper.tex` with the files it `\input`s, `\include`s or `\subfile`s
+It reads `paper.tex` with the files it `\input`s, `\include`s or `\subfile`s
 spliced in; a name found in an included file is reported at that include, with the file and line at
 the front of the message. It looks at what a reader sees — prose, the author block, captions,
 footnotes, a citation's note in square brackets, and the venue-stating commands — and ignores
@@ -59,7 +78,8 @@ the definition, whether or not the macro is used: the rule does not expand macro
                                                         and the exit code stays 0
 ```
 
-What the machine cannot see: a venue without a shipped preset; a year written apart from the name
+What the machine cannot see: a venue without a shipped preset; a leftover in the body, unless
+`body` is on; a year written apart from the name
 («MSR, in 2027»); a name split by markup (`\textbf{AI}Sec`); a venue named in a sentence on purpose,
 which only a disable directive tells apart.
 
@@ -95,7 +115,13 @@ edition.
 
 ## Preset fields
 
-No rule options. It reads every shipped preset's `name` and `aliases`, collected along `extends`,
+One rule option, `body` (default `false`): also read the body, from the first `\section` on.
+
+```jsonc
+"rules": { "tex/venue-leftover": ["warn", { "body": true }] }
+```
+
+It reads every shipped preset's `name` and `aliases`, collected along `extends`,
 and the year of its id:
 
 ```jsonc
@@ -121,6 +147,8 @@ venue preset, a parent of another year, or parents that name each other, are ref
 ## What it does not check
 
 - A venue no shipped preset describes.
+- A paper that extends a template family rather than a venue.
+- The body, from the first `\section` on, unless `body` is on.
 - A name split by markup (`\textbf{AI}Sec`).
 - A name in prose with no year beside it («submitted to MSR»): the rule cannot tell it from an
   acronym or a mention of the series.
