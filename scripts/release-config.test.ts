@@ -13,7 +13,14 @@
  */
 import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, realpathSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { PassThrough } from "node:stream";
 import { analyzeCommits } from "@semantic-release/commit-analyzer";
+import { analyzeCommits as runAnalyzeCmd } from "@semantic-release/exec";
+import steps from "semantic-release/lib/definitions/plugins.js";
 import { generateNotes } from "@semantic-release/release-notes-generator";
 import { z } from "zod";
 
@@ -94,5 +101,112 @@ describe("release config (.releaserc.json) with the installed toolchain", () => 
     expect(notes).toContain("the `markdown` venue profile is removed.");
     expect(notes).toContain("add a flag");
     expect(notes).toContain("resolve the paper from the config root");
+  });
+});
+
+/**
+ * A commit whose tree holds only `default-rules.json` with `snapshot` in it, written to a throwaway
+ * object directory that reads this repository's objects but never writes to them. The returned `env`
+ * makes git see the commit.
+ */
+function releaseWithSnapshot(snapshot: string): {
+  readonly sha: string;
+  readonly env: NodeJS.ProcessEnv;
+} {
+  const repo = resolve(import.meta.dirname, "..");
+  const shared = resolve(
+    repo,
+    execFileSync("git", ["rev-parse", "--git-common-dir"], {
+      cwd: repo,
+      encoding: "utf8",
+    }).trim(),
+    "objects",
+  );
+  const env = {
+    ...process.env,
+    GIT_OBJECT_DIRECTORY: realpathSync(
+      mkdtempSync(join(tmpdir(), "release-objects-")),
+    ),
+    GIT_ALTERNATE_OBJECT_DIRECTORIES: shared,
+  };
+  const git = (args: readonly string[], input?: string): string =>
+    execFileSync("git", args, {
+      cwd: repo,
+      env,
+      input,
+      encoding: "utf8",
+    }).trim();
+  const blob = git(["hash-object", "-w", "--stdin"], snapshot);
+  const tree = git(["mktree"], `100644 blob ${blob}\tdefault-rules.json\n`);
+  const sha = git([
+    "-c",
+    "user.name=t",
+    "-c",
+    "user.email=t@example.com",
+    "commit-tree",
+    tree,
+    "-m",
+    "v1",
+  ]);
+  return { sha, env };
+}
+
+describe("the default rule set's analyzer (@semantic-release/exec)", () => {
+  const run = (gitTag: string, env: NodeJS.ProcessEnv) =>
+    runAnalyzeCmd(optionsFor("@semantic-release/exec"), {
+      ...context,
+      cwd: resolve(import.meta.dirname, ".."),
+      env,
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+      lastRelease: { gitTag, version: "1.0.0" },
+      commits: [feature],
+    });
+
+  test("runs beside the commit analyzer, so semantic-release keeps the higher of the two", () => {
+    // Guards: an analyzer placed in no step, or removed, would let a breaking default set out as a minor.
+    const names = releaserc.plugins.map((p) => (Array.isArray(p) ? p[0] : p));
+    expect(names.slice(0, 2)).toEqual([
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/exec",
+    ]);
+  });
+
+  test("semantic-release keeps the highest type the analyzers return", () => {
+    // Guards: the whole mechanism rests on this merge; a semantic-release that took the first answer
+    // instead would release a breaking default set as whatever the PR title says.
+    const merge = steps.analyzeCommits.postprocess;
+    expect(merge(["minor", "major"])).toBe("major");
+    expect(merge([null, "major"])).toBe("major");
+    expect(merge(["minor", undefined])).toBe("minor");
+  });
+
+  test("says major when a rule the last release had at warn is at error now", async () => {
+    // Guards: the command semantic-release renders from .releaserc.json reaches the script and its
+    // answer comes back, end to end through the installed plugin.
+    const now = z
+      .record(z.string(), z.string())
+      .parse(
+        JSON.parse(
+          readFileSync(
+            new URL("../default-rules.json", import.meta.url),
+            "utf8",
+          ),
+        ),
+      );
+    const anError = Object.keys(now).find((id) => now[id] === "error");
+    expect(anError).toBeDefined();
+    const release = releaseWithSnapshot(
+      JSON.stringify({ ...now, [String(anError)]: "warn" }),
+    );
+    expect(await run(release.sha, release.env)).toBe("major");
+  });
+
+  test("says nothing when the last release had the same set, and on a first release", async () => {
+    const same = releaseWithSnapshot(
+      readFileSync(new URL("../default-rules.json", import.meta.url), "utf8"),
+    );
+    expect(await run(same.sha, same.env)).toBeUndefined();
+    expect(await run("", process.env)).toBeUndefined();
   });
 });
