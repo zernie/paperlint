@@ -7,8 +7,8 @@ export default instructionFile({
 ${file("site/package.json")} and lock, so the npm package carries none of it. ${file("site/src/shared/lib/readme/content.ts")} reads
 the per-paper commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from ${file("docs/layout.md")} the same way, and ${file("site/src/shared/lib/readme/venues.ts")} groups the shipped venues by field
-from ${file("docs/venues.md")}. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
+tree from ${file("docs/layout.md")} the same way. The venue grid comes from ${file("presets/catalog.json")}, generated from the presets,
+which ${file("site/src/shared/lib/venues/catalog.ts")} parses with zod and throws on, naming the path that is wrong. ${file("site/src/entities/finding/model/findings.ts")} quotes each finding the
 journey shows from the file that holds it, and ${file("site/src/entities/finding/model/findings.test.ts")} fails when a quote is no
 longer there. Code lives in \`site/src/\` in Feature-Sliced Design layers, checked by Steiger (${file("site/steiger.config.mjs")});
 Next's routes stay in \`site/app/\`. A class name uses only the design tokens of ${file("site/src/app/styles/globals.css")}
