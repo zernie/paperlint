@@ -34,6 +34,7 @@
   // The call quoted above.
   "url": "https://conf.researchr.org/track/ase-2026/ase-2026-research-track",
   "extends": "paperlint:acm-sigconf",
+  "field": "software-engineering",
 
   // «The ASE 2026 Research Track will employ a double-anonymous review process. Thus, no submission
   // may reveal its authors' identities.» (the call above), and `"blind":true` in the portal's data

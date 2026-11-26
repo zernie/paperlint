@@ -36,6 +36,7 @@
   // The call quoted above.
   "url": "https://icml.cc/Conferences/2027/CallForPapers",
   "extends": "paperlint:icml-style",
+  "field": "ml-ai",
 
   // «All papers will be reviewed in a double-blind process» (the call). anonymity/identity then
   // requires the paper's `identity`. The style hides \icmlauthor without [accepted] or [preprint];

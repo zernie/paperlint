@@ -25,6 +25,7 @@
   // The call quoted above.
   "url": "https://2027.msrconf.org/track/msr-2027-technical-papers",
   "extends": "paperlint:ieee-conference",
+  "field": "software-engineering",
 
   // «The MSR 2027 Technical Track will employ a double-anonymous review process. Thus, no
   // submission may reveal its authors' identities.» (the call above), and `"blind":true` in the

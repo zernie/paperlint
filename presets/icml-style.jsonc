@@ -54,6 +54,7 @@
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
+  "template_label": "article + \\usepackage{icml2027}",
 
   // The kit's example_paper.tex: «\documentclass{article}» then «\usepackage{icml2027}». tex/template
   // requires both, and names another shipped venue's style (neurips_2026) or another ICML edition's

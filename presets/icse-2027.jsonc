@@ -21,4 +21,5 @@
   // The research track's call quoted above.
   "url": "https://conf.researchr.org/track/icse-2027/icse-2027-research-track",
   "extends": "paperlint:ieee-conference",
+  "field": "software-engineering",
 }

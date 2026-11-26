@@ -32,6 +32,7 @@
   // The call quoted above.
   "url": "https://neurips.cc/Conferences/2026/CallForPapers",
   "extends": "paperlint:neurips-style",
+  "field": "ml-ai",
 
   // «All submissions must be anonymized» (the handbook above). anonymity/identity then requires the
   // paper's `identity`. No portal reading of it: OpenReview's public venue data has no blind flag.

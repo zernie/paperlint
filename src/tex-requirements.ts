@@ -46,6 +46,7 @@ import {
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
 import type { VenueFields } from "./domain/submission-fields.ts";
+import type { VenueField } from "./domain/venue-field.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -191,8 +192,20 @@ export interface RequiredSection {
  * field to put them in, the way the schema refuses them.
  */
 export type PresetIdentity =
-  | { readonly type: "venue"; readonly name: string; readonly url: string }
-  | { readonly type: "family" }
+  | {
+      readonly type: "venue";
+      readonly name: string;
+      readonly url: string;
+      /** A conference's field of research; null on a workshop (it takes its parent's) and where unset. */
+      readonly field: VenueField | null;
+    }
+  | {
+      readonly type: "family";
+      /** The template as a reader names it; null where unset. */
+      readonly templateLabel: string | null;
+      /** The organisation any of whose conferences may use this family; null for one venue's own. */
+      readonly anyConferenceOf: string | null;
+    }
   | { readonly type: "base" };
 
 /** A preset's kind of file: `venue`, `family` or `base`. */
@@ -282,8 +295,18 @@ interface FormatJson {
  */
 type PresetJson = PresetBodyJson &
   (
-    | { readonly type: "venue"; readonly name: string; readonly url: string }
-    | { readonly type: "family" | "base" }
+    | {
+        readonly type: "venue";
+        readonly name: string;
+        readonly url: string;
+        readonly field?: VenueField;
+      }
+    | {
+        readonly type: "family";
+        readonly template_label?: string;
+        readonly any_conference_of?: string;
+      }
+    | { readonly type: "base" }
   );
 
 /** Every key of a preset but its identity. */
@@ -365,10 +388,20 @@ const sectionsOf = (
     : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
 
 /** The identity a preset's `type` declares. Pure. */
-const identityOf = (j: PresetJson): PresetIdentity =>
-  j.type === "venue"
-    ? { type: "venue", name: j.name, url: j.url }
-    : { type: j.type };
+const identityOf = (j: PresetJson): PresetIdentity => {
+  switch (j.type) {
+    case "venue":
+      return { type: "venue", name: j.name, url: j.url, field: orNull(j.field) };
+    case "family":
+      return {
+        type: "family",
+        templateLabel: orNull(j.template_label),
+        anyConferenceOf: orNull(j.any_conference_of),
+      };
+    case "base":
+      return { type: "base" };
+  }
+};
 
 /** One ajv error, as far as the hints read it. */
 interface SchemaError {

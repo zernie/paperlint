@@ -50,6 +50,7 @@
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
+  "template_label": "article + \\usepackage{neurips_2026}",
 
   // The kit's neurips_2026.tex: «\documentclass{article}» then «\usepackage{neurips_2026}», with no
   // option at submission («At submission time, please omit the final and preprint options»). The
