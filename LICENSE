@@ -19,3 +19,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Third-party material: `fixtures/real-papers/` holds papers written by other people, each under
+the licence its own README.md names (CC BY 4.0, CC BY-SA 4.0 or CC0 1.0), with the class and style
+files they bundle under their own licences. The MIT License above does not apply to them. They are
+not part of the npm package.
