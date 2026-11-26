@@ -9,8 +9,12 @@
  *   1. did the last program fail — a non-zero exit, or a
  *      final log carrying a warning on latex-log's list of
  *      failing ones (`FAILING_WARNINGS`)?                  → fail, with its lines
+ *      Or does the aux name a database or a style that
+ *      cannot be found, with no paper.bbl of the author's
+ *      to fall back on (`bib-source.ts`)?                  → fail, naming them
  *   2. did the citations, a .bib or the style change since
- *      bibtex last ran?                                    → bibtex
+ *      bibtex last ran? Never when paper.bbl is the
+ *      author's: it is typeset as it shipped.              → bibtex
  *   3. did the last pass change a tracked file, or did the
  *      log ask for a rerun?                                → latex (fail after MAX_PASSES)
  *   4. otherwise                                           → one FINAL latex pass, then done
@@ -64,20 +68,25 @@ const RERUN: readonly LogMarker[] = [
 ];
 
 /**
- * What bibtex would be run on. `none` — the aux names no `\bibdata`, so there is nothing for
- * bibtex to do. Two `needed` states are the same input exactly when every field is equal: the
- * citation set moved, a database was added, or a `.bib` file's content changed ⇒ bibtex again.
+ * Where the bibliography comes from, as the aux stands after a pass (`src/domain/bib-source.ts`
+ * decides it; re-declared here so this module has no imports). Two `run-bibtex` states are the same
+ * input exactly when every field is equal: the citation set moved, a database was added, or a `.bib`
+ * file's content changed ⇒ bibtex again.
  */
 export type BibInput =
   | { readonly kind: "none" }
+  /** The author's `paper.bbl`: typeset as it is, bibtex never runs. */
+  | { readonly kind: "shipped-bbl"; readonly missing: readonly string[] }
+  /** A database or the style cannot be found, and no paper.bbl of the author's: the build stops. */
+  | { readonly kind: "missing"; readonly missing: readonly string[] }
   | {
-      readonly kind: "needed";
+      readonly kind: "run-bibtex";
       /** Sorted, unique cited keys. */
       readonly citations: readonly string[];
       readonly databases: readonly string[];
       readonly style: string | null;
-      /** A digest over the content of every database file that exists; null when none was found. */
-      readonly bibHash: string | null;
+      /** A digest over the content of every database file, in the order the aux names them. */
+      readonly bibHash: string;
     };
 
 export type Observation =
@@ -111,7 +120,8 @@ export type Observation =
 export type FailCause =
   | { readonly kind: "exit"; readonly code: number }
   | { readonly kind: "no-convergence"; readonly unsettled: readonly string[] }
-  | { readonly kind: "log-warnings"; readonly ids: readonly string[] };
+  | { readonly kind: "log-warnings"; readonly ids: readonly string[] }
+  | { readonly kind: "bib-missing"; readonly missing: readonly string[] };
 
 export type Step =
   | { readonly kind: "latex"; readonly final: boolean }
@@ -196,12 +206,29 @@ const failureLines = (f: LogFailure): readonly string[] => [
 ];
 
 /**
+ * bibtex would be run on files it cannot read: it would truncate paper.bbl and fail, so the build
+ * stops before it, naming them (`bib-source.ts`).
+ */
+const bibMissing = (
+  missing: readonly string[],
+): NonNullable<State["failed"]> => ({
+  step: "bibtex",
+  cause: { kind: "bib-missing", missing },
+  lines: [
+    `bibtex cannot find ${missing.join(", ")}, which the .aux names, and there is no paper.bbl of the author's to fall back on.`,
+    `Add the file to the paper directory, fix the name in \\bibliography or \\bibliographystyle, or install its TeX Live package.`,
+  ],
+});
+
+/**
  * Did the last run fail? A non-zero exit, whichever program; or a FINAL pass whose log carries a
  * failing warning. An earlier pass's log is not judged: before the rerun every reference is
  * undefined by construction.
  */
 function failureOf(last: Observation | undefined): State["failed"] {
   if (last === undefined) return null;
+  if (last.exitCode === 0 && last.bib.kind === "missing")
+    return bibMissing(last.bib.missing);
   if (last.exitCode !== 0)
     return {
       step: last.step,
@@ -225,7 +252,7 @@ export function summarize(history: readonly Observation[]): State {
   return {
     failed: failureOf(last),
     bibOutdated:
-      lastLatex?.bib.kind === "needed" &&
+      lastLatex?.bib.kind === "run-bibtex" &&
       !(lastBibtex && sameBib(lastBibtex.bib, lastLatex.bib)),
     unsettled: unsettledBy(history),
     latexPasses: latexRuns.filter((o) => !o.final).length,

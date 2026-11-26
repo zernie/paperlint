@@ -1,0 +1,9 @@
+% A paper that names a database nobody has: no nosuch.bib in the paper directory or the TeX tree,
+% and no paper.bbl. The build stops before bibtex and names the file (#708).
+\documentclass{article}
+\begin{document}
+\section{Intro}
+This cites \cite{knuth84}.
+\bibliographystyle{plain}
+\bibliography{nosuch}
+\end{document}

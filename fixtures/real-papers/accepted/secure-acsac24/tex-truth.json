@@ -92,6 +92,10 @@
     {
       "path": "figures/asdfadf.png",
       "role": "body"
+    },
+    {
+      "path": "paper.bbl",
+      "role": "body"
     }
   ],
   "written": [],
@@ -99,82 +103,7 @@
     "references"
   ],
   "bibtex": {
-    "ran": true,
-    "databases": [
-      "references.bib"
-    ],
-    "keys": [
-      "gpt4",
-      "zaboli2023chatgpt",
-      "bubeck2023sparks",
-      "weidinger2021ethical",
-      "madaan2022text",
-      "wang2018glue",
-      "hendrycks2020measuring",
-      "liang2022holistic",
-      "yu2023kola",
-      "sei2024considerations",
-      "mitre-techniques",
-      "mitre-mitigations",
-      "cve2024",
-      "cwe1358",
-      "cisa_advisories",
-      "qi2023fine",
-      "gekhman2024does",
-      "gpt3.5",
-      "llama370b",
-      "llama38b",
-      "gemini",
-      "jiang2023mistral",
-      "mixtral8x7b",
-      "aghaei2022securebert",
-      "bayer2024cysecbert",
-      "team2024gemma",
-      "roziere2023code",
-      "shestov2024finetuning",
-      "ferrag2023securefalcon",
-      "fang2024llm",
-      "li2024llm",
-      "silva2023repairllama",
-      "guo2023owl",
-      "sultana2023towards",
-      "tihanyi2024cybermetric",
-      "liucyberbench",
-      "li2023seceval",
-      "liu2023secqa",
-      "miao2023empirical",
-      "liu2023opseval",
-      "ullah2024llms",
-      "alam2024ctibench",
-      "feigenbaum1977art",
-      "petroni2019language",
-      "collins2014knowledge",
-      "cao2022kqa",
-      "kim2023prometheus",
-      "zheng2024judging",
-      "gpt4o",
-      "mitreOrg",
-      "brown2020language",
-      "kojima2022large",
-      "cvss3",
-      "lin-2004-rouge",
-      "ChatArena",
-      "chen2023quantifying",
-      "adlakha2024evaluating",
-      "lewis2020retrieval",
-      "LangChain",
-      "emb2024mxbai",
-      "faiss",
-      "zhang2024scaling",
-      "commoncrawl",
-      "barbaresi-2021-trafilatura",
-      "wang2022self",
-      "gao2023retrieval",
-      "vaswani2017attention",
-      "gptapi"
-    ],
-    "exit": 0,
-    "errors": []
+    "ran": false
   },
   "sha256": {
     "paper.tex": "24a6f5626279f19afddb025e4e896b2804cacd10073ae48bc18c26389a42d19a",
@@ -200,6 +129,6 @@
     "figures/spearman.png": "ffb5cdf350329b5f29fbaff2400b10aacba55a6751948fbd3459ef9f6f28af06",
     "figures/task-level.png": "018f53b3e98a86ae7f3b7d8a9505a5e49c21c8850dd0914b87e8cace8c93b7b8",
     "figures/asdfadf.png": "f84c99d14ca819f0c224c34f86906643e66742ea48855d983fbf6c834ad9754e",
-    "references.bib": "c2c30a1e5b49274f9e06cd2cd5d31de341890d2205b247fc2219a53b3c5ad2d9"
+    "paper.bbl": "96fac1db85e4ce1cd4f26c1f054e84b28257048dc84dbf06db28dec04a8b01ca"
   }
 }

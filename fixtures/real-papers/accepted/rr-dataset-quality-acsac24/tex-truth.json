@@ -52,6 +52,10 @@
     {
       "path": "Appendices.tex",
       "role": "body"
+    },
+    {
+      "path": "paper.bbl",
+      "role": "body"
     }
   ],
   "written": [],
@@ -59,37 +63,7 @@
     "ACSAC2024_bibliography"
   ],
   "bibtex": {
-    "ran": true,
-    "databases": [
-      "ACSAC2024_bibliography.bib"
-    ],
-    "keys": [
-      "chen2022neural",
-      "fu2022vulrepair",
-      "zhang2023pre",
-      "huang2023empirical",
-      "fu2024vision",
-      "mastropaolo2024training",
-      "ding2024vulnerability",
-      "fan2020ac",
-      "bhandari2021cvefixes",
-      "vqm2024",
-      "croft2023data",
-      "iso/iec25012",
-      "acm-badges",
-      "VulRepair-HuggingFace",
-      "wang2021codet5",
-      "feng2020codebert",
-      "guo2020graphcodebert",
-      "guo2022unixcoder",
-      "top10",
-      "herzig2013impact",
-      "vulrepairgit",
-      "isenglabgit",
-      "chen2023diversevul"
-    ],
-    "exit": 0,
-    "errors": []
+    "ran": false
   },
   "sha256": {
     "paper.tex": "f269bee158f3860f0f1875d1e4ecd34dec67f0f981e9cd6efac4736c267944cf",
@@ -105,6 +79,6 @@
     "RelatedSection.tex": "115caadb2df6118355534ee7205e7cbcec72e01ea586ff9d3da0bcbe15420505",
     "Conclusion.tex": "8e19335a432e2ee64977cea85a6225a5bcb1e608e891659f2bcb74e0d6e7c77d",
     "Appendices.tex": "f5d7f265ce2b0711734d04d30b3a17fdfe61ed5e3ce74484c66a80a1d9c59d61",
-    "ACSAC2024_bibliography.bib": "25788f1d9ace8b9fb5aaa635e9cd564160f67cc75aa78048a0713e0e15ef9d86"
+    "paper.bbl": "8ceb83a9549b521e7e1559e53fceb35691487ce878851f233996b2bae06eed58"
   }
 }

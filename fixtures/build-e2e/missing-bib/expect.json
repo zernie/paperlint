@@ -1,0 +1,13 @@
+{
+  "$comment": "A database that is nowhere and no paper.bbl to fall back on: the build stops before bibtex, naming it (#708).",
+  "build": {
+    "outcome": "failed"
+  },
+  "says": [
+    "bibtex was not run: a file it would read cannot be found",
+    "bibtex cannot find nosuch.bib, which the .aux names"
+  ],
+  "files": {
+    "absent": ["paper.blg", "paper.bbl"]
+  }
+}
