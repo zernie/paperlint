@@ -1,11 +1,16 @@
 import { Fragment } from "react";
-import type {
-  Conference,
-  Edition,
-  VenueField,
-  VenueGrid,
-} from "@/shared/lib/readme";
-import { orList, venueCount } from "@/shared/lib/readme";
+import {
+  anyConferenceOf,
+  editionName,
+  limitsText,
+  orList,
+  reviewText,
+  venueCount,
+  type CatalogConference,
+  type CatalogEdition,
+  type CatalogField,
+  type VenueCatalog,
+} from "@/shared/lib/venues";
 import { GITHUB, glossary } from "@/shared/config";
 import { Hint, Term } from "@/shared/ui/hint";
 import { Reveal } from "@/shared/ui/reveal";
@@ -15,22 +20,28 @@ import {
   SectionLabel,
 } from "@/shared/ui/section-heading";
 
-/** What a name's popover says: the format, then the page limits. */
-const Limits = ({ e }: { readonly e: Edition }) => (
-  <>
-    <span className="block font-medium text-foreground">{e.format}</span>
-    <span className="mt-1 block">{e.limits}</span>
-  </>
-);
+/** What a name's popover says: the format, the page limits, then the review mode where known. */
+const Limits = ({ e }: { readonly e: CatalogEdition }) => {
+  const review = reviewText(e.blind);
+  return (
+    <>
+      <span className="block font-medium text-foreground">
+        {e.templateLabel}
+      </span>
+      <span className="mt-1 block">{limitsText(e.kinds)}</span>
+      {review === null ? null : <span className="mt-1 block">{review}</span>}
+    </>
+  );
+};
 
 /** A conference on its own line; the workshops held at it beneath, small and muted, by series. */
-const ConferenceLines = ({ c }: { readonly c: Conference }) => (
+const ConferenceLines = ({ c }: { readonly c: CatalogConference }) => (
   <li data-test="venue" data-test-meta={JSON.stringify({ id: c.id })}>
     <Hint
       className="text-left font-display text-xl text-foreground hover:text-primary"
       note={<Limits e={c} />}
     >
-      {c.name}
+      {editionName(c)}
     </Hint>
     {c.workshops.length === 0 ? null : (
       <p className="mt-1 text-sm text-muted-foreground">
@@ -54,12 +65,12 @@ const ConferenceLines = ({ c }: { readonly c: Conference }) => (
 );
 
 /** A field's label, then its conferences with their workshops. */
-const Field = ({ f }: { readonly f: VenueField }) => (
+const Field = ({ f }: { readonly f: CatalogField }) => (
   <div
     data-test="venue-field"
     data-test-meta={JSON.stringify({ field: f.field })}
   >
-    <SectionLabel>{f.field}</SectionLabel>
+    <SectionLabel>{f.title}</SectionLabel>
     <ul className="mt-6 flex flex-col gap-3">
       {f.conferences.map((c) => (
         <ConferenceLines key={c.id} c={c} />
@@ -70,11 +81,11 @@ const Field = ({ f }: { readonly f: VenueField }) => (
 
 /**
  * The shipped venues on a soft sand ground: the heading and a short note on the left, and on the
- * right the four fields of docs/venues.md two by two, each conference with its workshops beneath
+ * right the fields of presets/catalog.json two by two, each conference with its workshops beneath
  * it. A name opens its format and page limits. The template-only presets are one line beside the heading.
  */
-export function Venues({ grid }: { readonly grid: VenueGrid }) {
-  const count = venueCount(grid);
+export function Venues({ catalog }: { readonly catalog: VenueCatalog }) {
+  const count = venueCount(catalog);
   return (
     <section
       data-test="venues"
@@ -97,7 +108,8 @@ export function Venues({ grid }: { readonly grid: VenueGrid }) {
             data-test="venue-families"
             className="mt-6 max-w-measure font-display text-xl text-foreground"
           >
-            And any {orList(grid.families)} conference, by its template.
+            And any {orList(anyConferenceOf(catalog))} conference, by its
+            template.
           </p>
           <a
             href={`${GITHUB}#-add-a-venue-that-isnt-listed`}
@@ -108,7 +120,7 @@ export function Venues({ grid }: { readonly grid: VenueGrid }) {
         </div>
         <div className="lg:col-span-8">
           <div className="grid grid-cols-1 gap-x-16 gap-y-12 sm:grid-cols-2">
-            {grid.fields.map((f) => (
+            {catalog.fields.map((f) => (
               <Field key={f.field} f={f} />
             ))}
           </div>

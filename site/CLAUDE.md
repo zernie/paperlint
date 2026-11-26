@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:903762a91abaa0c7 compiled from site/CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:9e2062e17a0223d2 compiled from site/CLAUDE.md.spec.ts -->
 
 # CLAUDE.md
 
@@ -8,8 +8,8 @@ paperlint.dev: a static Next.js export (`site/next.config.ts`) with its own
 `site/package.json` and lock, so the npm package carries none of it. `site/src/shared/lib/readme/content.ts` reads
 the per-paper commands, the lint output, the venue table and the disclaimer from the README at build time, and
 throws when one is gone, so the build fails instead of the page losing a section; it reads the folder
-tree from `docs/layout.md` the same way, and `site/src/shared/lib/readme/venues.ts` groups the shipped venues by field
-from `docs/venues.md`. `site/src/entities/finding/model/findings.ts` quotes each finding the
+tree from `docs/layout.md` the same way. The venue grid comes from `presets/catalog.json`, generated from the presets,
+which `site/src/shared/lib/venues/catalog.ts` parses with zod and throws on, naming the path that is wrong. `site/src/entities/finding/model/findings.ts` quotes each finding the
 journey shows from the file that holds it, and `site/src/entities/finding/model/findings.test.ts` fails when a quote is no
 longer there. Code lives in `site/src/` in Feature-Sliced Design layers, checked by Steiger (`site/steiger.config.mjs`);
 Next's routes stay in `site/app/`. A class name uses only the design tokens of `site/src/app/styles/globals.css`

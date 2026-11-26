@@ -1,6 +1,6 @@
 // The hero's four short facts. Each is backed by the repository (site/CLAUDE.md, "Only What
 // Ships"), and facts.test.ts fails when its source stops saying it:
-// - the count is the venue grid's own, read from docs/venues.md, never typed;
+// - the count is the venue grid's own, read from presets/catalog.json, never typed;
 // - "references": docs/references.md says `paperlint build` checks every entry of the bibliography
 //   against the services that know about published work (the build is online; lint reports it
 //   offline);
