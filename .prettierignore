@@ -7,6 +7,7 @@
 # The spec (SKILL.md.spec.ts) IS formatted.
 skills/*/SKILL.md
 .claude/skills/add-venue/SKILL.md
+.claude/skills/grow-real-papers/SKILL.md
 
 # Rulesync owns the generated frontmatter and formatting.
 .agents/skills/add-venue/SKILL.md

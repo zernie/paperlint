@@ -14,6 +14,8 @@
     "plugin/CLAUDE.md.spec.ts",
     ".claude/skills/add-venue/SKILL.md.spec.ts",
     ".claude/skills/add-venue/add-venue.eval.ts",
+    ".claude/skills/grow-real-papers/SKILL.md.spec.ts",
+    ".claude/skills/grow-real-papers/grow-real-papers.eval.ts",
     "site/CLAUDE.md.spec.ts"
   ],
   "exclude": [
