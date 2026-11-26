@@ -14,6 +14,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
@@ -45,6 +46,18 @@ export function writeTree(
     writeFileSync(p, text);
   }
   return root;
+}
+
+/**
+ * A fake `kpsewhich`, for a test's process runner: a file of `cwd` is found as `./name`, and
+ * `plain.bst`, which every TeX Live has, is found anywhere; anything else is not found.
+ */
+export function fakeKpsewhich(
+  cwd: string,
+  name: string,
+): { status: number; stdout?: string } {
+  const found = existsSync(join(cwd, name)) || name === "plain.bst";
+  return found ? { status: 0, stdout: `./${name}\n` } : { status: 1 };
 }
 
 /**

@@ -5,13 +5,17 @@
  * lines. pdflatex and bibtex are a fake runner that writes the files the real ones would.
  */
 import assert from "node:assert/strict";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
 import { test } from "vitest";
-import { present, useTempDir, writeTree } from "../test/support.ts";
 import {
-  bibInput,
+  fakeKpsewhich,
+  present,
+  useTempDir,
+  writeTree,
+} from "../test/support.ts";
+import {
   buildPaper,
   buildPapers,
   compileStep,
@@ -44,7 +48,7 @@ interface Fake {
   bibtex?: number | null;
   bibtexOut?: string;
   /** Which program cannot be started. */
-  missing?: "pdflatex" | "bibtex";
+  missing?: "pdflatex" | "bibtex" | "kpsewhich";
   aux?: string;
   log?: string;
   /** pdflatex dies before opening paper.log, printing nothing. */
@@ -64,7 +68,7 @@ function latexPass(f: Fake, cwd: string, pass: number) {
   if (status === 0) writeFileSync(join(cwd, "paper.pdf"), "%PDF-fake");
   return f.noLog ? { status } : { status, stdout: "", stderr: "" };
 }
-/** A bibtex run: writes the .bbl; status and output as the case says. */
+/** A bibtex run: writes the .bbl, as real bibtex does even when it fails; status and output as the case says. */
 function bibtexRun(f: Fake, cwd: string) {
   writeFileSync(join(cwd, "paper.bbl"), "\\begin{thebibliography}{1}");
   if (f.bibtex === undefined)
@@ -75,7 +79,7 @@ function bibtexRun(f: Fake, cwd: string) {
 }
 function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
   let pass = 0;
-  return (bin, _args, opts) => {
+  return (bin, args, opts) => {
     if (bin === f.missing)
       return {
         error: Object.assign(new Error("spawn ENOENT"), { code: "ENOENT" }),
@@ -83,6 +87,7 @@ function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
       };
     // The build always runs a pass in the paper's directory.
     const cwd = present(opts.cwd, "the pass's cwd");
+    if (bin === "kpsewhich") return fakeKpsewhich(cwd, args.at(-1) ?? "");
     return bin === "pdflatex" ? latexPass(f, cwd, ++pass) : bibtexRun(f, cwd);
   };
 }
@@ -204,27 +209,22 @@ test("compile's plan line names the options, a missing class and the venue", () 
   );
 });
 
-test("bibtex's input: no .aux, nothing named, a database named with and without .bib, one that is missing", () => {
-  assert.deepEqual(bibInput(paper({})), { kind: "none" });
-  const none = paper({ "paper.aux": "\\relax\n" });
-  assert.deepEqual(bibInput(none), { kind: "none" });
-  const named = paper({
-    "paper.aux": "\\citation{k}\n\\bibstyle{plain}\n\\bibdata{a.bib,missing}\n",
-    "a.bib": "@misc{k}\n",
-  });
-  const got = bibInput(named);
-  assert.deepEqual(
-    { ...got, bibHash: got.kind === "needed" && typeof got.bibHash },
-    {
-      kind: "needed",
-      citations: ["k"],
-      databases: ["a.bib", "missing"],
-      style: "plain",
-      bibHash: "string",
-    },
+test("compile: a paper.bbl whose refs.bib is nowhere is typeset as it is, bibtex never runs; a database nowhere stops the build", async () => {
+  const aux = "\\citation{k}\n\\bibdata{refs}\n";
+  const dir = paper({ "paper.tex": TEX, "paper.bbl": "shipped" });
+  const shipped = await build(dir, { aux });
+  // Guards: #708 — the shipped .bbl keeps its bytes; bibtex would have truncated it.
+  assert.equal(readFileSync(join(dir, "paper.bbl"), "utf8"), "shipped");
+  assert.match(
+    shipped.line,
+    /0 bibtex runs; .*the paper\.bbl on disk, typeset as it is — bibtex not run \(refs\.bib not found\)/,
   );
-  const gone = bibInput(paper({ "paper.aux": "\\bibdata{gone}\n" }));
-  assert.equal(gone.kind === "needed" && gone.bibHash, null);
+  const lost = await build(paper(), { aux });
+  // Guards: no "full log" line: bibtex did not run, so no paper.blg is this build's.
+  assert.match(
+    lost.line,
+    /✗ compile: bibtex was not run: a file it would read cannot be found\n {6}bibtex cannot find refs\.bib, .*\n.*\n {6}paper\.pdf removed/,
+  );
 });
 
 test("compile: pdflatex killed by a signal, with no log and nothing printed", async () => {

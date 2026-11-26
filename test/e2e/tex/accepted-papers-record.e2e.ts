@@ -37,12 +37,8 @@ import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { nodeFiles, nodeListDir } from "../../../dist/adapters/node/index.js";
 import { texOutput } from "../../../dist/adapters/tex-output/index.js";
-import {
-  bibInput,
-  JOB,
-  pdflatexArgs,
-  withTexInputs,
-} from "../../../dist/build.js";
+import { bibInput } from "../../../dist/bib-input.js";
+import { JOB, pdflatexArgs, withTexInputs } from "../../../dist/build.js";
 import { serializeSourcesRecord } from "../../../dist/domain/sources-record.js";
 import { texSearchPath } from "../../../dist/package-dirs.js";
 import { recordSources } from "../../../dist/sources-record.js";
@@ -113,7 +109,10 @@ function recordOf(paper: string): string {
   rmSync(join(dir, TRUTH), { force: true });
   const first = pass(dir, false);
   const bibtexExit =
-    bibInput(dir).kind === "needed" ? run(dir, "bibtex", [JOB]) : null;
+    bibInput({ paperDir: dir, env, run: spawnSync, files: nodeFiles }).kind ===
+    "run-bibtex"
+      ? run(dir, "bibtex", [JOB])
+      : null;
   const rest = [pass(dir, false), pass(dir, true)];
   const last = rest[rest.length - 1];
   if (last?.status !== 0)

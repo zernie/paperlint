@@ -12,7 +12,6 @@
  */
 import {
   mkdtempSync,
-  mkdirSync,
   writeFileSync,
   rmSync,
   realpathSync,
@@ -23,6 +22,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, expect, it, vi } from "vitest";
+import { fakeKpsewhich, writeTree } from "../test/support.ts";
 
 // Several tests here run real ESLint, spawn processes or walk the repository.
 vi.setConfig({ testTimeout: 120_000 });
@@ -55,15 +55,7 @@ const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
 // `~/.cache/paperlint/banal` present, the measure step would run the real banal on the fake reader's pages.
 const ENV = { PAPERLINT_BANAL_DIR: join(root, "no-banal") };
-const paper = (name, files) => {
-  const dir = join(root, "papers", name);
-  mkdirSync(dir, { recursive: true });
-  for (const [rel, body] of Object.entries(files)) {
-    mkdirSync(dirname(join(dir, rel)), { recursive: true });
-    writeFileSync(join(dir, rel), body);
-  }
-  return dir;
-};
+const paper = (name, files) => writeTree(join(root, "papers", name), files);
 
 /**
  * A fake TeX. `pdflatex` writes paper.aux / paper.log (and paper.pdf on success) in its cwd;
@@ -82,6 +74,9 @@ function fakeTex({
 } = {}) {
   const calls = [];
   const run = (bin, args, opts) => {
+    // kpsewhich, not recorded: the calls below are the build's passes.
+    if (bin === "kpsewhich" && !missing)
+      return fakeKpsewhich(opts.cwd, args.at(-1));
     calls.push({ bin, args, cwd: opts?.cwd, texinputs: opts?.env?.TEXINPUTS });
     if (missing)
       return {

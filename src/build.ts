@@ -61,6 +61,7 @@ import { banalMeasurer, parseBanalSettings } from "./adapters/banal/index.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { whyNoGeometry } from "./domain/geometry.ts";
+import { bibInput, shippedBblNote } from "./bib-input.ts";
 import { callerPath } from "./caller-path.ts";
 import type { Runner } from "./engine.ts";
 import type { Files } from "./ports/files.ts";
@@ -80,7 +81,6 @@ import {
   type ReadBibliography,
 } from "./references.ts";
 import {
-  auxBib,
   bibtexExcerpt,
   errorExcerpt,
   failingWarnings,
@@ -320,26 +320,6 @@ function hashes(paperDir: string): Hashes {
 const readOr = (path: string, enc: BufferEncoding): string | null =>
   existsSync(path) ? readFileSync(path, enc) : null;
 
-/** What bibtex would be run on, as the `.aux` stands now. */
-export function bibInput(paperDir: string): BibInput {
-  const aux = readOr(join(paperDir, `${JOB}.aux`), "utf8");
-  if (aux === null) return { kind: "none" };
-  const bib = auxBib(aux, (name) => readOr(join(paperDir, name), "utf8"));
-  if (bib.databases.length === 0) return { kind: "none" };
-  const files = bib.databases
-    .map((d) => join(paperDir, d.endsWith(".bib") ? d : `${d}.bib`))
-    .filter((p) => existsSync(p));
-  return {
-    kind: "needed",
-    citations: bib.citations,
-    databases: bib.databases,
-    style: bib.style,
-    bibHash: files.length
-      ? sha(Buffer.concat(files.map((p) => readFileSync(p))))
-      : null,
-  };
-}
-
 /** pdflatex arguments for a pass. The final pass defines `\finalpass` — see `latex-loop.ts`. */
 export function pdflatexArgs(final: boolean): string[] {
   return final
@@ -401,7 +381,7 @@ function latexPass(
     before,
     after: hashes(ctx.paperDir),
     markers: logMarkers(log),
-    bib: bibInput(ctx.paperDir),
+    bib: bibInput(ctx),
     fls: readOr(join(ctx.paperDir, `${JOB}.fls`), "utf8"),
     failing: failingWarnings(log).map((h) => ({
       ...h,
@@ -438,7 +418,7 @@ const NO_LOG = `pdflatex wrote no ${JOB}.log — the last lines it printed:`;
 /** One bibtex run, on the input the `.aux` names BEFORE it runs, or null when it could not start. */
 function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
   const before = hashes(ctx.paperDir);
-  const bib = bibInput(ctx.paperDir);
+  const bib = bibInput(ctx);
   const r = ctx.run("bibtex", [JOB], opts);
   if (r.error) return null;
   const exitCode = r.status ?? 1;
@@ -472,6 +452,8 @@ export function compile(ctx: BuildContext): {
   latex: number;
   bibtex: number;
   run: TexRun;
+  /** Where the bibliography came from, as the last pdflatex pass left the aux. */
+  bib: BibInput;
 } {
   const history: Observation[] = [];
   const opts = spawnOptions(ctx);
@@ -484,7 +466,12 @@ export function compile(ctx: BuildContext): {
   remove("log");
   remove("fls");
   const runs = { latex: 0, bibtex: 0 };
-  const finish = (end: Terminal) => ({ end, ...runs, run: runOf(history) });
+  const finish = (end: Terminal) => ({
+    end,
+    ...runs,
+    run: runOf(history),
+    bib: history.findLast((o) => o.step === "latex")?.bib ?? NO_BIB,
+  });
   for (;;) {
     const step = nextStep(summarize(history));
     if (step.kind === "done" || step.kind === "fail") return finish(step);
@@ -498,6 +485,8 @@ export function compile(ctx: BuildContext): {
   }
 }
 
+const NO_BIB: BibInput = { kind: "none" };
+
 const NO_PDF = `pdflatex exited 0 but wrote no ${JOB}.pdf — does the document have any pages?`;
 
 /** The head of a failed compile: which program, and how it ended. */
@@ -509,6 +498,8 @@ function whereFailed(bin: string, cause: FailCause): string {
       return `${bin} did not converge`;
     case "log-warnings":
       return `${bin} exited 0, but its final log carries a warning that fails the build`;
+    case "bib-missing":
+      return `${bin} was not run: a file it would read cannot be found`;
   }
 }
 
@@ -532,7 +523,7 @@ export const compileStep: BuildStep = {
     return { yes: true, why: `${facts.main} (${cls}${venue})` };
   },
   run: (ctx) => {
-    const { end, latex, bibtex, run } = compile(ctx);
+    const { end, latex, bibtex, run, bib } = compile(ctx);
     if (end.kind === "fail") {
       const bin = end.step === "latex" ? "pdflatex" : "bibtex";
       const where = whereFailed(bin, end.cause);
@@ -547,7 +538,10 @@ export const compileStep: BuildStep = {
           ...(end.lines.length
             ? end.lines
             : ["(no error line found in the log)"]),
-          ...(end.lines[0] === NO_LOG ? [] : [`full log: ${log}`]),
+          // A missing database stops the build before bibtex: no log of this build to point at.
+          ...(end.lines[0] === NO_LOG || end.cause.kind === "bib-missing"
+            ? []
+            : [`full log: ${log}`]),
         ],
       };
     }
@@ -562,7 +556,7 @@ export const compileStep: BuildStep = {
       };
     return {
       ok: true,
-      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}; ${recordingNote(ctx.recordSources(ctx.paperDir, run))}`,
+      note: `${plural(latex, "pdflatex pass", "pdflatex passes")}, ${plural(bibtex, "bibtex run", "bibtex runs")}; ${recordingNote(ctx.recordSources(ctx.paperDir, run))}${shippedBblNote(bib)}`,
     };
   },
 };

@@ -1,0 +1,9 @@
+% A paper as arXiv ships it: the paper.bbl bibtex wrote on the author's machine, and no refs.bib.
+% The build must typeset that paper.bbl as it is: bibtex, run here, would truncate it (#708).
+\documentclass{article}
+\begin{document}
+\section{Intro}
+This cites \cite{knuth84}.
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

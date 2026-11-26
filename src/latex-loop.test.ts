@@ -42,11 +42,8 @@ const H = (
   bbl: string | null = null,
 ): Hashes => ({ aux, toc, out, bbl });
 const NO_BIB: BibInput = { kind: "none" };
-const bib = (
-  citations: readonly string[],
-  bibHash: string | null = "b1",
-): BibInput => ({
-  kind: "needed",
+const bib = (citations: readonly string[], bibHash = "b1"): BibInput => ({
+  kind: "run-bibtex",
   citations,
   databases: ["refs"],
   style: "plain",
@@ -394,35 +391,39 @@ it("3. composed: nextStep(summarize(history)) over the histories the loop sees",
 });
 
 // ── what a fail carries ─────────────────────────────────────────────────────────────────
-it("what a fail carries", () => {
-  const latexFail = step([
-    latex({
-      exitCode: 1,
-      errorLines: ["./paper.tex:4: Undefined control sequence.", "l.4 \\foo"],
-    }),
+it("what a fail carries: the step, the cause, the lines", () => {
+  const failOf = (...history: Observation[]) => {
+    const s = step(history);
+    return s.kind === "fail" ? [s.step, s.cause, s.lines] : kind(s);
+  };
+  // Guards: a latex fail names the step, the exit code and the log excerpt verbatim.
+  const tex = ["./paper.tex:4: Undefined control sequence.", "l.4 \\foo"];
+  expect(failOf(latex({ exitCode: 1, errorLines: tex }))).toEqual([
+    "latex",
+    { kind: "exit", code: 1 },
+    tex,
   ]);
-  check(
-    "a latex fail names the step, the exit code and the log excerpt verbatim",
-    latexFail.kind === "fail" &&
-      latexFail.step === "latex" &&
-      latexFail.cause.kind === "exit" &&
-      latexFail.cause.code === 1 &&
-      latexFail.lines[1] === "l.4 \\foo",
-  );
-  const bibFail = step([
-    latex({ bib: bib(["k"]) }),
-    bibtex({
-      exitCode: 2,
-      errorLines: ["I couldn't open database file nope.bib"],
-    }),
+  // Guards: a bibtex fail names BIBTEX, not latex.
+  const nope = ["I couldn't open database file nope.bib"];
+  const bibFail = bibtex({ exitCode: 2, errorLines: nope });
+  expect(failOf(latex({ bib: bib(["k"]) }), bibFail)).toEqual([
+    "bibtex",
+    { kind: "exit", code: 2 },
+    nope,
   ]);
-  check(
-    "a bibtex fail names BIBTEX, not latex",
-    bibFail.kind === "fail" &&
-      bibFail.step === "bibtex" &&
-      bibFail.cause.kind === "exit" &&
-      bibFail.cause.code === 2,
-  );
+  // Guards: #708 — a paper.bbl whose refs.bib is nowhere is typeset as it is; bibtex would truncate it.
+  const shipped = { kind: "shipped-bbl", missing: ["refs.bib"] } as const;
+  expect(failOf(latex({ bib: shipped }))).toBe("latex-final");
+  // Guards: #708 — bibtex is never run on a database it cannot find; a pdflatex error outranks it.
+  const lost = { kind: "missing", missing: ["refs.bib"] } as const;
+  expect(failOf(latex({ bib: lost })).slice(0, 2)).toEqual([
+    "bibtex",
+    { kind: "bib-missing", missing: ["refs.bib"] },
+  ]);
+  expect(failOf(latex({ exitCode: 1, bib: lost }))[1]).toEqual({
+    kind: "exit",
+    code: 1,
+  });
 });
 
 // ── the cap ─────────────────────────────────────────────────────────────────────────────
