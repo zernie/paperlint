@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "nsdi-2025",
+      "venue": {
+        "kind": "named",
+        "name": "NSDI 2025",
+        "url": "https://arxiv.org/abs/2505.01616v3"
+      },
+      "opened": "2025-10-09",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-10-09",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

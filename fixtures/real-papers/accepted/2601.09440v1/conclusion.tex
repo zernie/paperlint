@@ -1,0 +1,11 @@
+\section{Conclusion}
+\label{conclusion}
+
+In this paper, we presented \appname, an agent coordination framework for automating defect impact analysis in DL libraries.
+\appname tackles the key challenge of determining whether bug fixes in libraries like \textit{Transformers} and \textit{Megatron} affect downstream client programs.
+By coordinating Miner, Diff Analyzer, and Impact Analyzer agents—\appname bridges the semantic gap between low-level library patches and high-level user-facing behavior, enabling context-aware impact assessment. 
+Our evaluation on real-world PRs and commits demonstrates its effectiveness, achieving up to 95\% F1 in defect classification and 80\% precision in impact analysis.
+In the future, we plan to extend its capabilities in several directions: (1) broadening support for additional DL libraries (e.g., vllm~\cite{vllm}) and defect types, (2) scaling the evaluation to larger datasets of client programs.
+While the current workflow focuses on PRs and commits containing explicit fixes, future extensions may also consider report-only or reproduction-case scenarios.
+% Notably, since CVE datasets for DL libraries are sparse, as most defects are fixed directly through PRs or commits, our evaluation reflects realistic workflows.
+We further plan to extend \appname to security vulnerability analysis, enabling it can interpret CVE reports and perform structured impact reasoning similar to defect cases.

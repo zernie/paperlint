@@ -5,6 +5,9 @@
  */
 import { gzipSync } from "node:zlib";
 import type { ArchiveFile } from "./archive.ts";
+import { collect, type ProbeLine, type Queries, type Walk } from "./collect.ts";
+import type { KeptPaper } from "./paper.ts";
+import type { Slot } from "./rules.ts";
 import type { Fetched, Get } from "./sources.ts";
 
 export type TarIn = Readonly<{
@@ -76,4 +79,60 @@ export function fakeGet(
     return Promise.resolve(answer(routes.find(([k]) => url.includes(k))?.[1]));
   };
   return { get, asked };
+}
+
+export const BY = "http://creativecommons.org/licenses/by/4.0/";
+export const slot: Slot = {
+  field: "nlp",
+  series: "ACL",
+  year: 2025,
+  cap: 1,
+  queries: ['co:"ACL 2025"'],
+  max_results: 50,
+  venue: "acl",
+  classSpec: "acl",
+};
+export const queries = (over: Partial<Queries> = {}): Queries => ({
+  hardCap: 5,
+  maxPages: 1,
+  quotas: { nlp: 9 },
+  slots: [slot],
+  ...over,
+});
+
+const entry = (id: string, comment: string) =>
+  `<entry><id>http://arxiv.org/abs/${id}</id><updated>2025-05-01</updated><title>T</title><arxiv:comment>${comment}</arxiv:comment></entry>`;
+export const feed = (es: readonly (readonly [string, string])[]) =>
+  `<feed>${es.map(([id, c]) => entry(id, c)).join("")}</feed>`;
+export const ACCEPTED = "Accepted at ACL 2025";
+export const camera = tarGz([
+  {
+    name: "main.tex",
+    body: mainTex("Hi.", "\\documentclass{article}\\usepackage{acl}"),
+  },
+]);
+
+/** One walk of the collector over a fake world: the log lines as tuples, what it kept, how each edition ended. */
+export async function walk(over: Partial<Walk> & Pick<Walk, "get">) {
+  const lines: ProbeLine[] = [];
+  const kept: KeptPaper[] = [];
+  const ends = await collect({
+    queries: queries(),
+    only: null,
+    entries: [],
+    otherIds: new Set(),
+    logged: [],
+    shipped: new Set(),
+    outOfTime: () => false,
+    emit: (line, paper) => {
+      lines.push(line);
+      if (paper !== undefined) kept.push(paper);
+    },
+    ...over,
+  });
+  return {
+    ends,
+    kept: kept.map((k) => k.id),
+    log: lines.map((l) => [l.rank, l.id, l.outcome, l.reason]),
+  };
 }

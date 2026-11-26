@@ -1,0 +1,49 @@
+
+\section{LLM Inference}
+\label{app:llm_inference}
+
+During the inference phase, the LLM predicts the next token $x_{T}$ conditioned on the previously generated sequence $X = [x_1, x_2, ..., x_T]$ of length $T$. The inference procedure for a single step is described below.
+% 
+The input token $x_{T}$ is first mapped to its corresponding dense vector representation via the embedding matrix $\mE$: $\vh_0 = \mathbf{E}[x_{T}]$, where $\vh_0 \in \mathbb{R}^{1 \times d}$ and $d$ is the hidden dimension of the model.
+% 
+For each layer $l \in \{1, \dots, N\}$ in the Transformer architecture, the hidden state undergoes Multi-Head Self-Attention (MHA)~\cite{vaswani2017attention} and a Feed-Forward Network (FFN).
+
+Given $H$ attention heads, the hidden state is first normalized using the Layer Normalization (LN): $\vu = \text{LN}(\vh_{l-1}).$
+% 
+For each head $h \in \{1, \dots, H\}$, the query, key, and value vectors are computed using head-specific weight matrices $\mW_Q^{(h,l)}, \mW_K^{(h,l)}, \mW_V^{(h,l)} \in \mathbb{R}^{d \times d_k}$, where $d_k = d/H$:
+\begin{align}
+    \vq_{T}^{(h)} = \vu \mW_Q^{(h,l)},\quad \vk_{T}^{(h)} = \vu \mW_K^{(h,l)},\quad \mathbf{v}_{T}^{(h)} = \vu \mW_V^{(h,l)}.
+\end{align}
+
+Rotary Position Embedding (RoPE)~\cite{su2024roformer} $\mR_{T}$ is then applied to encode positional information in the queries and keys:
+\begin{align}
+    \tilde{\vq}_{T}^{(h)} = \mR_{T} \vq_{T}^{(h)},\quad \tilde{\vk}_{T}^{(h)} = \mR_{T} \vk_{T}^{(h)}.
+\end{align}
+
+The current key and value vectors are concatenated with the past cached tensors $\vk_{1:T}^{(h)}$ and $\mathbf{V}_{1:T}^{(h)}$ to update the KV cache:
+\begin{align}
+    \mK_{1:T+1}^{(h)} = [\mK_{1:T}^{(h)}; \tilde{\vk}_{T}^{(h)}],\quad \mV_{1:T+1}^{(h)} = [\mV_{1:T}^{(h)}; \vv_{T}^{(h)}].
+\end{align}
+
+The attention output for head $h$ is computed by attending to the updated key-value pairs:
+\begin{align}
+    \vo^{(h)} = \text{softmax} \left( \frac{\tilde{\vq}_{T}^{(h)} (\mK_{1:T+1}^{(h)})^\top}{\sqrt{d_k}} \right) \mV_{1:T+1}^{(h)}.
+\end{align}
+
+The outputs from all $H$ heads are concatenated and linearly projected back to the original dimension:
+\begin{align}
+    \vo_{\text{attn}} = [\vo^{(1)}; \dots; \vo^{(H)}] \mW_O^{(l)}.
+\end{align}
+
+The final hidden state for layer $l$ is obtained via standard residual connections and a position-wise FFN:
+\begin{align}
+    \vh_{\text{mid}} = \vh_{l-1} + \vo_{\text{attn}}, \vh_l = \vh_{\text{mid}} + \text{FFN}(\text{LN}.(\vh_{\text{mid}}))
+\end{align}
+
+After passing through all $N$ layers, the final hidden state is normalized and projected into the vocabulary space of size $V$ to obtain the logits $\vz_{T}$:
+\begin{align}
+    \vh_{\text{final}} = \text{LN}(\vh_N), \vz_{T} = \vh_{\text{final}} \mW_{\text{vocab}}.
+\end{align}
+Finally, a decoding strategy (e.g., greedy search or nucleus sampling) is applied to $\vz_{T}$ to select the actual token.
+
+

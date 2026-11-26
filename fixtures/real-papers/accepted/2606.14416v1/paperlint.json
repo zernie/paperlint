@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "icml-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:icml-style"
+      },
+      "opened": "2026-06-12",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-06-12",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

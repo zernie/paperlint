@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "issta-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2026-08-04",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-08-04",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

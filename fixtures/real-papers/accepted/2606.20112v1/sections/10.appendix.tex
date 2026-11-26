@@ -1,0 +1,644 @@
+\section{Appendix}
+\subsection{LLM Usage}
+\label{ap:llm}
+
+In this paper, Large Language Models (LLMs) were utilized as a general-purpose assist tool to aid and polish the writing process. We used the LLM to refine language and improve clarity across the Introduction, Related Work and Conclusion sections.
+
+\subsection{Hallucination Risks and Potential Misuse}
+\rebuttal{
+In the context of this work, `hallucination' would refer to anatomically implausible or extremely rare structures that lie far outside the training distribution.}
+
+\rebuttal{From a technical angle, we monitor this risk partly via the W-score metric: if the model frequently produced unrealistic volumes, the WGAN critic would assign larger distances between real and generated samples, and the W-score would deteriorate. In practice, our W-scores remain close to those of real data, which suggests that severe hallucinations are uncommon in our experiments.}
+
+\rebuttal{That said, we want to emphasize that we do \emph{not} position PRDiT as a tool for direct clinical decision-making. Synthetic CT volumes should be used only for research, simulation, or carefully controlled data augmentation, and always under expert supervision. Any downstream clinical application must rely on appropriate validation on real patient data and the involvement of qualified radiologists.
+}
+
+\subsection{Limitations and Future Work}
+Our current implementation is constructed upon a simple linear mapping, including patch embeddings, which we treat as the base structure. While effective, this design may limit the model’s ability to capture complex local spatial correlations. A natural extension would be to incorporate convolutional neural networks (CNNs) for feature extraction, which could enhance representational richness and further improve generative quality. We leave this direction as an important opportunity for future exploration.
+
+PRDiT inherits the high training cost of Transformer-based models, especially in handling full-volume 3D attention. Future work might explore 3D-specific optimizations, such as linear or windowed attention, to reduce computational demands. We also plan to extend PRDiT to conditional generation tasks, enabling guidance from segmentation masks or sparse inputs for broader clinical applications.
+
+\rebuttal{It is important to point out that there generally exists no voxel-wise `ground truth' for novel unconditionally-generated volumes.
+This means that downstream segmentation or detection studies would require dense, expert annotations for both real and synthetic CT volumes, which are expensive and therefore unfortunately beyond the scope and resources of this work.}
+
+\rebuttal{The objective of this paper is to make high-fidelity unconditional 3D CT generation feasible at scale and to rigorously evaluate distributional fidelity. We therefore (i) do not claim that immediate clinical deployment of our method or similar methods of this kind are feasible, and (ii) want to point out that such downstream and clinical evaluations are outside the scope of the present paper, and we have to leave a systematic study of using our model for downstream segmentation/detection and assessing its clinical impact as future work.} 
+
+\rebuttal{
+\subsection{Characteristics of the Training Datasets} \label{ap:air_cavities}
+In this section, we explain why some of the generated CT outputs appear to contain black `voids' in the parts of the images, like the lower-left region within Figure~\ref{fig2}. Careful inspection of the original datasets shows that these dark `void' regions actually correspond to naturally occurring low-density air cavities that are also present in the real data, rather than artifacts introduced by the hot-diffusion sampler or hallucination issues, as illustrated in Figure~\ref{fig:real_datasets}. In addition, following standard practice in prior works, our pre-processing clamps HU values to a fixed window, which further accentuates such air regions as dark areas in both real and generated scans. For easier debugging and later verification, we additionally overlay the case IDs from the LIDC-IDRI dataset onto the images.
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}[b]{0.495\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{rebuttal_imgs/real_lidc_2.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{rebuttal_imgs/real_rad.pdf}
+    \end{minipage}
+    \caption{Ground truth CT samples from LIDC-IDRI (left) and Rad-ChestCT (right). Red boxes highlight naturally occurring low-density air cavities, showing that similar dark void regions are also present in the real data.}
+    \label{fig:real_datasets}
+\end{figure}
+}
+\subsection{The Local Denoiser}
+\label{ap:l}
+This section provides additional details for the local denoiser module. When processing high‐resolution 3D medical images, training diffusion models with Transformers to capture both low‐ and high‐frequency components is prohibitively expensive and time‐consuming. As illustrated in Figure~\ref{fig1}, we therefore decompose the learning process into two stages: a local denoiser estimates the content of each 3D patch locally (see Figure~\ref{fig:local}), and a diffusion model with Transformers focuses exclusively correcting these via global residuals. 
+
+Concretely, given an input volume 
+\[
+  \boldsymbol{X} \in \mathbb{R}^{C\times H\times W\times D},
+\]
+we extract \(N\) cubic patches 
+\[
+  \{\boldsymbol{x}_i\in\mathbb{R}^{C\times p\times p\times p}\}_{i=1}^N
+\]
+using a sliding window of size \(p\) and stride \(s<p\) to allow overlap between neighboring patches, which ensures that adjacent patches share contextual information at their borders to improve continuity in the reconstructed volume and mitigate boundary artifacts. Each patch is vectorized as 
+\[
+  \boldsymbol{v}_i = \mathrm{vec}(\boldsymbol{x}_i)\in\mathbb{R}^d,\quad d=C \times p^3.
+\]
+
+To follow the forward diffusion process~\citep{zhang2023improving}, we sample a timestep \(t\in\{1,\dots,T\}\) and compute
+\[
+\boldsymbol{v}_i^t = \cos(\frac{t}{T} \frac{\pi}{2})\,\boldsymbol{v}_i \;+\;\sin(\frac{t}{T} \frac{\pi}{2})\,\boldsymbol{\epsilon}_i,\quad
+  \boldsymbol{\epsilon}_i\sim\mathcal{N}(0,I).
+\]
+Given a diffusion timestep \(t\), we first compute a shared base embedding
+\[
+  \boldsymbol{c} = \mathrm{TimeEmbed}(t)\;\in\;\mathbb{R}^h.
+\]
+We then project \(\boldsymbol{c}\) into a stage‐specific time embedding for the local stage
+\[
+  \boldsymbol{c}_{\mathrm{local}}
+  = W_{\mathrm{c}}\,\boldsymbol{c} + \boldsymbol{b}_{\mathrm{c}}
+  \;\in\;\mathbb{R}^d,
+\]
+and feed \(\boldsymbol{c}_{\mathrm{local}}\) into the AdaLN modulation network to produce the LayerNorm shift/scale parameters
+\[
+  (\boldsymbol{\gamma}_1,\boldsymbol{\beta}_1,\boldsymbol{\gamma}_2,\boldsymbol{\beta}_2)
+  = \mathrm{AdaLN}(\boldsymbol{c}_{\mathrm{local}})
+  \;\in\;\mathbb{R}^{4d}.
+\]
+In the global residual stage, we similarly compute
+\[
+  \boldsymbol{c}_{\mathrm{fine}}
+  = W_{\mathrm{f}}\,\boldsymbol{c} + \boldsymbol{b}_{\mathrm{f}}
+  \;\in\;\mathbb{R}^h,
+\]
+and use \(\boldsymbol{c}_{\mathrm{fine}}\) within each AdaLN layer of the DiT blocks, ensuring consistent temporal conditioning across both modules. 
+
+The signal is then refined via two SwiGLU‐MLP blocks
+\[
+\begin{aligned}
+  \boldsymbol{z}_1 &= \mathrm{SwiGLU}\bigl(\boldsymbol{\gamma}_1\odot\mathrm{LayerNorm}(\boldsymbol{v}_i^t)+\boldsymbol{\beta}_1\bigr),\\
+  \boldsymbol{z}_2 &= \mathrm{SwiGLU}\bigl(\boldsymbol{\gamma}_2\odot\mathrm{LayerNorm}(\boldsymbol{z}_1)+\boldsymbol{\beta}_2\bigr),
+\end{aligned}
+\]
+and added residually as \(\boldsymbol{z}=\boldsymbol{z}_2+\boldsymbol{v}_i\). A final linear projection produces 
+\[
+[\hat{\boldsymbol{v}_i},\;\hat{\boldsymbol{\epsilon}_i}]
+= W_{\mathrm{final}}(\boldsymbol{z})
+\;\in\;\mathbb{R}^{2d},
+\quad
+\hat{\boldsymbol{v}_i},\;\hat{\boldsymbol{\epsilon}_i}\in\mathbb{R}^d,
+\]
+which is reshaped back to \(\hat{\boldsymbol{x}_i}\in\mathbb{R}^{C\times s^3}\). Here \(\hat{\boldsymbol{v}_i}\) is the denoised patch and \(\hat{\boldsymbol{\epsilon}_i}\) is the predicted noise, which aligns our MLP's outputs with the standard diffusion objective of jointly estimating clean signal and noise.
+
+We train the denoiser by minimizing the per‐patch loss
+\[
+  \mathcal{L}
+  = \mathbb{E}_{i}\Bigl[\|\hat{\boldsymbol{x}_i} - \boldsymbol{x}_i\|_2^2
+    \;+\;\|\hat{\boldsymbol{\epsilon}_i} - \boldsymbol{\epsilon}_i\|_2^2\Bigr],
+\]
+ensuring efficient capture of local patche structure and accurate noise estimation. At inference, the denoised and overlapping patches \(\{\hat{\boldsymbol{x}_i}\}^N\) are passed to the Residual Diffusion Transformer, which focuses exclusively on correcting the predictions via global residuals $\{\boldsymbol{x}_i - \hat{\boldsymbol{x}_i}\}$, thereby reducing overall learning complexity and training time.
+
+\subsection{Predictor-Corrector Sampling}\label{ap:predictor-corrector-details}
+\rebuttal{
+This section provides more detail on our sampling scheme introduced in Section~\ref{m3}, and shows how it differs from previous standard ancestral or 'DDIM' samplers.
+}
+
+% \subsubsection{Algorithmic description}
+% \rebuttal{
+% Algorithm~\ref{alg:pccosine} defines the predictor-corrector sampling method to provide further detailed explanation of our sampling scheme introduced in Section~\ref{m3}. 
+% }
+
+% \begin{algorithm}[h!]
+% \caption{Predictor--Corrector Sampling}
+% \label{alg:pccosine}
+% % \LinesNumbered 
+% \KwIn{
+%     Initial sample $x_T \in \mathbb{R}^{B \times C \times D \times H \times W}$;\\
+%     Timestep schedule $(t_\ell)_{\ell=0}^{L}$ with $0 = t_0 < \dots < t_L = T$;\\
+%     Diffusion model $f_\theta$ with $f_\theta(x_t, t) := (\epsilon_t, \hat{x}_0^{\,t})$;\\
+%     Predictor step multiplier $p \ge 1$.}
+% \KwOut{Sample sequence $\mathcal{X} = (x_{t_\ell})_{\ell=0}^L$ and predictions
+%        $\hat{\mathcal{X}}_0 = (\hat{x}_0^{\,t_\ell})_{\ell=1}^L$}
+% \BlankLine
+% \textbf{Initialize:} $\mathcal{X} \gets \{x_T\}$,
+% define angle map $\theta(t) \gets \frac{\pi}{2}\,\frac{t}{T}$.
+% \For{$\ell = L, L-1, \dots, 1$}{
+%     $t \gets t_\ell$, \quad $t' \gets t_{\ell-1}$, \quad $\Delta t \gets t - t'$; \\
+%     $x_t \gets$ last element of $\mathcal{X}$; \\
+%     $\theta_t \gets \theta(t)$, \quad $\theta_{t'} \gets \theta(t')$; \\[2pt]
+
+%     \tcp{Model prediction at time $t$}
+%     $(\epsilon_t, \hat{x}_0^{\,t}) \gets f_\theta(x_t, t)$; \\[2pt]
+
+%     \tcp{Gradient direction in the cosine plane}
+%     $g_t \gets \sin(\theta_t)\,\hat{x}_0^{\,t} - \cos(\theta_t)\,\epsilon_t$; \\[4pt]
+
+%     \tcp{Predictor: $p$-step gradient jump in time}
+%     $t_{\text{pred}} \gets t - p\,\Delta t$; \\
+%     $\theta_{\text{pred}} \gets \theta(t_{\text{pred}})$; \\
+%     $\Delta \theta \gets \theta_{\text{pred}} - \theta_t$; \\
+%     $\tilde{x} \gets x_t - \Delta \theta\, g_t$; \\[4pt]
+
+%     \tcp{Corrector: exact Gaussian transition from $t_{\text{pred}}$ to $t'$}
+%     $\alpha \gets \dfrac{\cos(\theta_{t'})}{\cos(\theta_{\text{pred}})}$; \\
+%     $\sigma \gets \sqrt{1 - \alpha^2}$; \\
+%     Sample $z \sim \mathcal{N}(0, I)$ with $\text{shape}(z) = \text{shape}(\tilde{x})$; \\
+%     $x_{t'} \gets \alpha\,\tilde{x} + \sigma\,z$; \\[2pt]
+
+%     Append $x_{t'}$ to $\mathcal{X}$.
+% }
+% \Return $\hat{\mathcal{X}}_0,\, \mathcal{X}$.
+% \end{algorithm}
+
+
+\subsubsection{Qualitative Insights for Varying \texorpdfstring{$k$}{k}}
+\rebuttal{
+To provide further insight in addition to the quantitative analysis of varying~$k$ in the main paper, we provide qualitative results across different $k$ values across axial, coronal, and sagittal views in Figures~\ref{fig:axial_k}~\ref{fig:coronal_k}~\ref{fig:sagittal_k}. 
+}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{rebuttal_imgs/k_a.pdf}
+    \caption{Qualitative comparison: axial view of generated chest CT samples for different $k$ values in LIDC-IDRI dataset.}
+    \label{fig:axial_k}
+\end{figure}
+% --- Coronal view ---
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{rebuttal_imgs/k_s.pdf}
+    \caption{Qualitative comparison: coronal view of generated chest CT samples for different $k$ values in LIDC-IDRI dataset.}
+    \label{fig:coronal_k}
+\end{figure}
+% --- Sagittal view ---
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{rebuttal_imgs/k_g.pdf}
+    \caption{Qualitative comparison: sagittal view of generated chest CT samples for different $k$ values in LIDC-IDRI dataset.}
+    \label{fig:sagittal_k}
+\end{figure}
+\rebuttal{
+\subsubsection{Relationship to Conventional 'hot' Diffusion Sampling}
+In this section, we outline how our sampling procedure differs from standard ancestral or 'DDIM' samplers: it is tailored to the cosine-sine schedule~\citep{zhang2023improving} and lets us inject a controlled amount of extra stochasticity per step, which we show empirically improves FID/MMD over both deterministic sampling ($k=1$, Table~\ref{tab:ablation}\,(\subref{tab:ablation_k}), main paper) as well as previous methods (following).
+}
+
+\rebuttal{The conventional ancestral 'hot' sampler performs a single stochastic update from $x_t$ to $x_{t-1}$ using only the predicted noise $\epsilon$. Our sampler can be viewed as a predictor-corrector variant of this ancestral sampler: instead of one stochastic step, we take $k$ deterministic denoising sub--steps followed by $k-1$ stochastic correction steps, which lets us inject a stronger but controllable amount of noise per outer step.
+\paragraph{Settings.} Our model in the main paper is trained to jointly predict the clean image $x_0$ and the noise $\epsilon$, whereas the conventional hot sampler only relies on $\epsilon$. For a fair comparison, we therefore refactor our generation process so that it also depends solely on the predicted noise. In this way, we get the $\hat{x}_0$ through
+$$\hat{x_0}(x_t,t)=\frac{x_t-\sqrt{1-\alpha_t}\epsilon_\theta(x_t, t)}{\sqrt{\alpha_t}},$$
+which exactly follows the method from the conventional sampler. The conventional sampling method is defined as
+\begin{align}
+x_{t-1}
+&= \sqrt{\alpha_{t-1}}\,\hat{x}_0(x_t, t)
+ + \sqrt{1-\alpha_{t-1}-\sigma_t^2}\,\epsilon_\theta(x_t, t)
+ + \sigma_t\, z
+\end{align}
+where $z \sim \mathcal{N}(0, I), \sigma_t=\sqrt{\frac{1-\alpha_{t-1}}{1-\alpha_t}}\sqrt{1-\frac{\alpha_t}{\alpha_{t-1}}}$, $\sqrt{\alpha_t}=\cos(\beta_t), \sqrt{1-\alpha_t}=\sin(\beta_t)$, which is the same sampling method used in DDPM or DDIM (setting $\eta=1$).
+} 
+
+\rebuttal{
+Recalling Equations~\ref{eq5} and~\ref{eq6}, our sampling method results in  
+\begin{equation}
+\label{eq:hot_pc}
+\boldsymbol{x}_{t-1}
+  = \Gamma_t^{(k)} \Bigl( \boldsymbol{x}_t
+   - k \cdot \nabla\Bigl(\sqrt{\alpha_t}\hat{x_0}(x_t,t)
+                         + \sqrt{1-\alpha_t}\epsilon_\theta(x_t, t)\Bigr) \Bigr)
+   + \sqrt{1 - \bigl(\Gamma_t^{(k)}\bigr)^2}\,z, \, 
+\end{equation}
+with $
+\Gamma_t^{(k)} = \frac{\sqrt{\alpha_{t-1}}}{\sqrt{\alpha_{t-k}}}
+$, where $k=\{1,2,..\}$, and $k$ is \emph{not} restricted to integer values.
+\paragraph{Experiments.}
+To clearly highlight the differences between our proposed hot-diffusion sampling method and the conventional sampler, we provide both qualitative (Figure~\ref{fig:ablations_k}) and quantitative (Table~\ref{tab:ablations}) comparisons of their respective generation quality. The results show that our hot diffusion (e.g. $k=3$) achieves better FID/MMD than both the deterministic case ($k=1$) and the conventional hot-diffusion sampler, indicating that our proposed modified stochastic schedule is genuinely beneficial rather than just a reparameterization of the standard sampler.
+}
+
+% table shows
+\begin{table}[t]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$k$ & FID$\downarrow$ & MMD$\downarrow$ \\
+\midrule
+1 (cold sampling) & 7.031 & 0.7285 \\
+2                 & 6.132 & 0.6023 \\
+2.5               & 5.950 & 0.5893 \\
+3                 & 5.736 & 0.5699 \\
+3.5               & \textbf{5.718} & \textbf{0.5682}  \\
+4                 & 6.960 & 0.6273 \\
+\midrule
+Conventional (hot diffusion) & 6.456 & 0.6100 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation experiments for \emph{noise-only adaptation}: quantitative comparison on the number of predictor-corrector sub-steps $k$ in our \emph{modified noise-only} sampler on LIDC-IDRI, compared to the conventional hot-diffusion sampler. FID is reported as $10^2$.}
+\label{tab:ablations}
+\end{table}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.95\textwidth]{rebuttal_imgs/k_comp_v3.pdf}
+    \caption{Ablation experiments: qualitative comparison on the number of predictor-corrector sub-steps $K$ in our \emph{modified noise-only} sampler on LIDC-IDRI, compared to the conventional hot-diffusion sampler (classic in row 1).}
+    \label{fig:ablations_k}
+\end{figure}
+
+
+\subsection{Inference Time}
+\label{ap:inference}
+We quantify inference speed in Table~\ref{tab:inference-time} by measuring sampling time across three baseline models and our three variant models. All timings are reported as the mean of 10 runs with a batch size of 1. 
+\begin{table}[h!]
+\caption{Inference sampling time per sample (seconds) with a batch size of 1 on an A100 GPU. Reported are mean $\pm$ std over 10 runs.}
+\label{tab:inference-time}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & {\textbf{Mean (s)}} & {\textbf{Std (s)}} \\
+\midrule
+HA-GAN~\citep{sun2022hierarchical}    & 0.01020 & 0.00139 \\
+3D-LDM~\citep{khader2023medical}    & 26.0518 & 0.1009  \\
+WDM-3D~\citep{friedrich2024wdm}    & 34.6328 & 0.5915  \\
+\midrule
+PRDiT-4L (ours)   & 11.4590 & 1.1665  \\
+PRDiT-8L (ours)   & 18.3414 & 0.7329  \\
+PRDiT-12L (ours)  & 21.9311 & 0.8646  \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+\subsection{High Resolution Models Architecture}
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=1.0\textwidth]{iclr2026/images/methodology/high_arc_3.pdf}
+% \caption{Detailed structure of our high resolution model, with lower resolution pretrained models.}
+% \label{fig:highres}
+% \end{figure}
+The architectural structure of our high-resolution 3D CT image generation approach is provided in the body of the main paper in Figure~\ref{fig:highres}. In this section, we additionally provide insights on the difference in image quality between our efficient high-resolution variant and expensive from-scratch training of PRDiT directly on higher-resolution images. Results are provided in Table~\ref{tab:ablation-highres64} and demonstrate that while training from scratch does indeed lead to slightly improved performance across FID and MMD, our efficient variant is close to 7~times faster in training, providing a convincing tradeoff in terms of quality--to--compute.
+\begin{table}[h!]
+\caption{Ablation experiments: Comparison of high-resolution training strategies on LIDC-IDRI. We report a model trained directly at $128^3$ (Scratch) versus our progressive strategy that reuses a pretrained $64^3$ model and extends it to $128^3$ (Pretrained Low-to-High). FID is reported as $10^3$.}
+\vspace{-6pt}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & FID$\downarrow$ & MMD$\downarrow$ & Training Cost \\
+\midrule
+% Scratch ($128^3$) & 2.04 & 0.1853 & 80 GPUh \\
+PRDiT$_{128}^{\text{\;scratch}}$ & 2.04 & 0.1853 & 80 GPUh \vspace{2pt}\\
+% Pretrained Low-to-High ($64^3 \rightarrow 128^3$) & 2.89 & 0.1893 & 12 GPUh \\
+PRDiT$_{64}$\,$\uparrow^{128}$ & 2.89 & 0.1893 & 12 GPUh \\
+% Pretrianed & & & 36 GPUh \\
+\bottomrule
+\end{tabular}
+\label{tab:ablation-highres64}
+\end{table}
+
+\rebuttal{
+In our high-resolution PRDiT$\uparrow^{256}$ model experiments, we freeze the entire low-resolution backbone, which includes both Local Denoiser and the Global Residual DiT modules, and only train a lightweight high-resolution refinement module. We made this choice on purpose: fine-tuning the full backbone at $256^3$ would be very memory- and compute-heavy, while the refinement module can concentrate on adding the missing high-frequency details on top of a already well-trained low-resolution anatomy.
+}
+
+\rebuttal{
+In practice, PRDiT-4L$\uparrow^{256}$ still outperforms all high-resolution baselines on LIDC-IDRI in both FID and MMD, and it does so with much lower GPU cost (Table~\ref{tab:lidc256}). This suggests that freezing the backbone does not noticeably hurt performance at $256^3$. In addition, our comparison of from-scratch $128^3$ training with the progressive $64^3\rightarrow128^3$ variant (Table~\ref{tab:highres64}) shows only a small drop in FID/MMD for more than a 6$\times$ reduction in training time, which further supports this design.
+}
+
+\rebuttal{
+To provide further insight into how a frozen backbone compares against a jointly fine-tuned setup, we performed an ablation at $128^3 \to 256^3$, directly comparing a model with a frozen low-resolution backbone to one where we fine-tune the entire backbone. For the fine-tuned variant, we use a conservative learning rate of $1\times10^{-6}$ for 100 epochs to avoid disrupting the well-trained low-resolution weights, and evaluate it under exactly the same setup as the frozen-backbone model. As Table~\ref{finetune} shows, the fine-tuned backbone gives a modest but consistent improvement over the frozen one (better FID and MMD), indicating that full fine-tuning can help, but the gain is relatively small compared with the additional computational cost, which supports our choice to freeze the backbone in the main $256^3$ experiments.
+}
+
+\rebuttal{To make these experiments reproducible, we detail below the exact configurations used to train all high--resolution models.}
+
+\rebuttal{
+\subsubsection{Training Setup for high--resolution models}
+\paragraph{Frozen--backbone settings.}
+We first freeze the entire low-resolution backbone (both the Local Denoiser and the Global DiT) and train only the high-resolution refinement module. The refinement operates on overlapping 3D patches of size $(12,12,12)$ with stride $8$ and padding $2$ voxels, matching the local denoiser configuration in the low-resolution model. We optimize with AdamW, using a learning rate of $6\times 10^{-5}$,
+gradient clipping at $1.0$, a batch size of $8$ per GPU, and train for
+$2000$ epochs.\\
+\paragraph{Full fine--tuning setting.}
+For the fine-tuning ablation, we start from the converged frozen-backbone high-resolution model and then unfreeze the entire pretrained backbone and high-resolution module, training all parameters jointly. To avoid disrupting the well-trained low-resolution weights, we use a much smaller learning rate of $1\times 10^{-6}$, gradient clipping at $0.4$, a batch size of $2$ per GPU, and train for $100$ epochs under otherwise the same setup.}
+
+\rebuttal{
+\subsubsection{Experiments Results}
+As Table~\ref{finetune} and Figure~\ref{fig:frozen} show, the fine-tuned backbone gives a modest but consistent improvement over the frozen one (better FID and MMD), indicating that full fine-tuning can help, but the gain is relatively small compared with the additional computational cost, which supports our choice to freeze the backbone in the main $256^3$ experiments.
+}
+
+\begin{table}[h!]
+\centering
+\caption{Ablation experiments: Comparison of high-resolution performance between frozen low-resolution model and fine-tune entire models. FID is reported as $10^3$.}
+\begin{tabular}{lcc}
+\toprule
+Model & FID\,$\downarrow$ & MMD\,$\downarrow$ \\
+\midrule
+Frozen $128^3$
+  & 2.280 & 0.1370 \\
+Fine-tuned $128^3$ & 1.702 & 0.1315 \\
+\bottomrule
+% \multicolumn{4}{l}{\footnotesize * FID values scaled by $10^{-3}$.}
+\end{tabular}
+\label{finetune}
+\end{table}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.85\textwidth]{rebuttal_imgs/frozen_ft3.pdf}
+    \caption{Ablation on freezing vs.\ fine-tuning the low-resolution backbone at $128^3$ on LIDC-IDRI. Fine-tuning with a small learning rate yields slightly better FID/MMD, while the frozen backbone already achieves competitive performance.}
+    \label{fig:frozen}
+\end{figure}
+
+% \begin{table}[h!]
+% \caption{Ablation experiments: Comparison of high-resolution training strategies on LIDC-IDRI. We report a model trained directly at $128^3$ (Scratch) versus our progressive strategy that reuses a pretrained $64^3$ model and extends it to $128^3$ (Pretrained Low-to-High). FID is reported as $10^3$.}
+% \vspace{-6pt}
+% \centering
+% \small
+% \begin{tabular}{lccc}
+% \toprule
+% Method & FID$\downarrow$ & MMD$\downarrow$ & Training Cost \\
+% \midrule
+% % Scratch ($128^3$) & 2.04 & 0.1853 & 80 GPUh \\
+% PRDiT$_{128}^{\text{\;scratch}}$ & 2.04 & 0.1853 & 80 GPUh \vspace{2pt}\\
+% % Pretrained Low-to-High ($64^3 \rightarrow 128^3$) & 2.89 & 0.1893 & 12 GPUh \\
+% PRDiT$_{64}$\,$\uparrow^{128}$ & 2.89 & 0.1893 & 12 GPUh \\
+% % Pretrianed & & & 36 GPUh \\
+% \bottomrule
+% \end{tabular}
+% \label{tab:ablation-highres64}
+% \end{table}
+\subsection{Model Configurations in detail}
+\label{ap:mc}
+In this section, we describe the network architecture, training setup and evaluation protocol to enable full reproducibility. \rebuttal{In addition, we use the FlashAttention-v2 included with Pytorch version 2.2.}
+\subsubsection{Network Architecture Configurations}
+The PRDiT model comprises two primary components: a Local Denoiser (MLP-based) and an Global Residual DiT models (Transformer-based), enabling a two-stage training process. Stage 1 trains the coarse path (depth$=$0), while stage 2 freezes the local path and trains the global path (depth$>$0). The architecture processes 3D volumes of shape $[B, C, D, H, W]$ into patch sequences for denoising. Key components are described below, with parameters summarized in Table~\ref{tab:local_denoiser},~\ref{tab:fine_refiner_configs}.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lc}
+        \toprule
+        Parameter & Value \\
+        \midrule
+        Input Channels ($C_{\text{in}}$) & 1 \\
+        Patch Size ($P \times P \times P$) & $12 \times 12 \times 12$ \\
+        Stride & 8 \\
+        Padding & 2 \\
+        MLP Structure & Two-layer SwiGLU \\
+        Hidden Size & $C_{\text{in}} \cdot P^3 = 1 \cdot 12^3 = 1728$ \\
+        MLP Ratio ($R_{\text{mlp}}$) & 1.0 \\
+        Output Channels ($C_{\text{out}}$) & 2 \\
+        Normalization & LayerNorm \\
+        Conditioning & AdaLN\_modulation with TimeEmbedding \\
+        Activation & SwiGLU \\
+        Dropout & 0.0 \\
+        Weight Initialization & Zero-initialized for AdaLN and final linear layer \\
+        \bottomrule
+    \end{tabular}
+    \caption{Configurations of the \texttt{LocalDenoiser} module for PRDiT.}
+    \label{tab:local_denoiser}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{lc}
+        \toprule
+        Parameter & Value \\
+        \midrule
+        Input Channels ($C_{\text{in}}$) & 1 \\
+        Patch Size ($P \times P \times P$) & $12 \times 12 \times 12$ \\
+        Stride & 8 \\
+        Padding & 2 \\
+        Depth & \{4, 8, 12\} \\
+        Hidden Size ($D_{\text{hidden}}$) & \{768, 1152\} \\
+        Number of Heads & \{12, 16\} \\
+        MLP Ratio ($R_{\text{mlp}}$) & 4.0 \\
+        Output Channels ($C_{\text{out}}$) & 2 \\
+        Normalization & LayerNorm \\
+        Positional Embedding & 3D sinusoidal, shape $[1, N, D_{\text{hidden}}]$, non-learnable \\
+        Conditioning & AdaLN-Modulation with TimeEmbedding \\
+        Attention & Multi-head self-attention with memory-efficient attention \\
+        Dropout & 0.0 \\
+        Weight Initialization & Zero-initialized for AdaLN-Zero and final linear layer \\
+        \bottomrule
+    \end{tabular}
+    \caption{Configurations of the \texttt{GlobalResidual DiT} module (global residual path) for PRDiT, with depths 4, 8, and 12. All models share the same pretrained \texttt{LocalDenoiser} model from Stage 1 training.}
+\label{tab:fine_refiner_configs}
+\end{table}
+\subsubsection{Training Setup}
+We provide the details of how to train the methods.
+\begin{itemize}
+    \item \textbf{Optimization Function}: AdamW  with $\beta_1=0.9$, $\beta_2=0.999$, and weight decay 0.0. The objective is mean squared error (MSE) loss.
+    \item \textbf{Learning Rate}:
+    \begin{itemize}
+        \item Stage 1 (\texttt{LocalDenoiser}): $10^{-4}$.
+        \item Stage 2 (\texttt{GlobalResidual DiT}): 
+        \begin{itemize}
+        \item $9 \times 10^{-5}$ (depth=4), 
+        \item $6 \times 10^{-5}$ (depth=8), 
+        \item $4 \times 10^{-5}$ (depth=12) 
+        \end{itemize}
+        for new parameters; pretrained parameters (Local Denoiser) are frozen during second-stage training.
+    \end{itemize}
+    \item \textbf{Device}: NVIDIA A100 80GB GPUs with BFP16 mixed precision.
+    \item \textbf{Batch Size}: 128 volumes (16 per GPU), 256 volumes (4 per GPU).
+    \item \textbf{Diffusion Schedule}: Linear, 1000 timesteps.
+    \item \textbf{Training Steps}: Stage 1: 6,000 epoches; Stage 2: 8,000 epoches.
+    \item \textbf{Gradient Clipping}: Maximum norm of 1.0.
+    \item \rebuttal{\textbf{Data Split}: Randomly-sampled data split of 90\% for actual training and a 10\% validation set for tracking progress (both datasets).}
+\end{itemize}
+\subsubsection{Evaluation Protocol With Focus on the W-Score Metric}
+\label{ap:eval}
+In here, we provide the details about how to measure the performance of the generative models. In this paper, we use the three evaluation metrics, 3D FID~\citep{friedrich2024wdm}, 3D MMD~\citep{sun2022hierarchical}, and W-GAN scores~\citep{zhang2025tcam}. We explain how to use the WGAN-GP Critic scores to measure the generative quality in our experiments.
+\paragraph{The Goal.} We use a single $1$-Lipschitz critic $f_\theta$ (WGAN-GP) as a measurement to estimate the Wasserstein-1 distance between the real data distribution $\mathbb{P}_\text{real}$ and a model $m$'s distribution $\mathbb{P}_m$:
+\begin{equation}
+\widehat{W}_1(\mathbb{P}_\text{real}, \mathbb{P}_m)
+= \mathbb{E}_{x \sim \mathbb{P}_\text{real}} \big[f_\theta(x)\big]
+- \mathbb{E}_{\tilde{x} \sim \mathbb{P}_m} \big[f_\theta(\tilde{x})\big].
+\end{equation}
+Lower is better. We compare models $m \in$ \{\text{HA\mbox{-}GAN},\ \text{3D\mbox{-}LDM},\ \text{WDM\mbox{-}3D},\ \text{PRDiT\mbox{-}4L (ours)},\ \text{PRDiT\mbox{-}8L (ours)}\} against our PRDiT-12L as the best performance standard.
+\paragraph{Data Splits \& Preprocessing.}
+\begin{enumerate}
+\item \textbf{Real}: Split the dataset into \emph{Real-Train} and \emph{Real-Val} (no overlap with any generator's training data).
+\item \textbf{Fake per model}: For each generator $m$, split its generated volumes into \emph{Fake-Train}$^{(m)}$ and \emph{Fake-Val}$^{(m)}$ (no overlap).
+\item \textbf{Preprocessing}: Apply identical resampling/cropping and intensity normalization (e.g., HU $\to [0,1]$) to both real and fake data, during training, it will map $[0,1] \to [-1,1]$.
+\item \textbf{Mixed Fake for training}: Build \emph{Fake-Train-Mix} by combining the pairs of \emph{Fake-Train}$^{(m)}$ sets.
+\end{enumerate}
+\paragraph{Critic \& Training Objective.}
+A 3D conv stack with stride-2 downsamples, InstanceNorm3d and LeakyReLU activations, which is following the 2D WGAN-GP~\citep{gulrajani2017improved} define. \emph{No} sigmoid at the end. 
+In addition, the objective (maximize)
+\begin{equation}
+\mathcal{L}_\text{critic}
+= \mathbb{E}_{x \sim \text{Real-Train}}[f_\theta(x)]
+- \mathbb{E}_{\tilde{x} \sim \text{Fake-Train-Mix}}[f_\theta(\tilde{x})]
+- \lambda\,\mathrm{GP}(\theta),
+\end{equation}
+with gradient penalty $\mathrm{GP}$ on random interpolates and setting $\lambda=10$.
+The default configurations is Adam (lr $=10^{-5}$, $\beta_1{=}0.5$, $\beta_2{=}0.999$). The batch size is $40$ real / $40$ fake, and the fake samples are consisting of the generative model and our anchor PRDiT-12L output.
+
+\paragraph{Pair-Comparisons vs. PRDiT-12L (Anchor)}
+Given \emph{PRDiT-12L} is the anchor (chosen by 3D FID/MMD), for each competitor $c$:
+\begin{align}
+r_c &= \frac{\widehat{W}_1(c)}{\widehat{W}_1(\text{Ours-12L})} \quad \text{(}{>}1 \text{ $\Rightarrow$ PRDiT-12L better)}.
+\end{align}
+Our experiments report the mean ratio and std over three different random seeds with the trained critic.
+\subsection{Comprehensive Pairwise Comparisons Across Anchors}
+\label{ap:wgan}
+In this section, we propose to choose the different model as the anchor to compute the WGAN ratio score, and for better visualization, we use the log of WGAN ratio. Using the log ratio makes results signed and interpretable (positive = better than the column model; negative = worse). The results show in Table~\ref{tab:logwgan}.
+
+\begin{table}[!htbp]
+\centering
+
+% spacing controls (tune to taste)
+\setlength{\tabcolsep}{2pt}        % horizontal padding in cells
+\renewcommand{\arraystretch}{1.35} % overall row height scalar
+\setlength{\extrarowheight}{1.5pt} % extra per-row padding
+
+\begin{tabular}{c|*{6}{M{1.25cm}}} % widen a bit to keep a square feel
+\toprule
+& HA-GAN & 3D-LDM & WDM-3D & PRDiT-4L & PRDiT-8L & PRDiT-12L \\
+\midrule
+HA-GAN
+  & \ms{0}{0}          & \ms{-0.302}{0.002} & \ms{-1.950}{0.055} & \ms{-0.969}{0.036} & \ms{-1.199}{0.095} & \ms{-1.433}{0.051} \\ \addlinespace[4pt]
+3D-LDM
+  & \ms{0.302}{0.002}  & \ms{0}{0}        & \ms{-1.602}{0.069} & \ms{-0.753}{0.043} & \ms{-0.963}{0.031} & \ms{-1.045}{0.068} \\ \addlinespace[4pt]
+WDM-3D
+  & \ms{1.950}{0.055}    & \ms{1.602}{0.069}  & \ms{0}{0}        & \ms{-0.142}{0.055} & \ms{-0.208}{0.080} & \ms{-0.371}{0.049} \\ \addlinespace[4pt]
+PRDiT-4L
+  & \ms{0.969}{0.036}    & \ms{0.753}{0.043}  & \ms{0.142}{0.055}& \ms{0}{0}        & \ms{-0.011}{0.003}& \ms{-0.104}{0.008}\\ \addlinespace[4pt]
+PRDiT-8L
+  & \ms{1.199}{0.095}    & \ms{0.963}{0.031}  & \ms{0.208}{0.080}& \ms{0.011}{0.003}& \ms{0}{0}         & \ms{-0.073}{0.011}\\ \addlinespace[4pt]
+PRDiT-12L
+  & \ms{1.433}{0.051}    & \ms{1.045}{0.068}  & \ms{0.371}{0.049}  & \ms{0.104}{0.008} & \ms{0.073}{0.011}  & \ms{0}{0} \\
+\bottomrule
+\end{tabular}
+\caption{Pairwise log-WGAN ratio comparisons. For every model pair $(i,j)$, we report $\mu \pm \sigma$ of the log ratio between the WGAN critic scores for samples from model $i$ and model $j$ (averaged over 4 evaluations). Values $>0$ indicates the row model is judged more realistic than the column model, $<0$ indicates the opposite. The matrix is anti-symmetric $(s_{i,j}=-s_{j,i})$ with zeros on the diagonal.}
+\label{tab:logwgan}
+\end{table}
+
+
+% \subsection{More Experiments with more random seeds}
+% To further check robustness, we run our main LIDC-IDRI experiments with two additional random seeds, which random selected, and recomputed the statistics over 5 seeds (Table~\ref{tab:lidc_5seeds}). Compared the Table~\ref{tab1} with Table~\ref{tab:lidc_5seeds}, the numbers change only slightly, for example, PRDiT--12L moves from $1.41\pm0.17$ to $1.48\pm0.16$ FID and from $0.1501\pm0.010$ to $0.1461\pm0.008$ MMD, while still clearly outperforming the baselines. This confirms that random seeds variance is small relative to the performance margins. 
+% }
+% \begin{table}[h!]
+% \centering
+% \caption{Ablation experiments: unconditional generative methods on LIDC-IDRI. Reported are mean $\pm$ std over 5 random seeds. FID values are scaled by $10^3$.}
+% \begin{tabular}{lcc}
+% \toprule
+% Model & FID $\downarrow$ & MMD $\downarrow$ \\
+% \midrule
+% HA-GAN           & \meanstd{{3.07}}{0.34} & \meanstd{0.1976}{0.008} \\
+% 3D-LDM           & \meanstd{7.46}{0.45} & \meanstd{0.3607}{0.015} \\
+% WDM-3D           & \meanstd{3.55}{0.36} & \meanstd{0.1881}{0.016} \\
+% \bottomrule
+% PRDiT-4L (ours)  & \meanstd{2.01}{0.14} & \meanstd{0.1825}{0.010} \\
+% PRDiT-8L (ours)  & \meanstd{1.90}{0.10} & \meanstd{0.1648}{0.010} \\
+% PRDiT-12L (ours) & \bmeanstd{1.48}{0.16} & \bmeanstd{0.1461}{0.008} \\
+% \bottomrule
+% \end{tabular}
+% \label{tab:lidc_5seeds}
+% \end{table}
+
+
+\subsection{Additional Qualitative Insights}
+\label{ap}
+Here we present additional qualitative examples that complement the quantitative results for the LIDC-IDRI dataset in Figure~\ref{fig:lidc} and Rad-chestCT dataset in Figure~\ref{fig:rad} for our 4-layer, 8-layer and 12-layer models. 
+\subsubsection{LIDC-IDRI}
+
+We provide additional generated 3D CT images for our PRDiT models with 4, 8 and 12 layers trained on LIDC-IDRI dataset in Figure~\ref{fig:lidc}.
+
+\begin{figure}[h]
+  \centering
+
+  \begin{subfigure}{\textwidth}
+  
+    \caption{\textbf{4-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/4-lidc.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{8-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/8-lidc.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{12-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/12-lidc.pdf}
+  \end{subfigure}
+
+  \caption{Extended qualitative results for different model within LIDC-IDRI dataset.}
+  \label{fig:lidc}
+\end{figure}
+\subsubsection{RAD-chestCT}
+
+We provide additional generated 3D CT images for our PRDiT models with 4, 8 and 12 layers trained on Rad-ChestCT dataset in Figure~\ref{fig:rad}.
+
+\begin{figure}[h]
+  \centering
+
+  \begin{subfigure}{\textwidth}
+  
+    \caption{\textbf{4-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/4-RAD.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{8-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/8-RAD.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{12-Layer Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/12-rad.pdf}
+  \end{subfigure}
+
+  \caption{Extended qualitative results for different model within Rad-ChestCT dataset.}
+  \label{fig:rad}
+\end{figure}
+\subsubsection{Comparisons on \texorpdfstring{$256^3$}{256-cubed} resolution}
+\label{apfig:256}
+We provide the additional generated samples across the HA-GAN, WDM-3D, and our PRDiT-4L with the $256^3$ LIDC-IDRI dataset, in Figure~\ref{fig:256}. 
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{HA-GAN Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/ha-gan_256.pdf}
+  \end{subfigure}%\vspace{3pt}
+  
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{WDM-3D Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/wdm_256_v2.pdf}
+  \end{subfigure}%\vspace{3pt}
+  
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{Our Model Generative Output}}
+    \includegraphics[width=\textwidth]{images/appendix/our_256.pdf}
+  \end{subfigure}
+  
+  \caption{Extended qualitative results for different model within $256^3$ LIDC-IDRI dataset.}
+  \label{fig:256}
+\end{figure}
+\subsubsection{Extended qualitative results}
+We present qualitative results comprising the Local Denoiser branch’s coarse reconstructions and the Global Residual DiT branch’s residual estimates, highlighting the complementary information each branch captures, in Figure~\ref{fig:resid}.
+
+\begin{figure}[!htbp]
+  \centering
+
+  \begin{subfigure}{\textwidth}
+  
+    \caption{\textbf{Local Denoiser Path Output}}
+    \includegraphics[width=\textwidth]{images/appendix/local.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \begin{subfigure}{\textwidth}
+    \caption{\textbf{Global Residual Path Output}}
+    \includegraphics[width=\textwidth]{images/appendix/global.pdf}
+  \end{subfigure}%\vspace{3pt}
+
+  \caption{Extended qualitative results for visualizing the output from Local Denoiser and Global Residual module.}
+  \label{fig:resid}
+\end{figure}

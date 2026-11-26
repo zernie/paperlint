@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "relatedwork3.tex",
+      "role": "body"
+    },
+    {
+      "path": "method.tex",
+      "role": "body"
+    },
+    {
+      "path": "maintable.tex",
+      "role": "body"
+    },
+    {
+      "path": "exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "abltable.tex",
+      "role": "body"
+    },
+    {
+      "path": "conclu.tex",
+      "role": "body"
+    },
+    {
+      "path": "app.tex",
+      "role": "body"
+    },
+    {
+      "path": "trace.tex",
+      "role": "body"
+    },
+    {
+      "path": "prompt.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "524f6da5abd304e87adef7d80ac72ad4dd89923b40edbbb36b4a24975c9b6e5e",
+    "acl.sty": "19dfeddc2c0e448f3926a0bef048a9db3f3611b46265b760caabd7ada4f361de",
+    "intro.tex": "80db57788b796aec892f07e82b9ba63bcf5e7a3e3147ed6576cdd80e058dd7c2",
+    "relatedwork3.tex": "c6d293fb193038076bf8980850692baaa7427e80f9a143a8760a2e862294bd8b",
+    "method.tex": "4086d75d4f4ba01fc4bd1ba6377bbd6a370ab5e22b16f87d2e29e9ce2a9a34e1",
+    "maintable.tex": "8d9729f436863153b1a144a52b390f43aa0849710b1a4bbae273a2976b1d0fcc",
+    "exp.tex": "ca7120607480a3e622533426754ba22a1ae14f28a2f132f1f5ecc31f87835999",
+    "abltable.tex": "3f64d02236e9b7371434ffd9e52b1e8ecd7c0424632bf7b3bd3fe38b126ad3c7",
+    "conclu.tex": "4e4dee8ad3df2d94dfc5025a5f4d63d75f9e5f68a1f98f74ea2da520ab72e7da",
+    "app.tex": "0053a0361bde70090024e213eb4577d941c616c9b8c01d32bfcfe11762564bc3",
+    "trace.tex": "c1d85feb7f0260fa14bbc1c105c80a6d2cfd96eee29265a759354fbb9f7ef545",
+    "prompt.tex": "9e03959705cf41ef91fb2e26acb8ab94d30264bc2e27410afdcc4e7a6a3acd48"
+  }
+}

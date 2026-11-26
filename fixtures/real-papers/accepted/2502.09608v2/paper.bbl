@@ -1,0 +1,540 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{50}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Bolya et~al\mbox{.}(2019)]%
+        {Bolya_2019_yolact}
+\bibfield{author}{\bibinfo{person}{Daniel Bolya}, \bibinfo{person}{Chong Zhou}, \bibinfo{person}{Fanyi Xiao}, {and} \bibinfo{person}{Yong~Jae Lee}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{YOLACT: Real-Time Instance Segmentation}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)}}.
+\newblock
+
+
+\bibitem[Bourouis et~al\mbox{.}(2024)]%
+        {bourouis2024open}
+\bibfield{author}{\bibinfo{person}{Ahmed Bourouis}, \bibinfo{person}{Judith~E Fan}, {and} \bibinfo{person}{Yulia Gryaditskaya}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Open Vocabulary Semantic Scene Sketch Understanding}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}}. \bibinfo{pages}{4176--4186}.
+\newblock
+
+
+\bibitem[Caron et~al\mbox{.}(2021)]%
+        {DINOcaron2021emerging}
+\bibfield{author}{\bibinfo{person}{Mathilde Caron}, \bibinfo{person}{Hugo Touvron}, \bibinfo{person}{Ishan Misra}, \bibinfo{person}{Herv\'e J\'egou}, \bibinfo{person}{Julien Mairal}, \bibinfo{person}{Piotr Bojanowski}, {and} \bibinfo{person}{Armand Joulin}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Emerging Properties in Self-Supervised Vision Transformers}. In \bibinfo{booktitle}{\emph{ICCV}}.
+\newblock
+
+
+\bibitem[Cheng et~al\mbox{.}(2022)]%
+        {cheng2021mask2former}
+\bibfield{author}{\bibinfo{person}{Bowen Cheng}, \bibinfo{person}{Ishan Misra}, \bibinfo{person}{Alexander~G. Schwing}, \bibinfo{person}{Alexander Kirillov}, {and} \bibinfo{person}{Rohit Girdhar}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Masked-attention Mask Transformer for Universal Image Segmentation}.
+\newblock \bibinfo{journal}{\emph{CVPR}}.
+\newblock
+
+
+\bibitem[Chowdhury et~al\mbox{.}(2022)]%
+        {fscoco}
+\bibfield{author}{\bibinfo{person}{Pinaki~Nath Chowdhury}, \bibinfo{person}{Aneeshan Sain}, \bibinfo{person}{Ayan~Kumar Bhunia}, \bibinfo{person}{Tao Xiang}, \bibinfo{person}{Yulia Gryaditskaya}, {and} \bibinfo{person}{Yi-Zhe Song}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{FS-COCO: Towards Understanding of Freehand Sketches of Common Objects in Context.}. In \bibinfo{booktitle}{\emph{ECCV}}.
+\newblock
+
+
+\bibitem[Eitz et~al\mbox{.}(2012)]%
+        {eitz2012hdhso}
+\bibfield{author}{\bibinfo{person}{Mathias Eitz}, \bibinfo{person}{James Hays}, {and} \bibinfo{person}{Marc Alexa}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{How Do Humans Sketch Objects?}
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph. (Proc. SIGGRAPH)}} \bibinfo{volume}{31}, \bibinfo{number}{4} (\bibinfo{year}{2012}), \bibinfo{pages}{44:1--44:10}.
+\newblock
+
+
+\bibitem[Ge et~al\mbox{.}(2022)]%
+        {GeLocalDetailPerception}
+\bibfield{author}{\bibinfo{person}{Ce Ge}, \bibinfo{person}{Haifeng Sun}, \bibinfo{person}{Yi-Zhe Song}, \bibinfo{person}{Zhanyu Ma}, {and} \bibinfo{person}{Jianxin Liao}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Exploring Local Detail Perception for Scene Sketch Semantic Segmentation}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Image Processing}}  \bibinfo{volume}{31} (\bibinfo{year}{2022}), \bibinfo{pages}{1447--1461}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TIP.2022.3142511}
+\showDOI{\tempurl}
+
+
+\bibitem[Ge et~al\mbox{.}(2020)]%
+        {ge2020creative}
+\bibfield{author}{\bibinfo{person}{Songwei Ge}, \bibinfo{person}{Vedanuj Goswami}, \bibinfo{person}{C.~Lawrence Zitnick}, {and} \bibinfo{person}{Devi Parikh}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Creative Sketch Generation}.
+\newblock
+\newblock
+\showeprint[arxiv]{2011.10039}~[cs.CV]
+
+
+\bibitem[Gryaditskaya et~al\mbox{.}(2019)]%
+        {OpenSketch19}
+\bibfield{author}{\bibinfo{person}{Yulia Gryaditskaya}, \bibinfo{person}{Mark Sypesteyn}, \bibinfo{person}{Jan~Willem Hoftijzer}, \bibinfo{person}{Sylvia Pont}, \bibinfo{person}{Fr\'{e}do Durand}, {and} \bibinfo{person}{Adrien Bousseau}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{OpenSketch: A Richly-Annotated Dataset of Product Design Sketches}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Graphics (Proc. SIGGRAPH Asia)}}  \bibinfo{volume}{38} (\bibinfo{date}{11} \bibinfo{year}{2019}).
+\newblock
+
+
+\bibitem[He et~al\mbox{.}(2018)]%
+        {he2018maskrcnn}
+\bibfield{author}{\bibinfo{person}{Kaiming He}, \bibinfo{person}{Georgia Gkioxari}, \bibinfo{person}{Piotr Dollár}, {and} \bibinfo{person}{Ross Girshick}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{title}{Mask R-CNN}.
+\newblock
+\newblock
+\showeprint[arxiv]{1703.06870}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/1703.06870}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Huang et~al\mbox{.}(2014)]%
+        {dataDrivenSeg2014}
+\bibfield{author}{\bibinfo{person}{Zhe Huang}, \bibinfo{person}{Hongbo Fu}, {and} \bibinfo{person}{Rynson W.~H. Lau}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Data-driven segmentation and labeling of freehand sketches}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{33}, \bibinfo{number}{6}, Article \bibinfo{articleno}{175} (\bibinfo{date}{Nov.} \bibinfo{year}{2014}), \bibinfo{numpages}{10}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2661229.2661280}
+\showDOI{\tempurl}
+
+
+\bibitem[Kaiyrbekov and Sezgin(2020)]%
+        {symbolReconSeg2020}
+\bibfield{author}{\bibinfo{person}{Kurmanbek Kaiyrbekov} {and} \bibinfo{person}{Metin Sezgin}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Deep Stroke-Based Sketched Symbol Reconstruction and Segmentation}.
+\newblock \bibinfo{journal}{\emph{IEEE Computer Graphics and Applications}} \bibinfo{volume}{40}, \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{112--126}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/MCG.2019.2943333}
+\showDOI{\tempurl}
+
+
+\bibitem[Kirillov et~al\mbox{.}(2023)]%
+        {kirillov2023segany}
+\bibfield{author}{\bibinfo{person}{Alexander Kirillov}, \bibinfo{person}{Eric Mintun}, \bibinfo{person}{Nikhila Ravi}, \bibinfo{person}{Hanzi Mao}, \bibinfo{person}{Chloe Rolland}, \bibinfo{person}{Laura Gustafson}, \bibinfo{person}{Tete Xiao}, \bibinfo{person}{Spencer Whitehead}, \bibinfo{person}{Alexander~C. Berg}, \bibinfo{person}{Wan-Yen Lo}, \bibinfo{person}{Piotr Doll{\'a}r}, {and} \bibinfo{person}{Ross Girshick}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Segment Anything}.
+\newblock \bibinfo{journal}{\emph{arXiv:2304.02643}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Krishna et~al\mbox{.}(2017)]%
+        {VisualGenome2017}
+\bibfield{author}{\bibinfo{person}{Ranjay Krishna}, \bibinfo{person}{Yuke Zhu}, \bibinfo{person}{Oliver Groth}, \bibinfo{person}{Justin Johnson}, \bibinfo{person}{Kenji Hata}, \bibinfo{person}{Joshua Kravitz}, \bibinfo{person}{Stephanie Chen}, \bibinfo{person}{Yannis Kalantidis}, \bibinfo{person}{Li-Jia Li}, \bibinfo{person}{David~A. Shamma}, \bibinfo{person}{Michael~S. Bernstein}, {and} \bibinfo{person}{Li Fei-Fei}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Visual Genome: Connecting Language and Vision Using Crowdsourced Dense Image Annotations}.
+\newblock \bibinfo{journal}{\emph{Int. J. Comput. Vision}} \bibinfo{volume}{123}, \bibinfo{number}{1} (\bibinfo{date}{May} \bibinfo{year}{2017}), \bibinfo{pages}{32–73}.
+\newblock
+\showISSN{0920-5691}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s11263-016-0981-7}
+\showDOI{\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2022)]%
+        {Li:2022:Free2CAD}
+\bibfield{author}{\bibinfo{person}{Changjian Li}, \bibinfo{person}{Hao Pan}, \bibinfo{person}{Adrien Bousseau}, {and} \bibinfo{person}{Niloy~J. Mitra}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Free2CAD: Parsing Freehand Drawings into CAD Commands}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph. (Proceedings of SIGGRAPH 2022)}} \bibinfo{volume}{41}, \bibinfo{number}{4} (\bibinfo{year}{2022}), \bibinfo{pages}{93:1--93:16}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3528223.3530133}
+\showDOI{\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2018)]%
+        {li2018universalperceptualgrouping}
+\bibfield{author}{\bibinfo{person}{Ke Li}, \bibinfo{person}{Kaiyue Pang}, \bibinfo{person}{Jifei Song}, \bibinfo{person}{Yi-Zhe Song}, \bibinfo{person}{Tao Xiang}, \bibinfo{person}{Timothy~M. Hospedales}, {and} \bibinfo{person}{Honggang Zhang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{title}{Universal Perceptual Grouping}.
+\newblock
+\newblock
+\showeprint[arxiv]{1808.02312}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/1808.02312}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2019)]%
+        {Li2019TowardDU}
+\bibfield{author}{\bibinfo{person}{Ke Li}, \bibinfo{person}{Kaiyue Pang}, \bibinfo{person}{Yi-Zhe Song}, \bibinfo{person}{Tao Xiang}, \bibinfo{person}{Timothy~M. Hospedales}, {and} \bibinfo{person}{Honggang Zhang}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Toward Deep Universal Sketch Perceptual Grouper}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Image Processing}}  \bibinfo{volume}{28} (\bibinfo{year}{2019}), \bibinfo{pages}{3219--3231}.
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:73430225}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Liu et~al\mbox{.}(2023a)]%
+        {liu2023llava}
+\bibfield{author}{\bibinfo{person}{Haotian Liu}, \bibinfo{person}{Chunyuan Li}, \bibinfo{person}{Qingyang Wu}, {and} \bibinfo{person}{Yong~Jae Lee}.} \bibinfo{year}{2023}\natexlab{a}.
+\newblock \showarticletitle{Visual Instruction Tuning}. In \bibinfo{booktitle}{\emph{NeurIPS}}.
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2023b)]%
+        {liu2023grounding}
+\bibfield{author}{\bibinfo{person}{Shilong Liu}, \bibinfo{person}{Zhaoyang Zeng}, \bibinfo{person}{Tianhe Ren}, \bibinfo{person}{Feng Li}, \bibinfo{person}{Hao Zhang}, \bibinfo{person}{Jie Yang}, \bibinfo{person}{Chunyuan Li}, \bibinfo{person}{Jianwei Yang}, \bibinfo{person}{Hang Su}, \bibinfo{person}{Jun Zhu}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{b}.
+\newblock \showarticletitle{Grounding dino: Marrying dino with grounded pre-training for open-set object detection}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2303.05499}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2021)]%
+        {liu2021Swin}
+\bibfield{author}{\bibinfo{person}{Ze Liu}, \bibinfo{person}{Yutong Lin}, \bibinfo{person}{Yue Cao}, \bibinfo{person}{Han Hu}, \bibinfo{person}{Yixuan Wei}, \bibinfo{person}{Zheng Zhang}, \bibinfo{person}{Stephen Lin}, {and} \bibinfo{person}{Baining Guo}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Swin Transformer: Hierarchical Vision Transformer using Shifted Windows}. In \bibinfo{booktitle}{\emph{ICCV}}.
+\newblock
+
+
+\bibitem[Minderer et~al\mbox{.}(2022)]%
+        {minderer2022owlvit}
+\bibfield{author}{\bibinfo{person}{Matthias Minderer}, \bibinfo{person}{Alexey Gritsenko}, \bibinfo{person}{Austin Stone}, \bibinfo{person}{Maxim Neumann}, \bibinfo{person}{Dirk Weissenborn}, \bibinfo{person}{Alexey Dosovitskiy}, \bibinfo{person}{Aravindh Mahendran}, \bibinfo{person}{Anurag Arnab}, \bibinfo{person}{Mostafa Dehghani}, \bibinfo{person}{Zhuoran Shen}, \bibinfo{person}{Xiao Wang}, \bibinfo{person}{Xiaohua Zhai}, \bibinfo{person}{Thomas Kipf}, {and} \bibinfo{person}{Neil Houlsby}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{Simple Open-Vocabulary Object Detection with Vision Transformers}.
+\newblock
+\newblock
+\showeprint[arxiv]{2205.06230}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2205.06230}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Qi et~al\mbox{.}(2021)]%
+        {oneshot2021}
+\bibfield{author}{\bibinfo{person}{Anran Qi}, \bibinfo{person}{Yulia Gryaditskaya}, \bibinfo{person}{Tao Xiang}, {and} \bibinfo{person}{Yi{-}Zhe Song}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{One Sketch for All: One-Shot Personalized Sketch Segmentation}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2112.10838} (\bibinfo{year}{2021}).
+\newblock
+\showeprint[arXiv]{2112.10838}
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2112.10838}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Qi et~al\mbox{.}(2015)]%
+        {edgePerceptual2015}
+\bibfield{author}{\bibinfo{person}{Yonggang Qi}, \bibinfo{person}{Yi-Zhe Song}, \bibinfo{person}{Tao Xiang}, \bibinfo{person}{Honggang Zhang}, \bibinfo{person}{Timothy Hospedales}, \bibinfo{person}{Yi Li}, {and} \bibinfo{person}{Jun Guo}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Making better use of edges via perceptual grouping}. In \bibinfo{booktitle}{\emph{2015 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}}. \bibinfo{pages}{1856--1865}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/CVPR.2015.7298795}
+\showDOI{\tempurl}
+
+
+\bibitem[Qi and Tan(2019)]%
+        {sketchSegNet2019}
+\bibfield{author}{\bibinfo{person}{Yonggang Qi} {and} \bibinfo{person}{Zheng-Hua Tan}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{SketchSegNet+: An End-to-End Learning of RNN for Multi-Class Sketch Semantic Segmentation}.
+\newblock \bibinfo{journal}{\emph{IEEE Access}}  \bibinfo{volume}{7} (\bibinfo{year}{2019}), \bibinfo{pages}{102717--102726}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/ACCESS.2019.2929804}
+\showDOI{\tempurl}
+
+
+\bibitem[Radford et~al\mbox{.}(2021)]%
+        {radford2021clip}
+\bibfield{author}{\bibinfo{person}{Alec Radford}, \bibinfo{person}{Jong~Wook Kim}, \bibinfo{person}{Chris Hallacy}, \bibinfo{person}{Aditya Ramesh}, \bibinfo{person}{Gabriel Goh}, \bibinfo{person}{Sandhini Agarwal}, \bibinfo{person}{Girish Sastry}, \bibinfo{person}{Amanda Askell}, \bibinfo{person}{Pamela Mishkin}, \bibinfo{person}{Jack Clark}, \bibinfo{person}{Gretchen Krueger}, {and} \bibinfo{person}{Ilya Sutskever}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{Learning Transferable Visual Models From Natural Language Supervision}.
+\newblock
+\newblock
+\showeprint[arxiv]{2103.00020}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2103.00020}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Ren et~al\mbox{.}(2024)]%
+        {ren2024grounded}
+\bibfield{author}{\bibinfo{person}{Tianhe Ren}, \bibinfo{person}{Shilong Liu}, \bibinfo{person}{Ailing Zeng}, \bibinfo{person}{Jing Lin}, \bibinfo{person}{Kunchang Li}, \bibinfo{person}{He Cao}, \bibinfo{person}{Jiayu Chen}, \bibinfo{person}{Xinyu Huang}, \bibinfo{person}{Yukang Chen}, \bibinfo{person}{Feng Yan}, \bibinfo{person}{Zhaoyang Zeng}, \bibinfo{person}{Hao Zhang}, \bibinfo{person}{Feng Li}, \bibinfo{person}{Jie Yang}, \bibinfo{person}{Hongyang Li}, \bibinfo{person}{Qing Jiang}, {and} \bibinfo{person}{Lei Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Grounded SAM: Assembling Open-World Models for Diverse Visual Tasks}.
+\newblock
+\newblock
+\showeprint[arxiv]{2401.14159}~[cs.CV]
+
+
+\bibitem[Rombach et~al\mbox{.}(2021)]%
+        {rombach2021highresolution}
+\bibfield{author}{\bibinfo{person}{Robin Rombach}, \bibinfo{person}{Andreas Blattmann}, \bibinfo{person}{Dominik Lorenz}, \bibinfo{person}{Patrick Esser}, {and} \bibinfo{person}{Björn Ommer}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{High-Resolution Image Synthesis with Latent Diffusion Models}.
+\newblock
+\newblock
+\showeprint[arxiv]{2112.10752}~[cs.CV]
+
+
+\bibitem[Sangkloy et~al\mbox{.}(2016)]%
+        {sketchydataset}
+\bibfield{author}{\bibinfo{person}{Patsorn Sangkloy}, \bibinfo{person}{Nathan Burnell}, \bibinfo{person}{Cusuh Ham}, {and} \bibinfo{person}{James Hays}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The sketchy database: learning to retrieve badly drawn bunnies}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{35}, \bibinfo{number}{4}, Article \bibinfo{articleno}{119} (\bibinfo{date}{July} \bibinfo{year}{2016}), \bibinfo{numpages}{12}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2897824.2925954}
+\showDOI{\tempurl}
+
+
+\bibitem[Schneider and Tuytelaars(2016)]%
+        {CRFseg2016}
+\bibfield{author}{\bibinfo{person}{Ros\'{a}lia~G. Schneider} {and} \bibinfo{person}{Tinne Tuytelaars}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Example-Based Sketch Segmentation and Labeling Using CRFs}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{35}, \bibinfo{number}{5}, Article \bibinfo{articleno}{151} (\bibinfo{date}{July} \bibinfo{year}{2016}), \bibinfo{numpages}{9}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2898351}
+\showDOI{\tempurl}
+
+
+\bibitem[Vincent and Soille(1991)]%
+        {watershed1991}
+\bibfield{author}{\bibinfo{person}{L. Vincent} {and} \bibinfo{person}{P. Soille}.} \bibinfo{year}{1991}\natexlab{}.
+\newblock \showarticletitle{Watersheds in digital spaces: an efficient algorithm based on immersion simulations}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}} \bibinfo{volume}{13}, \bibinfo{number}{6} (\bibinfo{year}{1991}), \bibinfo{pages}{583--598}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/34.87344}
+\showDOI{\tempurl}
+
+
+\bibitem[Vinker et~al\mbox{.}(2022)]%
+        {vinker2022clipasso}
+\bibfield{author}{\bibinfo{person}{Yael Vinker}, \bibinfo{person}{Ehsan Pajouheshgar}, \bibinfo{person}{Jessica~Y. Bo}, \bibinfo{person}{Roman~Christian Bachmann}, \bibinfo{person}{Amit~Haim Bermano}, \bibinfo{person}{Daniel Cohen-Or}, \bibinfo{person}{Amir Zamir}, {and} \bibinfo{person}{Ariel Shamir}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{CLIPasso: Semantically-Aware Object Sketching}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{41}, \bibinfo{number}{4}, Article \bibinfo{articleno}{86} (\bibinfo{date}{jul} \bibinfo{year}{2022}), \bibinfo{numpages}{11}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3528223.3530068}
+\showDOI{\tempurl}
+
+
+\bibitem[Vinker et~al\mbox{.}(2024)]%
+        {vinker2024sketchagent}
+\bibfield{author}{\bibinfo{person}{Yael Vinker}, \bibinfo{person}{Tamar~Rott Shaham}, \bibinfo{person}{Kristine Zheng}, \bibinfo{person}{Alex Zhao}, \bibinfo{person}{Judith~E Fan}, {and} \bibinfo{person}{Antonio Torralba}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{SketchAgent: Language-Driven Sequential Sketch Generation}.
+\newblock
+\newblock
+\showeprint[arxiv]{2411.17673}~[cs.CV]
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2411.17673}
+\showURL{%
+\tempurl}
+
+
+\bibitem[von Platen et~al\mbox{.}(2022)]%
+        {von-platen-etal-2022-diffusers}
+\bibfield{author}{\bibinfo{person}{Patrick von Platen}, \bibinfo{person}{Suraj Patil}, \bibinfo{person}{Anton Lozhkov}, \bibinfo{person}{Pedro Cuenca}, \bibinfo{person}{Nathan Lambert}, \bibinfo{person}{Kashif Rasul}, \bibinfo{person}{Mishig Davaadorj}, \bibinfo{person}{Dhruv Nair}, \bibinfo{person}{Sayak Paul}, \bibinfo{person}{William Berman}, \bibinfo{person}{Yiyi Xu}, \bibinfo{person}{Steven Liu}, {and} \bibinfo{person}{Thomas Wolf}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{Diffusers: State-of-the-art diffusion models}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/huggingface/diffusers}}.
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2020)]%
+        {wang2020multicolumnseg}
+\bibfield{author}{\bibinfo{person}{Fei Wang}, \bibinfo{person}{Shujin Lin}, \bibinfo{person}{Hanhui Li}, \bibinfo{person}{Hefeng Wu}, \bibinfo{person}{Tie Cai}, \bibinfo{person}{Xiaonan Luo}, {and} \bibinfo{person}{Ruomei Wang}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Multi-column point-CNN for sketch segmentation}.
+\newblock \bibinfo{journal}{\emph{Neurocomputing}}  \bibinfo{volume}{392} (\bibinfo{year}{2020}), \bibinfo{pages}{50--59}.
+\newblock
+\showISSN{0925-2312}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.neucom.2019.12.117}
+\showDOI{\tempurl}
+
+
+\bibitem[Wang et~al\mbox{.}(2024)]%
+        {Wang2024InstantStyleFL}
+\bibfield{author}{\bibinfo{person}{Haofan Wang}, \bibinfo{person}{Matteo Spinelli}, \bibinfo{person}{Qixun Wang}, \bibinfo{person}{Xu Bai}, \bibinfo{person}{Zekui Qin}, {and} \bibinfo{person}{Anthony Chen}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{InstantStyle: Free Lunch towards Style-Preserving in Text-to-Image Generation}.
+\newblock \bibinfo{journal}{\emph{ArXiv}}  \bibinfo{volume}{abs/2404.02733} (\bibinfo{year}{2024}).
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:268876474}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Wang and Li(2024)]%
+        {wang2024contextseg}
+\bibfield{author}{\bibinfo{person}{Jiawei Wang} {and} \bibinfo{person}{Changjian Li}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{ContextSeg: Sketch Semantic Segmentation by Querying the Context with Attention}. In \bibinfo{booktitle}{\emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}}. \bibinfo{pages}{3679--3688}.
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2021)]%
+        {wang2021solo}
+\bibfield{author}{\bibinfo{person}{Xinlong Wang}, \bibinfo{person}{Rufeng Zhang}, \bibinfo{person}{Chunhua Shen}, \bibinfo{person}{Tao Kong}, {and} \bibinfo{person}{Lei Li}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{SOLO}: A Simple Framework for Instance Segmentation}.
+\newblock \bibinfo{journal}{\emph{IEEE T. Pattern Analysis and Machine Intelligence (TPAMI)}} (\bibinfo{year}{2021}).
+\newblock
+
+
+\bibitem[Wu et~al\mbox{.}(2018)]%
+        {Wu2018SketchsegnetAR}
+\bibfield{author}{\bibinfo{person}{Xingyuan Wu}, \bibinfo{person}{Yonggang Qi}, \bibinfo{person}{Jun Liu}, {and} \bibinfo{person}{Jie Yang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Sketchsegnet: A Rnn Model for Labeling Sketch Strokes}.
+\newblock \bibinfo{journal}{\emph{2018 IEEE 28th International Workshop on Machine Learning for Signal Processing (MLSP)}} (\bibinfo{year}{2018}), \bibinfo{pages}{1--6}.
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:53234925}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Xiao et~al\mbox{.}(2023)]%
+        {xiao2023florence}
+\bibfield{author}{\bibinfo{person}{Bin Xiao}, \bibinfo{person}{Haiping Wu}, \bibinfo{person}{Weijian Xu}, \bibinfo{person}{Xiyang Dai}, \bibinfo{person}{Houdong Hu}, \bibinfo{person}{Yumao Lu}, \bibinfo{person}{Michael Zeng}, \bibinfo{person}{Ce Liu}, {and} \bibinfo{person}{Lu Yuan}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Florence-2: Advancing a unified representation for a variety of vision tasks}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2311.06242}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Yang et~al\mbox{.}(2023)]%
+        {yang2023sceneHierTransformer}
+\bibfield{author}{\bibinfo{person}{Jie Yang}, \bibinfo{person}{Aihua Ke}, \bibinfo{person}{Yaoxiang Yu}, {and} \bibinfo{person}{Bo Cai}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Scene sketch semantic segmentation with hierarchical Transformer}.
+\newblock \bibinfo{journal}{\emph{Knowledge-Based Systems}}  \bibinfo{volume}{280} (\bibinfo{year}{2023}), \bibinfo{pages}{110962}.
+\newblock
+
+
+\bibitem[Yang et~al\mbox{.}(2024)]%
+        {depth_anything_v2}
+\bibfield{author}{\bibinfo{person}{Lihe Yang}, \bibinfo{person}{Bingyi Kang}, \bibinfo{person}{Zilong Huang}, \bibinfo{person}{Zhen Zhao}, \bibinfo{person}{Xiaogang Xu}, \bibinfo{person}{Jiashi Feng}, {and} \bibinfo{person}{Hengshuang Zhao}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Depth Anything V2}.
+\newblock \bibinfo{journal}{\emph{arXiv:2406.09414}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Yang et~al\mbox{.}(2021)]%
+        {sketchGNN2021}
+\bibfield{author}{\bibinfo{person}{Lumin Yang}, \bibinfo{person}{Jiajie Zhuang}, \bibinfo{person}{Hongbo Fu}, \bibinfo{person}{Xiangzhi Wei}, \bibinfo{person}{Kun Zhou}, {and} \bibinfo{person}{Youyi Zheng}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{SketchGNN: Semantic Sketch Segmentation with Graph Neural Networks}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Graph.}} \bibinfo{volume}{40}, \bibinfo{number}{3}, Article \bibinfo{articleno}{28} (\bibinfo{date}{Aug.} \bibinfo{year}{2021}), \bibinfo{numpages}{13}~pages.
+\newblock
+\showISSN{0730-0301}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3450284}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2022b)]%
+        {zhang2022glipv2}
+\bibfield{author}{\bibinfo{person}{Haotian* Zhang}, \bibinfo{person}{Pengchuan* Zhang}, \bibinfo{person}{Xiaowei Hu}, \bibinfo{person}{Yen-Chun Chen}, \bibinfo{person}{Liunian~Harold Li}, \bibinfo{person}{Xiyang Dai}, \bibinfo{person}{Lijuan Wang}, \bibinfo{person}{Lu Yuan}, \bibinfo{person}{Jenq-Neng Hwang}, {and} \bibinfo{person}{Jianfeng Gao}.} \bibinfo{year}{2022}\natexlab{b}.
+\newblock \showarticletitle{GLIPv2: Unifying Localization and Vision-Language Understanding}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2206.05836}} (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2018)]%
+        {zhang2018CBSC}
+\bibfield{author}{\bibinfo{person}{Jianhui Zhang}, \bibinfo{person}{Yilan Chen}, \bibinfo{person}{Lei Li}, \bibinfo{person}{Hongbo Fu}, {and} \bibinfo{person}{Chiew-Lan Tai}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Context-based sketch classification}. In \bibinfo{booktitle}{\emph{Proceedings of the Joint Symposium on Computational Aesthetics and Sketch-Based Interfaces and Modeling and Non-Photorealistic Animation and Rendering}} (Victoria, British Columbia, Canada) \emph{(\bibinfo{series}{Expressive '18})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{3}, \bibinfo{numpages}{10}~pages.
+\newblock
+\showISBNx{9781450358927}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3229147.3229154}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2023)]%
+        {zhang2023recognize}
+\bibfield{author}{\bibinfo{person}{Youcai Zhang}, \bibinfo{person}{Xinyu Huang}, \bibinfo{person}{Jinyu Ma}, \bibinfo{person}{Zhaoyang Li}, \bibinfo{person}{Zhaochuan Luo}, \bibinfo{person}{Yanchun Xie}, \bibinfo{person}{Yuzhuo Qin}, \bibinfo{person}{Tong Luo}, \bibinfo{person}{Yaqian Li}, \bibinfo{person}{Shilong Liu}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Recognize Anything: A Strong Image Tagging Model}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2306.03514}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2022a)]%
+        {zhang2023strokeSeg}
+\bibfield{author}{\bibinfo{person}{Zhengming Zhang}, \bibinfo{person}{Xiaoming Deng}, \bibinfo{person}{Jinyao Li}, \bibinfo{person}{Yukun Lai}, \bibinfo{person}{Cuixia Ma}, \bibinfo{person}{Yongjin Liu}, {and} \bibinfo{person}{Hongan Wang}.} \bibinfo{year}{2022}\natexlab{a}.
+\newblock \showarticletitle{Stroke-based semantic segmentation for scene-level free-hand sketches}.
+\newblock \bibinfo{journal}{\emph{Vis. Comput.}} \bibinfo{volume}{39}, \bibinfo{number}{12} (\bibinfo{date}{Dec.} \bibinfo{year}{2022}), \bibinfo{pages}{6309–6321}.
+\newblock
+\showISSN{0178-2789}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s00371-022-02731-8}
+\showDOI{\tempurl}
+
+
+\bibitem[Zheng et~al\mbox{.}(2022)]%
+        {ENDE-GNN2022}
+\bibfield{author}{\bibinfo{person}{Yixiao Zheng}, \bibinfo{person}{Jiyang Xie}, \bibinfo{person}{Aneeshan Sain}, \bibinfo{person}{Zhanyu Ma}, \bibinfo{person}{Yi-Zhe Song}, {and} \bibinfo{person}{Jun Guo}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{ENDE-GNN: An Encoder-decoder GNN Framework for Sketch Semantic Segmentation}. In \bibinfo{booktitle}{\emph{2022 IEEE International Conference on Visual Communications and Image Processing (VCIP)}}. \bibinfo{pages}{1--5}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/VCIP56404.2022.10008880}
+\showDOI{\tempurl}
+
+
+\bibitem[Zheng et~al\mbox{.}(2023)]%
+        {segFormer2023}
+\bibfield{author}{\bibinfo{person}{Yixiao Zheng}, \bibinfo{person}{Jiyang Xie}, \bibinfo{person}{Aneeshan Sain}, \bibinfo{person}{Yi-Zhe Song}, {and} \bibinfo{person}{Zhanyu Ma}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Sketch-Segformer: Transformer-Based Segmentation for Figurative and Creative Sketches}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Image Processing}}  \bibinfo{volume}{32} (\bibinfo{year}{2023}), \bibinfo{pages}{4595--4609}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TIP.2023.3302521}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhu et~al\mbox{.}(2018)]%
+        {Zhu2018PartLevelSS}
+\bibfield{author}{\bibinfo{person}{Xianyi Zhu}, \bibinfo{person}{Yi Xiao}, {and} \bibinfo{person}{Yan Zheng}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Part-Level Sketch Segmentation and Labeling Using Dual-CNN}. In \bibinfo{booktitle}{\emph{International Conference on Neural Information Processing}}.
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:54435773}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Zou et~al\mbox{.}(2018)]%
+        {Zou18SketchyScene}
+\bibfield{author}{\bibinfo{person}{Changqing Zou}, \bibinfo{person}{Qian Yu}, \bibinfo{person}{Ruofei Du}, \bibinfo{person}{Haoran Mo}, \bibinfo{person}{Yi-Zhe Song}, \bibinfo{person}{Tao Xiang}, \bibinfo{person}{Chengying Gao}, \bibinfo{person}{Baoquan Chen}, {and} \bibinfo{person}{Hao Zhang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{SketchyScene: Richly-Annotated Scene Sketches}. In \bibinfo{booktitle}{\emph{ECCV}}. \bibinfo{publisher}{Springer International Publishing}, \bibinfo{pages}{438--454}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-01267-0_26}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

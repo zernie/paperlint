@@ -1,0 +1,169 @@
+\section{Introduction}
+\label{sec:intro}
+
+Graph is a natural representation for many real-world data, such as social networks, biological networks, and financial networks. In recent years, there has been a great surge of research interest on graph neural networks (GNNs)~\cite{scarselli2008graph,kipf2017semi,hamilton2017inductive,velivckovic2018graph,xu2019powerful} for representation learning on graphs, in which each node recursively aggregates representations of its neighbors to update its  representation. The learnt representations 
+can be used for various graph-relevant tasks, e.g., node classification~\cite{kipf2017semi,xu2019powerful} and  graph classification~\cite{hamilton2017inductive,gilmer2017neural}.
+For instance, in node classification, GNNs learn a node classifier to predict the label for each node, and learn a graph classifier to predict the label for an entire graph in graph classification.  
+GNNs have achieved  outstanding performance on these tasks  for various computer security applications, including 
+fraud detection (e.g., detecting fake accounts/users and fake news in social networks \cite{wang2017gang,wang2017sybilscar,gao2018sybilfuse,wang2018sybilblind,xu2022evidence}, fake reviewers and reviews in recommendation systems \cite{wang2019graph,dou2020enhancing}, fraud transactions in e-commerce systems \cite{zhang2022efraudcom}, and credit card fraud and money laundering in finance systems \cite{weber2018scalable,cheng2020graph}), 
+intrusion detection \cite{zhong2024survey}, and software vulnerability detection \cite{zhou2019devign,cheng2021deepwukong,zhang2023detecting,chu2024graph}.
+
+
+In GNNs, a graph is often represented as three components: nodes, their features, and edges that connect the nodes.
+However, various works~\cite{zugner2018adversarial,dai2018adversarial,wu2019adversarial,wang2019attacking,xu2019topology,sun2020adversarial,zhang2021backdoor,wan2021adversarial,zhang2022projective,ma2020towards,mu2021a,wang2022bandits,wang2023turning,chenunderstanding,ju2023let,wang2024efficient} have shown that GNNs are vulnerable to \emph{test-time} adversarial attacks, where an adversary can successfully perform the attack by perturbing any  individual component or their combinations in the graph.   
+Specifically, given a node/graph classifier and a graph, an attacker could inject a few nodes~\cite{sun2020adversarial,ju2023let}, slightly modify the edges~\cite{zugner2018adversarial,xu2019topology,wang2019attacking} on the graph\footnote{Edge features are typically incorporated in the edge matrix, whose perturbation can be viewed as a special case of edge perturbation.}, and/or perturb features of certain nodes~\cite{zugner2018adversarial} such that the classifier makes wrong predictions for the target node/graph.
+Taking GNN based fake user detection in social networks (e.g., Twitter) as an example. In this context, nodes represent users, edges denote following-follower relationships, and node features capture user profile information. A strategic attacker (i.e., fake users) can manipulate their profiles, modify their connections with other users, and create new fake accounts and connections to evade detection \cite{wang2017gang}. 
+
+
+
+
+To mitigate the attacks, two lines of defenses have been proposed. 
+Empirical defenses~\cite{wu2019adversarial,xu2019topology,zhu2019robust,entezari2020all,tao2021adversarial,zhao2021expressive} are developed with heuristic strategies, but were later broken by adaptive/stronger attacks~\cite{mujkanovic2022defenses}.
+Certified defenses~\cite{bojchevski2020efficient,jin2020certified,jia2020certified,wang2021certified,xia2024gnncert,lai2023nodeawarebismoothingcertifiedrobustness} address the issue by offering robustness guarantees against the worst-case attack scenario. For instance, Bi-RS \cite{lai2023nodeawarebismoothingcertifiedrobustness} achieves the state-of-the-art certified defense performance against the node injection attack, while GNNCert \cite{xia2024gnncert} achieves the state-of-the-art against the edge or/and node feature perturbation attack. 
+However, all existing certified defenses face several fundamental limitations shown below  (See Table~\ref{tbl:sum_CS} a comprehensive summary). 
+
+\begin{enumerate}[leftmargin=*]
+\vspace{-2mm}
+\item They all restrict the adversary's capability to only 
+\emph{one} type of perturbation, except \cite{xia2024gnncert} to edge and node feature perturbation. 
+In practice, however, an attacker could  simultaneously manipulate nodes, node features, as well as edges to perform the best-possible attack. 
+\vspace{-2mm}
+\item They are designed for a particular GNN task, e.g., node classification or graph classification. This naturally limits the applicability of these defenses. 
+
+\vspace{-2mm}
+\item Their robustness guarantees are probabilistic (i.e., not 100\%), with the exception of \cite{xia2024gnncert}. This  implies the guarantees could be inaccurate with a certain probability. 
+\vspace{-2mm}
+\end{enumerate}
+
+
+\noindent {\bf Our work:} We develop a voting-based defense, called {\name}, to address all the above limitations. 
+{\name} is the  \emph{first certified defense} for GNNs on the two most common \emph{node and graph classification tasks} against \emph{arbitrary perturbations} with  \emph{deterministic} robustness guarantees.
+Here, an {arbitrary perturbation} is the perturbation that can arbitrarily manipulate the 
+nodes (i.e., inject new nodes and delete existing nodes), edges (i.e., inject new edges and delete existing edges), and node features on a graph.  
+More specifically, {\name} can provably predict the same label for a test node/graph with arbitrary perturbation whose perturbation size (i.e., 
+the total number of manipulated nodes, nodes with feature perturbations, and edges) is bounded by a threshold, which we call the \emph{certified perturbation size}. 
+
+
+Generally, given a graph and a GNN node/graph classifier,  our voting-based defense includes three 
+steps:  
+\begin{itemize}[leftmargin=*]
+\vspace{-2mm}
+\item  {\bf Step I: Divide a graph into multiple subgraphs.} 
+We use a hash function \cite{xia2024gnncert} 
+to deterministically divide the given graph into multiple subgraphs. 
+
+\vspace{-2mm}
+\item {\bf Step II: Build a voting node/graph classifier on the subgraphs.}
+We use the node/graph classifier to predict the label of subgraphs, where each prediction is treated as a vote. We then count the votes for each label, and build a voting 
+classifier 
+that returns the label with the most votes. 
+
+\vspace{-2mm}
+\item {\bf Step III: Derive the deterministic robustness guarantee.} 
+We derive the certified perturbation size for the voting node/graph 
+classifier against arbitrary perturbations on the given graph with deterministic certification.  
+\vspace{-2mm}
+\end{itemize}
+
+Under this setup, we first derive the sufficient condition for certified robustness against arbitrary  perturbations on GNNs---the number of different predictions on subgraphs generated from the given graph and from the arbitrarily perturbed graph should be bounded (Theorem~\ref{thm:suffcond}).  
+We then propose two graph division strategies, one is \emph{edge-centric} and the other is \emph{node-centric}, to obtain the upper bounded altered predictions. 
+
+
+\noindent {\bf Edge-centric graph division:} This strategy is inspired by \cite{xia2024gnncert}, in which we use a hash function to 
+map \emph{edges} from the given graph into multiple subgraphs \emph{such that the edges  are disjoint in any two subgraphs} ({\bf Step I}). 
+With it, we show that manipulating any edge in the given graph (via edge injection or deletion) only perturbs one subgraph and hence at most one subgraph prediction is altered (Theorem~\ref{thm:edgeperturb}). 
+Further, by leveraging the underlying message-passing mechanism in GNNs and with careful analysis, we prove the generated subgraphs can also bound the different subgraph predictions caused by the node manipulation (Theorem~\ref{thm:nodeperturb}) and node feature manipulation (Theorem~\ref{thm:nodefeaperturb}). 
+Together, these theorems ensure the number of subgraph  predictions be altered for any node/graph 
+after arbitrary perturbation is bounded (Theorem \ref{thm:edgebased}). 
+Further, based on the voting 
+classifier in {\bf Step II} and  Theorem~\ref{thm:suffcond}, we derive in Theorem~\ref{thm:certifyedgebased} the certified perturbation size 
+({\bf Step III}).  
+
+\noindent {\bf Node-centric graph division:} The theoretical result under edge-centric
+graph division reveals the robustness guarantee  
+is largely dominated by the number of edges induced by the manipulated nodes and node features, which could be ineffective in practice. For instance, injected nodes could produce many edges by linking with many nodes in the graph to exceed the certified perturbation size. 
+To mitigate the issue, we propose a \emph{node-centric} graph division method. 
+Our key idea is that if we can ensure all edges of a manipulated node is in a same subgraph, this subgraph is the only one being affected under every node or node feature manipulation. 
+However, naive solutions are ineffective. For instance, we can map nodes into different subgraphs such that they are \emph{non-overlapped}, but it fails for node classification, as every node only appears once in all subgraphs and all target nodes for classification only receive one vote, yielding vacuous robustness. 
+
+To address it, we innovatively treat every undirected edge as two directed edges and map each node into a subgraph index only using its outgoing edges ({\bf Step I}). In doing so, all subgraphs are directed and only contain outgoing edges of the nodes with the corresponding index.
+By leveraging these \emph{directed subgraphs} and the message-passing mechanism in GNNs, we can derive the same bounded number of altered subgraph predictions against edge manipulation (Theorem~\ref{thm:edgeperturb2}) as in edge-centric graph division. Moreover, this bound 
+against arbitrary node or node feature manipulation is the  number of injected/deleted  nodes (Theorem~\ref{thm:nodeperturb2}) or number of nodes whose features can be arbitrarily perturbed (Theorem~\ref{thm:nodefeaperturb2}).  
+\emph{This implies the bound is robust to the manipulated node that links with many even infinite number of edges.} 
+Combining them, we derive the total bounded number of altered subgraph predictions against arbitrary perturbation in Theorem \ref{thm:nodebased}, 
+and the certified perturbation size in Theorem~\ref{thm:certifynodebased} 
+({\bf Step III}) with the built voting classifier on the directed subgraphs ({\bf Step II}).   
+
+
+%\vspace{+0.05in}
+\noindent {\bf Evaluation:} We extensively evaluate {\name} on multiple graph datasets and multiple node and graph classifiers against arbitrary perturbations. 
+We use the certified node/graph  accuracy at perturbation size $m$ 
+as the evaluation metric, which means the fraction of test nodes/graphs that are provably classified as the true label against arbitrary perturbations whose perturbation size is $m$. 
+Our results show that: 1) Under edge-centric graph division, {\name} can obtain about 70\% (or 60\%) certified node (or graph) accuracy when 
+the perturbation size is 200 (or 10), i.e., 200 (or 10) edges induced by the edge manipulation, injected/deleted edges associated with the node manipulation, and edges associated with node feature manipulation are arbitrarily perturbed; 2) Under node-centric graph division, {\name} can obtain similar 
+certified node (or graph) accuracy when the total number of 200 (or 10) edges and nodes induced by edge, node, and node feature manipulations are arbitrarily perturbed, where the manipulated nodes allow to have infinite number of edges. 
+
+As {\name} can also defend against fewer manipulations, 
+we further compare it with the state-of-the-art certified defenses of GNNs for node classification against node injection attack~\cite{lai2023nodeawarebismoothingcertifiedrobustness}, and for graph classification against node feature or/and edge manipulation~\cite{xia2024gnncert}. 
+Our results show {\name} significantly outperforms \cite{lai2023nodeawarebismoothingcertifiedrobustness}  under node-centric graph division, and outperforms \cite{xia2024gnncert} 
+under both graph division methods. 
+
+We also evaluate {\name} on two real-world graph datasets (Amazon co-purchasing dataset \cite{clusterGCN} with 2M nodes and 51M edges and Big-Vul code vulnerability dataset \cite{big_vul} with 10,900 vulnerable C++ codes) to demonstrate its scalability and practicability. Our results show {\name} obtains promising robustness guarantees with an acceptable computational overhead over the undefended GNNs.
+
+\vspace{+0.05in}
+\noindent {\bf Contributions:} Our contributions are summarized below: 
+\begin{itemize}[leftmargin=*]
+
+\vspace{-2mm}
+\item We develop the first certified defense to robustify GNNs for node and graph classification against arbitrary perturbations on individual graphs. 
+
+\vspace{-2mm}
+\item We propose two strategies to realize our defense that leverages the 
+unique message-passing mechanism in GNNs.  
+
+\vspace{-2mm}
+\item Our robustness guarantee  
+is accurate with probability 1. 
+
+\vspace{-2mm}
+\item Our defense treat existing certified defenses as special cases, as well as significantly outperforming them. 
+\vspace{-4mm}
+\end{itemize}
+
+
+
+\begin{table*}[!t]%\renewcommand\arraystretch{0.95}
+    \vspace{-2mm}
+    \addtolength{\tabcolsep}{-2pt}
+    \footnotesize
+    \centering 
+    \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+     \toprule
+      {\bf GNN Task} &\multicolumn{6}{c|}{\bf Node Classification}&\multicolumn{6}{c|}{\bf Graph Classification}&\multirow{2}{*}{\bf Certification Type}\\
+         \cline{1-13} 
+        {\bf Attack Type} & $\mathcal{E}_{\pm}$ & {\bf X}! & \multicolumn{1}{c|}{$\mathcal{V}_{\pm}$} & $\mathcal{E}_{\pm} \& {\bf X}!$ & $\mathcal{V}_{\pm} \& {\bf X}!$ & Arbitrary & $\mathcal{E}_{\pm}$ & {\bf X}! & \multicolumn{1}{c|}{$\mathcal{V}_{\pm}$} & $\mathcal{E}_{\pm} \& {\bf X}!$ & $\mathcal{V}_{\pm} \& {\bf X}!$ & Arbitrary & {}\\
+         \cline{1-14} 
+         {\bf RS} \cite{wang2021certified} &\checkmark &\checkmark & $\times$ &$\times$ & $\times$ &$\times$ & \checkmark &\checkmark &$\times$&$\times$&$\times$ & $\times$ &\multirow{3}{*}{\bf Probabilistic} \\
+         \cline{1-13} 
+         {\bf Sparsity-Aware RS} \cite{bojchevski2020efficient} &\checkmark &\checkmark & \checkmark& $\bigcirc$ &$\times$& $\times$& \checkmark &\checkmark   & \checkmark&$\times$&$\times$&$\times$&{}\\
+         \cline{1-13} 
+         {\bf Node-Aware Bi-RS}\cite{lai2023nodeawarebismoothingcertifiedrobustness}&$\times$ &$\times$ & \checkmark & $\times$&$\times$&$\times$&$\times$ &$\times$  & $\times$ & $\times$&$\times$&$\times$&{}\\
+         \cline{1-14} 
+         {\bf GNNCert} \cite{xia2024gnncert}&$\bigcirc$ &$\bigcirc$ & $\times$&$\bigcirc$ &$\times$ &$\times$&\checkmark&\checkmark & $\times$  & \checkmark &$\times$&$\times$&\multirow{3}{*}{\bf Deterministic}\\
+         \cline{1-13} 
+         {\bf {\nameE}} (Ours)&\checkmark &\checkmark& \checkmark&\checkmark &\checkmark &\checkmark&\checkmark &\checkmark&\checkmark&\checkmark&\checkmark & \checkmark \\
+         \cline{1-13} 
+         {\bf {\nameN}} (Ours)&\checkmark &\checkmark & \checkmark&\checkmark &\checkmark &\checkmark&\checkmark &\checkmark&\checkmark&\checkmark&\checkmark  & \checkmark \\
+       \bottomrule
+    \end{tabular}
+    \caption{Summarizing the existing certified defenses of GNN against adversarial perturbations and their capability against different types of manipulations. $\mathcal{E}_{\pm}$, $\mathcal{V}_{\pm}$, and ${\bf X}!$ represent the edge manipulation (injection/deletion), node manipulation (injection/deletion), and node feature perturbation, respectively. $\checkmark$ means the defense is able to defend the respective attack, $\bigcirc$ means the defense could be adapted to defend the attack, and $\times$ means not able to.}
+    \label{tbl:sum_CS}
+    \vspace{-4mm}
+\end{table*}
+
+
+
+
+
+
+

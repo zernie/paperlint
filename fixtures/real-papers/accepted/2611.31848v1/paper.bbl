@@ -1,0 +1,148 @@
+\begin{thebibliography}{29}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Cao et~al.(2025)Cao, Sotnikova, Zhao, Zou, Rudinger, and Daum{\'e}~III}]{cao-etal-2025-multilingual}
+Yang~Trista Cao, Anna Sotnikova, Jieyu Zhao, Linda~X. Zou, Rachel Rudinger, and Hal Daum{\'e}~III. 2025.
+\newblock Multilingual large language models leak human stereotypes across language boundaries.
+\newblock In \emph{Proceedings of the Fourth Workshop on NLP for Positive Impact (NLP4PI)}, Vienna, Austria. Association for Computational Linguistics.
+
+\bibitem[{Chen and Cherry(2014)}]{chen-2014-smoothing}
+Boxing Chen and Colin Cherry. 2014.
+\newblock A systematic comparison of smoothing techniques for sentence-level bleu.
+\newblock In \emph{Proceedings of the Ninth Workshop on Statistical Machine Translation}.
+
+\bibitem[{Cho et~al.(2025)Cho, Kwon, and Hockenmaier}]{cho2025saeicl}
+Ikhyun Cho, Gaeul Kwon, and Julia Hockenmaier. 2025.
+\newblock On the versatility of sparse autoencoders for in-context learning.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2025}. Association for Computational Linguistics.
+
+\bibitem[{Choi and Li(2024)}]{choi2024picle}
+Hyeong~Kyu Choi and Yixuan Li. 2024.
+\newblock Picle: Eliciting diverse behaviors from large language models with persona in-context learning.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine Learning}.
+
+\bibitem[{Dathathri et~al.(2020)Dathathri, Madotto, Lan, Hung, Frank, Molino, Yosinski, and Liu}]{Dathathri2020Plug}
+Sumanth Dathathri, Andrea Madotto, Janice Lan, Jane Hung, Eric Frank, Piero Molino, Jason Yosinski, and Rosanne Liu. 2020.
+\newblock Plug and play language models: A simple approach to controlled text generation.
+\newblock In \emph{Proceedings of the International Conference on Learning Representations}.
+
+\bibitem[{Davani et~al.(2024)Davani, Diaz, Baker, and Prabhakaran}]{DavaniDBP24}
+Aida~Mostafazadeh Davani, Mark Diaz, Dylan~K. Baker, and Vinodkumar Prabhakaran. 2024.
+\newblock {D3CODE:} disentangling disagreements in data across cultures on offensiveness detection and evaluation.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, {EMNLP} 2024, Miami, FL, USA, November 12-16, 2024}. Association for Computational Linguistics.
+
+\bibitem[{Dettmers et~al.(2023)Dettmers, Pagnoni, Holtzman, and Zettlemoyer}]{dettmers2023qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer. 2023.
+\newblock {QL}o{RA}: Efficient finetuning of quantized {LLM}s.
+\newblock In \emph{Proceedings of the Thirty-seventh Conference on Neural Information Processing Systems}.
+
+\bibitem[{Dev et~al.(2023)Dev, Goyal, Tewari, Dave, and Prabhakaran}]{DevGTDP23}
+Sunipa Dev, Jaya Goyal, Dinesh Tewari, Shachi Dave, and Vinodkumar Prabhakaran. 2023.
+\newblock Building socio-culturally inclusive stereotype resources with community engagement.
+\newblock In \emph{Advances in Neural Information Processing Systems}.
+
+\bibitem[{Fan et~al.(2024)Fan, Chen, Xu, and Liu}]{fan-etal-2024-biasalert}
+Zhiting Fan, Ruizhe Chen, Ruiling Xu, and Zuozhu Liu. 2024.
+\newblock {B}ias{A}lert: A plug-and-play tool for social bias detection in {LLM}s.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing}, Miami, Florida, USA. Association for Computational Linguistics.
+
+\bibitem[{Gu et~al.(2025)Gu, Zhang, Liu, Fu, Lin, Wang, Sun, Wu, Wang, and Wang}]{gu2025beamlora}
+Naibin Gu, Zhenyu Zhang, Xiyu Liu, Peng Fu, Zheng Lin, Shuohuan Wang, Yu~Sun, Hua Wu, Weiping Wang, and Haifeng Wang. 2025.
+\newblock \href {https://doi.org/10.18653/v1/2025.acl-long.582} {Beamlora: Beam-constraint low-rank adaptation}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}. Association for Computational Linguistics.
+
+\bibitem[{Han et~al.(2025)Han, Song, Gore, and Agrawal}]{han2025emergence}
+Seungwook Han, Jinyeop Song, Jeff Gore, and Pulkit Agrawal. 2025.
+\newblock Emergence and effectiveness of task vectors in in-context learning: An encoder decoder perspective.
+\newblock In \emph{Proceedings of the International Conference on Machine Learning}.
+
+\bibitem[{Hu et~al.(2022)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and Chen}]{hu2022lora}
+Edward~J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu~Wang, and Weizhu Chen. 2022.
+\newblock Lo{RA}: Low-rank adaptation of large language models.
+\newblock In \emph{Proceedings of the International Conference on Learning Representations}.
+
+\bibitem[{Kim et~al.(2025)Kim, Kim, and Ryu}]{kim2025lora_training}
+Junsu Kim, Jaeyeon Kim, and Ernest Ryu. 2025.
+\newblock Lora training provably converges to a low-rank global minimum or it fails loudly.
+\newblock In \emph{Proceedings of the International Conference on Machine Learning}.
+
+\bibitem[{Li et~al.(2025)Li, Wang, Ma, Chen, Xiao, and Wang}]{li2025mobilora}
+Borui Li, Yitao Wang, Haoran Ma, Ligeng Chen, Jun Xiao, and Shuai Wang. 2025.
+\newblock \href {https://doi.org/10.18653/v1/2025.acl-long.1140} {Mobilora: Accelerating lora-based llm inference on mobile devices via context-aware kv cache optimization}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}. Association for Computational Linguistics.
+
+\bibitem[{Li et~al.(2016)Li, Galley, Brockett, Gao, and Dolan}]{li-2016-diversity}
+Jiwei Li, Michel Galley, Chris Brockett, Jianfeng Gao, and Bill Dolan. 2016.
+\newblock \href {https://doi.org/10.18653/v1/N16-1014} {A diversity-promoting objective function for neural conversation models}.
+\newblock In \emph{Proceedings of the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies}.
+
+\bibitem[{Lin et~al.(2023)Lin, Morency, Dimitriadis, and Sharma}]{lin-etal-2023-counterfactual}
+Victoria Lin, Louis-Philippe Morency, Dimitrios Dimitriadis, and Srinagesh Sharma. 2023.
+\newblock Counterfactual augmentation for multimodal learning under presentation bias.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2023}, Singapore. Association for Computational Linguistics.
+
+\bibitem[{Liu et~al.(2024)Liu, Diab, and Fried}]{liu2024incongruous}
+Andy Liu, Mona Diab, and Daniel Fried. 2024.
+\newblock Evaluating large language model biases in persona-steered generation.
+\newblock In \emph{Findings of the Association for Computational Linguistics: ACL 2024}.
+
+\bibitem[{Liu et~al.(2025)Liu, Wu, Song, and Huang}]{liu2025palace}
+Dongshuo Liu, Zhijing Wu, Dandan Song, and Heyan Huang. 2025.
+\newblock A persona-aware llm-enhanced framework for multi-session personalized dialogue generation.
+\newblock In \emph{Findings of the Association for Computational Linguistics: ACL 2025}.
+
+\bibitem[{Mu et~al.(2025)Mu, Wang, Ni, Li, Wu, Jin, and Zhang}]{mu2025denselora}
+Lin Mu, Xiaoyu Wang, Li~Ni, Yang Li, Zhize Wu, Peiquan Jin, and Yiwen Zhang. 2025.
+\newblock \href {https://doi.org/10.18653/v1/2025.acl-long.503} {Denselora: Dense low-rank adaptation of large language models}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}. Association for Computational Linguistics.
+
+\bibitem[{Papineni et~al.(2002)Papineni, Roukos, Ward, and Zhu}]{papineni-2002-bleu}
+Kishore Papineni, Salim Roukos, Todd Ward, and Wei-Jing Zhu. 2002.
+\newblock \href {https://doi.org/10.3115/1073083.1073135} {Bleu: a method for automatic evaluation of machine translation}.
+\newblock In \emph{Proceedings of the 40th Annual Meeting of the Association for Computational Linguistics (ACL)}.
+
+\bibitem[{Pearl(2009)}]{pearl2009causality}
+Judea Pearl. 2009.
+\newblock \emph{Causality: Models, Reasoning, and Inference}.
+\newblock Cambridge University Press.
+
+\bibitem[{Rusak et~al.(2024)Rusak, Reizinger, Juhos, Bringmann, Zimmermann, and Brendel}]{rusak2024infonce}
+Evgenia Rusak, Paul Reizinger, Adam Juhos, Felix Bringmann, Roland Zimmermann, and Wieland Brendel. 2024.
+\newblock Infonce: Identifying the gap between theory and practice.
+\newblock \emph{arXiv:2407.00143}.
+
+\bibitem[{Singhal et~al.(2025)Singhal, Ponkshe, and Vepakomma}]{singhal2025fedexlora}
+Raghav Singhal, Kaustubh Ponkshe, and Praneeth Vepakomma. 2025.
+\newblock \href {https://doi.org/10.18653/v1/2025.acl-long.67} {Fedex-lora: Exact aggregation for federated and efficient fine-tuning of large language models}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}. Association for Computational Linguistics.
+
+\bibitem[{Tan et~al.(2024)Tan, Li, Zhang, Liu, and Sun}]{tan2024democratizing}
+Zhen Tan, Yiming Li, Ruiyi Zhang, Zhiyuan Liu, and Maosong Sun. 2024.
+\newblock Democratizing large language models via personalized parameter-efficient fine-tuning.
+\newblock In \emph{Proceedings of the Conference on Empirical Methods in Natural Language Processing}. Association for Computational Linguistics.
+
+\bibitem[{Tu et~al.(2023)Tu, Jing, Liang, Yang, Wong, and Xu}]{tu-etal-2023-training}
+Geng Tu, Ran Jing, Bin Liang, Min Yang, Kam-Fai Wong, and Ruifeng Xu. 2023.
+\newblock A training-free debiasing framework with counterfactual reasoning for conversational emotion detection.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}, Singapore. Association for Computational Linguistics.
+
+\bibitem[{Wan et~al.(2023)Wan, Zhao, Chadha, Peng, and Chang}]{wan2023are}
+Yixin Wan, Jieyu Zhao, Aman Chadha, Nanyun Peng, and Kai-Wei Chang. 2023.
+\newblock \href {https://openreview.net/forum?id=P2jDML1Ub6} {Are personalized stochastic parrots more dangerous? evaluating persona biases in dialogue systems}.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}.
+
+\bibitem[{Wang et~al.(2024)Wang, Li, Jiang, Tu, and Shi}]{crafting-2024}
+Zheng Wang, Zhongyang Li, Zeren Jiang, Dandan Tu, and Wei Shi. 2024.
+\newblock Crafting personalized agents through retrieval-augmented generation on editable memory graphs.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing}.
+
+\bibitem[{Zerhoudi and Granitzer(2024)}]{personaRAG}
+Saber Zerhoudi and Michael Granitzer. 2024.
+\newblock \href {https://arxiv.org/abs/2407.09394} {Personarag: Enhancing retrieval-augmented generation systems with user-centric agents}.
+
+\bibitem[{Zhang et~al.(2018)Zhang, Dinan, Urbanek, Szlam, Kiela, and Weston}]{zhang2018personachat}
+Saizheng Zhang, Emily Dinan, Jack Urbanek, Arthur Szlam, Douwe Kiela, and Jason Weston. 2018.
+\newblock Personalizing dialogue agents: I have a dog, do you have pets too?
+\newblock In \emph{Proceedings of the Annual Meeting of the Association for Computational Linguistics}. Association for Computational Linguistics.
+
+\end{thebibliography}

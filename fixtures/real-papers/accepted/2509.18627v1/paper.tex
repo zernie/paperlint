@@ -1,0 +1,1206 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2025_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\usepackage{paralist} % for compactitem
+\usepackage[shortlabels]{enumitem} % control itemize indentation
+\setlist[itemize]{topsep=-2.5pt} % to remove the gap around list
+\setlist[enumerate]{topsep=-2.5pt} % to remove the gap around enumerate
+
+% \usepackage{showframe} % Show borders for debugging
+% \usepackage{layout}
+
+\usepackage{multirow}
+
+\usepackage{makecell}
+% \renewcommand\theadfont{\normalsize} % revert thead to normal size
+% \renewcommand\theadfont{\bfseries} % Make headers bold
+\usepackage{pifont} % check mark and xmark
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\smark}{\ding{81}}
+
+\usepackage{xcolor}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\purple}[1]{\textcolor{purple}{#1}}
+\newcommand{\greencmark}{\green{\cmark}}
+\newcommand{\redxmark}{\red{\xmark}}
+
+\newcommand{\RNN}[1]{\(\textit{RNN#1}\)} % RNN1, RNN2, RNN3
+\newcommand{\RNNfw}[1]{\(\textit{RNN#1}_{fw}\)}
+
+% \definecolor{brown1}{RGB}{160,82,45} % Brighter brown (start)
+% \definecolor{brown2}{RGB}{150,75,40} % Slightly darker brown
+% \definecolor{brown3}{RGB}{140,70,35} % Medium brown
+% \definecolor{brown4}{RGB}{130,65,30} % Lighter medium brown
+% \definecolor{brown5}{RGB}{120,60,25} % Lighter brown (end)
+
+% % Define the \ourmethod command
+% \newcommand{\ourmethod}{%
+%     {\textcolor{brown1}{B}\textcolor{brown2}{R}\textcolor{brown3}{A}\textcolor{brown4}{I}\textcolor{brown5}{D}}%
+% }
+% \newcommand{\ourmethodfullname}{%
+%     {\textcolor{brown1}{B}ehaviorally \textcolor{brown2}{R}elevant \textcolor{brown3}{A}nalysis of \textcolor{brown4}{I}ntrinsic \textcolor{brown5}{D}ynamics}%
+% }
+
+% \newcommand{\ourmethodblack}{BRAID} % The old black version
+% \newcommand{\ourmethodlinear}{linear \ourmethod}
+% \newcommand{\ourmethodunsup}{U-\ourmethod}
+
+\newcommand{\ourmethod}{BRAID}
+\newcommand{\ourmethodlinear}{linear \ourmethod}
+\newcommand{\ourmethodunsup}{U-\ourmethod}
+\newcommand{\ourmethodfullname}{%
+    {{B}ehaviorally {R}elevant {A}nalysis of {I}ntrinsic {D}ynamics}%
+}
+% Put lines next to list items
+\newsavebox{\tempbox}
+
+\newcommand{\coloritem}[2]% #1 = color of bar, #2 = item text
+{\item \savebox{\tempbox}{\parbox[t]{\linewidth}{#2}}%
+  \usebox{\tempbox}\hspace{-\columnwidth}%
+  {\color{#1}\rule[-\dp\tempbox]{4pt}{\dimexpr \ht\tempbox+\dp\tempbox}}%
+}
+
+\input{chars.tex}
+\input{math_commands.tex}
+
+
+% To simplify equations
+\newcommand{\zk}{\(\rvz_{k}\)}
+\newcommand{\yk}{\(\rvy_{k}\)}
+\newcommand{\uk}{\(\rvu_{k}\)}
+\newcommand{\xk}{\(\rvx_{k}\)}
+\newcommand{\xsk}{\(\rvx^{s}_{k}\)}
+\newcommand{\A}{\(\mA\)}
+\newcommand{\Afw}{\(\mA_{fw}\)}
+\newcommand{\K}{\(\mK\)}
+\newcommand{\Kfw}{\(\mK_{fw}\)}
+\newcommand{\Cy}{\(\mC_{\rvy}\)}
+\newcommand{\Cz}{\(\mC_{\rvz}\)}
+
+
+\title{BRAID: Input-driven nonlinear dynamical modeling of neural-behavioral data}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\if 0
+%% Option 1: Separated auther names, affiliation fully goes to the footnote
+\author{Parsa Vahidi \\
+%   Electrical and Computer Engineering \\
+%   University of Southern California \\
+%   Los Angeles, CA \\
+  \texttt{pvahidi@usc.edu} \\
+  \And
+  Omid G. Sani \\
+%   Electrical and Computer Engineering  \\
+  % University of Southern California \\
+%   Los Angeles, CA \\
+  \texttt{omid.ghasemsani@usc.edu} \\
+  \And
+  Maryam M. Shanechi
+  \thanks{Affiliation for all authors: Ming Hsieh Department of Electrical and Computer Engineering, University of Southern California, Los Angeles, CA. Corresponding author: M.M.S. }
+  \\
+%   Electrical and Computer Engineering\\
+%   Departments of Computer Science and Bioengineering \\
+%   Neuroscience Graduate Program \\
+  % University of Southern California\\
+%   Los Angeles, CA \\
+  \texttt{shanechi@usc.edu} \\
+}
+\fi
+
+%% Option 2: Not separate author names.
+ \author{Parsa Vahidi\textsuperscript{1}, 
+Omid G. Sani\textsuperscript{1}, 
+Maryam M. Shanechi\textsuperscript{1-3,*}
+         %\thanks{Corresponding author.}
+         \\
+\textsuperscript{1}Electrical and Computer Engineering, 
+\textsuperscript{2}Computer Science, 
+\textsuperscript{3}Biomedical Engineering\\
+Viterbi School of Engineering, University of Southern California (USC), Los Angeles, CA \\
+\texttt{\{pvahidi, omid.ghasemsani, shanechi\}@usc.edu},    \textsuperscript{*}Corresponding author
+ }
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+% \layout
+
+\maketitle
+
+\begin{abstract}
+Neural populations exhibit complex recurrent structures that drive behavior, while continuously receiving and integrating external inputs from sensory stimuli, upstream regions, and neurostimulation. However, neural populations are often modeled as autonomous dynamical systems, with little consideration given to the influence of external inputs that shape the population activity and behavioral outcomes. Here, we introduce \ourmethod{}, a deep learning framework that models nonlinear neural dynamics underlying behavior while explicitly incorporating any measured external inputs. Our method disentangles intrinsic recurrent neural population dynamics from the effects of inputs by including a forecasting objective within input-driven recurrent neural networks. \ourmethod{} further prioritizes the learning of intrinsic dynamics that are related to a behavior of interest by using a multi-stage optimization scheme. We validate \ourmethod{} with nonlinear simulations, showing that it can accurately learn the intrinsic dynamics shared between neural and behavioral modalities. We then apply \ourmethod{} to motor cortical activity recorded during a motor task and demonstrate that our method more accurately fits the neural-behavioral data by incorporating measured sensory stimuli into the model and improves the forecasting of neural-behavioral data compared with various baseline methods, whether input-driven or not.
+\end{abstract}
+
+\section{Introduction}
+
+% Neural activity is a high-dimensional representation of a complex temporal structure \citep{buonomano2009state, shenoy2013cortical, remington2018dynamical, vyas2020computation}. Understanding how this intricate structure relates to behavior is a key challenge in neuroscience whose addressing could enhance our understanding of brain function and advance neuro-technologies. Behavioral actions are controlled by the brain and their parameters are encoded in the neural activity. Most current models for neural dynamics rely on the assumption that brain activity evolves autonomously, and the effect of external inputs is not explicitly accounted for. However, it is known that brain populations constantly receive inputs of different forms \citep{buonomano2009state, seely2016tensor, susilaradeya2019extrinsic, sauerbrei2020cortical, shenoy2021measurement, vahidi2024modeling}. Therefore, a critical question that arises when studying neural computations of behavior is identifying the origin of these computations. 
+
+Understanding the relationship between neural activity and behavior is a critical goal in neuroscience and neurotechnology. Neural activity and its temporal structure, or \textit{``dynamics''}, during a behavior are formed by the interplay between (1) the recurrent networks within a brain area, i.e., \textit{intrinsic dynamics}, and the (2) temporally-structured inputs it receives during the behavior \citep{remington2018dynamical, vyas2020computation}. 
+A neural population may receive inputs from measurable sources such as sensory stimuli, electrical/optogenetic neurostimulation \citep{buonomano2009state, seely2016tensor, susilaradeya2019extrinsic, sauerbrei2020cortical, shenoy2021measurement,yang2021modelling, vahidi2024modeling}, as well as from other upstream brain areas \citep{sauerbrei2020cortical, shenoy2021measurement}, which could be included in multi-regional recordings \citep{jun2017fully, steinmetz2019distributed}.
+% . Furthermore, recent advances in recording technologies now enable large-scale, simultaneous recordings from multiple brain regions \citep{jun2017fully, steinmetz2019distributed}. In such cases, upstream neural activity communicating with the target downstream area functions as an external input to the population of interest \citep{sauerbrei2020cortical, shenoy2021measurement}. 
+However, even easily measurable external inputs (e.g., sensory stimuli) are often not explicitly considered when modeling neural-behavioral activity, which can lead to a conflation of intrinsic and input-driven contributions, creating challenges for interpretation \citep{seely2016tensor, sauerbrei2020cortical, vahidi2024modeling}. Beyond disentangling intrinsic dynamics from input dynamics, incorporating measured inputs into models can also enhance the behavior decoding performance in neurotechnologies such as stimulation-based closed-loop controllers \citep{yang2018control, yang2021modelling}. % yang2018control, shanechi2019brain, 
+
+Another challenge is to disentangle neural dynamics that are relevant to a specific behavior from other neural dynamics, and to prioritize the former. This is critical as the majority of neural variance may not be relevant to the behavior of interest \citep{churchland2012neural, mante2013context, kobak2016demixed, allen2019thirst, engel2019new, stringer2019spontaneous, sani2021modeling}. While most prior works use unsupervised methods when modeling neural activity as latent variable dynamical systems \citep{aghagolzadeh2015inference, gao2016linear, wu2017gaussian, pandarinath2018inferring, hernandez2020, rutten2020non, kim2021inferring}, recent works have shown improved learning of behaviorally relevant neural dynamics by using behavior data during learning in a supervised manner \citep{ sani2021modeling,hurwitz2021targeted, kramer2022, gondur2024multi, vahidi2024modeling,abbaspourazad2024dynamical, sani2024dissociative,oganesian2025spectral}.
+
+Yet another challenge is posed by the nonlinearities in neural-behavioral data. While linear models have been extremely effective in approximating neural dynamics \citep{hastie2009elements, churchland2012neural, mante2013context, cunningham2014dimensionality, kao2015single, kobak2016demixed, abbaspourazad2021multiscale, sani2021modeling}, they may require higher dimensional latent representations compared to nonlinear models \citep{yang2019dynamic, nozari2024macroscopic,sani2024dissociative}, and do not provide interpretability for nonlinear dynamical phenomena such as multi-stable fixed points and limit cycles \citep{kim2021inferring, durstewitz2023reconstructing}. Moreover, unlike linear models, for nonlinear models the relationship between the intrinsic dynamics and an inference model that is fitted to estimate the latent states from observations is not analytically known, posing a challenge for studying intrinsic dynamics (see section \ref{sec: IPAD}). 
+
+Here, we address all aforementioned challenges by introducing \ourmethodfullname{} (\ourmethod{}), a new method with the following key contributions.
+% 1) \item \textbf{Nonnlinearity}
+\textit{First}, \ourmethod{} captures complex nonlinear structures in neural-behavioral-input data, offering greater expressivity than linear methods.  
+\textit{Second}, by optimizing multi-step-ahead forecasts of neural-behavior data, \ourmethod{} simultaneously learns two representations for neural dynamics: the predictor and the generative form representations (see section \ref{sec: IPAD}), the latter of which describes intrinsic dynamics.
+% 2) \textbf{Dissociating input dynamics}: 
+\textit{Third}, by explicitly modeling the influence of measured inputs, \ourmethod{} disentangles their dynamics from intrinsic dynamics to more closely reflect the neuronal networks within the recorded brain region.
+% 3) \textbf{Prioritizing behaviorally relevant dynamics}: 
+\textit{Fourth}, we introduce a multi-stage learning framework that dissociates and prioritizes the learning of intrinsic behaviorally relevant neural dynamics, while considering measured inputs (see section \ref{sec: IPAD_dissociate_beh_rel}).
+% 4) \textbf{Optimizing multi-step-ahead forecasting}: 
+\textit{Fifth}, we introduce additional preprocessing and post-hoc learning stages that allow behavior-specific dynamics to be dissociated from behaviorally relevant neural dynamics (see section \ref{sec: AddStep}).
+
+We validate \ourmethod{} in multiple simulated datasets with distinct nonlinear structures and show its capability to accurately learn the underlying nonlinear model, resulting in an interpretable representation of intrinsic dynamics. We then apply our method to electrophysiological data recorded from a non-human-primate (NHP) performing sequential reaches \citep{sabes}. Our results indicate that accounting for both nonlinearity and sensory inputs improves neural-behavioral prediction, suggesting a more accurate representation of intrinsic behaviorally relevant neural dynamics.
+
+\section{Related Work}\label{sec: related_work}
+Our work addresses multiple problems simultaneously, which makes it related to various methods that tackle a subset of these problems. A summary of related methods is provided in table \ref{tab: related_works}.
+
+First, a key ability of \ourmethod{} is to incorporate measured inputs to disentangle intrinsic dynamics from input dynamics. Other nonlinear modeling methods \citep{gao2016linear, sussillo2016making, wu2017gaussian, pandarinath2018inferring, rutten2020non, hurwitz2021targeted, kim2021inferring, abbaspourazad2024dynamical, sani2024dissociative} have not addressed modeling measured external inputs and their impact on neural-behavioral data. As demonstrated by \citet{vahidi2024modeling}, not considering external inputs can lead to the dynamics of these inputs being misinterpreted as intrinsic neural dynamics. To overcome this challenge, \cite{vahidi2024modeling} introduce a linear dynamical modeling method, termed IPSID, which explicitly incorporates measured external inputs into the model. However, IPSID is an analytical, and strictly linear method that cannot capture nonlinearities. By incorporating the strengths of this linear modeling work into \ourmethod{}, we can account for measured external inputs and dissociate their dynamics while allowing every model element to be nonlinear. We use IPSID as a key baseline to show the benefit of enabling nonlinearity in our method (see appendix \ref{app: baselines} for details). We also show the results for the special case of setting all model elements as linear in our method (referred to as \ourmethodlinear{}), which fits in a linear model similar to IPSID. 
+
+Second, a key capability of \ourmethod{} is that it dissociates behaviorally relevant neural dynamics into a distinct part of the latent states and prioritizes their learning, while also being able to learn neural-specific and behavior-specific dynamics using additional latent states. Among prior works, two recent nonlinear methods termed DPAD \citep{sani2024dissociative} and TNDM \citep{hurwitz2021targeted} aim to dissociate behaviorally relevant dynamics from other neural dynamics, but neither method dissociates the third category of dynamics, i.e., the behavior-specific dynamics. More importantly, neither DPAD nor TNDM incorporates external inputs into the model to dissociate intrinsic dynamics from input dynamics. Finally, DPAD learns models based on 1-step-ahead prediction of neural-behavioral data and does not explicitly learn the intrinsic dynamics, whereas \ourmethod{} adds \(m\)-step-ahead predictions into the loss to optimize forecasting and also explicitly learns a generative representation of intrinsic dynamics. TNDM on the other hand is a sequential autoencoder (similar to LFADS, \citealp{pandarinath2018inferring}), i.e., it optimizes reconstruction of a window of data after ingesting the entire window as input. We compared our results with both DPAD and TNDM, although DPAD's architecture is closer to ours. In fact, the comparisons with DPAD can also be thought of as ablation studies that show the benefit of incorporating external inputs and forecasting in our method. 
+
+Third, we learn behaviorally relevant neural dynamics, or in other words the shared neural-behavioral dynamics, in an initial optimization focused on learning these dynamics, while leaving the learning of other neural dynamics to a separate subsequent optimization. This approach, prioritizes behaviorally relevant neural dynamics in the sense that we can fit models with low dimensional latent states that are purely focused on these dynamics \citep{sani2021modeling}. Besides DPAD \citep{sani2024dissociative}, a few other works, including TNDM, propose nonlinear approaches for learning dynamics shared between two modalities \citep{hurwitz2021targeted, kramer2022, gondur2024multi}. However, these works use a combined loss to optimize the reconstruction of both modalities in the same optimization. While this approach can capture the dynamics shared between modalities, it does not prioritize them over dynamics specific to either modality \citep{sani2024dissociative}. Moreover, most multi-modal approaches do not model the effect of external inputs \citep{hurwitz2021targeted, gondur2024multi}. One multi-modal model, termed mmPLRNN \citep{kramer2022}, which models dynamics of two modalities with a piecewise-linear RNN (see appendix \ref{app: baselines} for details), supports modeling the effect of external inputs, although this capability was not demonstrated in \citet{kramer2022}. Nevertheless, we include comparisons with mmPLRNN with input as one baseline. Finally, as another ablation study to assess the importance of prioritizing behaviorally relevant dynamics, we also implement an unsupervised version of \ourmethod{}, termed \ourmethodunsup{}, that removes the behaviorally relevant optimization step and instead learns all neural dynamics in one optimization step while still incorporating external inputs into the model (see section \ref{sec: Methods} and appendix \ref{app: baselines} for details).
+
+Most other prior nonlinear methods only consider neural signals during modeling without considering behavior or external inputs \citep{gao2016linear, pandarinath2018inferring, hernandez2020, rutten2020non, kim2021inferring} or do not use dynamic models \citep{zhou2020learning, schneider2023learnable} and thus are vastly different from our method. Nevertheless, we include comparisons with LFADS \citep{pandarinath2018inferring} and CEBRA \citep{schneider2023learnable} as additional baselines. We list the differences of some of these methods with our method in table \ref{tab: related_works}.
+
+% \begin{table}[ht]
+% \caption{Summary of related works. \(\rvy_{k}\): neural data, \(\rvz_{k}\): behavior, \(\rvu_{k}\): measured external inputs. Seq. A.E.: sequential autoencoder. CEBRA: \citep{schneider2023learnable}.
+% %\(\sim\): nuanced, see section \ref{sec: related_work}.
+% }
+% \label{tab: related_works}
+% \small
+% \centering
+% \begin{tabular}{c|c|c|c|c|c|c|c}
+% \footnotesize
+% % \toprule
+% \thead{Method} &
+% \thead{Signals \\ during \\ training} & 
+% \thead{Signals \\ during \\ inference} & 
+% \thead{Training \\ loss} & 
+% \thead{Non-\\linear} & 
+% \thead{Prioritize \\ behavioral- \\ly relevant} & 
+% \thead{Dissociate \\ non-neural } & 
+% \thead{Dissociate \\ intrinsic}
+% \\
+% \midrule
+% \ourmethod{} & \yk, \zk, \uk & \yk, \uk & m-step & \cmark & \cmark & \cmark & \cmark \\ 
+% IPSID & \yk, \zk, \uk & \yk, \uk & Projection & \redxmark & \cmark & \cmark & \cmark \\ 
+% DPAD & \yk, \zk & \yk & 1-step & \cmark & \cmark & \redxmark & \redxmark \\ 
+% PSID & \yk, \zk & \yk & Projection & \redxmark & \cmark & \redxmark & \redxmark \\ 
+% TNDM & \yk, \zk & \yk & Seq. A.E. & \cmark & \cmark & \redxmark & \redxmark \\ 
+% LFADS & \yk & \yk & Seq. A.E. & \cmark & \redxmark & \redxmark & \redxmark \\ 
+% mmPLRNN & \yk, \zk, \uk & \yk, \blue{\zk}, \uk & \yk, \zk & \cmark & \redxmark & \redxmark & \cmark \\ 
+% CEBRA & \yk, \zk & \yk & Contrastive & \cmark & \redxmark & \redxmark & \redxmark \\ 
+
+% \end{tabular}
+% \end{table}
+
+% \vspace{-0.2in}
+
+\begin{table}[ht]
+\caption{Related works (see \hyperref[sec: Discussion]{Discussion}). ELBO: evidence lower bound, LL: log-likelihood.
+%\(\sim\): nuanced, see section \ref{sec: related_work}.
+}
+\label{tab: related_works}
+\small
+\centering
+\begin{tabular}{l|c|c|c|c|c}
+\footnotesize
+% \toprule
+\thead{Method} & 
+\thead{Nonlinear} & 
+\thead{Prioritize \\ behaviorally relevant} & 
+\thead{Dissociate \\ non-neural } & 
+\thead{Dissociate \\ intrinsic} &
+\thead{Training objective}
+\\
+\midrule
+IPSID & \redxmark & \cmark & \cmark & \cmark & Projection-based \\ 
+TNDM & \cmark & \cmark & \redxmark & \redxmark & Multi-modal ELBO \\ 
+LFADS & \cmark & \redxmark & \redxmark & \redxmark & ELBO \\ 
+mmPLRNN & \cmark & \redxmark & \redxmark & \cmark  & Multi-modal ELBO \\ 
+DPAD & \cmark & \cmark & \redxmark & \redxmark & 1-step-ahead LL \\  
+CEBRA & \cmark & \cmark & \redxmark & \redxmark & Contrastive \\ 
+\textbf{\ourmethod{}} & \cmark & \cmark & \cmark & \cmark &  \(m\)-step-ahead LL \\
+
+\end{tabular}
+\end{table}
+
+% \vspace{-0.2in}
+
+\section{Methods}\label{sec: Methods}
+
+\subsection{\ourmethod{} Model}\label{sec: IPAD}
+We model the neural activity (\(\rvy_{k} \in \R^{n_y}\)) and behavior (\(\rvz_{k} \in \R^{n_z}\)) as observations of a nonlinear dynamical system that is driven by measured (\(\rvu_{k} \in \R^{n_u}\)) and/or unmeasured inputs (\(\rvw_{k} \in \R^{n_x}\)):
+\begin{equation}\label{eq: IPAD_generative}
+    \left\{
+    \begin{array}{ccl}
+    \rvx^{s}_{k+1} &=& \mA_{fw}(\rvx^{s}_{k}) + \mK_{fw}(\rvu_{k}) + \rvw_{k}\\
+    \rvy_{k} &=& \mC_{\rvy}(\rvx^{s}_{k}, \rvu_{k}) + \rvv_{k}\\
+    \rvz_{k} &=& \mC_{\rvz}(\rvx^{s}_{k}, \rvu_{k}) + \beps_{k}\\
+    \end{array}
+    \right.
+\end{equation}
+Here, \(\rvx^{s}_{k} \in \R^{n_x}\) represent the latent states of the system and evolve according to intrinsic dynamics \(\mA_{fw}\). 
+\(\rvv_{k}\in \R^{n_y}\) and \(\beps_{k}\in \R^{n_z}\) represent observation noises. 
+Given this dynamical system, one can recursively infer the latent state from neural observations \(\rvy_{k}\) using an RNN as follows
+\begin{equation}\label{eq: IPAD_predictor}
+    \begin{array}{ccl}
+    \rvx_{k+1|k} &=& \mA(\rvx_{k|k-1}) + \mK(\rvy_{k}, \rvu_{k})
+    \end{array}
+\end{equation}
+where \(\rvx_{k+1|k}\) (or simply \(\rvx_{k+1}\)) is defined as the inferred latent state based on \(\{\rvy_{1}, ... , \rvy_{k}\}\) and \(\{\rvu_{1}, ... , \rvu_{k}\}\). Given the latent nature of the states, even when inference is optimal (e.g., in a Kalman filter), the inferred states will \textit{not} be equal to the internal states \(\rvx^{s}_{k}\) in equation \ref{eq: IPAD_generative} \citep{katayama2006subspace}, which is why we use different notations for the states in equations \ref{eq: IPAD_generative} and \ref{eq: IPAD_predictor}. More importantly, note that \(\mA\) and \(\mK\) in equation \ref{eq: IPAD_predictor} are distinct from \(\mA_{fw}\) and \(\mK_{fw}\) in equation \ref{eq: IPAD_generative}. This is because \(\mA\) and \(\mK\) represent the ``predictor form'' representation of dynamics, describing how the inferred latent state recursively evolves over time as samples of \(\rvy_{k}\) and \(\rvu_{k}\) are observed, whereas \(\mA_{fw}\) and \(\mK_{fw}\) represent the ``generative form''  representation of dynamics that describe how the latent states themselves evolve, purely based on their \textit{intrinsic dynamics} -- so \(\mA_{fw}\) is what ultimately describes the intrinsic dynamics. For linear systems, there is an analytical bidirectional relationship between predictor and generative form representations (defined by the Kalman filter, see \citealp{katayama2006subspace}), whereas for nonlinear systems in general, this relationship is not known. Thus, we devise an approach that allows us to learn both representations of dynamics from data.
+
+Critically, to predict the latent state (or neural-behavioral data) multiple (\(m > 1\)) steps into the future without new neural observations and using only new inputs \uk, we need to propagate the latent state ahead according to its \textit{intrinsic} dynamics, i.e., the ``generative form'' representation of dynamics, as
+\begin{equation}\label{eq: IPAD_generative_m-step}
+    \begin{array}{ccl}
+    \rvx_{k+m|k} &=& \mA_{fw}(\rvx_{k+m-1|k}) + \mK_{fw}(\rvu_{k+m-1})
+    \end{array}
+\end{equation}
+where \(\rvx_{k+m|k}\) denotes the latent state at time step \(k+m\), generated given \(\{\rvy_{1}, ... , \rvy_{k}\}\) and \(\{\rvu_{1}, ... , \rvu_{k+m-1}\}\). Note that for \(m\!=\!2\), the right hand side of equation \ref{eq: IPAD_generative_m-step} would have \(\rvx_{k+1|k}\), which is given by equation \ref{eq: IPAD_predictor}. Thus, \(m\)-step-ahead inference of the latent state engages both the predictor and generative form representations of the dynamics via equations \ref{eq: IPAD_predictor} and \ref{eq: IPAD_generative_m-step}, respectively. As an alternative interpretation, the \(m\)-step-ahead prediction of the latent state (or neural or behavioral data), for \(m > 1\), involves two RNNs operating in complementary fashion (figure \ref{fig: Methods}b):
+\begin{enumerate}[leftmargin=*]
+    \item The first RNN (\RNN{}, parameterized by \(\mA\) and \(\mK\)) takes in neural and input time series and recursively estimates the 1-step-ahead prediction (\(\rvx_{k|k-1}\)).
+    \item The second RNN (\RNNfw{}, parameterized by \(\mA_{fw}\) and \(\mK_{fw}\)) takes in the 1-step-ahead predicted state from the first RNN and propagates it \(m-1\) additional steps ahead according to the intrinsic latent dynamics of the model, to get the \(m\)-step-ahead predictions (\(\rvx_{k+m-1|k-1}\), for \(m>1\)).
+\end{enumerate}
+
+Overall, the \ourmethod{} model is comprised of six distinct transformations: \(\mA(\cdot)\), \(\mA_{fw}(\cdot)\), \(\mK(\cdot)\), \(\mK_{fw}(\cdot)\), \(\mC_{\rvz}(\cdot)\), and \(\mC_{\rvy}(\cdot)\). \(\mA\)/\(\mA_{fw}\) describe predictor/generative form recursions of the latent state. \(\mK\)/\(\mK_{fw}\) describe predictor/generative form encoders. \(\mC_{\rvz}\) and \(\mC_{\rvy}\) describe behavior and neural decoders. We implement these six transformations as multi-layer perceptrons (MLPs) with arbitrary user-specified number of units and hidden layers. As a special case, any (or all) of these mappings can be replaced by a linear mapping (i.e., an MLP with no hidden layer and a linear activation). 
+
+We learn the parameters specifying all six transformations of the model by optimizing a weighted sum of \(m\)-step-ahead neural-behavioral prediction errors (for \(m\in\left[m_1, m_2, \dots, m_L\right]\)) as our losses
+\begin{equation}\label{eq: forecasting_loss}
+    \begin{array}{lcl}
+     L_{\rvz} = \sum_{i=1}^{L} \alpha_{z_{m_i}}\text{MSE}(\rvz_{k+m_i}, \mC_{\rvz}(\rvx_{k+m_i|k}, \rvu_{k+m_i}))\\
+     L_{\rvy} = \sum_{i=1}^{L} \alpha_{y_{m_i}}\text{MSE}(\rvy_{k+m_i}, \mC_{\rvy}(\rvx_{k+m_i|k}, \rvu_{k+m_i}))
+    \end{array}
+\end{equation}
+where \(\text{MSE}(\cdot)\) indicates the mean-squared error loss, \(L\) denotes the number of steps ahead simultaneously included in the loss, and \(\alpha_{z_{m_i}}\) and \(\alpha_{y_{m_i}}\) denote the weights used in the sum.
+In this work, we always set $\alpha_{z_{m_i}}$ and $\alpha_{y_{m_i}}$ to $1$. 
+Moreover, although the decoders in \ourmethod{} can optionally take both the latent state and the external input \(\rvu_{k}\) (lines 2-3 of equation \ref{eq: IPAD_generative}), in our real data analyses we do not provide \(\rvu_{k}\) to decoders and generate predictions only based on the latent states. 
+% We provide the details of optimizations steps involving the loss functions from equation \ref{eq: forecasting_loss} in the next section.
+
+
+\begin{figure}[h]
+% \vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/v1/Methods.pdf}}
+\caption{\textbf{\ourmethod{} model architecture}. 
+\textbf{(a)} \ourmethod{} dissociates the dynamics of neural-behavioral data into three latent states \(\rvx_{k}^{(1)}\), \(\rvx_{k}^{(2)}\), and \(\rvx_{k}^{(3)}\): 1) the dynamics shared between neural and behavioral modalities (learned in stage 1 by \RNN1 and \RNNfw1), 2) any remaining dynamics private to neural activity (learned in stage 2 by \RNN2 and \RNNfw2), and 3) Input-driven, behavior-specific dynamics not encoded in neural activity (learned per section \ref{sec: AddStep} by \RNN3 and \RNNfw3). 
+\textbf{(b)} For each latent state, we simultaneously learn a predictor and generative form representation of the dynamics (denoted by \(\mA\) and \(\mA_{fw}\)), by optimizing \(m\)-step-ahead prediction of neural-behavioral data. This interconnected two-RNN system is visualized for \RNN1 and \RNNfw1 in this computation graph. The superscript \(.^{(1)}\) indicating that parameters are for \RNN1 and \RNNfw1 is omitted for simplicity.
+%The first recursion (horizontal, parameterized by \(\mA\)) infers 1-step-ahead predictions, then for each time step, a second recursion (vertical, parameterized by \(\mA_{fw}\)), generates multi-step-ahead predictions. Each RNN also includes an encoder \(\mK\)/ \(\mK_{fw}\) that maps its inputs to its latent state and decoders \(\mC_{\rvz}\) and \(\mC_{\rvy}\), that map the latent state to predicted behavior and neural data respectively.
+}
+\label{fig: Methods}
+\end{center}
+\vskip -1.9\baselineskip
+\end{figure}
+
+\subsection{Prioritization of behaviorally relevant over other neural dynamics}\label{sec: IPAD_dissociate_beh_rel}
+
+To dissociate behaviorally relevant neural dynamics from other neural dynamics and prioritize the former, we break the latent state \(\rvx_{k}\) into two sections (\(\rvx_{k}^{(1)}\) and \(\rvx_{k}^{(2)}\)) and learn these two sections in two learning stages. We denote the model parameters associated with each model section using a \(.^{(1)}\) or \(.^{(2)}\) superscript, e.g., \(\mA^{(1)}\) and \(\mA^{(2)}\). We provide the full two-section formulation for the model in appendix \ref{app: two-section-formulation} and the optimization details in appendix \ref{app: LearnigAlgo}. Briefly, each of the two learning stages consist of 2 optimizations, as follows: 
+
+% \vspace{-3pt}
+\textbf{Stage 1}\label{stage1}: Learning \RNN1 and \RNNfw1
+\begin{enumerate}[leftmargin=*,label=\alph*,itemsep=0em]
+    \item[1a] \label{stage1a}
+    Learn \(\mA^{(1)}\), \(\mA_{fw}^{(1)}\), \(\mK^{(1)}\), \(\mK_{fw}^{(1)}\), and \(\mC_{\rvz}^{(1)}\), and extract latent states \(\rvx_{k}^{(1)}\) and \(\rvx_{k+m|k}^{(1)}\) (for \(m>1\)) by minimizing the behavior prediction loss \(L_{\rvz} \) from equation \ref{eq: forecasting_loss}.
+    \item[1b] \label{stage1b}
+    Learn \(\mC_{\rvy}^{(1)}\) by predicting neural data from \(\rvx_{k}^{(1)}\) and \(\rvx_{k+m|k}^{(1)}\), while minimizing the neural prediction loss \(L_{\rvy}\) from equation \ref{eq: forecasting_loss}.
+\end{enumerate}
+\textbf{Stage 2}\label{stage2}: Learning \RNN2 and \RNNfw2
+\begin{enumerate}[leftmargin=*,label=\alph*,itemsep=0em]
+    \item[2a] \label{stage2a}
+    Learn \(\mA^{(2)}\), \(\mA_{fw}^{(2)}\), \(\mK^{(2)}\), \(\mK_{fw}^{(2)}\), and \(\mC_{\rvy}^{(2)}\), and extract latent states \(\rvx_{k}^{(2)}\) and \(\rvx_{k+m|k}^{(2)}\) (for \(m>1\)) by minimizing the neural loss \(L_{\rvy} \), while including outputs of stage 1b as part of the predictions.
+    \item[2b] \label{stage2b}
+    Learn \(\mC_{\rvz}^{(2)}\) by predicting behavior from \(\rvx_{k}^{(2)}\) and \(\rvx_{k+m|k}^{(2)}\), while minimizing the behavior loss \(L_{\rvz} \) from equation \ref{eq: forecasting_loss}, and including outputs of stage 1a as part of the predictions.
+\end{enumerate}
+The explicit dissociation of the relevant dynamics and the above two-stage optimization allow us to first preferentially learn the (low-dimensional) shared dynamics between the two observations, i.e., the behaviorally relevant neural dynamics (\(\rvx_{k}^{(1)}\)), in stage 1. Then in stage 2, we learn any residual neural dynamics (\(\rvx_{k}^{(2)}\)), which, as depicted in figure \ref{fig: Methods}a, can depend on the behaviorally relevant dynamic (see appendix \ref{app: methodDetails} for details). The optional stage 2 is of interest for explaining neural dynamics beyond the ones related to behavior. This multi-stage approach has similarities to \citet{sani2024dissociative}, but here we have: 1) additional signals (\uk), 2) different losses, 3) a forecasting RNN within each model section (figure \ref{fig: Methods}b), and additional steps that are discussed in the next section. 
+
+\subsection{Dissociation of behavior-specific dynamics}\label{sec: AddStep}
+Optimizing behavior prediction (stage 1a) given neural activity \(\rvy_{k}\) and input \(\rvu_{k}\) can lead to learning behavior dynamics that are predictable from the input but are not encoded in the recorded neural activity. Although learning such behavior-specific dynamics enhances behavior decoding, it poses an interpretation challenge for neuroscience applications because one would not know what part of the learned dynamics are represented in the recorded brain regions. As shown in \citet{vahidi2024modeling}, this may lead to a misinterpretation of input-driven behavior-specific dynamics as intrinsic dynamics of the recorded brain region. To mitigate this possibility, we develop two additional steps in our method, that can 1) exclude such behavior-specific dynamics from \(\rvx_{k}^{(1)}\), and 2) learn them separately as a distinct latent state \(\rvx_{k}^{(3)}\) (figure \ref{fig: Methods}a). Details are provided in appendix \ref{app: addStep}. Briefly, \textit{first}, to exclude behavior-specific dynamics, we introduce an optional preprocessing stage that predicts behavior from neural data, and passes this neurally-predicted behavior to be used in stages 1a and 2b. This preprocessing step ensures that the behaviorally relevant states learned in stage 1 (\(\rvx_{k}^{(1)}\)) are encoded in recorded neural activity \(\rvy_{k}\), which can be crucial for interpretability in neuroscience studies. In our analyses of the real datasets (section \ref{sec: RealDataRes}), we always include this preprocessing step. \textit{Second}, to still be able to learn behavior-specific dynamics, we add an optional post-hoc learning step (i.e., stage 3) that fits \RNN3 and \RNNfw3 to any unexplained behavior and learns these input-driven behavior-specific dynamics as a distinct latent state \(\rvx_{k}^{(3)}\). As we show in simulations (see section \ref{sec: AddStepResults} and figure \ref{fig: AddStepSim}), the preprocessing step can exclude non-encoded behavior dynamics. When desired in an application, the optional stage 3 can learn such dynamics to offset any behavior decoding loss incurred due to the preprocessing step, while still maintaining the interpretability of the model. We did not apply this post-hoc step in our real data analyses (section \ref{sec: RealDataRes}).
+
+
+\subsection{Inference and Evaluation Metrics}
+After learning \ourmethod{}'s parameters, we can readily use the learned mappings \(\mA\), \(\mK\) (and \(\mA_{fw}\) and \(\mK_{fw}\)) to infer the 1-(and multi)-step-ahead predicted states \(\rvx_{k}\) (and \(\rvx_{k+m|k}\)) using equations \ref{eq: IPAD_predictor} (and \ref{eq: IPAD_generative_m-step}) for the held-out test data. Predicted neural activity and behavior are obtained by applying their corresponding decoders \(\mC_{y}\) and \(\mC_{z}\) to these inferred states. We also use the term ``decoding'' for behavior predictions because our model predicts behavior only using neural data and inputs, and never using behavior itself. To evaluate the performance of our models, we perform 5- and 2-fold cross-validation, for real data and simulation analyses, respectively. 
+% We leave one fold out for training and then evaluate model predictions on the held-out test data. 
+We report Pearson's Correlation Coefficient (CC) and in some cases (see table \ref{tab: R2_main}) also the coefficient of determination ($R^2$) between the predicted and actual observation, averaged over dimensions. 
+% Note that regardless of what step-ahead predictions were included during training, the learned model can be used to predict the latent state and neural-behavioral data at $m$-steps ahead for any desired $m$ using equations \ref{eq: IPAD_predictor} and \ref{eq: IPAD_generative_m-step} (or \ref{eq: IPAD_base} and \ref{eq: IPAD_fw}) together. For example, in figure \ref{fig: forecastData}, only $[1, 2, 4, 8]$ step ahead predictions are included in the optimization loss (equation \ref{eq: forecasting_loss}, but we evaluate the learned models with predictions up to $32$-steps ahead. 
+We further report the $m$-step-ahead prediction accuracy, which reflects how well the intrinsic dynamics \(\mA_{fw}\) are learned. 
+For simulation analyses with linear recursions (\(\mA_{fw}\)), we additionally evaluate the learned intrinsic dynamics by comparing the eigenvalues of \(\mA_{fw}\) between the true and learned model (see appendix \ref{app: method_eigenvalues}).
+
+
+\section{Experimental Results}
+
+\subsection{Simulation Experiments}
+We validated \ourmethod{} in three simulations with different nonlinear neural-behavioral-input structures to show that it can learn intrinsic behaviorally relevant neural dynamics in presence of inputs. 
+
+% In the first three simulations, we excluded the preprocessing stage (section \ref{sec: AddStep}) for simplicity as we will separately validate it in other two simulation analysis (see section \ref{sec: AddStepResults}, figure \ref{fig: AddStepSim}), but we will importantly include them in our real data analyses (see section \ref{sec: Discussion}).
+
+\subsubsection{\ourmethod{} achieves near optimal neural-behavioral predictive accuracy in nonlinear input-driven simulations}\label{sec: results_sim_localization}
+First, we considered an input-driven dynamical system as in equation \ref{eq: IPAD_generative}, but with only the behavior mapping \Cz{} being nonlinear with the mapping \(f_{C_z}(\nu) := a \sin(\nu) + b \nu\), as detailed in section \ref{app: sim_2_method} (figure \ref{fig: simMain}a). We generated 10 random parameter sets as our true models and generated data from them. First, we implemented an automatic selection of nonlinearity for \ourmethod{} by setting each of \A{}, \K{}, \Cy{}, or \Cz{} to linear or nonlinear, resulting in \(2^4\) different \ourmethod{} models, and finding the model with the best behavior decoding in the training data. Across all 10 realizations and 2 cross-validated folds, setting the behavior decoder \Cz{} to be nonlinear was correctly identified as the best performing nonlinearity in 100\% of the cases. 
+Additionally, we evaluated \ourmethod{} with nonlinearity only in one of \A{}, \K{}, \Cy{}, or \Cz{}. The model with nonlinear behavior decoder \Cz{} outperformed other nonlinearity choices as well as linear models (i.e., IPSID and the fully \ourmethodlinear{}) in behavior decoding and neural prediction. \ourmethod{} further outperformed DPAD, which is nonlinear but does not account for the input $u_k$, in neural-behavioral prediction. In fact, both \ourmethod{} with nonlinear \Cz{} and \ourmethod{} with automatic nonlinearity selection achieved almost the same neural-behavioral prediction as the true simulated models, demonstrating \ourmethod{}’s success in accurately learning the nonlinear input-driven dynamical system (table \ref{tab: simTable}).
+
+% \vspace{-0.5cm}
+% \begin{figure}[h]
+% \vskip 0.2in
+% \begin{center}
+% \centerline{\includegraphics[width=0.5\linewidth]{Figs/v1/simScatter.pdf}}
+% \caption{\textbf{IPAD learns the underlying nonlinear dynamical system in simulated data}. Prediction results for nonlinear simulation with sinusoidal behavior mapping. See figure \ref{fig: simMain}e for an example state-to-behavior input-output map. 1-step-ahead behavior decoding vs neural prediction shown for IPAD with different nonlinearities. Results for the true models are shown as ``Ideal''. State dimensions for all variations is set as the ground truth.}
+% \label{fig: simFitToData}
+% \end{center}
+% \vskip -0.2in
+% \end{figure}
+
+
+\begin{table}[h]
+\vskip -0.6\baselineskip
+\caption{1-step-ahead prediction results for nonlinear simulations with sinusoidal behavior mapping. Mean \(\pm\) s.e.m. is across 20 runs (10 datasets, 2 folds). State dimension is always set to ground truth. True model's outcome indicates the ``Ideal'' accuracy. \textbf{Bold}: within 1 s.e.m. of ideal.}
+\label{tab: simTable}
+\begin{center}
+\begin{tabular}{l|c|c}
+% \toprule
+\multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c|}{\textbf{Behavior decoding CC}} & \multicolumn{1}{c}{\textbf{Neural prediction CC}} \\
+\midrule
+IPSID & 0.4567 \(\pm\) 0.0527  & \textbf{0.8901 \(\pm\) 0.0304}\\
+\ourmethodlinear{} & 0.4558 \(\pm\) 0.0528  & \textbf{0.8893 \(\pm\) 0.0304}\\
+DPAD \textit{Nonlin} \(\mC_\rvz\) & 0.4958 \(\pm\) 0.0620 & 0.3767  \(\pm\) 0.0680\\
+\ourmethod{} \textit{Nonlin} \(\mA\) & 0.4735 \(\pm\) 0.0572 & 0.8127 \(\pm\) 0.0528\\
+\ourmethod{} \textit{Nonlin} \(\mK\) & 0.7680 \(\pm\) 0.0467 & 0.6983 \(\pm\) 0.0473\\
+\ourmethod{} \textit{Nonlin} \(\mC_\rvy\) & 0.4558 \(\pm\) 0.0528 & \textbf{0.8887 \(\pm\) 0.0305}\\
+\ourmethod{} \textit{Nonlin} \(\mC_\rvz\) & \textbf{0.8696} \(\pm\) \textbf{0.0487} & \textbf{0.8913} \(\pm\) \textbf{0.0305}\\
+\ourmethod{} \textit{\textbf{Auto} Nonlin} & \textbf{0.8693} \(\pm\) \textbf{0.0487} &  \textbf{0.8913} \(\pm\) \textbf{0.0305}\\
+\midrule
+True model (ideal) & 0.8737 \(\pm\) 0.0486 &  0.8921 \(\pm\) 0.0306\\
+\end{tabular}
+\end{center}
+\vskip -1\baselineskip
+\end{table}
+
+\subsubsection{\ourmethod{} dissociates intrinsic dynamics from input dynamics in simulations}\label{sec: main sim results}
+Next, we sought to validate \ourmethod{}’s ability to disentangle intrinsic and input-driven contributions to neural dynamics. \ourmethod{} simultaneously learns a predictor form and a generative form representation of the dynamics, the latter of which directly describes the intrinsic dynamics in terms of the mapping \(\mA_{fw}(\cdot)\) (section \ref{sec: IPAD}, figure \ref{fig: Methods}b). In this simulation, we kept the ground truth state transitions linear so that we could precisely quantify the intrinsic dynamics and their learning error via the eigenvalues of the state transition matrix \(\mA_{fw}\) (appendix \ref{app: method_eigenvalues}). We analyzed data from three sets of simulated dynamical systems with distinct nonlinear structures (see appendix \ref{app: simDetails} for details): (1) Spiral behavior manifold (figure \ref{fig: simMain}a-d), (2) trigonometric behavior manifold (also explained in section \ref{sec: results_sim_localization}, figure \ref{fig: simMain}e-h), and (3) trigonometric input-encoder (figure \ref{fig: sinBRes}). For each simulation, we generated realizations from 10 different systems with randomly generated sets of parameters. Across all three simulations, \ourmethod{} accurately learned the intrinsic dynamics, resulting in smaller error in eigenvalues of the transition matrix compared with DPAD, which is nonlinear but does not consider the input, and compared with \ourmethodlinear{} and IPSID, which consider input but are linear (figures \ref{fig: simMain}c,g, \ref{fig: sinBRes}d). We demonstrate in an ablation study that learning a separate generative model for forecasting is crucial for correct learning of the intrinsic dynamics (table \ref{tab: RNN_fw ablation}). These more accurate intrinsic dynamics coupled with the input also resulted in \ourmethod{} achieving better behavior decoding (figures \ref{fig: simMain}b,f , \ref{fig: sinBRes}a) and neural prediction (figure \ref{fig: sinBRes}c) compared to baselines. These results suggest that failing to account for either nonlinearity or input may lead to less accurate models and a misinterpretation of the intrinsic dynamics in nonlinear data. 
+
+Another metric for how well intrinsic dynamics are learned is forecasting, where behavior is predicted multiple steps into the future, without observing new neural data and only by observing the future input (section \ref{sec: IPAD}). Forecasting evolves the state dynamics according to the learned intrinsic dynamics (equation \ref{eq: IPAD_generative_m-step}) and thus validates their accurate learning. We performed forecasting up to 32 steps ahead and found that the nonlinear models with input consistently outperformed linear models as well as the nonlinear DPAD, which does not consider input (figures \ref{fig: simMain}d,h and \ref{fig: sinBRes}e,f).
+
+% Finally, in simulation analyses (section \ref{sec: AddStepResults}), we show that \ourmethod{}'s behavior preprocessing step (section \ref{sec: AddStep}) can exclude behavior-specific (non-encoded) dynamics from the model, while the optional stage 3 of \ourmethod{} can learn them as a separate set of latent states (figure \ref{fig: AddStepSim}). 
+
+\begin{figure}[h]
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/v1/simMain.pdf}}
+\caption{\textbf{\ourmethod{} better learns the intrinsic shared dynamics by simultaneously modeling input and nonlinearity, and by optimizing forecasting}. \textbf{(a-d)} Results for simulations with a spiral behavioral manifold. \textbf{(b)} 1-step-ahead behavior decoding for nonlinear \ourmethod{}, nonlinear DPAD, \ourmethodlinear{}, and IPSID \textbf{(c)}. Error in identifying intrinsic dynamics of the true model quantified by the error in learning the eigenvalues of \(\mA_{fw}\). \textbf{(d)} Behavior decoding forecasts for 1 to 32 steps ahead, enabled by learning the intrinsic dynamics (\(\mA_{fw}\)), with predictions optimized for $[1,2,3,4,5]$-steps-ahead (section \ref{sec: Methods}). \textbf{(e-h)} Same as (a-d) for simulations with a trigonometric behavior mapping.}
+\label{fig: simMain}
+\end{center}
+\vskip -1\baselineskip
+\end{figure}
+
+% \subsubsection{\ourmethod{} can exclude non-encoded behavior-specific dynamics}\label{sec: AddStepResults}
+
+\subsection{Non-human primate motor cortical activity during reaching}\label{sec: RealDataRes}
+
+% \subsubsection{Nonlinear input-driven dynamical modeling enhances neural-behavioral data prediction by learning more accurate intrinsic dynamics}
+
+We applied our method to a publicly available dataset recorded from a non-human primate (NHP) performing reaching movements \cite{sabes} (figure \ref{fig: forecastData}a). We took either the smoothed spike counts or raw LFP from primary motor cortex (M1) as neural time-series $\rvy_k$, fingertip's position and velocity as behavior $\rvz_k$, and sensory task instructions (target location) as the input $\rvu_k$ (appendix \ref{app: dataDetails}). Sensory inputs can have their own dynamics, which are distinct from the intrinsic dynamics of the motor cortex. Our goal is to learn the intrinsic dynamics in M1 related to movement while disentangling them from the dynamics of sensory input and also from any behavior-specific dynamics. Therefore, we importantly include \ourmethod{}'s behavior preprocessing stage (section \ref{sec: AddStep}). 
+
+% Removed as is explained in the Methods:
+% We quantified the intrinsic dynamics by allowing our model to learn a separate recursion for multiple-steps-ahead predictions (figure \ref{fig: Methods}b). By doing so, for prediction horizons $m > 1$, IPAD is conditioned to rely on its generative intrinsic dynamics by \(\mA_{fw}(\cdot)\) (and the input), iterating $m-1$ times, without observing the subsequent neural activity samples to propagate dynamics forward in time. This not only helps gaining a more robust $m$-step-ahead prediction but enables learning an interpretable mapping corresponding to the intrinsic dynamics, i.e., \(\mA_{fw}(\cdot)\). 
+
+We fitted \ourmethod{} with different nonlinearity choices as in our simulations: (1) nonlinear recursion $\mA(\cdot)$/$\mA_{fw}(\cdot)$, (2) nonlinear encoder $\mK(\cdot)$/$\mK_{fw}(\cdot)$, (3) nonlinear decoders $\mC_{\rvy}(\cdot)$ and $\mC_{\rvz}(\cdot)$, and a fully linear variant, \ourmethodlinear{}. We included \(m\!=\![1,2,4,8]\)-steps-ahead predictions in the \ourmethod{} loss, which for \(m>1\) engage the intrinsic behaviorally relevant dynamics (\(\mA_{fw}\)) and allow their learning. To evaluate the learned intrinsic dynamics, we report neural-behavioral forecasting accuracy for different step-ahead horizons (figures \ref{fig: forecastData}b-c, and \ref{fig: LFP} for LFP), while tabulating the 4-steps-ahead (i.e., 200ms) results to highlight \ourmethod{}'s advantage in forecasting (tables \ref{tab: mainTable} and \ref{tab: NLConfigs}). In addition to these results in the low-dimensional regime (stage 1 only, \(n_x\!=\!n_1\!=\!16\)), we also report the results in the high-dimensional regime (both stages, \(n_x\!=\!64\), \(n_1\!=\!16\)) (table \ref{tab: mainTable}, figures \ref{fig: dataVsNx} and \ref{fig: reconstruction}). Among nonlinearity configurations, \ourmethod{} with nonlinear decoders provided the best fit to neural-behavioral data (table \ref{tab: NLConfigs}). Moreover, \ourmethod{}'s behavior forecasting performance improved as more neurons were included (table \ref{tab: neuron_scale}). % Interestingly, this aligns with the previous findings for this dataset without incorporating sensory inputs \citep{sani2024dissociative}.
+
+Next, we compared \ourmethod{}'s neural-behavioral forecasting to several ablation baselines (table \ref{tab: mainTable} and figures \ref{fig: forecastData} and \ref{fig: dataVsNx}). First, \ourmethod{} outperformed \ourmethodlinear{}, i.e., a similar but fully linear model. Second, \ourmethod{} outperformed DPAD \citep{sani2024dissociative}, which can have decoder nonlinearities but does not consider inputs. \ourmethod{}'s advantage shows the importance of considering the effects of sensory inputs on neural-behavioral dynamics. Third, we compared to \ourmethodunsup{}, which removes the first stage of \ourmethod{} and thus loses prioritization. 
+% \ourmethod{} has advantages over all ablation baselines (table \ref{tab: mainTable} and figures \ref{fig: forecastData} and \ref{fig: dataVsNx}). First, \ourmethod{} achieved more accurate neural-behavioral forecasts than \ourmethodlinear{}. Second, \ourmethod{} also outperformed DPAD in neural-behavioral forecasts, showing the importance of considering the effects of sensory inputs on neural-behavioral dynamics. 
+% Indeed, \ourmethod{}'s superior forecasting indicates its effective integration of intrinsic behaviorally relevant neural dynamics with sensory inputs. 
+\ourmethod{} consistently outperformed \ourmethodunsup{} in behavioral forecasting, but did not match the neural forecasting of \ourmethodunsup{} unless it was given enough latent state dimensions (table \ref{tab: mainTable}, $n_x\!=\!64$), which is expected given \ourmethodunsup{}'s singular objective being neural prediction. This comparison shows the benefit of prioritization for learning low-dimensional representations of intrinsic behaviorally relevant dynamics, and confirms that with its stage 2, \ourmethod{} can capture any remaining non-behavioral neural dynamics. Finally, \ourmethod{}'s low dimensional latent state trajectories were better separated for different movement directions  compared to those of \ourmethodunsup{} and DPAD, suggesting that \ourmethod{}'s latent states are more congruent with behavior, i.e., more behaviorally relevant (figure \ref{fig: trajectory}).
+
+We also compared \ourmethod{}'s neural-behavioral forecasting performance to mmPLRNN, which models multi-modal data using piecewise-linear RNNs, and has the option to model inputs although prior work had not explored this input option. \ourmethod{} outperformed input-driven mmPLRNN networks in forecasting both behavior and neural activity, across all forecasting horizons, with the exception of 2-steps-ahead neural prediction (table \ref{tab: mainTable}, figure \ref{fig: forecastData}). Note that \ourmethod{}'s better decoding is achieved despite the fact that mmPLRNN, by design, incorporates behavior \textit{as an input} during inference, whereas \ourmethod{} and DPAD do not. 
+Also, we compared \ourmethod{} to TNDM \citep{hurwitz2021targeted}, a nonlinear sequential autoencoder that models neural-behavioral dynamics, but does not include the effect of external inputs. We extended TNDM beyond the original work to create a version that also adds sensory inputs as an additional input besides neural activity (appendix \ref{app:TNDM_method}). We analyzed non-smoothed spike counts from the same dataset and found that \ourmethod{} significantly outperformed TNDM in behavior decoding while achieving comparable neural prediction (table \ref{tab: TNDM_comparison}). Extending TNDM to include inputs significantly improved its behavior decoding, but it still did not reach that of \ourmethod{} (table \ref{tab: TNDM_comparison}). 
+%\ourmethod{}'s superior behavior forecasting may be attributed to its prioritization of behaviorally relevant dynamics in a dedicated optimization stage as opposed to mmPLRNN and TNDM's combined objective approach (see \hyperref[sec: Discussion]{Discussion}). 
+Finally, we compared \ourmethod{} with CEBRA \citep{schneider2023learnable}, which is a non-dynamic convolutional encoder with a contrastive loss on behavior (section \ref{app:CEBRA_method}), and with LFADS \citep{pandarinath2018inferring}, which is an unsupervised sequential autoencoder (section \ref{app:LFADS_method}). \ourmethod{} outperformed both these baselines in neural-behavioral prediction (table \ref{tab: LFADS_CEBRA_comparison}).
+ 
+
+
+
+\begin{figure}[h]
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/v1/data1.pdf}}
+\caption{\textbf{\ourmethod{} outperforms baselines in neural-behavioral forecasting}. \textbf{(a)} Dataset and task visualization. \textbf{(b, c)} Behavior and neural activity forecasting correlation coefficient (CC) for \ourmethod{}, \ourmethodlinear{}, DPAD, and mmPLRNN at low state dimension regime ($n_x$=16). Shaded areas show the s.e.m. across the 7 recording sessions and 5 cross-validation folds.}
+ % (b) Same as a at high state dimension regime ($n_x$=64).
+\label{fig: forecastData}
+\end{center}
+\vskip -1.5\baselineskip
+\end{figure}
+% \vspace{-1em}
+
+% \begin{table}[b]
+% \caption{Forecasting performance (4-step-ahead) compared to baselines in NHP dataset for low-dimensional models with $n_x=16$. See tables \ref{tab: NLConfigs} and \ref{tab: highD} for additional results.}
+% \label{tab: mainTable}
+% \begin{center}
+% \begin{tabular}{l|c|c}
+% % \toprule
+% \multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c|}{\textbf{Behavior forecasting CC}} & \multicolumn{1}{c}{\textbf{Neural forecasting CC}} \\
+% \midrule
+% \ourmethodlinear{} & 0.7453 \(\pm\) 0.0066 & 0.1767 \(\pm\) 0.0054\\
+% DPAD & 0.6706 \(\pm\) 0.0096  &  0.2067 \(\pm\) 0.0062\\
+% \ourmethodunsup{} & 0.7663 \(\pm\) 0.0069 & \textbf{0.4089 \(\pm\) 0.0076}\\
+% mmPLRNN &  0.6851 \(\pm\) 0.0143 &  0.3162 \(\pm\) 0.0107\\
+% \midrule
+% \ourmethod{} (ours) & \textbf{0.8042 \(\pm\) 0.0085} & 0.3274 \(\pm\) 0.0078\\
+% \end{tabular}
+% \end{center}
+% \end{table}
+
+
+\begin{table}[t]
+\vskip -0.9\baselineskip
+\caption{Forecasting performance (4-step-ahead) compared to baselines in NHP dataset for models with low ($n_x\!=\!16$) and high-dimensional ($n_x\!=\!64$) latent states. $n_1\!=\!16$ for \ourmethod{}, \ourmethodlinear{}, and DPAD. $R^2$ results were similar (table \ref{tab: R2_main}). Tables \ref{tab: NLConfigs}, \ref{tab: TNDM_comparison} and \ref{tab: LFADS_CEBRA_comparison} have additional results.}
+\label{tab: mainTable}
+\begin{center}
+\begin{tabular}{l|c|c|c|c}
+% \toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\textbf{Behavior forecasting CC}} & \multicolumn{2}{c}{\textbf{Neural forecasting CC}} \\ \cline{2-5} & $n_x=16$ & $n_x=64$ & $n_x=16$ & $n_x=64$ \\
+\midrule
+\ourmethodlinear{} & 0.7453 \(\pm\) 0.0066 & 0.7409 \(\pm\) 0.0059 & 0.1767 \(\pm\) 0.0054 & 0.3784 \(\pm\) 0.0078\\
+DPAD & 0.6706 \(\pm\) 0.0096 & 0.7352 \(\pm\) 0.0079 &  0.2067 \(\pm\) 0.0062 & 0.3611 \(\pm\) 0.0080\\
+\ourmethodunsup{} & 0.7663 \(\pm\) 0.0069 & \textbf{0.8049} \(\pm\) \textbf{0.0068} & \textbf{0.4089 \(\pm\) 0.0076} & \textbf{0.4185} \(\pm\) \textbf{0.0074}\\
+mmPLRNN &  0.6851 \(\pm\) 0.0143 & 0.7328 \(\pm\) 0.00361 &  0.3162 \(\pm\) 0.0107 & 0.3570 \(\pm\) 0.0223\\
+\midrule
+\ourmethod{} (ours) & \textbf{0.8042 \(\pm\) 0.0085} & \textbf{0.7970} \(\pm\) \textbf{0.0086} & 0.3274 \(\pm\) 0.0078 & \textbf{0.4123} \(\pm\) \textbf{0.0077}\\
+\end{tabular}
+\end{center}
+\end{table}
+\vskip -2\baselineskip
+\section{Discussion}\label{sec: Discussion}
+
+We introduced \ourmethod{}, a method for input-driven nonlinear dynamical modeling that disentangles intrinsic shared dynamics between two observation modalities from the effect of input. %Through simulations and motor cortical activity experiments, we show that \ourmethod{} effectively separates the dynamics of measured external inputs from intrinsic dynamics, while prioritizing shared dynamics between the observed modalities. 
+% \subsection{Measurement versus inference of inputs}
+Here, we assume some external inputs are measured  (e.g., from sensory stimuli or other brain regions) and are available for modeling. This approach is distinct from the input-inference approach, where unmeasured inputs are inferred from measured neural activity \citep{pandarinath2018inferring, schimel2022ilqr}. These two approaches are in a sense complementary. In our approach, any measured inputs can be explicitly incorporated into the model to dissociate their dynamics from the intrinsic dynamics of the measured neural-behavioral data. Practically, one cannot measure all inputs to a given brain area, so our approach does not rule out the influence of unmeasured inputs on the learned intrinsic dynamics. One could thus use the input-inference approach to infer such unmeasured inputs from all measured signals. Note, however, that inferred inputs are ultimately a function of measured signals and thus do not add any new information (unlike measured inputs); rather they can be thought of as a decomposition of the measured signals based on certain assumptions (e.g., smoothness).
+
+% \subsection{Cross-modality prediction versus multi-modal inference}
+While \ourmethod{}'s learning is supervised by behavior, it only uses neural activity and input (\textit{not} behavior) during inference. This supervision allows stage 1 to extract behaviorally relevant intrinsic dynamics with priority, while later stages learn neural-specific or behavior-specific dynamics in independent optimizations. This multi-stage learning has similarities to some prior works \citep{sani2021modeling,vahidi2024modeling,sani2024dissociative, oganesian2025spectral}, but is fundamentally different from other works that use a single multi-modal optimization loss \citep{kramer2022, gondur2024multi,hurwitz2021targeted}, which may miss prioritization of shared dynamics over unshared dynamics \citep{sani2024dissociative}. Some of the latter group are indeed focused on multi-modal inference and fuse all shared and unshared information into the same latent space \citep{kramer2022, gondur2024multi}. Multi-stage methods avoid this fusion by focusing on shared dynamics during a first optimization stage with only cross-modality prediction (e.g., behavior decoding) as the objective. 
+
+% \subsection{Cross-modality prediction versus multi-modal inference}
+To disentangle input dynamics from intrinsic dynamic, \ourmethod{} consists of three stages, each learning a predictor and a generator model. In each stage, \ourmethod{'s predictor model in that stage (e.g., \RNN{1}) infers the latent states, which are subsequently employed as the input to compute $m$-step-ahead predictions via the associated generative model (e.g., \RNNfw{1}). \ourmethod{}'s predictor and generative models are learned jointly to maximize the $m$-step-ahead log-likelihood. This has analogies to the encoder-decoder architectures such as those commonly used in variational inference \citep{kingma2013auto}. Specifically, the predictor and generator RNNs in \ourmethod{} have roles similar to those of the encoder and decoder in variational inference, respectively. However, in variational inference, the posterior distribution of the unobserved variables given the data is parametrized and a part of the optimization loss aims to enforce that distribution on the inferred latent variables \citep{chung2015recurrent, krishnan2015deepkalmanfilters, fraccaro2016sequential, luk2024learningoptimalfiltersusing}. In contrast, we do not impose such parametrization on the latent states in \ourmethod{}. Developing variational methods with the same multi-section architecture and multi-stage learning as \ourmethod{} is an interesting future direction.}
+
+Similar to many prior works including some in neuroscience  \citep{abbaspourazad2024dynamical,sani2024dissociative,chung2015recurrent, krishnan2015deepkalmanfilters, fraccaro2016sequential, luk2024learningoptimalfiltersusing}, \ourmethod{} has a causal formulation and performs inference by recursively inferring the next latent state after each new observation. This is distinct from some nonlinear methods in neuroscience \citep{gao2016linear, pandarinath2018inferring, hernandez2020, hurwitz2021targeted, keshtkaran2022large, gondur2024multi, karniolmodeling} that perform inference non-causally in time. Thus, \ourmethod{} may be useful for real-time decoding in brain-computer interfaces \citep{shanechi2019brain}. 
+
+\ourmethod{}, as presented, is designed for single-session settings. Extending it for cross-session generalization is an interesting future direction that can follow approaches used in the literature, such as aligning neural manifolds across sessions \citep{farshchian2018adversarial}, adaptive modeling approaches \citep{Ahmadipour_2021, Yang_2021}, or incorporating session-specific read-in and read-out mappings while keeping shared model parameters fixed \citep{pandarinath2018inferring}. The latter allows training across multiple sessions and adapting to new sessions with minimal data by learning session-specific matrices. Furthermore, \ourmethod{}'s ability to disentangle intrinsic dynamics may also facilitate generalization across tasks with different sensory instructions.
+
+% \section{Limitations}
+A fundamental challenge for nonlinear latent state models is that many alternative models may explain the data equally well. Thus, evaluating learned dynamics relies on computable quantities from measured signals, primarily $m$-step-ahead neural-behavioral predictions. While our results suggest that in our dataset having nonlinear decoders provides higher performance than other nonlinearities, this might not be case in another dataset. In practice, the optimal nonlinearity can be selected based on the desired metric as done by \ourmethod{}. For linear models, all correct latent models have the same eigenvalues \citep{katayama2006subspace}, allowing direct evaluation of learned dynamics (figure \ref{fig: simMain}).
+% , as we did in our simulations with a linear state dynamics. For other models with general nonlinear latent dynamics, such exact validation of learned dynamics is typically not generally possible.
+
+% \section{Ethics Statement}
+% All data used in our experiments were either simulated or were made publicly available by other groups \citep{sabes}.
+% , ensuring compliance with ethical guideline for data use. Our method aims to improve the understanding of the intrinsic neural dynamics and their relationship to behavior, and we foresee its potential applications contributing positively to neuroscience and machine learning research.
+% , ensuring compliance with ethical guideline for data use. Our method aims to improve the understanding of the intrinsic neural dynamics and their relationship to behavior, and we foresee its potential applications contributing positively to neuroscience and machine learning research.
+
+% # Should we add an Acknowledgments section?
+\section{Acknowledgments}
+This work was supported, in part, by the following organizations and grants: National Institutes of Health (NIH) R01MH123770, NIH BRAIN Initiative R61MH135407, NIH RF1DA056402, NIH Director’s New Innovator Award DP2-MH126378, Foundation for OCD Research (FFOR), the Office of Naval Research (ONR) Young Investigator Program under contract N00014-19-1-2128, and the Army Research Office (ARO) under contract W911NF-16-1-0368 as part of the collaboration between the US DOD, the UK MOD and the UK Engineering and Physical Research Council (EPSRC) under the Multidisciplinary University Research Initiative (MURI). We sincerely thank the Sabes lab at the University of California San Francisco for making the NHP datasets that we used here publicly available.
+
+\section{Author contributions} % OPTION 1: a section
+% Author contributions were as follows: % OPTION 2: at the end of acknowledgments
+P.V., O.G.S., and M.M.S. developed the new BRAID method and wrote the manuscript. P.V. and O.G.S. implemented the code for the method and the analyses. P.V. performed the analyses. M.M.S. supervised the work.
+
+\section{Reproducibility Statement}
+To ensure the reproducibility of our work, we are sharing the code for \ourmethod{} along with a Python notebook demonstrating its usage at \url{https://github.com/ShanechiLab/BRAID}. We also provide model architecture and training details in appendix \ref{app: TrainDetail}. Finally, the dataset we used \citep{sabes} is publicly available for anyone interested in reproducing the results reported in section \ref{sec: RealDataRes}. 
+
+% \newpage
+
+\bibliography{iclr2025_conference}
+\bibliographystyle{iclr2025_conference}
+
+\newpage
+\appendix
+
+% This resets figure counter and makes appendix figures A.1, etc.
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\counterwithin{equation}{section}
+
+\section{Appendix}
+% You may include other additional sections here.
+
+\subsection{Method details}\label{app: methodDetails}
+
+\subsubsection{Two-section formulation}\label{app: two-section-formulation}
+In equations \ref{eq: IPAD_generative}, \ref{eq: IPAD_predictor}, and \ref{eq: IPAD_generative_m-step}, we combined both latent state sections of our model (\(\rvx_{k}^{(1)}\) and \(\rvx_{k}^{(2)}\)) for simpler exposition. Here, we present the complete two-section formulation. The predictor form part of the model (equation \ref{eq: IPAD_predictor}) can be written as follows:
+
+\begin{equation}\label{eq: IPAD_base}
+    % \hspace{-0.4cm}{
+    \left\{%\!\!\!
+    % \begin{array}{c@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{ccl}
+    \begin{bmatrix}
+    \rvx_{k+1|k}^{(1)}\\
+    \rvx_{k+1|k}^{(2)}
+    \end{bmatrix}
+    &=&
+    \begin{bmatrix}
+    \mA^{(1)}(\rvx_{k|k-1}^{(1)})\\
+    \mA^{(2)}(\rvx_{k|k-1}^{(2)})
+    \end{bmatrix}
+    + 
+    \begin{bmatrix}
+    \mK^{(1)}(\rvy_{k}, \rvu_{k})\\
+    \mK^{(2)}(\rvy_{k}, \rvu_{k}, \rvx_{k|k-1}^{(1)})
+    \end{bmatrix}
+    \\[15pt] 
+    \hat{\rvy}_{k|k-1} &=& \mC_{\rvy}^{(1)}(\rvx_{k|k-1}^{(1)}, \rvu_{k}) + \mC_{\rvy}^{(2)}(\rvx_{k|k-1}^{(2)}, \rvu_{k})\\[5pt] %+ \rve_{k}
+    \hat{\rvz}_{k|k-1} &=& \mC_{\rvz}^{(1)}(\rvx_{k|k-1}^{(1)}, \rvu_{k}) + \mC_{\rvz}^{(2)}(\rvx_{k|k-1}^{(2)}, \rvu_{k})
+    \end{array}
+    \right.
+    % }
+\end{equation}
+
+where we have also included the two-section formulation for the prediction of observations as lines 2-3 of the equation. As before, \(\rvy_{k} \in \R^{n_y}\) and \(\rvz_{k} \in \R^{n_z}\) are the observed high-dimensional neural activity and behavior respectively while \(\rvu_{k} \in \R^{n_u}\) represents the measured inputs to the dynamical system. Here, the overall latent state, \(\rvx_{k} \in \R^{n_x}\), which describes the dynamics underlying the neural-behavioral data, is constructed such that the behaviorally relevant neural dynamics, represented by \(\rvx_{k}^{(1)} \in \R^{n_1}\), are dissociated from the the irrelevant ones, represented by \(\rvx_{k}^{(2)} \in \R^{n_x-n_1}\). 
+
+The predictor form RNNs in equation \ref{eq: IPAD_base} (i.e., \RNN1{} and \RNN2{}) are complemented by another set of RNNs (i.e., \RNNfw1{} and \RNNfw2{}) that constitute the generative form part of the model (equation \ref{eq: IPAD_generative_m-step}), and enable \(m\)-step-ahead (for \(m>1\)) prediction of latent states and neural-behavioral data. The generative RNNs were again shown with a combined latent state in equation \ref{eq: IPAD_generative_m-step} for simpler exposition. The following equations show the complete two-section formulation:
+
+\begin{equation}\label{eq: IPAD_fw}
+% \hspace{-0.4cm}{
+    % \scalemath{0.88}{
+    \left\{%\!\!\!
+    \begin{array}{ccl}
+    \begin{bmatrix}
+    \rvx_{k+m|k}^{(1)}\\
+    \rvx_{k+m|k}^{(2)}
+    \end{bmatrix}
+    &=&
+    \begin{bmatrix}
+    \mA_{fw}^{(1)}(\rvx_{k+m-1|k}^{(1)})\\
+    \mA_{fw}^{(2)}(\rvx_{k+m-1|k}^{(2)})
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    \mK_{fw}^{(1)}(\rvu_{k+m-1})\\
+    \mK_{fw}^{(2)}(\rvu_{k+m-1}, \rvx_{k+m-1|k}^{(1)})
+    \end{bmatrix}
+    \\[15pt] 
+    \hat{\rvy}_{k+m|k} &=& \mC_{\rvy}^{(1)}(\rvx_{k+m|k}^{(1)}, \rvu_{k+m}) + \mC_{\rvy}^{(2)}(\rvx_{k+m|k}^{(2)}, \rvu_{k+m})\\[5pt] %+ \rve_{k}
+    \hat{\rvz}_{k+m|k} &=& \mC_{\rvz}^{(1)}(\rvx_{k+m|k}^{(1)}, \rvu_{k+m}) + \mC_{\rvz}^{(2)}(\rvx_{k+m|k}^{(2)}, \rvu_{k+m})
+    
+    \end{array}
+    \right.
+    % }
+    % }
+\end{equation}
+
+where $m>1$, and \(\rvx^{(1)}_{k+1|k}\) and \(\rvx^{(2)}_{k+1|k}\) (i.e., $m\!=\!1$) are taken from equation \ref{eq: IPAD_base}. A visualization of how the formulations in equations \ref{eq: IPAD_base} and \ref{eq: IPAD_fw} are connected is provided in figure \ref{fig: Methods}.
+In equation \ref{eq: IPAD_fw}, we have also included the two-section formulation for the prediction of neural-behavioral observations as lines 2-3 of the equation, showing that applying the same decoders \(\mC^{(1)}_{\rvy}\)/\(\mC^{(2)}_{\rvy}\) and \(\mC^{(1)}_{\rvz}\)/\(\mC^{(2)}_{\rvz}\) as in equation \ref{eq: IPAD_base} to the $m$-step-ahead predicted latents \(\rvx^{(1)}_{k+m|k}\)/\(\rvx^{(2)}_{k+m|k}\) gives the $m$-step-ahead predictions of the neural-behavioral data (\(\hat{\rvy}_{k+m|k}\) and \(\hat{\rvz}_{k+m|k}\)). 
+
+Equations \ref{eq: IPAD_base} and \ref{eq: IPAD_fw} together constitute the two-section formulation of the \ourmethod{} model, which consists of 12 transformations in total: \(\mA(\cdot)\), \(\mA_{fw}(\cdot)\), \(\mK(\cdot)\), \(\mK_{fw}(\cdot)\), \(\mC_{\rvz}(\cdot)\), and \(\mC_{\rvy}(\cdot)\), each having two sections denoted with the \(.^{(1)}\) and \(.^{(2)}\) superscripts. % We implement each of these 12 transformations as an MLP. 
+
+% Moved here for now to save space in the main text
+% In brain-machine interface applications, behavior is typically only measured during training but neural data and external stimuli are measured during both training and inference in the test data. Motivated by this, we assume that the neural activity \(\rvy_{k}\) and external inputs \(\rvu_{k}\) are available during inference, which is why in equation \ref{eq: IPAD_base}, information from past neural activity and external input both drive the inferred latent state \(\rvx_{k}\) as inputs of the dynamical system, whereas behavior is only an output of the model. The neural data in the yet unmeasured future time steps is also an output of the model (line 2 of equation \ref{eq: IPAD_base}). 
+
+
+\subsubsection{Learning algorithm steps}\label{app: LearnigAlgo}
+
+In sections \ref{app: LearnigAlgo}-\ref{app: addStep}, we provide detailed formulations of the optimization stages used in \ourmethod{} during learning. For simplicity, we explain the optimizations in terms of 1-step ahead predictions, which involve predictor form parameters of the model. Formulations for \(m\)-step-ahead predictions, which constitute additional terms in the overall loss (equations \ref{eq: forecasting_loss}), are analogous to those provided here, but instead of the predictor form parameters (equation \ref{eq: IPAD_base}) they engage the generative form parameters (equation \ref{eq: IPAD_fw}). 
+
+Note that regardless of what step-ahead predictions were included during training, the learned model can be used to predict the latent state and neural-behavioral data at $m$-steps ahead for any desired $m$ using equations \ref{eq: IPAD_predictor} and \ref{eq: IPAD_generative_m-step} (or \ref{eq: IPAD_base} and \ref{eq: IPAD_fw}) together. For example, in figure \ref{fig: forecastData}, only $[1, 2, 4, 8]$ step ahead predictions are included in the optimization loss (equation \ref{eq: forecasting_loss}, but we evaluate the learned models with predictions up to $32$-steps ahead. 
+
+We develop a two-stage optimization algorithm for learning parameters of the two sections of the \ourmethod{} model (equation \ref{eq: IPAD_base}). We note that the following 2 stages are sequential. This means that parameters associated with behaviorally relevant states (\(\rvx_{k}^{(1)}\)) are fully learned with \RNN1, then if needed, the remaining parameters corresponding to non-relevant dynamics (\(\rvx_{k}^{(2)}\)) can be learned via \RNN2. In all the optimizations described below, we use the mean-squared-error (MSE) of predicting observations as the loss function, but we note that the MSE is proportional to the negative log-likelihood (NLL) for isotropic Gaussian-distributed data. Below we provide the details for the 4 optimizations that are performed in the two learning stages of \ourmethod{}.
+
+
+\textbf{Stage 1}\label{stage1}: 
+\begin{enumerate}[leftmargin=*]
+        \item[\textbf{1a}]
+        First, \ourmethod{} learns a recurrent neural network (\RNN1) with $n_1$ states, to minimize behavior prediction MSE given past neural data and inputs (equation \ref{eq: RNN1}). This ensures that \RNN1 only learns neural dynamics that are relevant to (i.e., predictive of) behavior. The states of \RNN1 constitute the first set of latent states in the \ourmethod{} model: \(\rvx_{k}^{(1)}\). This optimization step can be formulated as:
+
+    \begin{equation}\label{eq: RNN1}
+        % \hspace{-0.4cm}{
+        \left\{
+        % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+        \begin{array}{ccl}
+        \rvx_{k+1}^{(1)} &=& \mA^{(1)}(\rvx_{k}^{(1)}) + \mK^{(1)}(\rvy_{k}, \rvu_{k})\\
+        \rvz_{k} &=& \mC_{\rvz}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k})\\[5pt]
+        loss&:& MSE(\rvz_{k}, \mC_{\rvz}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k}))
+        \end{array}
+        \right.
+        .
+    \end{equation}
+
+    \item[\textbf{1b}]
+    Next, in a second optimization, we learn a transformation \(\mC_{\rvy}^{(1)}(\cdot)\) that maps \(\rvx_{k}^{(1)}\) to neural activity while minimizing neural prediction MSE (equation \ref{eq: Cy1}):
+    \begin{equation}\label{eq: Cy1}
+        % \hspace{-0.4cm}{
+        \left\{
+        % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+        \begin{array}{ccl}
+        \rvy_{k} &=& \mC_{\rvy}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k})\\[5pt]
+        loss&:& MSE(\rvy_{k}, \mC_{\rvy}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k}))
+        \end{array}
+        \right.
+        .
+    \end{equation}
+
+    The above 2 steps conclude stage 1 of learning, i.e., learning intrinsic behaviorally relevant dynamics \(\rvx^{(1)}_k\). Next we explain the (optional) remaining stage 2, which can learn any remaining dynamics in neural activity \(\rvx^{2}_k\).
+    \newline
+\end{enumerate}
+
+\textbf{Stage 2}\label{stage2}: 
+\begin{enumerate}[leftmargin=*]
+\item[\textbf{2a}]
+    We learn a second recurrent neural network (\RNN2) with $n_2 := n_x - n_1$ states, to minimize the MSE loss of predicting the residual neural activity, i.e., \(\rvy^\prime_{k} := \rvy_{k} - \mC_{\rvy}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k})\), given past neural activity and inputs (equation \ref{eq: RNN2}). States of \RNN2, i.e., \(\rvx_{k}^{(2)}\), together with \(\rvx_{k}^{(1)}\) from stage 1 constitute the full neural dynamics, i.e., $\rvx_{k} = \begin{bmatrix} \rvx_{k}^{(1)} & \rvx_{k}^{(2)}\end{bmatrix}^T$. This optimization step can be formulated as: 
+
+    \begin{equation}\label{eq: RNN2}
+        % \hspace{-0.4cm}{
+        \left\{
+        % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+        \begin{array}{ccl}
+        \rvx_{k+1}^{(2)} &=& \mA^{(2)}(\rvx_{k}^{(2)}) + \mK^{(2)}(\rvy_{k}, \rvu_{k}, \rvx_{k}^{(1)})\\  
+        \rvy^\prime_{k} &=& \mC_{\rvy}^{(2)}(\rvx_{k}^{(2)}, \rvu_{k})\\[5pt]
+        loss&:& MSE(\rvy^\prime_{k}, \mC_{\rvy}^{(2)}(\rvx_{k}^{(2)}, \rvu_{k}))
+        \end{array}
+        \right.
+        .
+    \end{equation}
+
+    \item[\textbf{2b}]
+    Finally, another readout, \(\mC_{\rvz}^{(2)}\), can be learned to map \(\rvx_{k}^{(2)}\) to the residual behavior, i.e., \(\rvz^\prime_{k} := \rvz_{k} - \mC_{\rvz}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k})\), to minimizing the overall behavioral loss (equation \ref{eq: Cz2}):
+    \begin{equation}\label{eq: Cz2}
+        % \hspace{-0.4cm}{
+        \left\{
+        % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+        \begin{array}{ccl}
+        \rvz^\prime_{k} &=& \mC_{\rvz}^{(2)}(\rvx_{k}^{(2)}, \rvu_{k})\\[5pt]
+        loss&:& MSE(\rvz^\prime_{k}, \mC_{\rvz}^{(2)}(\rvx_{k}^{(2)}, \rvu_{k})
+        \end{array}
+        \right.
+        .
+    \end{equation}
+    
+\end{enumerate}
+
+Note that the optimization in stage 2b does not change \RNN2 or \(\rvx_{k}^{(2)}\) that were learned in stage 2a. So although stage 2b is supervised by behavior, the second set of states \(\rvx_{k}^{(2)}\) are still learned unsupervised with respect to behavior. 
+
+In case a very low state dimension is specified by the user for stage 1 ($n_1$ lower than the ground truth shared dimensionality), \RNN1{} would not have enough capacity to learn all behaviorally relevant dynamics. In that case, some behaviorally relevant neural dynamics will be left for \RNN2{} in stage 2 to learn. This is why the \(\mC_{\rvz}^{(2)}\) transformation from  \(\rvx_{k}^{(2)}\) to behavior is included in the model, to allow such behaviorally relevant information in \(\rvx_{k}^{(2)}\) to be utilized to improve behavior decoding. 
+
+
+
+\subsubsection{Non-encoded behavior-specific dynamics}\label{app: addStep}
+
+To remove the non-encoded behavior-specific dynamics, as a preprocessing step, we fit a high-dimensional ($n_x=150$ in all real data analyses) unsupervised RNN to extract neural dynamics alone by minimizing neural prediction MSE (equation \ref{eq: RNN0}): 
+
+\begin{equation}\label{eq: RNN0}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{ccl}
+    \rvx_{k+1}^{(0)} &=& \mA^{(0)}(\rvx_{k}^{(0)}) + \mK^{(0)}(\rvy_{k}, \rvu_{k})\\  
+    \rvy_{k} &=& \mC_{\rvy}^{(0)}(\rvx_{k}^{(0)}, \rvu_{k})\\[5pt]
+    loss&:& MSE(\rvy_{k}, \mC_{\rvy}^{(0)}(\rvx_{k}^{(0)}, \rvu_{k}))
+    \end{array}
+    \right.
+    .
+\end{equation}
+
+Then a readout \(\mC_{\rvz}^{(0)}\) is trained to map these neurally relevant states \(\rvx_{k}^{(0)}\) to behavior:
+
+\begin{equation}\label{eq: Cz0}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{ccl}
+    \rvz_{k} &=& \mC_{\rvz}^{(0)}(\rvx_{k}^{(0)})\\[5pt]
+    loss&:& MSE(\rvz_{k}, \mC_{\rvz}^{(0)}(\rvx_{k}^{(0)}))
+    \end{array}
+    \right.
+\end{equation}
+
+After parameters of the above are learned, we run inference on the training data to obtain the filtered behavior as output of the preprocessing RNN model (first line in equation \ref{eq: Cz0}) and subsequently use it in place of the original behavior in \ourmethod{} (in equations \ref{eq: IPAD_base}, \ref{eq: RNN1} , \ref{eq: Cz2}). In simulations, we validate that this additional stage can successfully remove any input-driven behavior dynamics not encoded in the neural recordings (figure \ref{fig: AddStepSim}). We include  this preprocessing step in all reported real data analyses with \ourmethod{}.
+
+\textbf{Stage 3}\label{stage3}:
+As mentioned in \ref{sec: AddStep}, if desired, \ourmethod{} can also learn behavior-specific dynamics as separate dissociated latent states using a post-hoc learning step. This step is performed after \ourmethod{}'s main learning is done and is meant to be used in conjunction with \ourmethod{}’s preprocessing stage explained above.
+% After a full \ourmethod{} model is learned, we aim to learn the dynamics private to behavior not already learned due to \ourmethod{}’s preprocessing. 
+In this post-hoc learning step (stage 3), we first infer the behavior using the originally learned \ourmethod{} model. We then obtain the residual behavior (\(\rvz''_{k}\)) by subtracting the inferred behavior from the measured behavior. We then learn a third RNN (\RNN3) that optimizes the prediction of the residual behavior using \textit{only} the external inputs. The following equations summarize this step:
+
+
+\begin{equation}\label{eq: IPAD_x3}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{ccl}
+    \rvz''_{k} &:=& \rvz_{k} - [\mC_{\rvz}^{(1)}(\rvx_{k}^{(1)}, \rvu_{k}) - \mC_{\rvz}^{(2)}(\rvx_{k}^{(2)}, \rvu_{k})]\\ [3pt]
+    \rvx_{k+1}^{(3)} &=& \mA^{(3)}(\rvx_{k}^{(3)}) + \mK^{(3)}(\rvu_{k})\\[3pt]  
+    \rvz''_{k} &=& \mC_{\rvz}^{(3)}(\rvx_{k}^{(3)},\rvu_{k})\\[5pt]
+    loss&:& MSE(\rvz''_{k}, \mC_{\rvz}^{(3)}(\rvx_{k}^{(3)},\rvu_{k}))
+    \end{array}
+    \right.
+    .
+\end{equation}
+
+We summarize \ourmethod{}'s three stages and their use-case in table \ref{tab: stages_summary}.
+
+\begin{table}[h]
+\caption{Summary of the three stages of \ourmethod{} and their use-case in learning various dynamics. Each stage has two RNNs: a predictor form and a generator form RNN, denoted without and with a $fw$ subscript, respectively.}
+\label{tab: stages_summary}
+\begin{center}
+\begin{tabular}{c|c|c}
+% \toprule
+\multicolumn{1}{c|}{\textbf{Stage}} & \multicolumn{1}{c|}{\textbf{Models}} & \multicolumn{1}{c}{\textbf{Functionality}} \\
+\midrule
+1 & \RNN1, \RNNfw1 & Intrinsic behaviorally relevant neural dynamics \\
+2 & \RNN2, \RNNfw2 & Residual neural-specific intrinsic dynamics \\
+3 & \RNN3, \RNNfw3 & Residual behavior-specific dynamics not encoded in neural activity \\
+\end{tabular}
+\end{center}
+\end{table}
+
+\subsubsection{Model architecture details and hyperparameters}\label{app: TrainDetail}
+Throughout the manuscript, to model nonlinearities within any of the transformations i.e., \(\mA(\cdot)\), \(\mA_{fw}(\cdot)\), \(\mK(\cdot)\), \(\mK_{fw}(\cdot)\), \(\mC_{\rvz}(\cdot)\), and \(\mC_{\rvy}(\cdot)\), we use a multi-layer perceptron (MLP), also known as a feedforward neural network, with a single hidden layer, 64 units in the hidden layer, and a \textit{ReLU} nonlinearity as activation function. Otherwise, to keep a transformation linear, we replace the MLP with a linear mapping implementing a matrix multiplication, which is a special case of an MLP with no hidden layers and a linear activation function. For example, \ourmethodlinear{} is a \ourmethod{} model with all mappings being linear whereas \ourmethod{} \textit{Nonlinear} \(\mC_\rvz\) has a nonlinear MLP as the behavior decoder (both \(\mC^{(1)}_\rvz\) and \(\mC^{(2)}_\rvz\)) while all of its other transformations are linear. 
+
+We use an Adam optimizer \citep{kingma2017adam} in all \ourmethod{} optimizations. We train models up to a maximum number of 2500 epochs to ensure convergence, while employing early stopping to avoid overfitting. We provide example learning curves in figure \ref{fig: loss}.
+Details of the hyperparameters used for \ourmethod{} are provided in table \ref{tab: hyperparameters}.
+
+
+\begin{table}[h]
+\centering
+\caption{\ourmethod{} hyperparameters used in real data experiments and simulations}
+\label{tab: hyperparameters}
+\begin{tabular}{|l|c|}
+\toprule
+\textbf{Hyperparameter}    & \textbf{Value}\\
+\midrule
+Number of hidden layers in nonlinear maps & 1\\
+Number of hidden units in nonlinear maps  & 64\\
+Nonlinear activation  & ReLU\\
+Learning rate              & 0.001\\
+Batch size                 & 32\\
+Sequence length            & 128\\
+Optimizer                  & Adam\\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+We also show that \ourmethod{} can locate the correct structure of nonlinearity within all possible combinations in our simulations (table \ref{tab: simTable}). Here, we set each of the following four groups of transformations i.e., \(\mA(\cdot)\)/\(\mA_{fw}(\cdot)\), \(\mK(\cdot)\)/\(\mK_{fw}(\cdot)\), \(\mC_{\rvy}(\cdot)\), \(\mC_{\rvz}(\cdot)\), as linear or nonlinear, resulting in a total of \(2^4\) cases. To select one final configuration for the nonlinearity, we follow an automatic nonlinearity selection procedure for a given dataset. In this procedure, within the training data, we perform a 2-fold inner cross-validation in which we fit \ourmethod{} models with all \(2^4\) nonlinearity configurations and then pick the nonlinearity structure with the best cross-validated behavior decoding on the held-out section \textit{of the training data}. Then we retrain a \ourmethod{} model with that selected structure on the entire training data to get our final model. Finally, we evaluate that final model on the unseen test data. We refer to this approach as automatic nonlinearity selection (table \ref{tab: simTable}).
+
+In simulations, state dimensions are set to be the same as that of the true model underlying the data. In real data analyses, to investigate the effect of \(n_x\), we vary the state dimension in $n_x\in[1,2,4,8,16,32,64]$ and report the results (figure \ref{fig: dataVsNx}). For \ourmethod{} and DPAD models, we always learn the first $16$ dimensions via stage 1 i.e., $\rvx_k^{(1)}\in \R^{n_1}$ with $n_1=\min(16, n_x)$, and if there is any more capacity left (i.e., if $n_x - n_1 = n_2$ is positive), it is dedicated to the irrelevant states $\rvx_k^{(2)}\in \R^{n_x-n_1}$ and is learned using stage 2. We pick 16 as the dimensionality of the behaviorally relevant states as in our experiments, because \ourmethod{} reached close to its peak behavior decoding at this dimension. We refer to models with state dimensions $n_x=16$ and $64$ as low and high-dimensional regimes, respectively.
+
+\subsubsection{Intrinsic dynamics and eigenvalues}\label{app: method_eigenvalues}
+To evaluate how well the intrinsic behaviorally relevant neural dynamics are learned, in simulations (figures \ref{fig: simMain}, \ref{fig: sinBRes}), we assess the eigenvalues of the generative transition \(\mA_{fw}\) which characterize the intrinsic dynamics. Note that the ground truth and learned models in these simulations both have a linear intrinsic state transition \(\mA_{fw}\) and the nonlinearity either lies in the transformation from latent states to behavior (figure \ref{fig: simMain}) or transformation from external inputs to the latent space (figure \ref{fig: sinBRes}). We learn the forward recursion parameters \(\mA_{fw}\) and \(\mK_{fw}\) of equations \ref{eq: IPAD_generative} and \ref{eq: IPAD_generative_m-step} as we optimize multi-step-ahead predictions. We take the eigenvalues of the intrinsic transition \(\mA_{fw}\) and compare them to that of the ground truth model. For the ground truth ($\lambda_i$) and identified ($\hat{\lambda}_i$) eigenvalues we first pair them as $\{\lambda_1,\lambda_2,…,\lambda_{n_1}\}$ and $\{\hat{\lambda}_1,\hat{\lambda}_2,…,\hat{\lambda}_{n_1}\}$ such that the sum of squared distances of pairs is minimized. We then calculate the normalized eigenvalue error as:
+\begin{equation}\label{eq: eigerror}
+    % \scalemath{0.9}{
+    % \begin{array}{lcl}
+    \frac{\sqrt{\sum\limits_{i=1}^{n_1} \|\lambda_i - \hat{\lambda}_i\|^2}}{\sqrt{\sum\limits_{i=1}^{n_1} \|\lambda_i\|^2}}
+    % \end{array}
+    % }
+    .
+\end{equation}
+
+
+
+\subsection{Baselines}\label{app: baselines}
+First, to assess the impact of the nonlinearities learned by \ourmethod{}, we compare it against two fully linear dynamical methods: IPSID \citep{vahidi2024modeling} and \ourmethodlinear{}. Second, to highlight the significance of modeling the effect of measured inputs on the neural-behavioral dynamics, we take an autonomous dynamical model, DPAD \citep{sani2024dissociative}, as another baseline. Another important aspect of \ourmethod{} is supervision of the behaviorally relevant dynamics in presence of inputs in its first stage. To assess prioritization of the behaviorally relevant dynamics due to this supervision, we take an equivalent unsupervised baseline termed \ourmethodunsup{} detailed below. We also compare \ourmethod{} against a multi-modal nonlinear method that allows accounting for external inputs termed mmPLRNN \citep{kramer2022}. Finally, we compare \ourmethod{} to TNDM \citep{hurwitz2021targeted}, a second autonomous method for modeling neural-behavioral dynamics.
+
+\subsubsection{IPSID}
+IPSID, similar to \ourmethod{}, models the effect of measured external inputs on neural-behavioral dynamics but operates under a fully linear framework. It fits the parameters of a linear version of equation \ref{eq: IPAD_base} via a projection-based analytical algorithm called subspace identification \citep{van_overschee_subspace_1996}. 
+
+\subsubsection{\ourmethodlinear{}}
+Linear \ourmethod{} serves as another linear baseline, retaining the same architecture and learning stages as \ourmethod{} but with all transformations replaced by linear mappings. In essence, \ourmethodlinear{} and IPSID have a similar model that are learned differently. Linear \ourmethod{} uses the same numerical optimization used in \ourmethod{}. \ourmethod{} reduces to \ourmethodlinear{} by removing all hidden layers within model transformations and setting all activation functions to linear. In simulations, we find that \ourmethodlinear{} and IPSID perform similarly as expected (figure \ref{fig: simMain}).
+
+\subsubsection{DPAD}
+Dissociative Prioritized Analysis of Dynamics (DPAD) \citep{sani2024dissociative}, learns a nonlinear model that dissociates and prioritizes dynamics shared between neural activity and behavior, but it importantly does not account for the external inputs. Originally, DPAD also does not allow for multi-step-ahead optimization and thus does not learn a generative form representation of the dynamics, which is in contrast to the learning of \Afw{} in \ourmethod{}. We extend DPAD to add optimization of multi-step-ahead predictions into the DPAD framework for a more fair comparison to \ourmethod{} in terms of forecasting.  
+
+\subsubsection{\ourmethodunsup{}}
+\ourmethodunsup{} is an unsupervised method, which only performs stage 2 of the \ourmethod{} learning procedure. As such, \ourmethodunsup{} learns all neural dynamics irrespective of their relevance to the behavior, but still while considering inputs (equation \ref{eq: RNN2}). \ourmethodunsup{} does not utilize behavior information in learning dynamics, and the extracted latent states are later mapped to the behavior data via a downstream decoder (equation \ref{eq: Cz2} but without $\rvx_k^{(1)}$). In fact, \ourmethodunsup{} is special case of \ourmethod{} with $n_1=0$ and $n_x=n_2$.
+
+\subsubsection{mmPLRNN}
+Multi-modal piecewise-linear RNN (mmPLRNN) is a method previously introduced for multi-modal dynamical modeling with piecewise-linear RNNs \citep{kramer2022}. This method allows for modeling external inputs, although this aspect of it has not been investigated in any prior work.  Nevertheless, we compare \ourmethod{} to an input-driven mmPLRNN to further assess its performance. mmPLRNN builds on a prior work, PLRNN \citep{durstewitz2017state}, by fusing information from two modalities (e.g., neural activity and behavior). By design, mmPLRNN utilizes both modalities (and input) during inference, which is in contrast to \ourmethod{} that only uses neural activity (and input) during inference. Although this provides the benefit of using more data for behavior decoding to mmPLRNN and confounds the comparison with \ourmethod{}, we still include the mmPLRNN results. We train mmPLRNN models with nonlinear readouts comparable to \ourmethod{} and compare their neural-behavioral forecasting. mmPLRNN is a generative model whose parameters are learned via variational inference. We used the recommended hyperparameters from the original work\footnote{We use the implementation provided in \url{https://github.com/DurstewitzLab/mmPLRNN}}.
+
+\subsubsection{TNDM}\label{app:TNDM_method}
+Targeted Neural Dynamical Modeling (TNDM) \citep{hurwitz2021targeted} is a method based on sequential autoencoders that learns two sets of dynamics: one contributing to both neural and behavioral data, and the other only contributing to neural data. TNDM uses a non-causal, bidirectional RNN as the encoder to infer the initial conditions for its relevant and irrelevant generator/decoder RNNs. The dynamical model is learned via variational inference with both neural and behavioral reconstructions optimized simultaneously with a combined loss. Unlike \ourmethod{}, TNDM does not account for modeling the effect of external inputs on neural-behavioral dynamics. Therefore, for comparisons, we also implement an extension of TNDM to allow the inclusion of external inputs. In this version, we provide the external inputs to TNDM model as input by concatenating them with the neural activity as the input to the model. Importantly, we do not add reconstruction of inputs as part of the loss to keep the loss the same as that of the original TNDM and keep the learned model focused on neural-behavioral reconstruction. 
+
+We compare \ourmethod{} to TNDM (with and without addition of sensory stimuli as external input) in our real data experiments. Unlike \ourmethod{} that models the neural observations with a Gaussian distribution, TNDM uses a Poisson observation model for the neural data. Therefore, in our comparisons to TNDM, we analyze non-smoothed spike counts in 50ms bins (for both TNDM and \ourmethod{}). We use the default hyperparameters from the original work\footnote{We use the implementation provided in \url{https://github.com/HennigLab/tndm}} for TNDM.
+
+\subsubsection{LFADS}\label{app:LFADS_method}
+
+Latent Factor Analysis via Dynamical Systems (LFADS) \citep{pandarinath2018inferring} is an unsupervised method that combines nonlinear dynamical modeling with sequential autoencoders. Similar to TNDM, LFADS uses a non-causal, bidirectional RNN as the encoder to infer the initial conditions for a generator/decoder RNN. The dynamical model is learned via variational inference for unsupervised neural reconstruction. LFADS has a version that uses additional RNNs called controller networks to infer unmeasured inputs from the neural data and use those inferred inputs to drive its generator RNN. We use this version of LFADS \citep{dan_o_shea_2021_5790162}\footnote{We use the implementation provided in \url{https://lfads.github.io/lfads-run-manager/}}, to serve as an additional benchmark in comparison to \ourmethod{}'s modeling of measured inputs. 
+For a full visualization of the LFADS model including the controller networks see Supplementary Fig. 12 in \citealp{pandarinath2018inferring}. Briefly, without a controller network, all the information about the complete trial has to be encoded into the initial state of the LFADS generator RNN, which then autonomously evolves to extract states and factors over the course of the trial. In contrast, a controller network acts as a regular non-autonomous RNN for LFADS and allows its generator RNN to take corrections from the neural data throughout the trial, hence improving its capacity to accommodate non-smooth changes in the middle of trials \citep{pandarinath2018inferring}. The controller network itself does not directly take neural data as input, rather an additional bidirectional RNN called the controller-encoder operates on the neural data of each trial, and the states of this controller-encoder are passed as input to the controller network. As a result, the `inferred inputs' in LFADS are also non-causally inferred. To compare results with \ourmethod{}, we set the number of factors, and the latent states of the generator and the controller-encoder networks to be the same as \ourmethod{}. We also pass the same smoothed neural data to LFADS and use the Gaussian neural loss option accordingly. Other hyperparameters were set as those in the original work \citep{pandarinath2018inferring}.  
+% LET'S ADD THIS FOR CAMERA READY: (see Main 5 in Supplementary Table 1 in \citealp{pandarinath2018inferring})
+
+\subsubsection{CEBRA}\label{app:CEBRA_method}
+
+CEBRA \citep{schneider2023learnable} is a recent method proposed for extracting latent embeddings from neural data in a way that can be guided by behavior. CEBRA uses a 1-dimensional convolutional network to extract embeddings from small windows of neural data and guides the extraction of latents via a contrastive loss. The supervised version of CEBRA (i.e., CEBRA-Behavior) uses a contrastive loss on behavior to learn embeddings that dissociate samples with different behavior data, and are thus behaviorally relevant. Due to its use of a convolutional network to extract embeddings, CEBRA does not learn explicit recursive dynamics and also extracts embedding from a finite window of neural data at a time. CEBRA also does not learn any models to decode behavior or neural data form the extracted embeddings. Thus, as done in the original work \citep{schneider2023learnable}, we fit k-NN regression\footnote{sklearn.neighbors.KNeighborsRegressor \citep{scikit-learn}} models to decode neural-behavioral data from the extracted CEBRA embeddings. For a fair comparison, we also provided the measured sensory inputs time-series of the task to CEBRA by concatenating them with neural activity as the input. We use the default hyperparameters from the original work\footnote{We use the implementation provided in \url{https://github.com/AdaptiveMotorControlLab/CEBRA}} for CEBRA.
+
+\subsection{Non-human primate electrophysiological recordings from}\label{app: dataDetails}
+We analyzed a publicly available dataset \citep{sabes} in which a macaque (monkey I) performs a motor task. Spiking activity was recorded from primary motor cortex (M1), while the subject controlled a 2D cursor to reach targets that appeared on random locations on a grid within a virtual reality environment. Targets appeared back to back, without any time gaps. We took the subject's 2D fingertip position and velocity as the behavior time-series \(\rvz_{k}\), and the sensory input, taken as 2D location of the current target, as the input signal \(\rvu_{k}\). We analyzed the first spike dimension available for each channel-resulting in 89 to 92 units from the first 7 available recording sessions and randomly selected half of these units to model as our neural activity. For neural modality, we use spike counts within 50 ms non-overlapping windows. Finally, we smoothed the spike counts by a Gaussian kernel with a 50 ms s.d. (except for in table \ref{tab: TNDM_comparison}) and took that as the neural time-series \(\rvy_{k}\). We report the mean and standard error of the mean (s.e.m.) computed across 7 sessions and 5 cross-validated folds.
+
+As a second neural modality, we also model the raw local field potential (LFP) activity recorded from the same monkey during the same task. As the only preprocessing, we apply a 10 Hz anti-aliasing filter to be able to downsample the raw LFP to the sampling rate of behavior (i.e., 20 Hz). We refer to this modality as raw LFP data. Results for raw LFP data (figure \ref{fig: LFP}) were consistent with those obtained for spiking activity (figure \ref{fig: forecastData}).
+
+\subsection{Simulation details}\label{app: simDetails}
+We analyze three simulated datasets based on dynamical systems. In all the three, we generate 10 different sets of random linear matrices for equation \ref{eq: LSSM}, then generate the ground truth latent states \(\rvx_{k}\), neural activity \(\rvy_{k}\) and behavior observations \(\rvz_{k}\). In equation \ref{eq: LSSM}, $\rvw_{k}$, $\rvv_{k}$, and $\beps_{k}$ are zero-mean white Gaussian noises accounting for unmeasured excitations, neural observation noise, and behavioral observation noise respectively. \(f_{C_z}(\cdot)\) and \(f_B(\cdot)\) are nonlinear functions, as described below for each simulation.
+
+\begin{equation}\label{eq: LSSM}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{lcl}
+    \rvx_{k+1} &=& \mA_{fw} \rvx_{k} + f_B( \mB \rvu_{k}) + \rvw_{k}\\  
+    \rvy_{k} &=& \mC_{\rvy} \rvx_{k} + \mD_{\rvy} \rvu_{k} + \rvv_{k}\\
+    \rvz_{k} &=& f_{C_z}(\mC_{\rvz} \rvx_{k}) + \mD_{\rvz} \rvu_{k} + \beps_{k}
+    \end{array}
+    \right.
+\end{equation}
+
+To generate a temporally structured input in all cases, we simulate a separate random linear state space model according to equation \ref{eq: uLSSM} and take its output as the external input \(\rvu_{k}\) to the main model of equation \ref{eq: LSSM}.
+\begin{equation}\label{eq: uLSSM}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{lcl}
+    \rvx^\rvu_{k+1} &=& \mA_{fw}^\rvu \rvx^\rvu_{k} + \rvw^\rvu_{k}\\  
+    \rvu_{k} &=& \mC_{\rvu} \rvx^\rvu_{k} + \rvv^\rvu_{k}
+    \end{array}
+    \right.
+\end{equation}
+
+\subsubsection{Simulation 1: Spiral behavior manifold}
+For the first simulation, we generate data with a spiral behavior manifold. To do so, we apply a pointwise nonlinear mapping $f_{C_z}(\nu)=\begin{bmatrix}\frac{\overline{\nu}}{2}\cos(\overline{\nu})  & \quad \frac{\overline{\nu}}{2}\sin(\overline{\nu})\end{bmatrix}^T$ to the readout from the latent states (third line in equation \ref{eq: LSSM}).  The bar over the function input $\nu$ indicates a scaling factor that normalizes it before nonlinear function is applied. See figure \ref{fig: simMain}a for a visualization of the nonlinearity. We take $f_B(\cdot)$ as identity, set dimensions to $n_y=n_z=n_u=n_x=n_1=2$, and take $D_\rvy=D_\rvz=0$ for this simulation.
+
+\subsubsection{Simulation 2: Trigonometric behavior manifold}\label{app: sim_2_method}
+For the second simulation with trigonometric behavior map, we apply another nonlinearity, pointwise sinusoidal nonlinear function, $f_{C_z}(\nu)=a\sin(\overline{\nu}) + b\overline{\nu}$, to the latent states to generate the behavior $\rvz_{k}$. See figure \ref{fig: simMain}e for a visualization of the nonlinearity. In this simulation $f_B(\cdot)$ is taken as identity function and we set $n_y=n_z=n_u=n_x=n_1=1$.
+
+\subsubsection{Simulation 3: Trigonometric input-encoder}
+For the third simulation, as we iterate over the state equation  (first line in equation \ref{eq: LSSM}), we apply a pointwise sinusoidal nonlinear function, $f_B(\nu)=a\sin(\overline{\nu}) + b\overline{\nu}$, to the input. See figure \ref{fig: sinBRes}a for a visualization of the nonlinearity. Here $f_{C_z}(\cdot)$ is taken to be an identity function. In this simulation, we set $n_y=n_z=n_u=n_x=n_1=1$. 
+
+
+
+We also perform two additional simulations (figure \ref{fig: AddStepSim}) that are similar in nonlinearity structure to the second and third simulations explained above, but incorporate an additional 1-dimensional latent state \(\rvx^{(3)}_{k}\), as in figure \ref{fig: Methods}a, representing input-driven behavior-specific dynamics not encoded in the neural activity, as follows:
+\begin{equation}\label{eq: simAddStep}
+    % \hspace{-0.4cm}{
+    \left\{
+    % \begin{array}{l@{\hspace{5pt}}c@{\hspace{5pt}}l}
+    \begin{array}{ccl}
+    \begin{bmatrix}
+    \rvx_{k+1}^{(1)}\\
+    \rvx_{k+1}^{(3)}
+    \end{bmatrix}
+    &=&
+    \begin{bmatrix}
+    \mA_{fw}^{(1)} \rvx_{k}^{(1)}\\
+    \mA_{fw}^{(3)} \rvx_{k}^{(3)}
+    \end{bmatrix}
+    + 
+    \begin{bmatrix}
+    f_B( \mB^{(1)} \rvu_{k})\\
+    \mB^{(3)} \rvu_{k}
+    \end{bmatrix}
+    +
+    \rvw_{k}
+    \\[15pt] 
+    \rvy_{k} &=& \mC_{\rvy}^{(1)} \rvx_{k}^{(1)} + \mD_{\rvy} \rvu_{k} + \rvv_{k}\\[5pt] %+ \rve_{k}
+    \rvz_{k} &=& f_{C_z}(\mC_{\rvz}^{(1)} \rvx_{k}^{(1)}) + \mC_{\rvz}^{(3)} \rvx_{k}^{(3)} + \mD_\rvz \rvu_{k} + \beps_{k}
+    \end{array}
+    \right.
+    .
+    % }
+\end{equation}
+
+
+\subsection{Supplementary Results}\label{app: suppResults}
+\subsubsection{\ourmethod{} can exclude non-encoded behavior-specific dynamics}\label{sec: AddStepResults}
+Here, we demonstrate that the optional preprocessing step in \ourmethod{} (detailed in section \ref{sec: AddStep}) can dissociate behavior-specific dynamics (i.e., those that are not encoded in the neural activity) during learning and make sure they are not conflated with intrinsic neural dynamics and are not mixed into the neural states (\(\rvx_k^{(1)}\) and \(\rvx_k^{(2)}\)). We conducted two additional simulations similar in structure to the second and third simulations explained in section \ref{sec: main sim results}. However, here, for all simulated models, we added input-driven dynamics that influenced behavior but were not encoded in neural activity (denoted as \(\rvx_k^{(3)}\) in figure \ref{fig: Methods}a and equation \ref{eq: simAddStep}). The preprocessing step is intentionally expected to yield latent states that are potentially less predictive of behavior, but are encoded in neural activity. When desired, \ourmethod{} provides the option to further learn behavior-specific dynamics post-hoc with a separate latent state (\(\rvx_k^{(3)}\)). The preprocessing and post-hoc learning steps allow \ourmethod{} to avoid conflation of non-encoded behavior dynamics with others, while also being able to learn these dynamics and thus not incurring any overall reduction in behavior decoding. 
+
+We fitted \ourmethod{} models with the preprocessing, and both with and without post-hoc learning of behavior-specific dynamics. With the preprocessing, \ourmethod{} reached the neural prediction performance of the ground truth model indicating correct removal of behavior-specific dynamics (figure \ref{fig: AddStepSim}). Moreover, the optional learning of behavior-specific dynamics led to reaching the behavior decoding performance of the ground truth model (figure \ref{fig: AddStepSim}), suggesting that one could optionally learn these dynamics as well within \ourmethod{} to gain interpretability (by learning a disentangled model) without compromising decoding performance.
+
+\subsubsection{Additional Supplementary Tables}
+In this section we include additional supplementary tables that further support the results from the main text. The caption for each supplementary table includes all the details, but here we provide a list of these tables:
+\begin{itemize}[leftmargin=*]
+    \item Table \ref{tab: RNN_fw ablation}: Ablation analysis showing the importance of the \RNNfw{} generative model in \ourmethod{} for learning intrinsic dynamics.
+    \item Table \ref{tab: NLConfigs}: \ourmethod{} results for different nonlinearity configurations in real NHP data.
+    \item Table \ref{tab: TNDM_comparison}: Comparison with TNDM in real NHP data.
+    \item Table \ref{tab: LFADS_CEBRA_comparison}: Comparison with LFADS and CEBRA in real NHP data.
+    \item Table \ref{tab: neuron_scale}: \ourmethod{} results for modeling different number of neurons in real NHP data.
+    \item Table \ref{tab: R2_main}: Same as table \ref{tab: mainTable} shown in terms of the $R^2$ metric.
+\end{itemize}
+
+\begin{table}[h]
+\caption{\textbf{A separate generative model is essential to learn the intrinsic dynamics accurately with \ourmethod{}}. \\ Row 1: \ourmethod, when learning a separate generative model (\RNNfw{}), more accurately learns the intrinsic dynamics as quantified by the error in identifying eigenvalues of the ground truth intrinsic dynamics in the simulated dataset with spiral manifold in figure \ref{fig: simMain}a. \\Row 2: The error when ablating the forward RNN from \ourmethod{}. \\Rows 3-4: DPAD, even when optimized with $m$-step-ahead prediction loss and/or with input (\(\rvu_{k}\)), does not learn the intrinsic dynamics accurately.} 
+\label{tab: RNN_fw ablation}
+\begin{center}
+\begin{tabular}{l|c}
+% \toprule
+\multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c}{$\mathbf{log_{10}}$ \textbf{normalized eigenvalue error}} \\
+\midrule
+\ourmethod & \textbf{-1.3963} \(\pm\) \textbf{0.2551} \\
+\ourmethod{} without \RNNfw & 0.0635 \(\pm\) 0.2212 \\
+DPAD + $m$-step loss & 0.0357 \(\pm\) 0.1587  \\
+DPAD + input (\(\rvu_{k}\)) + $m$-step loss & -0.6512 \(\pm\) 0.0354 \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+% \begin{table}[h]
+% \caption{\ourmethod{} preprocessing stage is essential for correct learning of the intrinsic dynamics encoded in the neural activity. In simulated datasets, when preprocessing stage is used, \ourmethod{} correctly identifies the intrinsic behaviorally relevant dynamics encoded in the neural activity whereas without the preprocessing, \ourmethod{} may learn the behavior-specific dynamics and therefore miss the encoded dynamics. Results are for the simulated dataset with trigonometric behavior manifold (figure A.2d), showing $log_{10}$ normalized error from the encoded and non-encoded (behavior-specific) eigenvalues.} 
+% \begin{center}
+% \begin{tabular}{l|c|c}
+% % \toprule
+% \multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c}{Error from \\ \cline{2-2} & encoded eigenvalue} & \multicolumn{1}{c} {Error from non-encoded eigenvalue} \\
+% \midrule
+% \ourmethod & \textbf{-1.9778} \(\pm\) \textbf{0.2122} \\
+% \ourmethod without preprocessing & 0.0635 \(\pm\) 0.2212 \\
+% \end{tabular}
+% \end{center}
+% \end{table}
+
+
+
+\begin{table}[h]
+\caption{Comparison of \ourmethod{} model's nonlinearity configurations in the NHP dataset ($n_x=n_1=16$, 4-step-ahead).}
+\label{tab: NLConfigs}
+\begin{center}
+\begin{tabular}{l|c|c}
+% \toprule
+\multicolumn{1}{c|}{\textbf{Model nonlinearity}} & \multicolumn{1}{c|}{\textbf{Behavior forecasting CC}} & \multicolumn{1}{c}{\textbf{Neural forecasting CC}} \\
+\midrule
+Linear & 0.7453 \(\pm\) 0.0066 & 0.1767 \(\pm\) 0.0054\\
+Recursion (\(\mA, \mA_{fw}\)) & 0.7121 \(\pm\) 0.0059 & 0.2719 \(\pm\) 0.0061\\
+Encoder (\(\mK, \mK_{fw}\)) & 0.7181 \(\pm\) 0.0078 & 0.1646 \(\pm\) 0.0049\\
+\underline{Decoder} (\(\mC_{\rvz}, \mC_{\rvy}\)) & \textbf{0.8042 \(\pm\) 0.0085} & \textbf{0.3274 \(\pm\) 0.0078}\\
+\end{tabular}
+\end{center}
+\end{table}
+
+% \begin{table}[h]
+% \caption{Forecasting performance (4-step-ahead) in high-dimensional regime including both stages ($n_x=64, n_1=16$) for \ourmethod{}, \ourmethodlinear{} and DPAD. \ourmethodunsup{} learned with equal total state dimension of $n_x=64$.}
+% \label{tab: highD}
+% \begin{center}
+% \begin{tabular}{l|c|c}
+% % \toprule
+% \multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c|}{\textbf{Behavior forecasting CC}} & \multicolumn{1}{c}{\textbf{Neural forecasting CC}} \\
+% \midrule
+% \ourmethodlinear{} & 0.7409 \(\pm\) 0.0059  &  0.3784 \(\pm\) 0.0078 \\
+% DPAD & 0.7352 \(\pm\) 0.0079  &  0.3611 \(\pm\) 0.0080 \\
+% \ourmethodunsup{} & \textbf{0.8049 \(\pm\) 0.0068}  & \textbf{0.4185 \(\pm\) 0.0074 }\\
+% \midrule
+% \ourmethod{} (ours)& \textbf{0.7970 \(\pm\) 0.0086}  &  \textbf{0.4123 \(\pm\) 0.0077}\\
+% \end{tabular}
+% \end{center}
+% \end{table}
+
+
+\begin{table}[h]
+\caption{Comparison to TNDM, both when sensory input is additionally provided to the TNDM model and when it is not (see appendix \ref{app:TNDM_method}). All models are learned in low-dimensional regime, i.e., \ourmethod{} with $n_x=n_1=16$, and TNDM with 16 relevant factors only. We used non-smoothed spike counts as the neural signals in this analysis. \ourmethod{} performances are for causal 1-step-ahead prediction, whereas the TNDM performances are non-causal smoothing performances, which are the only option for TNDM since it is a sequential autoencoder.}
+\label{tab: TNDM_comparison}
+\begin{center}
+\begin{tabular}{l|c|c}
+% \toprule
+\multicolumn{1}{c|}{\textbf{Method}} & \multicolumn{1}{c|}{\textbf{Behavior decoding CC}} & \multicolumn{1}{c}{\textbf{Neural prediction CC}} \\
+\midrule
+TNDM & 0.3752 \(\pm\) 0.0170 & 0.3021 \(\pm\) 0.0051 \\
+TNDM with sensory input & 0.6219 \(\pm\) 0.0103 & \textbf{0.3075} \(\pm\) \textbf{0.0050}\\
+\midrule
+\ourmethod{} (ours)& \textbf{0.7841} \(\pm\) \textbf{0.0079}  & 0.2935 \(\pm\) 0.0053\\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\begin{table}[t]
+\caption{Comparison to LFADS (with controller), and CEBRA (CEBRA-behavior). LFADS inferred the external input to the dynamical system (appendix \ref{app:LFADS_method}). For CEBRA, w.s.i. (with sensory input) indicates that sensory input is additionally provided to the model to obtain the embeddings (appendix \ref{app:TNDM_method}). All models are learned with both low-dimensional ($n_x\!=\!16$) and high-dimensional ($n_x\!=\!64$) latent states ($n_1\!=\!16$ for \ourmethod{}). \ourmethod{} performances are for causal 1-step-ahead prediction, whereas LFADS and CEBRA performances are non-causal smoothing, and 0-step-ahead reconstruction respectively.}
+\label{tab: LFADS_CEBRA_comparison}
+\begin{center}
+\begin{tabular}{l|c|c|c|c}
+\renewcommand{\arraystretch}{5}
+% \toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\textbf{Behavior decoding CC}} & \multicolumn{2}{c}{\textbf{Neural prediction CC}} \\ \cline{2-5} & $n_x=16$ & $n_x=64$ & $n_x=16$ & $n_x=64$ \\
+\midrule
+LFADS & 0.4714 \(\pm\) 0.0192 & 0.5891 \(\pm\) 0.0135 & \textbf{0.5615 \(\pm\) 0.0086} & 0.5920 \(\pm\) 0.0072 \\
+% \midrule
+CEBRA w.s.i. & 0.7544 \(\pm\) 0.0073 & 0.7514 \(\pm\) 0.0072 &  0.5070 \(\pm\) 0.0053 & 0.5693 \(\pm\) 0.0041 \\
+\midrule
+\ourmethod{} (ours) & \textbf{0.8109 \(\pm\) 0.0074} & \textbf{0.8085 \(\pm\) 0.0076} & \textbf{0.5571 \(\pm\)  0.0051} & \textbf{0.8401 \(\pm\) 0.0061} \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+\begin{table}[t]
+\caption{\textbf{Effect of the number of neurons on \ourmethod{}'s performance.} Results of the \ourmethod{} modeling when different numbers of neurons included as the neural signal. We included neurons from the same channel sets across different sessions and the ranges indicate the number of neurons available from those channels across different sessions. In all 3 rows, neural predictions are evaluated on the same common set neurons (i.e., the smallest set shown in row 1) to make the neural forecasting results comparable across rows. Behavior forecasting improved with more neurons and neural forecasting remained largely stable. These results suggest that \ourmethod{} can aggregate behaviorally relevant information across larger populations of neurons, while still being able to model this higher-dimensional population activity well. }
+\label{tab: neuron_scale}
+\begin{center}
+\begin{tabular}{l|c|c|c|c}
+% \toprule
+\multirow{2}{*}{\textbf{Scale}} & \multicolumn{2}{c|}{\textbf{Behavior forecasting CC}} & \multicolumn{2}{c}{\textbf{Neural forecasting CC}} \\ \cline{2-5} & $n_x=16$ & $n_x=64$ & $n_x=16$ & $n_x=64$ \\
+\midrule
+20-21 neurons & 0.7727 \(\pm\) 0.0091 & 0.7709 \(\pm\) 0.0089 & 0.3206 \(\pm\) 0.0081 & 0.4115 \(\pm\) 0.0094 \\
+41-43 neurons & 0.8042 \(\pm\) 0.0085 & 0.7970 \(\pm\) 0.0086 &  0.3220 \(\pm\) 0.0088 & 0.4202 \(\pm\) 0.0091 \\
+89-92 neurons & 0.8337 \(\pm\) 0.0061 & 0.8302 \(\pm\) 0.0072 & 0.3329 \(\pm\) 0.0082 & 0.4195 \(\pm\) 0.0088 \\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+% \begin{table}[t]
+% \caption{\textbf{Effect of number of neurons on \ourmethod{}'s training time.}}
+% \begin{center}
+% \begin{tabular}{l|c|c}
+% % \toprule
+% \multirow{2}{*}{\textbf{Scale}} & \multicolumn{2}{c}{\textbf{Average training time (minute)}} \\ \cline{2-3} & $n_x=16$ & $n_x=64$ \\
+% \midrule
+% 20-21 neurons & 14  & 18 \\
+% 41-43 neurons & 16  & 22 \\
+% 89-92 neurons & 16  & 20 \\
+% \end{tabular}
+% \end{center}
+% \end{table}
+
+
+% \subsection{Results in terms of $R^2$ metric}\label{app: R2}
+
+\begin{table}[h]
+\caption{$R^2$ results for the same analyses provided in table \ref{tab: mainTable}. Forecasting performance (4-step-ahead) compared to baselines in NHP dataset for models with low-dimensional ($n_x\!=\!16$) and high-dimensional ($n_x\!=\!64$) latent states. $n_1\!=\!16$ for \ourmethod{}, \ourmethodlinear{}, and DPAD.
+1 of the 7 sessions were excluded from this table due to a very negative outlier in the mmPLRNN results. 
+}
+\label{tab: R2_main}
+\begin{center}
+\begin{tabular}{l|c|c|c|c}
+% \toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\textbf{Behavior forecasting $R^2$}} & \multicolumn{2}{c}{\textbf{Neural forecasting $R^2$}} \\ \cline{2-5} & $n_x=16$ & $n_x=64$ & $n_x=16$ & $n_x=64$ \\
+\midrule
+\ourmethodlinear{} & 0.5821 \(\pm\) 0.0056 & 0.5763 \(\pm\) 0.0084 & 0.0239 \(\pm\) 0.0036 & 0.1519 \(\pm\) 0.0067\\
+DPAD & 0.4561 \(\pm\) 0.0141 & 0.5497 \(\pm\) 0.0101 &  0.0321 \(\pm\) 0.0042 & 0.1344 \(\pm\) 0.0069\\
+\ourmethodunsup{} & 0.6047 \(\pm\) 0.0097 & \textbf{0.6684} \(\pm\) \textbf{0.0088} & \textbf{0.1768 \(\pm\) 0.0068} & \textbf{0.1860} \(\pm\) \textbf{0.0064}\\
+mmPLRNN &  0.4737 \(\pm\) 0.0118 & 0.6127 \(\pm\) 0.0369 &  0.0734 \(\pm\) 0.0079 & 0.0563 \(\pm\) 0.0670\\
+\midrule
+\ourmethod{} (ours) & \textbf{0.6680 \(\pm\) 0.0118} & \textbf{0.6578} \(\pm\) \textbf{0.0129} & 0.1083 \(\pm\) 0.0060 & \textbf{0.1792} \(\pm\) \textbf{0.0064}\\
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\clearpage
+
+\subsubsection{Additional Supplementary Figures}
+In this section we include supplementary figures that further support the results from the main text. The caption for each supplementary figure include all the details, but here we provide a list of these supplementary figures:
+\begin{itemize}[leftmargin=*]
+    \item Figure \ref{fig: sinBRes}: Simulation results for simulation 3 with a trigonometric nonlinear input-encoder. 
+    \item Figure \ref{fig: AddStepSim}: Validation of the optional third stage of learning in \ourmethod{} for learning behavior-specific input driven dynamics.
+    \item Figure \ref{fig: LFP}: Results of modeling the raw LFP modality in the real NHP data. 
+    \item Figure \ref{fig: trajectory}: Average low-dimensional latent state trajectory extracted from real NHP data. 
+    \item Figure \ref{fig: dataVsNx}: Results in real NHP data for different latent state dimensions. 
+    \item Figure \ref{fig: reconstruction}: Example \ourmethod{} decoded time series in real NHP data. 
+    \item Figure \ref{fig: loss}: Example plot showing loss versus epochs for \ourmethod{}.
+
+\end{itemize}
+
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/v1/simB.pdf}}
+\caption{\textbf{\ourmethod{} results, optimized for forecasting, in simulation with trigonometric input-encoder.} \textbf{(a)} Visualization of example nonlinearity in the simulation. \textbf{(b-c)} 1-step-ahead behavior decoding and neural prediction for nonlinear \ourmethod{}, nonlinear DPAD, \ourmethodlinear{}, and IPSID. \textbf{(d)} Error in identifying intrinsic dynamics of the true model, quantified by the eigenvalues of the state transition matrix \(\mA_{fw}\). \textbf{(e-f)} Behavior and neural forecasting accuracy for $1$ to $32$ steps ahead, enabled by learning the intrinsic dynamics (\(\mA_{fw}\)), with predictions optimized for $[1,2,3,4,5]$-steps-ahead (section \ref{sec: IPAD}).}
+\label{fig: sinBRes}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\textwidth]{Figs/v1/simAddStep.pdf}}
+\caption{\textbf{Behavior preprocessing successfully excludes non-encoded, behavior-specific dynamics in simulations}. 1-step-ahead behavior decoding and neural predictions for simulations with \textbf{(a-c)} trigonometric behavior decoder, and \textbf{(d-f)} input-encoder. Note that the true model includes behavior-specific dynamics, so here we expect that decoding of \ourmethod{} with preprocessing but without the post-hoc learning of behavior-specific dynamics (shown as green), to be worse than that of true model. Once the post-hoc learning step is also performed (shown as red), \ourmethod{} reaches ideal performance, but importantly does so while these behavior-specific dynamics are dissociated into a separate latent state \(\mC_{\rvz}^{(3)}\). In contrast, without the preprocessing step (shown as blue), \ourmethod{} reaches ideal decoding performance, but does so without having dissociated behavior specific dynamics to not be included in \(\mC_{\rvz}^{(1)}\). See section \ref{app: addStep} for details.}
+\label{fig: AddStepSim}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/rebuttal/LFP_forcast.pdf}}
+\caption{\textbf{Analysis of Local Field Potential (LFP) neural modality. \ourmethod{} outperforms baselines in neural-behavioral forecasting}. We used LFP neural data as a second different modality and performed analysis similar to the one in figure \ref{fig: forecastData} for smoothed spike counts. \textbf{(a)} Behavior and, \textbf{(b)} neural activity forecasting correlation coefficient (CC) for \ourmethod{}, \ourmethodlinear{}, DPAD, and mmPLRNN for $n_x$=16. Shaded areas show the s.e.m., across the 3 recording sessions and 5 cross-validation folds. NHP results in all other figures and tables are for spiking data.}
+\label{fig: LFP}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/rebuttal/state_trajectory.pdf}}
+\caption{\textbf{Latent states trajectories revealed on non-human primate reaching dataset}. We divide reach trials to 8 conditions based on reach direction (shown by colors) and find the condition-averaged (4-step-ahead) latent states trajectories for 2 dimensional models. \textbf{(a)} Condition-averaged behavior i.e., movement position and velocity. \textbf{(b-d)} Condition-averaged latent state trajectories for (b) \ourmethod{}, (c) DPAD and (d) \ourmethodunsup{}. \ourmethod{} learns the most well-separated posterior (latent) trajectories for the 8 conditions in the task. \ourmethodunsup{}'s trajectories are the least separated, showing that \ourmethod{} is more successful in extracting the behaviorally relevant intrinsic dynamics that are more congruent with behavior. Also, DPAD’s trajectories are not as well-separated as \ourmethod{}’s, although they are more separated than the unsupervised version (\ourmethodunsup{})  as expected.}
+\label{fig: trajectory}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/v1/data_vsNx4step.pdf}}
+\caption{\textbf{Forecasting (4-step-ahead predictions) correlation coefficient across latent dimensions.} \ourmethod{} predicts both \textbf{(a)} behavior and \textbf{(b)} neural activity more accurately than DPAD due to modeling input, and than \ourmethodlinear{} due to modeling nonlinearity. As state dimension increases beyond 16 (dedicated to behaviorally relevant dynamics, i.e., $n_1=16$), \ourmethod{} uses stage 2 to learn neural specific dynamics, thus reaching the unsupervised baseline, i.e., \ourmethodunsup{}, in neural prediction. For \ourmethod{} and DPAD, the first 16 state dimensions are dedicated to the behaviorally relevant neural dynamics (i.e., $n_1=16$) while any remaining dimensions ($n_x > 16$) are dedicated to the residual non-shared neural dynamics. 4-steps-ahead in this dataset corresponds to 200ms ahead.}
+\label{fig: dataVsNx}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+
+
+
+
+% #################################
+
+
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/rebuttal/behavior_series.pdf}}
+\caption{\textbf{Predicted behavior visualization}. True behavior versus \ourmethod{}'s (4-step-ahead) predicted behavior for a representative session corresponding to the results in table \ref{tab: mainTable} ($n_x=64$).}
+\label{fig: reconstruction}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+
+
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=1\linewidth]{Figs/rebuttal/losses.pdf}}
+\caption{\textbf{Learning curve examples for \ourmethod{} model}. Loss values as a function of number of epochs for training and validation datasets for two example runs of \ourmethod{}. Top row: learning curve examples for the \RNN1, \RNNfw1, i.e., stage 1a, in section \ref{sec: IPAD_dissociate_beh_rel}. Bottom row: learning curves examples for stage 1b in section \ref{sec: IPAD_dissociate_beh_rel}. These examples are taken from the same models whose performances are reported in figure \ref{fig: forecastData} and table \ref{tab: mainTable}.}
+\label{fig: loss}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+\end{document}
+

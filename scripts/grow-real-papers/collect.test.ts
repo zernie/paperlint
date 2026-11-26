@@ -3,48 +3,20 @@
  * when an edition is full, and that quotas and caps count the whole manifest, earlier batches too.
  */
 import { describe, expect, test } from "vitest";
+import { targets, type Counted, type ProbeLine } from "./collect.ts";
 import {
-  collect,
-  targets,
-  type Counted,
-  type ProbeLine,
-  type Queries,
-  type Walk,
-} from "./collect.ts";
-import type { KeptPaper } from "./paper.ts";
-import type { Slot } from "./rules.ts";
-import { fakeGet, mainTex, tarGz, type Route } from "./testkit.ts";
-
-const BY = "http://creativecommons.org/licenses/by/4.0/";
-const slot: Slot = {
-  field: "nlp",
-  series: "ACL",
-  year: 2025,
-  cap: 1,
-  queries: ['co:"ACL 2025"'],
-  max_results: 50,
-  venue: "acl",
-  classSpec: "acl",
-};
-const queries = (over: Partial<Queries> = {}): Queries => ({
-  hardCap: 5,
-  maxPages: 1,
-  quotas: { nlp: 9 },
-  slots: [slot],
-  ...over,
-});
-
-const entry = (id: string, comment: string) =>
-  `<entry><id>http://arxiv.org/abs/${id}</id><updated>2025-05-01</updated><title>T</title><arxiv:comment>${comment}</arxiv:comment></entry>`;
-const feed = (es: readonly (readonly [string, string])[]) =>
-  `<feed>${es.map(([id, c]) => entry(id, c)).join("")}</feed>`;
-const ACCEPTED = "Accepted at ACL 2025";
-const camera = tarGz([
-  {
-    name: "main.tex",
-    body: mainTex("Hi.", "\\documentclass{article}\\usepackage{acl}"),
-  },
-]);
+  ACCEPTED,
+  BY,
+  camera,
+  fakeGet,
+  feed,
+  mainTex,
+  queries,
+  slot,
+  tarGz,
+  walk,
+  type Route,
+} from "./testkit.ts";
 
 /** A world where each id has a licence and an e-print, and the search lists `listed` in order. */
 function world(
@@ -59,30 +31,6 @@ function world(
     ]),
   ];
   return fakeGet(routes);
-}
-
-async function walk(over: Partial<Walk> & Pick<Walk, "get">) {
-  const lines: ProbeLine[] = [];
-  const kept: KeptPaper[] = [];
-  const ends = await collect({
-    queries: queries(),
-    only: null,
-    entries: [],
-    otherIds: new Set(),
-    logged: [],
-    shipped: new Set(),
-    outOfTime: () => false,
-    emit: (line, paper) => {
-      lines.push(line);
-      if (paper !== undefined) kept.push(paper);
-    },
-    ...over,
-  });
-  return {
-    ends,
-    kept: kept.map((k) => k.id),
-    log: lines.map((l) => [l.rank, l.id, l.outcome, l.reason]),
-  };
 }
 
 describe("rules 1 to 4 in the fixed order", () => {
@@ -141,6 +89,31 @@ describe("rules 1 to 4 in the fixed order", () => {
     // Guards: how the edition's walk ended, and where.
     expect(r.ends).toEqual([
       { slot: "nlp/ACL 2025", ended: "full", walkedTo: 9 },
+    ]);
+  });
+});
+
+describe("rule 1 read from the paper itself", () => {
+  test("an accepted comment loses to a TeX that declares a companion track", async () => {
+    const companion = tarGz([
+      {
+        name: "main.tex",
+        body: mainTex(
+          "Hi.",
+          "\\documentclass{article}\\usepackage{acl}\n\\acmConference[ACL Companion '25]{Companion}{2025}{X}",
+        ),
+      },
+    ]);
+    const { get } = world([["p1", ACCEPTED]], { p1: { src: companion } });
+    const r = await walk({ get, queries: queries() });
+    // Guards: the check runs on a candidate found by its comment, not only on a listed one.
+    expect(r.log).toEqual([
+      [
+        1,
+        "p1",
+        "rejected",
+        "the paper's TeX declares a track that is not the main proceedings: \"ACL Companion '25\"",
+      ],
     ]);
   });
 });
@@ -284,46 +257,5 @@ describe("a run resumes, skips and stops", () => {
     expect(
       (await walk({ get: failing.get, queries: other, only: ["ml"] })).ends,
     ).toEqual([]);
-  });
-});
-
-describe("from a Semantic Scholar listing", () => {
-  test("the listing's venue is rule 1, and an id arXiv does not describe is rejected", async () => {
-    const s2Slot: Slot = {
-      ...slot,
-      source: "semantic-scholar",
-      s2Venue: "ACL",
-    };
-    const listing = JSON.stringify({
-      data: [
-        { venue: "ACL", externalIds: { ArXiv: "s1" } },
-        { venue: "ACL Workshop", externalIds: { ArXiv: "s2" } },
-        { venue: "ACL", externalIds: { ArXiv: "s3" } },
-      ],
-    });
-    const { get } = fakeGet([
-      ["semanticscholar", listing],
-      [
-        "id_list=",
-        feed([
-          ["s2v1", ""],
-          ["s3v1", ""],
-        ]),
-      ],
-      ["arXiv.org:s3&", `<license>${BY}</license>`],
-      ["src/s3v1", camera],
-    ]);
-    const r = await walk({ get, queries: queries({ slots: [s2Slot] }) });
-    // Guards: each listed id's reason, and the kept one.
-    expect(r.log).toEqual([
-      [1, "s1", "rejected", "arXiv metadata missing for the listed id"],
-      [
-        2,
-        "s2v1",
-        "rejected",
-        'S2 venue string is not the main proceedings: "ACL Workshop"',
-      ],
-      [3, "s3v1", "kept", "passes rules 1-4"],
-    ]);
   });
 });

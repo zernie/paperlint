@@ -1,0 +1,35 @@
+\section{Serverless As We Know It Today}\label{sec:background}
+
+FaaS platforms are advertised as elastic cloud services that quickly provision and autoscale server infrastructure for users based on application load. We review their current execution system design, programming model, and discuss how current platforms provide the \textit{illusion} of high elasticity.
+
+\subsection{FaaS Execution Environment} %\label{sec:background:exec_environments}
+FaaS platforms execute and isolate functions by wrapping function code, inputs, outputs, and intermediate execution state inside sandboxes, such as MicroVMs~\cite{firecracker}, hardened containers~\cite{gvisor}, or Wasm modules~\cite{wasm}. Sandboxes are not shared across users or functions~\cite{aws-lambda-exec-environment}. Subsequent invocations of the same function from the same user may reuse a sandbox~\cite{alzayat2023groundhog}. The platform scales the number of sandboxes per function based on invocations~\cite{knative, serverless-in-the-wild}. 
+
+
+Hyperscaler cloud providers use hardware virtualization to sandbox untrusted user code~\cite{nitro, firecracker, azure-security}.
+Each function runs in a MicroVM with a guest OS. To breach security, a malicious user function would need to exploit both the guest OS and the hypervisor. The defense-in-depth provided by the VM is critical when user functions can issue a variety of system calls, as the syscall interface is considered a large attack surface prone to vulnerabilities~\cite{linux-kernel-vulnerabilities, kernel-security}. 
+
+Traditional VMs can take tens of seconds to boot~\cite{boxer-elasticity}. Firecracker MicroVMs~\cite{firecracker} reduce boot times to hundreds of milliseconds by removing many general-purpose VMM features that FaaS does not need, such as a BIOS and various device emulators. To further reduce boot time to tens of milliseconds~\cite{catalyzer, reap}, MicroVMs can be restored from snapshots. Unikernel-based VMs~\cite{seuss, unikraft, hand:unikernels, lightvm} reduce boot time to the millisecond range by creating a specialized, single-address-space machine image of the user function with only its necessary kernel functionality.
+
+Some cloud or edge platforms run functions as Wasm modules~\cite{cloudflare-wasm, fastly-wasm, faasm, sledge, spin, hyperlight-wasm}.
+Wasm is a binary instruction format designed for a stack-based VM to run code at near-native speed with memory safety guarantees provided by a compiler and runtime~\cite{wasm}.
+Wasm sandboxes boot much faster than MicroVMs, which makes it practical to create sandboxes on-demand per request. However, Wasm code does not necessarily run as fast as native code~\cite{lightweight-fault-wasm,understanding-wasm-perf, sledge}. Current Wasm compilers may lack optimizations implemented in more mature compilers like Clang, which can result in more instructions, CPU register pressure, and extra branches~\cite{not-so-fast-wasm}, though this is an active area of research and engineering.
+Our experiments in \S\ref{sec:eval:compute} and \S\ref{sec:eval:timeplot} show that Wasmtime~\cite{wasmtime} runs slower than native code for compute-intensive tasks.
+
+\subsection{FaaS Programming Model}
+FaaS developers submit code snippets that have a POSIX-like environment and can initiate communication with cloud services.
+However, they do not expose the public IP addresses of functions and functions cannot accept network connections~\cite{wawrzoniak2021boxer}. Hence, functions that need to communicate typically exchange data via remote storage~\cite{pocket, locus}.
+Most FaaS platforms orchestrate functions as independent, stateless units. Some frameworks allow users to express dependencies and build workflows~\cite{aws-step-functions,aws-airflow,azure-durable-functions}.
+However, data dependencies are primarily used as a hint to spin up sandboxes for downstream functions, rather than to optimize data transfers between them. These workflows do not necessarily capture an application's entire dataflow, as an application can still communicate with cloud services within a function~\cite{yu2023following, dataflower, compute-centric-networking}.
+
+\subsection{Why FaaS is not Elastic Today}
+
+Although MicroVM snapshots reduce sandbox boot times down to tens of milliseconds, this latency is still too high to incur for every function invocation. Production traces reveal that many FaaS functions execute for tens of milliseconds or less~\cite{huawei-function-trace, datadog:state21} and would hence experience high overhead.
+It is difficult to further reduce boot latency, as we find that at least 8\textit{ms} are spent on loading a minimal snapshot (primarily the guest OS state) by demand paging and on re-establishing the network connection between the host and the guest process (to provide function inputs and retrieve its outputs). Both are necessary in a POSIX-like sandbox environment.
+
+Using Wasm sandboxes is an option to reduce boot times compared to MicroVMs. However, in practice several commercial Wasm-based serverless platforms still apply defense-in-depth strategies for stronger isolation even though some components of the Wasm toolchain have been  formally verified~\cite{veriwasm, Johnson:WaVe:2023, rwasm}. For example, Cloudflare runs multiple instances of their Wasm runtime as separate processes on each machine to separate low-trusted Wasm workers from more trusted ones. They also use Linux namespaces and seccomp for additional sandboxing at the process level~\cite{cloudflare-workers-security}. This limits elasticity, as scaling now involves starting a Wasm runtime (i.e. loading and initialization overheads) as well as setting up a namespace and seccomp filters.
+
+Since quickly initializing a securely isolated POSIX-like environment for cloud user functions is difficult, today's platforms pre-provision sandboxes to reduce the probability of incurring guest OS and networking initialization overheads on the critical path of requests. This gives the illusion of microsecond-scale elasticity at the  expense of consuming extra memory.
+
+Figure~\ref{fig:mem-overhead} compares the committed memory on a server executing a sample of the Azure Functions trace~\cite{serverless-in-the-wild} with Knative's default autoscaling algorithm that provisions extra idle sandboxes (red line) versus the memory usage of active sandboxes over time (blue) line. Running a guest OS inside each function sandbox further adds to the memory footprint~\cite{medes, runD}. Memory usage contributes significantly to the overall cost of operating a FaaS platform, as DRAM dominates server costs~\cite{pond-dram-cost, tmo-dram-cost}. This ultimately leads to higher cost for users.
+Since it is usually prohibitively expensive for providers to keep enough sandboxes hot in memory for \textit{all} requests~\cite{firecracker, serverless-in-the-wild, faascache, knative}, some requests incur sandbox creation on the critical path, introducing high performance variability for user applications, as shown in Figure~\ref{fig:hotStartServer}.

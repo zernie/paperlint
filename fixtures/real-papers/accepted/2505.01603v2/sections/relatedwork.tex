@@ -1,0 +1,18 @@
+\section{Related Work}\label{sec:relatedwork}
+
+\textbf{Serverless programming models.} \dandelion's design is closely related to other dataflow paradigms for serverless. Computation-centric networking~\cite{compute-centric-networking} involves a separation between I/O and compute, with delineated nondeterminism. Lambdata~\cite{lambdata} and Dataflower~\cite{dataflower} leverage application dataflow information to reduce function triggering latency and avoid round-trips to remote storage for data exchange.
+Pheromone~\cite{yu2023following} exposes a data bucket abstraction (for intermediate function outputs) and trigger primitives, which allows developers to specify when and how to pass intermediate data to other functions and invoke them. 
+Other FaaS systems introduce data dependency hints to optimize function placement across nodes~\cite{abdi2023palette, mahgoub:sonic, faasflow}. 
+Nu~\cite{nu-nsdi} provides a new process abstraction that decomposes an application into fine-grained units of state and compute, which can be quickly migrated to improve resource utilization. However, Nu only provides process-level isolation, which is not sufficient for multi-tenant cloud environment.
+
+SigmaOS~\cite{sigmaos} forgoes POSIX compatibility and designs a cloud-centric communication API to improve container performance for serverless and microservice tasks. However, SigmaOS still allows user code to invoke 67 host system calls, which has different security implications than Firecracker, gVisor, and \dandelion, which restrict user code from making direct system calls to the host kernel.
+
+\fakepara{Lightweight isolation mechanisms.}
+Complementary to \dandelion's four isolation backends, Wedge~\cite{wedge-nsdi08} introduces sthreads for intra-process privilege separation and memory isolation, Shreds~\cite{shreds-security16} isolates code and data compartments using Arm memory domains, and lwCs~\cite{lwC-osdi16} are independent units of protection, privilege, and execution state within a process.
+Virtines~\cite{virtines} is a programmer-guided abstraction allowing individual functions within an application to run in lightweight, virtualized execution environments. X-containers~\cite{x-containers} is an exokernel-inspired container architecture designed to isolate single-concerned cloud-native applications without nested hardware virtualization.
+\mbox{GraalOS~\cite{graalos-serveless}} and V8~\cite{v8} isolate code with language runtimes.
+
+\fakepara{Data processing systems.}
+DAG-based systems for data processing such as Spark\cite{spark} are already popular.
+These systems usually focus on single users or groups of mutually trusting users. 
+\dandelion innovates on the DAG model for processing, as it leverages it to achieve secure isolation and high elasticity in multi-tenant environments.

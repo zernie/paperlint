@@ -1,0 +1,108 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{table/table1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{table/table3_4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Experiments}\label{sec:expriments}
+\subsection{Dataset and Preprocessing}
+We use dyadic conversation video datasets: RealTalk~\citep{realtalk} and ViCo~\citep{rlhg}. We first detect scene changes using PySceneDetect~\citep{pyscenedetect} to split the videos into individual clips. We then detect and track each face using Face-Alignment~\citep{face_alignment}, crop and resize it to $512{\times}512$. Next, we separate and assign the speaker and listener audio using a visual-grounded speech separation model~\citep{iianet}. All videos are converted to 25~fps, and audio is resampled to 16~kHz. Additionally, we randomly select 50 videos from the talking-head dataset HDTF~\citep{hdtf} to evaluate the performance of talking-head generation.
+
+\subsection{Implementation Details} 
+We use the Adam optimizer~\citep{adam} with a learning rate of $10^{-4}$ and a batch size of 8. We retrain the motion latent auto-encoder from~\citet{float} on our dataset. The latent dimension is set to $d=512$. For our model $v_\theta$, we use 8 attention heads with a hidden dimension of $h$~$=$~$1024$ and 1D RoPE~\citep{rope}. It is trained with $N=50$ frames over $B=5$ blocks (i.e., 10 frames per block) and $l=2$ look-ahead frames. For audio encoding, we extract 12 multi-scale features from Wav2Vec2.0~\citep{wav2vec2}.
+For motion sampling, we use 10 NFEs with the Euler solver and a classifier-free guidance~\citep{classifier_free}. All the experiments are conducted on a single NVIDIA H100 GPU.
+% We will release our code and models upon publication.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[t]
+\vspace{-0.15in}
+\begin{minipage}{1\textwidth}
+    \centering
+    \includegraphics[width=0.98\textwidth]{figure/compare-3.pdf}
+    \vspace*{-2mm}
+    \caption{\textbf{Qualitative comparison of interactive head avatar generation models} on the RealTalk~\citep{realtalk} dataset. Our model generates more reactive (red arrow) and expressive (red box) avatar motion compared to INFP*.
+    We provide the videos in supplementary materials.
+    }
+    \label{fig:sota_compare}
+\end{minipage}
+\vspace*{-3mm}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Interactive Avatar Evaluation}
+\paragraph{Metrics} We evaluate our model across five aspects of interactive avatar generation: Latency, Reactiveness, Motion Richness, Visual Quality, and Lip Synchronization.
+For \textbf{Latency}, we assume that the pre-extracted audio features and measure motion generation time using 10 NFEs. For Reactiveness, we measure the motion synchronization between the user and the avatar by utilizing the residual Pearson correlation coefficients (rPCC) on facial expression (\textbf{rPCC-exp}) and head pose (\textbf{rPCC-pose})~\citep{emoca}. For Motion Richness, we measure the Similarity Index for diversity (\textbf{SID})~\citep{l2l} and variance (\textbf{Var}), following the previous studies~\citep{dim, infp}. For Visual Quality, we compute the Frechet inception distance (\textbf{FID})~\citep{fid} and the Frechet video distance (\textbf{FVD})~\citep{fvd} for the generated videos. We also assess the identity preservation using the cosine similarity of identity embeddings (\textbf{CSIM})~\citep{arcface} between the reference avatar image and the generated videos. In Lip Synchronization, we compute the lip sync error distance and confidence (\textbf{LSE-C} and \textbf{LSE-D}) using the generated video and the avatar's audio. Please refer to Appendix~\ref{sec:apx_exp_detail} for details on the metrics.
+
+\paragraph{Comparison with Interactive Head Avatar}
+We compare our model with the reproduced state-of-the-art dyadic talking avatar model, INFP*~\citep{infp}, since its official implementation is not publicly available. For reference, we also include a talking avatar generation model~\citep{float} which does not use user motion or audio.
+
+In \cref{tab:quantitative_realtalk}, we provide a quantitative comparison on the RealTalk~\citep{realtalk} dataset. Avatar Forcing significantly outperforms INFP* in terms of Reactiveness and Motion Richness, indicating that our generated avatar is much more reactive and expressive compared to the baselines.
+Notably, Avatar Forcing achieves a latency of 0.5s, enabling real-time interaction, and maintains Visual Quality and Lip Synchronization comparable to INFP*. In contrast, INFP*'s 3.4s latency makes it unsuitable for real-time applications.
+
+We visualize the generated samples of ours and INFP* in \cref{fig:sota_compare}, where ours demonstrate more reactive (red arrow) and expressive motions (red box), compared to INFP*. 
+
+\vspace{-0.05in}
+\paragraph{Human Preference Study}
+We conduct a human preference study comparing our model with the interactive head avatar generation model INFP*. We recruited 42 participants to evaluate 12 video sets using five perceptual metrics: \textbf{Reactiveness} measures how well the avatar reacts to user motion and audio, \textbf{Motion Richness} evaluates expressiveness of the avatar motion, \textbf{Verbal Alignment} evaluates the lip synchronization with the audio, \textbf{Non-verbal Alignment} assesses the non-verbal behaviors such as eye contact or nodding, and \textbf{Overall Preference}. We provide further details of the human study in the supplementary materials.
+
+As shown in \cref{fig:human_eval}, our model is strongly preferred across all metrics, achieving over 80\% preference in overall quality. In particular,  our generated avatars exhibit expressive motion and strong non-verbal alignment, showing the effectiveness of the preference optimization (\cref{sec:dpo}).
+
+\subsection{Comprehensive Analysis}
+\paragraph{Comparison with Talking Head Avatar}
+We evaluate the talking capability of the avatar. 
+We compare Avatar Forcing with four state-of-the-art talking head avatar generation models:
+SadTalker~\citep{sadtalker}, Hallo3~\citep{hallo3}, FLOAT~\citep{float}, and INFP$^*$. We measure the visual quality with \textbf{FID}, \textbf{FVD}, and \textbf{CSIM} metrics, and assess lip synchronization using \textbf{LSE-D} and \textbf{LSE-C} used in~\cref{tab:quantitative_realtalk}. We provide the quantitative results on the HDTF dataset~\citep{hdtf} in \cref{tab:compare_talking_hdtf}.
+Avatar Forcing shows competitive performance on all metrics and achieves the best image and video quality. 
+We provide visual examples in Appendix~\ref{sec:apx_exp_detail}.
+
+\vspace{-0.075in}
+\paragraph{Comparison with Listening Head Avatar}
+We further evaluate the listening capability of our model. We compare Avatar Forcing with the listening head avatar generation models, including RLHG~\citep{rlhg}, L2L~\citep{l2l}, DIM~\citep{dim}, and INFP*, using the ViCo~\citep{rlhg}. 
+We measure Frechet distance (FD) for the expression and pose, and rPCC, SID, and Var metrics used in~\cref{tab:quantitative_realtalk} but with respect to expression and head pose, respectively.
+Since the baseline models are not publicly available, we take the results from DIM~\citep{dim}.
+In \cref{tab:compare_listening_vico}, our model outperforms the baselines on almost all of the metrics. In particular, Avatar Forcing achieves the best user–avatar synchronized motion generation (rPCC).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{table/table5}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Ablation Study} \label{sec:experiments:ablation}
+In this section, we conduct ablation studies on (i) the necessity of using user motion in the Dual Motion Encoder and (ii) the importance of preference optimization. We provide further ablation studies, including the diffusion forcing and blockwise look-ahead attention mask in Appendix~\ref{sec:apx_exp_detail}.
+
+\vspace{-0.05in}
+\paragraph{User Motion} 
+To validate the necessity of using user motion for interactive avatar generation, we compare our model with a variant that does not take user motion as input. As shown in \cref{tab:ablation_realtalk}, removing user motion leads to significantly less reactive behavior (Reactiveness) and reduced expressiveness in motion (Motion Richness).
+
+Furthermore, as visualized in~\cref{fig:ablation_user}, the model without user motion produces static behavior whenever the user's audio is silent. 
+This occurs even in the presence of strong non-verbal cues, such as smiling, as the model cannot perceive visual signals. In contrast, our model, which uses user motion, generates a reactive avatar that naturally smiles right after the user smiles (\cref{fig:ablation_user} red arrow) and becomes more focused when the user speaks (\cref{fig:ablation_user} green box).
+
+\vspace{-0.05in}
+\paragraph{Direct Preference Optimization} 
+To assess the impact of the preference optimization, we compare our model against a variant without fine-tuning. As shown in~\cref{tab:ablation_realtalk}, preference optimization significantly improves the Reactiveness metrics (rPCC-Exp and rPCC-Pose), which quantify user-avatar motion synchronization. It also substantially boosts the Motion Richness metrics (SID and Var), indicating more expressive and varied motion. As visualized in \cref{fig:ablation_dpo}, the model without preference optimization generates noticeably reduced diversity in facial expressions and head movement. It also exhibits weaker interaction, failing to respond to the user's smile. 
+
+In contrast, our fine-tuned model generates an expressive avatar that shows natural head movement (\cref{fig:ablation_dpo} red box) and smiles more broadly along with the user (\cref{fig:ablation_dpo} red arrow). We provide further analysis of our DPO method in Appendix~\ref{sec:apx_exp_detail}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\vspace{-0.1in}
+\centering
+\includegraphics[width=0.99\linewidth]{figure/ablation-user-3.pdf}
+\vspace*{-2mm}
+\caption{\textbf{Ablation study on the user motion}. Without $\mathbf{m}_u$, the avatar remains static even when the user smiles. With $\mathbf{m}_u$, our model reacts by smiling after the user (red arrow) and shifting to a focused expression when the user begins speaking (green box).}
+\label{fig:ablation_user}
+\vspace*{-1mm}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+    % \vspace*{-0.1in}
+    \centering
+    \includegraphics[width=0.99\linewidth]{figure/ablation-dpo-3.pdf}
+    \vspace*{-2mm}
+    \caption{\textbf{Ablation study on preference optimization}. Model fine-tuned with DPO produces more expressive motion (red box) and  reactive (red arrow)  compared to model without DPO.
+    }\label{fig:ablation_dpo}   
+    \vspace*{-0.18in}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

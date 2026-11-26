@@ -1,0 +1,55 @@
+\begin{figure*}[t]
+\begin{minipage}[t]{0.49\linewidth}
+    \captionof{table}{\textbf{Comparison with talking head generation models} on the HDTF~\citep{hdtf} dataset. Second-best results are underlined.
+    } \label{tab:compare_talking_hdtf}
+    \vspace*{-1mm}
+    \centering
+    \resizebox{1.0\linewidth}{!}{
+    \renewcommand{\arraystretch}{1.1}
+    \renewcommand{\tabcolsep}{5pt}
+    \begin{tabular}{lccccc}
+    \toprule
+     & \multicolumn{3}{c}{Visual Quality} & \multicolumn{2}{c}{Lip Synchronization} \\
+            \cmidrule(l{2pt}r{2pt}){2-4}
+            \cmidrule(l{2pt}r{2pt}){5-6}
+                             Method & FID $\downarrow$         & FVD $\downarrow$          & CSIM $\uparrow$        & LSE-D $\downarrow$         & LSE-C $\uparrow$        \\
+                             \midrule
+    SadTalker \cite{sadtalker}     &   64.744              &  342.996               &  0.697             &  8.046              & 7.171           \\
+    Hallo3  \cite{hallo3}          &   32.794              &  184.341               &  0.865             &  8.498              & 7.487           \\
+    FLOAT \cite{float}             &   \underline{25.110}  &  \underline{167.463}   &  \textbf{0.881}    &  \textbf{7.553}     & \textbf{8.006}  \\
+    INFP*~\citep{infp}             &   27.155              &  187.977               &  0.840             &  7.810              & 7.325          \\
+    \midrule
+    \textbf{Ours}                           &   \textbf{20.332}     &  \textbf{149.798}     &  \underline{0.870}  &  \underline{7.700}       &   \underline{7.560}       \\
+    \bottomrule
+    \end{tabular}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\linewidth}
+    \captionof{table}{\textbf{Comparison with listening head generation models} on the ViCo~\citep{rlhg} dataset. $\dagger$~denotes results inherited from DIM~\citep{dim}.} \label{tab:compare_listening_vico}
+    \vspace*{-1mm}
+    \centering
+    \resizebox{1.0\linewidth}{!}{
+    \renewcommand{\arraystretch}{1.07}
+    \renewcommand{\tabcolsep}{4pt}
+    \begin{tabular}{l cc cc cc cc}
+    \toprule
+     & \multicolumn{2}{c}{FD $\downarrow$}  & \multicolumn{2}{c}{rPCC $\downarrow$}  & \multicolumn{2}{c}{SID $\uparrow$} & \multicolumn{2}{c}{Var $\uparrow$} \\
+    \cmidrule(l{2pt}r{2pt}){2-3}
+    \cmidrule(l{2pt}r{2pt}){4-5}
+    \cmidrule(l{2pt}r{2pt}){6-7}
+    \cmidrule(l{2pt}r{2pt}){8-9}
+            Method  & Exp  & Pose  & Exp  & Pose  &  Exp  &  Pose  &  Exp  &  Pose       \\
+            \midrule
+    RLHG$^\dagger$~\citep{rlhg}   &   39.02          &  0.07            &  0.08         &  0.02           & 3.62    &   3.17     &  1.52   &  0.02           \\
+    L2L$^\dagger$~\citep{l2l}     &   33.93          &  0.06            &  0.06         &  0.08           & 2.77    &   2.66     &  0.83   &  0.02           \\
+    DIM$^\dagger$~\citep{dim}     &   23.88          &  0.06            &  0.06         &  0.03           & \textbf{3.71}    &   2.35     &  1.53   &  0.02           \\
+    INFP*~\citep{infp}  &   17.52              &  0.07               &  \textbf{0.01}            &  0.07             & 2.19 & \textbf{3.20}      &  2.10 &  0.03           \\
+    \midrule
+    \textbf{Ours}      &   \textbf{16.64}              &  \textbf{0.05}               &  \textbf{0.01}            &  \textbf{0.01}             & 3.12      &   3.00   &  \textbf{2.80} &  \textbf{0.03}           \\
+    \bottomrule
+    \end{tabular}
+}
+\vspace{-0.2in}
+\end{minipage}
+\vspace{-0.1in}
+\end{figure*}

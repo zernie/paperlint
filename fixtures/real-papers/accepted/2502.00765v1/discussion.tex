@@ -1,0 +1,31 @@
+\section{Discussions and Limitations}
+\label{sec:discussion}
+
+{\bf {\name}'s performance with larger/powerful GNNs:}
+The certified robustness result is determined by the gap between the most votes (for the correct label) and second-most votes obtained by a GNN on subgraphs.
+Hence, a GNN making more accurate predictions on subgraphs exhibits better certified robustness. A more powerful/larger GNN may achieve better robustness, as it is expected to provide more accurate predictions. For instance, we test a 6-layer ResGCN \cite{li2019deepgcns} on Pubmed, and its certified accuracy is 2\% higher than that of the used 3-layer GCN under the same perturbation size. 
+
+
+\vspace{+0.05in}
+\noindent {\bf Node-centric vs. edge-centric {\name}:} When defending against 
+node perturbations, {\nameN} outperforms {\nameE} because {\nameN}  guarantees an infinite number of perturbed edges, whereas {\nameE}'s guarantee is bounded. 
+However, when defending against edge manipulation attacks, it is hard to say which method is better, as we cannot ascertain which $M$ value (in Equation \ref{eqn:cpz_edge} for {\nameE} and Equation \ref{eqn:cpz_node} for {\nameN}) is larger, considering the two methods use distinct graph division strategies.
+
+
+\vspace{+0.05in}
+\noindent {\bf {\name} may be ineffective against training-time attacks on GNNs:} 
+The proposed {\name} is primarily designed to robustify a \emph{clean} GNN model against \emph{test-time} attacks. Its effectiveness relies on the gap between the most-votes and second-most-votes be sufficiently large. However, if the GNN model is poisoned \cite{wang2023turning} or backdoored \cite{zhang2021backdoor,xi2021graph,yang2024distributed} during training (e.g., a compromised model downloaded from the internet), and our defense is unaware of it, the derived bound may be weakened as the poisoned/backdoored model could reduce this gap. We will leave this as future work.
+
+
+\vspace{+0.05in}
+\noindent {\bf {\name} may be ineffective on graph similarity or matching tasks:} 
+{\name} takes a \emph{single} graph as input. 
+However, certain security applications involve a pair of graphs, e.g., GNN-based (binary or source) code similarity analysis \cite{he2022illuminati,li2019graph,liu2023learning,kim2022revisiting,gao2024sigmadiff,marcelli2022machine} takes as input a pair of  (e.g., control-flow) graphs generated from the code, and they can be formalized as a graph similarity/matching problem. In this context, an adversary is able to manipulate the source code such that the respective code graph could be largely changed (e.g., many node indexes and edges are changed), while maintaining the code functionality. This attack would make it hard to obtain the one-to-one correspondence between subgraphs generated from the two source graphs. 
+Hence, it is difficult to directly apply {\name} for certification in this setting. 
+
+
+\vspace{+0.05in}
+\noindent {\bf Inefficiency of {\name} to large-scale graphs:} As shown in Table \ref{computation-cost-training-testing}, our {\name} has a training and certification complexity that is $T$ times of the base GNN's. This overhead becomes significant when applying {\name} to large graphs (see Table \ref{tab:real-graph}). 
+We acknowledge it is important future work to speed up {\name}, while holding its theoretical results.
+
+

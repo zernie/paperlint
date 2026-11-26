@@ -1,0 +1,394 @@
+\section{STRANGE-Bench: Pipeline Details and Statistics}
+\label{app:strange-pipeline}
+
+STRANGE-Bench is our diffusion-generated tiered evaluation set: $5{,}523$ photorealistic scenes with $17{,}332$ instance annotations across $17$ NPMI-stratified sub-tiers, spanning typical, atypical, and never-co-occurring COCO object pairs. The remainder of this section describes the dataset release (\S\ref{app:strange:release}), shows qualitative samples (\S\ref{app:strange:samples}), reports the per-tier composition and sanity diagnostics (\S\ref{app:strange:tiers}--\S\ref{app:strange:diag}), describes the five-stage generation pipeline (\S\ref{app:strange:pipeline}), and lists the implementation hyperparameters
+(\S\ref{app:strange:impl}).
+
+\subsection{Dataset Release}
+\label{app:strange:release}
+
+\noindent\textbf{Hosting.}
+The full dataset and its metadata are publicly hosted on Hugging Face, and the generation code on GitHub (Tab.~\ref{tab:strange_links}).\footnote{The dataset repository is public and requires no login.} A stratified inspection sample drawn with a fixed seed is shipped under \texttt{samples/} so readers can assess data quality without downloading the full release. 
+
+\begin{table}[h]
+\centering
+\tiny
+\setlength{\tabcolsep}{6pt}
+\caption{\textbf{STRANGE-Bench artifact URLs}.}
+\label{tab:strange_links}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Artifact & URL \\
+\midrule
+Dataset    & \url{https://huggingface.co/datasets/sidgairo18/strange-bench} \\
+Code       & \url{https://github.com/sidgairo18/stranger-things} \\
+Samples    & \url{https://huggingface.co/datasets/sidgairo18/strange-bench/tree/main/samples} \\
+Croissant  & \url{https://huggingface.co/datasets/sidgairo18/strange-bench/blob/main/croissant.json} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Variants.}
+We release two variants: the \emph{balanced} variant ($5{,}523$ images / $17{,}332$ instance annotations) is the configuration whose numbers we report throughout this paper; the pre-balancing \emph{clean} variant ($6{,}571$ / $21{,}349$) is included for transparency. We also release the IDs of the $3{,}234$ scenes in which no class appears in the generated training scenes of the AAS late stage (the held-out-class subset of App.~\ref{app:circularity}).
+
+\noindent\textbf{Format.}
+Images are $1024 \times 1024$ PNG; annotations follow the COCO instance format (bounding boxes + per-class segmentation masks).
+A Croissant~1.1 file with both core and Responsible-AI~1.0 fields is shipped at the repository root.
+
+\noindent\textbf{License.}
+Data: \textbf{CC-BY 4.0}. Generation code: \textbf{MIT}. The dataset is intended for evaluation only; we ask users not to train on it.
+
+\noindent\textbf{Reproducibility.}
+The full pipeline, from the NPMI matrix through layout sampling, rendering, segmentation and the two audits to tier balancing, is reproducible from the included code; required external assets are public model weights and the COCO~\texttt{train2017} annotations.
+
+\noindent\textbf{Generality and Extensibility.}
+The pipeline above is deliberately recipe-driven and not COCO-specific. Swapping the input \emph{label vocabulary} (here, the $80$ COCO classes) and the source \emph{co-occurrence statistics} (here, NPMI on COCO~\texttt{train2017}) is sufficient to generate a STRANGE-Bench-style probe for any other dataset or task family. We release dataset, code, samples, and the Croissant manifest (Tab.~\ref{tab:strange_links}) under a permissive license so the community can:
+\begin{itemize}
+
+ \item regenerate STRANGE-Bench at higher resolution or larger scale, 
+ \item target alternative vocabularies (LVIS~\cite{gupta2019lvis}, Objects365~\cite{shao2019objects365}, fine-grained categories, video frames), 
+ \item substitute newer generative models (e.g., higher-resolution SD variants~\cite{stabilityai2024sd35}, Imagen~\cite{saharia2022photorealistic}, FLUX~\cite{flux2024}) or stronger auditors as they appear, and 
+ \item compose with new typicality axes (action-object, scene-object, temporal context).
+\end{itemize}
+The pipeline's modular form (layout, render, segment, audit) means each stage can be replaced independently without rebuilding the rest. Our intent is to provide both a benchmark and a reusable construction recipe for stress-testing co-occurrence shortcuts in vision systems. 
+
+\subsection{Qualitative Samples}
+\label{app:strange:samples}
+
+We first show what the dataset looks like. Each panel of every figure below is a single STRANGE-Bench scene (post-audit), with its ground-truth boxes overlaid (anchor in blue). Figs.~\ref{fig:samples_random_1}--\ref{fig:samples_random_2} show uncurated random samples of the eleven sub-tiers of the main grid and of the six others. Figs.~\ref{fig:samples_class_zebra}--\ref{fig:samples_class_bear} fix one anchor class and arrange two typical and two atypical scenes per tier (top to bottom: $T_1 \to T_5 \to T_\text{never}$), so the anchor is held visually constant while its surrounding context sweeps from typical to never-seen. 
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/random_main_s0_v2s.pdf}
+\caption{\textbf{Random samples across the main tiers.} Three typical (green) and three atypical (red) scenes per tier, for $T_1$ with natural and unusual background, and six $T_\text{never}$ scenes (purple), drawn uniformly at random and not curated; the anchor class is below each panel. Across panels, partner-count $k\!\in\!\{0,1,2,3,4\}$ and partner typicality (typical / atypical / never) jointly drive the contextual variation.}
+\label{fig:samples_random_1}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/random_extra_s0_v2s.pdf}
+\caption{\textbf{Random samples of the six sub-tiers outside the main grid.} One column per sub-tier, drawn at random as in Fig.~\ref{fig:samples_random_1}: $T_6$ ($k = 5$) and the $k = 1$ pair with a small anchor (three typical scenes above three atypical ones), and the never-co-occurring cliques with $k = 3$ and $k = 4$ (App.~\ref{app:additional_results}).}
+\label{fig:samples_random_2}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_zebra_v2s.pdf}
+\caption{\textbf{Anchor: \emph{zebra}.} Two typical (green) and two atypical (red) scenes per tier and four $T_\text{never}$ scenes (purple) with this anchor, drawn at random; the partner classes are listed below each panel. Top to bottom: the anchor alone with a natural or unusual background ($T_1$); $T_2$ to $T_5$ add $1$ to $4$ typical or atypical partners; $T_\text{never}$ adds one or two partners that never co-occur with the anchor. The zebra stays visually consistent; the surrounding scene shifts as we sweep partner-count and pair-typicality.}
+\label{fig:samples_class_zebra} 
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_cow_v2s.pdf}
+\caption{\textbf{Anchor: \emph{cow}.} Same layout as
+Fig.~\ref{fig:samples_class_zebra}. Notice how the \emph{cow} appears in pasture / farmland contexts on the typical side, while on the atypical / never side it shares the scene with out-of-place objects (toilet, snowboard, microwave) or, at $T_1$, an unusual background.}
+\label{fig:samples_class_cow}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_traffic_light_v2s.pdf}
+\caption{\textbf{Anchor: \emph{traffic light}.} Same layout as Fig.~\ref{fig:samples_class_zebra}. Typical contexts pair it with street scenes and vehicles; atypical / never contexts displace the traffic light into indoor or natural scenes (bedroom, beach, grassland).}
+\label{fig:samples_class_traffic_light}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_fire_hydrant_v2s.pdf}
+\caption{\textbf{Anchor: \emph{fire hydrant}.} Same layout as Fig.~\ref{fig:samples_class_zebra}. Typical pairings include vehicles and other street objects (car, stop sign, parking meter); atypical / never pairings place the fire hydrant next to animals and household objects (bear, giraffe, oven, toaster).}
+\label{fig:samples_class_fire_hydrant}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_airplane_v2s.pdf}
+\caption{\textbf{Anchor: \emph{airplane}.} Same layout as Fig.~\ref{fig:samples_class_zebra}. Typical pairings usually appear on runways or airfields with related vehicles and luggage (truck, suitcase); atypical / never pairings put the airplane next to food, animals, or household objects (banana, elephant, toilet).}
+\label{fig:samples_class_airplane}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics{appendix_static/images/anchor_bear_v2s.pdf}
+\caption{\textbf{Anchor: \emph{bear}.} Same layout as
+Fig.~\ref{fig:samples_class_zebra}. Typical pairings are forest / park scenes; atypical / never pairings move the bear to beaches, snow, or studio backdrops next to household objects (laptop, hair drier,~toothbrush).}
+\label{fig:samples_class_bear}
+\end{figure}
+
+\clearpage
+\subsection{Sub-Tier Composition}
+\label{app:strange:tiers}
+
+\paragraph{Two axes.}
+STRANGE-Bench varies two axes: \emph{partner-count} $k\!\in\!\{0,\dots,5\}$ and \emph{pair-typicality} (typical: high-NPMI partners; atypical: low-NPMI or never-co-occurring partners; never-co-occurring: $N_{ij}\!=\!0$ for every pair of the scene, with the fallback below). The anchor-only setting ($k\!=\!0$) splits into a natural-background and an atypical-background variant, giving two sub-tiers at $k\!=\!0$, two each at $k\!=\!1,\dots,4$, and one \texttt{tier\_never} sub-tier for a total of eleven, the grid of the main tables. Six more sub-tiers appear only in App.~\ref{app:additional_results}: the typical and atypical pair at $k\!=\!5$ ($T_6$), a $k\!=\!1$ pair whose anchor box covers at most $4\%$ of the image, and never-co-occurring cliques with $k\!=\!3$ and $k\!=\!4$.
+
+\paragraph{Anchor sampling and partner pools.}
+Anchors are allocated evenly over the $80$ COCO categories ($74$ to $80$ anchors per sub-tier of the main grid after filtering). Partners are added one at a time, and each new partner must meet the arm's rule with the anchor and with every partner already chosen. The rule uses $A_{ij} = (1 - \text{NPMI}_{ij})/2$ on COCO~\texttt{train2017}: typical pairs need $A_{ij} \leq 0.45$ (NPMI $\geq 0.1$) and at least $10$ co-occurrences with the anchor; atypical pairs need $A_{ij} \geq 0.55$ (NPMI $\leq -0.1$). Pairs that never co-occur get $A_{ij} = 0.8$, above every co-occurring pair. Each partner is drawn by a softmax over the $15$ highest-scoring candidates; if no candidate meets the rule, the sampler takes the highest-scoring one. 
+
+\paragraph{The \texttt{tier\_never} construction.}
+For \texttt{tier\_never} we attempt a strict $3$-clique (every pair among $\{\text{anchor}, p_1, p_2\}$ has $N_{ij}\!=\!0$), or a pair when the anchor has a single never-co-occurring partner; for ubiquitous anchors that admit no $3$-clique (\emph{person}, \emph{car}, \emph{chair}, \dots), we pad the largest strict sub-clique with atypical partners. Of the $466$ \texttt{tier\_never} scenes ($397$ with two partners, $69$ with one), $83.7\%$ are strict cliques; the rest are fallback scenes whose strict-clique status can be derived from \texttt{labels\_intended} together with the COCO-train co-occurrence matrix. The cliques with $k\!=\!3$ and $k\!=\!4$ are strict by construction and use only pairs whose expected count under independence, $N p_i p_j$, is at least $10$, so that a zero count reflects absence rather than two rare classes; anchors without such a clique are skipped ($46$ and $28$ anchors remain). Per-tier composition is in Table~\ref{tab:strange_tiers}.
+
+\input{static/tables/strange_tiers}
+
+\subsection{Sanity Diagnostics}
+\label{app:strange:diag}
+
+Three checks test the typicality structure and two nuisance variables, object scale and position. \textit{(i) Tier semantics.} Per-tier intended-pair NPMI on COCO-train separates the typical and atypical sub-tiers at every quartile: the lower quartile of every typical sub-tier is at least $+0.05$ and the upper quartile of every atypical sub-tier at most $-0.20$ (typical means $+0.18$ to $+0.24$, atypical $-0.27$ to $-0.31$; pairs that never co-occur have no NPMI and are left out; Fig.~\ref{fig:npmi_per_tier}). \textit{(ii) Object-scale balance.} Median relative bbox area within typical/atypical pairs at fixed $k$ is matched to within $0.15$--$0.66$\,pt for $k\!=\!1,\dots,5$ (Fig.~\ref{fig:bbox_area_per_tier}); the largest gap is at $k\!=\!1$ ($0.66$\,pt), and the single anchor of $T_1$ is $3.0$\,pt larger on the natural than on the atypical background. \textit{(iii) Spatial layout.} Box centers sit below the image center on average in every sub-tier (mean vertical position $0.60$ to $0.67$ of the image height, $0$ at the top), and the typical and atypical sub-tiers at the same $k$ match within $0.013$ in mean position (Fig.~\ref{fig:spatial_centers}), so the two arms share the same center bias.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/npmi_per_tier_violin_v2s.pdf}
+\caption{\textbf{Tier semantics.} Per-sub-tier distribution of intended-pair NPMI on COCO-train. Typical and atypical sub-tiers have the expected sign and are separated at every quartile. Pairs that never co-occur have no NPMI and are not shown: the never-co-occurring sub-tiers, and in the atypical sub-tiers the share in the last column of Tab.~\ref{tab:strange_tiers}. Sub-tiers right of the dashed line are outside the main grid.}
+\label{fig:npmi_per_tier}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/bbox_area_per_tier_v2s.pdf}
+\caption{\textbf{Object-scale balance.} Per-sub-tier boxplot of relative bbox area (\% of image). Median absolute difference between the typical and atypical sub-tiers at fixed $k$: $0.66$, $0.37$, $0.47$, $0.65$, $0.15$\,pt for $k\!=\!1,\dots,5$ ($T_2$ to $T_6$), $0.09$\,pt for the small-anchor pair, and $3.0$\,pt for $T_1$. Sub-tiers right of the dashed line are outside the main grid.}
+\label{fig:bbox_area_per_tier}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/spatial_centers_per_tier_v2s.pdf}
+\caption{\textbf{Spatial layout.} Box-center density
+per sub-tier on a $32\!\times\!32$ grid (normalized to image
+coordinates). Centers lie below the image center on average in every sub-tier, with the same distribution in the typical and atypical sub-tiers at each $k$; the single anchors of $T_1$ sit near the horizontal center.}
+\label{fig:spatial_centers}
+\end{figure}
+
+\FloatBarrier
+\subsection{Generation Pipeline}
+\label{app:strange:pipeline}
+
+For each scene we sample $k{+}1$ COCO categories from a target sub-tier, ask \textit{Qwen2.5-3B-Instruct}~\citep{qwen2024qwen25} for a layout (JSON bounding boxes, LayoutGPT-style~\citep{feng2023layoutgpt,lian2024lmd,cho2023vpgen}) and a photographic caption from those boxes' positions \citep{betker2023dalle3,hao2023promptist}, render with \textit{Stable Diffusion 3.5 Large}~\citep{stabilityai2024sd35,esser2024scaling}, segment with \textit{SAM3}~\citep{carion2026sam3},
+and discard the scene if a \textit{Grounding DINO}~\citep{liu2024grounding} auditor flags extras or duplicates, or if the second audit or the completeness check of Stage 5 fails. Numeric hyperparameters for every stage are deferred to \ref{app:strange:impl}.
+
+\noindent\textbf{Stage 1: layout and caption (Qwen).}
+We use Qwen2.5-3B-Instruct twice per scene with the same weights but two fixed system+user templates. The \emph{layout call} (LayoutGPT-style) emits pixel-coordinate bounding boxes; the \emph{caption call} writes the photographic prompt for SD~3.5L from the boxes' positions and per-class visual descriptions. 
+
+\begin{quote}\small
+\textbf{Layout system.} \emph{You are a layout designer. Output
+ONLY a JSON array of bounding boxes.}
+
+\medskip
+\textbf{Layout user.} \emph{Generate a realistic bounding box layout for an image of size $W\!\times\!H$. Objects to place:
+\texttt{\{labels\}}. Return ONLY a JSON list where each item has
+``label'' and ``bbox'' $[x_1, y_1, x_2, y_2]$ in pixels. Ensure
+boxes don't overlap excessively and are realistically sized and
+positioned. Each box must be inside the image
+($0 \leq x_1 < x_2 \leq W$, $0 \leq y_1 < y_2 \leq H$). Each box
+should be at least $64$ pixels wide and tall. Return labels exactly
+as given. Example: $[\{$``label'': ``cat'', ``bbox'': $[50, 200,
+250, 450]\}, \dots]$.}
+\end{quote}
+
+The emitted boxes are the \emph{planner layout boxes}; they reach the renderer only through the caption; on persistent JSON failure we fall back to a rule-based layout solver that places the boxes from COCO size priors without overlap. $T_6$ and the never-co-occurring cliques use the solver only; $79.2\%$ of the scenes have Qwen layouts. For the caption call we
+discretize each box center $(c_x, c_y)/W \in [0,1]^2$ at
+$\{0.33, 0.67\}$ to one of nine position strings
+(Table~\ref{tab:position_strings}).
+
+\begin{table}[h!]
+\centering\small
+\caption{\textbf{Position strings emitted by the center-bin discretization}, indexed by column ($c_x$) and row ($c_y$).}
+\label{tab:position_strings}
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{left} ($c_x{<}0.33$) & \textbf{center} ($0.33{\leq}c_x{<}0.67$) & \textbf{right} ($c_x{\geq}0.67$) \\
+\midrule
+\textbf{top} ($c_y{<}0.33$)        & \emph{top left}    & \emph{top center}    & \emph{top right} \\
+\textbf{middle} ($0.33{\leq}c_y{<}0.67$) & \emph{left side}   & \emph{center side}   & \emph{right side} \\
+\textbf{bottom} ($c_y{\geq}0.67$)  & \emph{bottom left} & \emph{bottom center} & \emph{bottom right} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{quote}\small
+\textbf{Caption system.} \emph{You are an expert visual-art director writing prompts for a high-end photorealistic text-to-image model. Output ONLY the final prompt as a single sentence -- no preamble, no JSON.}
+
+\medskip
+\textbf{Caption user.} \emph{Write a single rich photographic prompt (one sentence, $30$--$70$ words) for a wide-shot photograph (full scene, not close-up) containing the following objects. The image is \texttt{\{context\_label\}}; the objects \texttt{\{tier\_phrase\}}.}
+
+\smallskip
+\emph{Objects (label $\rightarrow$ position $\rightarrow$ visual
+description):}
+\begin{itemize}\setlength\itemsep{0pt}
+\item \texttt{\{label\}} $\rightarrow$ \texttt{\{position\}} within the image $\rightarrow$ \texttt{\{class\_visual\_description\}} \item \emph{...one entry per intended class}
+\end{itemize}
+
+\emph{The prompt MUST: be a wide / full shot; show every object completely (no cropping); mention each object by its exact label and spatial position; keep a minimalist scene (no extra people or unprompted clutter); specify environment, lighting, time of day, and mood; and use photorealistic-photography style words (wide angle, DSLR, 4K, sharp focus, natural light).}
+\end{quote}
+
+The \texttt{\{context\_label\}} and \texttt{\{tier\_phrase\}} fields are tier-conditioned (Table~\ref{tab:tier_phrases}). \texttt{\{class\_\allowbreak visual\_\allowbreak description\}} is a hand-written phrase per COCO class (e.g.\ ``a giraffe with very long neck and patterned coat''); the full $80$-class mapping is given in Table~\ref{tab:class_descriptions}. On total LLM failure we fall back to a deterministic template ``A photorealistic photo of a $\langle$label$_1\rangle$, \dots, and a $\langle$label$_n\rangle$, $\langle$bg-descriptor$\rangle$'' (loses spatial language but preserves the class set). The constraint list was hand-tuned across pilot runs to suppress two SD failure modes -- tight crops (headless figures, partial bodies) and unprompted clutter (extra people in the background).
+
+\begin{table}[h!]
+\centering\small
+\caption{\textbf{Tier-conditioned scene descriptors.} $^\dagger$Defined in the released generator but not used for the benchmark scenes: its atypical sub-tiers $T_2$ to $T_6$ were captioned with the typical wording (construction note~(ii) below). Variant sub-tiers use the wording of their base sub-tier.}
+\label{tab:tier_phrases}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lll}
+\toprule
+Sub-tier(s) & \texttt{\{context\_label\}} & \texttt{\{tier\_phrase\}} \\
+\midrule
+\texttt{tier1\_natural\_bg}        & set in a natural everyday environment       & fit naturally together \\
+\texttt{tier1\_atypical\_bg}       & set in an unusual or unexpected environment & appear together in an unusual setting \\
+\texttt{tier\{2--6\}\_*typical}    & in a natural everyday context               & are commonly seen together \\
+\texttt{tier\{2--6\}\_*atypical}$^\dagger$   & in an unusual or unexpected context         & are unusually paired \\
+\texttt{tier\_never}               & in a highly unusual scene                   & would normally never appear together \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\noindent\textbf{Stages 2-3: rendering and segmentation (SD~3.5L + SAM3).}
+We render the caption with Stable Diffusion 3.5 Large up to three times under a fixed negative prompt covering crops, clutter, duplication, and quality artifacts. Per-class instance masks are extracted by SAM3 with text prompts of the form \texttt{``a \{label\}''}; a small set of overrides resolves ambiguous COCO names (\texttt{bed} $\to$ \texttt{``a picture of a bed''}, \texttt{keyboard} $\to$ \texttt{``a computer keyboard''}, \texttt{skis} $\to$ \texttt{``a pair of skis''}, \texttt{airplane} $\to$ \texttt{``an airplane''}, \texttt{hot\_dog} $\to$ \texttt{``a hot dog in a bun''}). SAM3 finds $89.5\%$ of the intended classes on one render and $95.9\%$ with up to three; we keep the first render in which it finds every intended class.
+
+\noindent\textbf{Stage 4: consistency audit (Grounding DINO).}
+Grounding DINO Swin-B runs over the COCO-$80$ vocabulary and applies two checks: (i)~\textit{extras}, any detected class above threshold not in the intended set;
+(ii)~\textit{duplicates}, more than one detection of any intended class. Failing scenes are discarded.
+The audit keeps $85.0\%$ of the renders at $k = 0$, $75.5$, $70.9$, $59.8$ and $51.0\%$ at $k = 1$ to $4$, and $46.5\%$ at $k = 5$; every rejected render has an extra or a duplicate object.
+
+\noindent\textbf{Stage 5: second audit and balancing.} SAM3 and OWLv2~\cite{minderer2023scaling} run over the COCO-$80$ vocabulary at low thresholds. An unintended object on which both agree (SAM3 score $\geq 0.5$, OWLv2 score $\geq 0.2$, box IoU $\geq 0.3$) becomes an ignore region, on which predictions are not counted as false positives, if the scene is typical or the object's NPMI with every intended class is at most $0$; otherwise the scene is dropped, so that no unlabeled typical partner enters an atypical scene. Scenes that miss an intended class are dropped, and the typical and atypical sub-tiers at each $k$ are cut to the same size. Of the rendered scenes, $44.6\%$ enter the benchmark.
+
+\begin{table}[p]
+\centering\footnotesize\hbadness=10000
+\caption{\textbf{Per-class visual descriptions for the \texttt{\{class\_visual\_description\}} field.} All $80$ COCO categories, in source order (vehicles $\to$ street furniture $\to$ animals $\to$ accessories $\to$ sports $\to$ kitchenware $\to$ food $\to$ furniture $\to$ electronics $\to$ appliances $\to$ indoor).}
+\label{tab:class_descriptions}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}p{0.10\textwidth}p{0.36\textwidth}p{0.10\textwidth}p{0.36\textwidth}@{}}
+\toprule
+Class & Description & Class & Description \\
+\midrule
+person         & a person standing, full body, casual clothing             & wine glass     & a stemmed wine glass with bowl and base \\
+bicycle        & a bicycle with two spoked wheels, frame and handlebars    & cup            & a ceramic cup with handle \\
+car            & a four-wheeled passenger car, clearly side or front view  & fork           & a metal fork with four tines \\
+motorcycle     & a motorcycle with two wheels, fuel tank and handlebars    & knife          & a sharp metal knife with blade and handle \\
+airplane       & a fixed-wing airplane with wings and engines              & spoon          & a polished metal spoon \\
+bus            & a long passenger bus with windows along its length        & bowl           & a round food bowl, ceramic or wooden \\
+train          & a train with multiple connected carriages                 & banana         & a ripe yellow banana with curved shape \\
+truck          & a heavy truck with a large cargo area or trailer          & apple          & a round red or green apple with stem \\
+boat           & a boat floating on water, hull and deck visible           & sandwich       & a sandwich with bread slices and visible filling \\
+traffic light  & a vertical traffic light with red, yellow, and green lamps & orange        & a round orange citrus fruit \\
+fire hydrant   & a red fire hydrant on a sidewalk                          & broccoli       & a green broccoli floret with stem \\
+stop sign      & a red octagonal stop sign on a metal pole                 & carrot         & an orange carrot with green tops \\
+parking meter  & a single parking meter on a metal pole                    & hot dog        & a hot dog in a bun \\
+bench          & a wooden or metal park bench with backrest                & pizza          & a round pizza with cheese and toppings \\
+bird           & a small bird with feathers and beak                       & donut          & a round glazed or frosted donut with hole in the middle \\
+cat            & a domestic cat with fur, four legs and tail               & cake           & a layered round cake with frosting \\
+dog            & a dog with fur, four legs, ears and tail                  & chair          & a single chair with seat, backrest and four legs \\
+horse          & a horse with mane and tail, four hooved legs              & couch          & a long upholstered couch with cushions \\
+sheep          & a sheep with wooly white coat                             & potted plant   & a green leafy plant in a clay or ceramic pot \\
+cow            & a cow with horns, large body and udder                    & bed            & a bed with mattress, pillows and bedding \\
+elephant       & a gray elephant with long trunk and large ears            & dining table   & a wooden dining table with flat top \\
+bear           & a brown or black bear with thick fur                      & toilet         & a white porcelain toilet with bowl and tank \\
+zebra          & a zebra with bold black and white stripes                 & tv             & a flat-screen television on a stand or wall mount \\
+giraffe        & a giraffe with very long neck and patterned coat          & laptop         & an open laptop computer with keyboard and screen \\
+backpack       & a backpack with shoulder straps and zippered compartments & mouse          & a computer mouse peripheral device with scroll wheel and cable \\
+umbrella       & an open umbrella with curved canopy and handle            & remote         & a TV remote control with buttons \\
+handbag        & a stylish handbag with handle or shoulder strap           & keyboard       & a computer keyboard with QWERTY layout of keys for typing \\
+tie            & a long necktie with patterned fabric                      & cell phone     & a smartphone with rectangular screen \\
+suitcase       & a hard-sided rolling suitcase with handle                 & microwave      & a black or white microwave oven \\
+frisbee        & a colorful round flying disc                              & oven           & a kitchen oven with door and control panel \\
+skis           & a pair of long skis with bindings                         & toaster        & a metal toaster with two slots \\
+snowboard      & a snowboard with bindings on its top surface              & sink           & a sink with faucet, basin and drain \\
+sports ball    & a round sports ball with visible texture or panels        & refrigerator   & a tall refrigerator with door and handle \\
+kite           & a colorful kite flying with a long tail                   & book           & a single closed hardcover or paperback book \\
+baseball bat   & a baseball bat, smooth wooden cylinder with grip          & clock          & an analog wall clock with hour and minute hands \\
+baseball glove & a leather baseball glove                                  & vase           & a ceramic or glass vase \\
+skateboard     & a skateboard with four wheels and printed deck            & scissors       & a pair of scissors with two metal blades and grips \\
+surfboard      & a long pointed surfboard with fin underneath              & teddy bear     & a soft fluffy teddy bear stuffed toy \\
+tennis racket  & a tennis racket with strung head and grip                 & hair drier     & a handheld hair dryer with motor body and nozzle \\
+bottle         & a single bottle, narrow neck and wider body               & toothbrush     & a single toothbrush with bristles and handle \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\noindent\textbf{Construction notes.} Three properties of the scenes as built qualify the design above. (i)~The atypical sub-tiers are not limited to low-NPMI pairs: pairs that never co-occur in COCO~\texttt{train2017} score above every co-occurring pair, so $39$ to $64\%$ of the anchor-partner pairs in the atypical sub-tiers have $N_{ij}{=}0$ (Tab.~\ref{tab:strange_tiers}); the NPMI medians cover the other pairs. \texttt{tier\_never} differs in asking for $N_{ij}{=}0$ for every pair, partner pairs included, with one exception: for $76$ of its $466$ scenes ($16.3\%$) the anchor is one of $11$ classes that co-occur with almost every other class (\eg, \emph{person}, \emph{car}, \emph{cup}), and the sampler falls back to the anchor's rarest partners (median $14$ co-occurring images, NPMI $-0.24$); $40$ of these scenes contain no pair with $N_{ij}{=}0$. Conversely, when no candidate meets the typical rule the sampler takes the highest-scoring one, so $3.5$, $10.3$, $16.5$ and $20.6\%$ of the typical anchor-partner pairs at $k = 1$ to $4$ have NPMI below $0.1$, most of them below $0$; the medians of Tab.~\ref{tab:strange_tiers} include them. (ii)~The caption request for the atypical sub-tiers $T_2$ to $T_6$ used the wording of the typical ones (Tab.~\ref{tab:tier_phrases}), so the two arms differ in the class set given to the caption model, not in the context wording; the final captions mention an unusual context in $6$ to $16\%$ of the atypical scenes and in none of the typical ones. (iii)~The benchmark boxes are the bounding boxes of the SAM3 masks; no audit compares them with the planner layout.
+
+\FloatBarrier
+\subsection{Implementation Details}
+\label{app:strange:impl}
+
+Table~\ref{tab:strange_impl} presents all numeric hyperparameters across the five pipeline stages. Defaults match the final configuration that produced the dataset of Table~\ref{tab:strange_tiers}.
+
+\begin{table}[!t]
+\centering\small
+\caption{\textbf{Hyperparameters per pipeline stage for creating STRANGE-Bench.}}
+\label{tab:strange_impl}
+\begin{tabularx}{\linewidth}{@{}ll>{\raggedright\arraybackslash}X@{}}
+\toprule
+Stage & Knob & Value \\
+\midrule
+\multirow{4}{*}{1.1 Layout call (Qwen)}
+ & canvas size $W\!\times\!H$           & $1024 \times 1024$ \\
+ & sampling temperature (3 retries)     & $0.4 \to 0.7 \to 1.0$ \\
+ & top-$p$ / max new tokens             & $0.95$ / $512$ \\
+ & min box side / fallback          & $64$\,px / layout solver \\
+\midrule
+\multirow{2}{*}{1.2 Caption call (Qwen)}
+ & sampling temperature                 & $0.7$ ($+0.2$ per retry, max $2$ retries) \\
+ & top-$p$ / max new tokens             & $0.95$ / $256$ \\
+\midrule
+\multirow{5}{*}{2 Render (SD~3.5L)}
+ & resolution               &  $1024 \times 1024$ \\
+ & renders per scene                & up to $3$ \\
+ & inference steps                      & $40$ \\
+ & classifier-free guidance scale       & $3.5$ \\
+ & negative prompt                      & fixed \\
+\midrule
+\multirow{1}{*}{3 Segment (SAM3)}
+ & text prompt template                 & \texttt{``a \{class\_name\}''} \\
+
+\midrule
+\multirow{2}{*}{4 Audit (Grounding DINO)}
+ & detection score threshold            & $0.50$ \\
+ & checks        & extras, duplicates \\
+\midrule
+\multirow{2}{*}{5 Second audit}
+ & SAM3 / OWLv2 score threshold   & $0.5$ / $0.2$ \\
+ & agreement IoU                  & $0.3$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+\subsection{User Study}
+\label{app:strange:user-study}
+
+We ran three blinded studies on randomly drawn scenes, with the sub-tier hidden and the order shuffled (interfaces in Fig.~\ref{fig:user_study_ui}). The raters were unpaid volunteers, and no personal data was collected. They used an initial version of STRANGE-Bench ($4{,}003$ scenes) that shares the layout, rendering and segmentation stages of App.~\ref{app:strange:pipeline} but was filtered by the Grounding~DINO audit of Stage~4 alone: one SD~3.5L render per scene, no second audit, no missing-class rule, and no balancing of the typical and atypical sub-tiers. That audit kept about $76\%$ of the renders. The released benchmark renders up to three times per scene and adds Stage~5, after which $44.6\%$ of the rendered scenes remain.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/user_study_ui.pdf}
+\caption{\textbf{Rating interfaces of the user study.} (a)~Quality audit: the annotated boxes are drawn so that box correctness can be judged, and the instructions ask raters to judge the rendering, not the plausibility of the object combination. (b)~Free listing: no boxes are drawn and the anchor is never named. (c)~Pair plausibility: two class names, no image.}
+\label{fig:user_study_ui}
+\end{figure}
+
+\noindent\textbf{Quality audit.} Raters judged $330$ scenes ($30$ per sub-tier) on four binary criteria: the image is photorealistic, the anchor is identifiable, the boxes are correct, and no unlabeled object is present. Of four raters, one passed every scene on three of the four criteria and is excluded; agreement among the other three is high (Gwet's AC1 $0.86$ to $0.99$ per criterion). Typical and atypical scenes at the same $k$ are rendered equally well: their pass rates differ by at most $7.8$ points (unlabeled objects), and anchor identifiability by at most $1.1$. Tab.~\ref{tab:user_study_quality} compares the scenes with $330$ COCO photographs on the same instrument, rated by the human raters and by an LLM judge given their instructions.
+
+\begin{table}[!b]
+\centering\small
+\caption{\textbf{Annotation quality of the initial STRANGE-Bench scenes and of COCO photographs.} Pass rates (\%) on the four criteria of the quality audit and on all four together, $330$ images per source (COCO images with their own annotations, stratified by object count). LLM judge: Claude Sonnet~5 given the raters' instructions; it is stricter on box tightness than the human raters. Humans: answers pooled over three raters for STRANGE-Bench and two for COCO; ``All four'' counts one rater's answers on one image.}
+\label{tab:user_study_quality}
+\input{static/tables/generated/app_user_study_quality_tabular}
+\end{table}
+
+\noindent\textbf{Free listing.} Raters saw $200$ scenes ($100$ from $T_1$ with natural background, $100$ from $T_{\text{never}}$) without boxes and listed every category they could identify; we score whether the anchor is among them. Human anchor recall drops by $1.0$ point from $T_1$ to $T_{\text{never}}$, while a fine-tuned DINOv3 classifier loses $31.4$ points over all scenes of the two sub-tiers and $31.0$ on the $200$ rated ones, and the XPaste\,+\,AAS model of Tab.~\ref{tab:dinov3_main} $5.9$ and $3.0$ (Tab.~\ref{tab:user_study_listing}). A rendering defect would lower both; the drop is specific to the model. Fig.~\ref{fig:user_study_examples} shows eight $T_{\text{never}}$ scenes with the raters' answers.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{appendix_static/images/user_study_examples.pdf}
+\caption{\textbf{Free-listing answers on $T_{\text{never}}$ scenes.} Eight of the $100$ $T_{\text{never}}$ scenes of the free-listing task, as the raters saw them. Below each scene: the intended classes (anchor in bold) and how many of the four raters listed the anchor. In the two misses the raters named a similar class.}
+\label{fig:user_study_examples}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering\small
+\caption{\textbf{Free listing: humans and a classifier.} Anchor recall (\%) on $T_1$ scenes (natural background) and $T_{\text{never}}$ scenes of the initial STRANGE-Bench. Rated: the $100 + 100$ scenes shown to the raters. All: every scene of the two sub-tiers ($609$ and $560$). Humans: the anchor is among the listed categories (no boxes drawn, anchor never named), mean over the three raters kept in the quality audit (the fourth rater: $99.0$ and $98.0$). DINOv3 ViT-B/16 fine-tuned: anchor score $\geq 0.5$; XPaste + AAS is the model of Tab.~\ref{tab:dinov3_main}.}
+\label{tab:user_study_listing}
+\input{static/tables/generated/app_user_study_listing_tabular}
+\end{table}
+
+\noindent\textbf{Pair plausibility.} Five raters saw $200$ class pairs as two names without an image ($40$ pairs that never co-occur in COCO and $40$ per NPMI quartile) and rated how often both occur in the same real-world scene on a five-point scale. The consensus rating follows NPMI (Spearman $\rho = 0.81$; pairwise agreement between raters $0.65$ to $0.81$), so the NPMI ranking matches human judgments of real-world co-occurrence.

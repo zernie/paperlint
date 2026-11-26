@@ -1,0 +1,84 @@
+
+
+\section{KV Cache Hijacking}\label{sec:hijack_kv}
+
+Figure~\ref{fig:pipline} illustrates \sys, our attack framework targeting position-independent KV cache reuse. A complete attack consists of two phases: (1) the attacker constructs an adversarial prefix $p$ and submits a malicious query $p \oplus \tilde{X}$ to the LLM service; (2) the LLM service processes $p \oplus \tilde{X}$ into KV states and stores them as chunks in the shared cache pool $\mathcal{P}_\text{chunk}$. Subsequently, when a user sends a query $X \oplus q$, if a cache hit occurs between $\tilde{X}$ and $X$ as Definition~\ref{def:position_independent_cache_hit}, the user receives the malicious response $\tilde{r}$.
+
+We formulate the problem of finding a prefix $p$ that causes the LLM to stably output the malicious response $\tilde{r}$ in the aforementioned scenario as an optimization problem:
+\begin{align}\label{eq:cache_dop}
+    p^* = \arg\min_{p} \mathcal{L}_{\text{CE}}\left( \text{LLM}(X \oplus q \mid \mathcal{T}^p_{\tilde{X}}), \, \tilde{r} \right), 
+\end{align}
+where $\tilde{X}$ denotes a subsequence of the user context $X$, $\mathcal{T}^p_{\tilde{X}}$ represents the KV cache of $\tilde{X}$ obtained by querying the LLM with $p \oplus \tilde{X}$, and $\text{LLM}(X \oplus q \mid \mathcal{T}^p_{\tilde{X}})$ indicates LLM inference with cache hits on $\mathcal{T}^p_{\tilde{X}}$.
+% 
+$\tilde{X}$ can be chosen as frequently used context that provides answers to $q$, such as text from an FAQ interface, to further increase the attack success rate.
+
+\begin{algorithm}[t]
+\caption{\sys \textsc{Prefix Optimization}}
+\label{alg:hijackkv}
+
+\SetKwProg{Fn}{Function}{}{}
+
+\KwIn{Target text $\tilde{X}$, target query $q$, target malicious answer $\tilde{r}$, prefix length $L$, optimize step $T$, number of candidate prefixes $B$}
+\KwOut{Optimized prefix $p$}
+
+$p \gets \textsc{InitializePrefix}(L)$ \label{line:init}\;
+\For{$t = 1$ \KwTo $T$}{ \label{line:loop-start}
+    $\mathcal{L} \gets \textsc{ComputeLoss}(p, \tilde{X}, q, \tilde{r})$ \label{line:compute-loss}\;
+    $\nabla_p \gets \nabla_{\textsc{OneHot}(p)} \mathcal{L}$ \label{line:gradient}\;
+    \For{$l = 1$ \KwTo $L$}{ \label{line:topk-start}
+        $\mathcal{V}_{cand}^l \gets \textsc{TopK}(-\nabla_p)$ \label{line:topk}\;
+    } \label{line:topk-end}
+    $P \gets \emptyset$ \label{line:candidate-init}\;
+    \For{$b = 1$ \KwTo $B$}{ \label{line:sample-start}
+        $l \gets \textsc{UniformRandom}(L)$ \label{line:random-pos}\;
+        $x' \gets \textsc{RandomSelect}(\mathcal{V}_{cand}^l)$ \label{line:random-token}\;
+        $P \gets P \cup \{[x_1, \dots, x_{l-1}, x', x_{l+1}, \dots, x_L]\}$ \label{line:add-candidate}\;
+    } \label{line:sample-end}
+    $p \gets \arg\min_{p \in P} \textsc{ComputeLoss}(p, \tilde{X}, q, \tilde{r})$ \label{line:greedy-select}\;
+} \label{line:loop-end}
+\Return $p$ \label{line:return}\;
+
+\BlankLine
+
+\Fn{$\textsc{ComputeLoss}(p, \tilde{X}, q, \tilde{r})$}{ \label{line:func-start}
+    $\ve_{p} \gets \textsc{OneHot}(p)\cdot W_{\text{embed}}$ \label{line:embedding}\;
+    $\ve_{\text{context}} \gets \ve_{p} \oplus \textsc{Embedding}(\tilde{X})$ \label{line:concatenate}\;
+    $(\mK, \mV) \gets \textsc{ComputeKV}(\textsc{LLM}(\ve_{\text{context}}))$ \label{line:extract-kv}\;
+    $\mathcal{T}^p_{\tilde{X}} \gets (\mK_{L+1:L+|\tilde{X}|}, \mV_{L+1:L+|\tilde{X}|})$ \label{line:slice-kv}\;
+    $r \gets \mathrm{LLM}(\tilde{X} \oplus q \mid \mathcal{T}^p_{\tilde{X}})$ \label{line:inference}\;
+    $\mathcal{L} \gets \textsc{CrossEntropy}(r, \tilde{r})$ \label{line:loss}\;
+    \KwRet $\mathcal{L}$ \label{line:func-return}\;
+} \label{line:func-end}
+
+\end{algorithm}
+
+We employ the Greedy Coordinate Gradient (GCG) algorithm~\cite{zou2023universal} to solve this optimization problem, a method widely applied in discrete token optimization. The optimization process of \sys consists of two main components: (1) an iterative GCG optimization loop that refines the adversarial prefix through coordinate-wise gradient descent, and (2) a loss computation function that evaluates the effectiveness of each candidate prefix under position-independent cache reuse. Algorithm~\ref{alg:hijackkv} presents the implementation of this algorithm. We describe each component in detail below. 
+% 
+In the actual attack process, the attacker runs the algorithm locally in a simulator using a surrogate model, thereby avoiding any impact on the remote server-side model or cache pool.
+
+\paragraph{Greedy Coordinate Gradient Optimization.}
+The main optimization loop (Lines~\ref{line:loop-start} - \ref{line:loop-end}) iteratively refines the adversarial prefix $p$ over $T$ iterations. 
+
+Since the prefix consists of discrete tokens, the gradient is computed through the continuous relaxation obtained by embedding the one-hot vectors. At each iteration $t$, the algorithm first computes the loss $\mathcal{L}$ and its gradient $\nabla_p$ with respect to the one-hot encoded prefix $\textsc{OneHot}(p)$ (Lines~\ref{line:compute-loss} - \ref{line:gradient}). 
+
+For each position $l$ in the prefix, the algorithm identifies the top-$k$ candidate tokens that would most decrease the loss, based on the negative gradient values (Lines~\ref{line:topk-start} - \ref{line:topk-end}). 
+
+To explore the discrete space efficiently, the algorithm constructs a candidate set $P$ by randomly sampling $B$ positions and substituting each with a randomly selected token from its top-$k$ candidates $\mathcal{V}_{cand}^l$ (Lines~\ref{line:candidate-init} - \ref{line:sample-end}). 
+
+The candidate prefix that achieves the minimum loss is then greedily selected as the new prefix for the next iteration (Line~\ref{line:greedy-select}). 
+% 
+Upon completion of the iterations, we obtain an effective malicious prefix $p$ (Line~\ref{line:return}). This GCG optimization enables efficient search within the exponentially large and discrete token space.
+
+
+\paragraph{Evaluation of Malicious KV Cache.}
+The \textsc{ComputeLoss} function (Lines~\ref{line:func-start} - \ref{line:func-end}) is the core component that evaluates the effectiveness of a candidate prefix under position-independent cache reuse. This function simulates the complete attack pipeline from prefix injection to victim query inference. We now describe each step in detail.
+
+\textit{Step 1: Compute continuous embedding of the malicious prefix $p$} (Line~\ref{line:embedding}). Since gradient-based optimization requires differentiable operations, the discrete token sequence $p$ is first converted to a continuous representation. The one-hot encoding of $p$ is multiplied by the model's embedding matrix $W_{\text{embed}}$ to obtain continuous embeddings $\ve_p \in \mathbb{R}^{L \times d}$, where $d$ is the embedding dimension. This operation enables the direct computation of the gradient of the loss function with respect to each token.
+
+\textit{Step 2: Compute hijacked KV cache} (Lines~\ref{line:concatenate} - \ref{line:slice-kv}). The prefix embeddings $\ve_p$ are concatenated with the embeddings of the target chunk $\tilde{X}$ to form the complete context $\ve_{\text{context}} = \ve_p \oplus \textsc{Embedding}(\tilde{X})$, where $\oplus$ denotes sequential concatenation along the token dimension. This concatenated sequence is then fed through the LLM to generate the complete key-value pairs $(\mK, \mV)$ for all layers. Critically, only the KV pairs corresponding to the target chunk $c$ are extracted and cached, yielding $\mathcal{T}^p_c = (\mK_{L+1:L+|\tilde{X}|}, \mV_{L+1:L+|\tilde{X}|})$. The slicing operation $L+1:L+|\tilde{X}|$ selects the KV states from position $L+1$ (begin with the end of prefix) to position $L+|\tilde{X}|$ (the end of the chunk), discarding the prefix's KV states while retaining its adversarial influence encoded in the chunk's representations. This computation strategy aligns with real-world KV cache systems that cache document chunks $\tilde{X}$ without explicitly storing malicious prefix $p$.
+
+\textit{Step 3: Simulate victim's inference} (Line~\ref{line:inference}). To evaluate the attack's effectiveness, the function simulates a victim's query by performing inference with the malicious cache reuse. The shared context $\tilde{X}$ is concatenated with the target query $q$, and the LLM generates output response $r$ while reusing the hijacked KV cache $\mathcal{T}^p_c$. Notably, in real-world cache reuse scenarios, the cache $\mathcal{T}^p_c$ may have undergone processing such as recomputation~\cite{yao2025cacheblend, hu2025epic} or compression~\cite{zhang2023h2o, liu2023scissorhands}. Consequently, the attacker can replicate these operations during this optimization step to enhance the robustness of the attack. By simulating position-independent cache reuse, we can evaluate the impact of $\mathcal{T}^p_c$ on the LLM in real-world scenarios.
+
+\textit{Step 4: Compute loss} (Line~\ref{line:loss} - \ref{line:func-end}). Finally, we compute the cross-entropy loss $\mathcal{L}$ to measure the divergence between the model's current output distribution $r$ and the designated malicious target $\tilde{r}$. Minimizing $\mathcal{L}$ provides the essential gradient signals required to iteratively refine the adversarial prefix and achieves alignment with the attacker's target objective.
+
+Algorithm~\ref{alg:hijackkv} produces an adversarial prefix $p$ by optimizing the prefix $p$ through GCG. When $p$ serves as the prefix for the context $\tilde{X}$, it ensures that the KV state of $\tilde{X}$ is manipulated, such that upon a position-independent cache hit, the model's output is hijacked to the attacker's desired $\tilde{r}$.

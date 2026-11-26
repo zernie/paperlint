@@ -1,0 +1,25 @@
+\appendix
+\section{Artifact Appendix}
+
+\subsection*{Abstract}
+This artifact provides the experimental setup for Quake to reproduce key results. See the artifact's README for full details.
+
+\subsection*{Scope}
+This artifact enables validation of Quake's core experimental findings, such as those related to Adaptive Partition Scanning (APS), NUMA-aware searching, and maintenance policies. Refer to the artifact's README for specific experiments.
+
+\subsection*{Contents}
+The artifact includes Python scripts (e.g., \texttt{experiment\_runner.py}, individual experiment \texttt{run.py} files), system installation scripts (\texttt{install.sh}), experiment configurations (\texttt{configs/}), Conda environment files, and the paper PDF. The README details the full directory structure and contents.
+
+\subsection*{Hosting}
+The artifact is part of the Quake repository in the \texttt{osdi2025} branch. located at \url{https://github.com/marius-team/quake/tree/osdi2025/test/experiments/osdi2025}. Use the latest commit on this branch.
+
+\subsection*{Requirements}
+Python 3.9+ and Conda are required. Tested on Linux (Ubuntu 22.04). Some experiments (e.g., NUMA evaluations) require a machine with NUMA for meaningful reproduction. The \texttt{install.sh} script lists system-level dependencies. Refer to the README for comprehensive requirements.
+
+\subsection{Installation}
+Follow the detailed installation instructions in the artifact's README. Options include a comprehensive setup using \texttt{install.sh} or a Quake-only Conda environment setup.
+
+\subsection{Experiment Workflow}
+All experiments are launched via \texttt{experiment\_runner.py} from the repository root. Experiments will typically download and prepare required datasets if not found locally. Experiments are run as follows: \\
+\texttt{python3 -m test.experiments.osdi2025.experiment\_runner --experiment kick\_the\_tires -- config sift1m} \\
+After execution, experiments print status updates and save results (e.g., CSV files, plots) to an output directory, as indicated in the console output. The artifact's README provides the complete command structure, detailed explanations of all parameters (including \texttt{--output-dir}), further examples, and a full summary of available experiments with their specific configurations.

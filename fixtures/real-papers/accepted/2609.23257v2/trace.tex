@@ -1,0 +1,195 @@
+
+\section{Case Studies}
+\label{app:case_studies}
+
+\subsection{Quantitative: Ablation Analysis}
+\label{app:ablation_analysis}
+
+\begin{figure*}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{fig/grid.png}
+\caption{Three-way ablation on ETTh2. Scatter plots (top): zero control signal clusters around the diagonal with near-random win rate (49\%), indicating the decoder alone learns minimal correction. Adding LLM control signals shifts points below the diagonal, but gains concentrate in low-to-mid MSE regions. The full system extends improvements to harder samples where distribution shift invalidates cached control signals. Histograms (bottom): test-time adaptation compresses negative-skewed tails by detecting when cached control signals fail and triggering re-reasoning.}
+    \label{fig:3way_ablation}
+\end{figure*}
+
+We conduct a three-way ablation to isolate contributions of each CTRL component: (1) Zero Control Signal (decoder only, null control signal), (2) w/o Test-Time Adaptation (LLM-generated control signal only), and (3) CTRL Full (control signal generation + test-time adaptation). Results are evaluated on ETTh2 (384$\to$96) with DLinear backbone.
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+& \textbf{Zero} & \textbf{w/o TTA} & \textbf{Full} \\
+\midrule
+Mean Imp. & +4.3\% & +12.6\% & +13.3\% \\
+Win Rate & 49\% & 76\% & 82\% \\
+\bottomrule
+\end{tabular}
+\caption{Three-way ablation on ETTh2.}
+\label{tab:3way_ablation}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\small
+\footnotesize
+\begin{tabular}{lc}
+\toprule
+\textbf{Comparison} & \textbf{$\Delta$ Improv.} \\
+\midrule
+w/o Adaptation vs Zero & +8.3\% \\
+CTRL (Full) vs w/o Adaptation & +0.7\% \\
+CTRL (Full) vs Zero & +9.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Relative contribution of each component.}
+\label{tab:3way_contributions}
+\end{table}
+
+Table~\ref{tab:3way_ablation} quantifies overall performance, but the aggregate metrics obscure where each component provides value. The near-random win rate (49\%) under zero control signal confirms that without LLM guidance, the residual decoder lacks sufficient inductive bias to systematically correct backbone errors; the decoder architecture alone cannot discover correction strategies from data.
+
+The 27\% win rate jump when adding LLM control signals (49\%$\to$76\%) reflects LLM reasoning's capacity to diagnose backbone failure modes from held-out training statistics and encode correction strategies into compact control signals. However, Figure~\ref{fig:3way_ablation} reveals these gains concentrate disproportionately on easier samples (Q1-Q2), where backbone errors follow patterns visible in held-out training data. On harder samples (Q3-Q4), improvements without adaptation diminish because the control signal assumes distributional stationarity that does not hold.
+
+Test-time adaptation provides the critical bridge to hard samples. While its aggregate contribution appears modest (+0.7\% mean improvement, +6\% win rate), this masks its selective impact: on Q4 samples where the system without adaptation shows only +1.4\% improvement, CTRL (Full) achieves +5.7\%. The mechanism is straightforward: by monitoring STL statistics at test time, CTRL detects when input distributions diverge from held-out training and triggers re-reasoning rather than applying stale control signals. This explains the histogram compression in Figure~\ref{fig:3way_ablation} (bottom right), where the negative tail from hard-sample failures shrinks under full adaptation.
+
+The decomposition in Table~\ref{tab:3way_contributions} thus understates test-time adaptation's role. LLM control signal generation accounts for the majority of aggregate improvement (+8.3\% of +9.0\%), but test-time adaptation determines whether CTRL degrades gracefully or catastrophically under distribution shift. For deployment scenarios where test distributions are unpredictable, this robustness property may matter more than average-case gains.
+
+\subsection{Qualitative: Agent Reasoning Traces}
+
+We examine two contrasting cases from ETTh2 (384$\rightarrow$96) to illustrate how test-time adaptation responds to different shift patterns. We select samples exhibiting distinct shift patterns: Sample 0 (highest trend shift score in batch 0) and Sample 640 (highest seasonal shift score in batch 1).
+
+\subsubsection{Case 1: Trend Reversal}
+
+The trend slope reverses from $+3.05 \times 10^{-5}$ (held-out training) to $-1.57 \times 10^{-5}$ (test), yielding a shift score of 1.51 (151\%). Seasonal dominance increases moderately from 0.395 to 0.486 (23\% shift), while noise level rises slightly from $\sigma=1.07$ to $\sigma=1.19$ (11\% shift). The held-out training control signal assumed a rising trend; applying it to declining test data would systematically overpredict.
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.95\columnwidth}{
+\textbf{Trend Agent} \\
+\textit{Diagnosis:} The validation and test trends have a significant shift in direction with a ratio of 151.33\%, indicating a reversal in trend. \\
+\textit{Reasoning:} Reduced scale multiplier to dampen the impact of extreme predictions, negative bias shift to adjust for the reversal in trend direction, increased gate multiplier to allow more flexibility in response to new data, and a confidence penalty to reflect reduced certainty due to the significant trend change.
+}}
+\caption{Trend agent reasoning for Case 1 (trend reversal).}
+\label{fig:case1_trend}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.95\columnwidth}{
+\textbf{Seasonal Agent} \\
+\textit{Diagnosis:} The test data shows a stronger seasonal pattern compared to the validation data with a significant shift ratio. \\
+\textit{Reasoning:} Adjustments are made to amplify the seasonal scale and gate multipliers to better capture the increased strength of the seasonal pattern in test data, while a slight bias shift is added to align predictions with observed trends. Confidence penalty reduces overconfidence due to model adjustments.
+}}
+\caption{Seasonal agent reasoning for Case 1.}
+\label{fig:case1_seasonal}
+\end{figure}
+
+Table~\ref{tab:case1_policy} shows the resulting numerical control signal changes. Trend parameters shift dramatically (scale halved from 0.90 to 0.50, confidence reduced from 0.60 to 0.21), while seasonal scale increases from 0.95 to 1.50 to amplify the strengthening pattern. Gates increase across all components (0.40$\rightarrow$0.69 for trend), reflecting higher uncertainty where the LLM delegates more correction authority to the learned decoder.
+
+\begin{table}[h!]
+\centering
+\small
+
+
+\begin{tabular}{lcccc}
+\toprule
+& Scale & Bias & Gate & Conf. \\
+\midrule
+\multicolumn{5}{l}{\textit{Before Adaptation (Stage 1)}} \\
+Trend & 0.90 & $+$0.10 & 0.40 & 0.60 \\
+Seasonal & 0.95 & $+$0.10 & 0.40 & 0.60 \\
+Irregular & 0.95 & $+$0.10 & 0.50 & 0.60 \\
+\midrule
+\multicolumn{5}{l}{\textit{After Adaptation (Stage 3)}} \\
+Trend & 0.50 & $-$0.50 & 0.69 & 0.21 \\
+Seasonal & 1.50 & $+$0.55 & 0.66 & 0.41 \\
+Irregular & 1.26 & $-$0.20 & 0.67 & 0.31 \\
+\bottomrule
+\end{tabular}
+\caption{Control signal values before and after adaptation (Case 1: Trend Reversal).}
+\label{tab:case1_policy}
+\end{table}
+
+
+\subsubsection{Case 2: Seasonal Amplification (Sample 640)}
+
+Here the pattern inverts: trend shift is minimal (score 0.02, slope unchanged at $\approx 3.0 \times 10^{-5}$), but seasonal dominance more than doubles from 0.395 to 0.849 (115\% shift). The test window falls in a period where periodic fluctuations overpower the stable trend.
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.95\columnwidth}{
+\textbf{Trend Agent} \\
+\textit{Diagnosis:} A small positive shift in the trend slope has been observed with a minimal change ratio of 2.24\%, indicating a slight increase in the rate of change without any direction reversal. \\
+\textit{Reasoning:} Adjustments are made to slightly increase the scale and gate multipliers to account for the positive shift in trend slope, while a small bias shift is applied to align predictions more closely with observed patterns.
+}}
+\caption{Trend agent reasoning for Case 2 (seasonal amplification).}
+\label{fig:case2_trend}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.95\columnwidth}{
+\textbf{Seasonal Agent} \\
+\textit{Diagnosis:} The test data shows a significantly stronger seasonal pattern compared to the validation data. \\
+\textit{Reasoning:} Increasing the scale multiplier and gate multiplier to account for the stronger seasonal pattern in test data, adding a bias shift to further adjust predictions upwards, and applying a confidence penalty to reflect increased uncertainty in seasonal predictions due to the significant pattern change.
+}}
+\caption{Seasonal agent reasoning for Case 2.}
+\label{fig:case2_seasonal}
+\end{figure}
+
+Table~\ref{tab:case2_policy} shows the contrasting adaptation. Unlike Case 1, trend parameters change minimally (scale 0.90$\rightarrow$0.58, moderate adjustment). The seasonal agent, detecting strong amplification, maximizes scale to 1.50 and increases bias to $+$0.60 to match the new dominance level. This demonstrates context-sensitivity: the same adaptation mechanism produces different adjustments depending on which component exhibits shift.
+
+\begin{table}[h!]
+\centering
+\small
+
+\begin{tabular}{lcccc}
+\toprule
+& Scale & Bias & Gate & Conf. \\
+\midrule
+\multicolumn{5}{l}{\textit{Before Adaptation (Stage 1)}} \\
+Trend & 0.90 & $+$0.10 & 0.40 & 0.60 \\
+Seasonal & 0.95 & $+$0.10 & 0.40 & 0.60 \\
+Irregular & 0.95 & $+$0.10 & 0.50 & 0.60 \\
+\midrule
+\multicolumn{5}{l}{\textit{After Adaptation (Stage 3)}} \\
+Trend & 0.58 & $-$0.29 & 0.59 & 0.28 \\
+Seasonal & 1.50 & $+$0.60 & 0.61 & 0.42 \\
+Irregular & 1.25 & $-$0.14 & 0.63 & 0.37 \\
+\bottomrule
+\end{tabular}
+\caption{Control signal values before and after adaptation (Case 2: Seasonal Amplification).}
+\label{tab:case2_policy}
+\end{table}
+
+
+\subsubsection{Design Rationale}
+
+These cases illustrate several key properties of CTRL's test-time adaptation:
+
+\textbf{Component-wise independence.} Each STL component adapts independently, preventing a large trend shift from disrupting well-calibrated seasonal correction. In Case 1, the extreme trend reversal triggers aggressive trend dampening while seasonal adjustment remains moderate.
+
+\textbf{Context-sensitive responses.} The same adaptation mechanism produces opposite adjustments depending on shift direction. Case 1 triggers conservative trend scaling (0.50) with high gate delegation (0.69), while Case 2 triggers aggressive seasonal amplification (1.50) with moderate gate (0.61).
+
+\textbf{Uncertainty-aware delegation.} Confidence parameters absorb uncertainty: high shift scores drop confidence substantially (0.60$\rightarrow$0.21 in Case 1 trend), signaling to the decoder that the LLM is less certain. Simultaneously, gates increase to delegate more correction authority to the learned decoder, implementing a soft handoff under distribution shift.
+
+\textbf{Label-free operation.} Adaptation uses only input statistics from STL decomposition of the lookback window, requiring no ground truth labels. This enables deployment in streaming settings where labels arrive delayed or never.
+
+
+\subsubsection{Irregular Agent Output}
+
+Unlike trend and seasonal agents that output numerical control signals, the irregular agent generates natural language encoded via frozen GPT-2 and projected to a 32D embedding. Figure~\ref{fig:irregular_output} shows the output format from ETTh2.
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.95\columnwidth}{
+\textbf{Irregular Agent Output} \\[0.5em]
+\textit{[CoT Reasoning]} \textbf{Pattern Recognition:} Historical data shows a slight downward trend with high seasonality. The values fluctuate but generally decrease over time, indicating cyclical behavior. \textbf{Backbone Assessment:} Backbone predictions are slightly off as they predict a stronger downward trend than historical data suggests. They under-predict the mean and volatility compared to historical patterns. \textbf{Uncertainty Consideration:} Confidence should be moderate due to high residual noise (0.2549) indicating significant unexplained variation. The heavy tail difference in kurtosis suggests occasional extreme values. \textbf{Held-out Training Context:} Mean error of 0.0510 and standard deviation of 0.4510, suggesting the backbone under-predicts slightly. \\[0.5em]
+\textit{[Reflection]} Given the historical data's slight downward trend and high seasonality, we should DAMPEN backbone predictions (scale $<$ 1.0). A POSITIVE bias is needed since the model under-predicts slightly. A MODERATE gate ($\approx$ 0.5) balances adjustment and uncertainty. \\[0.5em]
+\textit{[Control Signal]} Dampen slightly, add positive bias, apply moderate correction strength.
+}}
+\caption{Chain-of-thought output from irregular agent on ETTh2.}
+\label{fig:irregular_output}
+\end{figure}
+
+We use text for the irregular component because, unlike trend (characterized by slope) or seasonality (period and amplitude), irregularity lacks a compact parametric description. Phrases like ``high residual noise (0.2549)'' and ``heavy tail difference in kurtosis'' convey nuance that a 4D vector cannot capture. The embedding allows the decoder to learn associations between linguistic descriptions and appropriate corrections.

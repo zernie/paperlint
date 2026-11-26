@@ -3,14 +3,14 @@
   "hardCap": 5,
   "maxPages": 4,
   "quotas": {
-    "ml": 18,
-    "nlp": 12,
-    "ai": 8,
-    "security": 10,
-    "se": 8,
-    "hci": 8,
-    "systems": 10,
-    "other": 6
+    "ml": 30,
+    "nlp": 24,
+    "ai": 16,
+    "security": 20,
+    "se": 16,
+    "hci": 16,
+    "systems": 20,
+    "other": 12
   },
   "slots": [
     {

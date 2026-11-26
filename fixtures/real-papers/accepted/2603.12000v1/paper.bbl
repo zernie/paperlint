@@ -1,0 +1,910 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{63}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Abidin(2016)]%
+        {AbidinVisibility2016}
+\bibfield{author}{\bibinfo{person}{Crystal Abidin}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{{Visibility Labour: Engaging with Influencers’
+  Fashion Brands and \#OOTD Campaigns on Instagram}}.
+\newblock \bibinfo{journal}{\emph{Media International Australia}}
+  \bibinfo{volume}{161}, \bibinfo{number}{1} (\bibinfo{year}{2016}),
+  \bibinfo{pages}{86--100}.
+\newblock
+\href{https://doi.org/10.1177/1329878X16665177}{doi:\nolinkurl{10.1177/1329878X16665177}}
+
+
+\bibitem[Abidin(2018)]%
+        {AbidinInternetCelebrity2018}
+\bibfield{author}{\bibinfo{person}{Crystal Abidin}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Internet Celebrity: Understanding Fame
+  Online}}}.
+\newblock \bibinfo{publisher}{Emerald Publishing Limited},
+  \bibinfo{address}{Bingley, UK}.
+\newblock
+\href{https://doi.org/10.1108/9781787560765}{doi:\nolinkurl{10.1108/9781787560765}}
+
+
+\bibitem[Abramova et~al\mbox{.}(2021)]%
+        {Abramova2021}
+\bibfield{author}{\bibinfo{person}{Svetlana Abramova}, \bibinfo{person}{Artemij
+  Voskobojnikov}, \bibinfo{person}{Konstantin Beznosov}, {and}
+  \bibinfo{person}{Rainer B\"{o}hme}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{Bits Under the Mattress: Understanding Different
+  Risk Perceptions and Security Behaviors of Crypto-Asset Users}}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2021 CHI Conference on Human
+  Factors in Computing Systems}} (Yokohama, Japan) \emph{(\bibinfo{series}{CHI
+  '21})}. \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, Article \bibinfo{articleno}{692},
+  \bibinfo{numpages}{19}~pages.
+\newblock
+\showISBNx{9781450380966}
+\href{https://doi.org/10.1145/3411764.3445679}{doi:\nolinkurl{10.1145/3411764.3445679}}
+
+
+\bibitem[{Advertising Standards Authority (UK)} and {{Committee of Advertising
+  Practice}}(2023)]%
+        {ASAInfluencer2023}
+\bibfield{author}{\bibinfo{person}{{Advertising Standards Authority (UK)}}
+  {and} \bibinfo{person}{{{Committee of Advertising Practice}}}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{Influencers' Guide to Making Clear that Ads are
+  Ads}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.asa.org.uk/static/b3d29825-db12-44c2-bfcff1b344b564b3/Influencerguidance2023v4-FINAL-DMMCA-Holding1.pdf}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-09-11}.
+
+
+\bibitem[Alacovska et~al\mbox{.}(2025)]%
+        {AlacovskaSpeculativeLabour2024}
+\bibfield{author}{\bibinfo{person}{Ana Alacovska}, \bibinfo{person}{Christian
+  Fieseler}, {and} \bibinfo{person}{Victor Renza~Avellaneda}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Speculative Labour: The Financialized Imagination
+  of Creative Work and the Assetization of Digital Art through Non-Fungible
+  Tokens (NFTs)}}.
+\newblock \bibinfo{journal}{\emph{New Media \& Society}}
+  (\bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1177/14614448251317693}{doi:\nolinkurl{10.1177/14614448251317693}}
+
+
+\bibitem[Ante(2023)]%
+        {AnteMuskCrypto2023}
+\bibfield{author}{\bibinfo{person}{Lennart Ante}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{How Elon Musk’s Twitter Activity Moves
+  Cryptocurrency Markets}}.
+\newblock \bibinfo{journal}{\emph{Technological Forecasting and Social Change}}
+   \bibinfo{volume}{186} (\bibinfo{year}{2023}), \bibinfo{pages}{122112}.
+\newblock
+\href{https://doi.org/10.1016/j.techfore.2022.122112}{doi:\nolinkurl{10.1016/j.techfore.2022.122112}}
+
+
+\bibitem[Bappy et~al\mbox{.}(2025)]%
+        {BappyCentralizedTrust2025}
+\bibfield{author}{\bibinfo{person}{Faisal~Haque Bappy},
+  \bibinfo{person}{EunJeong Cheon}, {and} \bibinfo{person}{Tariqul Islam}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Centralized Trust in Decentralized Systems:
+  Unveiling Hidden Contradictions in Blockchain and Cryptocurrency}}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2025 ACM Conference on Fairness,
+  Accountability, and Transparency}} \emph{(\bibinfo{series}{FAccT '25})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1960--1971}.
+\newblock
+\showISBNx{9798400714825}
+\href{https://doi.org/10.1145/3715275.3732130}{doi:\nolinkurl{10.1145/3715275.3732130}}
+
+
+\bibitem[Baym(2018)]%
+        {BaymPlaying2018}
+\bibfield{author}{\bibinfo{person}{Nancy~K. Baym}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Playing to the Crowd: Musicians,
+  Audiences, and the Intimate Work of Connection}}}.
+\newblock \bibinfo{publisher}{New York University Press}, \bibinfo{address}{New
+  York}.
+\newblock
+\href{https://doi.org/10.18574/nyu/9781479896165.001.0001}{doi:\nolinkurl{10.18574/nyu/9781479896165.001.0001}}
+
+
+\bibitem[Beierlein and McCoy(2025)]%
+        {beierlein2025creating}
+\bibfield{author}{\bibinfo{person}{Jaclyn~J. Beierlein} {and}
+  \bibinfo{person}{Lexi McCoy}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Creating and Testing a Personal Finance Motivation
+  Scale based on Self-Determination Theory}}.
+\newblock \bibinfo{journal}{\emph{Financial Planning Review}}
+  \bibinfo{volume}{8}, \bibinfo{number}{2} (\bibinfo{year}{2025}),
+  \bibinfo{pages}{1--14}.
+\newblock
+\href{https://doi.org/10.1002/cfp2.70009}{doi:\nolinkurl{10.1002/cfp2.70009}}
+
+
+\bibitem[Boerman et~al\mbox{.}(2017)]%
+        {boerman2017}
+\bibfield{author}{\bibinfo{person}{Sophie~C. Boerman},
+  \bibinfo{person}{Lotte~M. Willemsen}, {and} \bibinfo{person}{Elske~P. Van
+  Der~Aa}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{``This Post Is Sponsored'': Effects of Sponsorship
+  Disclosure on Persuasion Knowledge and Electronic Word of Mouth in the
+  Context of {Facebook}}}.
+\newblock \bibinfo{journal}{\emph{Journal of Interactive Marketing}}
+  \bibinfo{volume}{38} (\bibinfo{year}{2017}), \bibinfo{pages}{82--92}.
+\newblock
+\href{https://doi.org/10.1016/j.intmar.2016.12.002}{doi:\nolinkurl{10.1016/j.intmar.2016.12.002}}
+
+
+\bibitem[Cernera et~al\mbox{.}(2023)]%
+        {Cernera2023rugpulls}
+\bibfield{author}{\bibinfo{person}{Federico Cernera}, \bibinfo{person}{Massimo
+  La~Morgia}, \bibinfo{person}{Alessandro Mei}, {and}
+  \bibinfo{person}{Francesco Sassi}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{Token Spammers, Rug Pulls, and Sniper Bots: An
+  Analysis of the Ecosystem of Tokens in {Ethereum} and in the {Binance Smart
+  Chain} ({BNB})}}. In \bibinfo{booktitle}{\emph{32nd {USENIX} Security
+  Symposium ({USENIX} Security 23)}}. \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{address}{Anaheim, CA}, \bibinfo{pages}{3349--3366}.
+\newblock
+
+
+\bibitem[Cotter(2019)]%
+        {CotterVisibilityGame2019}
+\bibfield{author}{\bibinfo{person}{Kelley Cotter}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{{Playing the Visibility Game: How Digital
+  Influencers and Algorithms Negotiate Influence on Instagram}}.
+\newblock \bibinfo{journal}{\emph{New Media \& Society}} \bibinfo{volume}{21},
+  \bibinfo{number}{4} (\bibinfo{year}{2019}), \bibinfo{pages}{895--913}.
+\newblock
+\href{https://doi.org/10.1177/1461444818815684}{doi:\nolinkurl{10.1177/1461444818815684}}
+
+
+\bibitem[Deci and Ryan(1985)]%
+        {DeciRyan1985}
+\bibfield{author}{\bibinfo{person}{Edward~L. Deci} {and}
+  \bibinfo{person}{Richard~M. Ryan}.} \bibinfo{year}{1985}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Intrinsic Motivation and
+  Self-Determination in Human Behavior}}}.
+\newblock \bibinfo{publisher}{Springer}, \bibinfo{address}{New York}.
+\newblock
+\href{https://doi.org/10.1007/978-1-4899-2271-7}{doi:\nolinkurl{10.1007/978-1-4899-2271-7}}
+
+
+\bibitem[Deci and Ryan(2000)]%
+        {deci2000}
+\bibfield{author}{\bibinfo{person}{Edward~L. Deci} {and}
+  \bibinfo{person}{Richard~M. Ryan}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{{The ``What'' and ``Why'' of Goal Pursuits: Human
+  Needs and the Self-Determination of Behavior}}.
+\newblock \bibinfo{journal}{\emph{Psychological Inquiry}} \bibinfo{volume}{11},
+  \bibinfo{number}{4} (\bibinfo{year}{2000}), \bibinfo{pages}{227--268}.
+\newblock
+\href{https://doi.org/10.1207/S15327965PLI1104_01}{doi:\nolinkurl{10.1207/S15327965PLI1104_01}}
+
+
+\bibitem[Duffy(2017)]%
+        {DuffyAspirationalWork2017}
+\bibfield{author}{\bibinfo{person}{Brooke~Erin Duffy}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{(Not) Getting Paid to Do What You Love:
+  Gender, Social Media, and Aspirational Work}}}.
+\newblock \bibinfo{publisher}{Yale University Press}, \bibinfo{address}{New
+  Haven}.
+\newblock
+\showISBNx{9780300218176}
+\urldef\tempurl%
+\url{http://www.jstor.org/stable/j.ctt1q31skt}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Duffy et~al\mbox{.}(2021)]%
+        {DuffyNestedPrecarities2021}
+\bibfield{author}{\bibinfo{person}{Brooke~Erin Duffy},
+  \bibinfo{person}{Adrienne Pinch}, \bibinfo{person}{Stephanie Sannon}, {and}
+  \bibinfo{person}{Mary Sawey}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{The Nested Precarities of Creative Labor on Social
+  Media}}.
+\newblock \bibinfo{journal}{\emph{Social Media + Society}} \bibinfo{volume}{7},
+  \bibinfo{number}{2} (\bibinfo{year}{2021}), \bibinfo{pages}{1--12}.
+\newblock
+\href{https://doi.org/10.1177/20563051211021368}{doi:\nolinkurl{10.1177/20563051211021368}}
+
+
+\bibitem[Duffy et~al\mbox{.}(2019)]%
+        {DuffyPlatformPractices2019}
+\bibfield{author}{\bibinfo{person}{Brooke~Erin Duffy}, \bibinfo{person}{Thomas
+  Poell}, {and} \bibinfo{person}{David~B. Nieborg}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{{Platform Practices in the Cultural Industries:
+  Creativity, Labor, and Citizenship}}.
+\newblock \bibinfo{journal}{\emph{Social Media + Society}} \bibinfo{volume}{5},
+  \bibinfo{number}{4} (\bibinfo{year}{2019}), \bibinfo{pages}{1--8}.
+\newblock
+\href{https://doi.org/10.1177/2056305119879672}{doi:\nolinkurl{10.1177/2056305119879672}}
+
+
+\bibitem[Enke and Borchers(2019)]%
+        {Enke2019}
+\bibfield{author}{\bibinfo{person}{Nadja Enke} {and} \bibinfo{person}{Nils~S.
+  Borchers}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{{Social Media Influencers in Strategic
+  Communication: A Conceptual Framework}}.
+\newblock \bibinfo{journal}{\emph{International Journal of Strategic
+  Communication}} \bibinfo{volume}{13}, \bibinfo{number}{2}
+  (\bibinfo{year}{2019}), \bibinfo{pages}{85--100}.
+\newblock
+\href{https://doi.org/10.1080/1553118X.2019.1634075}{doi:\nolinkurl{10.1080/1553118X.2019.1634075}}
+
+
+\bibitem[Eskandari et~al\mbox{.}(2015)]%
+        {MoserBitcoinUsability2013}
+\bibfield{author}{\bibinfo{person}{Shayan Eskandari}, \bibinfo{person}{Jeremy
+  Clark}, \bibinfo{person}{David Barrera}, {and} \bibinfo{person}{Elizabeth
+  Stobert}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{{A First Look at the Usability of Bitcoin Key
+  Management}}. In \bibinfo{booktitle}{\emph{NDSS Workshop on Usable Security
+  (USEC)}}. \bibinfo{pages}{1--10}.
+\newblock
+\href{https://doi.org/10.14722/usec.2015.23015}{doi:\nolinkurl{10.14722/usec.2015.23015}}
+
+
+\bibitem[{European Securities and Markets Authority}(2023)]%
+        {ESMA2023MiCAR}
+\bibfield{author}{\bibinfo{person}{{European Securities and Markets
+  Authority}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Consultation Paper: Technical Standards
+  Specifying Certain Requirements of the Markets in Crypto-Assets Regulation
+  ({MiCA}) --- 1st Package}}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport} ESMA74-449133380-425.
+  \bibinfo{institution}{European Securities and Markets Authority}.
+\newblock
+\urldef\tempurl%
+\url{https://www.esma.europa.eu/sites/default/files/2023-07/ESMA74-449133380-425_MiCA_Consultation_Paper_1st_package.pdf}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-09-11}.
+
+
+\bibitem[{Federal Trade Commission}(2023)]%
+        {FTC2023EndorsementGuides}
+\bibfield{author}{\bibinfo{person}{{Federal Trade Commission}}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{Guides Concerning the Use of Endorsements and
+  Testimonials in Advertising}}.
+\newblock \bibinfo{howpublished}{Federal Register, 88(142), 48092--48112.
+  16~{CFR}~Part~255}.
+\newblock
+\urldef\tempurl%
+\url{https://www.federalregister.gov/documents/2023/07/26/2023-14795/guides-concerning-the-use-of-endorsements-and-testimonials-in-advertising}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Final rule; effective July 26, 2023}.
+
+
+\bibitem[{Financial Conduct Authority}(2023)]%
+        {FCA2023Finfluencer}
+\bibfield{author}{\bibinfo{person}{{Financial Conduct Authority}}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{GC23/2: Financial Promotions on Social
+  Media -- Guidance Consultation}}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport} GC23/2.
+  \bibinfo{institution}{{Financial Conduct Authority}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.fca.org.uk/publication/guidance-consultation/gc23-2.pdf}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-09-11}.
+
+
+\bibitem[Flanagin and Metzger(2007)]%
+        {Flanagin2007UGC}
+\bibfield{author}{\bibinfo{person}{Andrew~J. Flanagin} {and}
+  \bibinfo{person}{Miriam~J. Metzger}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{{The Role of Site Features, User Attributes, and
+  Information Verification Behaviors on the Perceived Credibility of Web-based
+  Information}}.
+\newblock \bibinfo{journal}{\emph{New Media \& Society}} \bibinfo{volume}{9},
+  \bibinfo{number}{2} (\bibinfo{year}{2007}), \bibinfo{pages}{319--342}.
+\newblock
+\href{https://doi.org/10.1177/1461444807075015}{doi:\nolinkurl{10.1177/1461444807075015}}
+
+
+\bibitem[Fogg et~al\mbox{.}(2001)]%
+        {fogg2001credibility}
+\bibfield{author}{\bibinfo{person}{B.~J. Fogg}, \bibinfo{person}{Jonathan
+  Marshall}, \bibinfo{person}{Othman Laraki}, \bibinfo{person}{Alex Osipovich},
+  \bibinfo{person}{Chris Varma}, \bibinfo{person}{Nicholas Fang},
+  \bibinfo{person}{Jyoti Paul}, \bibinfo{person}{Akshay Rangnekar},
+  \bibinfo{person}{John Shon}, \bibinfo{person}{Preeti Swani}, {and}
+  \bibinfo{person}{Marissa Treinen}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{{What Makes Web Sites Credible? A Report on a Large
+  Quantitative Study}}. In \bibinfo{booktitle}{\emph{Proceedings of the {ACM}
+  {CHI} Conference on Human Factors in Computing Systems}} (Seattle,
+  Washington, {USA}) \emph{(\bibinfo{series}{{CHI} '01})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{61--68}.
+\newblock
+\href{https://doi.org/10.1145/365024.365037}{doi:\nolinkurl{10.1145/365024.365037}}
+
+
+\bibitem[Franck(2019)]%
+        {franck2019economy}
+\bibfield{author}{\bibinfo{person}{Georg Franck}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{{The Economy of Attention}}.
+\newblock \bibinfo{journal}{\emph{Journal of Sociology}} \bibinfo{volume}{55},
+  \bibinfo{number}{1} (\bibinfo{year}{2019}), \bibinfo{pages}{8--19}.
+\newblock
+\href{https://doi.org/10.1177/1440783318811778}{doi:\nolinkurl{10.1177/1440783318811778}}
+
+
+\bibitem[Guan(2023)]%
+        {GuanFinfluencer2023}
+\bibfield{author}{\bibinfo{person}{Sunny~Shuyang Guan}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{The Rise of the Finfluencer}}.
+\newblock \bibinfo{journal}{\emph{NYU Journal of Law \& Business}}
+  \bibinfo{volume}{19} (\bibinfo{year}{2023}), \bibinfo{pages}{489--560}.
+\newblock
+
+
+\bibitem[Haase et~al\mbox{.}(2025)]%
+        {HaaseFinfluencersSentiment2025}
+\bibfield{author}{\bibinfo{person}{Frederic Haase}, \bibinfo{person}{Oliver
+  Rath}, \bibinfo{person}{Jonas Krau{\ss}}, {and} \bibinfo{person}{Detlef
+  Schoder}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{The Role of Finfluencers in Shaping Crowd
+  Sentiment: An Empirical Investigation}}.
+\newblock \bibinfo{journal}{\emph{Business \& Information Systems Engineering}}
+  (\bibinfo{year}{2025}).
+\newblock
+\href{https://doi.org/10.1007/s12599-025-00947-1}{doi:\nolinkurl{10.1007/s12599-025-00947-1}}
+
+
+\bibitem[Hasanah et~al\mbox{.}(2025)]%
+        {NurhandayaniWhoDeserves2025}
+\bibfield{author}{\bibinfo{person}{Eneng~Nur Hasanah},
+  \bibinfo{person}{Deddy~Priatmodjo Koesrindartoto},
+  \bibinfo{person}{Sudarso~Kaderi Wiryono}, {and} \bibinfo{person}{Agnes~Enya
+  Angelica}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Who Deserves to Be the Finfluencer?}}
+\newblock \bibinfo{journal}{\emph{Journal of Open Innovation: Technology,
+  Market, and Complexity}} \bibinfo{volume}{11}, \bibinfo{number}{2}
+  (\bibinfo{year}{2025}), \bibinfo{pages}{100553}.
+\newblock
+\href{https://doi.org/10.1016/j.joitmc.2025.100553}{doi:\nolinkurl{10.1016/j.joitmc.2025.100553}}
+
+
+\bibitem[Hayes and Ben-Shmuel(2024)]%
+        {HayesFinfluence2024}
+\bibfield{author}{\bibinfo{person}{Adam~S. Hayes} {and}
+  \bibinfo{person}{Ambreen~T. Ben-Shmuel}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Under the Finfluence: Financial Influencers,
+  Economic Meaning-making and the Financialization of Digital Life}}.
+\newblock \bibinfo{journal}{\emph{Economy and Society}} \bibinfo{volume}{53},
+  \bibinfo{number}{3} (\bibinfo{year}{2024}), \bibinfo{pages}{478--503}.
+\newblock
+\href{https://doi.org/10.1080/03085147.2024.2381980}{doi:\nolinkurl{10.1080/03085147.2024.2381980}}
+
+
+\bibitem[{International Organization of Securities Commissions}(2023)]%
+        {IOSCO2023Crypto}
+\bibfield{author}{\bibinfo{person}{{International Organization of Securities
+  Commissions}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Policy Recommendations for Crypto and
+  Digital Asset Markets: Final Report}}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport} FR11/23.
+  \bibinfo{institution}{{International Organization of Securities
+  Commissions}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.iosco.org/library/pubdocs/pdf/IOSCOPD747.pdf}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-09-11}.
+
+
+\bibitem[Khairuddin et~al\mbox{.}(2016)]%
+        {KhairuddinBitcoinMotivations2016}
+\bibfield{author}{\bibinfo{person}{Irni~Eliana Khairuddin},
+  \bibinfo{person}{Corina Sas}, \bibinfo{person}{Sarah Clinch}, {and}
+  \bibinfo{person}{Nigel Davies}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{{Exploring Motivations for Bitcoin Technology
+  Usage}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2016 CHI Conference
+  Extended Abstracts on Human Factors in Computing Systems}} (San Jose,
+  California, USA) \emph{(\bibinfo{series}{CHI EA '16})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{2872--2878}.
+\newblock
+\showISBNx{9781450340823}
+\href{https://doi.org/10.1145/2851581.2892500}{doi:\nolinkurl{10.1145/2851581.2892500}}
+
+
+\bibitem[Khamis et~al\mbox{.}(2017)]%
+        {Khamis2017}
+\bibfield{author}{\bibinfo{person}{Susie Khamis}, \bibinfo{person}{Li Ang},
+  {and} \bibinfo{person}{Rob Welling}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{Self-branding, `Micro-celebrity' and the Rise of
+  Social Media Influencers}}.
+\newblock \bibinfo{journal}{\emph{Celebrity Studies}} \bibinfo{volume}{8},
+  \bibinfo{number}{2} (\bibinfo{year}{2017}), \bibinfo{pages}{191--208}.
+\newblock
+\href{https://doi.org/10.1080/19392397.2016.1218292}{doi:\nolinkurl{10.1080/19392397.2016.1218292}}
+
+
+\bibitem[Krombholz et~al\mbox{.}(2017)]%
+        {Krombholz2016}
+\bibfield{author}{\bibinfo{person}{Katharina Krombholz},
+  \bibinfo{person}{Aljosha Judmayer}, \bibinfo{person}{Matthias Gusenbauer},
+  {and} \bibinfo{person}{Edgar Weippl}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{The Other Side of the Coin: User Experiences with
+  {Bitcoin} Security and Privacy}}. In \bibinfo{booktitle}{\emph{Financial
+  Cryptography and Data Security (FC)}}. \bibinfo{publisher}{Springer},
+  \bibinfo{address}{Berlin, Heidelberg}, \bibinfo{pages}{555--580}.
+\newblock
+\href{https://doi.org/10.1007/978-3-662-54970-4_33}{doi:\nolinkurl{10.1007/978-3-662-54970-4_33}}
+
+
+\bibitem[Labrecque(2014)]%
+        {Labrecque2014}
+\bibfield{author}{\bibinfo{person}{Lauren~I. Labrecque}.}
+  \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{{Fostering Consumer-Brand Relationships in Social
+  Media Environments: The Role of Parasocial Interaction}}.
+\newblock \bibinfo{journal}{\emph{Journal of Interactive Marketing}}
+  \bibinfo{volume}{28}, \bibinfo{number}{2} (\bibinfo{year}{2014}),
+  \bibinfo{pages}{134--148}.
+\newblock
+\href{https://doi.org/10.1016/j.intmar.2013.12.003}{doi:\nolinkurl{10.1016/j.intmar.2013.12.003}}
+
+
+\bibitem[Libai et~al\mbox{.}(2025)]%
+        {libai2025influencer}
+\bibfield{author}{\bibinfo{person}{Barak Libai}, \bibinfo{person}{Ana
+  Babic~Rosario}, \bibinfo{person}{Maximilian Beichert}, \bibinfo{person}{Bas
+  Donkers}, \bibinfo{person}{Michael Haenlein}, \bibinfo{person}{Reto
+  Hofstetter}, \bibinfo{person}{P.~K. Kannan}, \bibinfo{person}{Ralf van~der
+  Lans}, \bibinfo{person}{Andreas Lanz}, \bibinfo{person}{H.~Alice Li},
+  \bibinfo{person}{Dina Mayzlin}, \bibinfo{person}{Eitan Muller},
+  \bibinfo{person}{Daniel Shapira}, \bibinfo{person}{Jeremy Yang}, {and}
+  \bibinfo{person}{Lingling Zhang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Influencer Marketing Unlocked: Understanding the
+  Value Chains Driving the Creator Economy}}.
+\newblock \bibinfo{journal}{\emph{Journal of the Academy of Marketing Science}}
+  \bibinfo{volume}{53}, \bibinfo{number}{1} (\bibinfo{year}{2025}),
+  \bibinfo{pages}{4--28}.
+\newblock
+\href{https://doi.org/10.1007/s11747-024-01073-2}{doi:\nolinkurl{10.1007/s11747-024-01073-2}}
+
+
+\bibitem[Liu and Liu(2021)]%
+        {LiuAnxietyCommunities2021}
+\bibfield{author}{\bibinfo{person}{Jingfang Liu} {and} \bibinfo{person}{Yafei
+  Liu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{Motivation Research on the Content Creation
+  Behaviour of Young Adults in Anxiety Disorder Online Communities}}.
+\newblock \bibinfo{journal}{\emph{International Journal of Environmental
+  Research and Public Health}} \bibinfo{volume}{18}, \bibinfo{number}{17}
+  (\bibinfo{year}{2021}), \bibinfo{pages}{9187}.
+\newblock
+\href{https://doi.org/10.3390/ijerph18179187}{doi:\nolinkurl{10.3390/ijerph18179187}}
+
+
+\bibitem[Lou and Yuan(2019)]%
+        {Lou2019}
+\bibfield{author}{\bibinfo{person}{Chen Lou} {and} \bibinfo{person}{Shupei
+  Yuan}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{{Influencer Marketing: How Message Value and
+  Credibility Affect Consumer Trust of Branded Content on Social Media}}.
+\newblock \bibinfo{journal}{\emph{Journal of Interactive Advertising}}
+  \bibinfo{volume}{19}, \bibinfo{number}{1} (\bibinfo{year}{2019}),
+  \bibinfo{pages}{58--73}.
+\newblock
+\href{https://doi.org/10.1080/15252019.2018.1533501}{doi:\nolinkurl{10.1080/15252019.2018.1533501}}
+
+
+\bibitem[Lucchini et~al\mbox{.}(2022)]%
+        {LucchiniGamestopWSB2022}
+\bibfield{author}{\bibinfo{person}{Lorenzo Lucchini},
+  \bibinfo{person}{Luca~Maria Aiello}, \bibinfo{person}{Laura Alessandretti},
+  \bibinfo{person}{Gianmarco De~Francisci~Morales}, \bibinfo{person}{Michele
+  Starnini}, {and} \bibinfo{person}{Andrea Baronchelli}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{From Reddit to Wall Street: The Role of Committed
+  Minorities in Financial Collective Action}}.
+\newblock \bibinfo{journal}{\emph{Royal Society Open Science}}
+  \bibinfo{volume}{9}, \bibinfo{number}{4} (\bibinfo{year}{2022}),
+  \bibinfo{pages}{211488}.
+\newblock
+\href{https://doi.org/10.1098/rsos.211488}{doi:\nolinkurl{10.1098/rsos.211488}}
+
+
+\bibitem[Mai et~al\mbox{.}(2020)]%
+        {Mai2020}
+\bibfield{author}{\bibinfo{person}{Alexandra Mai}, \bibinfo{person}{Katharina
+  Pfeffer}, \bibinfo{person}{Matthias Gusenbauer}, {and}
+  \bibinfo{person}{Katharina Krombholz}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{User Mental Models of Cryptocurrency Systems: A
+  Grounded Theory Approach}}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  Sixteenth USENIX Conference on Usable Privacy and Security}}
+  \emph{(\bibinfo{series}{SOUPS'20})}. \bibinfo{publisher}{{USENIX}
+  Association}, \bibinfo{address}{Berkeley, CA, {USA}}, Article
+  \bibinfo{articleno}{19}, \bibinfo{numpages}{18}~pages.
+\newblock
+
+
+\bibitem[Marwick(2013)]%
+        {MarwickStatusUpdate2013}
+\bibfield{author}{\bibinfo{person}{Alice~E. Marwick}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Status Update: Celebrity, Publicity, and
+  Branding in the Social Media Age}}}.
+\newblock \bibinfo{publisher}{Yale University Press}, \bibinfo{address}{New
+  Haven}.
+\newblock
+\href{https://doi.org/10.12987/9780300199154}{doi:\nolinkurl{10.12987/9780300199154}}
+
+
+\bibitem[Merkley et~al\mbox{.}(2024)]%
+        {Merkley2024}
+\bibfield{author}{\bibinfo{person}{Kenneth~J. Merkley}, \bibinfo{person}{Joseph
+  Pacelli}, \bibinfo{person}{Mark Piorkowski}, {and} \bibinfo{person}{Brian
+  Williams}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Crypto-Influencers}}.
+\newblock \bibinfo{journal}{\emph{Review of Accounting Studies}}
+  \bibinfo{volume}{29} (\bibinfo{year}{2024}), \bibinfo{pages}{2254--2297}.
+\newblock
+\href{https://doi.org/10.1007/s11142-024-09838-4}{doi:\nolinkurl{10.1007/s11142-024-09838-4}}
+
+
+\bibitem[Metzger and Flanagin(2013)]%
+        {Metzger2013CredibilityReview}
+\bibfield{author}{\bibinfo{person}{Miriam~J. Metzger} {and}
+  \bibinfo{person}{Andrew~J. Flanagin}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{{Credibility and Trust of Information in Online
+  Environments: The Use of Cognitive Heuristics}}.
+\newblock \bibinfo{journal}{\emph{Journal of Pragmatics}}  \bibinfo{volume}{59}
+  (\bibinfo{year}{2013}), \bibinfo{pages}{210--220}.
+\newblock
+\href{https://doi.org/10.1016/j.pragma.2013.07.012}{doi:\nolinkurl{10.1016/j.pragma.2013.07.012}}
+
+
+\bibitem[Meyer et~al\mbox{.}(2023)]%
+        {MeyerHighOnBitcoin2023}
+\bibfield{author}{\bibinfo{person}{Eva~Andrea Meyer}, \bibinfo{person}{Philipp
+  Sandner}, \bibinfo{person}{Bernard Cloutier}, {and}
+  \bibinfo{person}{Isabell~M. Welpe}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{High on Bitcoin: Evidence of Emotional Contagion
+  in the YouTube Crypto Influencer Space}}.
+\newblock \bibinfo{journal}{\emph{Journal of Business Research}}
+  \bibinfo{volume}{164} (\bibinfo{year}{2023}), \bibinfo{pages}{113850}.
+\newblock
+\href{https://doi.org/10.1016/j.jbusres.2023.113850}{doi:\nolinkurl{10.1016/j.jbusres.2023.113850}}
+
+
+\bibitem[{Monetary Authority of Singapore}(2024)]%
+        {MAS2024crypto}
+\bibfield{author}{\bibinfo{person}{{Monetary Authority of Singapore}}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Guidelines on Provision of Digital Payment
+  Token Services to the Public}}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport} PS-G02.
+  \bibinfo{institution}{{Monetary Authority of Singapore}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.mas.gov.sg/regulation/guidelines/ps-g02-guidelines-on-provision-of-dpt-services}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-12-03}.
+
+
+\bibitem[Moser and Brauneis(2023)]%
+        {Moser2023}
+\bibfield{author}{\bibinfo{person}{Stefanie Moser} {and}
+  \bibinfo{person}{Alexander Brauneis}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{Should You Listen to Crypto {YouTube}rs?}}
+\newblock \bibinfo{journal}{\emph{Finance Research Letters}}
+  \bibinfo{volume}{54}, \bibinfo{number}{5} (\bibinfo{year}{2023}),
+  \bibinfo{pages}{103782}.
+\newblock
+\href{https://doi.org/10.1016/j.frl.2023.103782}{doi:\nolinkurl{10.1016/j.frl.2023.103782}}
+
+
+\bibitem[Nov(2007)]%
+        {NovMotivatesWikipedians2007}
+\bibfield{author}{\bibinfo{person}{Oded Nov}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{{What Motivates Wikipedians?}}
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{50},
+  \bibinfo{number}{11} (\bibinfo{year}{2007}), \bibinfo{pages}{60--64}.
+\newblock
+\href{https://doi.org/10.1145/1297797.1297798}{doi:\nolinkurl{10.1145/1297797.1297798}}
+
+
+\bibitem[Oak and Shafiq(2025)]%
+        {OakScamReddit2025}
+\bibfield{author}{\bibinfo{person}{Rajvardhan Oak} {and}
+  \bibinfo{person}{Zubair Shafiq}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Victims, Vigilantes, and Advice Givers: An
+  Analysis of Scam-related Discourse on Reddit}}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the Twenty-First USENIX Conference
+  on Usable Privacy and Security}} (Seattle, WA, USA)
+  \emph{(\bibinfo{series}{SOUPS '25})}. \bibinfo{publisher}{USENIX
+  Association}, \bibinfo{address}{USA}, Article \bibinfo{articleno}{4},
+  \bibinfo{numpages}{15}~pages.
+\newblock
+\showISBNx{978-1-939133-51-9}
+
+
+\bibitem[Olafsen et~al\mbox{.}(2025)]%
+        {olafsen2025crafting}
+\bibfield{author}{\bibinfo{person}{Anja~H. Olafsen}, \bibinfo{person}{Baptiste
+  P.~C. Marescaux}, {and} \bibinfo{person}{Miika Kujanp{\"a}{\"a}}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Crafting for Autonomy, Competence, and
+  Relatedness: A Self-Determination Theory Model of Need Crafting at Work}}.
+\newblock \bibinfo{journal}{\emph{Applied Psychology}} \bibinfo{volume}{74},
+  \bibinfo{number}{1} (\bibinfo{year}{2025}), \bibinfo{pages}{1--26}.
+\newblock
+\href{https://doi.org/10.1111/apps.12570}{doi:\nolinkurl{10.1111/apps.12570}}
+
+
+\bibitem[Pan et~al\mbox{.}(2025)]%
+        {pan2025}
+\bibfield{author}{\bibinfo{person}{Meizhi Pan}, \bibinfo{person}{Markus Blut},
+  \bibinfo{person}{Arezou Ghiassaleh}, {and} \bibinfo{person}{Zach W.~Y. Lee}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Influencer Marketing Effectiveness: A
+  Meta-Analytic Review}}.
+\newblock \bibinfo{journal}{\emph{Journal of the Academy of Marketing Science}}
+  \bibinfo{volume}{53}, \bibinfo{number}{1} (\bibinfo{year}{2025}),
+  \bibinfo{pages}{52--78}.
+\newblock
+\href{https://doi.org/10.1007/s11747-024-01052-7}{doi:\nolinkurl{10.1007/s11747-024-01052-7}}
+
+
+\bibitem[Reinikainen et~al\mbox{.}(2020)]%
+        {Reinikainen2020}
+\bibfield{author}{\bibinfo{person}{Hanna Reinikainen}, \bibinfo{person}{Juha
+  Munnukka}, \bibinfo{person}{Devdeep Maity}, {and} \bibinfo{person}{Vilma
+  Luoma-aho}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{{``}You really are a great big sister{''} --
+  Parasocial Relationships, Credibility, and the Moderating Role of Audience
+  Comments in Influencer Marketing}}.
+\newblock \bibinfo{journal}{\emph{Journal of Marketing Management}}
+  \bibinfo{volume}{36}, \bibinfo{number}{3-4} (\bibinfo{year}{2020}),
+  \bibinfo{pages}{279--298}.
+\newblock
+\href{https://doi.org/10.1080/0267257X.2019.1708781}{doi:\nolinkurl{10.1080/0267257X.2019.1708781}}
+
+
+\bibitem[Reis et~al\mbox{.}(2000)]%
+        {Reis2000DailyWellBeing}
+\bibfield{author}{\bibinfo{person}{Harry~T. Reis}, \bibinfo{person}{Kennon~M.
+  Sheldon}, \bibinfo{person}{Shelly~L. Gable}, \bibinfo{person}{Joseph Roscoe},
+  {and} \bibinfo{person}{Richard~M. Ryan}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{{Daily Well-being: The Role of Autonomy,
+  Competence, and Relatedness}}.
+\newblock \bibinfo{journal}{\emph{Personality and Social Psychology Bulletin}}
+  \bibinfo{volume}{26}, \bibinfo{number}{4} (\bibinfo{year}{2000}),
+  \bibinfo{pages}{419--435}.
+\newblock
+\href{https://doi.org/10.1177/0146167200266002}{doi:\nolinkurl{10.1177/0146167200266002}}
+
+
+\bibitem[Ryan and Deci(2000)]%
+        {RyanDeci2000}
+\bibfield{author}{\bibinfo{person}{Richard~M. Ryan} {and}
+  \bibinfo{person}{Edward~L. Deci}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{{Self-Determination Theory and the Facilitation of
+  Intrinsic Motivation, Social Development, and Well-being}}.
+\newblock \bibinfo{journal}{\emph{American Psychologist}} \bibinfo{volume}{55},
+  \bibinfo{number}{1} (\bibinfo{year}{2000}), \bibinfo{pages}{68--78}.
+\newblock
+\href{https://doi.org/10.1037/0003-066X.55.1.68}{doi:\nolinkurl{10.1037/0003-066X.55.1.68}}
+
+
+\bibitem[Sas and Khairuddin(2017)]%
+        {SasKhairuddin2017}
+\bibfield{author}{\bibinfo{person}{Corina Sas} {and}
+  \bibinfo{person}{Irni~Eliana Khairuddin}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{Design for Trust: An Exploration of the Challenges
+  and Opportunities of {Bitcoin} Users}}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2017 {ACM} {CHI} Conference on
+  Human Factors in Computing Systems}}. \bibinfo{publisher}{{ACM}},
+  \bibinfo{address}{New York, NY, {USA}}, \bibinfo{pages}{6499--6510}.
+\newblock
+\href{https://doi.org/10.1145/3025453.3025886}{doi:\nolinkurl{10.1145/3025453.3025886}}
+
+
+\bibitem[Schroeder et~al\mbox{.}(2025)]%
+        {Schroeder2025LLMs}
+\bibfield{author}{\bibinfo{person}{Hope Schroeder}, \bibinfo{person}{Marianne
+  Aubin Le~Qu\'{e}r\'{e}}, \bibinfo{person}{Casey Randazzo},
+  \bibinfo{person}{David Mimno}, {and} \bibinfo{person}{Sarita Schoenebeck}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{Large Language Models in Qualitative Research:
+  Uses, Tensions, and Intentions}}. In \bibinfo{booktitle}{\emph{Proceedings of
+  the 2025 {ACM} {CHI} Conference on Human Factors in Computing Systems}}
+  \emph{(\bibinfo{series}{{CHI} '25})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, {USA}}, Article
+  \bibinfo{articleno}{481}, \bibinfo{numpages}{17}~pages.
+\newblock
+\href{https://doi.org/10.1145/3706598.3713120}{doi:\nolinkurl{10.1145/3706598.3713120}}
+
+
+\bibitem[Sharifi~Fard et~al\mbox{.}(2024)]%
+        {sharifi2024basic}
+\bibfield{author}{\bibinfo{person}{Sayed~Ali Sharifi~Fard},
+  \bibinfo{person}{Mark~D. Griffiths}, \bibinfo{person}{Farnaz Mohseni},
+  \bibinfo{person}{Safdar Nabi~Zadeh}, {and} \bibinfo{person}{Golnaz
+  Ali~Babaei}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Basic Psychological Needs and Psychological
+  Well-being: The Mediating Role of Instagram Addiction}}.
+\newblock \bibinfo{journal}{\emph{Journal of Technology in Behavioral Science}}
+  \bibinfo{volume}{9}, \bibinfo{number}{2} (\bibinfo{year}{2024}),
+  \bibinfo{pages}{171--179}.
+\newblock
+\href{https://doi.org/10.1007/s41347-023-00313-6}{doi:\nolinkurl{10.1007/s41347-023-00313-6}}
+
+
+\bibitem[Si et~al\mbox{.}(2024)]%
+        {Si2024CHI}
+\bibfield{author}{\bibinfo{person}{Janice~Jianing Si},
+  \bibinfo{person}{Tanusree Sharma}, {and} \bibinfo{person}{Kanye~Ye Wang}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Understanding User-Perceived Security Risks and
+  Mitigation Strategies in the {Web3} Ecosystem}}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2024 {ACM} {CHI} Conference on
+  Human Factors in Computing Systems}} (Honolulu, HI, {USA})
+  \emph{(\bibinfo{series}{{CHI} '24})}. \bibinfo{publisher}{Association for
+  Computing Machinery}, \bibinfo{address}{New York, NY, {USA}}, Article
+  \bibinfo{articleno}{974}, \bibinfo{numpages}{22}~pages.
+\newblock
+\href{https://doi.org/10.1145/3613904.3642291}{doi:\nolinkurl{10.1145/3613904.3642291}}
+
+
+\bibitem[Stefanou(2023)]%
+        {StefanouFinfluencersReg2022}
+\bibfield{author}{\bibinfo{person}{Mia Stefanou}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{Finfluencers in the Wild: A Call for Regulation
+  Addressing the Growth of Online Investment Advice}}.
+\newblock \bibinfo{journal}{\emph{Brooklyn Law Review}} \bibinfo{volume}{88},
+  \bibinfo{number}{3} (\bibinfo{year}{2023}), \bibinfo{pages}{959--992}.
+\newblock
+
+
+\bibitem[Sundar(2008)]%
+        {Sundar2008MAIN}
+\bibfield{author}{\bibinfo{person}{S.~Shyam Sundar}.}
+  \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{{The {MAIN} Model: A Heuristic Approach to
+  Understanding Technology Effects on Credibility}}.
+\newblock In \bibinfo{booktitle}{\emph{Digital Media, Youth, and Credibility}},
+  \bibfield{editor}{\bibinfo{person}{Miriam~J. Metzger} {and}
+  \bibinfo{person}{Andrew~J. Flanagin}} (Eds.). \bibinfo{publisher}{MIT Press},
+  \bibinfo{address}{Cambridge, MA}, \bibinfo{pages}{73--100}.
+\newblock
+\href{https://doi.org/10.1162/dmal.9780262562324.073}{doi:\nolinkurl{10.1162/dmal.9780262562324.073}}
+
+
+\bibitem[T\"orh\"onen et~al\mbox{.}(2020)]%
+        {torhonen2019}
+\bibfield{author}{\bibinfo{person}{Maria T\"orh\"onen}, \bibinfo{person}{Max
+  Sj\"oblom}, \bibinfo{person}{Lobna Hassan}, {and} \bibinfo{person}{Juho
+  Hamari}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{Fame and Fortune, or just Fun? A Study on Why
+  People Create Content on Video Platforms}}.
+\newblock \bibinfo{journal}{\emph{Internet Research}} \bibinfo{volume}{30},
+  \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{165--190}.
+\newblock
+\href{https://doi.org/10.1108/INTR-06-2018-0276}{doi:\nolinkurl{10.1108/INTR-06-2018-0276}}
+
+
+\bibitem[Tyack and Mekler(2020)]%
+        {TyackMeklerSDT2020}
+\bibfield{author}{\bibinfo{person}{April Tyack} {and} \bibinfo{person}{Elisa~D.
+  Mekler}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{Self-Determination Theory in HCI Games Research:
+  Current Uses and Open Questions}}. In \bibinfo{booktitle}{\emph{Proceedings
+  of the 2020 CHI Conference on Human Factors in Computing Systems}} (Honolulu,
+  HI, USA) \emph{(\bibinfo{series}{CHI '20})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{1–22}.
+\newblock
+\showISBNx{9781450367080}
+\href{https://doi.org/10.1145/3313831.3376723}{doi:\nolinkurl{10.1145/3313831.3376723}}
+
+
+\bibitem[{U.S. Securities and Exchange Commission, Office of Investor Education
+  and Advocacy}(2023)]%
+        {SECInvestorCrypto}
+\bibfield{author}{\bibinfo{person}{{U.S. Securities and Exchange Commission,
+  Office of Investor Education and Advocacy}}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{Exercise Caution with Crypto Asset Securities:
+  Investor Alert}}.
+\newblock
+\urldef\tempurl%
+\url{https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-alerts/crypto-asset-securities}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2025-09-11}.
+
+
+\bibitem[Warkulat and Pelster(2024)]%
+        {warkulat2024}
+\bibfield{author}{\bibinfo{person}{Sonja Warkulat} {and}
+  \bibinfo{person}{Matthias Pelster}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{Social Media Attention and Retail Investor
+  Behavior: Evidence from \texttt{r/WallStreetBets}}}.
+\newblock \bibinfo{journal}{\emph{International Review of Financial Analysis}}
+  \bibinfo{volume}{96} (\bibinfo{year}{2024}), \bibinfo{pages}{103721}.
+\newblock
+\href{https://doi.org/10.1016/j.irfa.2024.103721}{doi:\nolinkurl{10.1016/j.irfa.2024.103721}}
+
+
+\bibitem[Wathen and Burkell(2002)]%
+        {Wathen2002Credibility}
+\bibfield{author}{\bibinfo{person}{C.~Nadine Wathen} {and}
+  \bibinfo{person}{Jacquelyn Burkell}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{{Believe it or Not: Factors Influencing Credibility
+  on the Web}}.
+\newblock \bibinfo{journal}{\emph{Journal of the American Society for
+  Information Science and Technology}} \bibinfo{volume}{53},
+  \bibinfo{number}{2} (\bibinfo{year}{2002}), \bibinfo{pages}{134--144}.
+\newblock
+\href{https://doi.org/10.1002/asi.10016}{doi:\nolinkurl{10.1002/asi.10016}}
+
+
+\end{thebibliography}

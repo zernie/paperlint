@@ -1,0 +1,5 @@
+\section{Conclusion}
+\vspace{-8pt}
+We revisited \emph{typicality bias}, the tendency of recognition models to anchor predictions on familiar co-occurring context rather than the object itself. Across the modern vision stack, the bias persists across diverse model families and pretraining scales, without consistently shrinking with size. To diagnose it on a continuous scale, we introduced an NPMI-based diagnostic and the photorealistic STRANGE-Bench. To mitigate it, we further proposed Anchor-Atypicality Sampling (AAS), a sampling rule for paste-based augmentation that closes the typicality gap by lifting atypical-context performance without degrading typical-context performance.
+
+Our diagnostic relies on annotated co-occurrence statistics, and AAS requires training pipelines that allow for paste-based augmentations, leaving contrastive image-text and instruction-following pretraining, where the bias is most pronounced, as open directions for future work. These findings suggest that contextual robustness should be reported alongside in-distribution performance in the standard evaluation of foundation-scale recognition models.

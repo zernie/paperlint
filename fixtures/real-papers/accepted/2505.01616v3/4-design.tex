@@ -1,0 +1,83 @@
+\section{Details of \sys}
+
+\subsection{Supporting Unmodified ML Frameworks}
+\label{sec:workflow}
+
+
+Each rank executes unmodified ML framework code, using PyTorch and NCCL libraries, and interacts with the CUDA Runtime. We implement the \sys Tracer in the PyTorch. This tracer collects all invoked PyTorch operators and the corresponding performance-related parameters, and pushes all information as computation events to the event queues in the \sys simulator. It is worth noting that this tracer does not affect the execution of PyTorch, and the operators are still dispatched to the corresponding CUDA backend to initiate computation in the CUDA Runtime. We replace the native CUDA Runtime with \sys CUDA Runtime, which does not actually execute any CUDA calls. Instead, it only maintains necessary metadata to emulate actual CUDA Runtime behaviors. For example, \texttt{cudaMalloc}/\texttt{cudaFree} in \sys does not actually allocate/deallocate GPU memory, but only tracks GPU memory usage and returns \texttt{cudaErrorMemoryAllocation} when an allocation will make usage exceed the configured memory capacity. In addition, it pushes CUDA calls as events to the event queue in \sys simulator. Similarly, we replace the native NCCL library with \sys NCCL library. \sys NCCL library does not initiate communication, but forward all communication operations (\eg, allreduce) to the simulator by pushing communication events to the event queues. Furthermore, \sys maintains a dependency graph of events to emulate CUDA's asynchronous semantics, i.e. CPU launches computation and communication kernels and specify dependencies through streams/events.
+
+\autoref{fig:workflow} shows an example workflow of \sys and two ranks. These two ranks are running a distributed workload of attention and all-reduce on the attention result. The launch of FlashAttention~\cite{dao2022flashattention,dao2023flashattention2} is captured by \sys CUDA Runtime and pushed to \sys simulator. PyTorch operators traced by \sys Tracer are also pushed to \sys simulator as computation events. \sys simulator will then invoke native computation libraries to profile these computation kernels. The profiler uses a performance estimation cache to store the performance results of operators that have been already faithfully executed. When invoking the same operators in the future, \sys will directly use results stored in the cache. In this example, the FlashAttention call of Rank 1 will not be profiled again, instead, \sys simulator will use the cached profiling result of Rank 0's FlashAttention.
+
+To accurately capture the dependencies and synchronizations of computation and communications and emulate the behavior of actual CUDA Runtime, \sys needs to carefully handle related CUDA calls. \sys event queue is designed to natively support dependencies and is used to emulate CUDA streams and events--two core constructs in CUDA asynchronous programming. Operations on the same stream will have implicit dependency in chronological order, and operations on different streams have no dependency unless explicitly specified via CUDA events. In \autoref{fig:workflow}'s example, computation and communications are launched on different streams for flexibility, and the dependency between them is enforced via an additional CUDA event. \sys correctly emulated that via dependencies in the event queue.
+
+\sys NCCL captures communication operations and pushes them to the \sys simulator. For example in \autoref{fig:workflow}, \texttt{ncclAllReduce} is first called by Rank 0. This is API is non-blocking so \sys NCCL will return immediately after pushing the call to the simulator, but the simulator will not start network flows until all ranks in the same communicator are prepared (in this example, wait for Rank 1 to call \texttt{ncclAllReduce} with \texttt{c0}), which is in compliance with NCCL semantics.
+To accurately model the execution time of collective communication operations, \sys adopts a standard flow-level network simulator adapted from NetHint~\cite{chen2022nethint}, referred to as \texttt{netsim}. The \texttt{netsim} simulator takes a cluster topology configuration as input, where users can specify various properties of the cluster, including switch port bandwidth, cluster interconnection, and multipath routing and load balancing strategies. The throughput of flows at each time is computed based on the max-min fairness. Within \texttt{netsim}, we implement the communication patterns of different collective operations. For instance, we model \texttt{allreduce} using a ring-based approach, as configured in NCCL in our evaluation. When receiving communication operators, \sys submits the corresponding data transfer flows to \texttt{netsim} with the appropriate timestamps. \texttt{netsim} then simulates network behaviors and computes the completion time of each flow based on network congestion and available bandwidth~\cite{chen2022nethint, wu2024mccs}.
+
+Time synchronization is enforced through CUDA synchronization calls, which should block the host until certain GPU completion point (\eg, \texttt{cudaStreamSynchronize}).
+When these APIs are called, the \sys CUDA Runtime pushes a synchronization event to the event queue and starts waiting for a response. After processing the preceding events in the event queue and completing this synchronization event, the simulator returns a response, including a completion time (a logical timestamp), to the rank's \sys CUDA Runtime. The rank's virtual clock is then updated based on this completion time. In the example shown in \autoref{fig:workflow}, The virtual clock of both Rank 0 and Rank 1 will be updated to the completion time of all-reduce after \texttt{cudaStreamSynchronize}.
+
+\parab{Runtime patching for ML frameworks.}
+For certain frameworks, there might be unconfigurable behaviors that do not satisfy \sys's assumption. To ensure no modification to the framework code and provide a close-to-natural user experience, we leverage the dynamic features of Python to runtime patch certain functions. For example, the built-in performance logging of TorchTitan utilizes \texttt{time.perf\_counter} that needs to be replaced by \sys timers. With runtime patching, \sys can directly work with ML frameworks installed via ``\texttt{pip install}''.
+
+\parab{Intercepting CUDA kernel invocations and communication.}
+One key design decision we have to make is how to intercept CUDA kernel invocations and communications. A strawman solution could intercept ML system execution only at the CUDA kernel level, which is widely used in profilers such as Nsight Systems~\cite{nsight_systems}.
+But at this level only untyped pointers to arguments are provided, so the inspection of arguments would require extra configurations for each kernel.
+
+Hence, we resort to a hybrid approach where most computation operations are intercepted at ML systems API level (\eg, PyTorch operators), while communication operators and some specific computation operations like FlashAttention~\cite{dao2022flashattention,dao2023flashattention2} are intercepted at runtime libraries level (\eg, NCCL, CUDA Runtime). This hybrid approach allows \sys to maintain generalizability without introducing the development effort of inspecting every CUDA kernel involved. For computation operations, \sys is aware of the type of operations and the shapes of the input tensors. \sys implements a cache manager to reuse earlier profiling results of an operation with the same input shapes, eliminating redundant execution.
+
+\subsection{Loose Time Synchronization of Real Execution and Event-Driven Simulation}
+\label{sec:integration}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.48\textwidth]{figures/timeline.pdf}
+    \caption{Challenges of synchronizing time between real execution and event-driven simulation.}
+    \vspace{-3mm}
+    \label{fig:synchronization}
+\end{figure}
+
+\sys needs to correctly synchronize the real execution and the event-driven simulator for accurate end-to-end simulation, as events generated by the real execution may impact the event-driven simulator. Without proper synchronization, such impacts may be neglected or wrongly considered, leading to inaccurate simulation. 
+
+\autoref{fig:synchronization} demonstrates a typical workload that requires correct synchronization. 
+Rank 0 and 1 independently launch communications that may share network resources. At time $T_1$, Rank 0 begins to wait for its communication and asks the simulator for the completion time. The simulator, however, cannot directly proceed to the completion point based on current information and respond $T_1'$, as a future communication from Rank 1 starts at $T_2$ may affect this completion time if $T_2 < T_1'$. Note that this is not an issue if the simulated workload is static (\eg, the use cases of today's static workload simulators). For static workload, the simulator already knows the existence of event at $T_2$, so it can simply move the simulated time forward to $T_2$ instead of $T_1'$, and update the state of the system. However, in our case because Rank 1 is a real execution, the simulator does not know whether or when it will launch communication.
+
+
+One approach to resolve this issue is to determine a small time quantum, and move time forward in both real execution and simulation. This is a common technique in hardware simulation. WWT~\cite{reinhardt1993wwt} uses such an approach for simulating cache-coherent shared memory multiprocessors, and it determines the time quantum based on cross-core communication latency. However, using a fine-grained time quantum can significantly slow down the simulation speed, which is exactly why it is not used by most of today's network simulators.
+
+Our key observation is that the characteristics of ML systems provide an opportunity to change the running time of operations during hybrid simulation. Specifically, the time taken by a given operation (\eg, a specific communication) does not affect the actual control flow of the real system. For example, changing the time consumed by a matrix multiplication in a rank's runtime does not affect which is the next operator invoked by the rank. Therefore, we can \emph{rollback} the simulator state and correct the real system state efficiently during simulation.
+We apply this insight by optimistically synchronizing clocks between the simulator and each rank's runtime in \sys. When past events occur, the simulator rollbacks to a prior time, processes the past events, corrects time for a set of events in the past, updates the clock with each rank's runtime, and continues the simulation process.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.48\textwidth]{figures/rollback.pdf}
+    \caption{Handing past events in the event-driven simulator using time rollback. The network state at $T_2$ is a superposition of the states at $T_1$ and $T_1'$.}
+    \vspace{-2mm}
+    \label{fig:rollback}
+\end{figure}
+
+\parab{Time rollback.}
+A traditional event-driven simulator keeps a priority queue of ``events'', where the priority is the start time of the event. This allows the simulator to process the event in the chronological order. \sys augments this simulator by adding the ability to time travel to any particular time in the past. To realize this feature, the network simulator keeps the throughput history of all flows. Consider the same example in \autoref{fig:synchronization}. A new event arrives at a time $T_2$ earlier than the current time $T_1'$. For simplicity, let's assume there are no other events between $T_1$ and $T_1'$ and let $S(T)$ denote the state of all the network flows at time $T$. As \autoref{fig:rollback} shows, the network simulator can compute state $S(T_2)$ based on the stored throughput history between $S(T_1)$ and $S(T_1')$.  This is because between neighboring events, network flows are assumed to have stable throughput, which is a common assumption made by existing event-driven network simulators. Such a time rollback can affect previously computed completion time of some network flows. The network simulator then sends these updated completion times to \sys's event queue to update other events' start/completion time by traversing the dependency graph. For example, if another event previously started at $T_1'$ for its dependency on this communication, then its start and completion time may be adjusted accordingly.
+
+With this rollback mechanism, \sys will still ensure forward progress if the system being simulated ensures forward progress.
+In \sys, the simulated ML system only has finite past events, so there will only be finite rollbacks and the simulator will make forward progress after rollbacks are complete.
+
+
+\parab{Garbage collection of historical states.} The ability to time travel to the past comes with the cost of storing the simulation states at all the event timestamps. These states include the dependency graph stored in \sys's event queue and the historical flow states in the network simulator. As the simulation progresses, storing these historical states can occupy a lot of host memory. \sys implemented garbage collection to address this issue. The key insight is that after all the ranks' time has passed $T$, it is impossible to inject an event before $T$ into the network simulator. Thus, all the simulator states before $T$ (including both the dependency graph and the flow states) can be safely discarded.
+
+\parab{Network simulator with time rollback.} Our flow-level simulator enables time rollback with low additional runtime overhead. The simulator assumes per-flow fairness across the network and solves the max-min fair flow allocation problem using an iterative water-filling algorithm. At each iteration, the simulator identifies the bottleneck link and computes the necessary delta adjustments for flow rates.
+
+To support time rollback, we provide two APIs: one for updating the start time of an existing flow, and another for advancing the simulation by one step or up to a specified time. The simulator records the throughput history for each flow, which is represented by a few floating point numbers. Since throughput changes are regular events to a network simulator, without garbage collection, the memory overhead is proportional to the number of discrete events the simulator processes.
+Although a rollback can potentially update multiple flows, these computations are based solely on the throughput history and can be computed in an incremental manner, making them computationally efficient compared to solving the max-min fair flow allocation problem.
+
+
+\subsection{Improving \sys's Scalability}
+\label{sec:scalability}
+
+\sys has the following two techniques to achieve scalable simulation.
+
+\parab{Scalability Technique \#1: Model parameter sharing on CPU.} ML systems may initialize models in CPU memory, either randomly or using pre-trained weights stored on disk. Once initialized, the models are transferred to the GPU for subsequent tasks. In real GPU clusters, this initialization phase is generally not a bottleneck, as GPU memory size is usually smaller than the CPU memory size. However, when \sys simulates a large cluster using limited hardware resource, this peak memory usage could become a scalability constraint.
+To address this limitation, \sys implements parameter sharing, which allows model parameters on the same simulation server to be transparently mapped to the the same region of shared memory.
+This ensures that at most one copy of the model is initialized per server. \sys assumes that the control logic of ML systems does not depend on tensor values, allowing safe sharing of model parameters without impacting execution.
+
+\parab{Scalability Technique \#2: Use CPU time instead of system time.} Similar to memory, CPU can also become a bottleneck for \sys. Existing ML training systems are usually multi-process. If the number of CPU cores used for simulation is smaller than the number of processes launched, CPU oversubscription can slow down the execution of the ML systems and cause inaccuracies in simulation results. To address this problem, \sys only counts the actual CPU time each process spent instead of the system time passed (wall clock). Thus, although the simulation process is still slowed down, the accuracy of the results will not be affected. \sys can also be configured to ignore the CPU time completely, leaving only the GPU operation time and CUDA synchronization waiting time to be included in the results.
+

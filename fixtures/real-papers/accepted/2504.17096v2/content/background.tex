@@ -1,0 +1,69 @@
+\section{Background}\label{sec:background}
+
+\subsection{ML job parallelization strategies}
+
+
+\begin{table}[tp!] 
+\footnotesize
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{System} & \textbf{Support} & \textbf{Search Time (128 A100)} \\
+\hline
+Piper~\cite{Tarnawski21Piper} & 3D, X, X, X & <1 sec \\
+\hline
+AMP~\cite{li2022amp} & 3D, X, $\checkmark$, X & 14 sec  \\
+\hline
+Varuna~\cite{Athlur22Varuna} & 3D, X, X, X & < 1 sec  \\
+\hline
+Oobleck~\cite{Jang2023Oobleck} & 3D, X, X, X & hours \\
+\hline
+Metis~\cite{Um24Metis} & 3D, X, $\checkmark$, X & hours \\
+\hline
+FlashFlex~\cite{yan2024flashflex} & 3D, $\checkmark$, $\checkmark$, X & 3 sec  \\
+\hline
+Galvatron~\cite{Miao22Galvatron} & 3D, X, X, X  & 10s of sec \\
+\hline
+% \textbf{Alpa}~\cite{zheng2022alpa} & 3D, X, X, X & \todo{}  \\
+%\hline
+Aceso~\cite{Liu24Aceso} & 3D, X, X, X & 200 sec  \\
+\hline
+%\textbf{NnScaler}~\cite{Lin24nnScaler} & 4D, X, X, X &\todo{}  \\
+%\hline
+DTFM~\cite{yuan2023decentralized} & 2D, $\checkmark$, X, $\checkmark$ & 125 sec \\
+\hline
+Atlas~\cite{palak2024atlas} & 3D, $\checkmark$, X, $\checkmark$ & 100 sec \\
+\hline
+\textbf{\sailor} & \textbf{3D, $\checkmark$,$\checkmark$,$\checkmark$} & \textbf{< 1 sec}
+\\
+\hline
+\end{tabular}
+
+\caption{Overview of distributed ML training planners. We omit planners that change ML training semantics~\cite{Wang23cocktailsgd}. The \textit{Support} column stands for: [\textit{degrees of parallelism supported, recommends resource allocation, supports heterogeneous GPU types, supports multi-zone}].
+Search time assumes a cluster of 128 A100 GPUs and OPT-350M model. 
+}
+\label{table:planners}
+%\vspace{-2cm}
+\vspace{-0.5cm}
+
+\end{table}
+
+
+
+Million or billion-parameter ML models train on massive datasets on clusters of high-end accelerators such as GPUs, using a combination of parallelization strategies:
+
+\textbf{Data Parallelism (DP):} The model is replicated across workers, while the dataset is partitioned. At the end of each iteration, the workers synchronize their gradients using an all-reduce collective~\cite{Sapio21innetwork}.
+
+\textbf{Pipeline Parallelism (PP):} The model is split into stages, with each stage consisting of a set of layers, and assigned to a worker or node. Workers operate at the granularity of a microbatch\footnote{A minibatch is split in microbatches.}, performing forward and backward passes, sending activations to the next stage, and gradients to the previous stage. Due to inter-stage dependencies, pipeline parallelism is subject to \textit{bubbles}, i.e., periods that a stage remains idle, waiting for others to complete~\cite{Huang19Gpipe}. As a result, many approaches have been proposed to process multiple microbatches simultaneously and reduce bubbles~\cite{Athlur22Varuna, Narayanan19Pipedream}.
+
+\textbf{Tensor Parallelism (TP):} With tensor parallelism, a layer is divided across GPUs. After each GPU performs its local computations (both in forward and backward pass), the GPUs are synchronized using collectives such as all-reduce and all-gather. Since TP requires frequent communication, it requires very high interconnection bandwidths and is usually limited within a single node for reasonable throughput~\cite{shoeybi2020megatronlm}.  
+
+
+\vspace{-0.1cm}
+\subsection{Automating parallelization strategies}
+
+Determining the optimal degree of parallelism for each dimension (DP, PP, TP) is complex and greatly affects training throughput. Multiple systems, which we refer to as \textit{planners}, automate this process (see Table~\ref{table:planners}). Given a fixed resource allocation (e.g., 16 nodes with 4 A100 GPUs each), model configuration (including hyperparameters like global batch size and learning rate), model profiling information (e.g., time for forward and backward pass for different configurations), and hardware characteristics (e.g., network bandwidth), planners explore different parallelization strategies, estimating the training time under different configurations, using some form of simulation. Planners apply techniques such as exhaustive search~\cite{Athlur22Varuna, Um24Metis}, dynamic programming~\cite{Tarnawski21Piper, li2022amp}, and integer linear programming~\cite{zheng2022alpa} to identify configurations that minimize training time.
+
+
+
+

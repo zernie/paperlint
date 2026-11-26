@@ -1,0 +1,13 @@
+# Learning the Latent Structure: A Feature-Centric Approach to Graph Data Augmentation
+
+- **Authors:** Yu Song, Zhigang Hua, Yan Xie, Bingheng Li, Jingzhe Liu, Bo Long, Jiliang Tang, Hui Liu
+- **Source:** arXiv [2610.02517v1](https://arxiv.org/abs/2610.02517v1), e-print `https://arxiv.org/src/2610.02517v1` (sha256 `5d4f283e7534006028d7243f547cadce8db72e1eb4410eb127d8a5438334f519`)
+- **Category:** cs.LG; **document class:** `[letterpaper]{article}`, **style package:** `aaai2026`
+- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
+- **Accepted at:** AAAI 2026. The arXiv comment of [2610.02517v1](https://arxiv.org/abs/2610.02517v1) says: «Accepted at AAAI 2026»
+- **Linted as:** `paperlint:aaai-press`, the camera-ready of an accepted attempt (the AAAI Press style family as no preset ships for this edition)
+- **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def`, each at its path from the archive's root, where arXiv compiles. Dropped: images, PDFs, data.
+- **Renamed, one thing changed inside:** `main.bbl` to `paper.bbl`, `main.tex` to `paper.tex`; `\input{main.bbl}` to `\input{paper.bbl}`.
+- **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.
+
+`paperlint.json` records one attempt, accepted, whose evidence is this file. Its dates are those of the arXiv version that states the acceptance: the real decision day is earlier and not known here. `record-by-hand.json` is NOT TeX's answer: it lists `paper.tex`, the class and style files at the root, then the `\input`/`\include` files in the order the source names them, hashed over the bytes here. See [`../README.md`](../README.md).

@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenixbadges.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "macros.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3_preliminaries.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4_problem_formulation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_experimentsetup.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq1_effectiveness.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq1_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq2_robustness.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq2_asr_vs_chunk_size.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq2_asr_vs_cache_ratio.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq2_asr_vs_recomp_ratio.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq3_asr_vs_context_length.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq3_persistence.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq4_transferability.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq4_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/rq4_acc.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq5_ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_rq6_mitigability.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/8_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/9_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/ethics.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendices/notions.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendices/llm.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendices/rebuttal.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendices/prompt.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2cf486a193787eb2b92990b6e01b71b31b0bbd8b710950ed1ee684ec6515fe2a",
+    "usenix.sty": "20afc960e0275fd1842ae95a019e3749092eed5f535037dabd5b092f93f56a6c",
+    "usenixbadges.sty": "dfc6ee9f414bb0c8f6b082394f92cb1b0170149b9471bf03f3688c1a53f9ad49",
+    "macros.tex": "193816b83e1a850d70b5cee20ff808a32d875376a245b1ccdfed3c52eb0048c3",
+    "sections/0_abstract.tex": "e8e2f04d63855f71f00704169527de839003eed89da85da12e01379ca4756434",
+    "sections/1_introduction.tex": "982027618bf08ef884577f5104f3cfeb947e54035a85eb303e353fbac98c79d7",
+    "sections/2_related_work.tex": "e8d9553ea41aa9bed709e040a1b31b8008475802cb7e5d7f199fa21b48b03ece",
+    "sections/3_preliminaries.tex": "2791f3af69cc9583607e3ec52386d2cd623c39e6c0a5eea489ed80e8eacacc7d",
+    "sections/4_problem_formulation.tex": "939d22410d6b1bf75afe3ebbd5fbbd7644c290344b728a80ac2bd735def1e7eb",
+    "sections/5_method.tex": "4a81f53f2e8bc635f7052d9f89b9a43b7736bf51eb86dacf6bbc009326a99615",
+    "sections/6_experimentsetup.tex": "4cc3e31f55a067fb284f5de9b476f28eac80f807e19191219f064c8cbbede057",
+    "sections/7_experiment.tex": "e90620f86e21c1ebb0634c99b3df58f44279ad4642f8b8e8e99cdeea556a4083",
+    "sections/7_rq1_effectiveness.tex": "cef05ae90fbd6ba99812e8201b2a5dbbcdf5c832bd0f519cdc32864ebb167da4",
+    "tables/rq1_main.tex": "f65da660fa1d25f1d4d2985779c8f4f31e3167c4a2f9a9908fb5cf56c392ec74",
+    "sections/7_rq2_robustness.tex": "6e5f6715c8d9f44acefc0992f451e37f629769238c1c5179346a201bb6fa51ea",
+    "tables/rq2_asr_vs_chunk_size.tex": "3383b724ebfefd55f4f89353156917ce5a84b6b9a820b775fcbfbb9c58c58202",
+    "tables/rq2_asr_vs_cache_ratio.tex": "a8a5e30ffdf077c4a6cbbcc98dbfc39028564b4c240c21e1d069a0a5a1fbd91c",
+    "tables/rq2_asr_vs_recomp_ratio.tex": "2ac2f032c2d8a1569c07b1bbf93fd8fb6ef3b0873f214a523d7ab249d89582b5",
+    "tables/rq3_asr_vs_context_length.tex": "173a2199632dfbdeccc54664866e3365af7e3192cc3dc2698a16b35b233df26c",
+    "sections/7_rq3_persistence.tex": "ceee6d9af6b0e56437a56cfb365a48072d7d9ca30cdda5ea6694ca13d2c6fef2",
+    "sections/7_rq4_transferability.tex": "22c27e16d1b017ed318ea9a69233253b0c37a44d809f0d95c915bf2774983448",
+    "tables/rq4_main.tex": "ec382cc610102b66bf89384b8f565705a274df7bb16c7f7740036f9d4c0340fe",
+    "tables/rq4_acc.tex": "53d16a46e116daed3df4158a482ab7dcc5aec6148e5978a9e8ae98c8543ef425",
+    "sections/7_rq5_ablation.tex": "b80a75da3a4a1c2814c245219188838c372a99c741db820c5b391b88e38ba954",
+    "sections/7_rq6_mitigability.tex": "c416530c0ba58c55aea407150f284c7c741475633235e8f2685e898cfea12a17",
+    "sections/8_discussion.tex": "0d05eb8720ce67f0853d2686213e2aa63bdc3507adda510c3f5e340a434ff0d6",
+    "sections/9_conclusion.tex": "e4c7d9ea80d3349a4bc8081dd11478999f5f299eab4d9062aae6f80108d7a5f2",
+    "sections/ethics.tex": "911ebe92a25f2c1e25574dedb031f4a320e8a29cdc6aa2e257f389085781f4dd",
+    "appendices/notions.tex": "d716bffc4dde773ce6e4984632ba48824977b62522a8d5f43f0bb9188f51decb",
+    "appendices/llm.tex": "eae6cbda8258266e187999f95bd2908a5e5641324bc0280ee31ae5efc451cd4f",
+    "appendices/rebuttal.tex": "44a04edb0cc50f92ed45786ca96cf8323c06e38693695ef13acc03900350c821",
+    "appendices/prompt.tex": "dd9d45bc1ac5b2a9701b5d1f9e36596619109f52535f57b102ab6b4ca46eb25c"
+  }
+}

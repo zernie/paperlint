@@ -1,0 +1,8 @@
+\section{Discussion}
+
+\textbf{Planner and simulator limitations: } Our planner and simulator currently support only the 1F1B pipeline parallel schedule, and do not incorporate optimizations such as activation offloading~\cite{Ren21zerooffload} or rematerialization~\cite{Yuan25remat}. Adding support for these optimizations is left for future work.
+
+\textbf{Additional challenges with heterogeneous hardware:} Training over heterogeneous and geo-distributed datacenters can introduce additional challenges. Heterogeneity in accelerator vendors (e.g., NVIDIA vs. AMD) and network links (e.g., Infiniband vs. Ethernet) may prevent the use of high-performance collective communication libraries (e.g., NCCL), which often assume uniform network protocols. 
+To maximize performance, collectives must be adapted to heterogeneous links. Furthermore, geo-distributed networks are prone to unreliability, including unpredictable jitter and packet loss. Training frameworks and algorithms should detect and adapt to such issues. Finally, even though \sailor optimizes parallelization strategies, it is based on strategies that were first introduced for homogeneous settings (e.g. 1F1B pipeline schedule). Achieving high performance in such contexts may require developing new schedules that more effectively overlap computation and communication, thereby reducing bubble times~\cite{chen2025crosspipe}.
+
+

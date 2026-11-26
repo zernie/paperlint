@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "0-abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "1-intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "2-background.tex",
+      "role": "body"
+    },
+    {
+      "path": "3-overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "4-design.tex",
+      "role": "body"
+    },
+    {
+      "path": "6-eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "7-discuss.tex",
+      "role": "body"
+    },
+    {
+      "path": "8-related.tex",
+      "role": "body"
+    },
+    {
+      "path": "9-conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "10-appendices.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "924512460b608f0a12f41259156707d787d29b1d6635b52acea032401e0e0925",
+    "usenix.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "0-abstract.tex": "79d354443f3533d489f1fcbcfbb510d50bb6ddad46c9a0df98c266863bf9b9a9",
+    "1-intro.tex": "24c892ec85a0322eabbc6e8b3f5670b3dd1d4594b8763d58ac844fcce006c7fd",
+    "2-background.tex": "88e86033d0d3334d798822c0986a6a83b1c24ac5ee035b010172c62b0e93f468",
+    "3-overview.tex": "d0e6995f7601ed9190ef69efeef19d5883b92b5f3d74c7b5560b78524ed14d16",
+    "4-design.tex": "3e94ec5c545f734451cb3ce13b02745bc1ea59d73094734b897f918e27456155",
+    "6-eval.tex": "e7683a4c24941a62627422a206fb2e8c7dee05e6aa1d0f9d2682fda70cced61d",
+    "7-discuss.tex": "049b06cbceab4445570a90978a84ab510150a270a3ee435409a5776ad35ed0bb",
+    "8-related.tex": "3b13632c65fea77b97bbfa9bc6967ee8688550dc45e6d5b0c31d7e80518d21aa",
+    "9-conclusion.tex": "30f02d8d01e0c6cc1e027b4728fa871f646f1179a33fa5b53b07e899089cff48",
+    "10-appendices.tex": "59921837edb071f0c948ee5a42f222b8d4f242e42dc5571e1fb5775beb4cd5d0"
+  }
+}

@@ -1,0 +1,15 @@
+\section{Related Work}
+\paragraph{Vision-Language-Action Models.}
+Vision-Language-Action (VLA) models unify perception, language, and control for robotic manipulation \citep{sapkota2025visionlanguageactionmodelsconceptsprogress,din2025visionlanguageactionmodels}. 
+Early systems such as RT-1 and RT-2 established the effectiveness of large-scale transformer policies, while PaLM-E and LLaVA further incorporated multimodal grounding \citep{brohan2023rt1roboticstransformerrealworld,zitkovich2023rt,driess2023palm,liu2023visual}. 
+However, most VLA models directly predict actions without explicitly modeling world dynamics, limiting generalization to novel environments \citep{zhang2025inspirevisionlanguageactionmodelsintrinsic}.
+
+\paragraph{World Models.}
+World models learn predictive dynamics to support planning and decision-making \citep{sutton1990integrated,hafner2025mastering}. 
+Neural approaches such as World Models and Dreamer improve sample efficiency and long-horizon reasoning \citep{ha2018world,hafner2022masteringataridiscreteworld,hafner2025mastering}. 
+In robotics, however, these models are typically used for state prediction or model-based planning and remain largely decoupled from language-grounded action generation \citep{sakagami2023robotic, wang2026vagen}.
+
+\paragraph{Test-Time Training.}
+Test-time training adapts models to distribution shifts during inference via self-supervised objectives \citep{sun2020testtimetrainingselfsupervisiongeneralization,ma2024improved}. 
+While TTT has been explored in both vision and NLP \citep{ye2023robustquestionansweringdistribution}, robotic adaptation has mainly focused on perception modules or low-level policies \citep{zhao2020sim}. 
+Our work instead incorporates TTT into a unified VLA framework by adapting the world model itself during deployment.

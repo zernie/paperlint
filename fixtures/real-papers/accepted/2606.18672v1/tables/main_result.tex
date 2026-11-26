@@ -1,0 +1,75 @@
+\begin{table*}[t]
+\centering
+
+% --- 定义新样式 ---
+\newcommand{\res}[2]{%
+  #1{\scriptsize\,\ensuremath{\pm}\,#2}%
+}
+\newcommand{\best}[2]{%
+  \textbf{#1{\scriptsize\,\ensuremath{\pm}\,#2}}%
+}
+\newcommand{\second}[2]{%
+  \underline{#1{\scriptsize\,\ensuremath{\pm}\,#2}}%
+}
+
+\newcommand{\head}[1]{\mbox{\textbf{#1}}}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\renewcommand{\arraystretch}{0.95} 
+\setlength{\tabcolsep}{1pt}
+
+\resizebox{\linewidth}{!}{
+\begin{tabularx}{1.5\linewidth}{c c | YYYYYYYYYYY} 
+\toprule
+
+\textbf{Datasets} & \textbf{Metric}
+& \head{pcaReduce} & \head{DEC} & \head{contrastive-sc} & \head{scNAME} & \head{scDeepCluster}
+& \head{scDSC} & \head{AttentionAE-sc} & \head{scGNN} & \head{scCDCG} & \head{scSiameseClu} & \head{Ours} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Muraro Human}\\\textbf{Pancreas cells}}}
+& ACC & \res{50.56}{3.4} & \res{72.22}{5.5} & \res{81.85}{4.6} & \res{80.36}{7.9} & \res{74.70}{2.7} & \res{79.42}{1.4} & \res{93.84}{2.7} & \res{79.32}{4.0} & \res{92.65}{1.9} & \second{94.95}{0.1} & \best{96.02}{0.5} \\
+& NMI & \res{54.83}{1.7} & \res{76.29}{2.7} & \res{77.73}{3.3} & \res{79.12}{2.7} & \res{79.32}{0.3} & \res{75.89}{0.6} & \second{87.80}{2.3} & \res{78.76}{5.6} & \res{86.81}{1.0} & \res{86.19}{0.3} & \best{89.15}{1.1} \\
+& ARI & \res{36.61}{2.3} & \res{61.76}{5.6} & \res{75.22}{10.1} & \res{76.64}{10.4} & \res{64.59}{2.5} & \res{75.42}{1.2} & \res{90.74}{4.1} & \res{78.87}{3.2} & \res{91.37}{1.2} & \second{91.59}{0.3} & \best{93.10}{0.9} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Human Pancreas}\\\textbf{cells 1}}}
+& ACC & \res{23.63}{0.2} & \res{40.64}{1.9} & \res{69.67}{7.8} & \res{84.20}{6.0} & \res{66.39}{3.8} & \res{73.10}{2.3} & \res{81.56}{1.8} & \res{55.10}{2.1} & \res{92.15}{0.8} & \second{95.12}{0.4} & \best{97.21}{0.3} \\
+& NMI & \res{42.58}{0.4} & \res{62.35}{0.6} & \res{69.21}{3.3} & \res{65.74}{4.0} & \res{69.42}{12.5} & \res{60.50}{4.2} & \res{82.62}{3.0} & \res{64.03}{0.9} & \res{86.35}{0.9} & \second{89.50}{0.6} & \best{93.23}{0.2} \\
+& ARI & \res{1.98}{0.5} & \res{26.07}{1.3} & \res{52.00}{8.7} & \res{63.31}{7.4} & \res{47.92}{3.0} & \res{69.81}{1.6} & \res{71.84}{8.5} & \res{38.32}{0.8} & \res{92.83}{0.6} & \second{93.40}{0.5} & \best{96.61}{1.5} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Human Pancreas}\\\textbf{cells 2}}}
+& ACC & \res{37.56}{0.4} & \res{45.26}{1.8} & \res{60.01}{5.7} & \res{63.33}{2.0} & \res{62.88}{5.5} & \res{80.40}{4.0} & \res{80.40}{4.0} & \res{57.62}{2.3} & \res{84.66}{1.1} & \second{89.45}{0.9} & \best{91.13}{0.9} \\
+& NMI & \res{50.81}{0.3} & \res{66.32}{2.1} & \res{62.25}{2.3} & \res{58.05}{1.6} & \res{73.97}{2.2} & \res{79.44}{1.7} & \res{82.16}{10.9} & \res{79.32}{2.3} & \res{83.44}{2.6} & \second{86.80}{1.2} & \best{90.63}{1.2} \\
+& ARI & \res{19.23}{0.5} & \res{39.14}{1.8} & \res{47.10}{5.3} & \res{32.12}{1.5} & \res{64.56}{7.5} & \res{82.85}{6.5} & \res{73.20}{10.5} & \res{79.96}{1.7} & \res{85.30}{1.6} & \second{89.20}{1.1} & \best{92.38}{1.4} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Human Pancreas}\\\textbf{cells 3}}}
+& ACC & \res{35.92}{0.4} & \res{43.56}{1.5} & \res{57.47}{5.0} & \res{83.20}{8.7} & \res{73.65}{3.1} & \res{80.12}{10.0} & \second{90.96}{2.4} & \res{67.94}{4.6} & \res{88.04}{0.3} & \res{89.45}{0.5} & \best{95.31}{1.4} \\
+& NMI & \res{51.22}{0.3} & \res{64.51}{0.8} & \res{66.84}{2.3} & \res{80.56}{5.6} & \res{75.02}{1.2} & \res{75.87}{8.4} & \second{87.00}{1.8} & \res{62.60}{1.8} & \res{82.21}{1.1} & \res{86.20}{0.6} & \best{91.37}{0.3} \\
+& ARI & \res{26.40}{4.5} & \res{42.73}{1.0} & \res{47.90}{3.4} & \res{81.08}{5.7} & \res{63.31}{2.3} & \res{82.85}{8.5} & \res{89.78}{2.5} & \res{58.41}{1.9} & \res{90.78}{0.6} & \second{92.34}{0.8} & \best{95.25}{0.5} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Mouse Pancreas}\\\textbf{cells 2}}}
+& ACC & \res{28.97}{0.3} & \res{34.19}{2.3} & \res{59.55}{5.7} & \res{82.36}{8.0} & \res{69.91}{2.9} & \res{77.35}{2.3} & \res{81.92}{6.5} & \res{43.03}{3.0} & \second{93.97}{0.2} & \res{92.45}{0.4} & \best{95.11}{1.2} \\
+& NMI & \res{48.93}{0.1} & \res{54.08}{0.9} & \res{62.34}{2.4} & \res{78.00}{3.9} & \res{59.58}{2.6} & \res{62.50}{0.4} & \res{81.88}{5.1} & \res{55.87}{1.9} & \second{88.02}{0.2} & \res{86.50}{0.5} & \best{88.59}{0.6} \\
+& ARI & \res{12.80}{0.1} & \res{18.54}{1.1} & \res{49.75}{8.5} & \res{76.56}{11.4} & \res{60.14}{3.6} & \res{65.81}{1.4} & \res{82.14}{7.8} & \res{26.40}{2.5} & \second{92.61}{0.3} & \res{90.80}{0.6} & \best{93.43}{0.8} \\
+\midrule
+
+\multirow{3}{*}{\textbf{CITE-CMBC}}
+& ACC & \res{28.19}{0.1} & \res{41.88}{5.4} & \res{52.70}{5.0} & \res{68.06}{13.3} & \res{70.80}{2.5} & \res{68.79}{0.9} & \res{61.18}{7.9} & \res{66.71}{4.0} & \res{71.45}{1.8} & \second{74.70}{0.5} & \best{79.20}{0.5} \\
+& NMI & \res{28.36}{0.2} & \res{46.87}{9.2} & \res{64.83}{0.8} & \res{63.23}{13.2} & \res{72.53}{0.7} & \res{64.21}{3.3} & \res{62.02}{9.6} & \res{61.70}{3.1} & \second{74.77}{1.7} & \res{68.71}{0.7} & \best{76.50}{0.4} \\
+& ARI & \res{5.10}{0.1} & \res{23.55}{10.3} & \res{47.88}{3.7} & \res{58.99}{21.3} & \res{56.23}{4.1} & \res{52.51}{2.2} & \res{44.20}{11.6} & \res{61.20}{3.1} & \res{61.46}{1.4} & \second{67.56}{1.1} & \best{69.80}{0.5} \\
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{Human Liver}\\\textbf{cells}}}
+& ACC & \res{34.92}{0.2} & \res{46.32}{5.5} & \res{79.31}{2.1} & \res{74.55}{5.3} & \res{63.44}{0.7} & \res{70.90}{2.2} & \res{79.46}{6.7} & \res{68.65}{3.2} & \res{75.34}{1.7} & \second{88.33}{1.7} & \best{94.50}{0.9} \\
+& NMI & \res{32.07}{0.6} & \res{52.24}{5.0} & \res{85.11}{0.1} & \res{77.42}{12.0} & \res{74.60}{2.5} & \res{71.63}{2.8} & \res{82.86}{4.5} & \res{62.33}{2.1} & \res{79.34}{2.6} & \second{88.82}{1.2} & \best{90.15}{1.1} \\
+& ARI & \res{6.34}{14.4} & \res{31.04}{4.7} & \res{89.96}{0.1} & \res{79.91}{2.9} & \res{58.58}{10.1} & \res{75.34}{3.6} & \res{79.16}{11.8} & \res{65.41}{1.3} & \res{81.26}{2.7} & \second{91.90}{0.5} & \best{94.10}{0.5} \\
+\bottomrule
+\end{tabularx}
+}
+\caption{Clustering performance across seven benchmark datasets. The results are reported as mean $\pm$ standard deviation, where the best results are highlighted in \textbf{bold} and the second-best are \underline{underlined}.}
+\label{tab:main_result}
+\end{table*}

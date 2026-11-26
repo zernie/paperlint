@@ -1,0 +1,79 @@
+\subsubsection{RQ1: How effective is our approach in localizing concurrent bugs?}
+
+Table~\ref{table:overall} presents the fault localization performance of our approach on DatasetGit.
+ConFL achieves 132 Top-1 hits, 186 Top-3 hits, and 216 Top-5 hits, substantially outperforming all baselines.
+In contrast, the strongest baseline, FlexFL, achieves 82 Top-1 hits, 110 Top-3 hits, and 123 Top-5 hits, while IR-based techniques perform significantly worse.
+
+In terms of ranking quality, ConFL attains an MRR of 0.503 and a MAP of 0.486, improving upon FlexFL by +0.189 MRR and +0.178 MAP.
+Compared to traditional IR-based approaches (BRTracer and BoostNSift), the improvements are even more pronounced, exceeding +0.40 in both MRR and MAP.
+These results indicate that ConFL not only identifies the correct faulty methods more frequently, but also ranks them more consistently near the top of the candidate list.
+
+\input{tables/results/overall_results}
+
+\noindent
+\textbf{Comparison with BLCoiR.} BLCoiR performs poorly at the method level, achieving only 0.030 MRR and 0.030 MAP. This is mainly due to a granularity mismatch between its sparse, file-level query design and method-level retrieval. BLCoiR retains only coarse-grained concurrency keywords and class-level information, which are effective for file-level retrieval where files contain rich aggregated context, but insufficient for individual methods that are themselves sparse and localized. To provide a fairer comparison, we additionally evaluate both techniques at file-level granularity, following the original BLCoiR setting. As shown in Table~\ref{tab:file}, \Name{} still substantially outperforms BLCoiR, improving MRR from 0.32 to 0.76 and MAP from 0.21 to 0.70. These results suggest that \Name{}'s gains primarily come from structured concurrency interaction modeling rather than localization granularity alone.
+
+\begin{wraptable}{r}{0.3\textwidth} \footnotesize
+\vspace{-10pt}
+\centering 
+\caption{File-level comparison.}
+\vspace{-8pt}
+\label{tab:file}
+\begin{tabular}{lcc}
+\toprule
+Technique & MRR & MAP \\
+\midrule
+BLCoiR & 0.32 & 0.21 \\
+ConFL & \textbf{0.76} & \textbf{0.70} \\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{wraptable}
+
+Overall, the strong gains in Top-$k$ accuracy, MRR, and MAP on Dataset$_{Git}$ demonstrate the effectiveness of ConFL in localizing real-world concurrent bugs using bug reports alone, even in large and diverse codebases mined from GitHub.
+
+
+\noindent\textbf{Evaluating Explanation Quality.}
+As described in Section~4.3, ConFL explanations identify suspicious methods, thread entry points, shared resources, and synchronization context. The goal of this evaluation is to assess whether these explanations faithfully describe the concurrency behavior of the localized fault rather than their fluency or writing quality.
+
+\noindent\textbf{Evaluation Setup.}
+Automated metrics such as BLEU or BERTScore cannot determine whether claims about thread interactions are factually correct, and no benchmark of ground-truth concurrency explanations exists. We therefore conduct manual evaluation against the source code and developer fix commits. Annotators classify each explanation as \textbf{Faithful} (all concurrency claims are supported by the code), \textbf{Partial} (the explanation is generally correct but omits relevant interactions), or \textbf{Hallucinated} (the explanation contains unsupported thread interactions or synchronization behavior).
+
+We evaluate only successfully localized bugs, since explanations based on incorrect localizations are not meaningful. We randomly sample 50 bugs and generate three explanations per bug under two settings: \textit{w/ DSL}, where the LLM receives interaction DSLs, and \textit{w/o DSL}, where the LLM receives only raw source code. This yields 300 explanations in total. Two annotators independently labeled all explanations, achieving 88.3\% agreement with Cohen's $\kappa = 0.767$, indicating substantial agreement.
+
+\begin{wraptable}{r}{0.32\textwidth}\footnotesize
+\vspace{-10pt}
+\centering
+\caption{Explanation quality.}
+\vspace{-8pt}
+\label{tab:explanation}
+\begin{tabular}{lcc}
+\toprule
+Category & w/ DSL & w/o DSL \\
+\midrule
+Faithful     & \textbf{78\%} & 70\%          \\
+Partial      & 10\%          & 5\%           \\
+Hallucinated & \textbf{12\%} & 25\%          \\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{wraptable}
+
+
+\noindent\textbf{Results.}
+Table~\ref{tab:explanation} shows that the interaction DSL improves the faithful rate from 70\% to 78\% while reducing hallucinations from 25\% to 12\%. This reduction is particularly important because hallucinated thread interactions or synchronization behavior can mislead developers during debugging. The improvement stems from the DSL grounding explanations in explicit thread entry points, shared variables, and access relationships extracted from static analysis, thereby constraining the LLM to reason over verifiable concurrency structure.
+
+\noindent\textbf{Illustrative Case.}
+The motivating example \textbf{Druid-3174} illustrates this effect. Without the DSL, the LLM explains only local behavior inside \texttt{RemoteTaskRunner}. With the DSL, ConFL additionally captures that \texttt{WorkerTaskMonitor} initiates concurrent execution while \texttt{RemoteTaskRunner} launches additional threads accessing shared task-state resources, enabling the explanation to describe the fault in terms of concrete cross-thread interactions.
+
+\vspace{-0.5em}
+\vspace*{3pt}
+\begin{tcolorbox}
+\stepcounter{findingsCounter}
+{\bf RQ\thefindingsCounter{} summary:} {
+The results show that ConFL significantly outperforms all baselines on Dataset$_{Git}$, achieving higher Top-$k$ accuracy as well as substantially better MRR and MAP.
+These gains indicate that ConFL not only localizes faulty methods more effectively, but also ranks them more reliably near the top.
+Moreover, by providing interaction-level concurrency context, ConFL enables more informative explanations than method-level outputs alone, supporting both accurate and explainable fault localization using bug reports only.
+}
+\end{tcolorbox}
+

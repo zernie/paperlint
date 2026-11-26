@@ -1,0 +1,41 @@
+\usepackage{booktabs,multirow,colortbl,xcolor,graphicx}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{xspace}
+\usepackage{pifont}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{placeins}
+
+\definecolor{anchorcolor}{HTML}{1F77B4}
+\definecolor{typcolor}{HTML}{2CA02C}
+\definecolor{atypcolor}{HTML}{D62728}
+
+\definecolor{oursrow}{HTML}{DCEEFA}
+
+\definecolor{findingbg}{HTML}{EAF5EA}
+\definecolor{findingborder}{HTML}{4CAF50}
+\newtcolorbox{finding}{
+  colback=findingbg, colframe=findingborder,
+  boxrule=0.5pt, left=4pt, right=4pt, top=3pt, bottom=3pt,
+  arc=2pt, fontupper=\small,
+  breakable,
+  before skip=6pt, after skip=6pt
+}
+
+\providecommand{\eg}{\textit{e.g.}\@\xspace}
+\providecommand{\ie}{\textit{i.e.}\@\xspace}
+
+\newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
+
+\newcommand{\codino}{Co-DINO\xspace}
+\newcommand{\gdino}{Grounding~DINO\xspace}
+\newcommand{\dinov}{DINOv3\xspace}
+\newcommand{\openclip}{OpenCLIP\xspace}
+\newcommand{\llava}{LLaVA-OneVision\xspace}

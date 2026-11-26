@@ -1,0 +1,231 @@
+\maketitlesupplementary
+\appendix 
+\paragraph{Organization} The appendix is organized as follows: In Appendix~\ref{sec:apx_background}, we provide the additional backgrounds of our work. We describe the details of our model architecture in Appendix~\ref{sec:apx_architecture} and the preference optimization method in Appendix~\ref{sec:apx_dpo}. Experimental details are presented in Appendix~\ref{sec:apx_exp_detail}, and further discussion is provided in Appendix~\ref{sec:apx_discussion}.
+
+\section{Background}\label{sec:apx_background}
+\paragraph{Flow Matching} Flow matching~\citep{cfm, rectflow} is a generative model that transforms a simple prior distribution $p_0$, for example, a Gaussian distribution, into the target data distribution $p_1$ via an ordinary differential equation (ODE):
+\begin{equation}
+    \frac{d x_t}{dt} = v_{\theta}(x_t, t), ~~ t \in [0, 1], \label{eq:ode}
+\end{equation}
+where for fixed $x_0$ $\sim$ $p_0$ and $x_1$ $\sim$ $p_1$, the intermediate sample is a linear interpolation $x_t = tx_1 + (1-t) x_0$. The training objective of flow matching is to regress the vector field $v_{\theta}$ toward the target vector field $v_t = x_1 - x_0$:
+\begin{equation}
+    \loss_{FM}(\theta) = \mathbb{E}_{t, x_t} \left[\| v_{\theta}(x_t, t) - (x_1 - x_0)\|\right]. \label{eq:train_fm}
+\end{equation}
+It then generates target samples by solving Eq.~\eqref{eq:ode}. Note that flow matching can be interpreted as a diffusion model~\citep{ddpm, sde} where a noise schedule follows the linear trajectory between the prior and the target data.
+
+\section{Details on Model Architecture}\label{sec:apx_architecture}
+In Appendix~\ref{sec:apx_motion_ae}, we provide more details on the motion latent auto-encoder. In Appendix~\ref{sec:apx_vector_field_model}, we provide more details on the vector field predictor $v_\theta$.
+
+\subsection{Motion Latent Auto-encoder}\label{sec:apx_motion_ae}
+
+In~\cref{fig:motion_latent_ae}, we show an overview of the motion latent auto-encoder. It encodes an image into a latent vector that can be decomposed into an identity representation (i.e., appearance) and the motion representation. This auto-encoder is trained to reconstruct a driving image using a source image that shares the same identity. During each training iteration, the encoder encodes two images $S$ and $D$ drawn from the same video clip, and computes the $z_{S \to D} := z_S + \mathbf{m}_D$ that transforms the source image into the reconstructed $\hat{D}$. This explicit decomposition yields a compact motion representation, enabling fast motion generation.
+
+We train this auto-encoder on our dataset, following the training objective described in the original paper. For more details, including the property of this latent space, training details, please refer to~\citep{lia, float}. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figure/motion-latent-ae.pdf}
+    \vspace*{-5mm}
+    \caption{\textbf{Overview of Motion Latent Encoder}. It encodes an image into a latent vector that has explicit identity-motion decomposition.\label{fig:motion_latent_ae}}
+    \vspace*{-3mm}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figure/motion_generator.pdf}
+    \vspace*{-7mm}
+    \caption{\textbf{Detailed architecture for Motion Generator in $v_{\theta}$}.\label{fig:motion_generator}}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Vector Field Model $v_\theta$}\label{sec:apx_vector_field_model}
+
+\paragraph{Model Architecture}
+The model $v_{\theta}$ comprises two main components: the Dual Motion Encoder and the Causal DFoT Motion Generator. The Dual Motion Encoder unifies three multimodal inputs through a cross-attention layer, computed as $\text{softmax}\left(\frac{QK^\top}{\sqrt{d}}\right)V$, where
+
+\begin{equation}
+    Q = \mathbf{q}W_q, \qquad
+    K = \mathbf{k}W_k, \qquad
+    V = \mathbf{v}W_v,
+\end{equation}
+
+and $W_q, W_k, W_v \in \mathbb{R}^{d \times d}$ are learnable projection matrices for the query $\mathbf{q}$, key $\mathbf{k}$, and value $\mathbf{v} \in \mathbb{R}^{N \times d}$, respectively ($N$ is the number of latents). In the first cross-attention layer, the encoder captures holistic verbal and non-verbal user motion by using the user motion latent $\mathbf{m}_u$ as the query. In the second layer, it integrates this aligned user motion with the avatar’s audio by taking the avatar audio as the query. We use four attention heads, each with a hidden dimension of $d = 512$, for both cross-attention layers.
+
+In~\cref{fig:motion_generator}, we provide a detailed architecture for the motion generator. It consists of eight DFoT transformer blocks followed by a transformer head. Specifically, in each DFoT block, noisy latents $(\mathbf{m}_{t_1}^1, \mathbf{m}_{t_2}^2, \cdots, \mathbf{m}_{t_N}^N)$ are modulated by the flow time $\mathbf{t} = (t_1, t_2, \cdots, t_N)$ through a shared AdaLN scale-shift coefficients (ToTimeEmb layer)~\citep{pixart_a}. 
+
+For the attention modules, we use Blockwise Causal Look-ahead Mask (Eq.~\eqref{eq:lookahead_mask}) in self-attention and a Sliding-window Attention Mask for aligning the driving signal $\mathbf{c}^{1:N}$ to the noisy latents. Specifically, we introduce the Blockwise Casual Look-ahead Mask to ensure the causal motion generation in our motion latent space, which significantly improves the temporal consistency of the generated video, as demonstrated in Appendix~\ref{sec:apx_additional_ablation}. Unlike the recent video diffusion models that employ a spatio-temporal compression module~\citep{causvid, self_forcing} where each latent correlates to multiple video frames by the compression rate (e.g., 4$\times$ or 8$\times$), our motion latent has one-to-one correspondence with each frame in pixel space. Under this setting, a simple (blockwise) causal mask alone produces the temporal inconsistencies across the frames or blocks. 
+
+\section{Details on Preference Optimization}\label{sec:apx_dpo}
+
+\paragraph{Training Objective Formulation}
+Inspired by DiffusionDPO~\citep{wallace2024diffusiondpo}, we formulate the training objective $\loss_{DPO}$ in the context of diffusion forcing~\citep{diffusion_forcing}. Let $(\mathbf{m}^l, \mathbf{m}^w)$ denote a pair of less-preferred and preferred motion latents, each consisting of $N$ frames, where $\mathbf{m}^l \coloneq (\mathbf{m}^{l, n})_{n=1}^{N}$ and $\mathbf{m}^w \coloneq (\mathbf{m}^{w, n})_{n=1}^{N}$. Following the per-token independent noising process of diffusion forcing, we construct the noisy latent pairs as:
+\begin{equation}
+\begin{aligned}
+    \mathbf{m}_{t_n}^{w, n} &\coloneq t_n \mathbf{m}^{w, n} + (1 - t_n)\mathbf{m}_0^{n}, \\
+    \mathbf{m}_{t_n}^{l, n} &\coloneq t_n \mathbf{m}^{l, n} + (1 - t_n)\mathbf{m}_0^{n},
+\end{aligned}
+\end{equation}
+where $n \in [1, N]$ is the frame index, $t_n \in [0, 1]$ is the $n$-th flow time, and $\mathbf{m}_0 \coloneq (\mathbf{m}_0^{n})_{n=1}^{N} \in \real^{N \times d}$ is the noise sequence. With these notations, we formulate $\loss_{DPO}$ as
+\begin{equation}
+\begin{aligned}
+\loss_{DPO}(\theta)
+&= -\mathbb{E}_{n, t_n, \mathbf{c}^n, (\mathbf{m}^{w, n},\mathbf{m}^{l, n})} \\
+& \log \sigma\Big(
+    - \beta \big[ \|v^{w, n}_{t_n} - v_{\theta}(\mathbf{m}^{w, n}_{t_n}, t_n, \mathbf{c}^n)\| \\
+ & \quad - \|v^{w, n}_{t_n} - v_{\text{ref}}(\mathbf{m}^{w, n}_{t_n}, t_n, \mathbf{c}^n)\|  \\
+ & \quad - (\|v^{l, n}_{t_n} - v_{\theta}(\mathbf{m}^{l, n}_{t_n}, t_n, \mathbf{c}^n)\| \\
+ & \quad - \|v^{l, n}_{t_n} - v_{\text{ref}}(\mathbf{m}^{l,n}_{t_n}, t_n, \mathbf{c}^n)\|)\big] \Big), \\
+\end{aligned}
+\label{eq:dpo_train}
+\end{equation}
+where $\mathbf{c}^n$ is the $n$-th unified condition, $v_{\text{ref}}$ is the reference vector field model, the target vector fields for less-preferred and preferred samples are given by
+\begin{equation}
+v_{t_n}^{l, n} \coloneq \mathbf{m}^{l, n} - \mathbf{m}_0^{n} ~~~\text{and}~~~ v_{t_n}^{w, n} \coloneq \mathbf{m}^{w, n} - \mathbf{m}_0^{n}.
+\end{equation}
+
+
+\section{Experimental Details}\label{sec:apx_exp_detail}
+
+\subsection{Inference Details}
+\paragraph{Classifier-Free Guidance (CFG)} We apply independent classifier-free guidance (CFG)~\citep{instructpix2pix} for multiple driving conditions. Specifically, we compute the modified vector field $\tilde{v}_{\theta}$ as
+\begin{equation}
+\begin{aligned}
+    \tilde{v}_\theta(x_t, t; \mathbf{c}) & \coloneq v_\theta(x_t, t; \mathbf{c}_{\{\emptyset,\emptyset\}}), \\
+    & + w_{\mathbf{a}} [ v_\theta(x_t, t; \mathbf{c}_{\{\mathbf{a}, \emptyset\}}) - v_\theta(x_t, t; \mathbf{c}_{\{\emptyset,\emptyset\}})], \\
+    & + w_{\mathbf{u}} [v_\theta(x_t, t; \mathbf{c}_{\{\emptyset, \mathbf{\mathbf{u}\}}}) - v_\theta(x_t, t; \mathbf{c}_{\{\emptyset, \emptyset\}}],\label{eq:apx_cfg}
+\end{aligned}
+\end{equation}
+where $\mathbf{c}_{\{x, y\}}$ denotes a driving condition with the conditions $x$ and $y$. $\mathbf{a}$ denotes the avatar audio, and  $\mathbf{u} = \{\mathbf{a}_u, \mathbf{m}_u\}$ is the set of user audio $\mathbf{a}_u$ and user motion $\mathbf{m}_u$. $w_{\mathbf{a}}$ and $w_{\mathbf{u}}$ are the CFG scales of the avatar audio and user condition, respectively. We use 10\% dropout rate for each condition during training.
+
+\input{table/algorithm1_detail}
+
+\paragraph{Motion Inference Details}
+We provide more details on our inference strategy in~\cref{algo:sampling_detail}.
+
+While the lookahead attention enables to generate temporally consistent motion across the blocks, naively introducing it incurs additional latency as it requires $l$ future frames. To tackle this problem, we introduce an offset $\mathbf{O}^i$ for $i$-th block generation. Specifically, the offset $\mathbf{O}^i$ consists of the last $l$ clean motion latents and the corresponding condition from the previous block:
+\begin{equation}
+    \mathbf{O}^{i+1} = (\mathbf{m}_1^{i}[-l:], \mathbf{c}^{i}([-l:])),\label{eq:offset}
+\end{equation}
+
+where $i=1, \cdots, L-1$. These offset motion frames are concatenated with the current noisy motion block $\mathbf{m}^i_{t_j}\in \real^{B\times d}$ and the condition $\mathbf{c}^i \in \real^{3 \times B \times d}$ along the time axis, resulting in $l + B$ motion frames and corresponding conditions (Line 7 in~\cref{algo:sampling_detail}). Due to the flexibility of diffusion forcing, we can assign difference flow time schedules, i.e., $t=1$ for the offset and $t=t_j$ for the current noisy latent block.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figure/ablation_vs_ar_diffusion.pdf}
+    \vspace*{-6mm}
+    \caption{Comparison of \textbf{autoregressive diffusion} and \textbf{diffusion forcing}. Autoregressive diffusion suffers from motion drift (red arrow) over the long horizon, whereas diffusion forcing maintains stable motion generation over the long horizon.}\label{fig:apx_ablation_ar_diffusion}
+    \vspace*{-2mm}
+\end{figure*}
+
+As we compute the modified vector field $\tilde{v}_\theta$ for CFG as in Eq.~\eqref{eq:apx_cfg}, we separately cache and update the KV of these vector fields $v_\theta (\cdot; \mathbf{c}_{\{\emptyset, \emptyset\}})$, $v_\theta (\cdot; \mathbf{c}_{\{\mathbf{a}, \emptyset\}})$, and $v_\theta (\cdot; \mathbf{c}_{\{\emptyset, \mathbf{u}\}})$. To obtain the KV caches of the clean block, we compute all three by reusing the generated motion block along with the existing KV caches~\citep{self_forcing}. Moreover, due to the introduction of lookahead attention and offset, the KV caches are updated except the for last $l$ frames and these frames are provided by the offset. Therefore, the maximum cache size is $M = L - B - l = 38$.
+\input{table/ablation_full}
+
+\subsection{Training Details}
+We train the vector field model $v_{\theta}$ in Eq.~\eqref{eq:train_ours} for 2000k steps while freezing the motion latent auto-encoder. We use L1 distance for $\| \cdot \|$. For fine-tuning the model using the proposed preference optimization method in Eq.~\eqref{eq:total_objective}, we set the balancing coefficient to $\lambda=0.1$ and the deviation parameter to $\beta=1000$. We initialize the reference model $v_{\text{ref}}$ with the same weights as the trained $v_{\theta}$. We fine-tune $v_\theta$ for 5k steps and observe that additional tuning does not yield further performance gains. 
+
+\subsection{Baseline Implementation}
+One major challenge of evaluating an interactive head avatar model is the \textbf{absence of official implementation of baseline methods}. To bridge this gap, we reproduce INFP~\citep{infp} on the motion latent space of ~\citep{float}, following its core module, Motion Guider and denote the reproduced model as INFP*. Based on the description in the original paper, we adopt a bidirectional Transformer encoder for motion generation, where a single window consists of $N=75$ frames and additional $10$ frames serve as context frames. For Motion Guider, we set $K=64$ for both verbal and non-verbal motion memory banks. We train INFP* on our dataset for 2000k steps.
+
+\subsection{Additional Ablation Studies}\label{sec:apx_additional_ablation}
+\paragraph{Comparison with Autoregressive Diffusion} We compare our motion latent diffusion forcing with standard autoregressive diffusion, where the motion generator is conditioned on clean context motion latents. Specifically, we train the motion generator in an autoregressive diffusion manner using four clean context blocks (40 frames) and one noisy block (10 frames). As shown in~\cref{fig:apx_ablation_ar_diffusion}, autoregressive diffusion suffers from degraded long-horizon generation, whereas diffusion forcing is much more robust to motion drift, highlighting its necessity.
+
+\paragraph{Ablation on Motion Motion block Size} In~\cref{tab:apx_ablation_block_size}, we provide an ablation study on motion block size under a fixed number of training frames $N=50$. Increasing block size (i.e., reducing the number of frames in each block) leads to lower latency while achieving quantitative performance. Conversely, reducing the block size (i.e., increasing the number of frames in each block) can improve the temporal consistency (FVD) and Lip-sync quality (LSE-D) with higher latency.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figure/mask_compare.pdf}
+    \vspace{-0.3in}
+    \caption{\textbf{Attention Mask Comparison.} (Left) framewise causal mask; (Middle) blockwise causal mask; (Right) blockwise causal look-ahead mask (Ours).} \label{fig:mask_compare}
+    \vspace{-0.1in}
+\end{figure}
+
+\paragraph{Additional Quantitative Results} In~\cref{tab:apx_ablation_realtalk}, we present the ablation studies on our model with additional metrics, including Visual Quality and Lip Synchronization. We provide a video results of the ablation study. Please refer to the videos \textit{``02\_ablation\_wo\_user\_motion.mp4''} and \textit{``02\_ablation\_wo\_DPO.mp4''}. Moreover, we provide video ablation results on the attention mask, where each masking method is illustrated in~\cref{fig:mask_compare}. The motion jittering observed when using only the blockwise causal mask is clearly visible in the video results, yet difficult to capture with quantitative metrics. We highly recommend watching the ablation video \textit{``02\_ablation\_attention\_mask\_XX.mp4''}.
+
+
+\subsection{Evaluation Metrics}
+\paragraph{Reactiveness and Motion Richness} Reactiveness and Motion Richness are computed using the EMOCA-based~\citep{emoca} 3D morphable models (3DMMs) that model the facial dynamics via 50-dim expression parameters and 6-dim pose parameters. We extract those parameters using an off-the-shelf 3DMM extractor, SPECTRE~\citep{spectre}, for each video frame. Let us denote $x\in\real^{N\times d}$ as the ground-truth user parameters, $y\in\real^{N\times d}$ as the ground-truth avatar parameters, and $\hat{y}\in\real^{N\times d}$ as the generated avatar parameters. $L$ is the number of frames and $d$ is the feature dimension. As reported in~\cref{tab:quantitative_realtalk} and~\cref{tab:compare_listening_vico}, we can compute rPCC, SID, Var, and FD for expression and pose, respectively.
+
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{rPCC} (residual Pearson Correlation Coefficients)~\citep{dim} is to measure the motion synchronization between the user parameters and avatar parameters. Specifically, L1 distance is used to measure the discrepancy between generated PCC and ground-truth PCC where we define PCC as a function of $z\in\real^{N\times d}$ given ground-truth user parameters $x$:
+\begin{equation}
+    \text{PCC}(z|x) = \frac{\sum (z_i - \bar{z})(x_i - \bar{x})}{\sqrt{\sum(z_i - \bar{z})^2 \sum (x_i - \bar{x})^2}},
+\end{equation}
+where $i\in[0,N]$ is the frame index, and $\bar{z}$ and $\bar{x}$ denote the mean of $z$ and $y$, respectively. Based on this notation, we can define rPCC as $|\text{PCC}(y|x) - \text{PCC}(\hat{y}|x)|$. 
+
+\item \textbf{SID} (Shannon Index for Diversity)~\citep{l2l} is to measure the motion diversity of the generated avatars using $K$-means clustering on 3DMM parameters. Following~\citep{l2l}, we compute the average entropy (Shannon index) of the clusters with $K=15, 9$ for expression and pose, respectively.
+
+\item \textbf{Var} is the variance of the parameters from generated avatars, which is computed along the time axis and then averaged along the feature axis. 
+
+\item \textbf{FD} (Frechet Distance)~\citep{fid} measures the distance between the expression and pose distributions of the generated avatars and the ground truth by calculating
+\begin{equation}
+    |\mu_{\hat{y}} - \mu_{y}| + \text{tr}(\Sigma_{\hat{y}} + \Sigma_{y} - 2 (\Sigma_{\hat{y}} \Sigma_{y})^{\frac{1}{2}}), \label{eq:fd}
+\end{equation}
+where $\mu$ and $\Sigma$ are the mean and the covariance matrix, respectively.
+\end{itemize}
+
+\input{table/ablation_motion_block.tex}
+
+\paragraph{Visual Quality} We utilize FID~\citep{fid} and FVD~\citep{fvd} to assess the image and video quality of the generated avatars, and CSIM~\citep{arcface} to measure the identity preservation performance of avatar generation models.
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{FID} (Frechet Inception Distance) measures the quality of the generated frames by comparing the distribution of image features extracted from a pre-trained feature extractor~\citep{fid}. The FD computation in Eq.~\eqref{eq:fd} is adopted using the extracted image features.
+\item \textbf{FVD} (Frechet Video Distance) quantifies the spatio-temporal quality of the generated videos by comparing the feature distributions of real and generated videos in a learned video feature space~\citep{fvd}. It reflects both frame-wise quality and temporal consistency. The FD computation in Eq.~\eqref{eq:fd} is adopted using the extracted video features.
+\item \textbf{CSIM} (Cosine Similarity for Identity Embedding) evaluates identity preservation by computing cosine similarity between the facial embeddings from the generated and the source image, extracted using ArcFace~\citep{arcface}.
+\end{itemize}
+
+\paragraph{Lip Synchronization} We compute LSE-D and LSE-C~\citep{syncnet} to assess the alignment between the generated lip motion and the corresponding audio.
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{LSE-D} and \textbf{LSE-C} (Lip Sync Error Distance and Confidence):
+Both metrics are derived from a pre-trained SyncNet-based audio–visual synchronization model. LSE-D measures the distance between the audio and lip embeddings, where lower values indicate better synchronization. LSE-C measures the confidence score of synchronized audio–visual pairs, where higher values indicate more accurate lip-audio alignment.
+\end{itemize}
+
+\subsection{Human Evaluation} 
+In~\cref{fig:apx_human_eval}, we show the interface used for our human evaluation. To improve the evaluation consistency, we additionally provided participants with a reference test and answer sheet. We asked 42 participants to compare 12 videos based on 5 evaluation metrics and indicate their preference. We also provide a video test sheet. Please refer to \textit{``04\_human\_evaluation\_XX.mp4''}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figure/appendix-human-evaluation-screenshot.pdf}
+    \caption{\textbf{Human evaluation interface}. (Left) Instructions for human evaluation; (Middle) A reference sheet for consistent evaluation; (Right) Test and answer sheet.}\label{fig:apx_human_eval}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Supplementary Visual Results}
+\paragraph{Comparison with Interactive Head Avatar}
+We provide the video results to further support the visual results in~\cref{fig:sota_compare}. Please refer to \textit{``01\_interactive\_avatar\_comparison\_XX.mp4''}. We also provide a video comparison results using the DEMO videos of Official INFP~\citep{infp}. Please refer to \textit{``01\_interactive\_avatar\_comparison\_demo.mp4''}
+
+\paragraph{Comparison with Talking Head Avatar}
+In~\cref{fig:apx_talking_head}, we compare our model with SadTalker~\citep{sadtalker}, Hallo3~\citep{hallo3}, FLOAT~\citep{float}, and INFP*~\citep{infp} for talking head avatar generation bu dropping the user condition at inference. Avatar Forcing can generate competitive results compared to state-of-the-art models, while our model successfully reflects user signals. We also provide the video comparison results. Please refer to \textit{``03\_talking\_XX.mp4''}.
+
+\paragraph{Comparison with Listening Head Avatar}
+In~\cref{fig:apx_listening_head}, we compare our model with RLHG~\citep{rlhg}, L2L~\citep{l2l}, DIM~\citep{dim}, and INFP*~\citep{infp} for listening head avatar generation. Avatar Forcing can generate competitive results with more expressive facial expression. Please refer to \textit{``03\_listening\_XX.mp4''} for video results.
+
+
+\section{Discussion}\label{sec:apx_discussion}
+\paragraph{Ethical Consideration} Our method can generate more engaging and interactive head-avatar videos, broadening positive applications such as virtual avatar chat, virtual education, and other communication tools by providing users with a more immersive experience. However, realistic interactive head avatar videos also pose risks of misuse, including identity spoofing or malicious deepfakes. Adding watermarks to generated videos
+and applying a restricted license can help mitigate these risks. We also encourage the community to use our generated data to train deepfake detection models.
+
+\paragraph{Limitation and Future Work}
+Our system focuses on modeling interactive conversations through a head-motion latent space, which enables natural and expressive interactions. This design limits the modeling of richer bodily cues, such as hand gestures, that contribute to more dynamic communication. Moreover, while our model captures user-driven conversational cues via motion latents, certain scenarios may require more explicit controllability, such as directing eye gaze or emphasizing emotional shifts. We believe that incorporating additional user signals, including eye-tracking or emotion-tracking inputs, can address these limitations. Since our framework imposes no architectural constraints on adding new conditions, such signals can be incorporated in future extensions of our system. While diffusion forcing is robust for long-horizon generation, it does not fully address exposure bias. Addressing this issue in the motion latent space remains future work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figure/compare-talking.pdf}
+    \caption{\textbf{Qualitative comparison on talking head avatar generation}.\label{fig:apx_talking_head}}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figure/compare_listening.pdf}
+    \caption{\textbf{Qualitative comparison on listening head avatar generation}.\label{fig:apx_listening_head}}
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\FloatBarrier
+\clearpage

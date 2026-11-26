@@ -1,0 +1,12 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented CTRL, a framework that repositions LLMs as strategic controllers rather than numerical predictors. Frozen LLMs generate interpretable correction policies via in-context learning, while a lightweight residual decoder translates these into forecast adjustments. Experiments demonstrate consistent gains, with the strongest improvements on non-stationary datasets, using 3--24 LLM calls through policy caching. Structural isolation from pretraining data positions CTRL as a practical plug-in for deployment where distribution shift is unpredictable and labels are unavailable.
+
+\section{Limitations}
+CTRL's improvement diminishes at extended horizons, where growing backbone error makes residual correction more uncertain. On highly stationary datasets (e.g., Weather), gains are marginal, which reflects appropriate behavior rather than a failure mode. Our evaluation excludes TimesFM~\cite{das2024timesfm}, a 200M-parameter foundation model representing a different contribution category; applying CTRL as a post-hoc correction layer on foundation model outputs remains future work.
+
+
+\section*{Acknowledgments}
+
+This work was supported by the Ministry of Education of the Republic of Korea and the National Research Foundation of Korea (NRF-2024S1A5C3A03046579).

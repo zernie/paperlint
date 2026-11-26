@@ -1,0 +1,118 @@
+\section{Proactive Hearing Assistants}
+
+
+\begin{figure*}[t]
+    \centering
+  %  \vskip -0.1in
+    \includegraphics[width=1\linewidth]{figs/diagram.pdf}
+    \vskip -0.14in
+    \caption{Overview of our model pipeline.     A. The streaming beamformer extracts the wearer's self-speech from the binaural mixture. B. Dual-model architecture: the slow model runs every 1s ($T$) on the mixture and self-speech to produce a conversation embedding; the fast model runs every 12.5~ms ($\tau$) on the current mixture and  embedding from the previous 1s ($T$), to output the cleaned target conversation.
+    }
+    \vskip -0.15in
+    \label{fig:pipeline}
+\end{figure*}
+
+
+
+%We first formulate the problem of proactive hearing assistants  (\xref{sec:problem_formulation}), then describe the system architecture (\xref{sec:modeling}) and training procedure (\xref{sec:training}).
+
+
+
+\subsection{Problem formulation}
+\label{sec:problem_formulation}
+
+The input egocentric audio stream can be decomposed into three components: the target conversation involving the wearer, interfering conversations, and background noise. 
+%, \emph{i.e.,}  $m(t) = s^{conv}(t) + s^{inter}(t) + n(t)$.  
+
+
+%The input is an egocentric audio stream,  $m(t) \in \mathbf{R^{2}}$ which can be decomposed into three components: the target conversation involving the wearer, interfering conversations, and background noise, \emph{i.e.,}  $m(t) = s^{conv}(t) + s^{inter}(t) + n(t)$.  
+
+The target conversation  consists of the wearer's self-speech and the speech of their conversational partners. Notably, in egocentric recordings, the wearer's own speech is typically  louder  than all other voices.
+
+
+Our goal is to identify and separate the wearer's conversation partners, which can be done by isolating the target conversation and suppressing model output during the wearer’s own speech, using on-device voice activity detection (e.g., as in AirPods~\cite{apple-conversationawareness}). The system can then  output the conversation partners' speech into the ear.
+
+
+
+The system must handle dynamic conversational settings, where speakers may join or leave the conversation at any time, following natural turn-taking patterns. Real-world dialogue includes backchannels and overlaps, requiring the model to adapt as speakers shift between target and interfering conversations. For example, a speaker might begin as part of the target conversation (e.g., at a dinner table) but later engage in a separate, interfering conversation, requiring the system to adapt.
+
+
+
+
+
+Once the conversation partners are extracted, their voices must be rendered to the wearer with minimal delay to preserve a natural conversational experience. Thus, the system must process audio in small chunks of 10–20~ms to maintain a  latency below the perceptual threshold. Real-time operation requires each chunk to be processed faster than it is recorded. Because offloading to a phone or cloud introduces communication delays (10–30~ms over Bluetooth and 100–200~ms over the Internet),  streaming processing must occur on-device on compute-limited embedded platforms.
+
+An assumption we make is that the wearer is an active participant in the conversation. Thus, passive listening, such as eavesdropping, is a non-goal. 
+
+\subsection{Proactive assistant modeling}\label{sec:modeling}
+Fig.~\ref{fig:pipeline} shows the full  architecture, including all sub-networks and the data pipeline. The beamformer and the slow conversational embedding model operate on audio chunks of $T$ second length, while the fast streaming model runs on much shorter chunks of $\tau$ seconds ($\tau \ll T$). The beamformer takes the egocentric binaural audio stream and isolates the wearer's own voice by beamforming toward their mouth. This self-speech, along with the monaural egocentric audio mixture, is inputted to the slow  model, which generates an embedding every $T$ seconds. This embedding is then used by the fast streaming model to guide target conversation extraction for upcoming audio chunks. The fast model receives  a single egocentric audio stream and the conversational embedding as input.
+
+
+
+
+
+\subsubsection{Dual-model processing}\label{sec:dual}
+Conversations can occur continuously for very long durations. Thus, it is useful to utilize attention to effectively model and retain minutes-long contextual sequences of audio. However, with attention, it is challenging to meet the strict real-time requirements needed for proactive hearing assistants on hardware with tight processing capabilities. 
+
+Specifically, as conversation length increases, so does the number of chunks, leading to longer input sequences for the attention mechanism. This is problematic, as the memory requirements of full self-attention scale quadratically with sequence length~\cite{ainslie2020etcencodinglongstructured,10889061}. Ideally, we want to maintain long-context awareness for accurate filtering while ensuring low memory usage and real-time performance. 
+
+We employ a dual-model pipeline. It incorporates a high-latency, attention-based network to model long  sequences and extract a  conversation embedding, and a low-latency, low-complexity LSTM-based network that integrates this conversation embedding to estimate the target conversation in small chunks. Since the fast model does not directly attend to historical context, its memory footprint is low. Further, because the large model processes fewer, longer chunks, it attends over fewer tokens for the same conversation duration, enabling it to efficiently capture extended context (details in~\xref{sec:dualmodeldetails}).
+
+Several key design choices support real-time performance. First, the beamformed self-speech is not fed into the fast model, as doing so would introduce additional processing latency that would violate real-time constraints. Second, the  slow embedding model processes audio $T$ seconds behind the fast stream. This decoupling allows these models to run remotely on say a smartphone. Further, it prevents their higher processing latency from affecting streaming performance, but introduces a tradeoff: larger $T$ values reduce the system’s responsiveness to  conversational dynamics (see~\xref{sec:ablation}).  Third, both the fast and slow models use monaural rather than binaural audio as input. This reduces computational load on the fast model and ensures the models focus on conversational turn-taking and dynamics rather than spatial cues.
+
+
+
+
+
+
+\subsection{Training strategy}\label{sec:training}
+
+
+Our models must generalize to egocentric binaural conversations with 2–3 participants and handle dynamic scenarios where participants may leave the target conversation and join an interfering one. To jointly model conversation tracking and source separation, we require mixtures of a target egocentric conversation with a separate interfering conversation with no shared speakers. However, since the wearer's self-speech dominates in egocentric audio, we cannot simply mix two egocentric recordings. Instead, we need passive third-person binaural recordings to construct realistic mixtures.
+
+Existing egocentric datasets like EgoCom~\cite{egocom} and EasyCom~\cite{easycom} are unsuitable for this purpose:  EgoCom features the same host in all recordings and  both datasets   lack third-person binaural recordings needed for  mixture synthesis. 
+
+
+Instead, we use non-egocentric datasets and spatialize them to simulate egocentric scenarios. We train on the Candor dataset~\cite{candor}, which contains 850 hours of high-quality 2-speaker English conversations, and RAMC~\cite{ramc}, which has 180 hours of 2-speaker Mandarin conversations. Both provide clean audio, speaker IDs, and timestamps. Large open-source datasets with 3-speaker conversations or complex dynamics (e.g., speakers switching conversations) are scarce.
+
+
+\subsubsection{Synthetic dataset creation}
+To address this, we adopt the time-preserving method from~\cite{tce} and generate {five} synthetic datasets (see~\xref{sec:datasetgen}):
+\squishlist
+    \item {\it Libri (2spk).} We align LibriTTS~\cite{zen2019libritts} audio from two random English speakers with RAMC~\cite{ramc} 2-spk timestamps, replacing the original Mandarin utterances.
+    
+    \item {\it Libri (3spk).} With RAMC timestamps, we randomly assign each turn to one of three LibriTTS speakers, creating a synthetic 3-spk conversation.
+    
+    \item {\it Libri (leaving).} A speaker active in the first 20 seconds of the 3-spk conversation leaves and reappears in the interfering conversation between 20–40 seconds, simulating speaker dynamics.
+
+    \item {\it Libri (4spk) and (5spk) (Evaluation only).} {Two test-only datasets where RAMC test set timestamps are used to generate synthetic four- and five-speaker conversations by randomly assigning each turn to one of four or five LibriTTS speakers.}
+
+    
+\squishend
+
+\subsubsection{Training procedure}\label{sec:trainingrecipe}
+
+
+We generate  mixtures by combining a target conversation with an interfering conversation and  noise. Each target conversation starts at least 5 seconds of the wearer’s self-speech, so the models can anchor to the wearer. Training proceeds in three stages.
+
+
+
+
+
+ We pretrain on the training splits of the three synthetic datasets and Candor mixtures. The fast streaming model and the slow conversational embedding model are trained jointly, with a negative SNR loss computed on the fast  model’s output to reconstruct the target conversation. The conversational embedding model receives ground-truth self-speech as input.
+
+
+In the second stage, to simulate egocentric hearing, we spatialize the synthetic and Candor datasets (see~\xref{sec:spatialize}). Ground-truth self-speech is replaced with the output of a pretrained beamformer, which serves as input to the slow  model. Both models are trained jointly using the same loss function.
+
+
+To address the distribution shift between Candor (Zoom-based, first-time interactions) and real-world, in-person conversations between familiar participants, in the final stage, we finetune the model by perturbing the amount of silence and overlap between speaker utterances (see~\xref{sec:trainingdetails})). 
+
+
+\subsection{On-device real-time inference}
+The fast streaming model runs on a low-power embedded device, while the slower conversational embedding  model can operate remotely on device with more compute. 
+To meet real-time requirements, we run the fast streaming model on an embedded Orange Pi 5B and the slower conversational model on Apple M2 silicon, supported by commodity wearable devices. The fast model processes 12.5~ms audio chunks in 8.9~ms on average, while the slow model processes 1-second chunks in 41.3~ms. {In addition, we profiled memory usage for the slow and fast models. We run streaming inference of the slow and fast models for 100 runs. Then we measure the peak memory usage averaged over 100 runs. Peak memory is 591.47 MB (slow model) and 86.33 MB (fast model) during streaming inference.}
+ 
+
+
+
+

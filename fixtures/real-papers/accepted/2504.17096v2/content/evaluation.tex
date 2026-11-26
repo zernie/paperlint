@@ -1,0 +1,272 @@
+\section{Evaluation}\label{sec:eval}
+
+We evaluate \sailor to answer the following questions:
+
+\begin{enumerate}
+    \item How accurately does the \sailor simulator estimate iteration time and memory footprint?
+    \item How well does the \sailor planner perform compared to baselines in homogeneous and heterogeneous setups, in terms of throughput and monetary cost?
+     \item How is the \sailor planner search time affected by the cluster size, resource heterogeneity, user constraints and the different optimizations?
+
+\end{enumerate}
+
+\textbf{System configurations: } We evaluate \sailor using real hardware and simulations. We use different cluster setups and GPU generations, in both cloud environments and on-premise clusters. In the public cloud, we used VMs with A100-40GB and V100-16GB  from GCP~\cite{gcpgpus}. For our on-premise datacenter experiments, we used a cluster with up to 32 homogeneous machines with 4 Grace-Hopper GPUs each, and a cluster of heterogeneous machines with 2x8 Titan-RTX, 3x8 RTX-2080, and 2x8 RTX-3090. 
+
+\textbf{Models:} We use the OPT-350M~\cite{hfopt} and GPT-Neo-2.7B~\cite{hfgptneo} models, with global batch size of 2048 sequences, and sequence length of 2048 tokens, with the Adam optimizer.
+
+\textbf{Baselines: } To our knowledge, we present the first comprehensive comparison of major planners for large-scale ML training, including planners targeting \textit{homogeneous} resources (Piper~\cite{Tarnawski21Piper}, Varuna~\cite{Athlur22Varuna}, Aceso~\cite{Liu24Aceso}), \textit{heterogeneous} resources (AMP~\cite{li2022amp}, Metis~\cite{Um24Metis}, FlashFlex~\cite{yan2024flashflex}), and \textit{geo-distributed training} (DTFM\cite{yuan2023decentralized}). All baselines, except Aceso, are integrated into our platform with a unified Python API. We profile our models once and give each baseline its required profiling information.  Aceso defines its own operators, which we profile separately. As Aceso also uses the Megatron backend, per-layer runtime profiles are very close to our models. 
+We used the open-source version of all baselines. DTFM~\cite{yuan2023decentralized} does not determine parallelization strategies (e.g., DP, PP), but instead partitions a given plan. Therefore, we exhaustively generated all homogeneous parallelization plans and applied their partitioning methods to each. As the Atlas paper does not have an open-source implementation of runtime and memory simulation, we were unable to test Atlas end-to-end. However, we tested the zone assignment described in the paper~\cite{palak2024atlas}, which performs similar to \sailor.
+
+\subsection{Validation of the \sailor simulator}\label{sec:eval_val}
+
+We evaluate the accuracy of the \sailor simulator's iteration time and memory footprint estimations. We vary the number of devices and parallelization plans, find the difference in iteration time and peak memory footprint, and summarize using box plots. We omit AMP and DTFM since they do not support memory estimation.
+
+\textbf{Cluster of homogeneous GPU types.} Figures \ref{fig:val_homo_mem} and \ref{fig:val_homo_time} show the iteration time and peak memory footprint estimation error for the homogeneous cluster of Grace-Hopper for the OPT-350M model, respectively. Most baselines fail to accurately capture the peak memory footprint, since they ignore significant memory sources and assume a homogeneous memory footprint across the different pipeline stages. The examined baselines exhibit an error of 12.5-74\% on average, while \sailor  achieves an average error of 5.56\%. \sailor also reduces the average runtime estimation error in the homogeneous setup to 6\%, compared to 10-20\% for the baselines.
+
+
+\begin{figure}[t!]
+    \centering
+    % First row of subfigures
+    
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/evaluation/validation/homogeneous/OPT_350_box_mem.pdf}
+        \caption{Peak memory footprint estimation}
+        \label{fig:val_homo_mem}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/evaluation/validation/homogeneous/OPT_350_box_time.pdf}
+        \caption{Iteration time estimation}
+        \label{fig:val_homo_time}
+    \end{subfigure}
+    \caption{Different planners' compute and memory estimation on a cluster of GH200 GPU for the OPT-350M model. 
+    }
+    \label{fig:val_homo}
+\end{figure}
+
+\textbf{Cluster of Heterogeneous GPU types.} Figure \ref{fig:val_time_hetero} shows the iteration time prediction error for the OPT-350M model in a heterogeneous cluster of Titan-RTX, RTX-2080, and RTX-3090. The homogeneous planners (Piper, Varuna, Aceso) do not consider the differences in forward and backward passes of the different GPU types, resulting in an average error of 28\%, 47\%, and 37\%, respectively. Even heterogeneous planners fail to accurately capture runtime: since FlashFlex relies on the theoretical performance of GPUs, it cannot accurately predict the runtime, getting an error of 69\%. Metis fails to fully capture the heterogeneous network bandwidth between nodes, thus miscalculating the communication cost, resulting in 28\% error in iteration time estimation, on average.On average, \sailor's iteration time estimations error is 4.5\%.
+
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/validation/heterogeneous/OPT_350_box_time.pdf}
+    \caption{Different planners' iteration time on a cluster with heterogeneous GPUs for the OPT-350M model.}
+    \label{fig:val_time_hetero}
+    \vspace{-0.4cm}
+\end{figure}
+
+
+
+\subsection{\sailor Planner vs. Baselines}\label{sec:eval_planner}
+
+We evaluate the throughput achieved by \sailor and the baselines across various cluster configurations using both real hardware and our simulator. All baselines require a predefined resource topology as input: we consider 4-GPU VMs for each GPU type.
+\sailor takes resource quotas as input (total \textit{number} of GPUs per type per zone) and jointly determines both the topology (VM allocation) and the parallelization plan. For Metis, we impose a 300-second time limit and use the best solution found within that period, if available. We summarize key takeaways. 
+
+\begin{figure}[t]
+    \centering
+\includegraphics[width=\linewidth]{figures/evaluation/planner/homogeneous/throughput_points.pdf}
+    \caption{Comparison of the different planners considering A100-40GB GPUs for the OPT-350M model in one zone }
+    \label{fig:planner_homo}
+\vspace{-0.5cm}
+\end{figure}
+
+\subsubsection{Homogeneous Setups}\label{sec:eval_planner_homo}
+
+Figure \ref{fig:planner_homo} shows the throughput achieved using the baseline planners and \sailor with only A100 GPUs for the OPT-350M model. Varuna failed to generate a valid plan that would not lead to OOM errors due to the poor memory estimation, and its limited search space (only supporting 2D parallelism). \sailor improves throughput by 1.15$\times$ compared to the closest baseline (DTFM), and even up to 5.7$\times$ (compared to Aceso).
+
+
+
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/heterogeneous/throughput_OPT_50.pdf}
+        \caption{50\% A100, 50\% V100}
+        \label{fig:planner_het_OPT_50}
+    \end{subfigure}
+    {\hskip 0.05in}
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/evaluation/planner/heterogeneous/throughput_OPT_75.pdf}
+        \caption{25\% A100, 75\% V100}
+        \label{fig:planner_het_OPT_25}
+    \end{subfigure}
+    \caption{Comparison of planners considering A100 and V100 GPUs for the OPT-350M model in 1 zone }
+    \label{fig:planner_het_OPT}
+\end{figure*}
+
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/heterogeneous/throughput_GPT_50.pdf}
+        \caption{50\% A100, 50\% V100}
+        \label{fig:planner_het_GPT_50}
+    \end{subfigure}
+    {\hskip 0.05in}
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/evaluation/planner/heterogeneous/throughput_GPT_75.pdf}
+        \caption{25\% A100, 75\% V100}
+        \label{fig:planner_het_GPT_25}
+    \end{subfigure}
+    \caption{Comparison of planners considering A100 and V100 GPUs for the GPT-Neo-2.7B model in 1 zone }
+    \label{fig:planner_het_GPT}
+\end{figure*}
+
+\subsubsection{Heterogeneous Setups}\label{sec:eval_planner_het}
+
+We evaluate \sailor's throughput compared to baselines (AMP, Metis, and FlashFlex) in a heterogeneous cluster setup using a mixture of A100 and V100. We vary the ratio and amount of A100 and V100 (50\%-50\% and 25\%-75\%) to assess the impact of having more low-end GPUs in the cluster~\cite{guo2024cephalo}). As in the homogeneous setup, all baselines get a fixed resource topology (4-GPU VMs) as input, while \sailor also determines the resource topology along with the parallelization plan.
+
+\textbf{Throughput of heterogeneous baselines:} Figures~\ref{fig:planner_het_OPT}~and~\ref{fig:planner_het_GPT} use our simulator to evaluate \sailor and the baselines in large heterogeneous clusters for the OPT-350M and GPT-Neo-2.7B model, respectively. We also compare the throughput achieved by \sailor, when using only homogeneous resources (either A100 or V100).  We also report the monetary cost per iteration at each scenario (number on top of bar), and the number of plans generated by the baseline that would lead to OOM before a valid plan was found (\textbf{bold} number on top of bar). Although AMP achieves high throughput in the homogeneous case,  it performs poorly in the heterogeneous scenario, as it only allows for homogeneous plans, and does not correctly model stragglers. As a result, the monetary cost per iteration also increases. Furthermore, since AMP does not model training memory footprint, it leads to a large number of OOM plans, especially in the case of the GPT-Neo model (Figure ~\ref{fig:planner_het_GPT}). 
+
+FlashFlex achieves similar or higher throughput than AMP, as it can consider heterogeneous plans, and captures differences in compute between the different GPUs. However, its throughput is still low, as it uses low tensor parallelism and microbatch sizes. This leads to higher iteration costs (e.g. Figure \ref{fig:planner_het_OPT}), since it uses a large number of resources with a low throughput. It also fails to find valid plans for the large GPT-Neo model due to suboptimal memory estimation. Metis capped at 300 seconds achieves higher throughput than FlashFlex and AMP, due to more accurate runtime and memory footprint estimation, layer partitioning, load balancing, and exhaustive search of different GPU group combinations, but it generates a huge number of OOM plans (Figure \ref{fig:planner_het_GPT}).
+
+\sailor achieves significantly higher throughput compared to baselines: for the OPT-350M model, \sailor achieves 1.9$\times$, 2.03$\times$, and 1.15$\times$ higher throughput compared to AMP, FlashFlex, and Metis, respectively, when the ratio of A100 and V100 GPUs is equal, and 1.57$\times$, 1.55$\times$, 1.39$\times$ higher throughput when more V100 are available. 
+The speedups are similar for the GPT-Neo model as well. Compared to baselines, \sailor uses larger tensor parallelism and longer pipelines, accounting for data parallelism limitations among heterogeneous nodes (for example AMP uses data parallelism of 256 in Figure~\ref{fig:planner_geo} which significantly increases the data parallelism communication cost.) Also, \sailor does not output invalid plans, significantly improving the plan deployment compared to baselines with 10s of invalid plans. 
+\sailor's ability to discover efficient resource topologies and parallelization plans also translates to significantly lower cost compared to the baselines (up to 2.67$\times$ lower cost compared to baselines in Figures \ref{fig:planner_het_OPT} and \ref{fig:planner_het_GPT}).
+
+We also evaluated \sailor and the other heterogeneous baselines with real hardware using a smaller cluster of A100 and V100 GPUs. Figure \ref{fig:planner_het_real} shows the throughput achieved for the OPT-350M model when using an equal amount of GPUs per type (8 each), and when using more V100 than A100, as V100 were more readily available. When using the same number of GPUs per type, \sailor outperforms the baselines by 1.08-1.81$\times$ and does not generate any Out-Of-Memory plans. In contrast, AMP and Metis generate 5 and 1 invalid (OOM) plans before finding a valid plan, respectively. The valid plan found by Metis is similar to Sailor’s, but Sailor avoids invalid outputs entirely, and finds a solution in less than 1 sec, while Metis takes 60 sec.
+When using 8 A100 and 16 V100 GPUs, Metis fails to output a plan as it requires the global batch size to be equally divisible by the total number of GPUs. We therefore reuse the plan from the 16 GPU case. AMP produces the same plan for the 24 GPU case as the 16 GPU case, while the plan provided by FlashFlex utilizes all 24 GPUs but uses an unnecessarily large number of pipeline stages that degrades throughput. \sailor outperforms the baselines by 1.19-2$\times$ for the 24 GPU scenario. Our simulator's estimated iteration times were within 4\% of those measured on real hardware.
+% \ana{Explain case 1 (Sailor similar to Metis) vs. case 2 (Sailor outperforms Metis) as two separate scenarios and give a bit more details as to why Metis doesn't find a plan in case 2.  }
+
+
+\textbf{Search times:} Table~\ref{table:search_times_het} shows the search time for Figure~\ref{fig:planner_het_GPT_25} for the different baselines. Metis has long search times. In our experiments, we let Metis search for up to 300 seconds and take the best plan it produces in this time window. The other baselines are significantly faster, finishing their search in less than 200 seconds in all cases. \sailor keeps the search time within 1 minute even for the largest case (512 GPUs) due to its efficient search algorithm. 
+
+
+
+
+
+\textbf{Benefits of heterogeneity:} 
+Figures \ref{fig:planner_het_OPT}, \ref{fig:planner_het_GPT} and \ref{fig:planner_het_real} also show the throughput achieved by \sailor when given homogeneous-only setups of A100 (\sailor-A100) or V100 GPUs (\sailor-V100). Given that V100s are less efficient than A100s, using A100 only, or a mixture of A100 and V100 is always better than using V100 only. However, using V100 \textit{in addition} to A100 does not always improve throughput. Heterogeneity is more beneficial when resources are limited (e.g. Figure \ref{fig:planner_het_OPT_50}, with 32 GPUs per type), or with larger models like GPT-Neo. In fact, for the OPT-350M model, when 128 A100 and 128 V100 are available, \sailor chooses a plan with 128 A100 only, as it determines that no additional benefits will be gained by adding extra resources. Moreover, when the ratio of V100 to A100 is higher than 1, the throughput improvents are more significant, as shown in Figures \ref{fig:planner_het_real}, \ref{fig:planner_het_OPT_25} and \ref{fig:planner_het_GPT_25}, where the V100:A100 ratio is 2:1 or 3:1. This aligns with the GPU memory capacity ratio, as well as the time for forward/backward pass for the transformer layers of the two GPU types, enabling better load balancing. Finally, heterogeneity leads to a higher cost, as more resources are used. Since the objective is to maximize throughput, \sailor ignored monetary cost when searching job configurations. In \S\ref{sec:eval_constraints}, we will show \sailor's ability to consider budget optimization and constraints.
+
+
+\textbf{\textit{Key takeaway 1:} Heterogeneity is most beneficial when resources are limited, or for larger models, or when the ratio of the different GPU types aligns with their memory and compute characteristics for better load balancing.}
+
+
+
+
+\begin{table}[t!]
+%\footnotesize
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Baseline} & \multicolumn{3}{c|}{\textbf{A100-V100}} \\
+\hline
+& \textbf{32-96} & \textbf{80-240} & \textbf{128-384} \\
+\hline
+\textbf{AMP} & 31.22 & 51.43 & 86.41 \\
+\hline
+\textbf{FlashFlex} & 4.05 & 54.67 & 222.64 \\
+\hline
+\textbf{Metis} & 300 & 300 & 300\\
+\hline
+\textbf{\sailor} & 1.6 & 7.67 & 17.4 \\ 
+\hline
+\end{tabular}
+\caption{Search times (in seconds) for Figure \ref{fig:planner_het_GPT_25}. }
+\vspace{-0.7cm}
+\label{table:search_times_het}
+\end{table}
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/heterogeneous/fig_het_real.png}
+    \caption{Throughput of heterogeneous planners for clusters of A100 and V100 GPUs for the OPT-350M model.}
+    \label{fig:planner_het_real}
+\vspace{-0.5cm}
+\end{figure}
+
+\subsubsection{Geo-distributed setups}\label{sec:eval_planner_geo}
+
+In Figures \ref{fig:planner_geo_real} and \ref{fig:planner_geo}, we evaluate \sailor's throughput in geo-distributed setups, considering A100 GPUs for the OPT-350M model. We compare \sailor with DTFM, with the exhaustive search to automatically discover parallelization plans. We report training throughput and monetary cost per iteration, taking both the computation and communication cost into account.
+
+\textbf{Small-scale results on real hardware:} Figure \ref{fig:planner_geo_real} shows an experiment with small-scale cluster in 4 cloud zones (2 regions) using 4 and 8 A100 GPUs per zone. DTFM cannot fully leverage multiple zones, mainly due to its suboptimal cost function and lack of memory footprint estimation. DTFM ranks solutions based on the time spent in data and pipeline parallel communication, which leads to suboptimal solution ranking. Furthermore, it uses all cloud regions, which increases communication bottlenecks and cost without increasing throughput. In contrast, \sailor uses only 1 region with all available zones (us-central1), as incorporating an additional region (us-west1) does not improve throughput. \sailor leads to 1.9$\times$ and 2.45$\times$ higher throughput than DTFM for two cluster sizes. Our simulator was within 3.7\% of the real throughput in this scenario.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/geodistributed/fig_geo_real.png}
+    \caption{Throughput of geo-distributed planners with A100-40GB for the OPT-350M model in 4 zones (2 regions) using real GPUs.}
+    \label{fig:planner_geo_real}
+%\vspace{-1cm}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/geodistributed/throughput_opt_points.png}
+    \caption{Throughput of geo-distributed planners with A100-40GB for the OPT-350M model in 5 zones (2 regions) using our simulator.}
+    \label{fig:planner_geo}
+\vspace{-0.5cm}
+\end{figure}
+
+\textbf{Large-scale results on simulation:} In Figure \ref{fig:planner_geo} we use our simulator to evaluate larger cluster sizes with 5 cloud zones (2 regions). \sailor achieves 5.9$\times$ higher throughput and 9.48$\times$ lower cost per iteration than DTFM. \sailor employs larger microbatch sizes and tensor parallelism degrees, reducing the pipeline and data parallel data transfers.  Furthermore, \sailor finds configurations within 1 second, compared to DTFM that needs hundrend of seconds with large clusters (due to the exhaustive search). On GPT-Neo, DTFM fails due to OOMs, while \sailor finds valid plans with a throughput of 0.07–0.21 iters/sec across cluster sizes. 
+
+Finally, comparing \sailor's throughput for the OPT-350M model in the heterogeneous setups with more V100 (Figure \ref{fig:planner_het_OPT_25}) and the geo-distributed A100-only setup (Figure \ref{fig:planner_geo}), shows that the geo-distributed setup achieves up to 2$\times$ higher throughput, and also lower cost.
+
+\textbf{\textit{Key takeaway 2:} Efficiently using the same GPU type across zones can lead to higher throughput and lower cost than mixing GPU types within a single zone, despite data transfer costs in geo-distributed setups. }
+
+
+
+
+
+
+\subsubsection{Optimization with constraints}\label{sec:eval_constraints}
+
+We now change the optimization objective to minimizing monetary cost and add constraints. Since baselines do not support cost-aware optimization or constraints, we modify them to rank solutions by iteration cost and only return plans within the constraints. We consider 2 cloud zones in the same region, each with 128 A100 and 128 V100. \sailor takes the full search space and outputs the resource allocation and parallelization plans. The baselines (that require a fixed topology) assume 4-GPU VMs: Varuna, Aceso, Galvatron  consider only the A100 machines (since they are more high-end than V100). AMP, FlashFlex, and Metis consider both A100 and V100 in a single zone, while DTFM considers only A100 in two zones. 
+
+\textbf{Scenario 1: Minimizing cost with throughput constraint of 0.2 iterations/sec:} Figure \ref{fig:plan_constraints_cost} shows the throughput (bars) and iteration cost (asterisks) achieved by the different planners. \sailor outputs a solution within the constraint, while achieving the minimum cost compared to baselines: 40\% lower cost compared to the second-best performing baseline (Galvatron). The found solution consisted of 64 A100 GPUs in a single zone, as they were enough to meet the throughput target. 
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/constraints/cost_min.png}
+    \caption{Minimizing cost with a throughput constraint.}
+    \label{fig:plan_constraints_cost}
+\end{figure}
+
+\textbf{Scenario 2: Maximizing throughput with cost constraint of 1.2 USD/iteration:}  Figure \ref{fig:plan_constraints_thr} shows the throughput (bars) and iteration cost (asterisks). Most baselines will use all available resources (e.g. all 128 A100 and 128 V100), even if they do not benefit throughput. DTFM does not find a solution as it outputs plans with low throughput and high costs. \sailor outperforms all baselines leading to 1.65-3$\times$ higher throughput while remaining within the cost constraint. \sailor's plan includes 256 A100 GPUs in two zones, with tensor parallelism of 4, and data parallelism of 64.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/evaluation/planner/constraints/throughput_max.png}
+    \caption{Maximizing throughput with budget limit.} 
+    \label{fig:plan_constraints_thr}
+\end{figure}
+
+%\vspace{-0.5cm}
+\subsection{\sailor scalability study}
+
+We evaluated \sailor's search time varying the number of GPUs and zones or regions with a homogeneous GPU type. The search time remains below 1.5 sec even with 5 GCP zones and 256 A100/zone for the GPT-Neo-2.7B model. In contrast, adding more GPU types has a much higher impact in \sailor's search time: considering 256 GPUs/type in a single zone, \sailor's search time is 0.3, 6.2, 4900 sec for 1, 2, 3 GPU types, respectively. Nevertheless, \sailor's search process is much more efficient than the rest of the heterogeneous baselines:  Metis~\cite{Um24Metis} needs hours to complete its search even with 2 GPU types, while FlashFlex~\cite{yan2024flashflex} cannot find a valid configuration for any of these setups.
+
+\subsection{\sailor Planner optimization breakdown} 
+
+Table \ref{table:search_times_breakdown} shows \sailor's planner search time breakdown when optimizing for throughput, and budget constraint overhead, considering 128 A100 and 128 V100 GPUs for the GPT-Neo-2.7b model. The dynamic-programming-only approach needs hours to complete the search, even in the single-GPU-type case. Introducing the heuristics \textit{H1-H3} (\ref{planner_heuristics}), which apply in this scenario, dramatically decreases the search time to a couple of seconds.  The additional cost constraint increases the search time (4$\times$ increase in the 2-GPU-type scenario) due to the extra iterations caused by the straggler approximations, as described in \ref{planner_dp_cost}.
+
+\begin{table}[tp!]
+%\footnotesize
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{GPU types} & \multicolumn{3}{c|}{\textbf{Search Time}} \\
+\hline
+& \textbf{Dyn Prog} & \textbf{+ Heuristics} & \textbf{+ cost limit} \\
+\hline
+\textbf{1} & hours & 0.25 sec & 0.4 sec \\
+\hline
+\textbf{2} & hours & 5 sec & 20 sec \\
+\hline
+\end{tabular}
+\caption{Breakdown of search time, in dynamic programming and heuristics, and additional search time overhead due to budget constraints for the GPT-Neo-2.7 model. We use A100 and V100 in one zone, with 128 GPUs per type. The budget constraint is 1.5 USD/iteration.}
+\vspace{-0.5cm}
+\label{table:search_times_breakdown}
+\end{table}
+
+\subsection{Reconfiguration overheads}
+
+We measure \sailor's reconfiguration time on a cluster of 16 V100 GPUs for the OPT-350M model. When 4 more GPUs are added, the controller re-invokes the planner, instructs workers to clean up (e.g., destroy NCCL groups), and broadcasts the new plan and topology. Planning takes 0.1 seconds, process cleanup takes 3 seconds, and topology broadcast (using grpc) takes 1.25 seconds. After the workers have received the new plan and topology, they reinitialize NCCL communication groups (for data, pipeline, tensor parallelism) in 4.5 seconds, redefine the model and optimizer in 2 seconds, redefine the dataloaders in 0.5 seconds, and resume training. %In our experiment, NCCL group initialization took 4.5 sec, model reloading took 2 sec, and dataloaders' redefinition took 0.5 sec. 
+While moderate at this scale, NCCL initialization can take minutes on thousands of GPUs~\cite{jiang2024megascale}. Existing methods to reduce this overhead~\cite{jiang2024megascale} can be integrated into \sailor.

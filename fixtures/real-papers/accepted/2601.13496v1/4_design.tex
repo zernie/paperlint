@@ -1,0 +1,247 @@
+\section{Observability in \abstraction{}}
+\label{sec:rasc}
+
+
+The goals of action progress updates and failure detection (\Table~\ref{tab:properties}) can be served via a mechanism that {\it periodically polls} the device for its current state. This polling needs to (i) satisfy user-specified tolerances for detecting failures, (ii) balance detection latency vs.  device/network load, and (iii) adapt to evolving action time distributions (i.e., wrong estimates). 
+
+
+
+\begin{figure}[th]
+    \centering
+     \vspace{-0.3cm}
+    \includegraphics[width=\linewidth]{figures/design/RASC_abstraction.pdf}
+    \vspace{-0.7cm}
+    \caption{\bf \small \abstraction{} over RPCs. {\it Frequent RPCs on right are polls.}
+    }
+    \label{fig:rasc_design}
+    \vspace{-0.3cm}
+\end{figure}
+
+
+\noindent \textbf{Lifetime of an Action.} \Figure~\ref{fig:rasc_design} shows how 
+our \abs{} abstraction runs in a backward-compatible way over the RPC layer.  
+For a given action, our  \sysname{} system can be in one of four states (or stages or phases, which we use interchangeably): {
+{\it ack wait, start detection, complete detection}, and {\it failure detection}. 
+When the action is requested, \sysname{} is in the {\it ack wait} state. Immediately after the hub receives an ack (that the device or its web service has received the request), \sysname{} enters the {\it start detection} phase, wherein it starts tracking the state of the device (described in \Section~\ref{sec:adaptive-polling-strategy}). 
+Alternately, if the IoT device is unresponsive, then \sysname{} enters the {\it failure detection state}.  
+The user specifies a {\bf tolerance threshold} $Q_w$ seconds (maximum time between failure and its detection), and \sysname{} needs to meet it. 
+
+If the action is short, 
+the action completion target state might be detected alongside or soon after the start.
+So during the start detection state, \sysname{} also checks if either of the start or completion states is already matched, and if so, short-circuits to the complete detection state.
+
+In IoT settings, it is impossible to distinguish a failed device from one that is not executing actions at all. So \sysname{} detects the failure of {\it actions}, but does not declare a device as being failed. \sysname{} reports failures to the user (who may take subsequent actions like restarting the device).
+
+\begin{figure}[h]
+    \vspace{-0.2cm}
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/design/smart_space_setup.pdf}
+    \caption{\bf \small Communication between a smart device and a client app. {\it Each arrowed line is an RPC in today's stacks. This paper replaces dashed lines with the new \abs{} abstraction.}
+    }
+    \label{fig:iot setup}
+    \vspace{-0.3cm}
+\end{figure}
+
+\noindent \textbf{IoT Architecture.}
+\Figure~\ref{fig:iot setup} shows how  \abs{} is built atop today's RPC mechanisms. 
+\abs{} sits at the interface between user devices and applications on the one side (running on the Hub Service, e.g., Alexa, Google Home), and on the other side either the device or its vendor service  (e.g., web microservices run by the device vendor, e.g., Philips Hue, GE Sync, etc.).
+In \Figure~\ref{fig:iot setup}, \abs{} replaces only those RPCs at dashed arrows, while solid arrow RPCs remain.
+Every path from the hub/user device to the IoT device contains exactly one \abs{} call. 
+{\abs{} needs to modify only the cloud services and hubs but not the device or vendor services.} 
+\subsection{Adaptive Polling Strategy}
+\label{sec:adaptive-polling-strategy}
+
+Both progress updates and failure detection require \emph{polling} that is (i) efficient (few messages) and (ii) responsive (detects changes quickly).
+For \emph{push} devices (\Section~\ref{sec:model}), this is straightforward---the device or vendor notifies the hub, which relays to \sysname{}. 
+The challenge is \emph{pull}-only devices.
+
+Polling too aggressively (e.g., every 500\,ms) can overload devices and the network; polling too sparsely increases detection latency. 
+Key questions arise: {\it What polling frequency is appropriate? Should polling become more frequent as it progresses?}
+
+\noindent \textbf{\underline{Problem Statement}.}
+We seek to minimize \emph{detection time}: the gap between the action state change on a device and the next poll from \sysname{}.
+Inputs are: (i) the {\bf historical state-change time distribution} \(p(t)\) for a (device, action) pair---\texttt{dist.pdf(t)}, (ii) a {\bf state change time bound} $U$---\texttt{dist.ppf(0.99)}\footnote{Percent point function (inverse cdf); \(\texttt{ppf}(y)\) returns the value with cdf \(y\).} which may occasionally be exceeded, and (iii) a poll \textbf{budget} \(k\) representing how many total polls are allowed for a given action (representing allowable bandwidth).
+The goal is to select \(k\) poll timepoints in \((0,U]\) that minimize expected detection time.
+
+
+\noindent \textbf{Solution.}
+Let the $k$ poll times be $L_i, i=1,...,k$. Then the expected detection time $Q$ can be formulated as:
+
+\vspace{-0.4cm}
+\begin{align}
+Q &= \int_{0}^{L_1} (L_1-t)p(t)\,dt 
+   + \int_{L_1}^{L_2} (L_2-t)p(t)\,dt + \cdots \notag \\ 
+  &+ \int_{L_{k-1}}^{L_k} (L_k-t)p(t)\,dt \tag{1} \\
+Q &= \sum_{i=1}^{k} L_i \int_{L_{i-1}}^{L_i} p(t)\, dt
+   - \int_{0}^{L_k} t\,p(t)\, dt \tag{2} \label{eq:Q}
+\end{align}
+
+Here, each term $i$ represents the expected detection time of $L_i$ if the change happens before $L_i$ and after $L_{i-1}$. The highest ${L_k}$ is always equal to $U$.
+The second term here is the average of $p(t)$, and thus a constant we can ignore to optimize $Q$.
+
+\begin{theorem}[Adaptive Poll Placement with Fixed Budget $k$]
+Given a time distribution $p(t)$ on $(0,U]$, a poll budget $k$, and a terminal tolerance $\varepsilon>0$,
+polls
+$0<{L_1^{\!*}}<\cdots<L_{k-1}^{\!*}<L_k^{\!*}$
+that \underline{minimize 
+expected detection time} $Q$ and  satisfy $\lvert L_k^{\!*}-U\rvert\le\varepsilon$ are given by the following recurrent relation:
+\[
+L_i^{\!*} =
+\begin{cases} 
+\frac{1}{p(L_{i-1}^{\!*})} \cdot \int_{L_{i-2}^{\!*}}^{L_{i-1}^{\!*}} p(t)\, dt + L_{i-1}^{\!*} & \text{for } i \in \{2,\dots,k\}, \\
+\text{value } \in (0,U] & \text{for } i=1
+\end{cases} \tag{3} \label{eq:recurrence}
+\]
+\end{theorem}
+\vspace{-0.5cm}
+
+\begin{proof}[Proof Sketch (Full proof in Appendix~\ref{app:rasc-proofs})]
+Based on \eqref{eq:Q}, only the $i$-th and $(i+1)$-th terms depend on $L_i$.
+By applying a partial derivative to each $L_i$ and setting it equal to 0, we rearrange and get the recurrence relation \eqref{eq:recurrence}.
+Under $p>0$ and continuity, these conditions determine a unique sequence once $L_1$ is fixed.
+%
+Next, we fix $L_1\in(0,U)$ and generate $L_2,\dots,L_k$ via \eqref{eq:recurrence}.
+Then $L_k(L_1)$ is strictly increasing in $L_1$.
+Hence, there exists a unique $L_1^*\in(0,U)$ such that the generated sequence satisfies $L_k^*=U$.
+\end{proof}
+
+\vspace{-0.2cm}
+
+\begin{algorithm}[t!]
+    \caption{\bf Adaptive Polling Algorithm}
+    \label{algo:adaptive-polling-algorithm}
+    \footnotesize
+    \algtext*{EndIf} % hide EndIf but keep block structure
+    \algtext*{EndElse} % same for Else
+    \algtext*{EndFor} % same for For
+    \begin{algorithmic}[1]
+        \Procedure{FindPolls}{dist, $U$, $Q_w$, $slo$}
+            \State \Return RFindPolls(dist, $U$, 0, $ceil(U/Q_w)$,$Q_w$, $slo$)
+        \EndProcedure
+        \Procedure{RFindPolls}{dist, $U$, left, right, $Q_w$, $slo$}
+            \State $k^*$ = (left + right) / 2
+            \State $\mathcal{L}$ = GetPollingInterval(dist, $k^*$, $U$, left, right)
+
+            \State valid = examineQw(dist, $\mathcal{L}$, $Q_w$, $slo$)
+
+            \If{left == right $\And$ valid}
+                \State \Return $\mathcal{L}$
+            \EndIf
+
+            \If{valid}
+                \Comment{Try to reduce polls}
+                \State \Return RFindPolls(dist, $U$, left, $k^*+1$, $Q_w$, $slo$)
+            \EndIf
+
+            \If{N+1 >= right}
+                \Comment{Need more polls than $right$}
+                \State \Return RFindPolls(dist, $U$, $k^*+1$, $right\times2$, $Q_w$, $slo$)
+            \EndIf
+
+            \State \Return RFindPolls(dist, $U$, $k^*+1$, right, $Q_w$, $slo$)
+            
+        \EndProcedure
+        \Procedure{GetPollingInterval}{dist, $k$, $U$, left, right}
+            \State $\mathcal{L}$ = zeros(k)
+            \State $L_1$ = (left + right) / 2
+
+            \State too\_large = False
+            \For{i in range(2, $k$ + 1)}
+                \State $L_i$ = calculateByRecurrenceRelation()
+                \If{$L_i$ > $U$}
+                    \State too\_large = True
+                    \State \textbf{break}
+                \EndIf
+            \EndFor
+            \If{isclose($L_k$, U)}
+                \State \Return $\mathcal{L}$
+            \EndIf
+            \If{too\_large}
+                \State \Return GetPollingInterval(dist, $k$, $U$, left, $L_1$)
+            \EndIf
+            \State \Return GetPollingInterval(dist, $k$, $U$, $L_1$, right)
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+Next, to find the best sequence $\{L_i^{\!*}\}$
+we use {\it binary search}. This leverages our empirical observations that there is a linear relationship between $L_1$ and $L_k$.
+Algorithm~\ref{algo:adaptive-polling-algorithm} initially sets the left and right boundaries to 0 and $U$, respectively. In line 18, $L_1$ is set to the midpoint of the current left and right values. Using the recurrence equation from \eqref{eq:recurrence}, lines 20-29 calculate subsequent values based on $L_1$. We then check if $L_k$ is close enough to $U$.\footnote{The closeness is measured via the
+{terminal tolerance $\varepsilon$}. 
+{In our implementation, we set $\varepsilon=\num{e-5}$ (default in numpy np.isclose()).} 
+}
+If it is, we return $\{L_i\}$.  If not, we adjust the left and right boundaries and recursively search for the correct $L_1$.
+
+
+After we obtain the placement $\{L_i^{\!*}\}$, %i=1,...,k$,
+we can examine the second derivative of each $L_i$, {where $L_0=0$ is a constant}:
+\[
+\small
+L_i'' =
+\begin{cases} 
+2 \cdot p(L_i) - (L_{i+1} - L_i) \cdot p'(L_i) & \text{for } i \in [1,k-1], \\
+2 \cdot p(L_i) + L_i \cdot p'(L_i) & \text{for } i=k
+\end{cases} \tag{4}
+\]
+
+\noindent If any of them is negative, indicating a maximum instead of a minimum, the placement is invalid {and a larger $k$ is required}.
+
+{\Figure~\ref{fig:poll} shows a pictorial example of a PDF for shade up, and the resulting polls generated by \sysname’s Algorithm~\ref{algo:adaptive-polling-algorithm}.}
+
+\noindent \textbf{Meeting Detection Tolerance.} 
+{We need to meet the user-specified {\it detection tolerance} $Q_w$ (gap between failure and its detection). 
+More critical actions (e.g., involving locks, fire alarms, exhaust fans) use smaller values (e.g., < 1 s) while less critical actions (e.g., adjusting light brightness, the position of window shades, ovens) can use larger values.
+We account for this by ensuring that $\forall i: L_{i+1} - L_i \leq Q_w$ {and $L_{i+1} - L_i >$ minimum polling interval allowed by the existing API (naturally, a $Q_w < $ min polling interval is unsupportable).}
+
+Given $Q_w$, we use binary search to determine the smallest $k$ that meets $Q_w$---see  lines 4-15 in Algorithm~\ref{algo:adaptive-polling-algorithm}. Line 8  examines the $\mathcal{L}=\{L_i\}$ found by $GetPollingInterval$ to make sure any interval between any two polls is smaller than $Q_w$. If $\mathcal{L}$ is valid and left = right, we return  $\mathcal{L}$. If 
+left does not equal right, this means we might be able to find  $\mathcal{L}$ 
+with a smaller $k^*$. The algorithm recursively updates $k^*$ until it finds a $k^*$ that respects $Q_w$ and also cannot be smaller. The algorithm terminates when reducing $k^{*}$ by 1 would violate  $Q_w$.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/design/rasc.pdf}
+    \vspace{-0.4cm}
+    \caption{\bf \small Placement Example, $k = 4$. {\it Red lines are \abstraction{}  polls (after action start). Action completes between second and third poll.}}
+    \vspace{-0.5cm}
+    \label{fig:poll}
+\end{figure}
+
+
+\noindent \textbf{Reducing Polling further via  Confidence Intervals.} 
+We relax the worst-case detection time assumption by introducing a {\it service-level objective (SLO)}: a confidence level for meeting the detection window $Q_w$. 
+When SLO=0.9, \sysname’s placement may violate $Q_w$ on at most 10\% of events.
+This allows \sysname{} to avoid excessive polling in high probability areas of the distribution.
+Our evaluations (\Section~\ref{sec:detection_times}) find that  SLO-awareness does not change average detection time. Algorithm~\ref{algo:adaptive-polling-algorithm} shows how to find polls under SLOs.
+
+\begin{theorem}[Meeting a Detection Tolerance SLO-Condensed version]
+Given a detection window $Q_w$, a service-level objective $\text{SLO}\in(0,1]$, and a binary oracle that detects whether a $k$-poll placement with coverage of at least $\text{SLO}$ exists, binary search on the number of polls $k$ returns the smallest $k^*$ that meets the SLO. (\noindent Full theorem and proof in Appendix~\ref{app:rasc-proofs}.)
+\end{theorem}
+\vspace{-0.3cm}
+
+\begin{proof}[Proof Sketch]
+The oracle predicate is monotone: if some placement meets the SLO with $k$ polls, the SLO can still be met with any larger $k'$ by adding polls. The search is bracketed because $k=0$ is infeasible, while a sufficiently large $k$ (e.g., evenly spaced polls with $k=\lceil U/Q_w\rceil$) guarantees feasibility. Binary search on a monotone predicate with a valid bracket returns the minimal feasible $k^*$ %, so the algorithm finds the lowest $k^*$
+that satisfies the SLO.
+\end{proof}
+
+\subsection{Detection Beyond  Upper Bound}
+\label{sec:detect-after-U}
+
+{
+An estimate of the upper bound time for completing an action may be violated due to 
+human interference (e.g., an elevator door is propped open), environmental factors (e.g., the heater takes longer when temperatures outside are colder), and out-of-order requests (e.g., the elevator receives a request to the 2nd floor when moving from 1st to 3rd). 
+This means that
+when no state change occurs by time $U$, polling must continue. %Without a model beyond $U$, 
+The key question is: {\it 
+What is the optimal post-$U$ polling technique?} 
+
+Our key observation is that past $U$, the chance of an imminent state change typically declines, so \sysname{} polls densely at first and then tapers. 
+Concretely, 
+we distinguish between actions with progress (i.e., % A updated to S, or S updated to C, or 
+{{\it some} partial progress between critical points) and those without. For the former (e.g., vacuum has changed location), 
+we estimate the remaining time from the instance's observed rate (time to the current progress) and thus schedule the next poll at $min\{\text{estimate},Q_w\}$.}
+For the latter,
+\sysname{} uses {\it exponential backoff}, doubling the inter-poll gap, capped by $Q_w$. 
+This avoids overloading failing or troubled devices, and keeps worst-case detection  $< Q_w$ (\Figure~\ref{fig:poll}).
+If no change occurs within $Q_w$ {after the upper bound $U$}
+we declare the action failed. In our experiments, overruns beyond $U$ were rare, and late actions typically finished soon after $U$.
+} 

@@ -1,0 +1,118 @@
+\documentclass[10pt]{article}
+
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+ \geometry{
+ left=25mm,
+ right=25mm,
+ top=25mm,
+ bottom=25mm,
+ }
+ 
+\begin{document}
+
+\pagenumbering{gobble}
+
+\section*{\Large \centering \bf Summary of Major Changes}
+
+\subsection*{1 textual revision} 
+
+\subsubsection*{1.1 Discuss real-world security applications where GNN-based solutions have been proposed}
+
+See Page 1: {``GNNs have
+achieved outstanding performance on these tasks for various computer security applications, including fraud detection
+(e.g., detecting fake accounts/users and fake news in social
+networks [55, 67], fake reviewers and reviews in recommen-
+dation systems [15, 57], fraud transactions in e-commerce
+systems [69], and credit card fraud and money laundering in
+finance systems [5,60]), intrusion detection [76], and software
+vulnerability detection [6, 8, 71, 77]."}
+
+
+\subsubsection*{1.2 Clarify what attacks and security applications are in scope, and which are not.}
+
+{\bf What attacks are in scope and what are not:} we focus on \emph{test-time} attack (i.e., we are given a pretrained GNN model which is clean). See Page 1: ...Specifically, given
+a node/graph classifier and a graph, an attacker could...; Page 4 (Threat model): Given a GNN node/graph classifier $f$ and a graph $G$... 
+
+We do not consider \emph{training-time} attack where the GNN model itself is poisoned or backdoored. See Page 13 ({\bf Discussions and Limitations}): {\bf AGNNCert may be ineffective against training-time attacks on GNNs}.
+
+\vspace{+0.05in}
+\noindent {\bf What security applications are in scope and what are not:} we focus on GNN-based security applications where GNN takes a \emph{single graph} as input. 
+
+AGNNCert maybe inapplicable in the security applications that involves a pair of graphs, e.g., GNN-based code similarity analysis. See  Page 13 ({\bf Discussions and Limitations}): {\bf AGNNCert may be ineffective on graph similarity or
+matching tasks}.   
+
+
+\subsubsection*{1.3 Justify the threat model of node/feature modification in these real-world scenarios, as well as the relevance of having a pre-defined bound.}
+
+{\bf Justify the threat model of node/feature modification:} Page 1 (Introduction): {"Taking GNN based fake user detection in
+social networks (e.g., Twitter) as an example. In this context,
+nodes represent users, edges denote following-follower rela-
+tionships, and node features capture user profile information.
+A strategic attacker (i.e., fake users) can manipulate their pro-
+files, modify their connections with other users, and create
+new fake accounts and connections to evade detection [55]."}
+
+Also on Page 4 (Threat model): {"...For instance, when a social network platform deploys a GNN detector to detect fake users (the adversary) [55, 67], the fake users is motivated to evade them [54]:
+they can modify their profiles, their connections with some
+users, and create new fake accounts and connections to bypass
+detection..."}
+
+\vspace{+0.05in}
+\noindent {\bf Relevance of having a pre-defined bound:} We do not \emph{predefine} a bound (certified perturbation size). Instead, we design our certified defense to calculate such bound to offer certified robustness. See Page 5 (second paragraph): "\emph{Our ultimate goal is to obtain the largest-possible certified
+perturbation size that satisfies all the above conditions}". Note that $M$ calculated in Equation (13) and in Equation (15) are the maximum certified perturbation size for {\nameE} and {\nameN}, respectively. 
+
+\subsubsection*{1.4 Discuss what types of attacks are not well captured by the threat model, but are also practical (clarify the limitation)}
+
+The threat model does not capture the \emph{training-time} attack.  
+See Page 13-14 ({\bf Discussions and Limitations}): {\bf AGNNCert may be ineffective against training-time attacks on GNNs}.
+
+
+ \subsection*{2 new experiments (Include an empirical analysis of computation overhead (e.g., runtime) for both defenses and undefended GNNs. )} 
+ 
+
+Page 12: {See Table 2 the runtime on the evaluated 8 benchmark graph datasets.} 
+
+\noindent Page 14: See Table 5 the runtime on the two newly added real-world graph datasets. 
+
+
+\subsection*{3 new experiments (Include additional datasets with security implications)} 
+
+
+Page 13: See Section 5 {\bf Evaluations on Real-World Graph Datasets}. We include the Amazon2M co-purchasing dataset for node classification (demonstrate scalability of our defense) and Big-Vul code vulnerability dataset for graph classification (pratical security implications.). 
+
+\emph{{\color{red} Note: since our current AGNNCert is inapplicable for graph similarity/matching tasks, we are unable to evaluate the robustness guarantee of our defense for code similarity analysis applications.}}
+
+
+
+\subsection*{4. other comments and clarifications}
+
+\vspace{+0.05in}
+\noindent {\bf Review\#510A: Adaptive attack on AGNNCert.} 
+
+- ANNCert is provably robust against \emph{all} attacks, meaning no known and unknown attack can break ANNCert, if its perturbation budget is within the derived bound $M$ in Eqn (13) or Eqn (15), regardless of the attack knowledge of ANNCert. See Remark point 1 on Page 7 and Remark (third line) on Page 9.   
+
+\vspace{+0.05in}
+\noindent
+{\bf Review\#510A: Edge feature perturbation.}  
+
+- See footnote 1 on Page 1.
+
+\vspace{+0.05in}
+\noindent
+{\bf Review\#510B: An exploration of trends in performance as the model scales up.} 
+
+- See Page 13 ({\bf Discussions and Limitations}): {\bf AGNNCert’s performance with larger/powerful GNNs}.
+
+\vspace{+0.05in}
+\noindent {\bf Review\#510C: Comparing AGNNCert-N and AGNNCert-E.} 
+
+- See Page 13 ({\bf Discussions and Limitations}): {\bf Node-centric vs. edge-centric AGNNCert}.
+
+
+\subsection*{5. source code release}
+Lastly, we will make our source code publicly available via GitHub, and include a GitHub link in the paper very soon. 
+
+
+\end{document}

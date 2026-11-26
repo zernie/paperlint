@@ -1,4 +1,4 @@
-<!-- vigiles:sha256:d865f14e563439a3 compiled from CLAUDE.md.spec.ts -->
+<!-- vigiles:sha256:9287daea74d3bda8 compiled from CLAUDE.md.spec.ts -->
 
 # AGENTS.md
 
@@ -43,6 +43,7 @@ Claude Code loads `add-venue` from `.claude/skills/` and Codex loads it from `.a
 | working on the website, paperlint.dev | [`site/CLAUDE.md`](site/CLAUDE.md) | the design the author chose, and what the page may claim |
 | changing CI, Dependabot or the release | [`.github/CLAUDE.md`](.github/CLAUDE.md) | cost, Dependabot cadence, release from the PR title |
 | writing a test | [`docs/testing.md`](docs/testing.md), [`docs/e2e.md`](docs/e2e.md) | which kind of test, fakes, the e2e triggers |
+| adding, changing or moving a real paper of the corpus | [`fixtures/real-papers/CLAUDE.md`](fixtures/real-papers/CLAUDE.md) | 🔴 critical: which licences may come in, the credit each paper carries, never relicensed under MIT |
 
 ## Before leaving draft and before merge
 

@@ -1,0 +1,362 @@
+\begin{table}[t]
+    \centering
+    \footnotesize
+    \resizebox{0.9\columnwidth}{!}{%
+    \begin{tabular}{ll c}
+    \toprule
+    \textbf{Topic Domain} & \textbf{Source Wave} & \textbf{Size} ($N$ / $Q$) \\
+    \midrule
+    \textsc{Social} (SO)       & ATP Wave 131 & 400 / 12 \\
+    \textsc{Science} (SC)      & ATP Wave 123 & 200 / 12 \\
+    \textsc{Religion} (RL)     & ATP Wave 143 & 200 / 12 \\
+    \textsc{Politics} (PL)     & ATP Wave 92  & 200 / 12 \\
+    \textsc{Methodology} (MT)  & ATP Wave 98  & 400 / 12 \\
+    \textsc{Journalism} (JN)   & ATP Wave 141 & 400 / 12 \\
+    \textsc{Global} (GL)       & ATP Wave 105 & 400 / 12 \\
+    \bottomrule
+    \end{tabular}}
+    \caption{\textbf{Dataset Statistics.} Mapping of topical domains to American Trends Panel (ATP) survey waves, detailing respondent count ($N$) and number of questions ($Q$).}
+    \label{tab:waves}
+\end{table}
+
+
+
+
+
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt} %
+\renewcommand{\arraystretch}{0.98} %
+\resizebox{0.9\textwidth}{!}{%
+\begin{tabular}{l ccc ccc ccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{No-Turn}} & \multicolumn{3}{c}{\textbf{Single-Turn}} & \multicolumn{3}{c}{\textbf{Multi-Turn (Ours)}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+\textbf{Topic} & Llama & Qwen & Mistral & Llama & Qwen & Mistral & Llama & Qwen & Mistral \\
+\midrule
+\textsc{Social} & 25.8$_{\pm 0.0}$ & 28.2$_{\pm 0.0}$ & 31.8$_{\pm 0.0}$ & 27.8$_{\pm 0.1}$ & 28.7$_{\pm 1.6}$ & 31.0$_{\pm 0.0}$ & 33.9$_{\pm 4.1}$ & \textbf{36.7$_{\pm 3.3}$} & \underline{35.4$_{\pm 0.0}$} \\
+\textsc{Science} & 31.4$_{\pm 0.6}$ & 31.2$_{\pm 0.1}$ & 31.2$_{\pm 0.0}$ & 33.1$_{\pm 1.1}$ & 35.2$_{\pm 0.4}$ & \textbf{38.3$_{\pm 0.0}$} & 33.1$_{\pm 3.9}$ & 34.0$_{\pm 0.2}$ & \underline{35.3$_{\pm 0.0}$} \\
+\textsc{Religion} & \textbf{19.2$_{\pm 0.0}$} & 12.3$_{\pm 0.0}$ & 14.7$_{\pm 0.0}$ & 13.6$_{\pm 1.8}$ & 14.3$_{\pm 0.9}$ & 17.3$_{\pm 0.0}$ & \underline{18.5$_{\pm 0.0}$} & 17.8$_{\pm 0.0}$ & 17.8$_{\pm 0.0}$ \\
+\textsc{Politics} & 13.8$_{\pm 0.0}$ & 13.8$_{\pm 0.0}$ & 13.8$_{\pm 0.0}$ & 30.5$_{\pm 23.6}$ & 30.5$_{\pm 23.6}$ & 13.8$_{\pm 0.0}$ & \textbf{48.4$_{\pm 0.0}$} & 30.8$_{\pm 23.2}$ & \underline{47.2$_{\pm 0.0}$} \\
+\textsc{Method.} & 27.4$_{\pm 0.0}$ & \textbf{49.1$_{\pm 0.0}$} & 16.8$_{\pm 0.0}$ & 27.9$_{\pm 0.7}$ & 44.1$_{\pm 3.7}$ & 16.5$_{\pm 0.0}$ & \underline{49.1$_{\pm 6.0}$} & 44.1$_{\pm 1.1}$ & 34.8$_{\pm 0.0}$ \\
+\textsc{Journ.} & 24.5$_{\pm 0.0}$ & 24.5$_{\pm 0.0}$ & 24.5$_{\pm 0.0}$ & 16.8$_{\pm 0.0}$ & 26.4$_{\pm 1.7}$ & 28.5$_{\pm 0.0}$ & \underline{40.0$_{\pm 3.0}$} & 38.2$_{\pm 1.0}$ & \textbf{42.1$_{\pm 0.0}$} \\
+\textsc{Global} & 59.4$_{\pm 0.0}$ & 37.5$_{\pm 0.0}$ & 59.4$_{\pm 0.0}$ & \underline{62.1$_{\pm 0.4}$} & 61.8$_{\pm 0.1}$ & 59.4$_{\pm 0.0}$ & \textbf{62.1}$_{\pm 0.8}$ & 61.8$_{\pm 0.7}$ & 59.7$_{\pm 0.0}$ \\
+\midrule
+\textbf{MacroAcc (\%)} & 28.8$_{\pm 0.1}$ & 28.1$_{\pm 0.0}$ & 27.4$_{\pm 0.0}$ & 30.2$_{\pm 3.7}$ & 34.5$_{\pm 4.1}$ & 29.3$_{\pm 0.0}$ & 40.7$_{\pm 2.5}$ & 37.6$_{\pm 3.0}$ & 38.9$_{\pm 0.0}$ \\
+\textbf{MicroAcc (\%)} & 28.8$_{\pm 0.1}$ & 28.1$_{\pm 0.0}$ & 27.4$_{\pm 0.0}$ & 30.2$_{\pm 3.7}$ & 34.5$_{\pm 4.1}$ & 29.3$_{\pm 0.0}$ & 40.7$_{\pm 2.5}$ & 37.6$_{\pm 3.0}$ & 38.9$_{\pm 0.0}$ \\
+\rowcolor{gray!10}\textbf{Rel. Gain (\%)} & \textit{--} & \textit{--} & \textit{--} & \textit{+4.86} & \textit{+22.78} & \textit{+6.93} & \textit{+41.32} & \textit{+33.81} & \textit{+41.97} \\
+\bottomrule
+\end{tabular}}
+\caption{\textbf{Assessment of Resistance to Drift in Persona-Steered QA (PQA).} Accuracy across seven domains measures persona alignment under increasing context. \colorbox{gray!10}{Rel. Gain (\%)} quantifies improvements over the No-Turn baseline, demonstrating the mitigation of context override via multi-turn refinement. The best results are \textbf{bolded}, and the second best are \underline{underlined}.}
+\label{tab:mcq}
+\end{table*}
+
+
+
+
+
+
+
+
+
+\definecolor{spurious}{HTML}{FFF2CC} %
+\definecolor{stable}{HTML}{E2EFDA}   %
+\definecolor{gain}{gray}{0.95}       %
+
+\begin{table*}[!t]
+\centering
+\footnotesize %
+\setlength{\tabcolsep}{2.5pt} %
+\renewcommand{\arraystretch}{1.05}
+\resizebox{0.87\textwidth}{!}{%
+\begin{tabular}{ccl ccc ccc ccc}
+\toprule
+& & \multicolumn{3}{c}{\textbf{Llama}} & \multicolumn{3}{c}{\textbf{Qwen}} & \multicolumn{3}{c}{\textbf{Mistral}} \\
+\cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(lr){10-12}
+\textbf{Split} & \textbf{Setting} & \textbf{Topic} & \textbf{BLEU} & \textbf{Dist-1} & \textbf{Dist-2} & \textbf{BLEU} & \textbf{Dist-1} & \textbf{Dist-2} & \textbf{BLEU} & \textbf{Dist-1} & \textbf{Dist-2} \\
+\midrule
+
+\multirow{26}{*}{\rotatebox{90}{\textsc{\textbf{Congruous}}}} 
+& \multirow{8}{*}{\rotatebox{90}{\textbf{No-Turn}}} 
+& \textsc{Social} & 0.03$_{\pm 0.01}$ & 95.2$_{\pm 0.3}$ & 97.6$_{\pm 1.2}$ & 0.01$_{\pm 0.00}$ & 96.7$_{\pm 0.2}$ & 98.9$_{\pm 0.9}$ & 0.06$_{\pm 0.00}$ & 99.0$_{\pm 0.0}$ & 99.3$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.06$_{\pm 0.00}$ & 96.1$_{\pm 0.1}$ & 99.4$_{\pm 0.5}$ & 0.05$_{\pm 0.00}$ & 98.5$_{\pm 0.2}$ & 99.9$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 99.8$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.06$_{\pm 0.01}$ & 95.7$_{\pm 0.1}$ & 97.3$_{\pm 0.1}$ & 0.04$_{\pm 0.00}$ & 98.6$_{\pm 0.5}$ & 99.5$_{\pm 0.3}$ & 0.09$_{\pm 0.00}$ & 98.2$_{\pm 0.0}$ & 95.5$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.05$_{\pm 0.01}$ & 97.2$_{\pm 0.6}$ & 99.9$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 98.3$_{\pm 0.2}$ & 100.0$_{\pm 0.1}$ & 0.09$_{\pm 0.00}$ & 99.6$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.06$_{\pm 0.00}$ & 96.8$_{\pm 0.5}$ & 99.1$_{\pm 0.8}$ & 0.07$_{\pm 0.00}$ & 99.0$_{\pm 0.2}$ & 99.9$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 99.0$_{\pm 0.0}$ & 99.8$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.07$_{\pm 0.01}$ & 96.9$_{\pm 0.0}$ & 99.1$_{\pm 0.4}$ & 0.00$_{\pm 0.00}$ & 97.2$_{\pm 0.0}$ & 99.7$_{\pm 0.3}$ & 0.07$_{\pm 0.00}$ & 99.6$_{\pm 0.0}$ & 90.5$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.05$_{\pm 0.00}$ & 95.6$_{\pm 0.5}$ & 98.5$_{\pm 0.6}$ & 0.06$_{\pm 0.01}$ & 96.3$_{\pm 0.0}$ & 99.5$_{\pm 0.1}$ & 0.17$_{\pm 0.00}$ & 98.7$_{\pm 0.0}$ & 99.2$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+\rowcolor{gray!10} && \textbf{Avg.} & 0.06$_{\pm 0.01}$ & 96.2$_{\pm 0.8}$ & 98.7$_{\pm 1.0}$ & 0.05$_{\pm 0.03}$ & 97.8$_{\pm 1.1}$ & 99.6$_{\pm 0.4}$ & 0.09$_{\pm 0.04}$ & 99.1$_{\pm 0.6}$ & 97.8$_{\pm 3.6}$ \\
+
+
+\cmidrule(lr){2-12}
+& \multirow{9}{*}{\rotatebox{90}{\textbf{Single-Turn}}} 
+& \textsc{Social} & 0.03$_{\pm 0.01}$ & 93.9$_{\pm 2.8}$ & 90.0$_{\pm 13.5}$ & 0.01$_{\pm 0.00}$ & 99.7$_{\pm 0.4}$ & 53.9$_{\pm 18.4}$ & 0.02$_{\pm 0.00}$ & 87.1$_{\pm 0.0}$ & 82.6$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.07$_{\pm 0.03}$ & 94.0$_{\pm 3.0}$ & 98.1$_{\pm 2.3}$ & 0.20$_{\pm 0.19}$ & 98.8$_{\pm 1.3}$ & 52.5$_{\pm 21.2}$ & 0.11$_{\pm 0.00}$ & 99.8$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.05$_{\pm 0.06}$ & 98.5$_{\pm 0.9}$ & 87.9$_{\pm 1.1}$ & 0.15$_{\pm 0.02}$ & 97.9$_{\pm 0.7}$ & 56.4$_{\pm 17.9}$ & 0.02$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 86.9$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.03$_{\pm 0.01}$ & 98.4$_{\pm 0.3}$ & 100.0$_{\pm 0.0}$ & 0.26$_{\pm 0.01}$ & 100.0$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ & 0.05$_{\pm 0.00}$ & 99.0$_{\pm 0.0}$ & 75.6$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.06$_{\pm 0.02}$ & 97.1$_{\pm 0.6}$ & 76.3$_{\pm 18.2}$ & 0.13$_{\pm 0.01}$ & 100.0$_{\pm 0.0}$ & 52.5$_{\pm 6.2}$ & 0.18$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.07$_{\pm 0.04}$ & 92.9$_{\pm 7.4}$ & 89.0$_{\pm 14.8}$ & 0.01$_{\pm 0.02}$ & 48.6$_{\pm 67.3}$ & 49.4$_{\pm 69.9}$ & 0.00$_{\pm 0.00}$ & 100.0$_{\pm 0.0}$ & 95.3$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.08$_{\pm 0.00}$ & 91.4$_{\pm 0.8}$ & 84.9$_{\pm 1.1}$ & 0.15$_{\pm 0.02}$ & 99.7$_{\pm 0.4}$ & 99.8$_{\pm 0.3}$ & 0.23$_{\pm 0.00}$ & 96.7$_{\pm 0.0}$ & 98.8$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+&& \textbf{Avg.} & 0.06$_{\pm 0.02}$ & 95.2$_{\pm 2.8}$ & 89.4$_{\pm 8.0}$ & 0.13$_{\pm 0.09}$ & 92.1$_{\pm 19.2}$ & 66.3$_{\pm 23.0}$ & 0.09$_{\pm 0.09}$ & 97.5$_{\pm 4.7}$ & 91.3$_{\pm 9.7}$ \\
+\rowcolor{gray!10} && \textbf{Rel. Gain} & +0.0 & -1.0 & -9.4 & +160.0 & -5.8 & -33.4 & +0.0 & -1.6 & -6.6 \\
+
+
+\cmidrule(lr){2-12}
+&\multirow{9}{*}{\rotatebox{90}{\textbf{Multi-Turn}}} 
+& \textsc{Social} & 0.04$_{\pm 0.02}$ & 94.4$_{\pm 0.9}$ & 90.2$_{\pm 7.3}$ & 0.01$_{\pm 0.00}$ & 100.0$_{\pm 0.0}$ & 68.0$_{\pm 18.4}$ & 0.03$_{\pm 0.00}$ & 92.3$_{\pm 0.0}$ & 88.3$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.06$_{\pm 0.04}$ & 92.1$_{\pm 2.0}$ & 96.0$_{\pm 0.6}$ & 0.16$_{\pm 0.13}$ & 97.5$_{\pm 0.3}$ & 52.1$_{\pm 28.9}$ & 0.07$_{\pm 0.00}$ & 93.2$_{\pm 0.0}$ & 74.2$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.04$_{\pm 0.02}$ & 94.3$_{\pm 1.0}$ & 82.4$_{\pm 5.4}$ & 0.07$_{\pm 0.04}$ & 99.4$_{\pm 0.1}$ & 52.7$_{\pm 19.8}$ & 0.05$_{\pm 0.00}$ & 97.8$_{\pm 0.0}$ & 86.4$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.03$_{\pm 0.02}$ & 97.4$_{\pm 0.5}$ & 98.5$_{\pm 0.4}$ & 0.17$_{\pm 0.03}$ & 99.7$_{\pm 0.5}$ & 89.0$_{\pm 0.4}$ & 0.05$_{\pm 0.00}$ & 97.4$_{\pm 0.0}$ & 82.6$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.06$_{\pm 0.01}$ & 93.6$_{\pm 0.6}$ & 88.6$_{\pm 3.1}$ & 0.14$_{\pm 0.00}$ & 99.8$_{\pm 0.0}$ & 49.7$_{\pm 2.2}$ & 0.16$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 92.5$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.06$_{\pm 0.02}$ & 96.4$_{\pm 0.3}$ & 97.0$_{\pm 1.3}$ & 0.01$_{\pm 0.02}$ & 47.7$_{\pm 66.0}$ & 48.2$_{\pm 68.2}$ & 0.00$_{\pm 0.00}$ & 98.3$_{\pm 0.0}$ & 83.9$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.06$_{\pm 0.01}$ & 92.1$_{\pm 0.4}$ & 89.2$_{\pm 0.8}$ & 0.11$_{\pm 0.04}$ & 97.5$_{\pm 0.6}$ & 98.4$_{\pm 0.7}$ & 0.18$_{\pm 0.00}$ & 96.3$_{\pm 0.0}$ & 98.1$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+&& \textbf{Avg.} &  0.05$_{\pm 0.01}$ & 94.3$_{\pm 2.0}$ & 91.7$_{\pm 5.7}$ & 0.10$_{\pm 0.07}$ & 91.7$_{\pm 19.4}$ & 65.4$_{\pm 20.5}$ & 0.08$_{\pm 0.07}$ & 96.4$_{\pm 2.7}$ & 86.6$_{\pm 7.6}$ \\
+\rowcolor{gray!10} && \textbf{Rel. Gain} & -16.7 & -2.0 & -7.1 & +100.0 & -6.2 & -34.3 & -11.1 & -2.7 & -11.5 \\
+
+
+\midrule
+\multirow{26}{*}{\rotatebox{90}{\textsc{\textbf{Incongruous}}}} 
+&\multirow{9}{*}{\rotatebox{90}{\textbf{No-Turn}}} 
+& \textsc{Social} & 0.03$_{\pm 0.00}$ & 96.2$_{\pm 0.3}$ & 98.0$_{\pm 0.2}$ & 0.03$_{\pm 0.00}$ & 96.7$_{\pm 1.0}$ & 99.6$_{\pm 0.2}$ & 0.05$_{\pm 0.00}$ & 99.0$_{\pm 0.0}$ & 99.4$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.06$_{\pm 0.00}$ & 95.2$_{\pm 0.2}$ & 98.7$_{\pm 0.5}$ & 0.04$_{\pm 0.00}$ & 98.0$_{\pm 0.0}$ & 99.7$_{\pm 0.1}$ & 0.06$_{\pm 0.00}$ & 99.6$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.06$_{\pm 0.00}$ & 95.6$_{\pm 0.4}$ & 97.7$_{\pm 0.3}$ & 0.04$_{\pm 0.00}$ & 98.9$_{\pm 0.7}$ & 99.8$_{\pm 0.3}$ & 0.07$_{\pm 0.00}$ & 98.6$_{\pm 0.0}$ & 95.3$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.06$_{\pm 0.00}$ & 97.0$_{\pm 0.3}$ & 99.5$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 98.2$_{\pm 0.1}$ & 99.6$_{\pm 0.2}$ & 0.08$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 99.9$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.07$_{\pm 0.00}$ & 96.3$_{\pm 0.1}$ & 99.1$_{\pm 0.7}$ & 0.07$_{\pm 0.00}$ & 99.3$_{\pm 0.3}$ & 99.8$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 98.8$_{\pm 0.0}$ & 99.7$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.07$_{\pm 0.00}$ & 97.1$_{\pm 0.2}$ & 99.3$_{\pm 0.3}$ & 0.00$_{\pm 0.00}$ & 97.1$_{\pm 0.2}$ & 99.9$_{\pm 0.1}$ & 0.07$_{\pm 0.00}$ & 99.6$_{\pm 0.0}$ & 95.0$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.05$_{\pm 0.01}$ & 95.3$_{\pm 0.4}$ & 98.5$_{\pm 0.0}$ & 0.06$_{\pm 0.01}$ & 96.0$_{\pm 1.2}$ & 99.3$_{\pm 0.4}$ & 0.19$_{\pm 0.00}$ & 98.8$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+\rowcolor{gray!10} && \textbf{Avg.} & 0.06$_{\pm 0.01}$ & 96.1$_{\pm 0.8}$ & 98.7$_{\pm 0.7}$ & 0.05$_{\pm 0.03}$ & 97.7$_{\pm 1.2}$ & 99.7$_{\pm 0.2}$ & 0.09$_{\pm 0.05}$ & 99.2$_{\pm 0.5}$ & 98.5$_{\pm 2.3}$ \\
+\rowcolor{stable} && \textbf{Gap ($\Delta$)} & +0.0 & -0.1 & +0.0 & +0.0 & -0.1 & +0.1 & +0.0 & +0.1 & +0.7 \\
+
+\cmidrule(lr){2-12}
+&\multirow{9}{*}{\rotatebox{90}{\textbf{Single-Turn}}} 
+& \textsc{Social} & 0.04$_{\pm 0.00}$ & 93.7$_{\pm 3.3}$ & 92.9$_{\pm 9.5}$ & 0.02$_{\pm 0.00}$ & 99.9$_{\pm 0.1}$ & 68.8$_{\pm 6.1}$ & 0.03$_{\pm 0.00}$ & 91.9$_{\pm 0.0}$ & 90.5$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.07$_{\pm 0.03}$ & 93.8$_{\pm 4.5}$ & 98.8$_{\pm 1.5}$ & 0.15$_{\pm 0.14}$ & 98.7$_{\pm 1.5}$ & 55.2$_{\pm 23.9}$ & 0.10$_{\pm 0.00}$ & 99.8$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.03$_{\pm 0.04}$ & 98.7$_{\pm 0.7}$ & 95.5$_{\pm 2.1}$ & 0.16$_{\pm 0.07}$ & 98.6$_{\pm 0.1}$ & 61.2$_{\pm 13.3}$ & 0.01$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 94.7$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.03$_{\pm 0.02}$ & 98.4$_{\pm 0.4}$ & 100.0$_{\pm 0.0}$ & 0.26$_{\pm 0.03}$ & 100.0$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ & 0.04$_{\pm 0.00}$ & 97.0$_{\pm 0.0}$ & 75.7$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.04$_{\pm 0.00}$ & 97.4$_{\pm 0.1}$ & 77.1$_{\pm 15.6}$ & 0.13$_{\pm 0.02}$ & 100.0$_{\pm 0.0}$ & 56.0$_{\pm 10.1}$ & 0.16$_{\pm 0.00}$ & 99.9$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.07$_{\pm 0.04}$ & 91.0$_{\pm 11.2}$ & 88.4$_{\pm 16.0}$ & 0.01$_{\pm 0.01}$ & 48.2$_{\pm 68.2}$ & 49.6$_{\pm 70.2}$ & 0.00$_{\pm 0.00}$ & 100.0$_{\pm 0.0}$ & 94.7$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.07$_{\pm 0.00}$ & 92.3$_{\pm 3.3}$ & 84.9$_{\pm 4.8}$ & 0.14$_{\pm 0.02}$ & 99.6$_{\pm 0.5}$ & 99.6$_{\pm 0.6}$ & 0.23$_{\pm 0.00}$ & 96.3$_{\pm 0.0}$ & 98.9$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+&& \textbf{Avg.} & 0.05$_{\pm 0.02}$ & 95.0$_{\pm 3.1}$ & 91.1$_{\pm 8.2}$ & 0.12$_{\pm 0.09}$ & 92.1$_{\pm 19.4}$ & 70.1$_{\pm 21.1}$ & 0.08$_{\pm 0.08}$ & 97.8$_{\pm 3.0}$ & 93.5$_{\pm 8.6}$ \\
+\rowcolor{gray!10} && \textbf{Rel. Gain} & -16.7 & -1.1 & -7.7 & +140.0 & -5.7 & -29.7 & -11.1 & -1.4 & -5.1 \\
+\rowcolor{stable} && \textbf{Gap ($\Delta$)} & -16.7 & -0.2 & +1.9 & -7.7 & +0.0 & +5.7 & -11.1 & +0.3 & +2.4 \\
+
+\cmidrule(lr){2-12}
+&\multirow{9}{*}{\rotatebox{90}{\textbf{Multi-Turn}}} 
+& \textsc{Social} & 0.04$_{\pm 0.00}$ & 94.2$_{\pm 2.0}$ & 91.7$_{\pm 6.0}$ & 0.02$_{\pm 0.00}$ & 99.9$_{\pm 0.0}$ & 70.4$_{\pm 3.0}$ & 0.03$_{\pm 0.00}$ & 91.1$_{\pm 0.0}$ & 92.6$_{\pm 0.0}$ \\
+&& \textsc{Science} & 0.05$_{\pm 0.03}$ & 94.7$_{\pm 2.1}$ & 97.2$_{\pm 0.8}$ & 0.11$_{\pm 0.10}$ & 96.5$_{\pm 0.0}$ & 54.4$_{\pm 29.5}$ & 0.09$_{\pm 0.00}$ & 91.9$_{\pm 0.0}$ & 72.5$_{\pm 0.0}$ \\
+&& \textsc{Religion} & 0.04$_{\pm 0.02}$ & 93.8$_{\pm 2.9}$ & 84.3$_{\pm 9.3}$ & 0.04$_{\pm 0.02}$ & 99.5$_{\pm 0.2}$ & 56.6$_{\pm 17.5}$ & 0.03$_{\pm 0.00}$ & 97.1$_{\pm 0.0}$ & 85.8$_{\pm 0.0}$ \\
+&& \textsc{Politics} & 0.03$_{\pm 0.01}$ & 97.8$_{\pm 0.4}$ & 98.4$_{\pm 0.6}$ & 0.16$_{\pm 0.02}$ & 99.5$_{\pm 0.8}$ & 89.1$_{\pm 0.0}$ & 0.04$_{\pm 0.00}$ & 96.4$_{\pm 0.0}$ & 78.1$_{\pm 0.0}$ \\
+&& \textsc{Method.} & 0.05$_{\pm 0.01}$ & 93.5$_{\pm 1.1}$ & 86.0$_{\pm 2.0}$ & 0.13$_{\pm 0.02}$ & 99.8$_{\pm 0.3}$ & 52.3$_{\pm 8.1}$ & 0.11$_{\pm 0.00}$ & 98.9$_{\pm 0.0}$ & 83.7$_{\pm 0.0}$ \\
+&& \textsc{Journ.} & 0.06$_{\pm 0.03}$ & 94.8$_{\pm 2.0}$ & 96.4$_{\pm 1.7}$ & 0.01$_{\pm 0.01}$ & 47.1$_{\pm 66.1}$ & 47.6$_{\pm 67.3}$ & 0.00$_{\pm 0.00}$ & 99.1$_{\pm 0.0}$ & 90.8$_{\pm 0.0}$ \\
+&& \textsc{Global} & 0.06$_{\pm 0.01}$ & 93.5$_{\pm 0.5}$ & 90.3$_{\pm 2.1}$ & 0.10$_{\pm 0.02}$ & 97.5$_{\pm 0.2}$ & 98.2$_{\pm 1.0}$ & 0.18$_{\pm 0.00}$ & 97.1$_{\pm 0.0}$ & 99.7$_{\pm 0.0}$ \\
+\cmidrule(lr){3-12}
+&& \textbf{Avg.} & 0.04$_{\pm 0.01}$ & 94.6$_{\pm 1.5}$ & 92.0$_{\pm 5.6}$ & 0.08$_{\pm 0.06}$ & 91.4$_{\pm 19.6}$ & 66.9$_{\pm 19.7}$ & 0.07$_{\pm 0.06}$ & 95.9$_{\pm 3.2}$ & 86.2$_{\pm 9.2}$ \\
+\rowcolor{gray!10} &&\textbf{Rel. Gain} & -33.3 & -1.6 & -6.8 & +60.0 & -6.4 & -32.9 & -22.2 & -3.3 & -12.5 \\
+\rowcolor{stable} &&  \textbf{Gap ($\Delta$)} & -20.0 & +0.3 & +0.3 & -20.0 & -0.3 & +2.3 & -12.5 & -0.5 & -0.5 \\
+
+
+\bottomrule
+\end{tabular}}
+\caption{\textbf{Assessment of Narrative Stability (PNI).} We evaluate semantic faithfulness (BLEU) and lexical diversity (Distinct) across Congruous and Incongruous splits to measure resistance to context drift. \colorbox{gray!10}{Rel. Gain (\%)} denotes improvements over the No-Turn baseline, while \colorbox{stable}{Gap ($\Delta$)} quantifies the performance deviation of incongruous personas relative to the congruous group.}
+\label{tab:narrative}
+\end{table*}
+
+
+
+\section{Experiments}\label{sec:exp}
+We evaluate \textsc{QuirkyMind} against open-source baselines on PQA and PNI tasks. Our analysis addresses: (1) whether iterative refinement mitigates context drift; (2) if the model sustains narrative diversity without compromising consistency; and (3) the specific contributions of our dual-phase alignment and PEFT adaptation strategy.
+
+
+
+\subsection{Experimental Setup}
+\noindent \textbf{Datasets.}
+Our primary evaluation utilizes the \textbf{American Trends Panel (ATP)}, which provides naturally incongruous personas derived from real-world surveys. We normalize multiple waves into a seven-domain benchmark (Table~\ref{tab:waves}) and adopt persona-level splits (70/10/20) to ensure disjoint identity sets across partitions. To assess cross-domain generalizability, we evaluate on \textbf{PersonaChat} \citep{zhang2018personachat}, whose predominantly congruous, attribute-based personas provide a counterpoint to ATP's heterodox stances. We sample 400 personas (800 items), maintaining methodological parity with the ATP protocol.
+
+
+
+\noindent \textbf{Baselines.} 
+We evaluate QuirkyMind using three open-source backbones to isolate the efficacy of our method from model scale: Llama~3.1 (8B), Qwen~2.5 (7B), and Mistral~3 (8B). This ensures that gains are attributable to the persona learning framework rather than base model capacity.
+
+
+
+\noindent \textbf{Metrics.}
+For \textbf{PQA}, we report Accuracy, \textit{MacroAcc} (per backstory), and \textit{MicroAcc} (per turn), where higher scores denote resilience to context override. For \textbf{PNI}, we evaluate three core dimensions: (i) \textit{Semantic Faithfulness} via BLEU-1 \citep{papineni-2002-bleu}; (ii) \textit{Lexical and Semantic Diversity} via Distinct-1/2 \citep{li-2016-diversity}, EDIV-1/2 (entropy-based diversity), and SDIV$_{\text{sem}}$ (embedding-based distance); and (iii) \textit{Persona Individuation} via \textbf{IND} (persona-specific distinctiveness) and \textbf{EXAG} (stereotype amplification) \citep{liu2024incongruous}. A robust model should maximize IND while maintaining controlled EXAG, signaling authentic individuation without collapsing into demographic caricatures.
+
+\noindent \textbf{Implementation Details.} 
+We use a pre-trained SBERT (MiniLM-L6-v2) for sentence-level anchoring. The LLM backbone remains frozen; only the LoRA adapters ($\Phi$), soft prompt ($g_\phi$), and projection head ($f_\theta$) are trained. Experiments run on a single NVIDIA RTX 5090 (32GB).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{table}[t]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{3.5pt} %
+    \newcommand{\drop}[1]{\textcolor{red}{\scriptsize\,$\downarrow$#1}}
+    \resizebox{0.9\columnwidth}{!}{%
+    \begin{tabular}{l rrrr}
+        \toprule
+        \textbf{Topic} & \textbf{Full} & \textbf{w/o Align.} & \textbf{w/o Gen.} & \textbf{PEFT Only} \\
+        \midrule
+        \textsc{Social}   & \textbf{33.9} & 29.1\drop{4.8} & 25.8\drop{8.1} & 30.3\drop{3.6}\\
+        \textsc{Science}  & \textbf{33.1} & 31.8\drop{1.3}  & 31.8\drop{1.3} & 31.5\drop{1.6} \\
+        \textsc{Religion} & \textbf{18.5} & 17.8\drop{0.7} & 18.5\drop{0} & 14.8\drop{3.7} \\
+        \textsc{Politics} & \textbf{48.4} & 13.8\drop{34.6} & 45.6\drop{2.8} & 13.8\drop{34.6} \\
+        \textsc{Method.}  & \textbf{49.1} & 39.4\drop{9.7}  & 48.7\drop{0.4} & 28.8\drop{20.3} \\
+        \textsc{Journ.}   & \textbf{40.0} & 26.1\drop{13.9} & 38.5\drop{1.5} & 19.3\drop{20.7} \\
+        \textsc{Global}   & \textbf{62.1} & 32.3\drop{29.8} & 59.9\drop{2.2} & 60.3\drop{1.8}\\
+        \bottomrule
+    \end{tabular}}
+    \caption{\textbf{Ablation Study.} Impact of dual-stream refinement and PEFT strategy \cite{tan2024democratizing,hu2022lora,dettmers2023qlora} on PQA MicroAcc (\%). \textcolor{red}{Red} values denote absolute performance drops relative to the full model, confirming the necessity of dual-phase anchoring to mitigate context drift.}    
+    \label{tab:ablation}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{PQA Performance: Resistance to Drift}\label{sec:rq1}
+\noindent \textbf{Setup.}
+We evaluate three inference regimes: (i) \textit{No-Turn} (zero-shot prompt), (ii) \textit{Single-Turn} (one context pair), and (iii) \textit{Multi-Turn} (progressive refinement over $m$ turns). We compare against No-Persona, Standard LoRA, PSP, and Prefix\,+\,SBERT baselines under identical conditions. As shown in Table~\ref{tab:mcq}, \textsc{QuirkyMind} consistently outperforms all baselines across backbones and topics.
+
+\noindent \textbf{Context Override Mitigation.}
+The \textit{No-Turn} baseline succumbs to strong pre-trained priors, often reverting to generic answers. While \textit{Single-Turn} context provides immediate cues (+4.86\% to +22.78\% gain), \textit{Multi-Turn} refinement yields the most robust state, adding a further +33.81\% to +41.97\%.
+
+\noindent \textbf{Resolution of Incongruity.}
+Gains are most pronounced in ideologically complex domains like \textsc{Religion} (RL) and \textsc{Politics} (PL). For instance, Llama gains +33.4\% on \textsc{Politics} in the multi-turn setting. This confirms that iterative anchoring allows the model to override generic stereotypes with atypical backstory traits.
+
+\noindent\textbf{Cross-Persona Robustness.}
+The gap between MacroAcc and MicroAcc narrows in the Multi-Turn setting, indicating that improved performance is stable across diverse backstories, not just easy examples. Stratified PQA studies and generalization to PersonaChat are provided in Appendix~\ref{sec:eexp} and Section~\ref{sec:rq5}, respectively.
+
+
+
+
+
+
+
+\subsection{PNI Performance: Narrative Stability}\label{sec:rq2}
+\noindent \textbf{Setup.} To evaluate narrative robustness under persona-prior dissonance, we stratify PNI performance into \textbf{Congruous} and \textbf{Incongruous} cohorts based on the alignment between persona stances and empirical distribution priors (Table~\ref{tab:narrative}).
+
+\noindent \textbf{Spurious Diversity vs. Convergent Stability.} \textit{Single-turn} models often exhibit elevated Distinct scores alongside stagnant BLEU performance, which we identify as ``spurious diversity,'' unbounded lexical variance disconnected from persona constraints. This is evidenced by the positive \colorbox{stable}{Gap ($\Delta$)} in D2 for baselines. Conversely, our method's \textit{Multi-Turn} refinement induces necessary stabilization. Negative \colorbox{gray!10}{Rel. Gains} in D2 indicate a pruning of irrelevant vocabulary, converging toward a stable range (D2 $\approx 65$--$92$) that faithfully reflects the persona. This transition from noisy randomization to \textit{semantically anchored expressivity} is confirmed by maintained BLEU scores.
+
+\noindent \textbf{Consistency Across Congruence.}
+QuirkyMind rectifies the instability associated with incongruity. In the Single-Turn setting, Incongruous personas diverge significantly from the Congruous baseline with a large positive \colorbox{stable}{Gap ($\Delta$)}. However, Multi-Turn refinement collapses this divergence gap (e.g., Mistral $\Delta_{\text{D2}}$ narrows from $+2.2$ to $-0.4$; Llama from $+1.7$ to $+0.3$). This convergence demonstrates that iterative refinement applies uniform regularization, modeling incongruous traits, such as a Liberal favoring military spending, with the same stability and coherence as stereotypical traits.
+
+
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{0pt} %
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} l ccccc}
+\toprule
+\textbf{Method} & \textbf{Acc} $\uparrow$ & \textbf{D2} $\uparrow$ & \textbf{SDIV}$_{\text{sem}}$ $\uparrow$ & \textbf{IND} $\uparrow$ & \textbf{EXAG} \\
+\midrule
+No-Persona        & 0.103 & 0.382 & 0.654 & --- & --- \\
+Standard LoRA     & \textbf{0.999} & 0.280 & 0.696 & 0.931 & 0.725 \\
+PSP               & \underline{0.998} & 0.109 & \underline{0.724} & \underline{0.989} & \textbf{0.873} \\
+Prefix + SBERT    & 0.996 & 0.137 & 0.717 & 0.947 & 0.801 \\
+\midrule
+\textbf{\textsc{QuirkyMind}} & 0.976 & \textbf{0.522} & \textbf{0.806} & \textbf{0.989} & \underline{0.862} \\
+\bottomrule
+\end{tabular*}
+\caption{\textbf{Generalization to Open-Domain Dialogue} (PersonaChat, $N=400$). \textsc{QuirkyMind} uniquely resolves the Accuracy--Individuation--Diversity trilemma, sustaining high diversity (D2, SDIV) and individuation (IND) without the stereotypical collapse (EXAG) seen in baselines. Bold and underline denote best and second-best; metrics follow \citet{liu2024incongruous}.}
+\label{tab:baselines}
+\end{table}
+
+
+\subsection{Cross-Domain Generalizability}\label{sec:rq5}
+\noindent\textbf{Setup.}
+e benchmark \textsc{QuirkyMind} on \textbf{PersonaChat} \citep{zhang2018personachat} to assess geocultural and stylistic generalizability. In contrast to the heterodox stances of ATP, PersonaChat’s congruous, attribute-list personas provide a testbed for standard dialogue where identities are more stereotypical. We sample 400 personas (800 items) to evaluate PQA and the extended PNI suite under identical experimental conditions.
+
+\noindent\textbf{Resolving the Trilemma.} 
+Our results (Table~\ref{tab:baselines}) expose a fundamental \textbf{Accuracy--Individuation--Diversity Trilemma} in persona steering that monolithic architectures fail to resolve:
+
+\noindent \textbf{Standard LoRA} yields near-perfect accuracy (0.999) but triggers \textit{individuation collapse} (IND=0.931, D2=0.280), regressing toward a distributionally averaged representation that erases idiosyncratic traits.
+
+\noindent \textbf{PSP} \citep{tan2024democratizing} matches our individuation (0.989) at the cost of catastrophic diversity loss (D2=0.109, $\sim$21\% of ours). Its peak EXAG (0.873) exposes a \textit{cluster-centroid shortcut}: individuation is mimicked via demographic caricatures rather than authentic per-persona nuance.
+
+\noindent \textbf{Prefix+SBERT} lacks the discriminative geometric grounding afforded by Stage-1 InfoNCE; without this constraint, the latent state drifts toward stereotypical amplification (EXAG=0.801) and lexical stasis (D2=0.137).
+
+\noindent \textbf{\textsc{QuirkyMind}} uniquely resolves the trilemma, attaining superior lexical diversity (D2=0.522; \textbf{4.8$\times$} PSP) and semantic richness (SDIV$_{\text{sem}}$=0.806). The nominal accuracy trade-off (0.976) is a \textit{principled cost} of Stage-1 anchoring, which actively inhibits the model from adopting the ``stereotypical prior'' shortcut prevalent in monolithic architectures.
+
+    
+
+\noindent\textbf{Validating the Incongruity Hypothesis.}
+The attenuated performance gap on PersonaChat validates our central thesis: dual-stream refinement is a functional necessity for atypical stances. While monolithic baselines suffice for congruous identities, they succumb to stereotypical priors under incongruity. PersonaChat thus confirms that \textsc{QuirkyMind} is not a dataset-specific artifact, but a robust defense against sociodemographic mode collapse in representational space.
+
+
+
+
+
+
+
+\subsection{Ablation Study}\label{sec:rq3}
+We dissect the contributions of the dual-phase refinement using the Llama backbone (Table \ref{tab:ablation}).
+
+
+\noindent \textbf{Impact of Discriminative Alignment.} 
+Removing Stage 1 (InfoNCE) causes the sharpest performance drop (up to -34.6\% in \textsc{POLITICS}). Without geometric anchoring, the latent state $\mathbf{z}$ drifts, leading to stance inversions and high entropy. This confirms that discriminative supervision is critical for anchoring personas against drift.
+
+\noindent \textbf{Impact of Generative Refinement.} 
+Omitting Stage 2 (Cross-Entropy) leads to a moderate drop (-0\% to -8.1\%). While the model retains the \textit{correct stance} (via Stage 1), it struggles to \textit{verbalize} the stance effectively. Without token-level regularization, responses become generic or less persuasive. The full model synthesizes these strengths: Stage 1 ensures the persona is defined correctly, and Stage 2 ensures the persona is naturally expressed.
+
+\noindent \textbf{Comparison with Standard PEFT.}
+While PEFT-adapted models optimize adaptation efficiency, they lack explicit mechanisms for persona grounding. Relying solely on PEFT results in consistent performance degradation across domains, especially in ideologically sensitive categories such as \textsc{Religion} and \textsc{Politics}. This suggests that low-rank updates alone are insufficient to override the model's pretrained priors or robustly encode persona semantics. Without the geometric guidance of discriminative alignment and the expressive regularization of generative refinement, PEFT-adapted models succumb to persona drift. In contrast, the full method disentangles identity alignment from expression, ensuring incongruous traits are both structurally preserved and fluently articulated.
+
+
+\noindent \textbf{Dual-stream Efficacy.}
+Benchmarking on \textit{PersonaChat} isolates the structural efficacy of our dual-stream design (Table~\ref{tab:baselines}). Results expose a pervasive failure in monolithic architectures: the sacrifice of persona individuation for distributional accuracy. Conversely, \textsc{QuirkyMind} optimizes both dimensions, sustaining superior IND and diversity metrics while maintaining competitive task performance. This confirms that our framework generalizes beyond the heterodox stances of ATP to resolve the fundamental representational tensions inherent in persona steering.
+
+\subsection{Qualitative Study: The ``Affluent Liberal''}\label{sec:rq4}
+
+
+Figure~\ref{fig:PL26} illustrates the generation trajectory for Persona PL-26. The \textit{No-Turn} baseline produces brief, direct responses that rely heavily on generic backstory priors. \textit{Single-Turn} conditioning introduces situational detail but remains tonally neutral. In contrast, \textit{Multi-Turn} refinement yields a narrative characterized by precise ideological detachment, demonstrating a deeper alignment with the persona's specific worldview rather than a generic political stance.
+
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/PL26.pdf}
+  \caption{\textbf{Case Study: Persona PL--26.} For this persona, baselines revert to generic caricatures. Conversely, multi-turn refinement anchors the incongruity, synthesizing structural critique with personal privilege into a nuanced, coherent narrative.}
+  \label{fig:PL26}
+\end{figure}

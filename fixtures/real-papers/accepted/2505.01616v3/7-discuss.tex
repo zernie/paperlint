@@ -1,0 +1,20 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\parab{General support of custom kernels.} As detailed in \autoref{sec:workflow}, \sys can support custom kernel extensions in an ad-hoc manner but still requires extra engineering effort. And like all existing workload-based performance estimation methods, \sys does not currently support JIT-compiled kernels. In principle, a more general and transparent support could be implemented by intercepting or cooperating with compilers, but we leave this direction for future work.
+
+\parab{Value-dependent performance in ML frameworks.}
+Like other ML system simulators, \sys currently cannot precisely reflect some value-dependent performance characteristics. One key example is expert parallelism~\cite{lepikhin2021gshard}, where performance depends on the distributions of activated experts. \sys can simulate expert parallelism under the assumption of perfect load balance, but it does not model the performance overheads caused by expert imbalance. Another example is reinforcement learning (RL) for LLMs, where the its performance depends on the generation length.
+We believe this limitation can be addressed through an annotation interface that allows users to specify distributions of certain values (\eg, activated expert indices, LLM generation lengths). With these distributions, \sys can allow users to further estimate the performance of their system under different scenarios. We leave this direction to future work.
+
+GPU itself can also has value-dependent performance of a single operation—for instance, sorting implementations on GPU may take different branches based on comparison of tensor values. We ignore such GPU-level effects as their performance impact is generally minor in end-to-end ML systems.
+
+\parab{Improving \sys's accuracy.}
+Our main goal is maximizing ML framework code reuse, not to improve simulation accuracy beyond existing static workload simulations.
+Similar to static workload simulations, \sys uses standard discrete event simulation, so other techniques improving simulation accuracy should also apply to \sys. For example, the SimCCL library in SimAI~\cite{wang2025simai} could replace the current simple ring algorithm in \sys for more accurate network simulation of NCCL.
+
+\parab{Improving \sys's speed.}
+Similarly, \sys can adopt simulation performance enhancement techniques in existing static workload simulations. For example, while \sys simulator is currently single-threaded, parallel discrete event simulation like UNISON~\cite{bai2024unison} could potentially be applied to \sys for improved simulation speed.
+
+\parab{Non-independent computation/communication overlap performance.}
+Overlapping communication with computation is a standard way to hide communication latency in distributed ML systems. However, this overlap could also slow down both operations as they share critical internal hardware resources~\cite{liu2024deepseek}. Currently \sys and other simulators do not consider this effect as it's hard to simulate and impractical to profile for every possible overlap. An analytical model could help in the estimation, but we leave it for future work.

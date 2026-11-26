@@ -1,0 +1,55 @@
+% =====================================================================
+% RELATED WORK
+% =====================================================================
+
+\section{Related work}
+\label{sec:related}
+
+\paragraph{Double descent in deep learning.}
+\citet{belkin2019reconciling,nakkiran2021deep} first articulated the
+double-descent picture across kernel methods, small neural networks, and
+modern deep networks (CNNs, ResNets), showing that the peak in test loss
+arises along several axes simultaneously---including model width, training
+time, and dataset size---and is amplified by label noise. Subsequent work has refined the picture: sample-wise variants
+\citep{nakkiran2020optimal}, the role of regularization in attenuating the
+peak \citep{nakkiran2021optimal}, empirical characterizations of when the
+phenomenon appears \citep{schaeffer2023double}, and the related grokking
+phenomenon \citep{power2022grokking}.
+Finally, \citet{wilson2020bayesian} observe empirically that Bayesian
+model averaging (approximated by deep ensembles) can eliminate the
+double-descent peak. We study this observation by decomposing the MLE
+excess test cross-entropy into four terms through the universal-compression
+lens---an approximation-and-shift term, a minimax batch regret, a prior cost,
+and an MLE-vs-Bayes gap---and, under $100\%$ label noise where the
+approximation-and-shift term is zero by construction, find a large
+SGD-vs-ensemble gap near interpolation.
+
+\paragraph{Double descent in classical models.}
+A complementary line of work analyzes double descent in tractable, mostly
+linear, settings: high-dimensional linear regression
+\citep{advani2017high,hastie2022surprises}, finite-sample least squares on
+concrete data models \citep{belkin2020two}, benign overfitting of
+minimum-norm interpolants \citep{bartlett2020benign,muthukumar2020harmless},
+ridge regression over random features \citep{mei2022generalization}, and
+feature designs exhibiting arbitrarily many descents \citep{chen2021multiple}.
+Our contribution is complementary: we target \emph{misspecified, non-regular}
+model families, of which deep networks are the prototypical case, rather
+than well-specified linear or kernel settings. Unlike these exact risk
+analyses, our bound separates candidate contributions without giving a
+tight risk formula for deep networks.
+
+\paragraph{Information-theoretic complexity and deep learning theory.}
+For discrete data, $-\log q(x)$ is an ideal code length in nats, so expected
+excess code length over the true source is a KL divergence.
+Classical complexity measures such as VC dimension \citep{vapnik1971uniform}
+and Rademacher complexity \citep{bartlett2002rademacher} are notoriously
+loose for overparameterized networks; mutual-information generalization
+bounds \citep{xu2017information,steinke2020reasoning} provide a
+distribution-dependent alternative. Universal coding
+\citep{rissanen1984universal,barron1998minimum,davisson1973universal,shtarkov1987universal,haussler1997mutual,merhav1998universal,rissanen1996fisher}
+characterizes the unavoidable cost of predicting without knowing the
+source parameter, and singular learning theory
+\citep{watanabe2009algebraic,hoogland2024towards,chen2023dynamical}
+extends this to the non-regular families characteristic of deep networks.
+However, none of these frameworks have been shown to directly explain the
+double-descent phenomenon in full generality.

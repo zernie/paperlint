@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "3bd4daab518531379afb8f7bdf94d1d2142f756a8eff50e5085a56da687e8a1e",
+    "usenix.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e"
+  }
+}

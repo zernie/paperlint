@@ -1,0 +1,103 @@
+\subsection{Interaction DSL Generation}
+\label{sec:interaction-dsl}
+
+At the core of our approach is an \emph{interaction DSL} designed to explicitly represent concurrency context in a lightweight and comparable manner across bug reports and source code. The goal of the DSL is to capture concurrency-relevant semantics while filtering out unrelated program details, thereby enabling focused and explainable fault localization.
+
+Recent work has demonstrated the potential of LLMs for fault localization, but a fundamental challenge remains determining what constitutes relevant context. This challenge becomes particularly severe in concurrent systems, where relevant behaviors may span multiple threads, shared resources, and asynchronous execution paths. While general fault localization often requires reasoning over deep call chains and large code regions, we observe that concurrent faults typically exhibit a more structured form of context centered around shared-variable accesses and cross-thread interactions. This motivates a representation that explicitly models concurrency-relevant interactions while suppressing unrelated program information.
+
+\input{tables/entity}
+
+Based on this observation, we propose an interaction DSL that models concurrency at the granularity of shared-variable accesses across thread entry points. For each thread entry, the DSL records shared-variable accesses reachable from its downstream methods, and an interaction is constructed whenever two thread entries may access the same shared resource, whether through the same method or through different methods. Rather than attempting to reconstruct concrete schedules or happens-before relations, the DSL conservatively captures potential cross-thread interactions that may contribute to faults. Each interaction summarizes who may execute concurrently, what resources are shared, where the accesses occur, and the associated synchronization context.
+
+The DSL is intentionally designed as a lightweight program-level abstraction rather than a predictor of bug-specific interactions. The CKB is constructed offline using conservative static analysis to capture methods reachable from thread entry points that access shared variables, which may over-approximate actual runtime behaviors. Instead of treating all extracted interactions as buggy candidates, ConFL further relies on hierarchy-guided retrieval and LLM-based reasoning to identify interactions most relevant to the bug report. This design enables scalable fault localization without requiring execution traces or reproducible thread schedules.
+
+\Name{} targets thread-based concurrency in Java, including explicit \texttt{Thread} creation, \texttt{Executor} submissions, asynchronous callbacks, and framework-managed entry methods. Synchronization is modeled uniformly through both \texttt{synchronized} constructs and \texttt{java.util.concurrent.Lock} primitives. By representing concurrency through shared-variable accesses across thread entry points rather than through language-specific syntax, the DSL naturally supports a broad range of executor-based and asynchronous concurrency patterns commonly used in modern Java systems.
+
+\paragraph{Concurrency Entity Extraction.}
+The DSL is grounded in a small set of concurrency-relevant entities, as summarized in Table~\ref{tab:entity-domain}.
+All entities correspond to statically available program constructs and can be extracted using lightweight static analysis.
+Variables include both class fields and method parameters that may escape their defining scope.
+Synchronization via the \texttt{synchronized} keyword is treated separately, as it appears as a method or block modifier, while other synchronization primitives (e.g., \texttt{ReentrantLock}) are modeled as shared variables.
+Thread entry points are identified as methods that may initiate concurrent execution, including explicit thread creation, executor submissions, asynchronous callbacks, and framework-managed entry methods.
+
+
+\begin{wrapfigure}{r}{0.35\textwidth} 
+    \centering 
+    \includegraphics[width=0.35\textwidth]{figs/dsl.pdf}
+    \caption{Interaction DSL}\label{fig:interaction-dsl}
+\end{wrapfigure}
+
+
+Based on these extracted entities, we define an interaction DSL to represent potential concurrent behaviors.
+Figure~\ref{fig:interaction-dsl} illustrates the structure of the Interaction DSL.
+Each interaction is defined by a pair of thread entry points and a set of shared access summaries.
+For a given entry pair, the DSL records the methods reachable from each entry that access shared variables, along with the corresponding synchronization context.
+By organizing concurrency information at the granularity of entry pairs and access points, the DSL provides a compact yet expressive representation of concurrency-relevant context suitable for subsequent analysis and reasoning.
+
+As shown in Algorithm~\ref{alg:interaction-extraction}, the construction of the Interaction DSL proceeds in three phases.
+
+In the first phase, the algorithm extracts base concurrency-relevant entities from the source code, including methods, shared variables, and thread entry points.
+A static call graph is then constructed to support reachability analysis.
+These entities form the foundation for subsequent interaction modeling and correspond directly to the analysis domain defined earlier.
+
+In the second phase, the algorithm performs thread-entry–centered reachability analysis.
+Starting from each thread entry point, it computes the set of methods that may be executed as part of the corresponding concurrent context.
+For each reachable method, the algorithm records all accesses to shared variables.
+This step associates downstream shared accesses with their originating thread entries, enabling the DSL to capture cross-class and cross-call concurrency behavior.
+
+In the final phase, the algorithm constructs interaction instances by examining pairs of thread entry points.
+For each entry pair, it identifies methods that are reachable from both entries and aggregates their shared variable accesses.
+An interaction is created whenever two thread entries may access shared state through one or more common methods.
+Each interaction summarizes the potential concurrent behavior between the two entries by grouping the relevant methods and shared accesses into a single DSL element.
+
+Overall, the algorithm conservatively over-approximates concurrency interactions: it captures all shared accesses that may occur under some interleaving, without committing to specific execution orders or schedules.
+This design ensures soundness while keeping the interaction representation compact and suitable for scalable fault localization and LLM-based reasoning.
+
+\vspace{-0.5em}
+{\footnotesize
+\begin{algorithm}[h]
+\caption{Interaction DSL Extraction}
+\label{alg:interaction-extraction}
+\begin{algorithmic}[1]
+\Require Source code $\mathcal{P}$
+\Ensure Set of interactions $\mathcal{I}$
+
+\State \textbf{// Phase 1: Extract base entities}
+\State $\mathbb{M} \gets \textit{ExtractMethods}(\mathcal{P})$
+\State $\mathbb{V}_s \gets \textit{ExtractVars}(\mathcal{P})$
+\State $\mathbb{T}_e \gets \textit{IdentifyThreadEntries}(\mathbb{M})$
+\State $\mathcal{G} \gets \textit{BuildCallGraph}(\mathbb{M})$
+
+\State \textbf{// Phase 2: Compute reachability and accesses per thread entry}
+\ForAll{$t \in \mathbb{T}_e$}
+    \State $\textit{Reach}(t) \gets \textit{ComputeReachable}(\mathcal{G}, t.m)$
+    \ForAll{$m \in \textit{Reach}(t)$}
+        \State $\textit{Accesses}(t, m) \gets \textit{ExtractAccesses}(m, \mathbb{V}_s)$
+    \EndFor
+\EndFor
+
+\State \textbf{// Phase 3: Build interactions for each thread entry pair}
+\State $\mathcal{I} \gets \emptyset$
+\ForAll{$(t_1, t_2) \in \mathbb{T}_e \times \mathbb{T}_e$ where $t_1 < t_2$}
+    \State $M_{common} \gets \textit{Reach}(t_1) \cap \textit{Reach}(t_2)$
+    \State $\textit{SharedMethods} \gets \emptyset$
+    \ForAll{$m \in M_{common}$}
+        \State $A_m \gets \textit{Accesses}(t_1, m) \cup \textit{Accesses}(t_2, m)$
+        \If{$A_m \neq \emptyset$}
+            \State $\textit{SharedMethods} \gets \textit{SharedMethods} \cup \{(m, A_m)\}$
+        \EndIf
+    \EndFor
+    \If{$\textit{SharedMethods} \neq \emptyset$}
+        \State $I \gets \textit{BuildInteraction}(t_1, t_2, \textit{SharedMethods})$
+        \State $\mathcal{I} \gets \mathcal{I} \cup \{I\}$
+    \EndIf
+\EndFor
+
+\State \Return $\mathcal{I}$
+\end{algorithmic}
+\end{algorithm}
+}
+\vspace{-0.5em}
+
+
+

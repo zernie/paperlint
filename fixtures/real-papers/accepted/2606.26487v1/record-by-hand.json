@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ijcai26.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "latex/table.tex",
+      "role": "body"
+    },
+    {
+      "path": "latex/table_ablation.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "26d7c8f1ef5fd81af5309243bb77a2523d4f7638f8f0eafb293ac5e52ba9105b",
+    "ijcai26.sty": "cdf7ca9a28c6b1ba60cde0f42019ccea3722838242b69471db572d21f879d3b2",
+    "latex/table.tex": "b2cefc50682b1c64109e17e260f56eb870a2f5b7708afb1368620404a8bd82c3",
+    "latex/table_ablation.tex": "861d8b65828722889811e8ea5883ff40e0386013f30cb0d5f01c9344d534e2bc"
+  }
+}

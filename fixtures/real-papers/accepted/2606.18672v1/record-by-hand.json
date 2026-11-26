@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ijcai26.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "1_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "2_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/Similarity_comparison.tex",
+      "role": "body"
+    },
+    {
+      "path": "4_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/framework.tex",
+      "role": "body"
+    },
+    {
+      "path": "5_experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_result.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/UMAP.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/DEG_overlap_heatmap.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/TOP_10_DEGs.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/KEGG.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/sensitivity.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_component_ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/embeddings_ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "6_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "8_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "3_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/Statistical_Significance_Analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/datasets.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/trajectory.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/sensitivity_more.tex",
+      "role": "body"
+    },
+    {
+      "path": "figs/runtime_analysis_fig.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/main_ablation_more.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "ce40257d7b71fbb119c62d20e4717bf0b2a15553168f9a71e98927702eb580ee",
+    "ijcai26.sty": "cdf7ca9a28c6b1ba60cde0f42019ccea3722838242b69471db572d21f879d3b2",
+    "1_abstract.tex": "6b1189ee95a98c510d4fa4ae02b1a6343554d52270d8a23713d1d7558d67a56a",
+    "2_introduction.tex": "c65115c4fa653c71bbc76496cb755abe21b09d6f3a6c55ac0a86bdfba53c0d97",
+    "figs/Similarity_comparison.tex": "55f8b4053dbf6b52663f16f3bd3a21764147248eb840e3de3bba4bb3dab2b67f",
+    "4_method.tex": "864d7cab518c4b2f85583cebe249e012131a8de1c4f077eca71a15d4e5601ee8",
+    "figs/framework.tex": "79205ed20afe91b0cde33549c6ab2f354b068314e7c07bd6fb2fd28aff650f2c",
+    "5_experiment.tex": "8da3b2c0d87268b2565d8a57c8c545b4d50f9eadd41c79e994b70e02e00459f8",
+    "tables/main_result.tex": "5c25034e64501a0ef08b585f6cf215d0a11c1040885b7b737e8dbae58cd84a31",
+    "figs/UMAP.tex": "b4abbd248ec4f2b8cf59623ee871357ab5b21b49812d0eedfd2b232aa6d05e75",
+    "figs/DEG_overlap_heatmap.tex": "e6e3da60ae07223a785c88ffcab2c159e1c8f6a5e57d6d1f862f65d5850157c1",
+    "figs/TOP_10_DEGs.tex": "cb9350b157fb9f0807fbac3e70d2dd108f4b55367ec258849caa93c3451cff88",
+    "figs/KEGG.tex": "c3d2dfde33166a97b291eef1320cdaeecbc1283664e88174ef55ec21da6f6349",
+    "figs/sensitivity.tex": "255274b5bd305083e137cef8c48cc2f9d4bf75a1d9278ebdffe27afb06433bb6",
+    "tables/main_component_ablation.tex": "312a1ffe55a73ad2ed5c2bb471eaa91e15fe1e0ede99a45759daa3a39234f0ff",
+    "tables/embeddings_ablation.tex": "18ef65c06d0052117a3710ac27e37ce6036e50d1d112292c8aedd15c6774f09e",
+    "6_conclusion.tex": "d63852db6938e3e175bacbcac8feb00c1656d03c898a65055aa17dca3e2abc10",
+    "8_appendix.tex": "46d66091d667764cdcd0901b126928def53dcce808809149afc8d861630a8539",
+    "3_related_work.tex": "e3a23fd6134cb50228b77908fb2e8e2dbe77e065e9c11735ebe97273f5615d1a",
+    "tables/Statistical_Significance_Analysis.tex": "3b41bc2ac864cab63a2d07462654fdd6a3b44198b67994aec052841d23494c9e",
+    "tables/datasets.tex": "0e40b3e56a32bdfb93d851a5fa21dcc17f7f6876e9b14aee67b1860dfa1ad488",
+    "figs/trajectory.tex": "c6b0b9a51ed3a918b22798114544200db0cdc5f5dcbd7a813514352d4a8facee",
+    "figs/sensitivity_more.tex": "ad0dca13ece41e8df75e3c8f946e6dc3f25be1bcab550cce0fa4b0c7b9eae49e",
+    "figs/runtime_analysis_fig.tex": "219670aea32a59a7b267f94aa9935b4c0ee3f48aecda8756332bf983552aa65a",
+    "tables/main_ablation_more.tex": "579c45a7be69591deb73d36d61bf00db3e7147f865b32c034cecf2122ea50a2b"
+  }
+}

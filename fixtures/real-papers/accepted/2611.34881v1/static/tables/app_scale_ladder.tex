@@ -1,0 +1,11 @@
+\subsection{Pretraining Data and Model Capacity}
+\label{app:scale_ladder}
+
+\noindent The families of Sec.~\ref{sec:results_diagnostic} differ in pretraining data, capacity and objective at once. Fig.~\ref{fig:app_scale_ladder} separates the first two on STRANGE-Bench, changing one while holding the other fixed (metrics as in Fig.~\ref{fig:strange_diagnostic}: zero-shot mAP for CLIP and OpenCLIP, linear-probe F1$_{\text{micro}}$ for DINO). More pretraining data at fixed capacity does not narrow the gap. It grows from CLIP~\cite{radford2021learning} (WIT-400M) to OpenCLIP~\cite{cherti2023reproducible} (LAION-2B), $10.8 \rightarrow 14.7$, and from DINOv1~\cite{caron2021emerging} (ImageNet-1k) over DINOv2~\cite{oquab2024dinov} (LVD-142M) to DINOv3~\cite{simeoni2025dinov3} (LVD-1689M), $19.3 \rightarrow 21.5 \rightarrow 23.9$. More capacity at fixed data narrows the gap without closing it: from $16.5$ to $11.0$ for OpenCLIP ViT-B/32 to ViT-H/14, with little change after ViT-L/14 ($11.4$), and from $28.1$ to $19.8$ for DINOv3 ViT-S to ViT-H+ ($T_{\text{never}}$: $19.0 \rightarrow 52.8$).
+
+\begin{figure}[!htp]%
+\centering
+\includegraphics[width=\linewidth]{static/images/app_scale_ladder_dots_v2s.pdf}
+\caption{\textbf{Pretraining data and model capacity on STRANGE-Bench.} Adding capacity on the same pretraining data (solid lines) lowers the gap in both families; adding pretraining data at ViT-B capacity (curved arrows, gray band) raises it. $\Delta_{1\text{-}5}$: mean typical minus atypical over $T_1$ to $T_5$, against the image-encoder parameters; dot area grows with the logarithm of the number of pretraining images. CLIP and OpenCLIP: zero-shot mAP; DINO: linear probe on COCO, F1$_{\text{micro}}$.}
+\label{fig:app_scale_ladder}
+\end{figure}

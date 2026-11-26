@@ -1,0 +1,12 @@
+\section{Limitations and Discussion}
+\label{sec:discussion}
+
+\paragraph{Cache Availability.}
+The practicality of \sys depends on whether the hijacked KV state can enter the shared cache and be reused before eviction or overwritten. This creates a tradeoff: popular segments $X$ are more likely to appear in victim contexts, but also more likely to already have benign cached entries; less popular segments are easier to insert, but less likely to be reused. Thus, \sys is most practical for moderately shared content, such as shared documents, RAG sources, code files, or agent skill files. If $X$ is already cached, the attacker can switch to a suitable segment $Y$ or wait for an insertion window.
+A stronger attacker could further increase the likelihood that $X$ appears in the victim's context through retrieval poisoning techniques such as PoisonedRAG~\cite{zou2025poisonedrag}.
+
+\paragraph{Cache Occupancy Probing.}In our main experiments, we assume that the cache entry corresponding to the target segment $X$ can be inserted by the attacker without colliding with an existing benign entry. In real deployments, however, the attacker may not know the current occupancy of the shared cache. A lightweight side-channel test can help infer cache occupancy~\cite{gu2025auditing, song2025early}; in our preliminary experiments, it achieves $81.4\%$ accuracy with a single query and a $95.4\%$ hit recognition rate within five attempts. However, probing is not fully passive: probing queries may insert, refresh, or evict cache entries, causing self-pollution and changing the cache state before the attack. Therefore, practical attacks should use a small probing budget.
+
+
+\paragraph{Eviction Policies and Deployment Scope.}
+The feasibility of \sys depends on the cache replacement policy. FIFO may naturally create insertion windows; LRU makes frequently refreshed chunks harder to replace; and LFU further stabilizes high-frequency chunks. These dynamics shape when \sys is most practical, but they do not eliminate the attack surface. \sys is most relevant to real-time, position-independent, cross-user KV reuse, such as agent-based or multi-turn serving, and is less applicable to chunk-then-cache RAG pipelines where chunks are encoded independently. A full assessment would benefit from trace-driven evaluation under realistic workloads and eviction policies.

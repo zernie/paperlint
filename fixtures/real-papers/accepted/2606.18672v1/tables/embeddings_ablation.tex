@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+
+
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model Variants} & \textbf{ACC} & \textbf{NMI} & \textbf{ARI} \\
+\midrule
+\textbf{\method{}} & \textbf{96.02} & \textbf{89.15} & \textbf{93.10} \\
+GE + Pos & 92.12 & 86.33 & 88.55 \\
+GE + SP & 80.09 & 71.08 & 67.76 \\
+Pos + SP & 27.52 & 12.13 & 5.06 \\
+\midrule
+Gene Expression (GE) & 79.24 & 70.69 & 67.61 \\
+Position (Pos) & 16.68 & 0.73 & 0.23 \\
+Shortest Path (SP) & 26.53 & 12.14 & 6.80 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation experiment results of embedding components.}
+\label{tab:ablation_embed}
+\end{table}

@@ -1,0 +1,57 @@
+\section{\dandelion Execution System}\label{sec:design:system-arch}
+
+
+
+We now describe how \dandelion runs a composition and how we optimize the execution system for high elasticity. \autoref{fig:system_arch} shows the \dandelion worker node system architecture. 
+A client sends an HTTP request to the frontend.
+
+\fakepara{HTTP frontend.}
+The frontend manages client communication, handling requests for composition/function registration and invocation.
+It forwards these requests to the dispatcher and serializes and returns the final result to the client.
+
+\fakepara{Dispatcher.}
+The dispatcher orchestrates function execution within a \dandelion worker node. 
+It keeps track of pending invocations, available compute and memory resources, and maintains a registry of all registered composition DAGs, function binaries, and associated metadata. 
+The dispatcher schedules functions by tracking input/output dependencies and determines when a function is ready to run (i.e., when all its inputs are available).
+
+The dispatcher manages memory and compute resources using two abstractions: \textit{memory contexts} and \textit{engines}, respectively. The dispatcher prepares an isolated memory context for each ready function and enqueues the function in a compute or communication engine queue for execution. 
+When an engine finishes executing a function, the dispatcher associates its output data to the input of waiting functions. 
+When a waiting function becomes ready, the dispatcher ensures that the outputs from prior functions are copied as inputs into the new function's context. 
+The dispatcher de-allocates a completed function's memory context when all data-dependent functions have consumed its output.
+
+\begin{figure}
+    \centering
+    \includegraphics[trim={0 0.5cm 0 0}, width=0.4\textwidth]{figures/system_archv2.pdf}
+    \caption{\dandelion worker node system architecture.}
+    \label{fig:system_arch}
+\end{figure}
+
+\fakepara{Memory contexts.} A memory context is an abstraction for the dispatcher to manage the memory used by a function during execution.
+Each context is a bounded, contiguous memory region with methods to read or write at particular offsets and methods to transfer data to other contexts.
+Maintaining a simple context abstraction simplifies implementing different isolation mechanisms for compute functions, such as processes or lightweight VMs (\S\ref{sec:impl}).
+It also enables specializing methods for transferring data between different types of contexts.
+The maximum size of a context is set by the memory requirement specified by the user when registering a function (like in AWS Lambda).
+\dandelion reserves this amount of virtual memory for the context and uses demand paging to allocate zeroed pages as needed.
+
+\fakepara{Engines.} 
+Engines abstract compute resources that execute functions.
+\dandelion implements two types of engines: compute and communication engines. 
+Each engine type polls a single, type-specific queue to ensure late binding of tasks.
+The dispatcher enqueues tasks (which consist of a prepared memory contexts and metadata) to the appropriate queue type and receives contexts containing the results.
+
+\textit{Compute engines} are responsible for securely executing untrusted user code.
+When a compute engine dequeues a task, it sets up the necessary isolation for the memory context and executes the function on the assigned compute resource.
+After execution completes, the engine inspects the left over context, updates metadata to indicate the locations of output data, and returns it to the dispatcher. 
+\S\ref{sec:impl} describes the implementation details for different isolation mechanisms.
+Compute functions do not block, so each compute engine only runs a single task at a time to completion\footnote{Tasks that run for longer than a user-specified timeout (e.g., long or infinite loops) will be preempted to prevent resource hogging.} to minimize interference and context switching.
+
+\textit{Communication engines}, on the other hand, are part of the trusted execution system and therefore do not run in isolated sandboxes. These functions enable interactions (e.g., with HTTP requests) with external services by receiving a context with inputs and carefully validating these inputs to prevent corruption from potentially malicious users (see \S\ref{sec:comm-engines}). They return a context with outputs from the function execution if input validation succeeds or an error if input validation fails.
+Unlike compute engines, communication engines use cooperative multi-threading with green threads to maximize efficiency.
+
+\fakepara{Control plane.}
+The worker control plane dynamically balances CPU resources between compute and communication engines to maximize application goodput.
+It periodically (every 30ms) measures the growth rates of the communication and compute engines' queues. It uses the difference between their growth rates as an error signal for a Proportional-Integral controller~\cite{astrom1995_pid}.
+If the control signal is positive, the control plane re-assigns a CPU core from the communication engine type to the compute engine type. If it is negative, it re-assigns a core from the compute engine type to the communication engine type.
+
+\fakepara{Cluster manager.} The cluster manager (not shown in Figure~\ref{fig:system_arch}) orchestrates multiple worker nodes and load balances composition invocations across nodes.
+We extended Dirigent~\cite{dirigent} to support \dandelion worker nodes, but other cluster managers could also be used.

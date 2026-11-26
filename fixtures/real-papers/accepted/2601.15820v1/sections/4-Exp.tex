@@ -1,0 +1,525 @@
+\section{Experiments}
+
+\begin{table*}[t]
+\centering
+\caption{Results of different retrieval triggering methods on the \texttt{AMG} and \texttt{MR$^2$} datasets. For each model, we report RI and RE scores for both the \colorbox{lightgray}{\textit{vanilla}} and \textbf{fine-tuned} versions. * indicates that no retrieval is triggered for that method.}
+% \renewcommand{\arraystretch}{1.2}
+% \setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{width=\textwidth}
+\begin{tabular}{l|cccc|cccc|cccc|cccc|cccc}
+\toprule
+\textbf{Methods} 
+& \multicolumn{4}{c}{\textbf{Qwen-2.5-VL-7b}} 
+& \multicolumn{4}{c}{\textbf{InternVL2.5-8b}} 
+& \multicolumn{4}{c}{\textbf{LLaVA-1.6-Mistral-7b}} 
+& \multicolumn{4}{c}{\textbf{Qwen-2.5-VL-32b}} 
+& \multicolumn{4}{c}{\textbf{InternVL2.5-26b}} \\
+
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{RI} \quad \textit{RE}} 
+& \textbf{RI} & \textbf{RE} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{RI} \quad \textit{RE}} 
+& \textbf{RI} & \textbf{RE} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{RI} \quad \textit{RE}} 
+& \textbf{RI} & \textbf{RE} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{RI} \quad \textit{RE}} 
+& \textbf{RI} & \textbf{RE} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{RI} \quad \textit{RE}} 
+& \textbf{RI} & \textbf{RE} \\
+\midrule
+\midrule
+
+\multicolumn{9}{l}{\textit{AMG (in-domain)}} \\
+
+FL-RAG
+& \textbf{41.5} & 0.91 & \underline{16.7} & \underline{1.19}
+& \underline{41.6} & \underline{1.14} & 18.0 & -0.36
+& 47.8 & \underline{1.85} & \underline{14.1} & 0.00
+& \textbf{38.9} & 0.70 & * & *
+& \textbf{50.5} & \textbf{3.75} & * & * \\
+
+FLARE
+& 38.3 & \textbf{1.34} & 15.2 & -8.45
+& 39.4 & 1.01 & * & *
+& \underline{49.9} & 1.74 & * & *
+& 30.8 & \textbf{1.01} & \underline{18.6} & \underline{2.47}
+& 32.6 & 1.20 & * & * \\
+
+DRAGIN
+& 36.1 & 0.98 & * & *
+& 39.5 & 1.00 & \underline{16.6} & \underline{3.00}
+& 49.7 & 1.72 & 12.4 & \underline{1.00}
+& \underline{31.0} & \underline{0.88} & 14.5 & 0.00
+& 29.8 & \underline{2.13} & \underline{11.7} & \underline{0.00} \\
+% \cdashline{1-21}
+
+% \rowcolor{lightblue}
+\textbf{ExDR}$_{\textit{trigger}}$
+& \underline{38.8} & \underline{1.32} & \textbf{50.0} & \textbf{15.48}
+& \textbf{43.8} & \textbf{1.22} & \textbf{60.0} & \textbf{33.03}
+& \textbf{64.3} & \textbf{2.55} & \textbf{66.7} & \textbf{+28.15}
+& 30.1 & 0.87 & \textbf{52.1} & \textbf{23.33}
+& \underline{37.0} & 1.62 & \textbf{58.5} & \textbf{11.33} \\
+
+
+\midrule
+
+\multicolumn{9}{l}{\textit{MR$^2$ (cross-domain)}} \\
+
+FL-RAG
+& 37.5 & 1.79 & 26.7 & \textbf{0.87}
+& \underline{42.0} & \underline{1.07} & \underline{34.4} & \underline{22.50}
+& 49.0 & \underline{1.39} & \underline{40.2} & \underline{1.32}
+& 29.3 & \underline{2.17} & * & *
+& \textbf{38.2} & \textbf{+4.35} & * & * \\
+
+FLARE
+& \textbf{40.3} & \textbf{3.46} & \underline{29.4} & 0.00
+& 41.4 & 1.02 & * & *
+& \underline{49.7} & 1.25 & * & *
+& \underline{33.9} & 1.78 & \underline{34.5} & \textbf{2.42}
+& 31.4 & 2.39 & * & * \\
+
+DRAGIN
+& 37.1 & 1.01 & 0.0 & 0.00
+& 41.7 & 1.02 & 33.2 & 12.60
+& 49.4 & 1.25 & 35.3 & 0.98
+& 33.0 & 1.00 & 28.7 & \underline{1.29}
+& \underline{33.5} & 0.67 & \underline{29.9} & \underline{+1.03} \\
+
+% \rowcolor{lightblue}
+% \cdashline{1-21}
+\textbf{ExDR}$_{\textit{trigger}}$
+& \underline{37.9} & \underline{2.14} & \textbf{31.4} & -1.13
+& \textbf{42.9} & \textbf{1.37} & \textbf{53.4} & \textbf{51.91}
+& \textbf{57.6} & \textbf{1.73} & \textbf{68.7} & \textbf{2.54}
+& \textbf{34.7} & \textbf{2.69} & \textbf{36.8} & 0.60
+& 29.9 & \underline{8.07} & \textbf{48.5} & \textbf{+4.63} \\
+
+
+\bottomrule
+\end{tabular}
+
+\end{adjustbox}
+% \caption{Results of different retrieval triggering methods on the \texttt{AMG} and \texttt{MR$^2$} datasets. For each model, we report results for both the \colorbox{lightgray}{\textit{vanilla}} and \textbf{fine-tuned} version. We present \textbf{RI} and \textbf{RE} scores for all methods. `-' denotes no retrieval is triggered for that method.
+% }
+
+\label{tab:trigger-results}
+\end{table*}
+
+
+\begin{table*}[t]
+\centering
+\caption{Results of different evidence retrieval methods on the \texttt{AMG} and \texttt{MR$^2$} datasets. We report Accuracy (ACC) and F1 scores for both the \colorbox{lightgray}{\textit{vanilla}} and \cellcolor{lightgray}\textbf{fine-tuned} versions. Both the @full and @dynamic settings utilize our proposed explanation-guided contrastive evidence retrieval, where @full applies it to every sample and @dynamic employs our retrieval trigger component.}
+% \caption{Results of different evidence retrieval methods on the \texttt{AMG} and \texttt{MR$^2$} datasets. 
+% %We compare both \colorbox{lightgray}{\textit{vanilla}} and \cellcolor{lightgray}\textbf{fine-tuned} versions of each model, reporting \textbf{ACC} (accuracy) and \textbf{F1}. 
+% For each model, we report Accuracy (ACC) and F1-score results for both \colorbox{lightgray}{\textit{vanilla}} and \cellcolor{lightgray}\textbf{fine-tuned} version.
+% Both the @full and @dynamic settings leverage our proposed explanation-guided contrastive retrieval method, with @full applying it to every sample and @dynamic using our adaptive trigger for selective application.
+% }
+% \renewcommand{\arraystretch}{1.2}
+% \setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{width=\textwidth}
+\begin{tabular}{l|cccc|cccc|cccc|cccc|cccc}
+\toprule
+\textbf{Methods} 
+& \multicolumn{4}{c}{\textbf{Qwen-2.5-VL-7b}} 
+& \multicolumn{4}{c}{\textbf{InternVL2.5-8b}} 
+& \multicolumn{4}{c}{\textbf{LLaVA-1.6-Mistral-7b}} 
+& \multicolumn{4}{c}{\textbf{Qwen-2.5-VL-32b}} 
+& \multicolumn{4}{c}{\textbf{InternVL2.5-26b}} \\
+
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{ACC} \quad \textit{F1}} 
+& \textbf{ACC} & \textbf{F1} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{ACC} \quad \textit{F1}} 
+& \textbf{ACC} & \textbf{F1} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{ACC} \quad \textit{F1}} 
+& \textbf{ACC} & \textbf{F1} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{ACC} \quad \textit{F1}} 
+& \textbf{ACC} & \textbf{F1} 
+& \multicolumn{2}{>{\columncolor{gray!15}}c}{\textit{ACC} \quad \textit{F1}} 
+& \textbf{ACC} & \textbf{F1} \\
+\midrule
+% & \textit{ACC} & \textit{F1}
+% & \textbf{ACC} & \textbf{F1}
+% & \textit{ACC} & \textit{F1}
+% & \textbf{ACC} & \textbf{F1}
+% & \textit{ACC} & \textit{F1}
+% & \textbf{ACC} & \textbf{F1}
+% & \textit{ACC} & \textit{F1}
+% & \textbf{ACC} & \textbf{F1}
+% & \textit{ACC} & \textit{F1}
+% & \textbf{ACC} & \textbf{F1} \\
+\midrule
+
+\multicolumn{9}{l}{\textit{AMG (in-domain)}} \\
+
+wo-RAG
+& 63.5 & 67.5 & 84.2 & 83.2 & 60.4 & 64.3&84.5&83.3&59.1&65.3&85.9&84.9&69.0&71.3&86.0&84.8&66.8&64.8&85.3&83.9 \\
+
+Text@full
+&61.8&64.7&84.8&83.4&52.4&61.0&84.5&83.3&65.9&66.2&85.5&84.5&65.1&68.4&86.4&85.1&58.0&62.3&85.0&83.9 \\
+
+Text+Image@full
+&\textbf{73.8}&\textbf{71.6}&85.3&82.8&66.8&64.4&85.1&82.5&58.1&55.0&84.6&83.7&71.5&71.5&\underline{87.1}&85.0&69.1&63.4&\textbf{87.5}&\textbf{85.8} \\
+
+% \rowcolor{lightblue}
+% \cdashline{1-21}
+\hline
+\textbf{ExDR}$_\textit{evidence}$& & & & & & & & & & & & & & & & & & & &
+ \\
+% \rowcolor{lightblue}
+
+\hspace{4mm}-single@full
+&70.4&\underline{71.3}&\underline{85.4}&83.5&\textbf{71.2}&\textbf{68.4}&85.5&83.3&71.5&54.5&84.7&86.7&\textbf{73.5}&\underline{72.8}&83.7&85.1&\underline{69.3}&\textbf{67.3}&86.1&\underline{84.6} \\
+
+% \rowcolor{lightblue}
+\hspace{4mm}-single@dynamic
+&69.6&70.8&85.0&\underline{83.7}&68.1&\underline{66.7}&85.4&\underline{83.9}&67.7&\underline{69.7}&\underline{86.1}&\underline{85.1}&71.2&72.2&\textbf{87.2}&\textbf{85.7}&67.3&65.2&85.7&84.3 \\
+% \rowcolor{lightblue}
+\hspace{4mm}-pos+neg@full
+&\underline{71.8}&70.4&\textbf{86.0}&\textbf{83.8}&\underline{69.2}&66.2&\underline{85.8}&83.5&\textbf{83.7}&67.7&\textbf{86.4}&\textbf{85.2}&\underline{72.8}&\textbf{72.9}&86.7&84.7&\textbf{69.4}&64.9&\underline{86.3}&\underline{84.6} \\
+% \rowcolor{lightblue}
+\hspace{4mm}-pos+neg@dynamic
+&70.6&69.7&85.1&\textbf{83.8}&68.8&66.0&\textbf{86.7}&\textbf{84.7}&\underline{75.9}&\textbf{74.7}&85.9&84.9&70.8&72.6&86.9&\underline{85.2}&67.7&\underline{65.6}&85.7&84.4 \\
+
+
+\midrule
+% \midrule
+\multicolumn{9}{l}{\textit{MR$^2$ (cross-domain)}} \\
+
+wo-RAG
+&62.8&\underline{57.7}&68.4&\underline{60.3}&58.2&\textbf{55.5}&68.9&\textbf{65.0}&53.8&55.7&63.9&65.4&66.9&\textbf{57.8}&72.1&\underline{62.2}&66.6&\textbf{54.8}&74.0&\underline{68.2} \\
+
+Text@full
+&55.8&51.8&71.2&\underline{60.3}&40.5&50.9&63.9&61.8&59.4&54.6&60.5&63.9&59.1&56.9&72.7&\textbf{63.0}&52.8&52.7&73.6&66.8 \\
+
+Text+Image@full
+&66.3&51.2&\underline{73.2}&53.5&57.8&49.0&\textbf{73.2}&62.5&63.9&\textbf{58.8}&65.3&\textbf{66.7}&\textbf{69.5}&56.4&\textbf{73.9}&57.6&\textbf{67.3}&48.6&\textbf{75.1}&64.7 \\
+
+% \cdashline{1-21}
+\hline
+% \rowcolor{lightblue}
+\textbf{ExDR}$_\textit{evidence}$& & & & & & & & & & & & & & & & & & & &
+ \\
+
+% \rowcolor{lightblue}
+\hspace{4mm}-single@full
+&63.5&57.6&\textbf{73.6}&57.4&\underline{60.8}&50.6&69.1&60.5&66.6&42.3&\underline{65.2}&\underline{66.1}&68.1&55.0&73.1&59.3&65.4&52.1&72.2&64.5 \\
+
+% \rowcolor{lightblue}
+\hspace{4mm}-single@dynamic
+&63.9&\textbf{57.8}&68.3&59.7&\textbf{61.0}&\underline{51.4}&70.3&62.9&62.3&57.1&64.7&65.8&68.4&56.8&72.2&59.9&65.7&\underline{54.2}&\underline{74.4}&\textbf{68.3} \\
+
+% \rowcolor{lightblue}
+\hspace{4mm}-pos+neg@full
+&\textbf{67.6}&53.4&73.1&54.2&59.2&50.5&\underline{72.2}&61.7&\textbf{72.0}&44.0&\textbf{68.6}&\textbf{66.7}&\underline{68.6}&55.0&73.1&57.6&\underline{67.1}&51.3&73.4&64.1 \\
+
+% \rowcolor{lightblue}
+\hspace{4mm}-pos+neg@dynamic
+&\underline{66.9}&53.3&70.9&\textbf{60.7}&59.0&50.4&\textbf{73.2}&\underline{64.2}&\underline{69.0}&\underline{57.6}&64.0&65.5&68.5&\underline{57.1}&\underline{73.2}&60.5&66.5&\textbf{54.8}&\underline{74.4}&68.1 \\
+
+
+\bottomrule
+\end{tabular}
+
+\end{adjustbox}
+
+\label{tab:method-results}
+\end{table*}
+
+\subsection{Datasets and Baselines}
+
+\subsubsection{Datasets}
+We evaluate our method on two Multimodal Fake News Detection benchmarks: \texttt{AMG}~\cite{guo2025each} and \texttt{MR$^2$}~\cite{hu2023mr2}, and conduct both in-domain and cross-domain evaluations according to the source of the retrieval corpus and the fine-tuning setting.
+For the in-domain setting, we conduct experiments on \texttt{AMG}, the first dataset designed for attributing multimodal fake news with multi-granularity, covering five types of deception labels.
+It contains a total of 5,022 samples, which are split into 3,532 for training, 517 for validation, and 973 for testing. Specifically, we use the training set $\mathcal{D}_{\text{train}}$ to construct the retrieval corpus $\mathcal{D}_{\text{corpus}}$. The validation set $\mathcal{D}_{\text{val}}$ is used for threshold selection, and the test set $\mathcal{D}_{\text{test}}$ is used for final evaluation.
+For the cross-domain setting, we adopt \texttt{MR$^2$}, a large-scale multimodal and multilingual rumor detection dataset composed of image–text pairs. The dataset contains 14,700 samples in both Chinese and English. In this setting, the retrieval corpus and the fine-tuned model trained on \texttt{AMG} are directly reused without further adaptation, thereby introducing a realistic cross-domain retrieval scenario. In our experiments, we only use the English subset for the test set $\mathcal{D}_{\text{test}}$, which consists of 3,295 samples, to evaluate the cross-dataset generalization ability of our method.
+
+\subsubsection{Baselines}
+To ensure a fair and comprehensive comparison, we implemented several RAG-based baselines under a unified experimental setup. These baselines differ along two key components: the retrieval trigger and the evidence retrieval strategy.
+
+For the \textit{retrieval trigger} module, we evaluate three strategies: (1) \textbf{FL-RAG}~\cite{ram2023context}, which activates retrieval when the input sequence exceeds a predefined token length; (2) \textbf{FLARE}~\cite{jiang2023active}, which triggers retrieval when any generated token has a probability below a threshold; and (3) \textbf{DRAGIN}~\cite{su2024dragin}, which considers the importance and uncertainty of generated tokens based on attention weights.
+
+For the \textit{evidence retrieval} module, we compare three standard methods: (1) \textbf{wo-RAG}, using the vanilla model without any retrieval; (2) \textbf{Text@full}, employing BM25 to retrieve samples based on textual similarity; and (3) \textbf{Image-Text@full}~\cite{tang2024leveraging}, which computes retrieval scores using combined image-text features.
+
+To evaluate the overall performance on the MFND task, we conduct end-to-end experiments and compare several traditional MFND models, including \textbf{MCAN}~\cite{wu-mcan}, \textbf{CAFE}~\cite{62chencafe}, \textbf{BMR}~\cite{yingbmr}, \textbf{CLIP}~\cite{radfordclip}, and \textbf{MGCA}~\cite{guo2025each}, all trained on the same dataset for fair comparison.
+
+
+\vspace{-1mm}
+\subsection{Evaluation Metrics}
+We propose two new metrics to measure the effectiveness of dynamic trigger: \textit{Retrieval Identification Rate} and \textit{Retrieval Efficiency}. These metrics quantify (i) whether the model correctly identifies samples that require retrieval and (ii) whether retrieval leads to meaningful performance gains.
+
+\noindent\textbf{Retrieval Identification Rate (RI)} measures the proportion of triggered samples that were misclassified before retrieval, reflecting triggering accuracy:
+    \begin{equation}
+        \text{RI} = \frac{N_{\text{err-classified}}}{N_{\text{retri.}}},
+    \end{equation}
+where $N_{\text{retri.}}$ denotes the number of triggered samples, and $N_{\text{err-classified}}$ is the subset of those that were incorrectly classified prior to retrieval. A higher RI indicates that the trigger more precisely identifies cases where retrieval is genuinely needed.
+    
+\noindent\textbf{Retrieval Efficiency (RE)} evaluates the cost-benefit trade-off of the dynamic trigger. It measures how much of the potential accuracy gain from full retrieval is achieved, normalized by retrieval cost:
+\begin{equation}
+\label{eq:re}
+    \text{RE} = \frac{N_{\text{dyn}} - N_{\text{no}}}{N_{\text{full}} - N_{\text{no}}} \times \frac{N_{\text{total}}}{N_{\text{retrieved}}},
+\end{equation}
+where $N_{\text{dyn}}, N_{\text{full}},$ and $N_{\text{no}}$ are the counts of correct predictions with dynamic, full, and no retrieval, respectively. A higher RE indicates a more efficient strategy.
+
+
+%Typically, both dynamic and full retrieval outperform the no-retrieval baseline, 
+In most cases, dynamic and full retrieval exhibit consistent performance trends relative to the no-retrieval baseline, with the result that both tend to be either advantageous or disadvantageous. Accordingly, we report the standard RE value without additional symbols. However, in cases where one or both strategies underperform compared to the no-retrieval baseline, i.e., $N_{\text{dyn}} < N_{\text{no}}$ or $N_{\text{full}} < N_{\text{no}}$, we use special annotations to highlight their relative performance: a `$+$' signifies that dynamic retrieval is superior to full retrieval ($N_{\text{dyn}} > N_{\text{full}}$), while a `$-$' indicates the opposite.
+
+For evidence retrieval methods and end-to-end MFND experiments, we adopt \textbf{Accuracy} and \textbf{F1 Score} as standard metrics to evaluate the fundamental classification performance in the fake news detection task.
+
+\subsection{Experimental Settings}
+We conduct experiments on \textbf{Qwen2.5-VL-Instruct} (7B, 32B)~\cite{bai2025qwen2}, \textbf{InternVL2.5} (8B, 26B)~\cite{chen2024expanding}, and \textbf{LLaVA-1.6-Mistral} (7B)~\cite{liu2024llavanext}. For Named Entity Recognition model, we use \texttt{bert-base-NER}, and for image encoding, we use \texttt{clip-vit-base-patch32}. The hyperparameter $K$ is set to 10. During threshold search, we employ $N_{\text{iter}} = 100$ samples for global exploration and select the top 5 for subsequent local refinement.
+ For all retrieval triggering baseline models, we identify the optimal threshold on the validation set $\mathcal{D}_{\text{val}}$ and fix it for subsequent experiments. We adopt the LoRA technique~\cite{hu2022lora} to construct fine-tuned models for comparison, using the AMG training set $\mathcal{D}_{\text{train}}$. We use a LoRA rank of 8, a batch size of 4, and a learning rate of 1e-4, and run for 5 epochs. The implementation is executed on 2 A800 GPUs with 80GB of memory.
+
+\subsection{Main Results}
+
+
+
+We conducted experiments on the AMG and MR$^2$ dataset,  obtaining the following conclusions:
+
+\noindent \textbf{(1) \textit{Multi-level confidence estimation enables more accurate and efficient retrieval triggering.}} 
+As shown in Table~\ref{tab:trigger-results}, \textbf{ExDR}\textsubscript{trigger}, which dynamically performs retrieval based on multi-level confidence, consistently outperforms baselines in both Retrieval Indication (RI) and Retrieval Effectiveness (RE) metrics. This demonstrates its strong ability to decide when external evidence is necessary. The advantage is particularly pronounced on models like InternVL2.5-8B and LLaVA-1.6-Mistral-7B, where our trigger achieves significantly better performance than competing methods. 
+Moreover,  on the fine-tuned InternVL2.5-26b model, both the fixed-length \textit{FL-RAG} and the token-based \textit{FLARE} methods fail to trigger any retrieval. In contrast, only the attention-weighted approach DRAGIN and our ExDR$_{trigger}$ successfully activate retrieval, with our method achieving overall superior performance. 
+Furthermore, in the cross-domain evaluation on the MR$^2$ dataset, our trigger module also demonstrates strong robustness.
+
+\noindent \textbf{(2) \textit{Entity-enriched multimodal hybrid indexing provides more discriminative cues for evidence retrieval.}}
+When comparing single-sample retrieval methods, our entity-enriched indexing demonstrates a significant advantage over traditional multimodal indexing. As shown in Table~\ref{tab:method-results}, both \textit{ExDR$_{single@full}$} and \textit{Text+Image@full} retrieve one evidence sample, yet our method often achieves substantially better results. 
+For instance, our \textit{ExDR$_{single@full}$} achieves \text{71.5\%} accuracy on the AMG dataset with vanilla LLaVA-1.6-7B, substantially outperforming the \textit{Text+Image@full} by \text{13.4\%}, despite both retrieving a single evidence sample. This advantage holds even in the challenging cross-domain MR$^2$ evaluation, where our method achieves \text{66.6\%} accuracy against the baseline's \text{63.9\%}. This consistent outperformance indicates that our explanation-guided entity indexing provides more discriminative cues than generic image-text embeddings, enabling the selection of more informative reference samples.
+
+\textbf{(3) \textit{Contrastive evidence retrieval provides more informative context than single-polarity matching.}} While our entity-enriched hybrid indexing already achieves strong performance with single-sample retrieval, employing positive-negative contrastive evidence based on fine-grained deception labels yields additional improvements across multiple settings. 
+This enhancement is most pronounced on vanilla LLaVA-1.6-Mistral-7B, where using positive-negative retrieval elevates performance from 71.5\% to 83.7\%, achieving the highest accuracy among all methods.  
+Beyond in-domain performance, it also demonstrates particular value in cross-domain scenarios. For example, on MR$^2$ evaluation with vanilla LLaVA-1.6, it achieves 72.0\% accuracy compared to 66.6\% for single retrieval, showcasing superior generalization capability. 
+These results suggest that contrastive evidence enables the selection of meaningful contrasts, allowing models to distinguish inconsistencies.
+
+\begin{table}[t]
+\small
+\centering
+\caption{Comparison results of Multimodal Fake News Detection on the AMG dataset. ExDR represents the average performance across five fine-tuned LVLMs.}
+\label{tab:mfnd_result}
+\setlength{\tabcolsep}{12pt} 
+% \scriptsize
+\begin{tabular}{lcc}
+\toprule
+\multirow{2}{*}{\textbf{MFND Method}} & \multicolumn{2}{c}{\texttt{AMG}} \\
+ & \textit{ACC} & \textit{F1} \\
+\midrule
+CLIP & 78.1 & 78.1 \\
+CAFE & 76.7 & 76.3 \\
+MCAN & 77.4 & 76.9 \\
+BMR  & 80.8 & 80.6 \\
+MGCA & 83.2 & 83.1 \\
+\midrule
+\textbf{ExDR} & \textbf{86.1} & \textbf{84.6} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=1\linewidth]{fig/case_study_v5.pdf}
+    \caption{
+Case study illustrating the effectiveness of ExDR across three representative scenarios.
+}
+    \label{fig:case-study}
+\end{figure*}
+
+\textbf{(4) \textit{ExDR demonstrates significant advantages over traditional models on the MFND task.}} We evaluate the end-to-end performance of the task, as shown in Table~\ref{tab:mfnd_result}. Experimental results indicate that our model consistently outperforms the baselines. Compared to the strong baseline MGCA, our model achieves improvements of 2.9\% in ACC and 1.5\% in F1, demonstrating the effectiveness of our approach.
+
+\begin{table}[t!]
+\centering
+% \tiny
+\caption{Ablations of core components in \textbf{ExDR}. Results are averaged over three untuned LVLMs: Qwen2.5-VL-7B, LLaVA-1.6-Mistral-7B, and InternVL2.5-8B.}
+
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{c@{\hspace{2em}}c}  
+% --- Table (a): Trigger ---
+
+\begin{tabular}{@{}l|cc|cc@{}}
+\multicolumn{5}{c}{\textbf{(a) Retrieval Trigger Component}} \\
+\toprule
+
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\texttt{AMG}} & \multicolumn{2}{c}{\texttt{MR$^2$}} \\
+                                 & \textit{RI} & \textit{RE} & \textit{RI} & \textit{RE} \\
+\midrule
+\textbf{ExDR}$_\textit{trigger}$ & \textbf{49.0} & \textbf{1.70}  & \textbf{46.1} & 1.75  \\
+w/o $\tau_\text{label}$ & 45.9 & 1.46  & 44.7 & 1.06 \\
+w/o $\tau_\text{tok}$ & 43.3 & 1.36  & 43.4 & \textbf{1.82}  \\
+w/o $\tau_\text{sent}$ & 47.9 & 1.61  & 45.7 & 1.20 \\
+\midrule
+
+\end{tabular}
+&
+% --- Table (b): Query ---
+\begin{tabular}{@{}l|cc|cc@{}}
+\multicolumn{5}{c}{\textbf{(b) Evidence Retrieval Component}} \\
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\texttt{AMG}} & \multicolumn{2}{c}{\texttt{MR$^2$}} \\
+                                 & \textit{ACC} & \textit{F1} & \textit{ACC} & \textit{F1} \\
+\midrule
+\textbf{ExDR}$_\textit{evidence}$ & \textbf{74.9} & \textbf{68.1} & \textbf{66.3} & 49.3 \\
+w/o entity feat. & 74.2 & 66.8 & 65.0 & 49.3 \\
+w/o label det. & 71.0 & 64.7 & 63.6 & \textbf{50.2} \\
+w/o both & 66.5 & 64.0 & 64.1 & 48.3 \\
+\midrule
+
+\end{tabular}
+\end{tabular}
+}
+
+\label{tab:ablation}
+\end{table}
+
+\subsection{Ablation Study}
+We conduct ablation studies to validate each component of our framework, with detailed results presented in Table~\ref{tab:ablation}.
+The analysis of our retrieval trigger in Table~\ref{tab:ablation}(a) shows that the full ExDR$_{trigger}$, with all three thresholds, achieves the best overall performance. Removing any single dimension degrades performance, with token-level support $\tau_{\text{tok}}$ having the greatest impact.
+
+For the evidence retrieval module, Table~\ref{tab:ablation}(b) shows that both the entity-enriched multimodal hybrid indexing and the label detection mechanism are critical.  Disabling label detection (\textit{w/o label det.}) causes the largest drop, highlighting the importance of label-voted contrastive retrieval. Likewise, removing entity features (\textit{w/o entity feat.}) degrades performance, confirming the utility of entity-aware signals for more targeted retrieval.  When both components are removed (\textit{w/o both}), the performance drops further, demonstrating their complementary roles in enhancing retrieval quality.
+
+These ablation studies collectively validate the design choices in our ExDR, showing that each component makes a meaningful contribution to the overall performance.
+
+
+\subsection{Case Study}
+Figure~\ref{fig:case-study} presents three illustrative cases that demonstrate the key advantages of our ExDR framework.
+The first scenario, depicted in Figure 2a,  involves a hard sample that the base model misclassifies. Our dynamic trigger correctly identifies this low confidence and initiates retrieval, which successfully corrects the prediction.
+In the second case (b), the base model correctly identifies a simple sample, but naive retrieval introduces noise, leading to a misclassification. In contrast, our trigger correctly refrains from retrieval, preserving the original correct prediction and enhancing efficiency.
+Finally, the third example (c) presents a complex case where both the base model and simple retrieval fail. Our ExDR combines an accurate trigger with explanation-guided retrieval, providing the targeted evidence required for a correct classification.
+
+ \subsection{Quantitative Analysis}
+We conduct a quantitative analysis by: (1) comparing different threshold search strategies to validate our two-stage approach; (2) varying the number of required confidence conditions to assess the benefit of combining three measures; and (3) analyzing the importance of each confidence measure in the final triggering decisions.
+
+\subsubsection{Threshold Optimization Algorithm Analysis}
+
+
+We compare three threshold search strategies: Grid search, Bayesian search, and our proposed two-stage hybrid search. 
+As shown in Table~\ref{tab:threshold_strategy}, we observe that for models with smaller parameter sizes, Grid search and Bayesian search yield similar accuracy, while our hybrid approach with local optimization achieves significantly better performance. However, for larger models, the choice of threshold optimization strategy has less impact on performance, with all three methods producing comparable results. This suggests that larger models are less sensitive to threshold selection.
+
+\begin{table}[htb]
+\centering
+\caption{Accuracy (\%) of different threshold search strategies on the AMG and MR$^2$ datasets. All results are obtained under the vanilla setting of LVLMs.}
+\label{tab:threshold_strategy}
+
+\setlength{\tabcolsep}{5pt}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Methods} &
+\multicolumn{2}{c}{\textbf{Qwen-2.5-VL}} &
+\multicolumn{2}{c}{\textbf{InternVL2.5}} &
+\textbf{LLaVA-1.6} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-6}
+& \textbf{7B} & \textbf{32B} & \textbf{8B} & \textbf{26B} & \textbf{7B} \\
+\midrule
+
+\multicolumn{6}{l}{\textit{\textbf{AMG}}} \\
+Grid Search    & 66.2 & 70.7 & 70.5 & 67.0 & 68.4 \\
+Bayesian       & 66.7 & \textbf{71.7} & \textbf{71.0} & 66.8 & 67.8 \\
+Hybrid (ours)  & \textbf{70.6} & 70.8 & 68.8 & \textbf{67.7} & \textbf{75.9} \\
+% \addlinespace
+\midrule
+\multicolumn{6}{l}{\textit{\textbf{MR$^2$}}} \\
+Grid Search    & 63.7 & 68.0 & \textbf{60.9} & 65.9 & 62.6 \\
+Bayesian       & 63.7 & 68.1 & 60.7 & \textbf{66.5} & 62.4 \\
+Hybrid (ours)  & \textbf{66.9} & \textbf{68.5} & 59.0 & \textbf{66.5} & \textbf{69.0} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Number of Required Conditions Analysis}
+
+\begin{table}[t]
+\centering
+\caption{Analysis of threshold configurations for our two-stage hybrid search strategy across the AMG and MR$^2$ datasets, reporting accuracy (ACC) and retrieval trigger ratio for different numbers of thresholds (n).}
+\begin{adjustbox}{width=0.49\textwidth}
+\begin{tabular}{l|cc|cc|cc|cc|cc}
+\toprule
+\textbf{Methods} 
+& \multicolumn{2}{c}{\textbf{Qwen-2.5-VL}} & \multicolumn{2}{c}{\textbf{InternVL2.5}} & \multicolumn{2}{c}{\textbf{LLaVA-1.6}} & \multicolumn{2}{c}{\textbf{Qwen-2.5-VL}} & \multicolumn{2}{c}{\textbf{InternVL2.5}} \\
+& \multicolumn{2}{c}{(7B)} & \multicolumn{2}{c}{(8B)} & \multicolumn{2}{c}{(7B)} & \multicolumn{2}{c}{(32B)} & \multicolumn{2}{c}{(26B)} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+& \textit{ACC} & \textit{ratio} & \textit{ACC} & \textit{ratio} & \textit{ACC} & \textit{ratio} & \textit{ACC} & \textit{ratio} & \textit{ACC} & \textit{ratio}\\
+\midrule
+\midrule
+
+\multicolumn{11}{l}{\textit{\textbf{AMG}}} \\
+
+n=1
+& 69.0 & 67.4 & 71.2 & 99.7 & 68.2 & 33.4 &72.3&40.7&68.2&39.0\\
+
+n=2
+& 67.0 & 30.9 & 71.0 & 97.7 & 68.1 & 35.4 &72.4&73.1&67.3&21.0\\
+
+n=3 (ours)
+& \text{70.6} & \text{67.4} & \text{68.8} & \text{59.2} & \text{75.9} & \text{27.2} &\text{70.8}&\text{54.6}&\text{67.7}&\text{10.8}\\
+
+\midrule
+\multicolumn{11}{l}{\textit{\textbf{MR$^2$}}} \\
+
+n=1
+& 63.9 & 86.1 & 60.8 & 99.8 & 62.4 & 54.0 &67.8&46.8&66.8&23.8\\
+
+n=2
+& 64.2 & 76.2 & 62.8 & 99.7 & 62.4 & 53.7 &68.1&20.7&66.3&8.9\\
+
+n=3 (ours)
+& \text{66.9} & \text{75.8} & \text{59.0} & \text{77.5} & \text{69.0} & \text{38.8} &\text{68.5}&\text{45.8}&\text{66.5}&\text{9.5}\\
+
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+
+\label{tab:amg-mr2-full}
+\end{table}
+
+We examine the effect of varying the number of required threshold conditions in our two-stage hybrid search. Specifically, we test three settings: 
+
+(1) $n=3$: all three thresholds must be satisfied (our method);
+
+(2) $n=2$: any two thresholds must be satisfied; 
+
+(3) $n=1$: only one threshold needs to be satisfied. 
+
+As shown in Table~\ref{tab:amg-mr2-full}, requiring more conditions consistently lowers the trigger ratio while maintaining, or even improving, recognition accuracy. This suggests that our confidence estimation can suppress unnecessary retrievals without hurting predictive performance, supporting the design choice of enforcing all three confidence measures for optimal results.
+
+
+\subsubsection{Importance Analysis of Confidence Measures}
+
+\begin{figure}[ht!]
+    \centering
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/test_org.pdf}
+        \subcaption{AMG - Vanilla}
+        \label{fig:amg_org}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/mr_org.pdf}
+        \subcaption{MR$^2$ - Vanilla}
+        \label{fig:mr2_org}
+    \end{minipage}
+    
+    \vspace{0.5em}
+    
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/test-ft.pdf}
+        \subcaption{ AMG - Fine-tuned}
+        \label{fig:amg_ft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \includegraphics[width=\linewidth]{fig/mr-ft.pdf}
+        \subcaption{ MR$^2$ - Fine-tuned}
+        \label{fig:mr2_ft}
+    \end{minipage}
+    \caption{Contribution analysis of different confidence measures to retrieval triggering.}
+    \label{fig:importance_analysis}
+\end{figure}
+We analyze which confidence measures contribute most to successful retrieval triggering. Using the $n=1$ and $n=2$ threshold condition, we examine the contribution of different threshold combinations to the final retrieval decisions. Figure~\ref{fig:importance_analysis} presents the results.
+
+For the vanilla models, as shown in Figures~\ref{fig:importance_analysis}(a) and \ref{fig:importance_analysis}(b), all three thresholds play important roles, validating the necessity of using all three confidence measures. However, for fine-tuned models, depicted in Figures~\ref{fig:importance_analysis}(c) and \ref{fig:importance_analysis}(d), supervised fine-tuning tends to homogenize token-level probability distributions, which diminishes the discriminative power of token-level signals. As a result, token-level support contributes minimally, indicating a reduced reliance on this particular confidence measure.
+

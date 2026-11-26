@@ -1,0 +1,21 @@
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{\textbf{[RQ-4] Transferability of \sys.} This table evaluates cross-model transferability of \sys performance using 200 samples from the HotpotQA dataset. The experiments employ Llama-3.1-8B as the proxy model under default settings with a cache ratio $\delta = 0.3$ and a recomputation ratio $\rho=0.1$. \textit{U-ASR} and \textit{T-ASR} is reported as the attack performance metrics.}
+\label{tab:rq4_main}
+\setlength{\tabcolsep}{0pt} 
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l *{12}{c} }
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c}{Qwen3-4B} & \multicolumn{2}{c}{Qwen3-8B} & \multicolumn{2}{c}{Qwen3-14B} & \multicolumn{2}{c}{Llama-3.2-1B} & \multicolumn{2}{c}{Llama-3.2-3B} & \multicolumn{2}{c}{Llama-3.3-70B} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11} \cmidrule(lr){12-13}
+ & U-ASR & T-ASR & U-ASR & T-ASR & U-ASR & T-ASR & U-ASR & T-ASR & U-ASR & T-ASR & U-ASR & T-ASR \\
+\midrule
+\rowcolor{sectionbg}
+\multicolumn{13}{l}{\textbf{Llama-3.1-8B}} \\
+Vanilla     & 0.91 & 0.10 & 0.87 & 0.33 & 0.70 & 0.40 & 0.97 & 0.18 & 0.90 & 0.44 & 0.79 & 0.37 \\
+Random      & 0.89 & 0.11 & 0.87 & 0.37 & 0.64 & 0.41 & 0.93 & 0.17 & 0.89 & 0.42 & 0.73 & 0.35 \\
+EPIC        & 0.88 & 0.14 & 0.83 & 0.32 & 0.64 & 0.34 & 0.89 & 0.14 & 0.90 & 0.46 & 0.72 & 0.37 \\
+CacheBlend  & 0.85 & 0.09 & 0.87 & 0.38 & 0.62 & 0.39 & 0.90 & 0.13 & 0.89 & 0.44 & 0.75 & 0.38 \\
+\bottomrule
+\end{tabular*}
+\end{table*}

@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix-2020-09.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "background.tex",
+      "role": "body"
+    },
+    {
+      "path": "problem.tex",
+      "role": "body"
+    },
+    {
+      "path": "method.tex",
+      "role": "body"
+    },
+    {
+      "path": "experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "real-world.tex",
+      "role": "body"
+    },
+    {
+      "path": "discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "related.tex",
+      "role": "body"
+    },
+    {
+      "path": "conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1dbff598ade02315ff06c8f3a9e111356f6ababbacb3d56f29c2696c8efd905e",
+    "usenix-2020-09.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "usenix.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "intro.tex": "1414195108427e82d3b09e0465f34601717ef80ca366e6500fcf7b89a146963b",
+    "background.tex": "fd81aacdc10af09488a60238f4a3088a340eb706f653080c199026340d8b6381",
+    "problem.tex": "ad0e6c5c7b22bb3adc99df562541c012a873a77e084732472ae9901a1feac02d",
+    "method.tex": "5bac3f58a8438e82c8dd0880ff869453a6d946045a82fe8e67dfb5c477541e94",
+    "experiments.tex": "16d0c5d802d9dbe574eed2e83cde463e013298196813305eb30d1efeda42795c",
+    "real-world.tex": "eb1b80d16f2a881b8e08d1c57b63ea921f2f5b18ce4e413ce7d50b895a29f48d",
+    "discussion.tex": "cc805c3619ff53572291609ddf70e2282bbe58b95015dde7589f1be8810eba1b",
+    "related.tex": "fcb0010fde62451245b5c3ab29a1cab99421b56cc8e44de888fd279bf8107f20",
+    "conclusion.tex": "3976c7f83e1c9f647096985d4232f42626b1927a98863bf291338fbf6fe23479",
+    "appendix.tex": "638ab753f7778ee9c83b32d11706e128db0df41384912fb74c1b334e3092d72c"
+  }
+}

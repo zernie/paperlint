@@ -1,0 +1,6 @@
+\section{Conclusion}
+
+\abs{} provides an expressive RPC alternative for IoT device collections such as smart homes, smart buildings, etc. Our implementation, \sysname, supports \textit{observability} by detecting action completion and failures quickly, and \textit{programmability} via fine-grained causality dependencies, and assures safety and serial-equivalence. \sysname{} requires no modifications to existing devices. 
+Trace-driven evaluation showed that \sysname{} detects completion within 2-13 RPCs and 2-16s over 90\% of the time,
+even for actions lasting tens of minutes.  Our
+routine scheduling outperforms state-of-the-art baselines by 10-55\%. 

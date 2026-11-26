@@ -90,10 +90,18 @@ const readPaper = (dir: string): PaperFiles => {
 };
 
 /**
- * The one known case, kept so that a new one fails: TeX Live finds the table by case-folding,
+ * The known cases, kept so that a new one fails: TeX Live finds the file by case-folding,
  * paperlint does not read it (https://github.com/zernie/paperlint/issues/570).
  */
 const KNOWN = {
+  "accepted/2506.03437v2": [
+    {
+      kind: "case-only",
+      from: "paper.tex",
+      target: "sections/S0_abstract",
+      file: "sections/s0_abstract.tex",
+    },
+  ],
   "accepted/2602.22696v1": [
     {
       kind: "case-only",

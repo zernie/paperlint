@@ -1,0 +1,603 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+In this section, we evaluate our approach using 62 real-world C programs.
+%
+We first describe our implementation of Forcrat, which realizes the proposed
+approach (\cref{sec:evaluation:implementation}), the benchmark programs used
+for evaluation (\cref{sec:evaluation:benchmark}), and the overall experimental
+process (\cref{sec:evaluation:process}).
+%
+The implementation and benchmarks are publicly available~\cite{artifact}.
+%
+We then address the following research questions:
+%
+\begin{itemize}
+  %
+  \item \textbf{RQ1. Correctness}: Does it transform programs while preserving their
+    semantics? (\cref{sec:evaluation:correctness})
+  %
+  \item \textbf{RQ2. Efficiency}: Does it analyze and transform programs efficiently?
+    (\cref{sec:evaluation:efficiency})
+  %
+  \item \textbf{RQ3. Applicability}: Is it applicable to replacing a wide range of libc
+    I/O API calls? (\cref{sec:evaluation:applicability})
+  %
+  \item \textbf{RQ4. Impact on performance}: What is the effect of the transformation on
+    program performance? (\cref{sec:evaluation:performance})
+  %
+  \item \textbf{RQ5. Security}: How much does the transformation improve the
+    security of programs? (\cref{sec:evaluation:security})
+  %
+  \item \textbf{RQ6. Code changes}: How much does the code change due to the
+    transformation? (\cref{sec:evaluation:code})
+  %
+\end{itemize}
+%
+Our experiments were conducted on an Ubuntu machine with an Intel Core i7-6700K
+(4 cores, 8 threads, 4GHz) and 32GB of DRAM.
+%
+Finally, we discuss threats to validity (\cref{sec:evaluation:threats}).
+
+\subsection{Implementation}
+\label{sec:evaluation:implementation}
+
+We built Forcrat on top of the Rust compiler~\cite{rustc}.
+%
+For static analysis, we utilize Rust's mid-level intermediate representation
+(MIR)~\cite{mir}, which expresses functions as control flow graphs composed of
+basic blocks.
+%
+For program transformation, we modify the abstract syntax tree and then
+pretty-print it back to code.
+%
+We used C2Rust v0.18.0 with minor modifications.
+
+\subsection{Benchmark Programs}
+\label{sec:evaluation:benchmark}
+
+\renewcommand{\arraystretch}{0.45}
+\begin{table}[t]
+  \caption{Benchmark programs}
+  \label{tab:benchmark}
+  \centering
+\scriptsize
+  \vspace{-0.5em}
+  \begin{tabular}{@{~}l@{~}||@{~}r@{~}|@{~}r@{~}|@{~}r@{~}|@{~}r@{~}}
+    \textbf{Name} & \textbf{C LOC} & \textbf{Rust LOC} & \textbf{API Calls} & \textbf{Remaining Calls} \\
+    \hline
+avl&101&114&1&0\\
+bc-1.07.1&10,810&16,982&158&36\\
+brotli-1.0.9&13,173&127,691&99&0\\
+bst&65&89&1&0\\
+buffer-0.4.0&395&1,137&9&0\\
+bzip2&5,316&13,731&226&87\\
+cflow-1.7&20,601&26,375&150&11\\
+compton&8,748&14,084&130&3\\
+cpio-2.14&35,934&80,929&163&2\\
+dap-3.10&22,420&43,549&1,391&27\\
+diffutils-3.10&59,377&95,835&236&99\\
+ed-1.19&2,439&5,636&66&6\\
+enscript-1.6.6&34,868&78,749&987&234\\
+findutils-4.9.0&80,015&139,859&311&38\\
+gawk-5.2.2&58,111&140,566&643&517\\
+genann-1.0.0&608&1,818&69&0\\
+glpk-5.0&71,805&145,738&82&28\\
+gprolog-1.5.0&52,193&74,381&583&80\\
+grep-3.11&64,084&84,902&70&11\\
+gsl-2.7.1&227,199&422,756&880&0\\
+gzip-1.12&20,875&21,605&97&0\\
+hello-2.12.1&8,340&10,688&33&11\\
+heman&7,048&14,690&12&0\\
+hiredis&7,305&14,042&481&0\\
+indent-2.2.13&19,255&15,581&125&29\\
+less-633&20,063&45,685&64&18\\
+libcsv&965&3,010&9&0\\
+libosip2-5.3.1&15,772&36,286&134&0\\
+libtool-2.4.7&3,769&5,701&8&7\\
+libtree-3.1.1&1,412&2,632&149&0\\
+libzahl-1.0&2,438&4,096&1&0\\
+lil&2,934&5,558&28&0\\
+lodepng&5,098&14,299&11&0\\
+make-4.4.1&28,911&36,336&362&1\\
+mcsim-6.2.0&18,527&36,454&906&78\\
+minilisp&722&2,149&24&7\\
+mtools-4.0.43&18,266&37,021&627&10\\
+nano-7.2&42,999&74,995&102&25\\
+nettle-3.9&61,835&82,742&290&0\\
+patch-2.7.6&28,215&103,839&207&41\\
+pexec-1.0rc8&5,357&12,301&140&0\\
+pocketlang&14,267&41,439&82&0\\
+pth-2.0.7&7,590&12,950&178&9\\
+quadtree-0.1.0&365&1,057&14&0\\
+raygui&1,588&17,218&38&0\\
+rcs-5.10.1&28,286&36,267&106&99\\
+rgba&396&2,128&2&0\\
+robotfindskitten&398&1,508&3&0\\
+screen-4.9.0&39,335&72,201&113&3\\
+sed-4.9&48,190&68,465&426&266\\
+shairport&4,995&10,118&66&3\\
+tar-1.34&66,172&134,970&305&80\\
+time-1.9&2,828&1,830&102&0\\
+tinyproxy&5,667&12,825&56&0\\
+tulipindicators&12,371&22,864&45&0\\
+twemproxy&22,738&74,593&199&0\\
+units-2.22&7,240&11,521&241&44\\
+urlparser&56&1,360&12&0\\
+uucp-1.07&51,123&77,872&1,150&297\\
+webdis&14,369&29,474&24&5\\
+wget-1.21.4&81,188&192,742&325&125\\
+which-2.21&2,010&2,241&42&0\\\hline
+{\bf Total}&&&13,594&2,337\\
+  \end{tabular}
+  \vspace{-1em}
+\end{table}
+
+We used benchmark programs from previous studies on improving C2Rust-generated
+code~\cite{zhang2023ownership, hong2024dont, hong2024tag}.
+%
+This resulted in 62 programs, including 36 GNU packages as well as open-source
+projects from GitHub.
+%
+Columns 2--4 of \cref{tab:benchmark} present the C LOC, Rust LOC, and the number
+of libc I/O API calls in each program, respectively.
+%
+The benchmarks are diverse in size, ranging up to 422,756 Rust LOC and 1,391 API
+calls.
+%
+Among these, 32 programs are accompanied by test suites.
+
+\subsection{Experimental Process}
+\label{sec:evaluation:process}
+
+We first translated all benchmark programs using C2Rust.
+%
+We checked whether the translated programs were compilable and found that 25
+programs were not, due to type errors.
+%
+We manually fixed these errors, modifying an average of 11.7 lines per program.
+%
+We also ran the test suites, when available, and confirmed that all tests
+passed.
+%
+Next, we applied our approach to the translated code, performing static analysis
+and code transformation while measuring the times to answer RQ2.
+%
+After this, we checked whether the transformed programs were compilable and
+passed their test suites to answer RQ1.
+%
+We also measured the runtime of each test suite to answer RQ4.
+%
+Finally, we inspected the transformed code to count the number of transformed
+API calls and to measure the amount of unsafe code and code changes, addressing
+RQ3, RQ5, and RQ6.
+
+\subsection{RQ1: Correctness}
+\label{sec:evaluation:correctness}
+
+We evaluate the correctness of the proposed approach by checking whether the
+transformed program is compilable and passes its test cases.
+%
+First, the experimental results show that our approach produces compilable code
+for most programs.
+%
+Among the 62 programs, only one program, nano-7.2, fails to compile.
+%
+We manually investigated this case and confirmed that the failure is not due to
+a problem in our approach.
+%
+Below is the problematic part in the original C code:
+
+\begin{lstlisting}[language=C]
+if (original != NULL) { v = copy_file(original); }
+if (original == NULL || v < 0) { .. }
+\end{lstlisting}
+
+\noindent
+%
+Here, \C{original} is a stream, and \C{copy\_file} closes it.
+%
+Although the program uses \C{original} even after it is closed, it is only to
+check nullity, not to perform I/O, which is not considered a bug.
+%
+However, Forcrat translates this into the following uncompilable Rust code:
+
+\begin{lstlisting}[language=Rust]
+if !original.is_none() { v = copy_file(original); }
+if original.is_none() || v < 0 { .. }
+\end{lstlisting}
+
+\noindent
+%
+Since Rust's ownership type system prevents the use of a variable after it is
+passed to another function, using \C{original} after calling \C{copy\_file}
+results in a type error.
+%
+To obtain compilable code through translation, we can fix the original program
+as shown below, which checks nullity and stores the result in a variable before
+calling \C{copy\_file}:
+
+\begin{lstlisting}[language=C]
+int is_original_null = original == NULL;
+if (!is_original_null) { v = copy_file(original); }
+if (is_original_null || v < 0) { .. }
+\end{lstlisting}
+
+This example suggests that our approach can affect programs in ways not directly
+related to I/O operations.
+%
+In C, programs can use a variable that stores a stream (e.g., for nullity
+checking) even after closing it.
+%
+In contrast, Rust allows the use of only owned variables, and closed stream
+variables are no longer considered owned.
+%
+As a result, any statements that access closed stream variables can be affected
+by the transformation, potentially making the program uncompilable.
+%
+This implies that developers may need to slightly revise their code before
+translation to satisfy Rust's strict ownership discipline.
+%
+In addition, although this specific case is not a bug, it supports the common
+belief that translating to Rust can reveal previously unknown bugs, such as
+using a stream for I/O operations after it has been closed.
+
+The experimental results also show that our transformation likely preserves
+program behavior.
+%
+All the 32 programs still pass the tests after the transformation.
+
+To further investigate correctness, we conducted case studies.
+%
+To effectively evaluate correctness, we need to focus on the possible sources of
+incorrect transformation that arise from the design of our approach.
+%
+An incorrect transformation can result from:
+%
+(1) incorrect origin and capability analysis or an incorrect decision on stream
+types,
+%
+(2) incorrect transformation of stream construction, assignment, or function
+call expressions, or
+%
+(3) incorrect error propagation.
+
+Among these, the first two do not require manual checking.
+%
+First, an incorrect stream type results in a type error and is automatically
+detected by the compiler.
+%
+Second, we transform stream construction, assignment, and user-defined function
+call expressions only to match the types of the left and right values, and any
+incorrect transformation also leads to a type error.
+%
+In addition, since the transformation of API function calls relies on the same
+mappings across all programs, it is meaningless to perform case studies on
+individual translations.
+
+Therefore, our case studies focus on the correctness of error propagation.
+%
+Since each error-checking call is independently transformed, each case study
+targets a single error-checking call.
+%
+Among the 62 programs, we found 140 transformed error-checking calls across 24
+programs.
+%
+In each program, we studied all calls if it contained three or fewer, and
+randomly sampled three otherwise, resulting in 59 calls studied in total.
+%
+The authors and another Rust expert independently reviewed each call, and we
+confirmed that their assessments agreed.
+
+Our studies reveal that the error propagation of 8 calls (1 from bc-1.07.1, 2
+from gprolog-1.5.0, 1 from nettle-3.9, 2 from patch-2.7.6, 1 from time-1.9, and
+1 from uucp-1.07) is potentially incorrect.
+%
+The reason is that these programs use error-checking calls to detect errors from
+multiple API calls, rather than a single call, as illustrated below:
+
+\begin{lstlisting}[language=C]
+fputc('a', x); fputc('b', x); if (ferror(x)) { .. }
+\end{lstlisting}
+
+\noindent
+%
+Since our analysis considers only the API call found first while moving backward
+as the source, earlier calls are not treated as sources, and the indicator value
+is not propagated from them.
+%
+Therefore, the transformed code can behave incorrectly when an earlier call
+fails but a later call succeeds.
+%
+We believe this issue is rarely problematic in practice, because if an earlier
+call fails, a later call is likely to fail again.
+%
+Nevertheless, addressing this issue would be an interesting direction for future
+work.
+
+\subsection{RQ2: Efficiency}
+\label{sec:evaluation:efficiency}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.78\columnwidth]{imgs/time.pdf}
+  \vspace{-1em}
+  \caption{Forcrat execution time}
+  \vspace{-1.5em}
+  \label{fig:time}
+\end{figure}
+
+We evaluate the efficiency of the proposed approach by measuring the time taken
+to analyze and transform each program.
+%
+The experimental results show that our approach is highly efficient.
+%
+\cref{fig:time} presents the origin and capability analysis time, error source
+analysis time, transformation time, and the total time, all relative to the Rust
+LOC.
+%
+Even for the largest program, gsl-2.7.1 with 422k LOC, the entire process takes
+less than 14 seconds.
+%
+Note that the time required to translate each benchmark program using C2Rust
+ranges from 0.6 to 295 seconds.
+%
+On average, running the proposed method on C2Rust's output takes only 8.9\% of
+the time spent by C2Rust, demonstrating the efficiency of the proposed approach.
+
+The results provide empirical evidence that the proposed approach scales well to
+large programs in practice.
+%
+Although the origin and capability analysis has cubic time complexity in theory,
+it exhibited nearly linear performance in our experiments.
+%
+This is because real-world programs contain a relatively small number of
+stream-storing locations compared to their overall size.
+%
+The majority of analysis time is spent collecting constraints by visiting each
+statement, rather than solving the constraints.
+%
+To confirm this, we also measured the constraint-solving time and found that it
+completed in less than 5 milliseconds for each program.
+
+Similarly, the error source analysis is quadratic in theory, but it also showed
+nearly linear performance in our experiments.
+%
+This is because error-checking calls and their sources are typically located
+close to each other, allowing the source to be found after analyzing only nearby
+functions.
+%
+We measured the number of functions analyzed per error-checking call and found
+that only 2.15 functions were analyzed on average.
+
+\subsection{RQ3: Applicability}
+\label{sec:evaluation:applicability}
+
+We evaluate the applicability of the proposed approach by counting the number of
+libc I/O API calls replaced in each program.
+%
+If a stream is classified as unsupported by the analysis, its type remains
+\C{*mut\ FILE} during transformation, and the I/O API calls on that stream are
+not replaced with Rust std API calls.
+%
+The practical value of our approach is high only if it can replace the majority
+of API calls.
+%
+Therefore, we assess whether our approach is applicable to a sufficiently large
+number of API calls.
+
+The experimental results show that our approach achieves high applicability by
+replacing 11,257 out of 13,594 libc I/O API calls (82\%) across all benchmark
+programs.
+%
+The last column of \cref{tab:benchmark} shows the number of libc I/O API calls
+that remain after the transformation.
+%
+Notably, in 28 out of the 62 programs, Forcrat successfully replaces all API
+calls.
+%
+We believe these results are promising, especially considering the design
+differences between C and Rust.
+%
+For example, \textsc{Crown}~\cite{zhang2023ownership} replaces 30\% of raw
+pointers with references in a subset of these benchmark programs, highlighting
+the inherent difficulty of translating C features into Rust.
+
+Nevertheless, future research is needed to replace more API calls.
+%
+For example, Forcrat exhibits a low conversion ratio in a few programs:
+%
+below 50\% for four programs (gawk-5.2.2, libtool-2.4.7, rcs-5.10.1, and
+sed-4.9).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{imgs/unsupported.pdf}
+  \vspace{-1em}
+  \caption{Reasons for failing to replace API calls}
+  \vspace{-1.5em}
+  \label{fig:reason}
+\end{figure}
+
+To guide future research directions, we investigate the reasons for failing to
+replace each API call, which correspond to the reasons for classifying the
+stream used as the argument of the call as unsupported.
+%
+We follow the 11 reasons described in \cref{sec:analysis:unsupported} in
+this investigation.
+%
+Note that a single call can have multiple reasons, e.g., when the argument
+stream is passed to \C{setbuf} and also used in a pointer comparison.
+%
+\cref{fig:reason} presents the results:
+%
+blue bars show the number of API calls affected by each reason, and red bars
+show the number of calls affected \emph{solely} by that unique reason.
+
+The results show that many calls are affected by \emph{multiple} reasons, so
+resolving a single reason alone would not lead to significant improvement.
+%
+That said, Comparison and Casts appear as the unique reason for more than a
+hundred calls, making them higher-priority targets for future work.
+%
+To address Comparison, it may be feasible to compare the underlying file
+descriptors of streams, as Rust std supports obtaining file descriptors from
+streams.
+%
+For Casts, since Wu and Demsky's work~\cite{wu2025genc2rust} replaces \C{void}
+pointers with Rust generics, adopting their approach could handle such cases.
+%
+In addition, we may reduce the number of streams that are unsupported due to
+Improper Capabilities by developing a flow-sensitive version of the origin and
+capability analysis.
+%
+If a stream variable has different origins and capabilities at different program
+locations, a flow-sensitive analysis can capture this information, allowing us
+to split the variable into multiple variables with different types.
+
+\subsection{RQ4: Impact on Performance}
+\label{sec:evaluation:performance}
+
+We evaluate the impact of replacing libc streams with Rust std streams on
+program performance.
+%
+We first investigate how many \C{dyn}-type variables are introduced by the
+transformation, as \C{dyn} incurs run-time overhead due to virtual dispatch.
+
+It turns out that \C{dyn} variables are rarely introduced---only 0.9 per program
+on average.
+%
+In 48 programs, no \C{dyn} variables are introduced at all.
+%
+The maximum occurs in cflow-1.7, where 14 \C{dyn} variables are introduced.
+%
+We believe this is because C programmers typically handle streams from different
+origins by passing them to the same function, but rarely by storing them in the
+same variable.
+
+In addition, we compare the performance of each Rust program before and after
+the transformation by measuring the execution time of the test suite.
+%
+To ensure reliable results, we used only the 25 programs whose test suite
+execution time exceeds 0.1 seconds and ran each program fifty times.
+
+The experimental results show that the performance difference is negligible.
+%
+The transformed programs were slower by only 1.23\% on average compared to the
+original ones.
+%
+In 9 programs, execution was even faster after the transformation.
+%
+We also performed a one-sided Welch's t-test on the results from each program
+with the null hypothesis that the transformed program is slower than the
+original by 5\%.
+%
+With a significance level of 0.05, we could reject the null hypothesis for 15
+out of 25 programs, implying that the transformation is unlikely to incur
+significant performance overhead.
+%
+While we could not reject the null hypothesis for the remaining 10 programs,
+this does not necessarily mean that the overhead exceeds 5\%.
+%
+Increasing the number of runs may yield stronger statistical significance,
+allowing us to reject the null hypothesis.
+
+\subsection{RQ5: Security}
+\label{sec:evaluation:security}
+
+We evaluate how much the proposed approach improves the security of programs.
+%
+In Rust, code security is often approximated by measuring the amount of
+\emph{unsafe} code because the compiler cannot verify its safety and leaves the
+burden of validation to the developers.
+%
+Following this convention, we measured the number of characters in the unsafe
+code before and after the transformation.
+
+The results show that the transformation slightly improves security by reducing
+unsafe code by 4.4\%.
+%
+This reduction comes from replacing API calls, as all libc API calls are
+considered unsafe by the Rust compiler, while most Rust std API calls are
+considered safe.
+%
+Unfortunately, the security improvement is small because unsafe code arises from
+various sources~\cite{emre2021translating}.
+%
+Achieving a significant improvement requires addressing diverse features and
+APIs, and our work represents an important step toward this long-term goal.
+
+% Note that prior studies~\cite{emre2021translating, emre2023aliasing,
+% zhang2023ownership, wu2025genc2rust, hong2024dont, hong2024tag, hong2023concrat}
+% did not measure unsafe code reduction, focusing only on the conversion rate of
+% the targeted feature.
+
+\subsection{RQ6: Code Changes}
+\label{sec:evaluation:code}
+
+We evaluate how much the transformation changes the code by counting the line
+differences between the code before and after the transformation.
+%
+This helps estimate the effort required to manually replace the I/O API, and
+also
+provides insight into the verbosity of the transformed code.
+
+The results show that the transformation relieves a significant burden but
+increases code verbosity.
+%
+On average, 1,904 lines are inserted and 553 lines are deleted per program.
+%
+Manually modifying the code to this extent would require substantial effort.
+%
+At the same time, this indicates that each line is replaced with roughly four
+lines.
+%
+This increase in code size is mainly due to
+%
+(1) some libc API functions being replaced with sequences of Rust std API calls,
+owing to the lack of exact equivalents, and
+%
+(2) error propagation requiring the introduction and updates of error variables.
+%
+Reducing the verbosity would be an interesting direction for future research.
+
+\subsection{Threats to Validity}
+\label{sec:evaluation:threats}
+
+Threats to external validity stem from the choice of benchmarks, which consist
+of GNU packages and open-source projects on GitHub.
+%
+Since GNU packages often share common code patterns, including many GNU packages
+in the benchmarks may introduce bias.
+%
+Although open-source projects enhance diversity, they still cannot fully
+represent the entire C ecosystem.
+%
+Expanding the experiments to include a wider variety of C programs would
+strengthen the evidence for the generalizability of our approach.
+
+Threats to construct validity arise from using test suites for correctness.
+%
+Since tests do not cover all behaviors of the programs, passing all tests does
+not guarantee semantics preservation.
+%
+However, we discovered bugs in our implementation during development, indicating
+that the test suites are reasonably effective.
+%
+That said, testing the transformed programs more thoroughly using fuzzing or
+automated unit test generation would provide stronger evidence of correctness.
+
+Threats to construct validity arise also from using test suites for performance
+comparison.
+%
+The test suites are not designed for performance measurement, and many exhibit
+high variance in execution time.
+%
+To mitigate this, we ran each program multiple times and used statistical tests.
+%
+Furthermore, we discovered improper API mappings that led to performance
+degradation during development, indicating that the test suites are suitable for
+revealing performance issues.
+%
+However, developing dedicated benchmarks for performance evaluation would
+facilitate a stronger analysis of performance impact.

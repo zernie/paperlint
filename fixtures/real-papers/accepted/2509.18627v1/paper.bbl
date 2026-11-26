@@ -1,0 +1,323 @@
+\begin{thebibliography}{61}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abbaspourazad et~al.(2021)Abbaspourazad, Choudhury, Wong, Pesaran, and Shanechi]{abbaspourazad2021multiscale}
+Hamidreza Abbaspourazad, Mahdi Choudhury, Yan~T Wong, Bijan Pesaran, and Maryam~M Shanechi.
+\newblock Multiscale low-dimensional motor cortical state dynamics predict naturalistic reach-and-grasp behavior.
+\newblock \emph{Nature communications}, 12\penalty0 (1):\penalty0 607, 2021.
+
+\bibitem[Abbaspourazad et~al.(2024)Abbaspourazad, Erturk, Pesaran, and Shanechi]{abbaspourazad2024dynamical}
+Hamidreza Abbaspourazad, Eray Erturk, Bijan Pesaran, and Maryam~M Shanechi.
+\newblock Dynamical flexible inference of nonlinear latent factors and structures in neural population activity.
+\newblock \emph{Nature Biomedical Engineering}, 8\penalty0 (1):\penalty0 85--108, 2024.
+
+\bibitem[Aghagolzadeh \& Truccolo(2015)Aghagolzadeh and Truccolo]{aghagolzadeh2015inference}
+Mehdi Aghagolzadeh and Wilson Truccolo.
+\newblock Inference and decoding of motor cortex low-dimensional dynamics via latent state-space models.
+\newblock \emph{IEEE Transactions on Neural Systems and Rehabilitation Engineering}, 24\penalty0 (2):\penalty0 272--282, 2015.
+
+\bibitem[Ahmadipour et~al.(2021)Ahmadipour, Yang, Chang, and Shanechi]{Ahmadipour_2021}
+Parima Ahmadipour, Yuxiao Yang, Edward~F Chang, and Maryam~M Shanechi.
+\newblock Adaptive tracking of human ecog network dynamics.
+\newblock \emph{Journal of Neural Engineering}, 18\penalty0 (1):\penalty0 016011, 2021.
+\newblock \doi{10.1088/1741-2552/abae42}.
+\newblock URL \url{https://dx.doi.org/10.1088/1741-2552/abae42}.
+
+\bibitem[Allen et~al.(2019)Allen, Chen, Pichamoorthy, Tien, Pachitariu, Luo, and Deisseroth]{allen2019thirst}
+William~E Allen, Michael~Z Chen, Nandini Pichamoorthy, Rebecca~H Tien, Marius Pachitariu, Liqun Luo, and Karl Deisseroth.
+\newblock Thirst regulates motivated behavior through modulation of brainwide neural population dynamics.
+\newblock \emph{Science}, 364\penalty0 (6437):\penalty0 eaav3932, 2019.
+
+\bibitem[Buonomano \& Maass(2009)Buonomano and Maass]{buonomano2009state}
+Dean~V Buonomano and Wolfgang Maass.
+\newblock State-dependent computations: spatiotemporal processing in cortical networks.
+\newblock \emph{Nature Reviews Neuroscience}, 10\penalty0 (2):\penalty0 113--125, 2009.
+
+\bibitem[Chung et~al.(2015)Chung, Kastner, Dinh, Goel, Courville, and Bengio]{chung2015recurrent}
+Junyoung Chung, Kyle Kastner, Laurent Dinh, Kratarth Goel, Aaron~C Courville, and Yoshua Bengio.
+\newblock A recurrent latent variable model for sequential data.
+\newblock \emph{Advances in neural information processing systems}, 28, 2015.
+
+\bibitem[Churchland et~al.(2012)Churchland, Cunningham, Kaufman, Foster, Nuyujukian, Ryu, and Shenoy]{churchland2012neural}
+Mark~M Churchland, John~P Cunningham, Matthew~T Kaufman, Justin~D Foster, Paul Nuyujukian, Stephen~I Ryu, and Krishna~V Shenoy.
+\newblock Neural population dynamics during reaching.
+\newblock \emph{Nature}, 487\penalty0 (7405):\penalty0 51--56, 2012.
+
+\bibitem[Cunningham \& Yu(2014)Cunningham and Yu]{cunningham2014dimensionality}
+John~P Cunningham and Byron~M Yu.
+\newblock Dimensionality reduction for large-scale neural recordings.
+\newblock \emph{Nature neuroscience}, 17\penalty0 (11):\penalty0 1500--1509, 2014.
+
+\bibitem[Durstewitz(2017)]{durstewitz2017state}
+Daniel Durstewitz.
+\newblock A state space approach for piecewise-linear recurrent neural networks for identifying computational dynamics from neural measurements.
+\newblock \emph{PLoS computational biology}, 13\penalty0 (6):\penalty0 e1005542, 2017.
+
+\bibitem[Durstewitz et~al.(2023)Durstewitz, Koppe, and Thurm]{durstewitz2023reconstructing}
+Daniel Durstewitz, Georgia Koppe, and Max~Ingo Thurm.
+\newblock Reconstructing computational system dynamics from neural data with recurrent neural networks.
+\newblock \emph{Nature Reviews Neuroscience}, 24\penalty0 (11):\penalty0 693--710, 2023.
+
+\bibitem[Engel \& Steinmetz(2019)Engel and Steinmetz]{engel2019new}
+Tatiana~A Engel and Nicholas~A Steinmetz.
+\newblock New perspectives on dimensionality and variability from large-scale cortical dynamics.
+\newblock \emph{Current opinion in neurobiology}, 58:\penalty0 181--190, 2019.
+
+\bibitem[Farshchian et~al.(2019)Farshchian, Gallego, Cohen, Bengio, Miller, and Solla]{farshchian2018adversarial}
+Ali Farshchian, Juan~A. Gallego, Joseph~P. Cohen, Yoshua Bengio, Lee~E. Miller, and Sara~A. Solla.
+\newblock {ADVERSARIAL} {DOMAIN} {ADAPTATION} {FOR} {STABLE} {BRAIN}-{MACHINE} {INTERFACES}.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+\newblock URL \url{https://openreview.net/forum?id=Hyx6Bi0qYm}.
+
+\bibitem[Fraccaro et~al.(2016)Fraccaro, S{\o}nderby, Paquet, and Winther]{fraccaro2016sequential}
+Marco Fraccaro, S{\o}ren~Kaae S{\o}nderby, Ulrich Paquet, and Ole Winther.
+\newblock Sequential neural models with stochastic layers.
+\newblock \emph{Advances in neural information processing systems}, 29, 2016.
+
+\bibitem[Gao et~al.(2016)Gao, Archer, Paninski, and Cunningham]{gao2016linear}
+Yuanjun Gao, Evan~W Archer, Liam Paninski, and John~P Cunningham.
+\newblock Linear dynamical neural population models through nonlinear embeddings.
+\newblock \emph{Advances in neural information processing systems}, 29, 2016.
+
+\bibitem[Gondur et~al.(2024)Gondur, Sikandar, Schaffer, Aoi, and Keeley]{gondur2024multi}
+Rabia Gondur, Usama~Bin Sikandar, Evan Schaffer, Mikio~Christian Aoi, and Stephen~L Keeley.
+\newblock Multi-modal gaussian process variational autoencoders for neural and behavioral data.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Hastie et~al.(2009)Hastie, Tibshirani, Friedman, and Friedman]{hastie2009elements}
+Trevor Hastie, Robert Tibshirani, Jerome~H Friedman, and Jerome~H Friedman.
+\newblock \emph{The elements of statistical learning: data mining, inference, and prediction}, volume~2.
+\newblock Springer, 2009.
+
+\bibitem[Hernandez et~al.(2020)Hernandez, Moretti, Wei, Saxena, Cunningham, and Paninski]{hernandez2020}
+Daniel Hernandez, Antonio~Khalil Moretti, Ziqiang Wei, Shreya Saxena, John Cunningham, and Liam Paninski.
+\newblock Nonlinear evolution via spatially-dependent linear dynamics for electrophysiology and calcium data, 2020.
+\newblock URL \url{https://arxiv.org/abs/1811.02459}.
+
+\bibitem[Hurwitz et~al.(2021)Hurwitz, Srivastava, Xu, Jude, Perich, Miller, and Hennig]{hurwitz2021targeted}
+Cole Hurwitz, Akash Srivastava, Kai Xu, Justin Jude, Matthew Perich, Lee Miller, and Matthias Hennig.
+\newblock Targeted neural dynamical modeling.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34:\penalty0 29379--29392, 2021.
+
+\bibitem[Jun et~al.(2017)Jun, Steinmetz, Siegle, Denman, Bauza, Barbarits, Lee, Anastassiou, Andrei, Ayd{\i}n, et~al.]{jun2017fully}
+James~J Jun, Nicholas~A Steinmetz, Joshua~H Siegle, Daniel~J Denman, Marius Bauza, Brian Barbarits, Albert~K Lee, Costas~A Anastassiou, Alexandru Andrei, {\c{C}}a{\u{g}}atay Ayd{\i}n, et~al.
+\newblock Fully integrated silicon probes for high-density recording of neural activity.
+\newblock \emph{Nature}, 551\penalty0 (7679):\penalty0 232--236, 2017.
+
+\bibitem[Kao et~al.(2015)Kao, Nuyujukian, Ryu, Churchland, Cunningham, and Shenoy]{kao2015single}
+Jonathan~C Kao, Paul Nuyujukian, Stephen~I Ryu, Mark~M Churchland, John~P Cunningham, and Krishna~V Shenoy.
+\newblock Single-trial dynamics of motor cortex and their applications to brain-machine interfaces.
+\newblock \emph{Nature communications}, 6\penalty0 (1):\penalty0 7759, 2015.
+
+\bibitem[Karniol-Tambour et~al.(2024)Karniol-Tambour, Zoltowski, Diamanti, Pinto, Brody, Tank, and Pillow]{karniolmodeling}
+Orren Karniol-Tambour, David~M Zoltowski, E~Mika Diamanti, Lucas Pinto, Carlos~D Brody, David~W Tank, and Jonathan~W Pillow.
+\newblock Modeling state-dependent communication between brain regions with switching nonlinear dynamical systems.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+
+\bibitem[Katayama(2006)]{katayama2006subspace}
+Tohru Katayama.
+\newblock \emph{Subspace {{Methods}} for {{System Identification}}}.
+\newblock Springer Science \& Business Media, 2006.
+\newblock ISBN 978-1-84628-158-7.
+\newblock URL \url{https://link.springer.com/book/10.1007%2F1-84628-158-X}.
+
+\bibitem[Keshtkaran et~al.(2022)Keshtkaran, Sedler, Chowdhury, Tandon, Basrai, Nguyen, Sohn, Jazayeri, Miller, and Pandarinath]{keshtkaran2022large}
+Mohammad~Reza Keshtkaran, Andrew~R Sedler, Raeed~H Chowdhury, Raghav Tandon, Diya Basrai, Sarah~L Nguyen, Hansem Sohn, Mehrdad Jazayeri, Lee~E Miller, and Chethan Pandarinath.
+\newblock A large-scale neural network training framework for generalized estimation of single-trial population dynamics.
+\newblock \emph{Nature Methods}, 19\penalty0 (12):\penalty0 1572--1577, 2022.
+
+\bibitem[Kim et~al.(2021)Kim, Luo, Pillow, and Brody]{kim2021inferring}
+Timothy~D Kim, Thomas~Z Luo, Jonathan~W Pillow, and Carlos~D Brody.
+\newblock Inferring latent dynamics underlying neural population activity via neural differential equations.
+\newblock In \emph{International Conference on Machine Learning}, pp.\  5551--5561. PMLR, 2021.
+
+\bibitem[Kingma \& Ba(2017)Kingma and Ba]{kingma2017adam}
+Diederik~P. Kingma and Jimmy Ba.
+\newblock Adam: {{A Method}} for {{Stochastic Optimization}}.
+\newblock 2017.
+\newblock URL \url{http://arxiv.org/abs/1412.6980}.
+
+\bibitem[Kingma \& Welling(2013)Kingma and Welling]{kingma2013auto}
+Diederik~P Kingma and Max Welling.
+\newblock Auto-encoding variational bayes, 2013.
+\newblock URL \url{https://arxiv.org/abs/1312.6114}.
+
+\bibitem[Kobak et~al.(2016)Kobak, Brendel, Constantinidis, Feierstein, Kepecs, Mainen, Qi, Romo, Uchida, and Machens]{kobak2016demixed}
+Dmitry Kobak, Wieland Brendel, Christos Constantinidis, Claudia~E Feierstein, Adam Kepecs, Zachary~F Mainen, Xue-Lian Qi, Ranulfo Romo, Naoshige Uchida, and Christian~K Machens.
+\newblock Demixed principal component analysis of neural population data.
+\newblock \emph{elife}, 5:\penalty0 e10989, 2016.
+
+\bibitem[Kramer et~al.(2022)Kramer, Bommer, Tombolini, Koppe, and Durstewitz]{kramer2022}
+Daniel Kramer, Philine~L Bommer, Carlo Tombolini, Georgia Koppe, and Daniel Durstewitz.
+\newblock Reconstructing nonlinear dynamical systems from multi-modal time series.
+\newblock In \emph{Proceedings of the 39th International Conference on Machine Learning}, volume 162, pp.\  11613--11633. PMLR, 17--23 Jul 2022.
+
+\bibitem[Krishnan et~al.(2015)Krishnan, Shalit, and Sontag]{krishnan2015deepkalmanfilters}
+Rahul~G. Krishnan, Uri Shalit, and David Sontag.
+\newblock Deep kalman filters, 2015.
+\newblock URL \url{https://arxiv.org/abs/1511.05121}.
+
+\bibitem[Luk et~al.(2024)Luk, Bach, Baptista, and Stuart]{luk2024learningoptimalfiltersusing}
+Enoch Luk, Eviatar Bach, Ricardo Baptista, and Andrew Stuart.
+\newblock Learning optimal filters using variational inference, 2024.
+\newblock URL \url{https://arxiv.org/abs/2406.18066}.
+
+\bibitem[Mante et~al.(2013)Mante, Sussillo, Shenoy, and Newsome]{mante2013context}
+Valerio Mante, David Sussillo, Krishna~V Shenoy, and William~T Newsome.
+\newblock Context-dependent computation by recurrent dynamics in prefrontal cortex.
+\newblock \emph{nature}, 503\penalty0 (7474):\penalty0 78--84, 2013.
+
+\bibitem[Nozari et~al.(2024)Nozari, Bertolero, Stiso, Caciagli, Cornblath, He, Mahadevan, Pappas, and Bassett]{nozari2024macroscopic}
+Erfan Nozari, Maxwell~A Bertolero, Jennifer Stiso, Lorenzo Caciagli, Eli~J Cornblath, Xiaosong He, Arun~S Mahadevan, George~J Pappas, and Dani~S Bassett.
+\newblock Macroscopic resting-state brain dynamics are best described by linear models.
+\newblock \emph{Nature biomedical engineering}, 8\penalty0 (1):\penalty0 68--84, 2024.
+
+\bibitem[O'Doherty et~al.(2017)O'Doherty, Cardoso, Makin, and Sabes]{sabes}
+Joseph~E. O'Doherty, Mariana M.~B. Cardoso, Joseph~G. Makin, and Philip~N. Sabes.
+\newblock {Nonhuman Primate Reaching with Multichannel Sensorimotor Cortex Electrophysiology}, May 2017.
+\newblock URL \url{https://doi.org/10.5281/zenodo.583331}.
+
+\bibitem[Oganesian et~al.(2024)Oganesian, Sani, and Shanechi]{oganesian2025spectral}
+Lucine~L Oganesian, Omid~G Sani, and Maryam Shanechi.
+\newblock Spectral learning of shared dynamics between generalized-linear processes.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37:\penalty0 89150--89183, 2024.
+
+\bibitem[O'Shea \& Pandarinath(2021)O'Shea and Pandarinath]{dan_o_shea_2021_5790162}
+Dan O'Shea and Chethan Pandarinath.
+\newblock Lfads run manager, December 2021.
+\newblock URL \url{https://doi.org/10.5281/zenodo.5790161}.
+
+\bibitem[Pandarinath et~al.(2018)Pandarinath, O’Shea, Collins, Jozefowicz, Stavisky, Kao, Trautmann, Kaufman, Ryu, Hochberg, et~al.]{pandarinath2018inferring}
+Chethan Pandarinath, Daniel~J O’Shea, Jasmine Collins, Rafal Jozefowicz, Sergey~D Stavisky, Jonathan~C Kao, Eric~M Trautmann, Matthew~T Kaufman, Stephen~I Ryu, Leigh~R Hochberg, et~al.
+\newblock Inferring single-trial neural population dynamics using sequential auto-encoders.
+\newblock \emph{Nature methods}, 15\penalty0 (10):\penalty0 805--815, 2018.
+
+\bibitem[Pedregosa et~al.(2011)Pedregosa, Varoquaux, Gramfort, Michel, Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos, Cournapeau, Brucher, Perrot, and Duchesnay]{scikit-learn}
+F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel, M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, J.~Vanderplas, A.~Passos, D.~Cournapeau, M.~Brucher, M.~Perrot, and E.~Duchesnay.
+\newblock Scikit-learn: Machine learning in {P}ython.
+\newblock \emph{Journal of Machine Learning Research}, 12:\penalty0 2825--2830, 2011.
+
+\bibitem[Remington et~al.(2018)Remington, Egger, Narain, Wang, and Jazayeri]{remington2018dynamical}
+Evan~D Remington, Seth~W Egger, Devika Narain, Jing Wang, and Mehrdad Jazayeri.
+\newblock A dynamical systems perspective on flexible motor timing.
+\newblock \emph{Trends in cognitive sciences}, 22\penalty0 (10):\penalty0 938--952, 2018.
+
+\bibitem[Rutten et~al.(2020)Rutten, Bernacchia, Sahani, and Hennequin]{rutten2020non}
+Virginia Rutten, Alberto Bernacchia, Maneesh Sahani, and Guillaume Hennequin.
+\newblock Non-reversible gaussian processes for identifying latent dynamical structure in neural data.
+\newblock \emph{Advances in neural information processing systems}, 33:\penalty0 9622--9632, 2020.
+
+\bibitem[Sani et~al.(2021)Sani, Abbaspourazad, Wong, Pesaran, and Shanechi]{sani2021modeling}
+Omid~G Sani, Hamidreza Abbaspourazad, Yan~T Wong, Bijan Pesaran, and Maryam~M Shanechi.
+\newblock Modeling behaviorally relevant neural dynamics enabled by preferential subspace identification.
+\newblock \emph{Nature Neuroscience}, 24\penalty0 (1):\penalty0 140--149, 2021.
+
+\bibitem[Sani et~al.(2024)Sani, Pesaran, and Shanechi]{sani2024dissociative}
+Omid~G Sani, Bijan Pesaran, and Maryam~M Shanechi.
+\newblock Dissociative and prioritized modeling of behaviorally relevant neural dynamics using recurrent neural networks.
+\newblock \emph{Nature Neuroscience}, pp.\  1--13, 2024.
+
+\bibitem[Sauerbrei et~al.(2020)Sauerbrei, Guo, Cohen, Mischiati, Guo, Kabra, Verma, Mensh, Branson, and Hantman]{sauerbrei2020cortical}
+Britton~A Sauerbrei, Jian-Zhong Guo, Jeremy~D Cohen, Matteo Mischiati, Wendy Guo, Mayank Kabra, Nakul Verma, Brett Mensh, Kristin Branson, and Adam~W Hantman.
+\newblock Cortical pattern generation during dexterous movement is input-driven.
+\newblock \emph{Nature}, 577\penalty0 (7790):\penalty0 386--391, 2020.
+
+\bibitem[Schimel et~al.(2022)Schimel, Kao, Jensen, and Hennequin]{schimel2022ilqr}
+Marine Schimel, Ta-Chu Kao, Kristopher~T Jensen, and Guillaume Hennequin.
+\newblock ilqr-vae: control-based learning of input-driven dynamics with applications to neural data. biorxiv.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
+\bibitem[Schneider et~al.(2023)Schneider, Lee, and Mathis]{schneider2023learnable}
+Steffen Schneider, Jin~Hwa Lee, and Mackenzie~Weygandt Mathis.
+\newblock Learnable latent embeddings for joint behavioural and neural analysis.
+\newblock \emph{Nature}, 617\penalty0 (7960):\penalty0 360--368, 2023.
+
+\bibitem[Seely et~al.(2016)Seely, Kaufman, Ryu, Shenoy, Cunningham, and Churchland]{seely2016tensor}
+Jeffrey~S Seely, Matthew~T Kaufman, Stephen~I Ryu, Krishna~V Shenoy, John~P Cunningham, and Mark~M Churchland.
+\newblock Tensor analysis reveals distinct population structure that parallels the different computational roles of areas m1 and v1.
+\newblock \emph{PLoS computational biology}, 12\penalty0 (11):\penalty0 e1005164, 2016.
+
+\bibitem[Shanechi(2019)]{shanechi2019brain}
+Maryam~M Shanechi.
+\newblock Brain--machine interfaces from motor to mood.
+\newblock \emph{Nature neuroscience}, 22\penalty0 (10):\penalty0 1554--1564, 2019.
+
+\bibitem[Shenoy \& Kao(2021)Shenoy and Kao]{shenoy2021measurement}
+Krishna~V Shenoy and Jonathan~C Kao.
+\newblock Measurement, manipulation and modeling of brain-wide neural population dynamics.
+\newblock \emph{Nature communications}, 12\penalty0 (1):\penalty0 633, 2021.
+
+\bibitem[Steinmetz et~al.(2019)Steinmetz, Zatka-Haas, Carandini, and Harris]{steinmetz2019distributed}
+Nicholas~A Steinmetz, Peter Zatka-Haas, Matteo Carandini, and Kenneth~D Harris.
+\newblock Distributed coding of choice, action and engagement across the mouse brain.
+\newblock \emph{Nature}, 576\penalty0 (7786):\penalty0 266--273, 2019.
+
+\bibitem[Stringer et~al.(2019)Stringer, Pachitariu, Steinmetz, Reddy, Carandini, and Harris]{stringer2019spontaneous}
+Carsen Stringer, Marius Pachitariu, Nicholas Steinmetz, Charu~Bai Reddy, Matteo Carandini, and Kenneth~D Harris.
+\newblock Spontaneous behaviors drive multidimensional, brainwide activity.
+\newblock \emph{Science}, 364\penalty0 (6437):\penalty0 eaav7893, 2019.
+
+\bibitem[Susilaradeya et~al.(2019)Susilaradeya, Xu, Hall, Gal{\'a}n, Alter, and Jackson]{susilaradeya2019extrinsic}
+Damar Susilaradeya, Wei Xu, Thomas~M Hall, Ferran Gal{\'a}n, Kai Alter, and Andrew Jackson.
+\newblock Extrinsic and intrinsic dynamics in movement intermittency.
+\newblock \emph{Elife}, 8:\penalty0 e40145, 2019.
+
+\bibitem[Sussillo et~al.(2016)Sussillo, Stavisky, Kao, Ryu, and Shenoy]{sussillo2016making}
+David Sussillo, Sergey~D Stavisky, Jonathan~C Kao, Stephen~I Ryu, and Krishna~V Shenoy.
+\newblock Making brain--machine interfaces robust to future neural variability.
+\newblock \emph{Nature communications}, 7\penalty0 (1):\penalty0 13749, 2016.
+
+\bibitem[Vahidi et~al.(2024)Vahidi, Sani, and Shanechi]{vahidi2024modeling}
+Parsa Vahidi, Omid~G Sani, and Maryam~M Shanechi.
+\newblock Modeling and dissociation of intrinsic and input-driven neural population dynamics underlying behavior.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 121\penalty0 (7):\penalty0 e2212887121, 2024.
+
+\bibitem[Van~Overschee \& De~Moor(1996)Van~Overschee and De~Moor]{van_overschee_subspace_1996}
+Peter Van~Overschee and Bart De~Moor.
+\newblock \emph{Subspace {Identification} for {Linear} {Systems}}.
+\newblock Springer US, Boston, MA, 1996.
+\newblock ISBN 978-1-4613-8061-0.
+\newblock \doi{10.1007/978-1-4613-0465-4}.
+
+\bibitem[Vyas et~al.(2020)Vyas, Golub, Sussillo, and Shenoy]{vyas2020computation}
+Saurabh Vyas, Matthew~D Golub, David Sussillo, and Krishna~V Shenoy.
+\newblock Computation through neural population dynamics.
+\newblock \emph{Annual review of neuroscience}, 43\penalty0 (1):\penalty0 249--275, 2020.
+
+\bibitem[Wu et~al.(2017)Wu, Roy, Keeley, and Pillow]{wu2017gaussian}
+Anqi Wu, Nicholas~A Roy, Stephen Keeley, and Jonathan~W Pillow.
+\newblock Gaussian process based nonlinear latent structure discovery in multivariate spike train data.
+\newblock \emph{Advances in neural information processing systems}, 30, 2017.
+
+\bibitem[Yang et~al.(2018)Yang, Connolly, and Shanechi]{yang2018control}
+Yuxiao Yang, Allison~T Connolly, and Maryam~M Shanechi.
+\newblock A control-theoretic system identification framework and a real-time closed-loop clinical simulation testbed for electrical brain stimulation.
+\newblock \emph{Journal of neural engineering}, 15\penalty0 (6):\penalty0 066007, 2018.
+
+\bibitem[Yang et~al.(2019)Yang, Sani, Chang, and Shanechi]{yang2019dynamic}
+Yuxiao Yang, Omid~G Sani, Edward~F Chang, and Maryam~M Shanechi.
+\newblock Dynamic network modeling and dimensionality reduction for human ecog activity.
+\newblock \emph{Journal of neural engineering}, 16\penalty0 (5):\penalty0 056014, 2019.
+
+\bibitem[Yang et~al.(2021{\natexlab{a}})Yang, Ahmadipour, and Shanechi]{Yang_2021}
+Yuxiao Yang, Parima Ahmadipour, and Maryam~M Shanechi.
+\newblock Adaptive latent state modeling of brain network dynamics with real-time learning rate optimization.
+\newblock \emph{Journal of Neural Engineering}, 18\penalty0 (3):\penalty0 036013, 2021{\natexlab{a}}.
+\newblock \doi{10.1088/1741-2552/abcefd}.
+\newblock URL \url{https://dx.doi.org/10.1088/1741-2552/abcefd}.
+
+\bibitem[Yang et~al.(2021{\natexlab{b}})Yang, Qiao, Sani, Sedillo, Ferrentino, Pesaran, and Shanechi]{yang2021modelling}
+Yuxiao Yang, Shaoyu Qiao, Omid~G Sani, J~Isaac Sedillo, Breonna Ferrentino, Bijan Pesaran, and Maryam~M Shanechi.
+\newblock Modelling and prediction of the dynamic responses of large-scale brain networks during direct electrical stimulation.
+\newblock \emph{Nature biomedical engineering}, 5\penalty0 (4):\penalty0 324--345, 2021{\natexlab{b}}.
+
+\bibitem[Zhou \& Wei(2020)Zhou and Wei]{zhou2020learning}
+Ding Zhou and Xue-Xin Wei.
+\newblock Learning identifiable and interpretable latent models of high-dimensional neural activity using pi-vae.
+\newblock \emph{Advances in Neural Information Processing Systems}, 33:\penalty0 7234--7247, 2020.
+
+\end{thebibliography}

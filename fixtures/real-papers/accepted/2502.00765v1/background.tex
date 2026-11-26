@@ -1,0 +1,162 @@
+\section{Background and Problem Definition}
+\label{sec:background}
+
+ \subsection{\bf Graph Neural Network (GNN)} 
+
+Let a graph be $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$, which consists of the nodes $\mathcal{V}$, node features  ${\bf X}$, and edges $\mathcal{E}$. We denote $u\in \mathcal{V}$ as a node, $e=(u,v) \in \mathcal{E}$ as an edge, and ${\bf X}_u$ as node $u$'s feature. 
+
+GNNs learn representations for graph data 
+by following the \textit{message passing} strategy with two operations, i.e.,  the {aggregate} operation \texttt{Agg} and {combine} operation \texttt{Comb}.
+Specifically, \texttt{Agg} iteratively aggregates the representations of all neighbors of a node, while \texttt{Comb} updates the node’s representation by combining it with the aggregated neighbors’ representations. The two operations are formally defined below:
+
+{
+\vspace{-4mm}
+\small
+\begin{align}
+\label{aggregate}
+\bm{l}_v^{(k)} =  \texttt{Agg} \big(\big\{ \bm{h}_u^{(k-1)}: u \in \mathcal{N}(v) \big\} \big), \, \bm{h}_v^{(k)} = \texttt{Comb}\big(\bm{h}_v^{(k-1)},  \bm{l}_v^{(k)} \big),
+\end{align}
+}%
+where $\bm{h}_v^{(k)}$ denotes node $v$'s representation in the $k$-th layer and $\bm{h}_v^{(0)}={\bf X}_v$. $\mathcal{N}(v)$ denotes the neighbors of $v$. 
+
+Different GNNs use different aggregate and combine operations. For example, in Graph Convolutional Network (GCN)~\cite{kipf2017semi}, the two operations are integrated as follows:
+
+{
+\vspace{-4mm}
+\small
+ \begin{align}
+ \label{aggregate_gcn}
+ \bm{h}_v^{(k)} & = \texttt{ReLU}\big( \bm{W}^{(k)} \cdot \texttt{Mean}  \big \{  \bm{h}_{u}^{(k-1)}: u \in \mathcal{N}(v) \bigcup \bm{h}_v^{(k-1)} \big \} \big), %\nonumber \\
+ \end{align}
+ }% 
+where the element-wise mean pooling function \texttt{Mean} acts as the aggregate operation and $\texttt{ReLU}$ the combine operation. $\Theta = \{\bm{W}^{(1)}, \cdots, \bm{W}^{(K)} \} $ are all the learned parameters. 
+
+
+
+
+ 
+A node $v$’s final representation $\bm{h}_v^{(K)}$ captures structural information within $v$’s $K$-hop neighbors, which are used for many tasks. In this paper we focus on the two classic classification tasks on graphs: node classification and graph classification. We  denote $f$ as the GNN node or graph classifier and $\mathcal{Y}$ as the set of all labels.  
+
+\vspace{+0.05in}
+ \noindent {\bf Node classification:} $f$ takes a graph $G$ as input and predicts each node $v \in G$ a label $y_v \in \mathcal{Y}$ based on $v$'s learnt representation $\bm{h}_v^{(K)}$. That is, $y_v = f(G)_v = \texttt{softmax}(\bm{h}_v^{(K)})$. 
+
+\vspace{+0.05in}
+ \noindent {\bf Graph classification:} $f$ takes a graph $G$ as input and predicts a label $y_G \in \mathcal{Y}$ for the whole graph $G$ by using all nodes' representations $\{\bm{h}_v^{(K)}\}_{v\in G}$. For instance, when averaging all nodes' final representations, we have $y_G = f(G) = \texttt{softmax}(\texttt{Avg}(\{\bm{h}_v^{(K)}\}_{v \in G}))$. 
+
+
+
+
+\subsection{Adversarial Attacks on GNNs} 
+
+
+In adversarial attacks against GNNs, an attacker can manipulate a graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$ into a perturbed one $G' = \{\mathcal{V}',\mathcal{E}',{\bf X}'\}$, where $\mathcal{V}'$, $\mathcal{E}'$, ${\bf X}'$ are the perturbed version of $\mathcal{V}$, $\mathcal{E}$, and ${\bf X}$, respectively. 
+
+\vspace{+0.05in}
+\noindent {\bf Edge manipulation:} The attacker can 1) \emph{inject new edges} $\mathcal{E}_+$, and 2) \emph{delete existing edges}, denoted as $\mathcal{E}_{-}\subset \mathcal{E}$ from $G$. 
+
+
+
+\vspace{+0.05in}
+\noindent {\bf Node manipulation:}
+The attacker perturbs $G$ by (1) \emph{injecting new nodes} $\mathcal{V}_+$,  whose node feature denoted as ${\bf X}'_{\mathcal{V}_+}$ can be arbitrary, together with the arbitrarily injected new edges $\mathcal{E}_{\mathcal{V}_+} \subseteq \{(u,v) \notin \mathcal{E}, \forall u \in \mathcal{V}_+ \vee v \in \mathcal{V}_+ \}$ induced by 
+$\mathcal{V}_+$; and (2) \emph{deleting existing nodes} $\mathcal{V}_- \subset \mathcal{V}$. When $\mathcal{V}_-$ are deleted, their features  ${\bf X}_{\mathcal{V}_-} \subseteq {\bf X}$ and all connected edges  $\mathcal{E}_{\mathcal{V}_-} = \{(u,v) \in \mathcal{E}, \forall u \in \mathcal{V}_- \vee v \in \mathcal{V}_- \}$ are also removed. 
+
+
+\vspace{+0.05in}
+\noindent {\bf Node feature manipulation:} 
+The attacker arbitrarily manipulates features ${\bf X}_{\mathcal{V}_r}$ of a set of representative nodes $\mathcal{V}_{r}$ to be ${\bf X}'_{\mathcal{V}_r}$. 
+We also denote the edges connected with nodes $\mathcal{V}_{r}$  
+as $\mathcal{E}_{\mathcal{V}_r}=\{(u,v) \in \mathcal{E}: \forall u \in\mathcal{V}_{r} \vee v \in\mathcal{V}_{r} \}$.
+
+\vspace{+0.05in}
+\noindent {\bf Arbitrary manipulation:} The attacker can manipulate the graph $G$ with an 
+arbitrary combined perturbations on 
+edges, nodes, and node features. 
+
+\emph{For description simplicity, we will use $\{\mathcal{E}_+, \mathcal{E}_-\}$ to indicate the edge manipulation with arbitrary injected edges $\mathcal{E}_+$  and deleted edges $\mathcal{E}_-$ on $G$. Similarly, we will use $\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+}, {\bf X}'_{\mathcal{V}_+}, \mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$ to indicate the node manipulation, and $\{\mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r},{\bf X}'_{\mathcal{V}_r}\}$ the node feature manipulation. Any combination of the manipulations is inherently well-defined.}  
+
+
+\subsection{Voting based Certified Defense}
+\label{sec:GNNCert}
+
+Voting-based GNNCert~\cite{xia2024gnncert}
+has achieved state-of-the-art certified defense performance against 
+node feature and edge manipulation. Here we review~\cite{xia2024gnncert} since  
+our defense is also based on voting.   
+GNNCert is only applicable for graph classification and consists of three steps.  
+
+\vspace{+0.05in}
+\noindent {\bf Step I:  divide a graph into multiple subgraphs.} Given a graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$, and a graph classifier $f$.  GNNCert uses a hash function $h$ (e.g., MD5) to generate the subgraphs for $G$. A hash function takes a bit string as input and outputs an integer (e.g., within a range $[0,2^{128}-1]$). It uses the string of edge or node index as the input to the hash function. 
+For instance, for a node $u$,  its string is denoted as $\texttt{str}(u)$, while for an edge $e=(u,v)$, its string is $\texttt{str}(u)+\texttt{str}(v)$, where ``+" means string concatenation, and $\texttt{str}$ turns the node index into a string and adds “0” prefix to align it into a fixed length. 
+
+
+To defend against edge manipulation, it uses 
+$h$ to map each edge into a subgraph index.
+Assuming $T_e$ subgraphs 
+in total, the subgraph index $i_e$ of every edge $e=(u,v)$ is defined as\footnote{In the undirected graph, we put the node with a smaller index (say  $u$) first and let 
+$h[\mathrm{str}(v) + \mathrm{str}(u)]=h[\mathrm{str}(u) + \mathrm{str}(v)]$.} 
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+\label{eqn:edgehash}
+i_e = h[\mathrm{str}(u) + \mathrm{str}(v)] \, \, \texttt{mod} \, \, T_e+1, 
+\end{align}
+}%
+where $\texttt{mod}$ is the module function. Denoting $\mathcal{E}^i$ as the set of edges whose subgraph index is $i$, i.e., $\mathcal{E}^i = \{\forall e \in \mathcal{E}: i_e= i \}$,  $T_e$ subgraphs for $G$ can be built as $\mathcal{G}^e_T = \{ {G}_i = (\mathcal{V},\mathcal{E}^i,{\bf X}): i=1,2,\cdots, T_e\}$, where edges in different subgraphs are disjoint, i.e., $\mathcal{E}^i \cap \mathcal{E}^j =  \emptyset, \forall i,j \in \{1, \cdots, T_e\}, i \neq j$. 
+
+To defend against node feature manipulation, it 
+ uses $h$ to map each node into a subgraph index. 
+Assuming $T_n$ subgraphs in total, the subgraph index $i_u$ of every node $u$ is
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+\label{eqn:nodehash}
+i_u = h[\mathrm{str}(u)] \, \, \texttt{mod} \, \, T_n+1, 
+\end{align} 
+}%
+It then uses ${\bf X}^i$ to denote the features of nodes whose subgraph index is $i$. 
+Then, $T_n$ subgraphs  can be built as: $\mathcal{G}^n_T = \{ {G}_i = (\mathcal{V},\mathcal{E},{\bf X}^i): i=1,2,\cdots, T_n\}$,
+
+To defend against both manipulations, it then constructs a total of $T = T_e \cdot T_n$ subgraphs $\mathcal{G}_T = \{G_t = (\mathcal{V},\mathcal{E}^i,{\bf X}^j), t = 1, \cdots, T_e \cdot T_n, i=\lceil t/T_n\rceil, j=t-(i-1)\cdot T_n\}$. 
+
+
+% \vspace{+0.05in}
+\noindent {\bf Step II: build a voting graph classifier on all subgraphs.} 
+GNNCert applies the graph classifier $f$  to make predictions on all $T$ subgraphs, and count the vote $c_y$ for every class $y \in \mathcal{Y}$. 
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+%\label{eqn:vote}
+c_{y_G} = \sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i})=y_G), \forall y_G \in \mathcal{Y} \label{eqn:vote_GC} 
+\end{align}
+}%
+
+It then defines a \emph{voting graph classifier} $\bar{f}$ as returning the class with the most vote:  
+
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+\bar{f}(G) = \underset{y_G \in \mathcal{Y}}{\arg\max} %\nolimits_{y_G \in \mathcal{Y}}
+\,  c_{y_G} \label{eqn:vc_GC} 
+\vspace{-2mm}
+\end{align}
+}%
+
+% \vspace{+0.05in}
+\noindent {\bf Step III: derive the deterministic robustness guarantee for the voting graph classifier.}
+GNNCert guarantees that $T_n$ (or $T_e$) subgraphs are corrupted when an attacker injects or deletes an \emph{arbitrary} edge (or \emph{arbitrarily} perturb the features of a node). Then, GNNCert shows the voting classifier $\bar{f}$ tolerates up to $\lfloor M^f/T_e \rfloor$ perturbed edges {\bf \emph{OR}} $\lfloor M^f/T_n \rfloor$ of nodes with adversarially perturbed features, where $M^f \in [0,T_n\cdot T_e/2]$ is a constant depending on the number of votes of $f$'s output. 
+
+
+\vspace{+0.05in}
+\noindent {\bf Limitations of GNNCert:} 1) It only derives the robustness guarantee against edge manipulation \emph{OR} node feature manipulation. 
+{Under a very special case when $T_n = T_e = T$, we can derive its robustness against both edge \emph{AND} node feature manipulation, where the certified perturbation size is $\lfloor M^f/T \rfloor$.} However, its performance is worse than ours (See Figure~\ref{fig:ours-vs-gnncert-edgenode}). 
+2) It is only applicable for graph classification. 3) It cannot defend against the well-known node injection attack. 
+

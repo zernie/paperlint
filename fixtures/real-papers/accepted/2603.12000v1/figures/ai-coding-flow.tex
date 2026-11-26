@@ -1,0 +1,52 @@
+\begin{tikzpicture}[x=.05cm, node distance=4mm and 12mm,
+ >=Stealth,
+  every node/.style={font=\footnotesize},
+  process/.style={
+    rectangle, rounded corners=2pt, draw,
+    line width=0.4pt, align=center,
+    minimum height=9mm, text width=20mm, inner sep=2.4mm,
+    fill=gray!3
+  },
+  data/.style={process, fill=gray!12},
+  groupbox/.style={draw, rounded corners=2pt, inner sep=5mm, dashed},
+  forward/.style={->, line width=0.6pt},
+  assist/.style={->, densely dotted, line width=0.6pt},
+  feedback/.style={->, dashed, line width=0.5pt}]
+  % Nodes (left-to-right main pipeline)
+  \node[data]    (seg)      {Transcript\\Segmentation};
+  \node[process, right=4mm of seg]      (human)    {Dual Human\\Descriptive Coding};
+  \node[process, above=of human]    (llm)      {LLM\\Candidate Themes};
+  \node[process, right=4mm of human] (integrate) {Theme Integration\\\& Reconciliation\vphantom{Aq}};
+  \node[process, right=4mm of integrate, text width=22mm] (refine)   {Iterative Refinement\\\& Validation};
+  \node[process, right=4mm of refine]   (apply)    {Apply Refined\\Thematic Frame};
+  \node[data,    right=4mm of apply]    (themes)   {Themes \& SDT\\Mapping};
+
+  % Main flow
+  \draw[forward] (seg) -- (human);
+  \draw[forward] (human) -- (integrate);
+  \draw[assist]  (llm) -- (integrate);
+  \draw[forward] (integrate) -- (refine);
+  \draw[forward] (refine) -- (apply);
+  \draw[forward] (apply) -- (themes);
+
+  % Feedback loops
+  \draw[feedback, bend right=20] (integrate.north) to (llm.east);
+  \draw[feedback, bend left=15] (integrate.south) to (human.south);
+  \draw[feedback, bend left=20] (apply.south)     to (human.south);
+
+  % Group “swim-lanes”
+  \node[groupbox, fit=(seg)(human), inner sep=4pt, label={[align=center]above left:Human Coding}] (gHuman) {};
+  \node[groupbox, fit=(llm), inner sep=4pt, label={[align=center]above:LLM Assistance}] (gLLM) {};
+  \node[groupbox, fit=(integrate)(refine)(apply), inner sep=4pt, label={[align=center]above:Synthesis \& Validation}] (gSyn) {};
+  \node[groupbox, fit=(themes), inner sep=4pt, label={[align=center]above:Outcomes}] (gOut) {};
+
+  % Legend (print-safe)
+  \coordinate (leg) at ($(seg.south west)+(0,-11mm)$);
+  \node[anchor=west] at (leg) {\textbf{Legend}};
+  \draw[forward] ($(leg)+(0,-3.5mm)$) -- ++(8mm,0);
+  \node[anchor=west] at ($(leg)+(9mm,-3.5mm)$) {Primary flow};
+  \draw[assist]  ($(leg)+(0,-7.0mm)$) -- ++(8mm,0);
+  \node[anchor=west] at ($(leg)+(9mm,-7.0mm)$) {LLM-assisted input};
+  \draw[feedback] ($(leg)+(0,-10.5mm)$) -- ++(8mm,0);
+  \node[anchor=west] at ($(leg)+(9mm,-10.5mm)$) {Feedback / iteration};
+\end{tikzpicture}

@@ -1,0 +1,30 @@
+\section{Limitations and Future Work}
+While our method successfully segments scene sketches across various styles and challenging cases, it has some limitations.
+First, our bounding box filtering technique may still include undesired boxes, potentially introducing artifacts when combining masks into the final segmentation (\Cref{fig:limitations}a).
+Second, our mask generation relies on SAM, which generally produces good masks but can occasionally introduce artifacts, particularly for objects occupying large regions in the sketch (\Cref{fig:limitations}b). \rev{In particular, it may miss sketch object boundaries or produce grid-like masks.} Even after applying our refinement stage, some artifacts may persist in the final segmentation. Future work could address this issue by fine-tuning SAM specifically for sketches or incorporating a learned refinement stage. 
+% Lastly, oveerlapping masks still pose a challenge, while out depth-based approach aim to choose the, depth cues may not always provide a reliable signal for resolving ambiguous pixels in overlapping masks, leading to artifacts, especially along shared contours between overlapping objects.
+
+% \maneesh{These limitations are largely aspects of the algorithm that could be improved by tweaking. I think it would be stronger to list real limitations -- are their assumptions or types of sketches that we know won't work with our approach?}
+
+
+\begin{figure}
+    \vspace{-4mm} 
+    \includegraphics[width=.94\linewidth]{figs/limitations_seg_new.pdf}
+    \vspace{-3mm} 
+    \caption{\textbf{Examples showcasing \methodname{}'s limitations.} (a) The bounding box filtering process can still retain undesired boxes, leading to artifacts in final segmentation. \rev{(b) SAM masks are generally reasonable but can produce artifacts such as missing object boundaries or producing grid-like regions.}}
+    \label{fig:limitations}
+    \vspace{-4mm}
+\end{figure}
+
+
+\section{Conclusions}
+We introduced \methodname{}, a method for instance segmentation of raster scene sketches. Our approach adapts Grounding DINO, an object detection model trained on natural images, to the sketch domain through class-agnostic fine-tuning. We utilized Segment Anything (SAM) for segmentation along with a refinement stage that incorporates depth cues to resolve ambiguous pixels.
+Our method significantly improves upon state-of-the-art approaches in this domain, demonstrating the utility of natural image priors for sketch understanding tasks. We additionally provide a synthetic scene-level annotated sketch dataset, \datasetname{}, encompassing a wide range of object categories and significant variations in drawing styles. Our experiments demonstrate that \methodname{} is robust to these variations, achieving consistent performance across diverse datasets.
+
+\begin{acks}
+This work was partially supported by the Brown Institute for Media Innovation at Stanford. Yael Vinker was supported in part by IBM Agreement No. W1771646 and Hyundai Motor Company R\&D Center Agmt Dtd 2/22/23.
+\end{acks}
+
+% The dataset will be made publicly available to support further research and advancements in sketch understanding.
+
+% \maneesh{Need to add acknowledgements -- This work was partially supported by the Brown Institute for Media Innovation at Stanford. -- Anything else? Yael may have some funding sources that should be thanked.}

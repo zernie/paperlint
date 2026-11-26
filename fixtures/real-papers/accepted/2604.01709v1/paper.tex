@@ -1,0 +1,840 @@
+\documentclass{article}
+\usepackage{iclr2025_conference,times}
+\input{math_commands.tex}
+\usepackage{hyperref}
+\usepackage{url}
+\iclrfinalcopy
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\usepackage{bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+
+\usepackage[american]{babel}
+\usepackage{microtype}
+
+\usepackage{lipsum}
+\usepackage{wrapfig}%文字环绕表格
+\usepackage{tabularx}
+
+
+\usepackage{float}
+\usepackage{natbib}
+
+\newcommand{\D}{{\rm{d}}}
+\newcommand{\x}{{{\bm x}}}
+\newcommand{\z}{{{\bm z}}}
+\newcommand{\s}{{{\bm s}}}
+\newcommand{\w}{{{\bm w}}}
+\newcommand{\f}{{{\bf f}}}
+\newcommand{\X}{{{\bm X}}}
+\newcommand{\A}{{{\bm A}}}
+\newcommand{\G}{{{\bm G}}}
+\newcommand{\EPS}{{\bm\epsilon}}
+\newcommand{\PHI}{{\bm\phi}}
+\newcommand{\THETA}{{\bm\theta}}
+\newcommand{\PSI}{{\bm\psi}}
+
+\usepackage{subcaption}
+
+
+\title{Bias Mitigation in Graph Diffusion Models}
+\author{Meng Yu, Kun Zhan\thanks{Corresponding Author. Email: kzhan@lzu.edu.cn}\\
+School of Information Science \& Engineering, Lanzhou University}
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\begin{document}
+\maketitle
+\begin{abstract}
+Most existing graph diffusion models have significant bias problems. We observe that the forward diffusion’s maximum perturbation distribution in most models deviates from the standard Gaussian distribution, while reverse sampling consistently starts from a standard Gaussian distribution, which results in a reverse-starting bias. Together with the inherent exposure bias of diffusion models, this results in degraded generation quality. This paper proposes a comprehensive approach to mitigate both biases. To mitigate reverse-starting bias, we employ a newly designed Langevin sampling algorithm to align with the forward maximum perturbation distribution, establishing a new reverse-starting point. To address the exposure bias, we introduce a score correction mechanism based on a newly defined score difference. Our approach, which requires no network modifications, is validated across multiple models, datasets, and tasks, achieving state-of-the-art results.
+\end{abstract}
+\section{Introduction}
+In recent years, graph diffusion models have made significant progress. GDSS~\citep{jo2022GDSS} introduced the score-based diffusion model to the graph generative task, demonstrating remarkable results and outperforming existing baselines. This was followed by the development of more advanced graph diffusion models such as MOOD~\citep{lee2023exploring}, GSDM~\citep{luo2023fast}, and HGDM~\citep{wen2024hyperbolic}. Due to the constraints imposed by the scale of graph data and the learning capacity of the networks, these models truncate the forward diffusion process to improve performance, preventing it from fully reaching the standard Gaussian distribution. However, in reverse sampling, they typically start from a standard Gaussian distribution without employing any specific strategy. We identify this mismatch as a critical bias issue. In addition, graph diffusion models also suffer from exposure bias, and we are working on addressing both of these challenges.
+
+Diffusion models~\citep{ho2020denoising,song2021scorebased} consist of a forward noising and a reverse denoising process. In the forward process, the data is gradually corrupted by noise over multiple steps. This process can be divided into four stages with the reduction of the signal-to-noise ratio: (1) the data distribution, (2) the low-noise stage, (3) the high-noise stage, and (4) the standard Gaussian.
+
+\textbf{Reverse-Starting Bias.} Ideally, the forward process gradually perturbs the data to the standard Gaussian, while the reverse process starts from the standard Gaussian and gradually recovers clean data. However, in graph learning, due to limitations in data scale and the network's learning ability, it is difficult to accurately predict scores from the high-noise state or the standard Gaussian. This constrains the forward perturbation to follow a conservative strategy, where the maximum perturbation distribution deviates significantly from the standard Gaussian~\citep{jo2022GDSS, luo2023fast, wen2024hyperbolic}. Yet, the reverse-starting point remains the standard Gaussian in sampling, resulting in a severe reverse-starting bias as shown in Fig.~\ref{fig:combined}, which significantly affects the generation quality.
+
+\textbf{Exposure Bias.} During the forward process, the model generates a noisy sample $\x_t$ based on a clean sample by adding noise. During the reverse process, the model starts from the standard Gaussian and iteratively denoises to obtain the predicted sample $\hat{\x}_t$ using the score network. Due to the prediction error of the score network, this leads to exposure bias: a mismatch between $\x_t$ in the forward diffusing and $\hat{\x}_t$ in sampling. This bias accumulates and propagates as sampling progresses, ultimately affecting the quality of the generated samples. Naturally, the most direct approach to address exposure bias is to reduce the prediction errors of the score network.
+
+Rather than exploring the two biases independently, this paper aims to analyze and mitigate these two biases in graph diffusion models from a comprehensive perspective:
+\begin{figure*}[t]
+\begin{minipage}{0.33\textwidth}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+Model & GDSS & GSDM & HGDM & MOOD \\
+\cmidrule(lr){2-2} \cmidrule(lr){3-3} \cmidrule(lr){4-4} \cmidrule(lr){5-5}
+Dataset & Comm. & ~~~~Enz & ~~QM9 & ZINC250k \\
+\midrule
+Type &~~Edge & ~~Eigen & ~~Edge & ~~Node \\[2ex]
+SDE & VPSDE & VPSDE & VESDE & VPSDE \\[2ex]
+$\beta_{\min}|\sigma_{\min}$ & 0.1 & 0.1 & 0.1 & 0.1 \\[2ex]
+$\beta_{\max}|\sigma_{\max}$ & 1.0 & 1.0 & 1.0 & 1.0 \\[2ex]
+$u_T$ & 0.7596 & 0.7596 & 1.0 & 0.7596 \\[2ex]
+$\sigma_T^2$ & 0.4231 & 0.4231 & 1.0 & 0.4231 \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{1.56mm}
+\caption*{(a) Reverse-starting bias}\label{tab:generic_graph_results}
+\end{minipage}%
+\begin{minipage}{0.31\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Figure/1-1.comm_oc.pdf}
+\caption*{(b) Baseline model-GDSS}
+\end{minipage}%
+\begin{minipage}{0.31\textwidth}
+\centering
+\includegraphics[width=\linewidth]{Figure/1-2.comm_oc_s++.pdf}
+\caption*{(c) Our approach GDSS-S++}
+\end{minipage}
+\caption{(a) According to the diffusion equation, we write the perturbation distribution as $q(\x_t|\x_0)=\mathcal{N}\left(\x_t|u_t\x_0,\sigma_t^2\mathbf{I}\right)$.The maximum perturbation distribution in the forward diffusing is $\mathcal{N}\left(\x_T|u_T\x_0,\sigma_T^2\mathbf{I}\right)$, but the reverse-starting point always follows $\mathcal{N}(\x_T|\textbf{0},\mathbf{I})$, leading to significant inconsistencies between forward diffusing and reverse sampling. In particular, we observe that $\x_T$ of different baselines are in the low-noise state since their signal-to-noise ratios are always greater than one. More details are provided in Appendix~\ref{appendix:A.reverse_starting_bias}. (b) and (c) Expectation of $\|{\s}_{\THETA,t}(\cdot)\|_2$ during sampling (without the corrector) and training on Community-small. Due to the reverse-starting bias, there is a significant difference between forward diffusing and reverse sampling in the early stages of sampling in (b). However, after applying our approach, not only is the reverse-starting bias mitigated, but the exposure bias during the sampling process is also significantly reduced.}
+\label{fig:combined}
+\end{figure*}
+
+
+\textbf{Q1: Is it possible to mitigate exposure bias while addressing reverse-starting bias?} It originates from a key finding: when $\x_t$ is in the high-noise stage, the model is highly sensitive to the prediction error of the score network, which means the prediction error at this stage can significantly affect the generative quality. Conversely, when $\x_t$ is in the low-noise state, the model is quite resistant to the prediction error. Coincidentally, the forward maximum perturbation distribution of many models are in the low-noise state as shown in Fig.~\ref{fig:combined}(a). Thus, for a given score network $s_{\THETA,t}(\cdot)$, we use Langevin sampling~\citep{song2019generative} with $s_{\THETA,T}(\cdot)$ to estimate the forward maximum perturbation distribution $q(\x_T|\x_0)$. It mitigates the reverse-starting bias, meanwhile, it pushes the reverse-starting point towards the low-noise state, utilizing the model's resistance to prediction error to avoid exposure bias.
+
+However, the prediction error of the score network severely affects the stable distribution of Langevin sampling, forcing us to improve the prediction accuracy of the network, which is also beneficial for mitigating exposure bias in the sampling process. In particular, we also focus on the cost of achieving: 
+
+\textbf{Q2: How to correct scores without modifying the network or introducing other components?} The issue arises from a key situation: current graph diffusion models design different networks based on various domains, such as spatial, spectral, and hyperbolic domains. Our goal is to seamlessly integrate our correction method into these models without modifying the network architecture or model parameters. Additionally, we do not introduce any extra learner, such as a generator~\citep{zheng2022truncated} or a discriminator~\citep{kim2023refining}. Instead, we aim to fully leverage the existing diffusion model to address its inherent bias issues. First, we use the pretrained score network to generate a batch of samples. Second, we train a pseudo score network using these generated samples. Third, we use the score difference between the two networks to correct the score.
+
+In summary, the main contributions of this paper are as follows: (1) To the best of our knowledge, we are the first to systematically address bias issues in graph diffusion models, effectively employing Langevin sampling to mitigate reverse-starting bias while significantly mitigating exposure bias in graph sampling. (2) We propose a score correction mechanism based on the score difference, and provide a logical analysis that the corrected scores are closer to the true scores, further mitigating reverse-starting bias and exposure bias. (3) Our approach does not require modifying the network or introducing new components. It has been validated on different graph diffusion models, different datasets, and different tasks, achieving state-of-the-art metrics.
+% \end{itemize}
+\section{Related Work}
+Diffusion models were first introduced by~\citet{sohl2015deep} and later improved by~\citet{ho2020denoising}. Notably, \citet{song2021scorebased} proposed a unified framework for diffusion models based on stochastic differential equations, greatly advancing their development. GDSS~\citep{jo2022GDSS} was the first to introduce diffusion models to both nodes and edges of graphs. GSDM~\citep{luo2023fast} extended GDSS by introducing the diffusion process of adjacency matrices into the spectral domain. HGDM~\citep{wen2024hyperbolic} introduced node diffusion into hyperbolic space based on degree distribution characteristics. MOOD~\citep{lee2023exploring} propose the molecular out-Of-distribution diffusion to generate novel molecules with specific properties.~\citet{huang2023conditional} proposed a conditional diffusion model based on discrete graph structures. Furthermore,~\citet{Xu2022GeoDiff} proposed a graph diffusion model for predicting molecular conformations.
+
+The signal leakage in image diffusion models is somewhat similar to the reverse-starting bias we found in graph diffusion models. It was first identified by~\citet{lin2024common}, who modified the diffusion noise schedule to ensure that the final time step in the forward process achieves a zero signal-to-noise Ratio. Then, \citet{everaert2024exploiting} estimated the actual maximum perturbation distribution in the forward process as the reverse-starting point for sampling. The exposure bias of diffusion models was initially discovered in ADM-IP~\citep{ning2023input}, which proposed re-perturbing the perturbation distribution to simulate exposure bias during sampling. EB-DDPM~\citep{li2023error} estimated the upper bound of cumulative errors and incorporated it as a regularization term to retrain the model. MDSS~\citep{ren2024multi} introduced a multi-step timed sampling strategy to mitigate exposure bias. Notably, ADM-IP, EB-DDPM, and MDSS all require retraining the model. In contrast, ADM-ES~\citep{ningelucidating} proposed a noise scaling mechanism to mitigate exposure bias without retraining, while TS-DPM~\citep{li2024alleviating} only requires finding the optimal time points during reverse sampling to match the forward process as closely as possible.
+
+Our approach aims to effectively mitigate both reverse-starting bias and exposure bias without altering the network architecture or incorporating additional components.
+\section{Motivation}
+\subsection{Graph Diffusion Models}
+Firstly, we define a graph with $V$ nodes as $\G=(\X,{\A})$, where $\X\in\mathbb{R}^{V\times F}$ represents node features, with $F$ indicating that each node has $F$ features; ${\A}\in\mathbb{R}^{V\times V}$ represents the weighted adjacency matrix. Then, we formally represent the graph diffusion process as the trajectory of the random variable $\G$ over time $[0,T]$. The forward diffusion process is given by:
+\begin{align}
+\D \G_t
+=\f_t(\G_t)\D t+
+g_t(\G_t)\D\w,\quad\G_0\sim p_{\rm data},
+\label{eq1}
+\end{align}
+where $\f_t(\G_t)$ is the linear drift coefficient, $g_t(\G_t)$ is the diffusion coefficient, $\w$ is the standard Wiener process, and $\G_0$ is a graph from the true data distribution $p_{\rm data}$. The stochastic differential equation (SDE), \Eqref{eq1}, describes a forward diffusion process. Specifically, we replace $\G$ in~\Eqref{eq1} with node $\X$ or edge ${\A}$, representing the forward diffusion process of node $\X$ or edge ${\A}$, respectively.
+
+Following GDSS~\citep{jo2022GDSS}, we separate $\X$ and ${\A}$ in the reverse diffusion:
+\begin{equation}
+\begin{aligned}
+\D\X_t &= \left[\mathbf{f}_{1,t}(\X_t)-g_{1,t}^2\nabla_{\X_t}\log p_t(\X_t,{\A}_t)\right]\D\bar{t} + g_{1,t}\D\bar{\w }_1\,, \\
+\D{\A}_t &= \left[\mathbf{f}_{2,t}({\A}_t)-g_{2,t}^2\nabla_{{\A}_t}\log p_t(\X_t,{\A}_t)\right]\D\bar{t} + g_{2,t}\D\bar{\w }_2
+\end{aligned}\label{eq2}
+\end{equation}
+where $\mathbf{f}_{1,t}$ and $\mathbf{f}_{2,t}$ satisfy $\mathbf{f}_t(\X,{\A})=(\mathbf{f}_{1,t}(\X),\mathbf{f}_{2,t}({\A}))$, representing the drift coefficients of the reverse process for $\X$ and $\A$ respectively. $g_{1,t}$ and $g_{2,t}$ are the corresponding scalar diffusion coefficients, $\bar{\w }_1$ and $\bar{\w }_2$ are reverse-time Wiener processes in reverse diffusion, and $\nabla_{\X_t}\log p\left(\X_t,{\A}_t\right)$ and $\nabla_{{\A}_t}\log p\left(\X_t,{\A}_t\right)$ represent the partial scores of the node and the edge, respectively. It's worth noting that two SDEs in~\Eqref{eq2} corresponds to the diffusion process of $\X$ and ${\A}$, respectively. We will choose different types of SDEs for $\X$ and $\A$ based on actual conditions. For example, for VPSDE (Variance-Preserving SDE)~\citep{song2021scorebased}, $\mathbf{f}_{1,t}(\X_t)=-\frac{1}{2}\beta_{t}\X_t$, $\mathbf{f}_{2,t}({\A}_t)=-\frac{1}{2}\beta_{t}{\A}_t$, $g_{1,t} =g_{2,t}= \sqrt{\beta_{t}}$, $\beta_{t}=\beta_{\min}+t(\beta_{\max}-\beta_{\min})$, where $\beta_{\max}$ and $\beta_{\min}$ are hyperparameters.
+
+Then, we use $\s_{\THETA,t}(\G_{t})$ and $\s_{\PHI,t}(\G_{t})$ to estimate the partial scores $\nabla_{\X_t}\log p~\left(\X_t,{\A}_t\right)$ and $\nabla_{{\A}_t}\log p\left(\X_t,{\A}_t\right)$, respectively. Based on the denoising score matching~\citep{vincent2011connection,song2021scorebased}, we can always get $\s_{\THETA,t}(\G_{t})\approx\nabla_{\X_{t}}\log p_{t}(\X_{t},\A_t)$, $\s_{\PHI,t}(\G_{t})\approx\nabla_{{\A}_{t}}\log p_{t}(\X_{t},\A_t)$, When the training objectives are met as follows:
+\begin{equation}
+%\scriptsize
+\begin{aligned}
+\min_{\THETA} 
+&\mathbb{E}_{t}\, \Bigl\{ w_{1}(t) \mathbb{E}_{\G_{0}} \mathbb{E}_{\G_{t}|\G_{0}} \bigl\| \s_{\THETA,t}(\G_{t}) - \nabla_{\X_{t}} \log p_{0t}(\X_{t}|\X_{0}) \bigr\|_{2}^{2} \Bigr\}\,,\\
+\min_{\PHI} 
+&\mathbb{E}_{t}\, \Bigl\{ w_{2}(t) \mathbb{E}_{\G_{0}} \mathbb{E}_{\G_{t}|\G_{0}} \bigl\| \s_{\PHI,t}(\G_{t}) - \nabla_{{\A}_{t}} \log p_{0t}({\A}_{t}|{\A}_{0}) \bigr\|_{2}^{2} \Bigr\}
+\end{aligned}
+\label{eq:combined}
+\end{equation}
+where $w_{1}(t)$ and $w_{2}(t)$ are positive weight functions, $t$ is uniformly sampled in the range of $[0,T]$. For nodes, we have $\X_{0} \sim p_{0}(\X)$, $\X_{t} \sim p_{0t}(\X_{t}|\X_{0})$, and similarly for edges, we have ${\A}_{0} \sim p_{0}({\A})$, ${\A}_{t} \sim p_{0t}({\A}_{t}|{\A}_{0})$. Since $\mathbf{f}_{1,t}$ and $\mathbf{f}_{2,t}$ are affine, the transition kernels $p_{0t}(\X_{t}|\X_{0})$ and $p_{0t}({\A}_{t}|{\A}_{0})$ are always Gaussian distributions, and closed-form means and variances are obtained based on standard techniques. For example, the node transition kernel in VPSDE~\citep{song2021scorebased} is:
+\begin{align}
+p_{0t}(\X_t | \X_0) 
+= \mathcal{N}
+\Bigl(\X_t| e^{-\frac14t^2(\beta_{\max}-\beta_{\min}) 
+- \frac12t\beta_{\min}}\X_0, 
+\mathbf{I} - \mathbf{I}e^{-\frac12t^2(\beta_{\max}
+-\beta_{\min}) - t\beta_{\min}}\Bigr)\,.
+\label{eq:vp perturbation kernel}
+\end{align}
+For simplicity, the subsequent derivations focus on $\X$ in VPSDE, as the derivations for both $\X$ and $\A$ in VPSDE and VESDE (Variance Exploding SDE) are similar to those for $\X$ in VPSDE.
+\subsection{Why baseline models are truncated?} 
+In this section, we use GDSS as the basic model and QM9~\citep{ramakrishnan2014quantum} as the dataset to demonstrate the reverse-starting bias and effectively validate our motivations. Specifically, we have two score networks: the first is a pretrained network $\s_{\THETA,t}(\cdot)$ whose forward maximum perturbation is far from reaching the standard Gaussian; the second is a network $\s_{\bar{\THETA},t}(\cdot)$ whose forward maximum perturbation distribution is constrained to follow the standard Gaussian. 
+
+% Specifically, the $\beta_{\min}$ of both networks are set to $0.1$. However, the $\beta_{\max}$ of $\s_{\THETA,t}(\cdot)$ are set to 1 by GDSS, while the $\beta_{\max}$ of $\s_{\bar{\THETA},t}(\cdot)$ is set to 20 by us.
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[b]{0.32\linewidth}
+ \centering
+ \includegraphics[width=\linewidth]{Figure/2-1.score_norm_vp20_all.pdf}
+ \caption{$\s_{\bar{\THETA},t}(\cdot)$}
+ \label{fig:score_norm_vp20_all}
+ \end{subfigure}
+ \hfill
+ \begin{subfigure}[b]{0.32\linewidth}
+ \centering
+ \includegraphics[width=\linewidth]{Figure/2-2.score_norm_vp1_fact.pdf}
+ \caption{ $\s_{\THETA,t}(\cdot)$}
+ \label{fig:score_norm_vp1_fact}
+ \end{subfigure}
+ \hfill
+ \begin{subfigure}[b]{0.32\linewidth}
+ \centering
+ \includegraphics[width=\linewidth]{Figure/2-3.attack_score_fcd.pdf}
+ \caption{FCD metric}
+ \label{fig:attack_score_fcd}
+ \end{subfigure} 
+ \caption{(a) and (b) The $\ell_2$ norm of the predictions from the two score networks at different time steps. (c) The generation results of two score networks with perturbations at different time steps.
+}
+ \label{fig:combined_scores}
+\end{figure}
+
+Figs.~\ref{fig:combined_scores}(a) and \ref{fig:combined_scores}(b) show the $\ell_2$-norm distribution of the predictions of two score networks at different timesteps. Taking \Figref{fig:combined_scores}(a) as an example, we obtain perturbed samples through forward noising at each step, then use $\s_{\bar{\THETA},t}(\cdot)$ to predict the score and calculate the corresponding $\ell_2$-norm value. We present the details of \Figref{fig:combined_scores} in Appendix~\ref{appendix:B.Figures detail}. At time 0, the score $\ell_2$ norm of the ground-truth $\X_0$ spans $(0, 2500)$ approximately, demonstrating the diversity of the true data and its scores. As the noise intensity increases, the range of the score $\ell_2$ norm narrows, eventually stabilizing within $(0, 10)$. The evolution of the score $\ell_2$ norm of perturbed samples at different time indicates that as the distribution approaches the standard Gaussian distribution, the model becomes highly sensitive to score changes. The tightened score $\ell_2$ norm implies that the slight perturbation in score during the early sampling stage can significantly affect the generation quality. For \Figref{fig:combined_scores}(b), the evolution pattern of $\s_{\THETA,t}(\cdot)$ is consistent with $\s_{\bar{\THETA},t}(\cdot)$, but since the maximum perturbation distribution of $\s_{\THETA,t}(\cdot)$ is far from reaching the standard Gaussian, its score $\ell_2$ norm range is wider, indicating a higher tolerance for score deviations.
+
+\Figref{fig:combined_scores}(c) illustrates the response of the predictions of the two score networks to perturbations at different time steps in sampling. Each point in~\Figref{fig:combined_scores}(c) corresponds to a perturbation experiment. The $x$-axis represents the addition of a standard Gaussian noise perturbation to the predicted score at the current time, while the $y$-axis represents the final generation metric resulting from that perturbation experiment (details in Appendix~\ref{appendix:B.Figures detail}). For $\s_{\bar{\THETA},t}(\cdot)$, at time 0, we start from standard Gaussian and perturb the predicted score at the current step. No perturbation is applied during the subsequent sampling steps, leading to a poor generation metric. As the time step of the perturbation increases, the negative impact on generation quality diminishes and eventually stabilizes after 200 steps. This evolution highlights how diffusion models are highly sensitive to accurate scores during the early sampling stages, where deviations in the score can significantly degrade the generated quality. For $\s_{\THETA,t}(\cdot)$, instead of starting from a standard Gaussian, we use samples from the forward maximum perturbation distribution as the initial point to eliminate the reverse-starting bias.
+\begin{wrapfigure}[26]{r}{0.48\textwidth}
+\centering
+\includegraphics[width=0.48\textwidth]{Figure/ICLR2025-Figure3.png}
+\caption{Score correction based on the score difference. At the reverse-sampling time $t$, the optimal score always points to $\X_0$. $\s_{\THETA,t}(\cdot)$ points to $\gamma_t\X_0$ with some deviation (partially containing $\X_0$), while $\s_{\PSI,t}(\cdot)$ points to $\gamma'_t\X_0$ with larger deviation (containing little $\X_0$). The difference between predicted and pseudo scores guides the predicted score towards the optimal score. We use $\lambda$ to control the angle and $\omega$ to adjust the magnitude of the corrected score. The final corrected score flexibly approaches the optimal score within the dashed box.}
+\label{fig: corrected score}
+\end{wrapfigure}
+
+\Figref{fig:combined_scores}(c) shows that diffusion models are highly sensitive to score deviations in high-noise states, while in low-noise states, their resistance to score deviations significantly increases. Notably, this provides us with two potential approaches for addressing the reverse-starting bias: $\s_{\bar{\THETA},t}(\cdot)$ suggests retraining the model and constraining the forward maximum perturbation distribution to follow a standard Gaussian, while $\s_{\THETA,t}(\cdot)$ suggests exploring a reverse-starting distribution aligned with the forward maximum perturbation distribution during sampling. We observe that the latter not only mitigates the reverse-starting bias but also offers greater tolerance to subsequent deviations.
+\section{Methodology}\label{sec:Methodology}
+\subsection{Langevin Sampling}
+Langevin sampling~\citep{song2019generative} is a key component of SDE-based diffusion models. Given sufficiently small step sizes and a sufficiently large number of steps, Langevin sampling can obtain samples of the target distribution under the guidance of the score starting from a prior distribution, such as the standard Gaussian distribution. Specially, we already have the score network $\s_{\THETA,T}(\G_t) \approx \nabla_{\X_T} \log p(\X_T,\A_t)$. Thus, this score guides Langevin sampling to obtain samples from the high-density regions~\citep{umdon} of the actual maximum perturbation distribution $q(\X_T)$:
+\begin{equation}
+\hat{\X}_{T} \leftarrow \hat{\X}_{T}+ \frac{\eta_{T}}2\s_{\THETA,T}(\hat{\G}_{T}) + \sqrt{\eta_{T}}\EPS_T
+\label{eq:langevin}
+\end{equation}
+where the subscript $T$ represents the reverse-starting time, $\eta_{T}$ represents the step size at time $T$, and $\EPS_T$ is standard Gaussian noise. In this stage, we only use the score $\s_{\THETA,T}(\cdot)$ at time $T$. After iterating~\Eqref{eq:langevin} $M$ times, we assume the distribution $p(\hat{\X}_T)$ has transitioned to a stable state to align with the distribution $q(\X_T)$. We refer to this stage as the reverse-starting alignment stage.
+\subsection{S++ Bias Correction Method}
+
+% $\nabla_{\X_T} \log q(\X_T|\X_0)
+% =\frac{{\X_T}-\sqrt{{\bar{\alpha}}_T}\X_0}{{1-{\bar{\alpha}}_T}}$ where $\bar{\alpha}_t=1-\beta_t,\forall\,t\in[0,T]$
+
+In theory, after Langevin sampling based on~\Eqref{eq:langevin}, $\hat{\X}_T$ almost follows the distribution $p(\X_T)$. However, the pretrained score $\s_{\THETA,T}(\cdot)$ struggles to accurately learn the true score. We have to consider the exposure bias. Following~\cite{luo2022understanding,xue2024accelerating} , we model the predicted score:
+\begin{equation}
+\s_{\THETA,t}(\hat{\G}_t) = -\frac{\hat{\X}_t-\sqrt{\bar{\alpha}_t}\hat{\X}_0}{{1-\bar{\alpha}_t}}\,.
+\label{eqx2s}
+\end{equation}
+We can rewrite \Eqref{eqx2s} as
+\begin{equation}
+\hat{\X}_0
+= \frac1{\sqrt{\bar{\alpha}_t}}\bigl(\hat{\X}_t+({1-\bar{\alpha}_t})\s_{\THETA,t}(\hat{\G}_t)\bigr)=\hat{\X}_0(\hat{\X}_t,\THETA)\,.
+\label{eq:x_estimate}
+\end{equation}
+
+Straightforwardly, it is challenging to predict $\hat{\X}_0$ from $\X_0$ analytically. Following~\cite{zhang2023lookahead}, we model the estimate of $\hat{\X}_0$ by
+\begin{equation}
+\hat{\X}_{0} = \gamma_t\X_0 + \delta_t\EPS_a
+\label{eq:x_model}
+\end{equation}
+where $\gamma_t$ and $\delta_t$ are constants that reflect the similarity of $\hat{\X}_{0}$ to $\X_0$ and $\EPS_a$, respectively, with $\EPS_a \sim \mathcal{N}(\bm{0},\boldsymbol{I})$. Consequently, for all $j,k$ such that $0\leq j<k\leq N$, it holds that $1>\gamma_j>\gamma_k\geq0$ and $0\leq \delta_j < \delta_k$. We then use the model $\s_{\THETA,t}(\hat{\G}_t)$ to generate a dataset ${\X}_0'$ and train a pseudo score network $\s_{\PSI,t}(\cdot)$ using ${\X}_0'$. Since $\hat{\X}_0$ always has a bias compared to $\X_0$, the pseudo score $\s_{\PSI,t}(\cdot)$, trained on the pseudo data $\X_0'$, naturally learns the bias. Similarly, we estimate $\hat{\X}'_0(\hat{\X_t},\PSI)$ as $\hat{\X}'_0 = \gamma'_t\X_0 + \delta'_t\EPS_b$, where it is straightforward that $\gamma'_t < \gamma_t$. Then, we define a score difference between the two scores at the same time point for the same sample:
+\begin{equation}
+\s_{\THETA,t}(\hat{\G}_t) - \s_{\PSI,t}(\hat{\G}_t) 
+= \sqrt{\bar{\alpha}_t}\frac{(\gamma_t - \gamma'_t)\X_0 + (\delta_t\EPS_a - \delta'_t\EPS_b)}{{1-\bar{\alpha}_t}}\,.
+\label{eq:score_diff}
+\end{equation}
+We find that the score difference contains information about $\X_0$ as shown in~\Figref{fig: corrected score}. We aim to utilize this information. Inspired by classifier-free guidance~\citep{ho2021classifier} and extrapolation operations~\citep{zhang2023lookahead}, we define a new score adjustment by
+\begin{align}
+\s_{\THETA,t}(\hat{\G}_t)&=\s_{\THETA,t}(\hat{\G}_t) + \lambda \bigl( \s_{\THETA,t}(\hat{\G}_t) - \s_{\PSI,t}(\hat{\G}_t) \bigr) \notag\\
+&= -\frac{\hat{\X}_t - \sqrt{\bar{\alpha}_t} \Bigl(\bigl(\gamma_t + \lambda (\gamma_t - \gamma'_t)\bigr) \X_0 + \delta_t \EPS_a + \lambda (\delta_t \EPS_a - \delta'_t \EPS_b) \Bigr)}{1 - \bar{\alpha}_t}
+\label{eq:direction_corrected_score}
+\end{align}
+where $\lambda \geq 0$ represents the step size for correcting the score using the score difference, \Eqref{eq:score_diff}. When $\lambda = 0$, no correction is applied. Conceptually, the correction operation pulls the biased direction towards the unbiased direction. Although there is some noise in this correction direction, choosing appropriate parameters $\lambda$ improves the score accuracy. Then, we divide the $\s_{\THETA,t}(\hat{\G}_t)$ by a scalar to adjust the score magnitude, further driving $\s_{\THETA,t}(\hat{\G}_t)$ closer to the true score:
+\begin{equation}
+\s_{\THETA,t}(\hat{\G}_t) 
+=\frac{\s_{\THETA,t}(\hat{\G}_t)}{\omega}\,.
+\label{eq:magnitude_score_diff}
+\end{equation}
+In particular, we emphasize that the S++ score correction at time $T$ is far more critical than at other times. In some cases, the correction at time $T$ is so effective that no further correction is needed in subsequent stages, especially in a truncated model. Therefore, we recommend decoupling the correction parameter at time $T$ from those at other times during the actual score correction process. Specifically, by using Langevin sampling~\citep{song2019generative} to align the distribution with the forward maximum perturbation distribution, which is in a low-noise state and retains some data information from $\X_0$, we can shorten the sampling chain and significantly reduce sampling time. Experimental validation is provided in~\S\ref{subsec:rapid_sample}.
+
+The score correction method described here can also be applied in the reverse-starting alignment stage, as Langevin sampling also relies on scores. Once the reverse-starting bias is corrected, it naturally helps mitigate the exposure bias in subsequent sampling stages. Additionally, our score correction method is applicable wherever scores are utilized, ensuring its effectiveness across different stages of the reverse sampling.
+
+We emphasize that utilizing Langevin sampling to obtain aligned samples and using the difference signal to correct scores are indispensable components for addressing the reverse-starting bias and the exposure bias. The effect is shown in Fig.~\ref{fig:combined}(c). Additionally, we conduct extensive ablation experiments in \S\ref{subsec:ablation study} to demonstrate this point. We provide a detailed geometric illustration in~\Figref{fig: corrected score} and provide detailed derivations and proofs of the equations from \S\ref{sec:Methodology} in Appendix~\ref{appendix:C.Derivation of section 4.2}.
+\section{Experiment}\label{sec:5.EXPERIMENTS}
+In this section, we select three generic graph datasets and two molecular datasets to evaluate the performance of our approach. In order to demonstrate the broad applicability of this method in addressing the reverse-starting bias and mitigating exposure bias, we tested it on a variety of mainstream graph diffusion models, namely GDSS~\citep{jo2022GDSS}, GSDM~\citep{luo2023fast}, HGDM~\citep{wen2024hyperbolic}, and MOOD~\citep{lee2023exploring}. Our improved model is prefixed with the basic diffusion model and denoted by S++ at its suffix. At the same time, we perform extensive downstream task testing and ablation study to further illustrate the effectiveness and necessity of S++.
+\subsection{Generic Graph Generation}
+\textbf{Experimental Setup} We select three generic graph datasets to test our approach: (1) Community-small: 100 artificially generated graphs with community structure; (2) Enzymes: 600 protein maps representing the enzyme structure in BRENDA~\citep{schomburg2004brenda}; (3) Grid: 100 standard 2D grid diagrams. To evaluate the quality of the generated graphs, we follow GDSS~\citep{jo2022GDSS} and we use Maximum Mean Discrepancy (MMD)~\citep{MMDgretton12a,you2018graphrnn} to compare the statistical distribution of the graphs between the same number of generated plots and the test plots, including the distribution of measured degrees, clustering coefficients, and the number of orbits of the 4-node track.
+
+\begin{table*}[!t]
+\caption{Generation results on the generic graph datasets (Lower is better). The results of the Enzymes dataset of GDSS are reproduced by ourselves, the results of other baselines are all from published papers, and we give detailed settings and instructions in Appendix~\ref{appendix:D.Experiment detail}.}\label{tab:generic graph results}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccccccc}
+\toprule
+Dataset & \multicolumn{4}{c}{Community-small} & \multicolumn{4}{c}{Enzymes} & \multicolumn{4}{c}{Grid} \\
+Info. & \multicolumn{4}{c}{Synthetic, $12 \leq |V| \leq 20$} & \multicolumn{4}{c}{Real, $10 \leq |V| \leq 125$} & \multicolumn{4}{c}{Synthetic, $100 \leq |V| \leq 400$} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13}
+Method & Deg.$\downarrow$ & Clus.$\downarrow$ & Orbit$\downarrow$ & Avg.$\downarrow$ & Deg.$\downarrow$ & Clus.$\downarrow$ & Orbit$\downarrow$ & Avg.$\downarrow$ & Deg.$\downarrow$ & Clus.$\downarrow$ & Orbit$\downarrow$ & Avg.$\downarrow$ \\
+\midrule
+GDSS-OC & 0.050 & 0.132 & 0.011 & 0.064 & 0.052 & 0.627 & 0.249 & 0.309 & 0.270 & 0.009 & 0.034 & 0.070 \\
+GDSS-OC-S++ & \textbf{0.021} & \textbf{0.061} & \textbf{0.005} & \textbf{0.029} & \textbf{0.067} & \textbf{0.099} & \textbf{0.007} & \textbf{0.058} & \textbf{0.105} & \textbf{0.004} & \textbf{0.061} & \textbf{0.066} \\
+GDSS-WC & 0.045 & 0.088 & 0.007 & 0.045 & 0.044 & 0.069 & 0.002 & 0.038 & 0.111 & 0.005 & 0.070 & 0.070 \\
+GDSS-WC-S++ & \textbf{0.019} & \textbf{0.062} & \textbf{0.004} & \textbf{0.028} & \textbf{0.031} & \textbf{0.050} & \textbf{0.003} & \textbf{0.028} & \textbf{0.105} & \textbf{0.004} & \textbf{0.061} & \textbf{0.057} \\
+\midrule
+HGDM-OC & 0.065 & 0.119 & 0.024 & 0.069 & 0.125 & 0.625 & 0.371 & 0.374 & 0.181 & 0.019 & 0.112 & 0.104 \\
+HGDM-OC-S++ & \textbf{0.021} & \textbf{0.034} & \textbf{0.005} & \textbf{0.020} & \textbf{0.080} & \textbf{0.500} & \textbf{0.225} & \textbf{0.268} & \textbf{0.023} & \textbf{0.034} & \textbf{0.004} & \textbf{0.020} \\
+HGDM-WC & 0.017 & 0.050 & 0.005 & 0.024 & 0.045 & 0.049 & 0.003 & 0.035 & 0.137 & 0.004 & 0.048 & 0.069 \\
+HGDM-WC-S++ & \textbf{0.021} & \textbf{0.024} & \textbf{0.004} & \textbf{0.016} & \textbf{0.040} & \textbf{0.041} & \textbf{0.005} & \textbf{0.029} & \textbf{0.123} & \textbf{0.003} & \textbf{0.047} & \textbf{0.058} \\
+\midrule
+GSDM-OC & 0.142 & 0.230 & 0.043 & 0.138 & 0.930 & 0.867 & 0.168 & 0.655 & 1.996 & 0.0 & 1.013 & 1.003 \\
+GSDM-OC-S++ & \textbf{0.011} & \textbf{0.016} & \textbf{0.001} & \textbf{0.009} & \textbf{0.012} & \textbf{0.087} & \textbf{0.011} & \textbf{0.037} & \textbf{1.2e-4} & \textbf{0.0} & \textbf{1.2e-4} & \textbf{0.066} \\
+GSDM-WC & 0.011 & 0.016 & 0.001 & 0.009 & 0.013 & 0.088 & 0.013 & 0.038 & 0.002 & 0.0 & 0.0 & 7.2e-5 \\
+GSDM-WC-S++ & \textbf{0.011} & \textbf{0.016} & \textbf{0.001} & \textbf{0.009} & \textbf{0.011} & \textbf{0.086} & \textbf{0.010} & \textbf{0.036} & \textbf{5.0e-5} & \textbf{0.0} & \textbf{1.1e-5} & \textbf{0.066} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\textbf{Results} Table~\ref{tab:generic graph results} shows that S++ outperforms all of baselines. For the uncorrected sampling method, the performance indicators of the baseline model are particularly poor due to the existence of the reverse-starting bias and score exposure bias, while S++ can significantly improve the performance of all baseline models and reach or even exceed the level of the baseline model with correctors. Because the method without correctors can significantly reduce computational complexity, we believe that S++ can really release the ability of the graph diffusion model, which is enlightening for large-scale datasets. For the sampling method with aligners, S++ is still significantly better than all baseline models. At the same time, we also give experimental comparisons of other advanced models in Appendix~\ref{appendix:E.Added Experiment}, and results show that S++ achieves SOTA indicators of the corresponding tasks.
+\subsection{Molecular Graph Generation}
+\textbf{Experimental Setup} We select two widely recognized molecular datasets to evaluate our approach: QM9~\citep{ramakrishnan2014quantum} and ZINC250k~\citep{irwin2012zinc}. We generate 10,000 molecules and select the following metrics: Frechet ChemNet Distance (FCD)~\citep{preuer2018frechet}, Neighborhood subgraph pairwise distance kernel (NSPDK)~MMD~\citep{costa2010fast}, validity w/o correction, and the generation time. (1) FCD uses the activation of the penultimate layer of ChemNet to calculate the distance between the benchmark molecular dataset and the generated dataset to characterize the similarity between them, and the lower the FCD, the higher the similarity between distributions. (2) NSPDK~MMD considers the characteristics of nodes and edges at the same time, and calculates the MMD between the benchmark molecular dataset and the generated dataset; (3) Sampling time is used to evaluate the speed in generating large-scale molecular datasets, and we only count the time spent on sampling, regardless of the time spent on preprocessing and evaluation.
+
+\textbf{Results} Table~\ref{tab:molecular graph} shows that both in terms of sampling time and generation quality, S++ is significantly better than the baseline models. For the sampling method without correctors, due to the existence of the reverse-starting bias and score exposure bias, the quality of generation from the baseline model is particularly poor, while S++ can significantly improve the performance of all baselines and approximate the sampling methods with correctors of the baseline model. For the sampling method with aligners, S++ is still significantly better than all baseline models and greatly reduces the sampling time. At the same time, we provide more comparative experimental results in Appendix~\ref{appendix:E.Added Experiment} and provide parameter sensitivity experiments in Appendix~\ref{appendix:G.insensitivity of la}.
+
+\begin{table*}[!t]
+\caption{Comparison of different methods on QM9 and ZINC250k datasets.}\label{tab:molecular graph}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{3}{c}{QM9} & \multicolumn{3}{c}{ZINC250k} \\
+\cmidrule(lr){2-4} \cmidrule(l){5-7}
+ & Sampling time $\downarrow$ & NSPDK~MMD $\downarrow$ & FCD $\downarrow$ & Sampling time$\downarrow$ & NSPDK MMD $\downarrow$ & FCD $\downarrow$ \\
+\midrule
+GDSS-OC & 0.73e2 & 0.016 & 4.584 & 0.73e3 & 0.047 & 20.53 \\
+GDSS-OC-S++ & \textbf{5.10} & \textbf{0.001} & \textbf{1.661} & \textbf{0.70e3} & \textbf{0.050} & \textbf{16.79} \\
+GDSS-WC & 1.61e2 & 0.004 & 2.550 & 1.41e3 & 0.019 & 14.66 \\
+GDSS-WC-S++ & \textbf{9.25} & \textbf{0.001} & \textbf{1.661} & \textbf{0.98e3} & \textbf{0.012} & \textbf{12.70} \\
+\midrule
+HGDM-OC & 0.62e2 & 0.005 & 3.164 & 0.76e3 & 0.033 & 21.38 \\
+HGDM-OC-S++ & \textbf{0.62e2} & \textbf{0.003} & \textbf{2.512} & \textbf{0.77e3} & \textbf{0.034} & \textbf{20.79} \\
+HGDM-WC & 1.16e2 & 0.002 & 2.147 & 1.52e3 & 0.016 & 17.69 \\
+HGDM-WC-S++ & \textbf{0.98e2} & \textbf{0.001} & \textbf{2.001} & \textbf{1.17e3} & \textbf{0.016} & \textbf{16.24} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+\subsection{Diversity Generation}
+\label{subsec:rapid_sample}
+\textbf{Characteristic molecule generation} To evaluate the performance of S++ in generating novel, drug-like, and synthesizable molecules, we follow \citep{lee2023exploring} and assess S++ in the five docking score (DS) optimization tasks under the quantitative estimate of synthetic accessibility (SA), drug-likeness (QED) and novelty constraints. The property $Y$ is defined by
+\begin{equation}
+Y(\G)=\widehat{\text{DS}}(\G)\times\text{QED}(\G)\times\widehat{\text{SA}}(\G)\in[0,1]
+% \label{eq:x_estimate}
+\end{equation}
+where $\widehat{\text{DS}}$ refers to the normalized docking score, $\widehat{\text{SA}}$ denotes the normalized synthetic accessibility, and \text{QED} represents drug-likeness. We use MOOD-S++ to generate 3000 molecules and evaluate performance using the following metrics. \textbf{Novel hit ratio (\%)} is the fraction of unique hit molecules whose maximum Tanimoto similarity with the training molecules is less than 0.4. In particular, hit molecules are defined as the molecules that satisfy the following conditions: \text{DS} $<$ (the median \text{DS} of the known active molecules), QED $>$ 0.5, and \text{SA} $<$ 5. \textbf{Novel top 5\% docking score} refers to the average \text{DS} of the top 5\% unique molecules that satisfy the constraints $\text{QED}>0.5$ and \text{SA} $<$ 5 and their maximum similarity with the training molecules is below 0.4. To avoid bias in target selection, we utilize five protein targets: parp1, fa7, 5ht1b, braf, and jak2.
+
+\textbf{Results} Tables~\ref{mood hit ratio} and~\ref{mood novel hit ratio} show that MOOD-S++ is significantly better than baseline in all target proteins. This indicates that S++ still has advantages in the discovery of drug-like, synthesizable, and novel molecular tasks with high binding affinity, and it can be seen that the reverse-starting bias and exposure bias pose a significant threat to various generation tasks.
+
+\begin{table*}[!t]
+\caption{Novel hit ratio (\%) results ($\uparrow$).}\label{mood hit ratio}
+\vspace{-3mm}
+\centering
+\tiny
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{5}{c}{Target protein} \\
+\cmidrule(lr){2-6}
+ & parp1 & fa7 & 5ht1b & braf & jak2 \\
+\midrule
+MOOD & 7.017 \tiny{(± 0.428)} & 0.733 \tiny{(± 0.141)} & 18.673 \tiny{(± 0.423)} & 5.240 \tiny{(± 0.285)} & 9.200 \tiny{(± 0.524)} \\
+MOOD-S++ & \textbf{8.286 \tiny{(± 0.214)}} & \textbf{0.900 \tiny{(± 0.068)}} & \textbf{20.354 \tiny{(± 0.672)}} & \textbf{5.653 \tiny{(± 0.073)}} & \textbf{9.167 \tiny{(± 0.067)}} \\
+\bottomrule
+\end{tabular}
+}
+\vspace{4mm}
+\caption{Novel top 5\% docking score (kcal/mol) results ($\downarrow$).}\label{mood novel hit ratio}
+\vspace{-3mm}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{5}{c}{Target protein} \\
+\cmidrule(lr){2-6}
+ & parp1 & fa7 & 5ht1b & braf & jak2 \\
+\midrule
+MOOD & -10.865 \tiny{(± 0.113)} & -8.160 \tiny{(± 0.071)} & -11.145 \tiny{(± 0.042)} & -11.063 \tiny{(± 0.034)} & -10.147 \tiny{(± 0.060)} \\
+MOOD-S++ & \textbf{-10.961 \tiny{(± 0.027)}} & \textbf{-8.182 \tiny{(± 0.028)}} & \textbf{-11.231 \tiny{(± 0.036)}} & \textbf{-11.143 \tiny{(± 0.025)}} & \textbf{-10.163 \tiny{(± 0.015)}} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\textbf{Accelerate generation} To demonstrate that S++ can generate good samples faster by using fewer steps of reverse diffusion, we choose GDSS-OC as the benchmark, and QM9 and Comm are selected to test the performance of our approach and benchmark models at different sampling total time steps. 
+
+\textbf{Results} Table~\ref{tab:rapid sampling} shows that S++ is significantly better than the baseline model at different sampling total time steps $N$. S++ is not only able to generate samples with fewer reverse-diffusion steps but also achieves consistent improvements across generation metrics, especially on the QM9 dataset, where S++ remained close to optimal performance even with a significant reduction in the sampling time step $(N=100)$, while the performance of the benchmark model decreased significantly. 
+
+In conclusion, S++ shows higher efficiency, better quality, and stronger robustness in graph generative tasks, which provides a powerful improvement scheme for the application of the diffusion model.
+\begin{table*}[!t]
+\caption{Comparison of different methods under different total sampling time steps.}\label{tab:rapid sampling}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llccccccccc@{}}
+\toprule
+\multirow{2}{*}{$N$} & \multirow{2}{*}{Method} & \multicolumn{3}{c}{QM9} & \multicolumn{4}{c}{Community-small} \\
+\cmidrule(lr){3-5} \cmidrule(l){6-9}
+ & & Val. w/o corr. $\uparrow$ & NSPDK~MMD $\downarrow$ & FCD $\downarrow$ & Deg.$\downarrow$ & Clus. $\downarrow$ & Orbit $\downarrow$ & Avg. $\downarrow$ \\
+\midrule
+
+\multirow{2}{*}{1000} & GDSS-OC & 73.5 & 0.015 & 4.584 & 0.050 & 0.132 & 0.011 & 0.064 \\
+ & GDSS-OCS++ & \textbf{94.0} & \textbf{0.001} & \textbf{1.671} & \textbf{0.021} & \textbf{0.061} & \textbf{0.005} & \textbf{0.029} \\
+\midrule
+
+\multirow{2}{*}{500} & GDSS-OC & 46.2 & 0.045 & 7.960 & 0.136 & 0.456 & 0.151 & 0.248 \\
+ & GDSS-OC-S++ & \textbf{93.9} & \textbf{0.001} & \textbf{1.665} & \textbf{0.029} & \textbf{0.142} & \textbf{0.008} & \textbf{0.060} \\
+\midrule
+\multirow{2}{*}{100} & GDSS-OC & 37.8 & 0.069 & 9.951 & 0.092 & 0.666 & 0.394 & 0.384 \\
+ & GDSS-OC-S++ & \textbf{93.9} & \textbf{0.001} & \textbf{1.663} & \textbf{0.061} & \textbf{0.414} & \textbf{0.140} & \textbf{0.205} \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{4mm}
+\caption{Ablation experiments on the QM9 dataset.}\label{Ablation study}
+\vspace{-3mm}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{3}{c}{QM9} \\
+\cmidrule(lr){2-4} 
+ & Val. w/o corr. $\uparrow$ & NSPDK~MMD $\downarrow$ & FCD $\downarrow$ \\
+\midrule
+GDSS-OC & 73.5 & 0.0157 & 4.58 \\
+GDSS-w/o correction in sampling & 94.8 & 0.0037 & 2.65 \\
+GDSS-w/o reverse-starting alignment & 89.8 & 0.0031 & 2.01 \\
+GDSS-OC-S++ & \textbf{94.0} & \textbf{0.0014} & \textbf{1.67} \\
+\bottomrule
+\end{tabular}%
+\end{table*}
+\subsection{Ablation Study}\label{subsec:ablation study}
+Table~\ref{Ablation study} demonstrates that GDSS without reverse-starting alignment and score correction independently improves performance to varying degrees. Among these, the case without reverse-starting alignment is more general, as it does not require $\eta_T$ and $T$. Even in their absence, our approach still achieves impressive results,  highlighting its robustness and flexibility. Additionally, we provide a comparative analysis of the two biases in the image and graph domains in Appendix~\ref{appendix:H.two bias} and present comparative experiments of S++ with existing methods on images in Appendix~\ref{appendix:I.s++ and existing solutions}.
+\section{Conclusion}
+In this paper, we use Langevin sampling to obtain samples aligned with the forward maximum perturbation distribution, which mitigates the reverse-starting bias and greatly mitigates the exposure bias of the score network, and we propose a score correction mechanism based on score difference to further promote the stable-state distribution of Langevin sampling to the true forward maximum perturbation distribution, and further mitigate the exposure bias in sampling. Since the score is also used in Langevin sampling, the proposed score correction is also applied to Langevin sampling as well. Our approach does not require network modifications or the introduction of new learners and can be naturally integrated into existing graph diffusion models to achieve SOTA metrics on multiple datasets and multiple tasks. 
+
+% By addressing the reverse-starting bias in the Langevin sampling phase, the exposure bias in subsequent sampling steps is naturally be mitigated. Moreover, once the reverse-starting bias is properly addressed, further score correction in subsequent sampling stage may become unnecessary. 
+\section*{Acknowledgments}
+This work was supported by the National Natural Science Foundation of China under Grant No.~62176108.
+\bibliography{iclr2025_conference}
+\bibliographystyle{iclr2025_conference}
+\clearpage
+\appendix
+\section{Reverse-Starting Bias}\label{appendix:A.reverse_starting_bias}
+In this section, we provide a detailed discussion of the reverse-starting bias. It is worth noting that these models are based on SDE~\citep{song2021scorebased}. For VPSDE, it obtains perturbed samples through~\Eqref{eq:vp perturbation kernel}, which corresponds to Eq.~(33) in~\citep{song2021scorebased}. At $t=T$, \Eqref{eq:vp perturbation kernel} gives the maximum perturbation distribution, which is $\mathcal{N}\left(\X_T|\textbf{0},\mathbf{I}\right)$. Similarly, for VESDE, the diffusion model obtains perturbed samples through $p_{0t}(\X_t | \X_0)= \mathcal{N}(\X_t| \X_0, \sigma_t^2\mathbf{I})$, where $\sigma_{\min}=\sigma_1\leq\sigma_t\leq\sigma_T=\sigma_{\max}$. When this expression is extended continuously, we have
+\begin{align}
+p_{0t}(\X_t | \X_0) 
+= \mathcal{N}
+\Bigr(\X_t| \X_0, \sigma_{\min}^2\Bigl(\frac{\sigma_{\max}}{\sigma_{\min}}\Bigr)^{2t}\mathbf{I}\Bigr)\,,t\in[0,1]\,.
+\label{eq:ve perturbation kernel}
+\end{align}
+\Eqref{eq:ve perturbation kernel} corresponds to Eq.~(31) of~\citep{song2021scorebased}. At $t=T$~\Eqref{eq:ve perturbation kernel} achieves the maximum perturbation distribution, which is $\mathcal{N}(\X_T| \X_0, \sigma_{\max}^2\mathbf{I})$. In particular, we need to make sure that $\sigma_{\max}$ is large enough that $\mathcal{N}(\X_T| \X_0, \sigma_{\max}^2\mathbf{I}) \approx \mathcal{N}(\X_T| \textbf{0}, \sigma_{\max}^2\mathbf{I})$.
+
+However, in practice, lots of diffusion models~\citep{jo2022GDSS, luo2023fast, wen2024hyperbolic} adopted a rather conservative strategy when training the network. For VPSDE, results in the maximum forward perturbation distribution being $\mathcal{N}(\X_T|u_T\x_0,\sigma_T^2\mathbf{I})$, which is far from reaching $\mathcal{N}\left(\X_T|\mathbf{0},\mathbf{I}\right)$. For VESDE, due to $\sigma_{\max}$ not being large enough, the maximum forward perturbation distribution is $\mathcal{N}(\X_T| \X_0, \sigma_{\max}^2\mathbf{I})$, which cannot be approximated by $\mathcal{N}(\X_T| \textbf{0}, \sigma_{\max}^2\mathbf{I})$. However, baselines always start reverse sampling from the standard Gaussian distribution, which leads to significant reverse-starting bias. A detailed comparison of parameters is shown in Tables~\ref{tab:start_bias_gdss}, \ref{tab:start_bias_hgdm}, and \ref{tab:start_bias_gsdm}.
+
+\begin{table*}[!b]
+\caption{The actual parameters of the forward perturbation of GDSS.}
+\label{tab:start_bias_gdss}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lllllllllll}
+\toprule
+Model & \multicolumn{10}{c}{\centering GDSS} \\
+\cmidrule(lr){2-11}
+Dataset & \multicolumn{2}{c}{Community-small} & \multicolumn{2}{c}{Enzymes} & \multicolumn{2}{c}{Grid} & \multicolumn{2}{c}{QM9} & \multicolumn{2}{c}{ZINC250k} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+Type & Node & Edge & Node & Edge & Node & Edge & Node & Edge & Node & Edge \\
+\midrule
+SDE & VPSDE & VPSDE & VPSDE & VESDE & VPSDE & VPSDE & VESDE & VESDE & VPSDE & VESDE\\
+$\beta_{\min}|\sigma_{\min}$ & 0.1 & 0.1 & 0.1 & 0.2 & 0.1 & 0.2 & 0.1 & 0.1 & 0.1 & 0.2\\
+$\beta_{\max}|\sigma_{\max}$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 0.8 & 1.0 & 1.0 & 1.0 & 1.0\\
+$u_T$ & 0.7596 & 0.7596 & 0.7596 & 1.0 & 0.7596 & 0.7788 & 1.0 & 1.0 & 0.7596 & 1.0\\
+$\sigma_T^2$ & 0.4231 & 0.4231 & 0.4231 & 1.0 & 0.4231 & 0.3935 & 1.0 & 1.0 & 0.4231 & 1.0\\
+\bottomrule
+\end{tabular}}
+\end{table*}
+\begin{table*}[!b]
+\caption{The actual parameters of the forward perturbation of HGDM.}
+\label{tab:start_bias_hgdm}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lllllllllll}
+\toprule
+Model & \multicolumn{10}{c}{\centering HGDM} \\
+\cmidrule(lr){2-11}
+Dataset & \multicolumn{2}{c}{Community-small} & \multicolumn{2}{c}{Enzymes} & \multicolumn{2}{c}{Grid} & \multicolumn{2}{c}{QM9} & \multicolumn{2}{c}{ZINC250k} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+Type & Node & Edge & Node & Edge & Node & Edge & Node & Edge & Node & Edge \\
+\midrule
+
+SDE & VPSDE & VPSDE & VPSDE & VESDE & VPSDE & VESDE & VPSDE & VESDE & VPSDE & VESDE\\
+$\beta_{\min}|\sigma_{\min}$ & 0.1 & 0.1 & 0.1 & 0.2 & 0.1 & 0.2 & 0.1 & 0.1 & 0.1 & 0.2\\
+$\beta_{\max}|\sigma_{\max}$ & 1.0 & 1.0 & 1.0 & 1.0 & 7.0 & 0.8 & 2.0 & 1.0 & 1.0 & 1.0\\
+$u_T$ & 0.7596 & 0.7596 & 0.7596 & 1.0 & 0.1695 & 1.0 & 0.5916 & 1.0 & 0.7596 & 1.0\\
+$\sigma_T^2$ & 0.4231 & 0.4231 & 0.4231 & 1.0 & 0.9713 & 0.64 & 0.6501 & 1.0 & 0.4231 & 1.0\\
+\bottomrule
+\end{tabular}}
+\end{table*}
+\begin{table*}[!b]
+\caption{The actual parameters of the forward perturbation of GSDM and MOOD.}\label{tab:start_bias_gsdm}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lllllllllll}
+\toprule
+Model & \multicolumn{6}{c}{\centering GSDM} & \multicolumn{4}{c}{\centering MOOD}\\
+\cmidrule(lr){2-11} 
+Dataset & \multicolumn{2}{c}{Community-small} & \multicolumn{2}{c}{Enzymes} & \multicolumn{2}{c}{Grid} & \multicolumn{2}{c}{QM9} & \multicolumn{2}{c}{ZINC250k} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+Type & Node & Eigen & Node & Eigen & Node & Eigen & Node & Edge & Node & Edge \\
+\midrule
+
+SDE & VPSDE & VPSDE & VPSDE & VPSDE & VPSDE & VPSDE & VPSDE & VESDE & VPSDE & VESDE\\
+$\beta_{\min}|\sigma_{\min}$ & 0.1 & 0.1 & 0.1 & 0.1 & 0.1 & 0.2 & 0.1 & 0.1 & 0.1 & 0.2\\
+$\beta_{\max}|\sigma_{\max}$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 0.8 & 1.0 & 1.0 & 1.0 & 1.0\\
+$u_T$ & 0.7596 & 0.7596 & 0.7596 & 0.7596 & 0.7596 & 0.7788 & 1.0 & 1.0 & 0.7596 & 1.0\\
+$\sigma_T^2$ & 0.4231 & 0.4231 & 0.4231 & 0.4231 & 0.4231 & 0.3935 & 1.0 & 1.0 & 0.4231 & 1.0\\
+\bottomrule
+\end{tabular}}
+\end{table*}
+\section{Figure Details}
+\label{appendix:B.Figures detail}
+In this section, we present the detailed procedures to plot~\Figref{fig:combined_scores}. Let $\s_{\THETA,t}(\cdot)$ represent the pretrained GDSS score network. Due to the conservative strategy of GDSS, with $\beta_{\min}=0.1$ and $\beta_{\max}=1$, the maximum perturbation distribution is $\mathcal{N}\left(\X_T|0.7596\X_0,0.4231\mathbf{I}\right)$ at $t=T$. On the other hand, $\s_{\PSI,t}(\cdot)$ is defined with the constraints of $\beta_{\min}=0.1$ and $\beta_{\max}=20$. At $t=T$, the maximum perturbation distribution is $\mathcal{N}(\X_T|\textbf{0},\mathbf{I})$. Then, $\s_{\THETA,t}(\cdot)$ and $\s_{\PSI,t}(\cdot)$ not only represent two different networks but also indicate that their maximum perturbation distributions in the forward diffusing are completely different. 
+
+To plot Figs.~\ref{fig:combined_scores}(a) and~\ref{fig:combined_scores}(b), we freeze the converged $\s_{\THETA,t}(\cdot)$ and $\s_{\PSI,t}(\cdot)$, then replace $\X_t$ in~\Eqref{eq:combined} with $\A_t$ to obtain perturbation samples of 1024 edges at different time steps. We then compute $\|{\s}_{\THETA,t}(\cdot)\|_2$ and $\|{\s}_{\PSI,t}(\cdot)\|_2$ and plot them in~\Figref{fig:combined_scores}.
+
+To plot Fig.~\ref{fig:combined_scores}(c), we introduce perturbations to ${\s}_{\THETA,t}(\cdot)$ at different time stepsin sampling. We employ a sampling method without a corrector and perturb the score at the selected time step ($y$-axis) using Gaussian noise:
+\begin{equation}
+{\s}_{\THETA,t}(\cdot) = \s_{\THETA,t}(\cdot) + \z_t
+\end{equation}
+where $\z_t \sim \mathcal{N}(\z_t|\mathbf{0},\mathbf{I})$. For the other time steps, we do not introduce any perturbations, allowing the diffusion model to perform sampling and record the generation metrics. We conduct the perturbation experiment on $\s_{\THETA,t}(\cdot)$ using the same method, and ultimately compare the results of the two perturbation experiments based on the time steps to evaluate how different score networks in the diffusion model resist bias at various time steps. We present a detailed comparison of the generation metrics from the perturbation experiments, as shown in~\Figref{fig:combined_attacks}.
+
+\begin{figure}[!t]
+\centering
+\begin{subfigure}[b]{0.32\linewidth}
+\centering
+\includegraphics[width=\linewidth]{Figure/4.attack_fcd.png}
+\caption{FCD}\label{fig:4.attack_fcd}
+\end{subfigure}
+\hfill 
+\begin{subfigure}[b]{0.32\linewidth}
+\centering
+\includegraphics[width=\linewidth]{Figure/4.attack_nspdk.png}
+\caption{NSPDK~MMD}\label{fig:4.attack_nspdk}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\linewidth}
+\centering
+\includegraphics[width=\linewidth]{Figure/4.attack_validity.png}
+\caption{Validity w/o correction}
+ \label{fig:4.attack_validity}
+ \end{subfigure} 
+ \caption{Generation metric responses to perturbations at different time steps for two score networks.} \label{fig:combined_attacks}
+\end{figure}
+\section{Derivations for 
+\S4.2}\label{appendix:C.Derivation of section 4.2}
+For a diffusion model, let the true data be $\X_0$, and the pretrained score network be $\s_{\THETA,t}(\cdot)$. Based on the set noise addition method, we have
+\begin{equation}
+\nabla_{\X_t}\log q(\X_t|\X_0)=-\frac{\X_t-\sqrt{\bar{\alpha}_t}\X_0}{{1-\bar{\alpha}_t}}\,.
+\label{eq:ideal_score}
+\end{equation}
+However, $\s_{\THETA,t}(\cdot)$ often deviates from the optimal score. In the reverse-sampling process, assuming the current time $t$ has a data state $\hat{\X}_t$, the predicted score is
+\begin{equation}
+\s_{\THETA,t}(\hat{\G}_t)=-\frac{\hat{\X}_t-\sqrt{\bar{\alpha}_t}\hat{\X}_0}{{1-\bar{\alpha}_t}}\,.\tag{6}
+\label{eq:predicted_score}
+\end{equation}
+We model $\hat{\X}_0$ by
+\begin{equation}
+\hat{\X}_0=\gamma_t\X_0+\delta_t\EPS_a\,.\tag{8}
+\label{eq:x0_model}
+\end{equation}
+\Eqref{eq:predicted_score} becomes
+\begin{equation}
+\s_{\THETA,t}(\hat{\G}_t)=-\frac{\hat{\X}_t-\sqrt{\bar{\alpha}_t}(\gamma_t\X_0+\delta_t\EPS_a)}{{1-\bar{\alpha}_t}}\,.
+\label{eq:modified_score}
+\end{equation}
+Then, we train a new score network $\s_{\PSI,t}(\cdot)$ based on the generated data $X'$ from the score network. Following the above derivation, we can write the predicted score at the current time $t$ as
+\begin{equation}
+\s_{\PSI,t}(\hat{\G}_t)=-\frac{\hat{\X}_t-\sqrt{\bar{\alpha}_t}\hat{\X}'_0}{{1-\bar{\alpha}_t}}\,.
+\label{eq:new_score}
+\end{equation}
+Due to the bias of $\s_{\THETA,t}(\cdot)$, the generated pseudo data $\X_0'$ always deviates from $\X_0$, and considering the prediction error of the network, we can easily obtain
+\begin{equation}
+\hat{\X}_0'=\gamma'_t\X_0+\delta'_t\EPS_b
+\label{eq:x0_tilde_model}
+\end{equation}
+where $\gamma'_t < \gamma_t$, $\delta'_t > \delta_t$, meaning that at the same time $t$, $\s_{\PSI,t}(\cdot)$ trained on generated data has a larger bias in predicting the target distribution than $\s_{\THETA,t}(\cdot)$ trained on the true data. By substituting \Eqref{eq:x0_tilde_model} into \Eqref{eq:new_score}, we have
+\begin{equation}
+\s_{\PSI,t}(\hat{\G}_t)=-\frac{\hat{\X}_t-\sqrt{\bar{\alpha}_t}(\gamma'_t\X_0+\delta'_t\EPS_b)}{{1-\bar{\alpha}_t}}\,.
+\label{eq:rewritten_new_score}
+\end{equation}
+The score difference is defined as the difference between \Eqref{eq:modified_score} and \Eqref{eq:rewritten_new_score},
+\begin{align}
+\s_{\THETA,t}(\hat{\G}_t) - \s_{\PSI,t}(\hat{\G}_t) 
+&= -\frac{\hat{\X}_t - \sqrt{\bar{\alpha}_t}(\gamma_t\X_0 + \delta_t\EPS_a)}{1 - \bar{\alpha}_t} 
+- \left(-\frac{\hat{\X}_t - \sqrt{\bar{\alpha}_t}(\gamma'_t\X_0 + \delta'_t\EPS_b)}{1 - \bar{\alpha}_t}\right) \notag \\
+&= \sqrt{\bar{\alpha}_t} \frac{(\gamma_t - \gamma'_t)\X_0 + (\delta_t\EPS_a - \delta'_t\EPS_b)}{1 - \bar{\alpha}_t}\,.\tag{9}
+\label{eq:score_difference}
+\end{align}
+We incorporate this score difference as a correction term into the predicted score and introduce a hyperparameter to fine-tune the adjustment, improving the alignment of the predicted score with the true score. It is given by
+\begin{align}
+{\s}_{\THETA,t}(\hat{\X}_t)&=\s_{\THETA,t}(\hat{\G}_t) + \lambda \bigl( \s_{\THETA,t}(\hat{\G}_t) - \s_{\PSI,t}(\hat{\G}_t) \bigr) \notag\\
+&= -\frac{\hat{\X}_t - \sqrt{\bar{\alpha}_t} \bigl( \gamma_t \X_0 + \delta_t \EPS_a + \lambda (\gamma_t - \gamma'_t) \X_0 + \lambda (\delta_t \EPS_a - \delta'_t \EPS_b) \bigr)}{1 - \bar{\alpha}_t}\notag \\
+&= -\frac{\hat{\X}_t - \sqrt{\bar{\alpha}_t} \Bigl(\bigl(\gamma_t + \lambda (\gamma_t - \gamma'_t)\bigr) \X_0 + \delta_t \EPS_a + \lambda (\delta_t \EPS_a - \delta'_t \EPS_b) \Bigr)}{1 - \bar{\alpha}_t}\,.\tag{10}
+\label{eq:final_corrected_score}
+\end{align}
+Since $\gamma'_t < \gamma_t$, this score difference helps the predicted score incorporate more information from the true data $\X_0$. By appropriately setting a hyperparameter $\lambda$, we can consistently use the information from $\X_0$ to guide the score correction process. Finally, we introduce an adjustment magnitude coefficient to further refine the score correction based on the score difference, which improves the alignment of the predicted score with the true score.
+\begin{equation}
+{\s}_{\THETA,t}(\hat{\X}_t) = \frac{{\s}_{\THETA,t}(\hat{\X}_t)}{\omega}\,.\tag{11}
+\label{eq:final_corrected_score_add_magnitude}
+\end{equation}
+We provide a logical analysis showing that the score difference helps to correct the score.
+
+\begin{algorithm}[!t]
+\caption{The S++ sampling algorithm.}
+\label{alg:s++}
+\begin{algorithmic}
+\STATE \textbf{Input:} An inference model $\s_{\THETA,t}(\cdot)$, a pretrained pseudo model $\s_{\PSI,t}(\cdot)$, and the cut-off time $t_c$\,.
+\STATE \textbf{Initialize:} $\X_T \sim \mathcal{N}(\mathbf{0},\mathbf{I})$ where $T=\frac{N-1}{N}$\,;
+\FOR{$j=1$ \textbf{to} $M$}%\COMMENT{Reverse-Starting Alignment}
+\STATE $\s_{\THETA,T}(\X_T) \gets \frac{\s_{\THETA,T}(\X_T)+\lambda_1\bigl(\s_{\THETA,T}(\X_T)-\s_{\PSI,T}(\X_T)\bigr)}{\omega_1}$\,;
+\STATE $\EPS \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$\,;
+\STATE $\X_T \leftarrow \X_T + \frac{\eta_T}2\s_{\THETA,T}(\X_T) + \sqrt{\eta_T}\EPS$\,;
+\ENDFOR
+\FOR{$i=N-1$ \textbf{to} $0$}
+ \STATE $t=\frac iN$\,;
+ \STATE $\s_{\THETA,t}(\X_t) \gets \frac{\s_{\THETA,t}(\X_t)+\lambda_2\bigl(\s_{\THETA,t}(\X_t)-\s_{\PSI,t}(\X_t)\bigr)}{\omega_2}$\,;
+ \STATE $\EPS \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$\,;
+ \STATE $\X_t \gets  (2 - \sqrt{1- \beta_{t}}) \X_t + \beta_{t}\s_{\THETA,t}(\X_t) + \sqrt{\beta_{t}}\EPS$\,;
+ \IF{$t \leq t_c$}
+ \IF{${\rm corrector}$}
+ \STATE $\EPS \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$\,;
+ \STATE $\X_t \gets \X_t + \frac{\eta_t}2\s_{\THETA,t}(\X_{t}) + \sqrt{\eta_t}\EPS$\,;
+ \ENDIF
+ \ENDIF
+\ENDFOR
+\RETURN $\X_0$\,.
+\end{algorithmic}
+\end{algorithm}
+
+\section{Details for experiment}\label{appendix:D.Experiment detail}
+We provide detailed parameters for experiments described in~\S\ref{sec:5.EXPERIMENTS}, as shown in Tables~\ref{tab:oc_ex_details} and \ref{tab:wc_ex_details}. Specifically, we distinguish between the relevant parameters for sampling methods with correctors and those without correctors. As shown in Tables~\ref{tab:oc_ex_details}, both Langevin sampling and the S++ correction are implemented in the reverse-starting alignment stage. After this stage, the subsequent sampling stages require little to no further correction. This suggests that in a truncated diffusion model, once correction is applied at a certain point, the later stages can achieve good sampling performance without the need for additional corrections.
+
+\begin{table*}[!t]
+\caption{Experimental parameters for sampling methods without a corrector (OC).}\label{tab:oc_ex_details}\vspace{-3mm}
+\centering
+\resizebox{0.7\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Model & Hyper. & Comm. & Enzymes & Grid & QM9 & ZINC250k \\
+\midrule
+& $M$ & 400 & 420 & 350 & 400 & 400 \\
+& $\lambda_1$ & 0.2 & 0.0008 & 0.06 & 1.19 & 2.5 \\
+GDSS-OC-S++ & $\omega_1$ & 0.998 & 1.0 & 1.0 & 1.09 & 1.0 \\
+& $\lambda_2$ & 0 & 0 & 0 & 0 & 0 \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+\midrule
+& $M$ & 280 & 310 & 280 & 240 & 220 \\
+& $\lambda_1$ & 0.02 & 0.0 & 0.02 & 0.1 & 0.025 \\
+HGDM-OC-S++ & $\omega_1$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.07 \\
+& $\lambda_2$ & 0.36 & 0.0 & 0.0 & 0.36 & 0.0 \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & 0.78 & 1.0 \\
+\midrule
+& $M$ & 200 & 400 & 400 & - & - \\
+& $\lambda_1$ & 0.0 & 0.0 & 0.0 & - & - \\
+GSDM-OC-S++ & $\omega_1$ & 1.0 & 1.0 & 1.0 & - & - \\
+& $\lambda_2$ & 0.0 & 0.0 & 0.0 & - & - \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & - & - \\
+\bottomrule
+\end{tabular}}
+\end{table*}
+\begin{table*}[!t]
+\caption{Experimental parameters for sampling methods with a corrector (WC).}\label{tab:wc_ex_details}\vspace{-3mm}
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tabular}{lccccccc}
+\toprule
+Model & Hyper. & Comm. & Enzymes & Grid & QM9 & ZINC250k \\
+\midrule
+& $M$ & 400 & 420 & 350 & 400 & 400 \\
+& $\lambda_1$ & 0.2 & 0.0008 & 0.06 & 1.19 & 2.5 \\
+GDSS-WC-S++ & $\omega_1$ & 0.998 & 1.0 & 1.0 & 1.09 & 1.0 \\
+& $t_c$ & 0.2 & 0.45 & 0.055 & 0.1 & 0.4 \\
+& $\lambda_2$ & 0 & 0 & 0 & 0 & 0 \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+\midrule
+&$M$ & 280 & 200 & 360 & 240 & 220 \\
+& $\lambda_1$ & 0.02 & 0.0 & 0.18 & 0.1 & 0.25 \\
+HGDM-WC-S++ & $\omega_1$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.07 \\
+& $t_c$ & 0.2 & 0.5 & 0.1 & 0.65 & 0.6 \\
+& $\lambda_2$ & 0.36 & 0.0 & 0.0 & 0.0 & 0.0 \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & 1.44 & 0.87 \\
+\midrule
+& $M$ & 200 & 400 & 400 & - & - \\
+& $\lambda_1$ & 0.0 & 0.0 & 0.0 & - & - \\
+GSDM-WC-S++ & $\omega_1$ & 1.0 & 1.0 & 1.0 & - & - \\
+& $t_c$ & 0.05 & 0.70 & 0.45 & - & - \\
+& $\lambda_2$ & 0.0 & 0.0 & 0.0 & - & - \\
+& $\omega_2$ & 1.0 & 1.0 & 1.0 & - & - \\
+\bottomrule
+\end{tabular}}
+\end{table*}
+\section{Sampling algorithm}\label{appendix:C.Added Experiment}
+In this section, we present the sampling algorithm procedure for S++, as shown in Algorithm~\ref{alg:s++}. $\beta_{t}=\beta_{\min}+t(\beta_{\max}-\beta_{\min})$ for $t\in[0,1]$. Additionally, our approach can be naturally integrated into the reverse sampling of various diffusion models without a corrector, greatly improving the generation quality of sampling methods. For methods with a corrector, we can significantly reduce the correction time interval by introducing a truncation time. Specifically, we apply the corrector when the time exceeds $t_c$ further reducing the computational cost.
+\section{Additional experiments}
+\label{appendix:E.Added Experiment}
+To demonstrate the superiority of S++, we select generative models other than diffusion models as baseline models for comparison. GraphVAE~\citep{simonovsky2018graphvae} is a graph generative model based on variational autoencoders; DeepGMG~\citep{li2018learning} is a deep generative model that generates graphs in a sequential, node-by-node manner; GraphAF~\citep{shi2020graphaf} is an autoregressive flow-based model. GraphRNN~\citep{you2018graphrnn} is an autoregressive model using recurrent neural networks to generate graphs; EDP-GNN~\citep{niu2020permutation} is a score-based generative model using energy-based dynamics. GraphEBM~\citep{liu2021graphebm} is an energy-based generative model that generates molecules by minimizing energy through Langevin dynamics, which is categorized as a one-shot generative method. We provide detailed comparative experiments in Tables~\ref{added generic graph results} and \ref{aded molecular graph}, and the results show that our approach significantly outperforms the baseline models and other generative models.
+
+\begin{table}[!t]
+\caption{Additional experiments on generic graph datasets.}
+\label{added generic graph results}\vspace{-3mm}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lcccccccccccc}
+\toprule
+Dataset & \multicolumn{4}{c}{Community-small} & \multicolumn{4}{c}{Enzymes} & \multicolumn{4}{c}{Grid} \\
+Info. & \multicolumn{4}{c}{Synthetic, $12 \leq |V| \leq 20$} & \multicolumn{4}{c}{Real, $10 \leq |V| \leq 125$} & \multicolumn{4}{c}{Synthetic, $100 \leq |V| \leq 400$} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13}
+Method & Deg. & Clus. & Orbit & Avg. & Deg. & Clus. & Orbit & Avg. & Deg. & Clus. & Orbit & Avg. \\
+\midrule
+DeepGMG & 0.220 & 0.950 & 0.400 & 0.523 & - & - & - & - & - & - & - & - \\
+GraphRNN & 0.080 & 0.120 & 0.040 & 0.080 & 0.017 & 0.062 & 0.046 & 0.042 & 0.064 & 0.043 & 0.021 & 0.043 \\
+GraphAF & 0.18 & 0.20 & 0.02 & 0.133 & 1.669 & 1.283 & 0.266 & 1.073 & - & - & - & - \\
+GraphDF & 0.06 & 0.12 & 0.03 & 0.070 & 1.503 & 1.061 & 0.202 & 0.922 & - & - & - & - \\
+GraphVAE & 0.350 & 0.980 & 0.540 & 0.623 & 1.369 & 0.629 & 0.191 & 0.730 & 1.619 & 0.0 & 0.919 & 0.846 \\
+EDP-GNN & 0.053 & 0.144 & 0.026 & 0.074 & 0.023 & 0.268 & 0.082 & 0.124 & 0.455 & 0.238 & 0.328 & 0.340 \\
+\midrule
+GDSS-OC & 0.050 & 0.132 & 0.011 & 0.064 & 0.052 & 0.627 & 0.249 & 0.309 & 0.270 & 0.009 & 0.034 & 0.070 \\
+GDSS-OC-S++ & \textbf{0.021} & \textbf{0.061} & \textbf{0.005} & \textbf{0.029} & \textbf{0.067} & \textbf{0.099} & \textbf{0.007} & \textbf{0.058} & \textbf{0.105} & \textbf{0.004} & \textbf{0.061} & \textbf{0.066} \\
+GDSS-WC & 0.045 & 0.088 & 0.007 & 0.045 & 0.044 & 0.069 & 0.002 & 0.038 & 0.111 & 0.005 & 0.070 & 0.070 \\
+GDSS-WC-S++ & \textbf{0.019} & \textbf{0.062} & \textbf{0.004} & \textbf{0.028} & \textbf{0.031} & \textbf{0.050} & \textbf{0.003} & \textbf{0.028} & \textbf{0.105} & \textbf{0.004} & \textbf{0.061} & \textbf{0.057} \\
+\midrule
+HGDM-OC & 0.065 & 0.119 & 0.024 & 0.069 & 0.125 & 0.625 & 0.371 & 0.374 & 0.181 & 0.019 & 0.112 & 0.104 \\
+HGDM-OC-S++ & \textbf{0.021} & \textbf{0.034} & \textbf{0.005} & \textbf{0.020} & \textbf{0.080} & \textbf{0.500} & \textbf{0.225} & \textbf{0.268} & \textbf{0.023} & \textbf{0.034} & \textbf{0.004} & \textbf{0.020} \\
+HGDM-WC & 0.017 & 0.050 & 0.005 & 0.024 & 0.045 & 0.049 & 0.003 & 0.035 & 0.137 & 0.004 & 0.048 & 0.069 \\
+HGDM-WC-S++ & \textbf{0.021} & \textbf{0.024} & \textbf{0.004} & \textbf{0.016} & \textbf{0.040} & \textbf{0.041} & \textbf{0.005} & \textbf{0.029} & \textbf{0.123} & \textbf{0.003} & \textbf{0.047} & \textbf{0.058} \\
+\midrule
+GSDM-OC & 0.142 & 0.230 & 0.043 & 0.138 & 0.930 & 0.867 & 0.168 & 0.655 & 1.996 & 0.0 & 1.013 & 1.003 \\
+GSDM-OC-S++ & \textbf{0.011} & \textbf{0.016} & \textbf{0.001} & \textbf{0.009} & \textbf{0.012} & \textbf{0.087} & \textbf{0.011} & \textbf{0.037} & \textbf{1.2e-4} & \textbf{0.0} & \textbf{1.2e-4} & \textbf{0.066} \\
+GSDM-WC & 0.011 & 0.016 & 0.001 & 0.009 & 0.013 & 0.088 & 0.013 & 0.038 & 0.002 & 0.0 & 0 & 7.2e-5 \\
+GSDM-WC-S++ & \textbf{0.011} & \textbf{0.016} & \textbf{0.001} & \textbf{0.009} & \textbf{0.011} & \textbf{0.086} & \textbf{0.010} & \textbf{0.036} & \textbf{5.0e-5} & \textbf{0.0} & \textbf{1.1e-5} & \textbf{0.066} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+\begin{table}[!t]
+\caption{Additional experiments on QM9 and ZINC250k datasets.}
+\label{aded molecular graph}
+\vspace{-3mm}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\multirow{2}{*}{Method} & \multicolumn{3}{c}{QM9} & \multicolumn{3}{c}{ZINC250k} \\
+\cmidrule(lr){2-4} \cmidrule(l){5-7}
+ & Val. w/o corr. (\%)$\uparrow$ & NSPDK~MMD $\downarrow$ & FCD $\downarrow$ & Val. w/o corr. (\%)$\uparrow$ & NSPDK MMD $\downarrow$ & FCD $\downarrow$ \\
+\midrule
+GraphAF & 67.00 & 0.020 & 5.268 & 68.00 & 0.044 & 16.289 \\
+GraphDF & 82.67 & 0.063 & 10.816 & 89.03 & 0.176 & 34.202 \\
+MoFlow & 91.36 & 0.017 & 4.467 & 63.11 & 0.046 & 20.931 \\
+EDP-GNN & 47.52 & 0.005 & 2.680 & 82.97 & 0.049 & 16.737 \\
+GraphEBM & 8.22 & 0.030 & 6.143 & 5.29 & 0.212 & 35.471 \\
+\midrule
+GDSS-OC & 73.49 & 0.015 & 4.584 & 41.84 & 0.047 & 20.53 \\
+GDSS-OC-S++ & \textbf{93.74} & \textbf{0.001} & \textbf{1.661} & \textbf{59.50} & \textbf{0.050} & \textbf{16.79} \\
+GDSS-WC & 94.91 & 0.004 & 2.550 & 95.83 & 0.019 & 14.66 \\
+GDSS-WC-S++ & \textbf{93.79} & \textbf{0.001} & \textbf{1.661} & \textbf{93.15} & \textbf{0.012} & \textbf{12.70} \\
+\midrule
+HGDM-OC & 92.22 & 0.005 & 3.164 & 66.47 & 0.033 & 21.38 \\
+HGDM-OC-S++ & \textbf{94.95} & \textbf{0.003} & \textbf{2.512} & \textbf{67.12} & \textbf{0.034} & \textbf{20.79} \\
+HGDM-WC & 98.02 & 0.002 & 2.147 & 93.26 & 0.016 & 17.69 \\
+HGDM-WC-S++ & \textbf{97.03} & \textbf{0.001} & \textbf{2.001} & \textbf{91.03} & \textbf{0.016} & \textbf{16.24} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\section{Insensitivity of $\lambda$}\label{appendix:G.insensitivity of la}
+We emphasize that S++ is largely insensitive to the choice of $\lambda$, as performance improvements are consistently observed across a wide range of $\lambda$ values, as shown in Tables~\ref{tab:16.insensitivity on qm9} and \ref{tab:17.insensitivity on comm}.
+
+\begin{table}[!t]
+\small
+\begin{minipage}{0.48\textwidth}
+\caption{FCD($\downarrow$) on GDSS-OC baseline and QM9 under different parameters $\lambda$ ($\lambda=0$ represents the baseline).}
+\label{tab:16.insensitivity on qm9}\vspace{-3mm}
+\centering
+\begin{tabular}{l@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c}
+\toprule
+$\lambda$ & 0 & 1.17 & 1.18 & 1.19 & 1.20 & 1.21 \\
+\midrule
+FCD &4.583 & 1.768 & 1.756 & 1.754 & 1.761 & 1.762 \\
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\caption{Degree($\downarrow$) on GDSS-OC baseline and Community-small under different parameters $\lambda$ ($\lambda=0$ represents the baseline).}\label{tab:17.insensitivity on comm}\vspace{-3mm}
+\centering
+\begin{tabular}{l@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c}
+\toprule
+$\lambda$ & 0 & 0.18 & 0.19 & 0.20 & 0.21 & 0.22 \\
+\midrule
+Degree & 0.05 & 0.023 & 0.024 & 0.022 & 0.024 & 0.026 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+\section{Two Biases in Image and Graph}\label{appendix:H.two bias}
+Given the existing research on reverse-starting bias and exposure bias in the image domain, this section highlights the key differences between these biases in image and graph data, focusing on three aspects: data scale, data structure, and network performance.
+
+\textbf{1-a Reverse-starting bias in images.} DPM-Fixes~\citep{lin2024common} was the first to identify that traditional noise scheduling strategies fail to ensure the maximum forward perturbation distribution aligns with a standard Gaussian distribution:
+\begin{equation}
+\x_T=0.068265\x_0+0.997667\EPS_T\,.
+\end{equation}
+This shows a slight deviation from the standard Gaussian starting point used in reverse sampling. To address this, DPM-Fixes constrains the forward $\x_T$ to follow the standard Gaussian by adjusting the noise scheduling scale. This approach benefits from large image datasets and robust network performance, which enable accurate noise (or score) predictions even in high-noise states. On the other hand, DPM-Leak~\citep{everaert2024exploiting} estimates the maximum forward perturbation distribution during diffusion based on pixel modeling, using it as the new reverse-starting point for sampling. This strategy capitalizes on the image data structure and scale, which allows pixels to be modeled independently and follow a Gaussian distribution.
+
+\textbf{1-b Reverse-starting bias in graphs.} Unlike image data, where the models can rely on more manageable data scales and network capacities, graph models are hindered by the challenges of accurately predicting noise (or score) from high-noise states. As a result, baseline models tend to adopt a conservative strategy during training, leading to the maximum forward perturbation distribution significantly deviating from a standard Gaussian. While this approach avoids the instability of high-noise states, it introduces considerable reverse-starting bias. Consequently, strategies like DPM-Fixes, which enforce $\x_T$ to follow a standard Gaussian distribution, are not suitable. Given the interdependencies of nodes and edges in graph data and its inherent sparsity, we cannot assume that nodes or edges follow a Gaussian distribution to estimate the maximum forward perturbation. This makes approaches like DPM-Leak equally inappropriate.
+
+\textbf{2-a Exposure bias in images.} In images, exposure bias refers to the mismatch between forward process $\x_t$ and reverse process $\hat{\x}_t$, with differences accumulating throughout sampling, ultimately affecting generation quality. Many current image exposure bias works assume no reverse-starting bias exists, focusing on sampling process bias, as reverse-starting bias in images is indeed quite minimal.
+
+\textbf{2-b Exposure bias in graphs.} Unlike the minor signal leakage seen in image diffusion models, graph diffusion models suffer from significant reverse-starting bias, leading to substantial exposure bias after the initial sampling step. In other words, the exposure bias in graphs is not solely a result of network prediction errors or the accumulation of sampling iterations, but is heavily influenced by the reverse-starting bias. Therefore, effectively addressing graph exposure bias requires first mitigating the reverse-starting bias.
+
+In conclusion, we emphasize that reverse-starting bias is a particularly acute and unique issue in graph diffusion models. While exposure bias also affects graphs, solutions developed for image-based models cannot be directly applied. This work is the first to focus specifically on reverse-starting bias in graph diffusion models, proposing a simple yet effective solution. 
+\section{S++ and existing solutions in images}
+\label{appendix:I.s++ and existing solutions}
+Although there are many solutions to mitigate the exposure bias in current images, these solutions cannot replace S++. In this section, we choose to compare S++ in detail with similar works~\citep{li2024alleviating,ningelucidating}, as they are plug-and-play solutions that do not introduce new components.
+
+TS-DPM~\citep{li2024alleviating} proposes searching an optimal time $s$ during sampling. TS-DPM relies on two fundamental assumptions: (a) image pixels are independent and follow Gaussian distribution, Eq.~(13) in Appendix J of~\cite{li2024alleviating}; (b) sample pixel variance approximates population variance, Eq.~(20) in Appendix J of~\cite{li2024alleviating}. These assumptions are based on large image datasets and a large number of pixels. However, nodes and edges in graphs are highly sparse. Specifically, many graph datasets are small (Community-small, Enzymes, and Grid have fewer than 1000 samples). Both assumptions do not hold for graph data, making TS-DPM inapplicable to graph diffusion models.
+
+ADM-ES\citep{ningelucidating} proposes reducing $s_{\THETA,t}(\cdot)$, originally noise $\bm\epsilon_{\THETA,t}(\cdot)$, during sampling to mitigate exposure bias. However, this approach does not involve the angle of $s_{\THETA,t}(\cdot)$. Our approach addresses this limitation: 
+\begin{equation}
+s_{\THETA,t}(\X_t)=\frac{s_{\THETA,t}(\X_t)+\lambda\bigl(s_{\THETA,t}(\X_t)-s_{\PSI,t}(\X_t)\bigr)}{\omega}\,.
+\end{equation}
+If $\lambda=0$, it is equivalent to ADM-ES. In other words, ADM-ES is a special case of S++, while the score difference $s_{\THETA,t}(\X_t)-s_{\PSI,t}(\X_t)$ provides the direction information. 
+
+For fair comparison with ADM-ES, we introduce $\lambda(s_{\THETA,t}(\X_t)-s_{\PSI,t}(\X_t))$ for each magnitude factor $\omega$, with $\lambda$ uniformly set to 0.5, to examine whether $s_{\THETA,t}(\X_t)-s_{\PSI,t}(\X_t)$ brings improvements over ADM-ES. Tables~\ref{tab:14.oc_es_s++} and \ref{tab:15.wc_es_s++} demonstrate that the angle information in S++ leads to significant gains.
+\begin{table}[!t]
+\small
+\begin{minipage}{0.48\textwidth}
+\caption{FCD($\downarrow$) on QM9 without a corrector.}
+\label{tab:14.oc_es_s++}\vspace{-3mm}
+\centering
+\begin{tabular}{l@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c}
+\toprule
+$\omega$ & 0.7 & 0.8 & 0.9 & 1.0 & 1.1 \\
+\midrule
+GDSS-OC-ES & 3.57 & 3.417 & 3.768 & 4.584 & 5.517 \\
+GDSS-WC-S++ & \textbf{2.94} & \textbf{2.814} & \textbf{3.198} & \textbf{4.187} & \textbf{5.201} \\
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\caption{FCD($\downarrow$) on QM9 with a corrector.}
+\label{tab:15.wc_es_s++}\vspace{-3mm}
+\centering
+\begin{tabular}{l@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{\hspace{4pt}}c}
+\toprule
+$\omega$ & 0.9 & 1.0 & 1.1 & 1.2 & 1.3 \\
+\midrule
+GDSS-WC-ES & 2.809 & 2.552 & 2.319 & 2.301 & 2.542 \\
+GDSS-WC-S++ & \textbf{2.321} & \textbf{2.034} & \textbf{1.858} & \textbf{1.852} & \textbf{2.152} \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+\end{document}

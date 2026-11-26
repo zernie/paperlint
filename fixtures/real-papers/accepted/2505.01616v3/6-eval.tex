@@ -1,0 +1,170 @@
+\section{Evaluation}
+\label{sec:eval}
+Our \sys prototype consists of 9K lines of Rust, 1.8K lines of C, and 500 lines of C++: 1.8K lines of C and 1K lines of Rust for \sys NCCL and CUDA Runtime, 3.6K lines of Rust for the flow-level network simulator, 3.4K lines of Rust for the event queue, 1K lines of Rust for the computation simulator, and 500 lines of C++ for \sys Tracer.
+
+We evaluate \sys on three aspects. First, we test \sys's generality in supporting different ML frameworks, and their runtime behaviors. 
+Second, we test a set of standard metrics for simulators, such as accuracy, simulation speed and scalability. Finally, we do a case study on selective activation recomputation \cite{korthikanti2023ac} to show \sys's capability on estimating ML system performance and GPU memory usage for features that existing static workload simulators have not fully reimplemented.
+
+\subsection{Generalizability}
+\label{sec:generalizability}
+
+\parab{Effort for supporting ML frameworks.} \sys currently support three LLM training frameworks: Megatron~\cite{shoeybi2019megatron}, DeepSpeed~\cite{rasley2020deepspeed} and TorchTitan~\cite{liang2025torchtitan}.
+Users can simply \texttt{pip install} these frameworks from official PyPI without building from source or using a different package index. All the runtime patches are applied when users \texttt{import} our helper library. Specifically, the size of runtime patches of these three frameworks are: \emph{Megatron}: no patch needed. \emph{DeepSpeed}: 4 lines of code where a NCCL setup validation is disabled. \emph{TorchTitan}: 1 line of code where \texttt{time.perf\_counter} is replaced with \sys timer.
+
+We believe supporting other PyTorch based frameworks in \sys should also require minimal effort. Further, \sys does not depend on model architecture. Our evaluation results focus on LLMs. See \autoref{sec:nonllm} for our evaluations using non-LLM workloads.
+
+\parab{Modifications to the training script.} For every training script, \sys Tracer needs to be explicitly enabled at the beginning and disabled at the end. This, together with importing of our helper library, adds about 6 lines of extra code per training script.
+
+In addition, when running Megatron \cite{shoeybi2019megatron} with \sys, gradient clipping must be disabled. This feature performs fallible CPU operation (specifically, square root) of data copied from GPU, which could lead to math errors as GPU memory value is effectively random in \sys.
+
+\parab{User experience of \sys.}
+With \sys, users are able to tune their ML system performance as if they are actually experimenting with a real GPU cluster. \sys natively supports customized printing and logging mechanisms embedded in the ML systems.
+
+The top part of \autoref{fig:measurement-code} shows the performance measurement and logging code in TorchTitan~\cite{liang2025torchtitan}, which represents how TorchTitan developers want to evaluate performance. In other existing simulators, printing these metrics would require a reimplementation of this code in post-simulation analysis. In contrast, \sys allows this code to run as is, and users can see results in exactly the same format as if they actually run the ML system on a real GPU cluster. The bottom part of \autoref{fig:measurement-code} shows the console output of running TorchTitan on top of \sys. To the best of our knowledge, \sys is the only method that has this type of generalizability. 
+
+After developers update either the ML system code (\eg, changing parallelization strategies for LLM training), the model or the performance measurement and logging code, \sys can immediately re-run and produce updated console output. For other existing simulators, the developer may have to craft extra configurations, collect additional traces or change post-simulation analysis---all of which significantly slow down the development cycle.
+
+\sys also supports feature-rich visualization via Perfetto UI~\cite{perfetto} to help developers tune their system. \autoref{fig:chrome-trace} shows a visualized simulation trace of TorchTitan exported by \sys.
+
+\begin{figure}[t]
+\begin{minted}[fontsize=\footnotesize]{python}
+time_delta = timer() - time_last_log
+# tokens per second, abbr. as wps by convention
+wps = ntokens_since_last_log / (
+    time_delta * parallel_dims.model_parallel_size
+)
+# model FLOPS utilization
+mfu = 100 * num_flop_per_token * wps / gpu_peak_flops
+time_end_to_end = \
+    time_delta / job_config.metrics.log_freq
+time_data_loading = np.mean(data_loading_times)
+metrics = {
+    "wps": wps,
+    "mfu(%)": mfu,
+    "time_metrics/end_to_end(s)": time_end_to_end,
+    "time_metrics/data_loading(s)": time_data_loading,
+    ...
+}
+metric_logger.log(metrics, step=train_state.step)
+logger.info(
+    f"step: {train_state.step:2}  "
+    f"loss: {global_avg_loss:7.4f}  "
+    f"memory: {gpu_mem_stats.max_reserved_gib:5.2f}GiB"
+    f"({gpu_mem_stats.max_reserved_pct:.2f}%)  "
+    f"wps: {round(wps):,}  "
+    f"mfu: {mfu:.2f}%{color.reset}"
+    ...
+)
+\end{minted}
+\subfloat{
+    \centering
+    \includegraphics[width=.48\textwidth]{figures/torchtitan_log.png}
+}
+\caption{Performance estimation code in TorchTitan~\cite{torchtitantrain} and the console output of running TorchTitan on top of \sys. The console output is exactly the same as if TorchTitan runs on a real GPU cluster except losses.}
+\vspace{-1mm}
+\label{fig:measurement-code}
+\end{figure}
+
+\parab{Computation/communication overlap and dynamic memory behaviors in ML systems.} \sys naturally captures computation/communication overlap and other runtime behaviors in ML systems. \autoref{fig:chrome-trace} shows the timeline of \sys executing TorchTitan, where x-axis is simulated time. As shown in the figure, the NCCL operations (communication) overlap with matrix multiplication (computation).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.48\textwidth]{figures/chrome_trace.png}
+\caption{Perfetto~\cite{perfetto} trace exported by \sys.}
+\vspace{-3mm}
+\label{fig:chrome-trace}
+\end{figure}
+
+\sys can also naturally capture dynamic behaviors of the PyTorch caching allocator as it tracks memory management on CUDA Runtime level.
+Note that ML systems usually cannot utilize all of GPU memory due to memory fragmentation. \sys can precisely reflect the fragmentation and dynamic behaviors of the PyTorch caching allocator, leaving the only imprecision under CUDA Runtime, i.e., the memory management in NVIDIA GPU driver.
+
+\subsection{Simulation Accuracy}
+
+\begin{figure*}[t]
+    \centering
+    \vspace{1mm}
+    \includegraphics[width=.96\textwidth]{figures/accuracy.pdf}
+    \caption{\textbf{Accuracy and speed of \sys (large scale):} Training throughput reported by TorchTitan~\cite{liang2025torchtitan} using FSDP2, simulation results and simulation speed of \sys on the testbeds. The error bars show 95\% confidence interval. ``ac'' means activation checkpointing in TorchTitan~\cite{liang2025torchtitan}. 
+    }
+    \label{fig:eval-accuracy}
+\end{figure*}
+
+\parab{Our hardware testbed.} We run \sys on two on-premise GPU servers, depending on which server has the closer hardware to the performance report we are comparing with.
+One server is equipped with 2 AMD EPYC 9355 CPUs and 4 NVIDIA H200 NVL GPUs connected via NVLink.
+We use all four GPUs to collect groud truth performance numbers. When we run \sys, we restrict the GPU usage to a single GPU. We use \textit{H200 testbed} to reference this testbed.
+Another server is equipped with 2 Intel Xeon Gold 6348 CPUs and a single NVIDIA A100 40G GPU.
+We use \textit{A100 testbed} to reference this testbed.  
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.47\textwidth]{figures/small_scale_acc.pdf}
+    \caption{\textbf{Accuracy of \sys (small scale):} Megatron training throughput of Llama2 7B on H200 testbed with or without optimizer, \sys simulation results with or without optimizer, and SimAI simulation results. The error bars show 95\% confidence interval. Note that SimAI currently does not include optimizer in its simulation.}
+    \label{fig:eval-accuracy-small}
+\end{figure}
+
+
+\parab{Comparing with public performance report as ground truth.} TorchTitan provides a comprehensive benchmark results~\cite{torchtitana100,liang2025torchtitan} utilizing up to 128 GPUs with a combination of FSDP2 and activation checkpointing. \autoref{fig:eval-accuracy} shows the accuracy of \sys to simulate TorchTitan's benchmark.
+The average error is 2.9\% with the maximum error of 8.5\% on Llama2 13B.
+Note that due to the limitation of accessible hardware, H100 reports~\cite{liang2025torchtitan} are evaluated on the H200 testbed, and A100-80G reports~\cite{torchtitana100} are evaluated on the A100 testbed with a single A100-40G GPU. The difference of computing power (FLOPS) between the reported GPUs and testbed GPUs is minor. The main difference is memory capacity, which is configurable in \sys and is set to the corresponding amount (80GB) in both experiments.
+
+\parab{Comparing with testbed training performance as ground truth.} \autoref{fig:eval-accuracy-small} shows the accuracy of \sys using Llama2 7B training with different parallelization strategies and batch sizes. Compared with the ground truth, the average error of \sys is 3.7\% with the maximum error of 5.3\% when tensor parallel size is 4 and micro batch size is 1. We hypothesize that SimAI’s error is larger than expected because a core component, SimCCL, though open-sourced, had not yet been integrated into SimAI’s open-sourced mocked frameworks at the time of the experiment.
+
+
+\subsection{Simulation Speed and Scalability}
+\label{sec:eval-scalability}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.46\textwidth]{figures/large_scale_speed.pdf}
+    \caption{\textbf{Speed of \sys:} \sys simulation time of Llama2 7B training (Megatron, TP=8) using 32 CPU cores on H200 testbed.}
+    \label{fig:eval-speed-large}
+\end{figure}
+
+\parab{Simulation speed.} \autoref{fig:eval-accuracy} also shows the simulation speed of \sys on TorchTitan's benchmark, which demonstrates \sys's ability to quickly evaluate a large scale workload. For example, Llama3 8B training with 128 GPUs takes around 15 seconds per iteration to simulate using \sys, which means the user can easily estimate the training throughput of this workload in minutes.
+
+
+\autoref{tbl:eval-speed-small} shows the simulation speed of \sys in an actual training workload on the H200 testbed. The simulation time remains at the same level as the actual training time, and is significantly shorter than SimAI. This difference is mainly because \sys uses a flow-level network simulator, while SimAI uses a packet-level network simulator.
+
+\autoref{fig:eval-speed-large} shows the \sys's simulation speed on Llama2 7B training using Megatron with different numbers of GPUs. The training uses data parallelism over tensor parallelism, where tensor parallel size is fixed to 8. The batch size per GPU is fixed to 1. \autoref{fig:eval-speed-large} shows that the simulation time increases linearly with respect to the workload scale when the number of GPUs is greater than 100, which is expected given fixed 32 CPU cores. If we set a limit of 1 minute per iteration, \sys can simulate approximately 240 GPUs under this setting. Note that \sys simulator is still single-threaded with one dedicated CPU core, and Megatron containers are placed on the other 31 cores.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{cccccc}
+\toprule
+DP & TP & batch & Testbed & \sys & SimAI \\
+\midrule
+1 & 4 & 1 & 0.30s & 0.91s & 56.9s \\
+1 & 4 & 2 & 0.54s & 0.93s & 63.4s \\
+2 & 2 & 1 & 0.52s & 0.96s & 117.7s \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Speed of \sys (small scale):} Average time per iteration of Llama2 7B training using Megatron on H200 testbed; Average \sys running time per iteration and SimAI running time for one iteration. Both \sys and SimAI can use at most 16 cores. Note that SimAI uses packet-level network simulation while \sys uses flow-level network simulation.}
+\vspace{-3mm}
+\label{tbl:eval-speed-small}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.46\textwidth]{figures/memory_usage.pdf}
+    \caption{\textbf{CPU memory usage:} Peak CPU memory usage of Llama2 7B training simulation in DeepSpeed with or without model parameter sharing.}
+    \vspace{-2mm}
+    \label{fig:eval-memory-usage}
+\end{figure}
+
+\parab{CPU memory usage.} Sometimes users may choose to load or initialize a full model instead of a corresponding shard on each rank, especially when using a framework like DeepSpeed~\cite{rasley2020deepspeed}, which transparently and automatically shard all models. In this case, as discussed in \autoref{sec:scalability}, \sys implemented model parameter sharing on CPU memory to overcome scalability limitation. \autoref{fig:eval-memory-usage} shows the peak memory usage over different simulation scales: Without parameter sharing, 256GB of CPU memory can only support 9 GPUs, while 64 GPUs only need less than 64GB of memory with parameter sharing. This greatly improves the scalability of \sys without forcing users to change the training script.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/case_study.pdf}
+    \caption{\textbf{Evaluating memory saving techniques:} \sys estimated peak memory usage per GPU and throughput of Llama2 training with different memory saving techniques (64 H100 GPUs, Megatron, DP=8, TP=8). A single number $n$ denotes the number of batches per GPU with activation recomputation. A pair in the form $m \times n$ denotes $n$ batches per GPU with $m$ gradient accumulation steps.}
+    \vspace{-4mm}
+    \label{fig:case_study}
+\end{figure*}
+
+\subsection{Case Study: Activation Recomputation}
+
+Selective activation recomputation~\cite{korthikanti2023ac} is a technique to save GPU memory in large scale training by discarding certain intermediate activations in the forward pass and recomputing them in the backward pass. It is widely supported in many ML frameworks like Megatron~\cite{shoeybi2019megatron}, DeepSpeed~\cite{rasley2020deepspeed} and TorchTitan~\cite{liang2025torchtitan}. However, to the best of our knowledge, no other existing simulator can simultaneously analyze its effect on throughput and memory usage, because the existing simulators have not yet fully reimplemented this feature. Meanwhile, \sys can natively support this feature without implementing any specific logic related to selective activation recomputation.
+
+\autoref{fig:case_study} shows the simulated peak memory usage and throughput of Llama2 training on 64 H100 GPUs, comparing activation recomputation with normal training with gradient accumulation---a more commonly used technique to achieve larger global batch size without increasing micro batch size.
+Our simulation results largely align with the results in the original selective activation recomputation paper~\cite{korthikanti2023ac}: \textit{selective activation recomputation greatly reduces memory usage without introducing significant throughput overheads.} This experiment has shown that \sys can be used to assess the performance of new training optimizations without any redundant reimplementation effort for simulator developers.

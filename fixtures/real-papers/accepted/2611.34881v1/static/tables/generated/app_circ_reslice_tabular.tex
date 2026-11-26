@@ -1,0 +1,30 @@
+\begin{tabular}{l ccc ccc}
+\toprule
+& \multicolumn{3}{c}{Split by COCO NPMI} & \multicolumn{3}{c}{Split by Objects365 NPMI} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Augmentation & Typ.\,$\uparrow$ & Atyp.\,$\uparrow$ & $\Delta^{\text{T-A}}\downarrow$ & Typ.\,$\uparrow$ & Atyp.\,$\uparrow$ & $\Delta^{\text{T-A}}\downarrow$ \\
+\midrule
+\multicolumn{7}{l}{\emph{Co-DINO R-50 (AP)}} \\
+No aug & 44.2 & 35.5 & \underline{8.7} & 44.3 & 36.2 & 8.2 \\
+Std. & \underline{53.2} & 44.0 & 9.2 & \textbf{52.3} & 44.2 & 8.1 \\
+SCP & \underline{53.2} & \underline{44.2} & 9.0 & 51.5 & \underline{44.4} & \underline{7.1} \\
+XPaste & 52.0 & 43.0 & 9.0 & 50.7 & 43.1 & 7.6 \\
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & \textbf{54.0} & \textbf{45.5} & \textbf{8.5} & \underline{52.2} & \textbf{45.9} & \textbf{6.3} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & 52.1 & 43.3 & 8.8 & 50.9 & 43.8 & \underline{7.1} \\
+\midrule
+\multicolumn{7}{l}{\emph{Grounding DINO Swin-B (AP)}} \\
+Zero Shot & 57.7 & 51.4 & 6.3 & 56.3 & 50.9 & 5.4 \\
+SCP & 59.6 & 53.4 & 6.1 & 58.3 & 53.2 & 5.1 \\
+XPaste & \underline{59.7} & \textbf{54.1} & \textbf{5.6} & \textbf{58.6} & \textbf{53.6} & \underline{4.9} \\
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & \textbf{59.8} & 53.6 & 6.2 & \underline{58.5} & \underline{53.3} & 5.1 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \underline{59.7} & \underline{53.7} & \underline{6.0} & 58.4 & \textbf{53.6} & \textbf{4.8} \\
+\midrule
+\multicolumn{7}{l}{\emph{DINOv3 ViT-B/16 (F1$_{\text{micro}}$)}} \\
+No aug & 77.8 & 70.1 & 7.7 & 76.7 & 72.9 & 3.8 \\
+Std. & 79.8 & 74.3 & 5.5 & 79.8 & 76.1 & 3.7 \\
+SCP & 78.8 & 75.1 & \textbf{3.7} & 79.3 & 76.5 & 2.8 \\
+XPaste & \underline{80.2} & \underline{76.1} & 4.1 & \underline{80.0} & \underline{77.8} & \textbf{2.2} \\
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 79.0 & 75.0 & 4.0 & 79.1 & 76.8 & \underline{2.3} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{80.6} & \textbf{76.8} & \underline{3.9} & \textbf{80.6} & \textbf{78.0} & 2.5 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,250 @@
+% =====================================================================
+% APPENDIX
+% =====================================================================
+
+\section{Full training details}
+\label{app:training}
+
+\subsection{Shared CNN setup (SGD and SGLD comparison)}
+
+\paragraph{Architecture.}
+A ``$k$-width'' CNN: 4 convolutional blocks (channels $3 \to k \to 2k \to 4k
+\to 8k$), each block consisting of a $3\times 3$ convolution (padding 1),
+group normalization (one group), ReLU, and max pool with strides $[1, 2, 2, 8]$, so a
+$32\times 32$ input collapses to $1\times 1$ after the four pools. A final
+linear head maps $8k \to 10$. Models are trained from scratch with random
+initialization; no pretraining and no data augmentation.
+
+\paragraph{Dataset.}
+CIFAR-10 with pixels rescaled to $[0,1]$ and standardized per-channel
+using train-set mean and standard deviation. The first $n_{\mathrm{train}}
+= 50{,}000$ images form the training set; the standard $10{,}000$-image
+test images are unchanged. Labels are corrupted by replacing each label
+with a uniformly random class with probability equal to the target noise
+level, using a fixed RNG (\texttt{np.random.RandomState(seed=0)}) so that
+the corruption pattern is identical across seeds and widths.
+
+\paragraph{Optimization.}
+SGD with no momentum and no weight decay; cross-entropy loss on the noisy
+labels; fp32 throughout with TF32 disabled. Learning rate follows the
+schedule
+\[
+\mathrm{lr}(t) \;=\; \mathrm{lr}_0 \,/\, (1 + t/T_{\mathrm{decay}})^{0.55},
+\]
+with $\mathrm{lr}_0 = 0.1$ and $T_{\mathrm{decay}} = 512$.
+Minibatches of 128 examples are sampled uniformly with replacement.
+
+\paragraph{Gaussian-prior SGLD.}
+Every trainable parameter has an independent Gaussian prior. Convolutional
+weights have mean zero and variance $2/\mathrm{fan\_in}$; linear weights
+have mean zero and variance $1/\mathrm{fan\_in}$; biases have mean zero and
+variance $0.25$; group-normalization scales have mean one and variance
+$0.25$. For mean minibatch cross-entropy $\ell_B$, the update is
+\[
+\theta_{t+1}=\theta_t-\mathrm{lr}(t)
+\left[\nabla\ell_B(\theta_t)-\frac{1}{n}\nabla\log\pi(\theta_t)\right]
++\sqrt{\frac{2\,\mathrm{lr}(t)}{n}}\,\xi_t,\qquad \xi_t\sim N(0,I).
+\]
+This is the temperature-one SGLD update \citep{welling2011sgld}, with
+posterior target proportional to the likelihood times the stated prior.
+Group normalization makes each prediction independent of the other
+examples in its minibatch.
+
+\paragraph{Per-seed protocol.}
+Each seed receives its own \texttt{torch.manual\_seed(seed)} for weight
+initialization and a CUDA \texttt{Generator(seed+123456)} for batch
+sampling. Inputs and (corrupted) labels are identical across seeds; only
+model initialization, minibatch order, and SGLD noise vary. For each (width $k$, seed)
+pair we save the post-training softmax probabilities on the test set,
+along with train cross-entropy and 0/1 error against the noisy training
+labels, test cross-entropy against \emph{noisy} test labels (corrupted
+with the same probability as the training labels), and test 0/1 error
+against the \emph{clean} test labels. Test corruption uses
+\texttt{np.random.RandomState(seed=12345)}, independently of training
+corruption. SGLD discards the first $100{,}000$ steps and retains
+predictive probabilities every $10{,}000$ steps thereafter, giving 10
+draws per chain. Within-chain averages weight each retained draw by the
+sum of step sizes since the preceding retained draw (or burn-in endpoint);
+the final ensemble weights the eight chains equally. SGD predictions use
+the final iterate. Log-loss evaluation floors assigned probabilities at
+$10^{-12}$; the largest clipped fraction across widths is $0.504\%$ for
+20\% noise and $0.223\%$ for 100\% noise, in the individual SGD predictions.
+
+\paragraph{Test labels: clean vs.\ noisy.}
+We use noisy test labels for cross-entropy and clean test labels for 0/1
+error. For 0/1 error, expected noisy loss is an affine function of the
+clean loss: writing the noise level as $\eta\in[0,1]$ and the number of
+classes as $K=10$, for any classifier $\hat Y(X)$
+\begin{equation}
+\mathbb{E}_{\widetilde{Y}\mid Y}\!\left[\mathbb{1}\{\hat Y(X) \ne \widetilde{Y}\}\right]
+\;=\; (1-\eta)\,\mathbb{1}\{\hat Y(X) \ne Y\}
+\;+\; \eta\cdot\frac{K-1}{K},
+\end{equation}
+which is strictly-increasing affine in the clean 0/1 loss whenever
+$\eta<1$, so the curve shape (peak and descent) is identical under either
+choice up to an affine transformation. We use the clean 0/1 error for
+interpretability since 0/1 is reported for reference rather than as a core
+theoretical metric. For cross-entropy, by contrast, no such relation
+holds:
+\begin{equation}
+\mathbb{E}_{\widetilde{Y}\mid Y}\!\left[-\log q(\widetilde{Y}\mid X)\right]
+\;=\; (1-\eta)\,\bigl(-\log q(Y\mid X)\bigr)
+\;-\; \frac{\eta}{K}\sum_{c=1}^{K} \log q(c\mid X),
+\end{equation}
+whose second term depends on the full predictive distribution rather
+than only on $q(Y\mid X)$, so noisy cross-entropy is not a monotonic
+function of clean cross-entropy. We therefore evaluate cross-entropy on
+the noisy test labels, which are the relevant labels for the data
+distribution $P^*$ in our decomposition.
+
+\subsection{CIFAR-10 experiments}
+
+\paragraph{20\% noise.}
+Used in Figures~\ref{fig:ensemble-collapse} (Right), \ref{fig:ensemble}
+(top row).
+$n_{\mathrm{train}} = 50{,}000$, label noise $= 20\%$;
+widths $k \in \{1, 2, 3, 4, 5, 6, 8, 10, 14, 20, 32, 48, 64\}$;
+batch size $128$; $200{,}000$ gradient steps;
+$K=8$ SGD seeds and $K=8$ SGLD chains per width;
+\texttt{torch.compile} enabled.
+
+\paragraph{100\% noise.}
+Used in Figure~\ref{fig:ensemble} (bottom row).
+$n_{\mathrm{train}} = 50{,}000$, label noise $= 100\%$ (all labels random);
+widths $k \in \{1, 2, 3, 4, 5, 6, 8, 10, 14, 20, 32, 48, 64, 96, 128\}$.
+All other settings as in the 20\% noise experiment.
+
+\paragraph{SGD ensembling.}
+Figure~\ref{fig:gap-vs-seeds} uses archived SGD predictions from 64 seeds
+per width under 20\% noise and 16 under 100\% noise. The architecture is
+as above with batch normalization in place of group normalization;
+training and test inputs are standardized separately. SGD has no momentum
+or weight decay and runs for $200{,}000$ steps with batch size 128 and
+$\mathrm{lr}(t)=0.1/\sqrt{1+\lfloor t/512\rfloor}$.
+Minibatches follow shuffled passes through the training set, with each
+seed used for both initialization and the CUDA shuffling generator.
+Widths are as above, with $\{192,256,384\}$ additionally included under
+100\% noise. Label corruption and test metrics are as above. Ensembles
+average the final-iterate class probabilities across seeds.
+
+\subsection{Random forests on MNIST}
+
+\paragraph{Dataset.}
+MNIST with pixels divided by $255$ (range $[0,1]$); the official
+$60{,}000$-train / $10{,}000$-test split is used. We uniformly subsample
+$n = 10{,}000$ training images without replacement (RNG seed $42$) and
+evaluate on the full $10{,}000$-image test set. Targets are one-hot
+encoded over $K = 10$ classes.
+
+\paragraph{Model.}
+We use \texttt{sklearn.ensemble.RandomForestRegressor} with
+\texttt{bootstrap=False} and \texttt{max\_features} $= \lfloor\sqrt{784}\rfloor = 28$.
+The train and test curves use the archived single-forest results.
+
+\paragraph{Two-phase complexity sweep.}
+Along the $x$-axis $N^{\mathrm{max}}_{\mathrm{leaf}} / N_{\mathrm{tree}}$:
+Phase~1 fixes $N_{\mathrm{tree}} = 1$ and varies
+$N^{\mathrm{max}}_{\mathrm{leaf}}$ from small values up to $n=10^4$
+(passing through the interpolation threshold); Phase~2 fixes
+$N^{\mathrm{max}}_{\mathrm{leaf}}$ at the interpolation threshold and
+varies $N_{\mathrm{tree}} \in \{2, 3, 5, 7, 10, 12, 15, 20\}$. We run two
+versions: one with the clean MNIST labels (Phase~2 at
+$N^{\mathrm{max}}_{\mathrm{leaf}}=2000$, just past the empirical
+interpolation point), and one with $100\%$ random labels (Phase~2 at
+$N^{\mathrm{max}}_{\mathrm{leaf}}=n=10{,}000$, since fully fitting random
+labels requires one leaf per training point).
+
+\paragraph{BART comparison.}
+The comparison uses a sum of $m$ regression trees, each capped at $L$
+leaves, with one-hot Gaussian regression variance $\sigma^2=0.1$ and
+independent Gaussian leaf values of variance $0.0625/m$ and mean zero.
+The split probability is $0.5$ at every depth, with uniform feature and
+available-threshold proposals. Each of 16 chains uses 3,000 burn-in
+sweeps and retains 25 draws, one every 120 sweeps; the number of structure
+moves per tree per sweep is
+$\max(1,\mathrm{round}((30L+3000)/3000))$.
+The BART curve averages regression outputs across draws and chains, then
+clips and normalizes the ten scores. This transformation is not the
+categorical posterior predictive of the Gaussian regression model.
+
+\paragraph{Metrics.}
+We report squared loss (used only to identify the interpolation
+threshold as the smallest $x$-value at which the average train squared
+loss first falls below $10^{-4}$), zero-one loss, and cross-entropy.
+Cross-entropy is computed on the row-renormalized, $\varepsilon$-clipped
+one-hot-mean prediction with $\varepsilon = 10^{-12}$, ensuring a proper
+probability vector.
+
+\section{Compute resources}
+\label{app:compute}
+
+The CNN reruns used four AWS Spot instances, each with eight NVIDIA H100
+80\,GB GPUs and a 200\,GB root volume. The 448 main runs and 48 sampling
+checks used approximately 145 allocated H100 GPU-hours, including
+provisioning and shutdown. Recorded training times were 6.9--62.6 minutes
+per main run and 14.5--121.6 minutes per sampling check.
+The archived forest and BART experiments ran on CPU; their hardware and
+runtime details were not reconstructed. Hardware and runtime details for
+the archived SGD runs in Figure~\ref{fig:gap-vs-seeds} were also not
+reconstructed. These figures also exclude earlier exploratory runs.
+
+\section{Notation and empirical quantities}
+\label{app:interpretation}
+
+\begin{center}
+\begin{tabular}{lp{0.68\linewidth}}
+\toprule
+Quantity & Interpretation and measurement \\
+\midrule
+$L_n(P^*)$ & Expected plug-in test log-loss; estimated by the mean SGD test loss. \\
+$Q^\pi_{n+1}$ & Bayes posterior predictive under the stated prior; approximated by SGLD. \\
+(I) & Change in plug-in risk from distribution shift; zero under uniform random labels. \\
+(II), (II') & Minimax risk and prior cost; not estimated in the CNN experiments. \\
+(III) & Worst-case MLE-vs-Bayes risk difference; not directly estimated. \\
+Empirical gap & SGD test loss minus SGLD ensemble test loss; the expectation lower bound requires unbiased posterior prediction. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Sampling checks and ensemble control}
+\label{app:sampling}
+
+We run four seeds at widths $\{8,14,64\}$ under 20\% noise and
+$\{10,20,128\}$ under 100\% noise. The longer-run check uses 400,000
+steps, discards 200,000, and retains a draw every 20,000 steps. The
+smaller-step check uses 400,000 steps with
+$\mathrm{lr}(t)=0.05/(1+t/1024)^{0.55}$, discards 200,000 steps, and
+retains a draw every 20,000 steps, matching the main run's effective
+integration time. Both comparisons use the same four seeds as their
+200,000-step reference.
+
+The largest absolute change in ensemble log-loss is at most $0.0186$ nats under
+20\% noise and $0.000319$ nats under 100\% noise. Mean predictive total
+variation from the reference ranges from $0.065$ to $0.117$ and from
+$0.008$ to $0.018$, respectively. The qualitative loss comparison is
+preserved, but predictive differences and retained-window drift remain;
+these checks do not establish convergence.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/sampling_checks.pdf}
+  \caption{CIFAR-10 with 20\% label noise (top) and 100\% label noise
+  (bottom). Each ensemble uses the same four seeds and 10 retained draws
+  per chain. \textbf{Left:} Ensemble test cross-entropy for the main run,
+  longer run, and smaller-step run. \textbf{Right:} Mean predictive total
+  variation from the main-run ensemble at the same width.}
+  \label{fig:sampling-checks}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/ensemble_comparison.pdf}
+  \caption{CIFAR-10 with 100\% label noise (top) and 20\% label noise
+  (bottom), with $K=8$ seeds or chains per width.
+  \textbf{Left:} Per-seed SGD test cross-entropy (orange; mean over seeds,
+  band $\pm 1$ s.d.), the probability-averaged SGD ensemble (blue, dotted),
+  and the SGLD ensemble (green, dashed).
+  \textbf{Right:} The per-seed SGD mean minus each ensemble's test
+  cross-entropy at the same width.}
+  \label{fig:ensemble-control}
+\end{figure}

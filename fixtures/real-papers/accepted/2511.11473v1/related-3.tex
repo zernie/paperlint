@@ -1,0 +1,37 @@
+
+\section{Related work}
+
+
+
+\noindent\textbf{Conversational dynamics.} 
+Understanding multi-party conversation structure has long been a focus in dialogue systems and speech processing. Prior work has explored speech recognition~\cite{asr4conversation}, speaker diarization~\cite{diarization4conversation}, and speech-driven question answering~\cite{qa4conversation}, often under idealized conditions without interfering speakers. Dialogue-level sentiment analysis and discourse segmentation have also been explored in clean settings~\cite{sa4conversation, sdu4conversation}.
+
+Turn-taking is a central feature of conversational dynamics~\cite{frontiers}, and has been studied using corpus-based models~\cite{turntake1, turntake2, turntake3} that identify patterns such as alternating speech, pauses, and backchannels. Recent approaches model turn-taking directly~\cite{turn_model,  turn_predict,nguyen-etal-2025-spirit}, including listener behavior prediction in dyadic settings~\cite{9879511}.
+
+
+Most relevant to our task is Target Conversation Extraction (TCE)~\cite{tce}, which uses turn-taking cues to extract a target conversation. Our work differs in three key aspects: (1) TCE operates offline and requires future context, making it unsuitable for real-time use; (2) it relies on explicit speaker embeddings, while we use self-speech extracted from egocentric binaural audio as a natural anchor; and (3) it uses monaural recordings, whereas we focus on realistic, spatialized egocentric audio from wearable devices.
+
+
+
+
+
+
+ 
+\vskip 0.02in\noindent{\bf Audiovisual speech understanding.}   Our work intersects with research in Active Speaker Detection (ASD) and Active Speaker Localization (ASL). ASD systems identify who is speaking using audio-visual correlations or facial features~\cite{1544886}, while ASL  focuses on spatial localization \cite{8578556, 9879100, easycom}. Recent work in Selective Auditory Attention Localization extends this to inferring whom the user is attending to, using egocentric video and audio~\cite{10203787, 10447323}.
+
+Efforts in egocentric video understanding have explored detecting social engagement~\cite{6247805} and speaker attention~\cite{ego4d}. For instance, the Ego4D benchmark includes a ``Talking to Me'' task focused on identifying who is addressing the camera wearer. However, these tasks typically stop at detection. In contrast, we go further: identifying, separating, and enhancing all speakers engaged with the wearer, in real time and on-device, under real-world constraints.
+
+
+
+\vskip 0.02in\noindent{\bf Auditory attention decoding.}  
+ Research in this domain  attempts to infer the target speaker by correlating brain activity (e.g., EEG or fNIRS) with competing audio streams~\cite{aad1, Choudhari2024.02.05.579018,aad2}. While promising, these systems lack real-time deployment capabilities and require bulky or invasive hardware. Even with miniaturized in-ear EEG sensors~\cite{cEEGrid,berkeleyearable}, challenges remain in noisy, real-world settings with multiple speakers~\cite{separationeeg}. In contrast, our work explores an dialog-based approach that aligns better with practical hearing assistance, leveraging self-speech as an implicit signal of attention and engagement.
+
+
+\vskip 0.02in\noindent{\bf Proactive assistants.} 
+ Prior work has explored proactive interaction in task planning~\cite{zhang-etal-2024-ask}, user modeling~\cite{lu2024proactiveagentshiftingllm}, and conversational guidance~\cite{llamapie}. However, these systems focus on information-seeking or planning tasks, which are complementary to our task.
+
+
+\vskip 0.02in\noindent{\bf Augmented hearing.} 
+Contemporary hearing systems support  selection of target sound sources, e.g., a speaker or sound class, via  spatial filtering or manual enrollment~\cite{semantichearing, tsh,soundbubble,knowledgeboosting}. Apple’s Conversation Awareness mode~\cite{apple-conversationawareness} reduces background volume upon detecting wearer speech, but does not perform speaker separation or conversational tracking. % extraction.
+
+%Our system is, to our knowledge, the first to support real-time, proactive speaker selection using conversational cues, to separate all relevant speakers in a multi-party conversation, enabling more natural interaction in noisy environments.

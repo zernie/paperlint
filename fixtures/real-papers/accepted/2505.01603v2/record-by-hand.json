@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acmart.cls",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/approach.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/applications.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/design_v2.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/impl.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/security.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/relatedwork.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "b227a026dcfb722aa43838a16f659ee78e123ad6bf2f8f3557ad15efd1396c84",
+    "acmart.cls": "4e4547fd3eca6a15044bcd4b025c38cc41b28ad9b5bba9116909536b46d5fca3",
+    "sections/intro.tex": "73e9354a700fb769416461428134ccced95eb38fcb612fde14591ecaa9bfdcf1",
+    "sections/background.tex": "2b5947a45c661328faa9033620c1bb6fa1b75c9b2fe8bfbbf7649abee4cf1949",
+    "sections/approach.tex": "0f4e2a16da84fc3d30dc431a3f332b19b89f0be907811dff5b7872d2d333c55d",
+    "sections/applications.tex": "17230a16de3b3117ae23ad3d82fdc8b446038d6c945afde045a7b7dc5bea585a",
+    "sections/design_v2.tex": "13e15b40ef41b28f3012deef84963856df166da12a36e19a45e38f768bf554fb",
+    "sections/impl.tex": "51b6d5f52fd1c044815321566e6ecf6d2514e1f89b1ba66b96108cf34e6dd0b1",
+    "sections/eval.tex": "01dc3d5278147bd71e1e3e5cdeb3f4f5583b1b75d8469df29720d4afc55b9532",
+    "sections/security.tex": "d4008f5083a1e9f8b2f5d69cf9754faacea6c6d5899c42033ee90c410013ab58",
+    "sections/relatedwork.tex": "7625a6dfe4b63dcfe019e73799350c23cd9ba99ec346dabdb6914d6144046916",
+    "sections/conclusion.tex": "9e7d26945cbb7803ecaafef0ebdbdf547326f770fb4bc75344f6be5518e4a6b3"
+  }
+}

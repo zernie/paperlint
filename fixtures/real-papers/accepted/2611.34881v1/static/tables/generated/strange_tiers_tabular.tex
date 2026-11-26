@@ -1,0 +1,26 @@
+\begin{tabular}{lclrrcr}
+\toprule
+Sub-tier & $k$ & Partner type & Scenes & Anns/Img & Med $|$ Mean NPMI & $N_{ij}{=}0$ (\%) \\
+\midrule
+\texttt{tier1\_natural\_bg} & 0 & none, natural background & $421$ & $1.00$ & -- & -- \\
+\texttt{tier1\_atypical\_bg} & 0 & none, unusual background & $421$ & $1.00$ & -- & -- \\
+\texttt{tier2\_1typical} & 1 & typical (high NPMI) & $400$ & $2.00$ & $+0.20$ $|$ $+0.24$ & 0.0 \\
+\texttt{tier2\_1atypical} & 1 & atypical (low NPMI) & $400$ & $2.00$ & $-0.32$ $|$ $-0.31$ & 57.5 \\
+\texttt{tier3\_2typical} & 2 & typical & $392$ & $3.00$ & $+0.18$ $|$ $+0.21$ & 0.0 \\
+\texttt{tier3\_2atypical} & 2 & atypical & $392$ & $3.00$ & $-0.29$ $|$ $-0.29$ & 53.1 \\
+\texttt{tier4\_3typical} & 3 & typical & $399$ & $4.00$ & $+0.18$ $|$ $+0.20$ & 0.0 \\
+\texttt{tier4\_3atypical} & 3 & atypical & $399$ & $4.00$ & $-0.29$ $|$ $-0.28$ & 45.9 \\
+\texttt{tier5\_4typical} & 4 & typical & $229$ & $5.00$ & $+0.17$ $|$ $+0.19$ & 0.0 \\
+\texttt{tier5\_4atypical} & 4 & atypical & $229$ & $5.00$ & $-0.28$ $|$ $-0.27$ & 43.1 \\
+\texttt{tier\_never} & 1--2 & never co-occurring & $466$ & $2.85$ & -- & 82.4 \\
+\midrule
+\texttt{tier2\_1typical\_\_small\_anchor} & 1 & typical, small anchor & $200$ & $2.00$ & $+0.19$ $|$ $+0.23$ & 0.0 \\
+\texttt{tier2\_1atypical\_\_small\_anchor} & 1 & atypical, small anchor & $200$ & $2.00$ & $-0.30$ $|$ $-0.30$ & 64.0 \\
+\texttt{tier6\_5typical} & 5 & typical & $193$ & $6.00$ & $+0.16$ $|$ $+0.18$ & 0.0 \\
+\texttt{tier6\_5atypical} & 5 & atypical & $193$ & $6.00$ & $-0.27$ $|$ $-0.27$ & 39.2 \\
+\texttt{tier\_never\_k3} & 3 & never co-occurring (clique) & $334$ & $4.00$ & -- & 100.0 \\
+\texttt{tier\_never\_k4} & 4 & never co-occurring (clique) & $255$ & $5.00$ & -- & 100.0 \\
+\midrule
+\textbf{Total} & & & $\mathbf{5{,}523}$ & $\mathbf{3.14}$ & & \\
+\bottomrule
+\end{tabular}

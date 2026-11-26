@@ -1,0 +1,40 @@
+Time series forecasting (TSF) supports data-driven decision-making in public health, finance, manufacturing, and energy. The emergence of large language models (LLMs) has led to growing interest in combining linguistic reasoning with temporal modeling to establish multimodal connections between numerical sequences and textual knowledge~\cite{zhou2023onefitsall,Chang2023LLM4TS,Sun2023TEST,Jin2024TimeLLM,Liu2025TimeCMA,Cao2024TEMPO,Liu2024UniTime,Pan2024S2IP,Liu2024AutoTimes,Liu2024STLLM,Liang2024Foundation}. These models leverage long-range dependencies and semantic abstraction to uncover latent temporal dynamics that traditional approaches may miss under non-stationary and event-driven environments~\cite{Liu2023AdaptiveNorm,Kim2022RevIN,Liu2023Koopa,Wen2023OneNet}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig/mot.png}
+\caption{LLM integration paradigms. (a) Prior methods use LLMs as direct numerical predictors. (b) CTRL uses LLMs as controllers generating compact control signals for a residual decoder; a frozen backbone provides base forecasts. Final prediction: $\tilde{\mathbf{y}} = \hat{\mathbf{y}} + \delta$.}
+\label{fig:motivation}
+\end{figure}
+
+
+Existing LLM-based forecasting frameworks face two structural limitations~\cite{Zhang2025DoesMultimodality,Singh2024TokenizationCounts}.
+First, many prompt-based methods reduce LLMs to Transformer-like predictors that tokenize numerical sequences and output values without exploiting their capacity for contextual reasoning and dynamic adaptation.
+Second, when LLMs directly generate numerical outputs, they can disrupt the stability of time-series backbones, amplifying noise and weakening generalization in complex temporal settings.
+
+Recent models such as TEMPO~\cite{Cao2024TEMPO} mitigate these issues by decomposing time series into trend, seasonality, and irregular components and learning them through prompt representations. Alignment-aware frameworks, including CALF~\cite{Liu2025CALF} and TimeCMA~\cite{Liu2025TimeCMA}, further improve semantic coherence through structured prompting and cross-modal alignment. %
+These efforts enhance interpretability but still couple LLM representations directly to forecast generation.
+
+This study introduces CTRL (Control-based Time Series Forecasting), a framework that separates semantic reasoning from quantitative prediction. A frozen backbone produces base forecasts, while specialized LLM agents function as controllers analyzing distinct temporal components: trend, seasonality, and irregular patterns. CTRL is motivated by the observation that many real-world time series are inherently
+non-stationary, exhibiting distribution shift and regime changes where static or
+alignment-based forecasting models struggle to adapt. Rather than attempting direct numerical generation, agents engage in comparative reasoning, diagnosing discrepancies between predictions and ground truth. Each agent outputs a compact control signal vector encoding scale, bias, gate, and confidence; the Irregular Agent produces natural language analysis projected via a frozen encoder. A lightweight residual decoder translates these policies into fine-grained corrections refining backbone forecasts.
+
+CTRL performs test-time adaptation by detecting distribution shift from input statistics alone, without relying on ground-truth labels, and operates efficiently with low LLM overhead by leveraging clustered held-out training samples. By separating reasoning from prediction, the framework enables stable and extensible forecasting: LLM agents provide policy-level guidance, the decoder ensures numerical robustness, and the backbone preserves accuracy. CTRL yields the largest gains under non-stationary dynamics while remaining competitive on stationary datasets, where adaptive reasoning offers diminishing returns.
+
+
+
+
+
+
+Our contributions are as follows:
+
+\begin{itemize}
+\item We position LLMs as strategic controllers that require no parameter updates, separating temporal reasoning from numerical computation. The lightweight residual decoder (${\sim}$400K parameters) is the only component trained via gradient descent.
+
+\item Specialized agents analyze backbone errors through STL-decomposed comparisons, generating correction policies from few-shot reasoning.
+
+\item We introduce test-time adaptation that detects distribution shift from input statistics alone, enabling LLM-guided control signal adjustment without ground truth, gradients, or parameter updates.
+
+
+\item CTRL improves two architecturally distinct backbones (linear and transformer) with 3--24 LLM calls, with gains scaling with distribution shift.
+\end{itemize}

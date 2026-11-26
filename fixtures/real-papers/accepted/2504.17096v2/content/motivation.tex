@@ -1,0 +1,62 @@
+\section{Motivation and Challenges}\label{sec:motivation_challenges}
+
+\begin{figure}[tp!]
+\centering
+  \includegraphics[width=\linewidth]{figures/motivation/traces.png}
+\vspace{-15pt}
+\caption{Availability of A100 GPUs in two zones in Google Cloud over 8-hr period. We request 8 GPUs in each zone. The trace was collected in April 2024.} 
+\label{fig:trace}
+\vspace{-0.5cm}
+\end{figure}
+
+\subsection{Why use heterogeneous, geo-distributed GPUs?}\label{motivation}
+
+\textbf{Homogeneous high-end GPU clusters are scarce.} The widespread adoption of ML, and hardware vendors' inability to keep up with this pace, has significantly increased GPU demand. Several studies report limited GPU availability across public cloud providers~\cite{Zongheng23Skypilot, Cheng23availability, chugh23availability, strati24crossregion, Thorpe23Bamboo}. 
+For example, Figure \ref{fig:trace} plots the availability of on-demand A100 GPUs in two zones in GCP. In one zone, it took 7 hours to allocate 8 A100 GPUs, while in the other zone, the requested number of GPUs was not attained within the 8-hour window.
+Our findings align with the AWS GPU availability plot from Guo et al.~\cite{guo2024cephalo}, which shows that high-end GPUs such as A100 and H100 are difficult to aquire, while mid-tier GPUs (A10G, V100, T4) have higher but still limited and dynamic availability. %\qh{Better have a trace plot here for clearer demonstration. I remember we have such data}
+Using GPUs across zones with heterogeneous types gives ML jobs the opportunity to use more GPUs to further increase throughput, as shown in Figure~\ref{fig:motivation_het}. 
+
+
+\textbf{Power and cooling limits \#GPUs per datacenter.}  From 2020 to 2025, the size of state-of-the-art ML models has increased by roughly 1200$\times$~\cite{gpt-2, gpt-4, llama-4}, while per-GPU memory capacity has only increased by 8$\times$~\cite{nvidia-list}. This requires hyperscalers to deploy more and more GPUs~\cite{ms-newAIdatacenter, meta-newAIdatacenter}. 
+However, the high power and cooling requirements of high-end GPUs limits the amount that can be deployed per datacenter~\cite{tapas}. The next generation of ML models may need to train on GPUs across multiple availability zones~\cite{geodistributedblog1, geodistributedblog2, heatchallengeblog, palak2024improvingtrainingtimegpu}.
+
+\textbf{Using old GPUs can reduce embodied carbon.} Embodied carbon (greenhouse gas emissions associated with manufacturing to disposal) is a major source of datacenter  emissions~\cite{greenSKU, carbonExplorer, metaEmbodiedCarbon}.
+Although users prefer to allocate the latest GPUs for their ML jobs, older GPUs are abundant as the typical lifetime for ML servers in hyperscaler datacenters is $\sim$6 years~\cite{schneider2025lifecycleGoogleAI, greenSKU}. Finding optimal ways to spread jobs across heterogeneous GPUs will enable leveraging older GPUs for longer to better amortize embodied carbon. 
+
+
+\subsection{Challenges with Heterogeneous ML Clusters}\label{challenges}
+
+\textbf{C1: Quickly searching a vast configuration space.} 
+Considering heterogeneous and geo-distributed GPUs creates a vast and complex search space.
+The ML developer needs to decide how many GPUs to use and how to group them across VMs.
+This complexity increases further, when accounting for job parallelization plans within each allocation. Furthermore, the optimal allocation and partitioning strategies depend on user objectives and constraints.
+A planner needs to \textit{quickly} navigate the large configuration space to adapt to dynamic resource availability in cloud and on-premise environments~\cite{Thorpe23Bamboo, guo2024cephalo, weng22mlaas, Gu19Tiresias}, since maximizing throughput requires adapting parallelization strategies with changes to cluster topology~\cite{Athlur22Varuna, wagenlander24tenplex}. 
+
+
+Table~\ref{table:planners} shows that Metis~\cite{Um24Metis}, FlashFlex~\cite{yan2024flashflex}, Cephalo~\cite{guo2024cephalo}, Atlas~\cite{palak2024atlas}, and DTFM~\cite{yuan2023decentralized}  explore parts of this large search space. Atlas~\cite{palak2024atlas} and DTFM~\cite{yuan2023decentralized}  target geo-distributed training, but do not consider heterogeneous GPU types, and do not decide the various parallelism degrees: instead, they take as input the parallelism degrees, and assign these degrees in the available zones.
+On the other hand, Metis~\cite{Um24Metis}, FlashFlex~\cite{yan2024flashflex} and Cephalo~\cite{guo2024cephalo},
+consider heterogeneous GPU types, but overlook geo-distributed training, and are quite inefficient for dynamic environments. Metis needs a few hours to devise a plan for a 16-GPU cluster (A100 and V100)\footnote{with max\_permutation\_length and device group variance set to 10 and 0.5 respectively, according to the paper~\cite{Um24Metis}}, making frequent reevaluation infeasible as GPU availability changes. Cephalo~\cite{guo2024cephalo} has a search time of ~300 sec on a cluster of 64 GPUs\footnote{reported on the paper~\cite{guo2024cephalo}}, but it is limited only to Fully Sharded Data Parallelism. FlashFlex~\cite{yan2024flashflex} has a short runtime, but provides inaccurate runtime estimations, leading to suboptimal plans. 
+Furthermore, these planners only optimize for \textit{throughput}, ignoring budget constraints, and cost (dollars per iteration), which affect the optimal configuration (\S\ref{sec:eval_constraints}). 
+
+
+\textbf{C2: Accurately simulating memory footprint and iteration time.} Most planners use analytical models or simulations to evaluate a configuration (parallelism degrees, microbatch sizes, etc) on a given cluster setup, since it is impractical and very expensive to deploy and profile every configuration. This evaluation usually includes two stages: 1) memory footprint estimation, to identify whether a configuration is valid (i.e., it does not lead to OOM errors) and 2) iteration time estimation, to determine performance. 
+
+{\setlength{\textfloatsep}{-0cm}
+\begin{figure}[tp!]
+\centering
+\vspace{5pt}
+  \includegraphics[width=\columnwidth]{figures/motivation/opt350_mem.pdf}%
+\caption{Peak Memory estimations of various baselines compared to the actual peak memory, for the OPT-350M model on a homogeneous cluster of 4 Grace-Hopper per node.  $N$ stands for the number of nodes,  $gbs$ is the global batch size, $pp$ pipeline parallelism, $tp$ tensor parallelism, $dp$ data parallelism, and $mbs$ the microbatch size. }
+\label{fig:motivation_sim_mem}
+%\vspace{-0.75cm}
+\end{figure}}
+
+
+Unfortunately, these estimations are often inaccurate, resulting in suboptimal or invalid plans. First,  planners either completely ignore memory footprint~\cite{li2022amp}, or underestimate the amount of memory requirements during training~\cite{Athlur22Varuna, Jang2023Oobleck}, omitting activations, optimizer states, and memory fragmentation, or assume the training memory footprint is uniform across all devices and pipeline stages~\cite{yan2024flashflex, Lin24nnScaler}. As a result, these systems may find plans that cause OOM errors, when deployed. Figure \ref{fig:motivation_sim_mem} compares memory footprint estimations with the real footprint on a homogeneous cluster of up to 16 Grace-Hopper nodes for the OPT-350M model, showing that planners can be 25-95\% off when estimating memory footprint.  Second, planners often poorly model training time, due to incorrect assumptions about network bandwidth and ignoring communication-computation overlap~\cite{Zhang17Poseidon, megatron-deepspeed}.
+
+Modeling memory footprint and iteration time becomes even more complex with heterogeneity~\cite{Mo24Heet}. Different GPU generations vary in compute performance (e.g., TFLOPs), and memory capacity~\cite{zhu2024nanoflow}. Thus, a configuration that fits in one GPU, might cause OOM errors in another GPU. Additionally, stragglers and network bandwidth differences (especially in geo-distributed setups~\cite{strati24crossregion}) must be considered for accurate timing estimations. Planners must accurately model compute, memory, and network bandwidth heterogeneity - yet, as shown in Table~\ref{table:planners}, most systems overlook this.
+
+
+\textbf{C3: Supporting both heterogeneous plans and seamless elasticity in a real distributed training framework.}   
+Most training frameworks, i.e., systems that train a model on a set of devices, assume homogeneous clusters and job configuration plans. For example, widely used and high-performing frameworks such as Megatron~\cite{shoeybi2020megatronlm} and DeepSpeed~\cite{megatron-deepspeed} assume \textit{uniform} parallelism degrees for the entire training job (e.g. DP=2, PP=6, TP=1). This limits efficiency in heterogeneous configurations, where various parallelism degrees per training subproblem (e.g., using PP=6, with first 3 stages having TP=4, and the next 3 stages having TP=2) help load-balance compute and memory on GPU nodes with different resources. Thus, a framework should accommodate heterogeneous degrees of parallelism. Furthermore, the framework should seamlessly reconfigure and adapt to dynamic GPU availability (Figure \ref{fig:trace}), as long job reconfiguration times in response to resource changes are wasteful~\cite{Thorpe23Bamboo, wagenlander24tenplex}. Although related works propose elastic systems~\cite{Athlur22Varuna, Thorpe23Bamboo, Duan24Parcae} or systems that support heterogeneity~\cite{Miao23SDPipe, yan2024flashflex}, there is no open-source system that supports both.
+

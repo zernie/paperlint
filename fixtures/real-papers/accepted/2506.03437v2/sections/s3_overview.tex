@@ -1,0 +1,30 @@
+\section{Solution Overview}
+\label{sec:overview}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{sections/figures/quake_overview.pdf}
+\caption{Quake Architecture Diagram. Search queries use Adaptive Partition Selection (APS) to determine which partitions to scan (\textbf{A}). Scanning partitions modifies access patterns of the index, tracked in the metadata table (\textbf{B}). A cost model is used to determine which maintenance actions to take (\textbf{C}) where the chosen maintenance actions modify the index (\textbf{D}). This process operates in a continuous online fashion as search and update queries (inserts/deletes) are issued to the index. }
+    \label{fig:quake_overview}
+\end{figure}
+
+\paragraph{Index Structure} Quake organizes the vectors in a multi-level index, where each level is a partitioned index similar to Faiss-IVF~\cite{douze2024faisslibrary}. The lowest level in the index is constructed by organizing the vectors into disjoint partitions (using k-means clustering) where each partition has a representative centroid. These centroids can be further partitioned in a similar manner to create additional levels in the index. Search queries scan the index in a top-down fashion, finding the nearest centroids at each level to determine the partitions to scan in the next level. Partitions in the lowest level contain the actual vectors and subsets of these partitions are scanned to return the k-nearest neighbors. Utilizing a multi-level design enables us to employ fine-grained partitioning of vectors at large scale (shown to improve search quality~\cite{chen_spann_nodate}), while mitigating the high cost of scanning centroids.
+% mitigates the cost of scanning centroids, allowing us to use fine-grained partitioning of vectors at large scale, which prior work has shown to be beneficial \cite{chen_spann_nodate}.
+
+\paragraph{Adaptive Incremental Maintenance} Inserts and deletes modify the Quake data structure by appending vectors to and removing vectors from index partitions. Insertions traverse the index structure top-down to find the nearest partition in the lowest level to the inserted vector and append to that partition. Deletes use a map to find the partition containing the vector to be deleted and the vector is removed from the partition with immediate compaction. As demonstrated in Section \ref{sec:motivation}, modifications can negatively affect index performance over time, requiring maintenance (Figure \ref{fig:ivf_latency}).
+Quake uses the following maintenance actions in order to minimize query latency:
+
+\begin{enumerate}[leftmargin=*, itemsep=0em, topsep=0pt]
+\item \textbf{Split Partition:} Uses k-means clustering to split a partition into two, removing the old partition and its centroid and adding two new partitions and centroids. To mitigate potential overlap due to the new partitions, we perform additional iterations of k-means clustering over the partitions neighboring the split partitions (by centroid distance).
+\item \textbf{Merge Partition:} Removes a partition and its centroid, reassigning the vectors of the removed partition to the remaining partitions in the index.
+\item \textbf{Add Level:} Adds a level of partitioning to the index by partitioning the current top-level using k-means clustering.
+\item \textbf{Remove Level:} Removes current top-level and merges the partitions in the next level.
+\end{enumerate}
+
+Quake uses a cost model that estimates query latency to determine if maintenance actions should be taken and which partitions to apply them to. The cost model is a function of partition access patterns and sizes to determine which partitions are contributing most to the overall query latency. We check for maintenance after each operation by evaluating the cost model, but the maintenance frequency is configurable. Partitions with the largest cost contribution are considered for split or deletion. Intuitively, frequently accessed and/or large partitions are split and infrequently accessed and/or small partitions are merged as they do not justify the overhead of maintaining a centroid. See Section \ref{sec:maintenance} for details on the cost model and maintenance methodology.
+
+\paragraph{Adaptive Partition Scanning} In order to determine the number of partitions a search query should scan to reach a given recall target, we apply \emph{Adaptive Partition Scanning} (APS) at each level of the index. APS solves a critical problem for partitioned indexes when applied to dynamic workloads: as the number and contents of partitions change, the number of partitions scanned needs to change, otherwise recall will degrade (Figure \ref{fig:ivf_latency}). APS maintains a recall estimator based on the intermediate top-k results of the query and the geometry of neighboring partitions. As more partitions are scanned, the intermediate results and recall model are updated and when the recall estimate exceeds the target recall, the results are returned. To mitigate overheads introduced by the estimator, we use pre-computation of expensive geometric functions and only update the estimate when the intermediate results have changed significantly. APS supports both Euclidean and inner-product distance metrics. We cover APS in Section \ref{sec:adaptive_partition_scanning}.
+
+\paragraph{NUMA-Aware Query Processing} Modern multi-core servers often use Non-Uniform Memory Access (NUMA) architectures, where memory close to a processor’s local node is faster to access than remote memory. Quake is designed to capitalize on this heterogeneous memory. It distributes index partitions across NUMA nodes. To minimize remote memory access, Quake employs affinity-based scheduling, and supports work stealing within a NUMA node to mitigate workload imbalances. By co-locating computation with the relevant data, Quake reduces remote memory accesses, saturates memory bandwidth, and thus lowers query latency. See Section~\ref{sec:numa_aware_query_processing} for details on Quake’s NUMA-aware optimizations.
+
+% to minimize data movement

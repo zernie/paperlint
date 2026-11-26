@@ -1,0 +1,1007 @@
+%%% ====================================================================
+%%%  BibTeX-file{
+%%%     author          = "Gerry Murray",
+%%%     version         = "1.2",
+%%%     date            = "2 April 2012",
+%%%     filename        = "acmsmall-sample-bibfile.bib",
+%%%     address         = "ACM, NY",
+%%%     email           = "murray at hq.acm.org",
+%%%     codetable       = "ISO/ASCII",
+%%%     keywords        = "ACM Reference Format, bibliography, citation, references",
+%%%     supported       = "yes",
+%%%     docstring       = "This BibTeX database file contains 'bibdata' entries
+%%%                        that 'match' the examples provided in the Specifications Document
+%%%                        AND, also, 'legacy'-type bibs. It should assist authors in
+%%%                        choosing the 'correct' at-bibtype and necessary bib-fields
+%%%                        so as to obtain the appropriate ACM Reference Format output.
+%%%                        It also contains many 'Standard Abbreviations'. "
+%%%  }
+%%% ====================================================================
+
+% Journals
+
+% First the Full Name is given, then the abbreviation used in the AMS Math
+% Reviews, with an indication if it could not be found there.
+% Note the 2nd overwrites the 1st, so swap them if you want the full name.
+
+ %{AMS}
+ @String{AMSTrans = "American Mathematical Society Translations" }
+ @String{AMSTrans = "Amer. Math. Soc. Transl." }
+ @String{BullAMS = "Bulletin of the American Mathematical Society" }
+ @String{BullAMS = "Bull. Amer. Math. Soc." }
+ @String{ProcAMS = "Proceedings of the American Mathematical Society" }
+ @String{ProcAMS = "Proc. Amer. Math. Soc." }
+ @String{TransAMS = "Transactions of the American Mathematical Society" }
+ @String{TransAMS = "Trans. Amer. Math. Soc." }
+
+ %ACM
+ @String{CACM = "Communications of the {ACM}" }
+ @String{CACM = "Commun. {ACM}" }
+ @String{CompServ = "Comput. Surveys" }
+ @String{JACM = "J. ACM" }
+ @String{ACMMathSoft = "{ACM} Transactions on Mathematical Software" }
+ @String{ACMMathSoft = "{ACM} Trans. Math. Software" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newsletter" }
+ @String{SIGNUM = "{ACM} {SIGNUM} Newslett." }
+
+ @String{AmerSocio = "American Journal of Sociology" }
+ @String{AmerStatAssoc = "Journal of the American Statistical Association" }
+ @String{AmerStatAssoc = "J. Amer. Statist. Assoc." }
+ @String{ApplMathComp = "Applied Mathematics and Computation" }
+ @String{ApplMathComp = "Appl. Math. Comput." }
+ @String{AmerMathMonthly = "American Mathematical Monthly" }
+ @String{AmerMathMonthly = "Amer. Math. Monthly" }
+ @String{BIT = "{BIT}" }
+ @String{BritStatPsych = "British Journal of Mathematical and Statistical
+          Psychology" }
+ @String{BritStatPsych = "Brit. J. Math. Statist. Psych." }
+ @String{CanMathBull = "Canadian Mathematical Bulletin" }
+ @String{CanMathBull = "Canad. Math. Bull." }
+ @String{CompApplMath = "Journal of Computational and Applied Mathematics" }
+ @String{CompApplMath = "J. Comput. Appl. Math." }
+ @String{CompPhys = "Journal of Computational Physics" }
+ @String{CompPhys = "J. Comput. Phys." }
+ @String{CompStruct = "Computers and Structures" }
+ @String{CompStruct = "Comput. \& Structures" }
+ @String{CompJour = "The Computer Journal" }
+ @String{CompJour = "Comput. J." }
+ @String{CompSysSci = "Journal of Computer and System Sciences" }
+ @String{CompSysSci = "J. Comput. System Sci." }
+ @String{Computing = "Computing" }
+ @String{ContempMath = "Contemporary Mathematics" }
+ @String{ContempMath = "Contemp. Math." }
+ @String{Crelle = "Crelle's Journal" }
+ @String{GiornaleMath = "Giornale di Mathematiche" }
+ @String{GiornaleMath = "Giorn. Mat." } % didn't find in AMS MR., ibid.
+
+ %IEEE
+ @String{Computer = "{IEEE} Computer" }
+ @String{IEEETransComp = "{IEEE} Transactions on Computers" }
+ @String{IEEETransComp = "{IEEE} Trans. Comput." }
+ @String{IEEETransAC = "{IEEE} Transactions on Automatic Control" }
+ @String{IEEETransAC = "{IEEE} Trans. Automat. Control" }
+ @String{IEEESpec = "{IEEE} Spectrum" } % didn't find in AMS MR
+ @String{ProcIEEE = "Proceedings of the {IEEE}" }
+ @String{ProcIEEE = "Proc. {IEEE}" } % didn't find in AMS MR
+ @String{IEEETransAeroElec = "{IEEE} Transactions on Aerospace and Electronic
+     Systems" }
+ @String{IEEETransAeroElec = "{IEEE} Trans. Aerospace Electron. Systems" }
+
+ @String{IMANumerAna = "{IMA} Journal of Numerical Analysis" }
+ @String{IMANumerAna = "{IMA} J. Numer. Anal." }
+ @String{InfProcLet = "Information Processing Letters" }
+ @String{InfProcLet = "Inform. Process. Lett." }
+ @String{InstMathApp = "Journal of the Institute of Mathematics and
+     its Applications" }
+ @String{InstMathApp = "J. Inst. Math. Appl." }
+ @String{IntControl = "International Journal of Control" }
+ @String{IntControl = "Internat. J. Control" }
+ @String{IntNumerEng = "International Journal for Numerical Methods in
+     Engineering" }
+ @String{IntNumerEng = "Internat. J. Numer. Methods Engrg." }
+ @String{IntSuper = "International Journal of Supercomputing Applications" }
+ @String{IntSuper = "Internat. J. Supercomputing Applic." } % didn't find
+%% in AMS MR
+ @String{Kibernetika = "Kibernetika" }
+ @String{JResNatBurStand = "Journal of Research of the National Bureau
+     of Standards" }
+ @String{JResNatBurStand = "J. Res. Nat. Bur. Standards" }
+ @String{LinAlgApp = "Linear Algebra and its Applications" }
+ @String{LinAlgApp = "Linear Algebra Appl." }
+ @String{MathAnaAppl = "Journal of Mathematical Analysis and Applications" }
+ @String{MathAnaAppl = "J. Math. Anal. Appl." }
+ @String{MathAnnalen = "Mathematische Annalen" }
+ @String{MathAnnalen = "Math. Ann." }
+ @String{MathPhys = "Journal of Mathematical Physics" }
+ @String{MathPhys = "J. Math. Phys." }
+ @String{MathComp = "Mathematics of Computation" }
+ @String{MathComp = "Math. Comp." }
+ @String{MathScand = "Mathematica Scandinavica" }
+ @String{MathScand = "Math. Scand." }
+ @String{TablesAidsComp = "Mathematical Tables and Other Aids to Computation" }
+ @String{TablesAidsComp = "Math. Tables Aids Comput." }
+ @String{NumerMath = "Numerische Mathematik" }
+ @String{NumerMath = "Numer. Math." }
+ @String{PacificMath = "Pacific Journal of Mathematics" }
+ @String{PacificMath = "Pacific J. Math." }
+ @String{ParDistComp = "Journal of Parallel and Distributed Computing" }
+ @String{ParDistComp = "J. Parallel and Distrib. Comput." } % didn't find
+%% in AMS MR
+ @String{ParComputing = "Parallel Computing" }
+ @String{ParComputing = "Parallel Comput." }
+ @String{PhilMag = "Philosophical Magazine" }
+ @String{PhilMag = "Philos. Mag." }
+ @String{ProcNAS = "Proceedings of the National Academy of Sciences
+                    of the USA" }
+ @String{ProcNAS = "Proc. Nat. Acad. Sci. U. S. A." }
+ @String{Psychometrika = "Psychometrika" }
+ @String{QuartMath = "Quarterly Journal of Mathematics, Oxford, Series (2)" }
+ @String{QuartMath = "Quart. J. Math. Oxford Ser. (2)" }
+ @String{QuartApplMath = "Quarterly of Applied Mathematics" }
+ @String{QuartApplMath = "Quart. Appl. Math." }
+ @String{RevueInstStat = "Review of the International Statisical Institute" }
+ @String{RevueInstStat = "Rev. Inst. Internat. Statist." }
+
+ %SIAM
+ @String{JSIAM = "Journal of the Society for Industrial and Applied
+     Mathematics" }
+ @String{JSIAM = "J. Soc. Indust. Appl. Math." }
+ @String{JSIAMB = "Journal of the Society for Industrial and Applied
+     Mathematics, Series B, Numerical Analysis" }
+ @String{JSIAMB = "J. Soc. Indust. Appl. Math. Ser. B Numer. Anal." }
+ @String{SIAMAlgMeth = "{SIAM} Journal on Algebraic and Discrete Methods" }
+ @String{SIAMAlgMeth = "{SIAM} J. Algebraic Discrete Methods" }
+ @String{SIAMAppMath = "{SIAM} Journal on Applied Mathematics" }
+ @String{SIAMAppMath = "{SIAM} J. Appl. Math." }
+ @String{SIAMComp = "{SIAM} Journal on Computing" }
+ @String{SIAMComp = "{SIAM} J. Comput." }
+ @String{SIAMMatrix = "{SIAM} Journal on Matrix Analysis and Applications" }
+ @String{SIAMMatrix = "{SIAM} J. Matrix Anal. Appl." }
+ @String{SIAMNumAnal = "{SIAM} Journal on Numerical Analysis" }
+ @String{SIAMNumAnal = "{SIAM} J. Numer. Anal." }
+ @String{SIAMReview = "{SIAM} Review" }
+ @String{SIAMReview = "{SIAM} Rev." }
+ @String{SIAMSciStat = "{SIAM} Journal on Scientific and Statistical
+     Computing" }
+ @String{SIAMSciStat = "{SIAM} J. Sci. Statist. Comput." }
+
+ @String{SoftPracExp = "Software Practice and Experience" }
+ @String{SoftPracExp = "Software Prac. Experience" } % didn't find in AMS MR
+ @String{StatScience = "Statistical Science" }
+ @String{StatScience = "Statist. Sci." }
+ @String{Techno = "Technometrics" }
+ @String{USSRCompMathPhys = "{USSR} Computational Mathematics and Mathematical
+     Physics" }
+ @String{USSRCompMathPhys = "{U. S. S. R.} Comput. Math. and Math. Phys." }
+ @String{VLSICompSys = "Journal of {VLSI} and Computer Systems" }
+ @String{VLSICompSys = "J. {VLSI} Comput. Syst." }
+ @String{ZAngewMathMech = "Zeitschrift fur Angewandte Mathematik und
+     Mechanik" }
+ @String{ZAngewMathMech = "Z. Angew. Math. Mech." }
+ @String{ZAngewMathPhys = "Zeitschrift fur Angewandte Mathematik und Physik" }
+ @String{ZAngewMathPhys = "Z. Angew. Math. Phys." }
+
+% Publishers % ================================================= |
+
+ @String{Academic = "Academic Press" }
+ @String{ACMPress = "{ACM} Press" }
+ @String{AdamHilger = "Adam Hilger" }
+ @String{AddisonWesley = "Addison-Wesley" }
+ @String{AllynBacon = "Allyn and Bacon" }
+ @String{AMS = "American Mathematical Society" }
+ @String{Birkhauser = "Birkha{\"u}ser" }
+ @String{CambridgePress = "Cambridge University Press" }
+ @String{Chelsea = "Chelsea" }
+ @String{ClaredonPress = "Claredon Press" }
+ @String{DoverPub = "Dover Publications" }
+ @String{Eyolles = "Eyolles" }
+ @String{HoltRinehartWinston = "Holt, Rinehart and Winston" }
+ @String{Interscience = "Interscience" }
+ @String{JohnsHopkinsPress = "The Johns Hopkins University Press" }
+ @String{JohnWileySons = "John Wiley and Sons" }
+ @String{Macmillan = "Macmillan" }
+ @String{MathWorks = "The Math Works Inc." }
+ @String{McGrawHill = "McGraw-Hill" }
+ @String{NatBurStd = "National Bureau of Standards" }
+ @String{NorthHolland = "North-Holland" }
+ @String{OxfordPress = "Oxford University Press" }  %address Oxford or London?
+ @String{PergamonPress = "Pergamon Press" }
+ @String{PlenumPress = "Plenum Press" }
+ @String{PrenticeHall = "Prentice-Hall" }
+ @String{SIAMPub = "{SIAM} Publications" }
+ @String{Springer = "Springer-Verlag" }
+ @String{TexasPress = "University of Texas Press" }
+ @String{VanNostrand = "Van Nostrand" }
+ @String{WHFreeman = "W. H. Freeman and Co." }
+
+%Entries
+
+%%%%%%%%%%%%%%%% Scene sketch segmentation citations %%%%%%%%%%%%%%%%
+@article{Kutuk2024ClassAgnosticVS,
+  title={Class-Agnostic Visio-Temporal Scene Sketch Semantic Segmentation},
+  author={Aleyna Kutuk and T. Metin Sezgin},
+  journal={ArXiv},
+  year={2024},
+  volume={abs/2410.00266},
+  url={https://api.semanticscholar.org/CorpusID:273022509}
+}
+
+@inproceedings{bourouis2024open,
+    title={Open Vocabulary Semantic Scene Sketch Understanding},
+    author={Bourouis, Ahmed and Fan, Judith E and Gryaditskaya, Yulia},
+    booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    pages={4176--4186},
+    year={2024}
+  }
+
+@ARTICLE{GeLocalDetailPerception,
+  author={Ge, Ce and Sun, Haifeng and Song, Yi-Zhe and Ma, Zhanyu and Liao, Jianxin},
+  journal={IEEE Transactions on Image Processing}, 
+  title={Exploring Local Detail Perception for Scene Sketch Semantic Segmentation}, 
+  year={2022},
+  volume={31},
+  number={},
+  pages={1447-1461},
+  keywords={Image segmentation;Semantics;Automobiles;Layout;Task analysis;Feature extraction;Airplanes;Sketch dataset;scene sketch;semantic segmentation;deep learning;local detail perception},
+  doi={10.1109/TIP.2022.3142511}
+}
+
+@article{Wang2021Tracing,
+  author = {Wang, Zeyu and Qiu, Sherry and Feng, Nicole and Rushmeier,  Holly and McMillan, Leonard and Dorsey, Julie},
+  title = {Tracing Versus Freehand for Evaluating Computer-Generated Drawings},
+  year = {2021},
+  issue_date = {August 2021},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {40},
+  number = {4},
+  issn = {0730-0301},
+  url = {https://doi.org/10.1145/3450626.3459819},
+  doi = {10.1145/3450626.3459819},
+  journal = {ACM Trans. Graph.},
+  month = aug,
+  numpages = {12},
+  keywords = {sketch dataset, drawing process, stroke analysis}
+}
+
+@inproceedings{Zou18SketchyScene,
+  author    = {Changqing Zou and
+                Qian Yu and
+                Ruofei Du and
+                Haoran Mo and
+                Yi-Zhe Song and
+                Tao Xiang and
+                Chengying Gao and
+                Baoquan Chen and
+                Hao Zhang},
+  title     = {SketchyScene: Richly-Annotated Scene Sketches},
+  booktitle = {ECCV},
+  year      = {2018},
+  publisher = {Springer International Publishing},
+  pages		= {438--454},
+  doi		= {10.1007/978-3-030-01267-0_26},
+  url		= {https://github.com/SketchyScene/SketchyScene}
+}
+
+@article{zhang2023strokeSeg,
+    author = {Zhang, Zhengming and Deng, Xiaoming and Li, Jinyao and Lai, Yukun and Ma, Cuixia and Liu, Yongjin and Wang, Hongan},
+    title = {Stroke-based semantic segmentation for scene-level free-hand sketches},
+    year = {2022},
+    issue_date = {Dec 2023},
+    publisher = {Springer-Verlag},
+    address = {Berlin, Heidelberg},
+    volume = {39},
+    number = {12},
+    issn = {0178-2789},
+    url = {https://doi.org/10.1007/s00371-022-02731-8},
+    doi = {10.1007/s00371-022-02731-8},
+    journal = {Vis. Comput.},
+    month = dec,
+    pages = {6309–6321},
+    numpages = {13},
+    keywords = {Semantic segmentation, Free-hand sketch, Scene sketch, Sketch dataset}
+}
+
+@article{yang2023sceneHierTransformer,
+  title={Scene sketch semantic segmentation with hierarchical Transformer},
+  author={Yang, Jie and Ke, Aihua and Yu, Yaoxiang and Cai, Bo},
+  journal={Knowledge-Based Systems},
+  volume={280},
+  pages={110962},
+  year={2023},
+  publisher={Elsevier}
+}
+
+
+
+%%%%%%%%%%%%%%%% Sketch object segmentation citations %%%%%%%%%%%%%%%%
+
+@inproceedings{wang2024contextseg,
+  title={ContextSeg: Sketch Semantic Segmentation by Querying the Context with Attention},
+  author={Wang, Jiawei and Li, Changjian},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={3679--3688},
+  year={2024}
+}
+
+@article{oneshot2021,
+  author       = {Anran Qi and
+                  Yulia Gryaditskaya and
+                  Tao Xiang and
+                  Yi{-}Zhe Song},
+  title        = {One Sketch for All: One-Shot Personalized Sketch Segmentation},
+  journal      = {CoRR},
+  volume       = {abs/2112.10838},
+  year         = {2021},
+  url          = {https://arxiv.org/abs/2112.10838},
+  eprinttype    = {arXiv},
+  eprint       = {2112.10838},
+  timestamp    = {Wed, 10 Jan 2024 18:05:26 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2112-10838.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@ARTICLE{fastsketchseg2019,
+  author={Li, Lei and Fu, Hongbo and Tai, Chiew-Lan},
+  journal={IEEE Computer Graphics and Applications}, 
+  title={Fast Sketch Segmentation and Labeling With Deep Learning}, 
+  year={2019},
+  volume={39},
+  number={2},
+  pages={38-51},
+  keywords={Image segmentation;Labeling;Semantics;Three-dimensional displays;Solid modeling;Databases;Kernel},
+  doi={10.1109/MCG.2018.2884192}
+}
+
+@INPROCEEDINGS{SPFusionNet2019,
+  author={Wang, Fei and Lin, Shujin and Wu, Hefeng and Li, Hanhui and Wang, Ruomei and Luo, Xiaonan and He, Xiangjian},
+  booktitle={2019 IEEE International Conference on Multimedia and Expo (ICME)}, 
+  title={SPFusionNet: Sketch Segmentation Using Multi-modal Data Fusion}, 
+  year={2019},
+  volume={},
+  number={},
+  pages={1654-1659},
+  keywords={Image segmentation;Three-dimensional displays;Neural networks;Feature extraction;Shape;Task analysis;Solid modeling;sketch segmentation, multi-modal fusion, deep neural network},
+  doi={10.1109/ICME.2019.00285}
+}
+
+@article{sketchGNN2021,
+    author = {Yang, Lumin and Zhuang, Jiajie and Fu, Hongbo and Wei, Xiangzhi and Zhou, Kun and Zheng, Youyi},
+    title = {SketchGNN: Semantic Sketch Segmentation with Graph Neural Networks},
+    year = {2021},
+    issue_date = {June 2021},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {40},
+    number = {3},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/3450284},
+    doi = {10.1145/3450284},
+    journal = {ACM Trans. Graph.},
+    month = aug,
+    articleno = {28},
+    numpages = {13},
+    keywords = {deep learning, semantic segmentation, Sketch analysis}
+}
+
+@INPROCEEDINGS{ENDE-GNN2022,
+  author={Zheng, Yixiao and Xie, Jiyang and Sain, Aneeshan and Ma, Zhanyu and Song, Yi-Zhe and Guo, Jun},
+  booktitle={2022 IEEE International Conference on Visual Communications and Image Processing (VCIP)}, 
+  title={ENDE-GNN: An Encoder-decoder GNN Framework for Sketch Semantic Segmentation}, 
+  year={2022},
+  volume={},
+  number={},
+  pages={1-5},
+  keywords={Training;Visualization;Codes;Visual communication;Semantic segmentation;Semantics;Feature extraction;Sketch Semantic Segmentation;Graph Neural Network;Encoder-decoder Framework},
+  doi={10.1109/VCIP56404.2022.10008880}
+}
+
+@ARTICLE{sketchSegNet2019,
+  author={Qi, Yonggang and Tan, Zheng-Hua},
+  journal={IEEE Access}, 
+  title={SketchSegNet+: An End-to-End Learning of RNN for Multi-Class Sketch Semantic Segmentation}, 
+  year={2019},
+  volume={7},
+  number={},
+  pages={102717-102726},
+  keywords={Semantics;Image segmentation;Recurrent neural networks;Labeling;Image retrieval;Task analysis;Stroke-level sketch segmentation;recurrent neural network},
+  doi={10.1109/ACCESS.2019.2929804}}
+
+
+@ARTICLE{segFormer2023,
+  author={Zheng, Yixiao and Xie, Jiyang and Sain, Aneeshan and Song, Yi-Zhe and Ma, Zhanyu},
+  journal={IEEE Transactions on Image Processing}, 
+  title={Sketch-Segformer: Transformer-Based Segmentation for Figurative and Creative Sketches}, 
+  year={2023},
+  volume={32},
+  number={},
+  pages={4595-4609},
+  keywords={Semantics;Semantic segmentation;Transformers;Task analysis;Solid modeling;Feature extraction;Stroke (medical condition);Sketch semantic segmentation;2D structured point set representation;dual self-attention block;order embedding;sketch-specific transformer-based framework},
+  doi={10.1109/TIP.2023.3302521}
+}
+
+@misc{li2018universalperceptualgrouping,
+      title={Universal Perceptual Grouping}, 
+      author={Ke Li and Kaiyue Pang and Jifei Song and Yi-Zhe Song and Tao Xiang and Timothy M. Hospedales and Honggang Zhang},
+      year={2018},
+      eprint={1808.02312},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1808.02312}, 
+}
+
+@inproceedings{edgePerceptual2015,
+  author={Qi, Yonggang and Song, Yi-Zhe and Xiang, Tao and Zhang, Honggang and Hospedales, Timothy and Li, Yi and Guo, Jun},
+  booktitle={2015 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 
+  title={Making better use of edges via perceptual grouping}, 
+  year={2015},
+  pages={1856-1865},
+  keywords={Image edge detection;Proposals;Image segmentation;Image retrieval;Semantics;Feature extraction;Visualization},
+  doi={10.1109/CVPR.2015.7298795}
+}
+
+@article{Li2019TowardDU,
+  title={Toward Deep Universal Sketch Perceptual Grouper},
+  author={Ke Li and Kaiyue Pang and Yi-Zhe Song and Tao Xiang and Timothy M. Hospedales and Honggang Zhang},
+  journal={IEEE Transactions on Image Processing},
+  year={2019},
+  volume={28},
+  pages={3219-3231},
+  url={https://api.semanticscholar.org/CorpusID:73430225}
+}
+
+@inproceedings{freehandseg2012,
+    author = {Sun, Zhenbang and Wang, Changhu and Zhang, Liqing and Zhang, Lei},
+    title = {Free hand-drawn sketch segmentation},
+    year = {2012},
+    isbn = {9783642337178},
+    publisher = {Springer-Verlag},
+    address = {Berlin, Heidelberg},
+    url = {https://doi.org/10.1007/978-3-642-33718-5_45},
+    doi = {10.1007/978-3-642-33718-5_45},
+    booktitle = {Proceedings of the 12th European Conference on Computer Vision - Volume Part I},
+    pages = {626–639},
+    numpages = {14},
+    location = {Florence, Italy},
+    series = {ECCV'12}
+}
+
+@article{vinker2022clipasso,
+        author = {Vinker, Yael and Pajouheshgar, Ehsan and Bo, Jessica Y. and Bachmann, Roman Christian and Bermano, Amit Haim and Cohen-Or, Daniel and Zamir, Amir and Shamir, Ariel},
+        title = {CLIPasso: Semantically-Aware Object Sketching},
+        year = {2022},
+        issue_date = {July 2022},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        volume = {41},
+        number = {4},
+        issn = {0730-0301},
+        url = {https://doi.org/10.1145/3528223.3530068},
+        doi = {10.1145/3528223.3530068},
+        journal = {ACM Trans. Graph.},
+        month = {jul},
+        articleno = {86},
+        numpages = {11},
+        keywords = {vector line art generation, sketch synthesis, image-based rendering}
+    }
+
+@article{dataDrivenSeg2014,
+    author = {Huang, Zhe and Fu, Hongbo and Lau, Rynson W. H.},
+    title = {Data-driven segmentation and labeling of freehand sketches},
+    year = {2014},
+    issue_date = {November 2014},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {33},
+    number = {6},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/2661229.2661280},
+    doi = {10.1145/2661229.2661280},
+    journal = {ACM Trans. Graph.},
+    month = nov,
+    articleno = {175},
+    numpages = {10},
+    keywords = {sketch interpretation, segmentation, labeling}
+}
+
+@article{CRFseg2016,
+    author = {Schneider, Ros\'{a}lia G. and Tuytelaars, Tinne},
+    title = {Example-Based Sketch Segmentation and Labeling Using CRFs},
+    year = {2016},
+    issue_date = {September 2016},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {35},
+    number = {5},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/2898351},
+    doi = {10.1145/2898351},
+    journal = {ACM Trans. Graph.},
+    month = jul,
+    articleno = {151},
+    numpages = {9},
+    keywords = {segmentation, Sketches, CRFs}
+}
+
+@article{wang2020multicolumnseg,
+    title = {Multi-column point-CNN for sketch segmentation},
+    journal = {Neurocomputing},
+    volume = {392},
+    pages = {50-59},
+    year = {2020},
+    issn = {0925-2312},
+    doi = {https://doi.org/10.1016/j.neucom.2019.12.117},
+    url = {https://www.sciencedirect.com/science/article/pii/S0925231220300588},
+    author = {Fei Wang and Shujin Lin and Hanhui Li and Hefeng Wu and Tie Cai and Xiaonan Luo and Ruomei Wang},
+    keywords = {Sketch segmentation, MCPNet, Deep neural network}
+}
+
+@inproceedings{Zhu2018PartLevelSS,
+  title={Part-Level Sketch Segmentation and Labeling Using Dual-CNN},
+  author={Xianyi Zhu and Yi Xiao and Yan Zheng},
+  booktitle={International Conference on Neural Information Processing},
+  year={2018},
+  url={https://api.semanticscholar.org/CorpusID:54435773}
+}
+
+@article{zhu2020CNN-CRF,
+    author = {Zhu, Xianyi and Xiao, Yi and Zheng, Yan},
+    title = {2D freehand sketch labeling using CNN and CRF},
+    year = {2020},
+    issue_date = {Jan 2020},
+    publisher = {Kluwer Academic Publishers},
+    address = {USA},
+    volume = {79},
+    number = {1–2},
+    issn = {1380-7501},
+    url = {https://doi.org/10.1007/s11042-019-08158-z},
+    doi = {10.1007/s11042-019-08158-z},
+    journal = {Multimedia Tools Appl.},
+    month = jan,
+    pages = {1585–1602},
+    numpages = {18},
+    keywords = {2D sketch labeling, Stroke classification, Convolutional neural network, Conditional random field, Connected graph creation}
+}
+
+@ARTICLE{symbolReconSeg2020,
+  author={Kaiyrbekov, Kurmanbek and Sezgin, Metin},
+  journal={IEEE Computer Graphics and Applications}, 
+  title={Deep Stroke-Based Sketched Symbol Reconstruction and Segmentation}, 
+  year={2020},
+  volume={40},
+  number={1},
+  pages={112-126},
+  keywords={Image segmentation;Neural networks;Image reconstruction;Computational modeling;Feature extraction;Task analysis;Stroke (medical condition);Sketching;Neural Networks;Segmentation},
+  doi={10.1109/MCG.2019.2943333}
+}
+
+
+%%%%%%%%%%%%%%%% Dataset citations %%%%%%%%%%%%%%%%
+@Article{OpenSketch19,
+  author       = "Yulia Gryaditskaya and Mark Sypesteyn and Jan Willem Hoftijzer and Sylvia Pont and Fr\'{e}do Durand and Adrien Bousseau",
+  title        = "OpenSketch: A Richly-Annotated Dataset of Product Design Sketches",
+  journal      = "ACM Transactions on Graphics (Proc. SIGGRAPH Asia)",
+  year         = "2019",
+  volume       = "38",
+  month        = "11",
+  publisher    = {ACM}
+}
+
+@inproceedings{fscoco,
+    title={FS-COCO: Towards Understanding of Freehand Sketches of Common Objects in Context.},
+    author={Chowdhury, Pinaki Nath and Sain, Aneeshan and Bhunia, Ayan Kumar and Xiang, Tao and Gryaditskaya, Yulia and Song, Yi-Zhe},
+    booktitle={ECCV},
+    year={2022}
+}
+
+@article{sketchydataset,
+    author = {Sangkloy, Patsorn and Burnell, Nathan and Ham, Cusuh and Hays, James},
+    title = {The sketchy database: learning to retrieve badly drawn bunnies},
+    year = {2016},
+    issue_date = {July 2016},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {35},
+    number = {4},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/2897824.2925954},
+    doi = {10.1145/2897824.2925954},
+    journal = {ACM Trans. Graph.},
+    month = jul,
+    articleno = {119},
+    numpages = {12},
+    keywords = {deep learning, image synthesis, siamese network, sketch-based image retrieval, triplet network}
+}
+
+@article{eitz2012hdhso,
+    author={Eitz, Mathias and Hays, James and Alexa, Marc},
+    title={How Do Humans Sketch Objects?},
+    journal={ACM Trans. Graph. (Proc. SIGGRAPH)},
+    year={2012},
+    volume={31},
+    number={4},
+    pages = {44:1--44:10}
+}
+
+@article{quickdrawdataset,
+  author    = {David Ha and
+               Douglas Eck},
+  title     = {A Neural Representation of Sketch Drawings},
+  journal   = {CoRR},
+  volume    = {abs/1704.03477},
+  year      = {2017},
+  url       = {http://arxiv.org/abs/1704.03477},
+  archivePrefix = {arXiv},
+  eprint    = {1704.03477},
+  timestamp = {Mon, 13 Aug 2018 16:48:30 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/HaE17},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{gao2020sketchycocoimagegenerationfreehand,
+      title={SketchyCOCO: Image Generation from Freehand Scene Sketches}, 
+      author={Chengying Gao and Qi Liu and Qi Xu and Limin Wang and Jianzhuang Liu and Changqing Zou},
+      year={2020},
+      eprint={2003.02683},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2003.02683}, 
+}
+
+@inproceedings{zhang2018CBSC,
+    author = {Zhang, Jianhui and Chen, Yilan and Li, Lei and Fu, Hongbo and Tai, Chiew-Lan},
+    title = {Context-based sketch classification},
+    year = {2018},
+    isbn = {9781450358927},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3229147.3229154},
+    doi = {10.1145/3229147.3229154},
+    booktitle = {Proceedings of the Joint Symposium on Computational Aesthetics and Sketch-Based Interfaces and Modeling and Non-Photorealistic Animation and Rendering},
+    articleno = {3},
+    numpages = {10},
+    keywords = {sketch classification, object relations, context, co-analysis},
+    location = {Victoria, British Columbia, Canada},
+    series = {Expressive '18}
+}
+
+@misc{ge2020creative,
+      title={Creative Sketch Generation}, 
+      author={Songwei Ge and Vedanuj Goswami and C. Lawrence Zitnick and Devi Parikh},
+      year={2020},
+      eprint={2011.10039},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@article{Wu2018SketchsegnetAR,
+  title={Sketchsegnet: A Rnn Model for Labeling Sketch Strokes},
+  author={Xingyuan Wu and Yonggang Qi and Jun Liu and Jie Yang},
+  journal={2018 IEEE 28th International Workshop on Machine Learning for Signal Processing (MLSP)},
+  year={2018},
+  pages={1-6},
+  url={https://api.semanticscholar.org/CorpusID:53234925}
+}
+
+%%%%%%%%%%%%%%%% Natural image citations %%%%%%%%%%%%%%%%
+@article{kirillov2023segany,
+  title={Segment Anything},
+  author={Kirillov, Alexander and Mintun, Eric and Ravi, Nikhila and Mao, Hanzi and Rolland, Chloe and Gustafson, Laura and Xiao, Tete and Whitehead, Spencer and Berg, Alexander C. and Lo, Wan-Yen and Doll{\'a}r, Piotr and Girshick, Ross},
+  journal={arXiv:2304.02643},
+  year={2023}
+}
+
+@misc{vinker2024sketchagent,
+      title={SketchAgent: Language-Driven Sequential Sketch Generation}, 
+      author={Yael Vinker and Tamar Rott Shaham and Kristine Zheng and Alex Zhao and Judith E Fan and Antonio Torralba},
+      year={2024},
+      eprint={2411.17673},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2411.17673}, 
+}
+
+@article{liu2023grounding,
+  title={Grounding dino: Marrying dino with grounded pre-training for open-set object detection},
+  author={Liu, Shilong and Zeng, Zhaoyang and Ren, Tianhe and Li, Feng and Zhang, Hao and Yang, Jie and Li, Chunyuan and Yang, Jianwei and Su, Hang and Zhu, Jun and others},
+  journal={arXiv preprint arXiv:2303.05499},
+  year={2023}
+}
+
+@article{Wang2024InstantStyleFL,
+  title={InstantStyle: Free Lunch towards Style-Preserving in Text-to-Image Generation},
+  author={Haofan Wang and Matteo Spinelli and Qixun Wang and Xu Bai and Zekui Qin and Anthony Chen},
+  journal={ArXiv},
+  year={2024},
+  volume={abs/2404.02733},
+  url={https://api.semanticscholar.org/CorpusID:268876474}
+}
+
+@article{VisualGenome2017,
+    author = {Krishna, Ranjay and Zhu, Yuke and Groth, Oliver and Johnson, Justin and Hata, Kenji and Kravitz, Joshua and Chen, Stephanie and Kalantidis, Yannis and Li, Li-Jia and Shamma, David A. and Bernstein, Michael S. and Fei-Fei, Li},
+    title = {Visual Genome: Connecting Language and Vision Using Crowdsourced Dense Image Annotations},
+    year = {2017},
+    issue_date = {May       2017},
+    publisher = {Kluwer Academic Publishers},
+    address = {USA},
+    volume = {123},
+    number = {1},
+    issn = {0920-5691},
+    url = {https://doi.org/10.1007/s11263-016-0981-7},
+    doi = {10.1007/s11263-016-0981-7},
+    journal = {Int. J. Comput. Vision},
+    month = may,
+    pages = {32–73},
+    numpages = {42},
+    keywords = {Scene graph, Relationships, Question answering, Objects, Language, Knowledge, Image, Dataset, Crowdsourcing, Computer vision, Attributes}
+}
+
+@misc{ren2024grounded,
+      title={Grounded SAM: Assembling Open-World Models for Diverse Visual Tasks}, 
+      author={Tianhe Ren and Shilong Liu and Ailing Zeng and Jing Lin and Kunchang Li and He Cao and Jiayu Chen and Xinyu Huang and Yukang Chen and Feng Yan and Zhaoyang Zeng and Hao Zhang and Feng Li and Jie Yang and Hongyang Li and Qing Jiang and Lei Zhang},
+      year={2024},
+      eprint={2401.14159},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@misc{he2018maskrcnn,
+      title={Mask R-CNN}, 
+      author={Kaiming He and Georgia Gkioxari and Piotr Dollár and Ross Girshick},
+      year={2018},
+      eprint={1703.06870},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1703.06870}, 
+}
+
+@article{wang2021solo,
+  title   =  {{SOLO}: A Simple Framework for Instance Segmentation},
+  author  =  {Wang, Xinlong and Zhang, Rufeng and Shen, Chunhua and Kong, Tao and Li, Lei},
+  journal =  {IEEE T. Pattern Analysis and Machine Intelligence (TPAMI)},
+  year    =  {2021}
+}
+
+@InProceedings{Bolya_2019_yolact,
+    author = {Bolya, Daniel and Zhou, Chong and Xiao, Fanyi and Lee, Yong Jae},
+    title = {YOLACT: Real-Time Instance Segmentation},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month = {October},
+    year = {2019}
+}
+
+@inproceedings{cheng2021mask2former,
+  title={Masked-attention Mask Transformer for Universal Image Segmentation},
+  author={Bowen Cheng and Ishan Misra and Alexander G. Schwing and Alexander Kirillov and Rohit Girdhar},
+  journal={CVPR},
+  year={2022}
+}
+
+@misc{radford2021clip,
+      title={Learning Transferable Visual Models From Natural Language Supervision}, 
+      author={Alec Radford and Jong Wook Kim and Chris Hallacy and Aditya Ramesh and Gabriel Goh and Sandhini Agarwal and Girish Sastry and Amanda Askell and Pamela Mishkin and Jack Clark and Gretchen Krueger and Ilya Sutskever},
+      year={2021},
+      eprint={2103.00020},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2103.00020}, 
+}
+
+@article{xiao2023florence,
+  title={Florence-2: Advancing a unified representation for a variety of vision tasks},
+  author={Xiao, Bin and Wu, Haiping and Xu, Weijian and Dai, Xiyang and Hu, Houdong and Lu, Yumao and Zeng, Michael and Liu, Ce and Yuan, Lu},
+  journal={arXiv preprint arXiv:2311.06242},
+  year={2023}
+}
+
+@inproceedings{liu2023llava,
+    author      = {Liu, Haotian and Li, Chunyuan and Wu, Qingyang and Lee, Yong Jae},
+    title       = {Visual Instruction Tuning},
+    booktitle   = {NeurIPS},
+    year        = {2023}
+}
+
+@article{yu2022coca,
+  title={Coca: Contrastive captioners are image-text foundation models},
+  author={Yu, Jiahui and Wang, Zirui and Vasudevan, Vijay and Yeung, Legg and Seyedhosseini, Mojtaba and Wu, Yonghui},
+  journal={arXiv preprint arXiv:2205.01917},
+  year={2022}
+}
+
+@article{zhang2022glipv2,
+  title={GLIPv2: Unifying Localization and Vision-Language Understanding},
+  author={Zhang, Haotian* and Zhang, Pengchuan* and Hu, Xiaowei and Chen, Yen-Chun and Li, Liunian Harold and Dai, Xiyang and Wang, Lijuan and Yuan, Lu and Hwang, Jenq-Neng and Gao, Jianfeng},
+  journal={arXiv preprint arXiv:2206.05836},
+  year={2022}
+}
+
+@misc{minderer2022owlvit,
+      title={Simple Open-Vocabulary Object Detection with Vision Transformers}, 
+      author={Matthias Minderer and Alexey Gritsenko and Austin Stone and Maxim Neumann and Dirk Weissenborn and Alexey Dosovitskiy and Aravindh Mahendran and Anurag Arnab and Mostafa Dehghani and Zhuoran Shen and Xiao Wang and Xiaohua Zhai and Thomas Kipf and Neil Houlsby},
+      year={2022},
+      eprint={2205.06230},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2205.06230}, 
+}
+
+
+%%%%%%%%%%%%%%%% Image parsing citations %%%%%%%%%%%%%%%%
+@article{painterlyrendering,
+    author = {Zeng, Kun and Zhao, Mingtian and Xiong, Caiming and Zhu, Song-Chun},
+    title = {From image parsing to painterly rendering},
+    year = {2009},
+    issue_date = {December 2009},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {29},
+    number = {1},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/1640443.1640445},
+    doi = {10.1145/1640443.1640445},
+    journal = {ACM Trans. Graph.},
+    month = dec,
+    articleno = {2},
+    numpages = {11},
+    keywords = {Image parsing, nonphotorealistic rendering, orientation field, painterly rendering, primal sketch}
+}
+
+@inproceedings{layerwisevectorization,
+   title={Towards Layer-wise Image Vectorization},
+   url={http://dx.doi.org/10.1109/CVPR52688.2022.01583},
+   DOI={10.1109/cvpr52688.2022.01583},
+   booktitle={2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+   publisher={IEEE},
+   author={Ma, Xu and Zhou, Yuqian and Xu, Xingqian and Sun, Bin and Filev, Valerii and Orlov, Nikita and Fu, Yun and Shi, Humphrey},
+   year={2022},
+   month=jun, pages={16293–16302} 
+}
+
+@ARTICLE{movingimages,
+  author={Wang, J.Y.A. and Adelson, E.H.},
+  journal={IEEE Transactions on Image Processing}, 
+  title={Representing moving images with layers}, 
+  year={1994},
+  volume={3},
+  number={5},
+  pages={625-638},
+  keywords={Image coding;Image sequences;Animation;Computer graphics;Laboratories;Additives;Motion analysis;Decoding;Image processing;Machine vision},
+  doi={10.1109/83.334981}
+}
+
+@article{yu2024_3dlayer,
+    author = {Yu, Emilie and Chevalier, Fanny and Singh, Karan and Bousseau, Adrien},
+    title = {3D-Layers: Bringing Layer-Based Color Editing to VR Painting},
+    year = {2024},
+    issue_date = {July 2024},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {43},
+    number = {4},
+    issn = {0730-0301},
+    url = {https://doi.org/10.1145/3658183},
+    doi = {10.1145/3658183},
+    journal = {ACM Trans. Graph.},
+    month = jul,
+    articleno = {101},
+    numpages = {15},
+    keywords = {3D painting, virtual reality, digital painting}
+}
+@misc{alzayer2024magicfixup,
+  title={Magic Fixup: Streamlining Photo Editing by Watching Dynamic Videos}, 
+  author={Hadi Alzayer and Zhihao Xia and Xuaner Zhang and Eli Shechtman and Jia-Bin Huang and Michael Gharbi},
+  year={2024},
+  eprint={2403.13044},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2403.13044}, 
+}
+
+%%%%%%%%% MISC %%%%%%%%
+
+@ARTICLE{watershed1991,
+  author={Vincent, L. and Soille, P.},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+  title={Watersheds in digital spaces: an efficient algorithm based on immersion simulations}, 
+  year={1991},
+  volume={13},
+  number={6},
+  pages={583-598},
+  keywords={Morphology;Oceans;Computational modeling;Gray-scale;Image segmentation;Digital elevation models;Surfaces;Image processing;Floods;Digital images},
+  doi={10.1109/34.87344}
+}
+
+@misc{rombach2021highresolution,
+      title={High-Resolution Image Synthesis with Latent Diffusion Models}, 
+      author={Robin Rombach and Andreas Blattmann and Dominik Lorenz and Patrick Esser and Björn Ommer},
+      year={2021},
+      eprint={2112.10752},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@article{depth_anything_v2,
+  title={Depth Anything V2},
+  author={Yang, Lihe and Kang, Bingyi and Huang, Zilong and Zhao, Zhen and Xu, Xiaogang and Feng, Jiashi and Zhao, Hengshuang},
+  journal={arXiv:2406.09414},
+  year={2024}
+}
+
+@inproceedings{liu2021Swin,
+  title={Swin Transformer: Hierarchical Vision Transformer using Shifted Windows},
+  author={Liu, Ze and Lin, Yutong and Cao, Yue and Hu, Han and Wei, Yixuan and Zhang, Zheng and Lin, Stephen and Guo, Baining},
+  booktitle={ICCV},
+  year={2021}
+}
+
+@article{Caesar2016COCOStuffTA,
+  title={COCO-Stuff: Thing and Stuff Classes in Context},
+  author={Holger Caesar and Jasper R. R. Uijlings and Vittorio Ferrari},
+  journal={2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  year={2016},
+  pages={1209-1218},
+  url={https://api.semanticscholar.org/CorpusID:4396518}
+}
+
+
+@inproceedings{DINOcaron2021emerging,
+  title={Emerging Properties in Self-Supervised Vision Transformers},
+  author={Caron, Mathilde and Touvron, Hugo and Misra, Ishan and J\'egou, Herv\'e  and Mairal, Julien and Bojanowski, Piotr and Joulin, Armand},
+  booktitle={ICCV},
+  year={2021}
+}
+
+@inproceedings{CarionDETR,
+author = {Carion, Nicolas and Massa, Francisco and Synnaeve, Gabriel and Usunier, Nicolas and Kirillov, Alexander and Zagoruyko, Sergey},
+title = {End-to-End Object Detection with Transformers},
+year = {2020},
+isbn = {978-3-030-58451-1},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+url = {https://doi.org/10.1007/978-3-030-58452-8_13},
+doi = {10.1007/978-3-030-58452-8_13},
+abstract = {We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture. Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. The new model is conceptually simple and does not require a specialized library, unlike many other modern detectors. DETR demonstrates accuracy and run-time performance on par with the well-established and highly-optimized Faster R-CNN baseline on the challenging COCO object detection dataset. Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines. Training code and pretrained models are available at .},
+booktitle = {Computer Vision – ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part I},
+pages = {213–229},
+numpages = {17},
+location = {Glasgow, United Kingdom}
+}
+
+@misc{SDXLInpaintingHF,
+  author = {Hugging Face },
+  title = {Diffusers: State-of-the-art diffusion models},
+  year = {2022},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://huggingface.co/spaces/diffusers/stable-diffusion-xl-inpainting}}
+}
+
+
+@misc{von-platen-etal-2022-diffusers,
+  author = {Patrick von Platen and Suraj Patil and Anton Lozhkov and Pedro Cuenca and Nathan Lambert and Kashif Rasul and Mishig Davaadorj and Dhruv Nair and Sayak Paul and William Berman and Yiyi Xu and Steven Liu and Thomas Wolf},
+  title = {Diffusers: State-of-the-art diffusion models},
+  year = {2022},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/huggingface/diffusers}}
+}
+
+@article{zhang2023recognize,
+  title={Recognize Anything: A Strong Image Tagging Model},
+  author={Zhang, Youcai and Huang, Xinyu and Ma, Jinyu and Li, Zhaoyang and Luo, Zhaochuan and Xie, Yanchun and Qin, Yuzhuo and Luo, Tong and Li, Yaqian and Liu, Shilong and others},
+  journal={arXiv preprint arXiv:2306.03514},
+  year={2023}
+}
+
+@Article{Li:2022:Free2CAD, 
+	Title = {Free2CAD: Parsing Freehand Drawings into CAD Commands}, 
+	Author = {Changjian Li and Hao Pan and Adrien Bousseau and Niloy J. Mitra}, 
+	Journal = {ACM Trans. Graph. (Proceedings of SIGGRAPH 2022)}, 
+	Year = {2022}, 
+	Number = {4}, 
+	Volume = {41},
+	Pages={93:1--93:16},
+	numpages = {16},
+	DOI={https://doi.org/10.1145/3528223.3530133},
+	Publisher = {ACM} 
+}

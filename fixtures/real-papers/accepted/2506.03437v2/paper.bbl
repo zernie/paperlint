@@ -1,0 +1,236 @@
+\begin{thebibliography}{10}
+
+\bibitem{noauthor_qdrant_nodate}
+Qdrant - {Vector} {Database}.
+\newblock https://qdrant.tech/.
+
+\bibitem{bigann}
+Billion-scale approximate nearest neighbor search challenge: Neurips'21 competition track.
+\newblock {https://big-ann-benchmarks.com/}, 2021.
+
+\bibitem{pinecone-url}
+Vector database for vector search | pinecone.
+\newblock https://www.pinecone.io, 2024.
+\newblock Accessed on December 4, 2023.
+
+\bibitem{wiki}
+Wikipedia:pageview statistics.
+\newblock {https://en.wikipedia.org/wiki/Wikipedia:Pageview\_statistics}, 2024.
+
+\bibitem{aguerrebere2024locally}
+Cecilia Aguerrebere, Mark Hildebrand, Ishwar~Singh Bhati, Theodore Willke, and Mariano Tepper.
+\newblock Locally-adaptive quantization for streaming vector search.
+\newblock {\em arXiv preprint arXiv:2402.02044}, 2024.
+
+\bibitem{baranchuk_dedrift_2023}
+Dmitry Baranchuk, Matthijs Douze, Yash Upadhyay, and I.~Zeki Yalniz.
+\newblock {DeDrift}: {Robust} {Similarity} {Search} under {Content} {Drift}, August 2023.
+\newblock arXiv:2308.02752 [cs].
+
+\bibitem{chen_spann_nodate}
+Qi~Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong Li, Mao Yang, and Jingdong Wang.
+\newblock {SPANN}: {Highly}-efﬁcient {Billion}-scale {Approximate} {Nearest} {Neighbor} {Search}.
+
+\bibitem{douze2024faisslibrary}
+Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely Szilvasy, Pierre-Emmanuel Mazaré, Maria Lomeli, Lucas Hosseini, and Hervé Jégou.
+\newblock The faiss library, 2024.
+
+\bibitem{grbovic2018real}
+Mihajlo Grbovic and Haibin Cheng.
+\newblock Real-time personalization using embeddings for search ranking at airbnb.
+\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 311--320, 2018.
+
+\bibitem{guo_accelerating_2020}
+Ruiqi Guo, Philip Sun, Erik Lindgren, Quan Geng, David Simcha, Felix Chern, and Sanjiv Kumar.
+\newblock Accelerating {Large}-{Scale} {Inference} with {Anisotropic} {Vector} {Quantization}.
+\newblock In {\em Proceedings of the 37th {International} {Conference} on {Machine} {Learning}}, pages 3887--3896. PMLR, November 2020.
+\newblock ISSN: 2640-3498.
+
+\bibitem{haldar2019applying}
+Malay Haldar, Mustafa Abdool, Prashant Ramanathan, Tao Xu, Shulin Yang, Huizhong Duan, Qing Zhang, Nick Barrow-Williams, Bradley~C Turnbull, Brendan~M Collins, et~al.
+\newblock Applying deep learning to airbnb search.
+\newblock In {\em Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 1927--1935, 2019.
+
+\bibitem{hashemi2021neural}
+Helia Hashemi, Aasish Pappu, Mi~Tian, Praveen Chandar, Mounia Lalmas, and Benjamin Carterette.
+\newblock Neural instant search for music and podcast.
+\newblock In {\em Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery \& Data Mining}, pages 2984--2992, 2021.
+
+\bibitem{jegou2010product}
+Herve Jegou, Matthijs Douze, and Cordelia Schmid.
+\newblock Product quantization for nearest neighbor search.
+\newblock {\em IEEE transactions on pattern analysis and machine intelligence}, 33(1):117--128, 2010.
+
+\bibitem{jegou_product_2011}
+Herve Jégou, Matthijs Douze, and Cordelia Schmid.
+\newblock Product {Quantization} for {Nearest} {Neighbor} {Search}.
+\newblock {\em IEEE Transactions on Pattern Analysis and Machine Intelligence}, 33(1):117--128, January 2011.
+\newblock Conference Name: IEEE Transactions on Pattern Analysis and Machine Intelligence.
+
+\bibitem{Kuznetsova_2020}
+Alina Kuznetsova, Hassan Rom, Neil Alldrin, Jasper Uijlings, Ivan Krasin, Jordi Pont-Tuset, Shahab Kamali, Stefan Popov, Matteo Malloci, Alexander Kolesnikov, Tom Duerig, and Vittorio Ferrari.
+\newblock The open images dataset v4: Unified image classification, object detection, and visual relationship detection at scale.
+\newblock {\em International Journal of Computer Vision}, 128(7):1956–1981, March 2020.
+
+\bibitem{lee2014concise}
+Yongjae Lee and Woo~Chang Kim.
+\newblock Concise formulas for the surface area of the intersection of two hyperspherical caps.
+\newblock {\em KAIST Technical Report}, 2014.
+
+\bibitem{10.1145/2588555.2610507}
+Viktor Leis, Peter Boncz, Alfons Kemper, and Thomas Neumann.
+\newblock Morsel-driven parallelism: a numa-aware query evaluation framework for the many-core age.
+\newblock In {\em Proceedings of the 2014 ACM SIGMOD International Conference on Management of Data}, SIGMOD '14, page 743–754, New York, NY, USA, 2014. Association for Computing Machinery.
+
+\bibitem{li2020improving}
+Conglong Li, Minjia Zhang, David~G Andersen, and Yuxiong He.
+\newblock Improving approximate nearest neighbor search through learned adaptive early termination.
+\newblock In {\em Proceedings of the 2020 ACM SIGMOD International Conference on Management of Data}, pages 2539--2554, 2020.
+
+\bibitem{li2010concise}
+Shengqiao Li.
+\newblock Concise formulas for the area and volume of a hyperspherical cap.
+\newblock {\em Asian Journal of Mathematics \& Statistics}, 4(1):66--70, 2010.
+
+\bibitem{libtorch}
+{LibTorch: PyTorch C++ API}.
+\newblock {https://pytorch.org/cppdocs}.
+
+\bibitem{liu2017related}
+David~C Liu, Stephanie Rogers, Raymond Shiau, Dmitry Kislyuk, Kevin~C Ma, Zhigang Zhong, Jenny Liu, and Yushi Jing.
+\newblock Related pins at pinterest: The evolution of a real-world recommender system.
+\newblock In {\em Proceedings of the 26th international conference on world wide web companion}, pages 583--592, 2017.
+
+\bibitem{liu2022monolith}
+Zhuoran Liu, Leqi Zou, Xuan Zou, Caihua Wang, Biao Zhang, Da~Tang, Bolin Zhu, Yijie Zhu, Peng Wu, Ke~Wang, and Youlong Cheng.
+\newblock Monolith: Real time recommendation system with collisionless embedding table.
+\newblock In {\em 5th Workshop on Online Recommender Systems and User Modeling (ORSUM2022), in conjunction with the 16th ACM Conference on Recommender Systems}, 2022.
+
+\bibitem{mageirakos2025cracking}
+Vasilis Mageirakos, Bowen Wu, and Gustavo Alonso.
+\newblock Cracking vector search indexes.
+\newblock {\em arXiv preprint arXiv:2503.01823}, 2025.
+
+\bibitem{10.1109/TPAMI.2018.2889473}
+Yu~A. Malkov and D.~A. Yashunin.
+\newblock Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs.
+\newblock {\em IEEE Trans. Pattern Anal. Mach. Intell.}, 42(4):824–836, April 2020.
+
+\bibitem{mohoney2024incremental}
+Jason Mohoney, Anil Pacaci, Shihabur~Rahman Chowdhury, Umar~Farooq Minhas, Jeffery Pound, Cedric Renggli, Nima Reyhani, Ihab~F Ilyas, Theodoros Rekatsinas, and Shivaram Venkataraman.
+\newblock Incremental ivf index maintenance for streaming vector search.
+\newblock {\em arXiv preprint arXiv:2411.00970}, 2024.
+
+\bibitem{mohoney_high-throughput_2023}
+Jason Mohoney, Anil Pacaci, Shihabur~Rahman Chowdhury, Ali Mousavi, Ihab~F. Ilyas, Umar~Farooq Minhas, Jeffrey Pound, and Theodoros Rekatsinas.
+\newblock High-{Throughput} {Vector} {Similarity} {Search} in {Knowledge} {Graphs}.
+\newblock {\em Proceedings of the ACM on Management of Data}, 1(2):1--25, June 2023.
+
+\bibitem{mohoney2025quakeadaptiveindexingvector}
+Jason Mohoney, Devesh Sarda, Mengze Tang, Shihabur~Rahman Chowdhury, Anil Pacaci, Ihab~F. Ilyas, Theodoros Rekatsinas, and Shivaram Venkataraman.
+\newblock Quake: Adaptive indexing for vector search (technical report).
+\newblock {\em arXiv preprint arXiv:2506.03437}, 2025.
+
+\bibitem{mohoney2021marius}
+Jason Mohoney, Roger Waleffe, Henry Xu, Theodoros Rekatsinas, and Shivaram Venkataraman.
+\newblock Marius: Learning massive graph embeddings on a single machine.
+\newblock In {\em 15th $\{$USENIX$\}$ Symposium on Operating Systems Design and Implementation ($\{$OSDI$\}$ 21)}, pages 533--549, 2021.
+
+\bibitem{moody}
+{moodycamel::ConcurrentQueue}.
+\newblock {https://github.com/cameron314/concurrentqueue}.
+
+\bibitem{simsimd}
+{SimSIMD}.
+\newblock {https://github.com/ashvardanian/SimSIMD}.
+
+\bibitem{ni_diskann_2023}
+Jiongkang Ni, Xiaoliang Xu, Yuxiang Wang, Can Li, Jiajie Yao, Shihai Xiao, and Xuecang Zhang.
+\newblock {DiskANN}++: {Efficient} {Page}-based {Search} over {Isomorphic} {Mapped} {Graph} {Index} using {Query}-sensitivity {Entry} {Vertex}, November 2023.
+\newblock arXiv:2310.00402 [cs].
+
+\bibitem{okura2017embedding}
+Shumpei Okura, Yukihiro Tagami, Shingo Ono, and Akira Tajima.
+\newblock Embedding-based news recommendation for millions of users.
+\newblock In {\em Proceedings of the 23rd ACM SIGKDD international conference on knowledge discovery and data mining}, pages 1933--1942, 2017.
+
+\bibitem{pal2020pinnersage}
+Aditya Pal, Chantat Eksombatchai, Yitong Zhou, Bo~Zhao, Charles Rosenberg, and Jure Leskovec.
+\newblock Pinnersage: Multi-modal user embedding framework for recommendations at pinterest.
+\newblock In {\em Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 2311--2320, 2020.
+
+\bibitem{pound2025micronn}
+Jeffrey Pound, Floris Chabert, Arjun Bhushan, Ankur Goswami, Anil Pacaci, and Shihabur~Rahman Chowdhury.
+\newblock Micronn: An on-device disk-resident updatable vector database.
+\newblock {\em arXiv preprint arXiv:2504.05573}, 2025.
+
+\bibitem{10.14778/3015274.3015275}
+Iraklis Psaroudakis, Tobias Scheuer, Norman May, Abdelkader Sellami, and Anastasia Ailamaki.
+\newblock Adaptive numa-aware data placement and task scheduling for analytical workloads in main-memory column-stores.
+\newblock {\em Proc. VLDB Endow.}, 10(2):37–48, October 2016.
+
+\bibitem{qin2021mixer}
+An~Qin, Mengbai Xiao, Yongwei Wu, Xinjie Huang, and Xiaodong Zhang.
+\newblock Mixer: efficiently understanding and retrieving visual content at web-scale.
+\newblock {\em Proceedings of the VLDB Endowment}, 14(12):2906--2917, 2021.
+
+\bibitem{radford2021learningtransferablevisualmodels}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever.
+\newblock Learning transferable visual models from natural language supervision, 2021.
+
+\bibitem{singh2021freshdiskann}
+Aditi Singh, Suhas~Jayaram Subramanya, Ravishankar Krishnaswamy, and Harsha~Vardhan Simhadri.
+\newblock Freshdiskann: A fast and accurate graph-based ann index for streaming similarity search.
+\newblock {\em arXiv preprint arXiv:2105.09613}, 2021.
+
+\bibitem{10.5555/3454287.3455520}
+Suhas~Jayaram Subramanya, Devvrit, Rohan Kadekodi, Ravishankar Krishaswamy, and Harsha~Vardhan Simhadri.
+\newblock {\em DiskANN: fast accurate billion-point nearest neighbor search on a single node}.
+\newblock Curran Associates Inc., Red Hook, NY, USA, 2019.
+
+\bibitem{soar_2023}
+Philip Sun, David Simcha, Dave Dopson, Ruiqi Guo, and Sanjiv Kumar.
+\newblock Soar: Improved indexing for approximate nearest neighbor search.
+\newblock In {\em Neural Information Processing Systems}, 2023.
+
+\bibitem{waleffe2023mariusgnn}
+Roger Waleffe, Jason Mohoney, Theodoros Rekatsinas, and Shivaram Venkataraman.
+\newblock Mariusgnn: Resource-efficient out-of-core training of graph neural networks.
+\newblock In {\em ACM SIGOPS European Conference on Computer Systems (EuroSys)}, 2023.
+
+\bibitem{wang2021milvus}
+Jianguo Wang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, Xiangyu Wang, Xiangzhou Guo, Chengming Li, Xiaohai Xu, et~al.
+\newblock Milvus: A purpose-built vector data management system.
+\newblock In {\em Proceedings of the 2021 International Conference on Management of Data}, pages 2614--2627, 2021.
+
+\bibitem{wang2018billion}
+Jizhe Wang, Pipei Huang, Huan Zhao, Zhibo Zhang, Binqiang Zhao, and Dik~Lun Lee.
+\newblock Billion-scale commodity embedding for e-commerce recommendation in alibaba.
+\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pages 839--848, 2018.
+
+\bibitem{wei2020analyticdb}
+Chuangxian Wei, Bin Wu, Sheng Wang, Renjie Lou, Chaoqun Zhan, Feifei Li, and Yuanzhe Cai.
+\newblock Analyticdb-v: A hybrid analytical engine towards query fusion for structured and unstructured data.
+\newblock {\em Proceedings of the VLDB Endowment}, 13(12):3152--3165, 2020.
+
+\bibitem{xu_spfresh_2023}
+Yuming Xu, Hengyu Liang, Jin Li, Shuotao Xu, Qi~Chen, Qianxi Zhang, Cheng Li, Ziyue Yang, Fan Yang, Yuqing Yang, Peng Cheng, and Mao Yang.
+\newblock {SPFresh}: {Incremental} {In}-{Place} {Update} for {Billion}-{Scale} {Vector} {Search}.
+\newblock In {\em Proceedings of the 29th {Symposium} on {Operating} {Systems} {Principles}}, {SOSP} '23, pages 545--561, New York, NY, USA, October 2023. Association for Computing Machinery.
+
+\bibitem{distmult}
+Bishan Yang, Wen-tau Yih, Xiaodong He, Jianfeng Gao, and Li~Deng.
+\newblock Embedding entities and relations for learning and inference in knowledge bases.
+\newblock {\em arXiv preprint arXiv:1412.6575}, 2014.
+
+\bibitem{zhang2023vbase}
+Qianxi Zhang, Shuotao Xu, Qi~Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan Yang, et~al.
+\newblock $\{$VBASE$\}$: Unifying online vector similarity search and relational queries via relaxed monotonicity.
+\newblock In {\em 17th USENIX Symposium on Operating Systems Design and Implementation (OSDI 23)}, pages 377--395, 2023.
+
+\bibitem{zhang2023fast}
+Zili Zhang, Chao Jin, Linpeng Tang, Xuanzhe Liu, and Xin Jin.
+\newblock Fast, approximate vector queries on very large unstructured datasets.
+\newblock In {\em 20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23)}, pages 995--1011, 2023.
+
+\end{thebibliography}

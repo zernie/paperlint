@@ -1,0 +1,245 @@
+\section{Experiments}
+% \subsection{Setup}
+We start with a brief overview of the datasets, related baselines and metrics that are used for evaluation. We then present a number of qualitative and quantitative insights to demonstrate our approach’s advantages in unconditional volume synthesis over related methods. Implementation details are provided in Appendix~\ref{ap:mc}, and additional experimental results can be found in Appendix~\ref{ap}.
+
+\textbf{Datasets.}\;\; We evaluate the performance of our model on two publicly available 3D medical imaging datasets: LIDC-IDRI~\citep{armato2011lung} and Rad-ChestCT~\citep{draelos2020rad}. LIDC-IDRI contains $1{,}018$ thoracic CT scans with annotations of lung nodules from multiple expert radiologists. The scans exhibit varied resolutions and patient anatomies. For preprocessing, we clip the intensity values to the lung window range, resample all volumes to an isotropic voxel spacing of 1 mm, and crop or pad them to a uniform size of $256\!\times\!256\!\times 256$. For experiments involving lower resolutions, volumes are downsampled via average pooling, then normalized to $[-1,1]$. Rad-ChestCT includes $3{,}630$ chest CT scans from $1{,}800$ adult patients, representing approximately $10\%$ of the full dataset, which contains $35{,}747$ scans from $19{,}661$ patients. The dataset encompasses a broad spectrum of thoracic diseases and anatomical variations. We center-crop to a fixed field of view, resize to $256\!\times256\!\times\!256$, optionally downsample, and normalize to $[-1,1]$ for consistency with LIDC-IDRI. %\mh{Leave for now -- if we need space, can shorten.}
+
+\textbf{Baseline Models.}\;\; We contrast our PRDiT to three recently published 3D medical image generation models. WDM-3D~\citep{friedrich2024wdm}, a diffusion model that decomposes each 3D volume into multi-resolution subbands via discrete wavelet transforms, denoises each subband with a 3D U-Net, and then reconstructs the full volume with an inverse wavelet transform. 3D LDM~\citep{khader2023medical}, a latent diffusion model that employs a VQ-GAN encoder to map volumes into a compact latent space, performs diffusion in that latent space and reconstructs volumes with a matching 3D convolutional decoder. HA-GAN~\citep{sun2022hierarchical} in contrast uses a hierarchical GAN whose generator comprises a low-resolution “global” and a high-resolution “local” 3D convolutional network, each guided by multi-scale discriminators on corresponding sub-volumes. 
+
+\textbf{Evaluation Metrics.}\;\; We evaluate unconditional generative quality using the 3D Fréchet Inception Distance (FID),
+%~\citep{sun2022hierarchical,pinaya2022brain,friedrich2024wdm}
+Maximum Mean Discrepancy (MMD)~\citep{gretton2012kernel,sun2022hierarchical} and the pairwise Wasserstein distance using WGAN~\citep{Arjovsky2017WassersteinG,zhang2025tcam}. Following common practice, we extract volumetric embeddings from both real and generated CT volumes using a pretrained Med3D encoder~\citep{chen2019med3d}, then quantify their distributional discrepancy by fitting multivariate Gaussians and computing the 3D FID as well as by applying an RBF‐kernel MMD~\citep{gretton2012kernel} in the same feature space. Lower 3D FID and MMD values indicate that the generated feature distribution more closely matches the real distribution. The Wasserstein distance is obtained by comparing the WGAN critic’s scores on generated samples against those on real data, following the evaluation approach of~\citet{zhang2025tcam}. A lower Wasserstein distance indicates that the critic assigns similar scores to generated and real volumes, implying the generated distribution closely matches the true data distribution and thus higher sample fidelity. We perform pairwise comparisons to one `anchor' model. See Appendix~\ref{ap:eval} for additional details.
+% \red{\paragraph{Implementation Details.}
+% Our model comprises a blind estimator module that predicts coarse signal and noise components from input patches and a residual refinement module that learns additive corrections to those estimates. We train these modules separately using the AdamW optimizer~\citep{adamw2019}, setting the learning rate to $1\times10^{-4}$ for the blind estimator and $9\times10^{-5}$ for the residual module. Training is distributed across four GPUs: for volumes resized to $128^3$, we use a per-GPU batch size of $16$, and for $256^3$ inputs, a per-GPU batch size of $4$. To ensure stability, we applied gradient clipping with a max norm of $1.0$.}
+
+\subsection{Contrasting PRDiT to the State\mbox{-}Of\mbox{-}The-Art}
+\begin{table*}[b]
+\caption{Comparison of unconditional 3D generative methods on LIDC\mbox{-}IDRI~\citep{armato2011lung} and RAD\mbox{-}ChestCT~\citep{draelos2020rad}, evaluated on volumes of size $128^3$. FID values are scaled by $10^{3}$. Reported are mean $\pm$ std over three seeds. Pairwise W-Score (ratio) is computed using a trained WGAN\mbox{-}GP critic against PRDiT\mbox{-}12L as reference. See Appendix~\ref{ap:eval} for details.}
+% \vspace{-6pt}
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt} % tighten columns a bit
+  \begin{tabular}{lcccccc}
+    \toprule
+      & \multicolumn{3}{c}{LIDC\mbox{-}IDRI} & \multicolumn{3}{c}{RAD\mbox{-}ChestCT} \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+    Model
+      & FID\,$\downarrow$ & MMD\,$\downarrow$ & W-Score\,$\downarrow$
+      & FID\,$\downarrow$ & MMD\,$\downarrow$ & W-Score\,$\downarrow$ \\
+    \midrule
+    HA\mbox{-}GAN
+      & \meanstd{3.26}{0.27} & \meanstd{0.2071}{0.004} & \meanstd{5.42}{1.46}
+      & \meanstd{3.92}{0.38} & \meanstd{0.183}{0.015} & \meanstd{2.48}{0.14} \\
+    3D\mbox{-}LDM
+      & \meanstd{7.62}{0.21} & \meanstd{0.3458}{0.006} & \meanstd{2.62}{0.28}
+      & \meanstd{4.14}{0.74} & \meanstd{0.228}{0.017} & \meanstd{2.87}{0.36} \\
+    % 3D LDM*
+    %   & \meanstd{}{} & \meanstd{}{} & \meanstd{}{}
+    %   & \meanstd{}{} & \meanstd{}{} & \meanstd{}{} \\
+    WDM\mbox{-}3D
+      & \meanstd{3.67}{0.38} & \meanstd{0.1885}{0.017} & \meanstd{1.31}{0.26}
+      & \meanstd{4.11}{0.58} & \meanstd{0.213}{0.039} & \meanstd{1.27}{0.11} \\
+    \midrule
+        PRDiT\mbox{-}4L (ours)
+      & {2.04}{\scriptsize\,$\pm$\,0.18} & {0.1852}{\scriptsize\,$\pm$\,0.009} & \meanstd{{1.23}}{0.08}
+      & {1.92}{\scriptsize\,$\pm$\,0.28} & {0.169}{\scriptsize\,$\pm$\,0.010} &  \meanstd{{1.21}}{0.04} \\
+      PRDiT\mbox{-}8L (ours)
+      & 1.86{\scriptsize\,$\pm$\,0.12} & 0.1650{\scriptsize\,$\pm$\,0.011} & 1.14{\scriptsize\,$\pm$\,0.13}
+      & 1.62{\scriptsize\,$\pm$\,0.07} & \textbf{0.149}{\scriptsize\,$\pm$\,0.010} & \meanstd{1.02}{0.02} \\
+      PRDiT\mbox{-}12L (ours)
+      & \textbf{1.41}{\scriptsize\,$\pm$\,0.17} & \textbf{0.1501}{\scriptsize\,$\pm$\,0.010} & \textbf{1.00}
+      & \textbf{1.45}{\scriptsize\,$\pm$\,0.21} & 0.159{\scriptsize\,$\pm$\,0.007} & \textbf{1.00} \\
+    \bottomrule
+    % \multicolumn{7}{l}{\footnotesize 3D LDM* incorporates flip data augmentation during training, and generated outputs are manually flipped back for fair comparison.}
+  \end{tabular}
+  \label{tab1}
+\end{table*}
+% 3D LDM$*$ incorporates flip data augmentation during training, and generated outputs are manually flipped back for fair comparison.
+
+
+To demonstrate the performance of our PRDiT, we compare three model variants (4 layers, 8 layers and 12 layers) against the baselines HA\mbox{-}GAN~\citep{sun2022hierarchical}, 3D\mbox{-}LDM~\citep{khader2023medical} and WDM\mbox{-}3D~\citep{friedrich2024wdm} on both LIDC\mbox{-}IDRI~\citep{armato2011lung} and RAD-ChestCT~\citep{draelos2020rad} and report the results in Table~\ref{tab1}. Our smallest 4~layer PRDiT-4L variant already achieves lower 3D FID and MMD scores than its competitors across both datasets, outperforming them across all metrics despite its shallow depth. Increasing PRDiT's depth to 8~and 12~layers yields consistent improvements in generative quality and demonstrates the scalability of our approach; albeit at increased computational cost. Note, however, that all PRDiT variants reuse the same Local Denoiser module which only has to be trained once, effectively reducing the computational overhead and training time when scaling our architecture to greater depths. 
+
+Following~\citet{zhang2023improving}, we additionally report the pairwise W\mbox{-}Scores with our PRDiT-12L as the `reference' model. This score effectively quantifies the ratio between the distances of each model's distribution of generated samples to that of the real data (see Appendix~\ref{ap:eval}). A score of `$1.0$' indicates equal generative quality between two models, while values greater than~$1$ reflect degraded performance relative to the reference - reaffirming the quality of even our 4-layer model.
+
+% \subsection{Qualitative Results} % image
+\subsection{Comparing Perceived Image Quality -- Sagittal Slices}
+\begin{wrapfigure}[14]{r}{0.40\textwidth}
+\vspace{-13.5pt}
+\begin{minipage}{0.40\textwidth}
+% \begin{figure}[h]
+\centering
+\includegraphics[width=1\textwidth]{images/experiments/4_8_12.pdf}
+\vspace{-18pt}
+\caption{Variation of image quality across different depths of PRDiT.}% \rebuttal{adding the description about not sequence, independence.}}
+\label{fig3}
+% \vspace{-40pt}
+% \end{figure}
+\end{minipage}
+\end{wrapfigure}
+\begin{figure*}[h]
+\centering
+\includegraphics[width=1.0\textwidth]{images/experiments/128lidc_rad.pdf}
+\caption{Qualitative comparison of unconditional 3D generative methods on the LIDC\mbox{-}IDRI~\citep{armato2011lung} and Rad\mbox{-}ChestCT~\citep{draelos2020rad}.  
+From top to bottom, the rows correspond to (1) HA\mbox{-}GAN~\citep{sun2022hierarchical}, (2) 3D\mbox{-}LDM~\citep{khader2023medical}, (3) WDM\mbox{-}3D~\citep{friedrich2024wdm}, (4) our method, and (5) real medical data.  
+Our approach better preserves fine anatomical details such as vertebral bone edges and organ boundaries while suppressing spurious artifacts compared to prior models. Additional examples are provided in Appendix~\ref{ap}. \rebuttal{\emph{Note: Images are independently generated and unconditional, and cannot be compared column-wise. Regions appearing as `black voids' within the body are low-density air cavities that are also present in the real data (see Appendix \ref{ap:air_cavities}, Figure~\ref{fig:real_datasets} for more details).}}}
+\label{fig2}
+\vspace{-8pt}
+\end{figure*}
+Figure~\ref{fig2} shows sagittal slices from each generative method alongside real CT scans, providing a qualitative comparison between our PRDiT model and its competitors.  HA\mbox{-}GAN~\citep{sun2022hierarchical} notably blurs bone contours and introduces unnatural texture artifacts throughout the volume. 3D\mbox{-}LDM~\citep{khader2023medical} in contrast demonstrates clearer structural details and reduced noise, however still suffers from insufficient anatomical detail and streak-like artifacts. WDM\mbox{-}3D~\citep{friedrich2024wdm} further improves clarity and reduces overall artifacts, but continues to exhibit noticeable blocky noise and unclear bone boundaries.
+Our residual DiT model substantially addresses these shortcomings by delivering sharper bone edges, smoother and more consistent organ boundaries, and clearer anatomical details. These improvements highlight our method's capability to more accurately reconstruct subtle features present in real medical scans.
+In addition, increasing model depth yields progressively sharper cortical bone edges, clearer bronchial walls and vessel bifurcations, and smoother soft–tissue boundaries (Figure~\ref{fig3}). These qualitative gains align with the results in Table~\ref{tab1}, which show a consistent decrease in FID and MMD as depth increases. 
+
+\subsection{Efficiently Scaling Up to Higher Resolutions}
+\begin{wrapfigure}[11]{r}{0.55\textwidth}
+\vspace{-25pt}
+\begin{minipage}{0.54\textwidth}
+\begin{table}[H]
+\begin{center}
+\caption{Results on LIDC-IDRI at $256^3$ resolution. Reported GPU-hours are measured on an A100.\\ FID values are scaled by $10^{3}$ (as is common practice).}
+\vspace{-3pt}
+  \centering
+  \scalebox{0.95}{
+  \begin{tabular}{lccc}
+    \toprule
+    Model & FID\,$\downarrow$ & MMD\,$\downarrow$ & Training Cost \\
+    \midrule
+    HA\mbox{-}GAN
+      & 3.98 & 0.2237 & 140\,GPUh \\
+      3D\mbox{-}LDM
+      & OOM & OOM & - \\
+    WDM\mbox{-}3D
+      & 5.60 & 0.2590 & 120\,GPUh \\
+    \midrule
+    PRDiT-4L$\uparrow^{256}$
+      & 2.28 & 0.1370 & 36\,GPUh \\
+    \bottomrule
+    % \multicolumn{4}{l}{\footnotesize * FID values scaled by $10^{-3}$.}
+  \end{tabular}
+}
+  \label{tab:lidc256}
+\end{center}
+\end{table}
+\end{minipage}
+\end{wrapfigure}
+We contrast our efficient high-resolution PRDiT against its competitors using the LIDC\mbox{-}IDRI~\citep{armato2011lung} dataset at $256^3$ resolution. As the results in Table~\ref{tab:lidc256} show, our PRDiT-4L$\uparrow^{256}$ clearly outperforms the other methods on both FID and MMD while incurring substantially lower training costs. While training 3D\mbox{-}LDM proved infeasible in our setup due to memory constraints, WDM\mbox{-}3D exhibited pronounced sensitivity to random seeds. While most seeds yield high-quality samples, a small fraction of severely degraded outputs disproportionately inflates FID/MMD, resulting in high variance and reduced evaluation robustness. Generated images of all methods are provided in Appendix~\ref{apfig:256} for visual inspection. 
+
+\begin{wrapfigure}[8]{r}{0.5\textwidth}
+\vspace{-24pt}
+\begin{minipage}{0.5\textwidth}
+\begin{table}[H]
+\caption{Comparison of high-resolution training strategies on LIDC-IDRI. FID scaled by $10^3$.}
+\vspace{-6pt}
+\centering
+% \small
+\scalebox{0.95}{
+\begin{tabular}{lccc}
+\toprule
+Method & FID$\downarrow$ & MMD$\downarrow$ & Training Cost \\
+\midrule
+% Scratch ($128^3$) & 2.04 & 0.1853 & 80 GPUh \\
+PRDiT$_{128}^{\text{\;scratch}}$ & 2.04 & 0.1853 & 80 GPUh \vspace{2pt}\\
+% Pretrained Low-to-High ($64^3 \rightarrow 128^3$) & 2.89 & 0.1893 & 12 GPUh \\
+PRDiT$_{64}$\,$\uparrow^{128}$ & 2.89 & 0.1893 & 12 GPUh \\
+% Pretrianed & & & 36 GPUh \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:highres64}
+\end{table}
+\end{minipage}
+\end{wrapfigure}
+
+To efficiently validate the quality our high-resolution upsampling strategy against expensive from-scratch training, we additionally train a PRDiT model at $64^3$ and upgrade to $128^3$ using our proposed high-resolution upsampling methodology, and compare its results to the PRDIT model trained from scratch on $128^3$.  While training from scratch does indeed lead to slightly improved performance across FID and MMD, our efficient variant is more than 6 times faster in training -- providing a convincing tradeoff in terms of quality-to-compute (Table~\ref{tab:highres64}). 
+
+
+\subsection{Ablation Experiments}\label{sec:abl}
+\begin{table}[t]
+\centering
+\caption{
+Ablation studies using our 4-layer variant PRDiT-4L on the LIDC-IDRI dataset.
+The reported FID values are scaled by $10^3$, as is common practice.
+(\subref{tab:ablation_components}) Contribution of the architecture's individual components.
+(\subref{tab:ablation_k}) Effect of varying the predictor steps $k$ in our predictor-corrector setup.
+}
+\label{tab:ablation}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\caption{}
+\label{tab:ablation_components}
+\begin{tabular}{lcc}
+\toprule
+Model variant & FID$\downarrow$ & MMD$\downarrow$ \\
+\midrule
+Full model            & \textbf{2.04} & \textbf{0.1853}  \\
+w/o overlap           & 3.27 & 0.2304  \\
+w/o local denoiser    & 3.10 & 0.2174 \\
+w/o global DiT        & 41.92 & 0.7795 \\
+\bottomrule
+\end{tabular}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\caption{}
+\label{tab:ablation_k}
+\begin{tabular}{lcc}
+\toprule
+$k$ & FID$\downarrow$ & MMD$\downarrow$ \\
+\midrule
+1.0 (cold) & 8.889 & 0.3490 \\
+\textbf{2.0} & \textbf{2.173} & \textbf{0.1849} \\
+3.0 & 3.112 & 0.2112 \\
+4.0 & 4.184 & 0.2425 \\
+\bottomrule
+\end{tabular}
+\end{subfigure}
+\end{table}
+
+
+
+\textbf{Contributions of Individual Design Choices.}\; We conduct ablation experiments on the LIDC\mbox{-}IDRI~\citep{armato2011lung} dataset using our PRDiT\mbox{-}4L model to assess the contributions of our design choices. Table~\ref{tab:ablation}\,(\subref{tab:ablation_components}) shows that removing the overlap between patches significantly worsens 3D FID and MMD scores due to boundary inconsistencies. Training our model without the Local Denoiser (i.e., DiT-only) also markedly reduces the performance -- whereas using \emph{only} the local component without any global refinement leads to the worst results.
+
+\textbf{Hot-vs-Cold Diffusion.}\;\;
+We evaluate the effect of varying the predictor step $k$ of our PRDiT\mbox{-}4L variant model using the LIDC-IDRI~\citep{armato2011lung} dataset. The results in Table~\ref{tab:ablation}\,(\subref{tab:ablation_k}) demonstrate that the transition from `cold' ($k=1$) to `hot' ($k>1$) significantly enhances generative output performance, with $k=2$ achieving the best results in this setup. Note that the number of steps is technically not limited to integers, and future work might explore whether further optimization along this axis might yield even greater quality improvements.
+
+To clearly highlight the differences between our proposed predictor-corrector diffusion sampling method and conventional sampling techniques (`cold' and `hot'), we provide detailed discussion as well as a range of additional insights and comparisons in Appendix~\ref{ap:predictor-corrector-details}, including both quantitative and qualitative results across a range of settings.
+
+\textbf{Inference times.}\;\; To further assess PRDiT’s suitability for practical, time-sensitive applications, we compare its inference speed against three competing models. All inference times are measured with a batch size of 1 on an A100 GPU at resolution $128^3$, with detailed results presented in Appendix~\ref{ap:inference}. It is worth noting that, due to its GAN-based architecture and non-iterative, single-pass image generation, HA\mbox{-}GAN~\citep{sun2022hierarchical} is by far the fastest, with an average inference time of just $0.01$s. Among the diffusion-based approaches, all PRDiT variants run markedly faster than the competitors, with inference times ranging from $11.5$s (4L) to $21.9$s (12L), compared to $26.1$s for 3D-LDM~\citep{khader2023medical} and $34.6$s for WDM-3D~\citep{friedrich2024wdm}.
+
+% \begin{table}
+% \caption{Ablation on LIDC-IDRI (4-layer config): removing overlap vs.\ disabling the local denoiser vs. disabling the global residual DiT.  
+% FID values are scaled by $10^{3}$.}
+% \vspace{-6pt}
+% \centering
+% \begin{tabular}{lcc}
+% \toprule
+% Model variant & {FID$\downarrow$} & {MMD$\downarrow$} \\
+% \midrule
+% Full model            & 2.04 & 0.1853  \\
+% w/o overlap           & 3.27 & 0.2304  \\
+% w/o local denoiser    & 3.10 & 0.2174 \\
+% w/o global DiT        & 41.92 & 0.7795 \\
+% \bottomrule
+% \end{tabular}
+% \label{tab:ablation-lidc-4layer}
+% \end{table}
+
+% \begin{table}[t]
+% \caption{Varying the predictor steps $k$ on LIDC-IDRI with PRDiT-4L. FID values are scaled by $10^{3}$. $k{=}1$ denotes traditional \emph{cold} sampling.}
+% \vspace{-6pt}
+% \centering
+% \small
+% \begin{tabular}{lcc}
+% \toprule
+% $k$ & FID$\downarrow$ & MMD$\downarrow$ \\
+% \midrule
+% 1 & 8.889 & 0.3490 \\
+% \textbf{2} & \textbf{2.173} & \textbf{0.1849} \\
+% 3 & 3.112 & 0.2112 \\
+% 4 & 4.184 & 0.2425 \\
+% % 5 & 5.574 & 0.2713 \\
+% \bottomrule
+% \end{tabular}
+% \label{tab:ablation-k}
+% \end{table}
+

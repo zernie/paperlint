@@ -9,7 +9,10 @@ import * as R from "remeda";
 import { z } from "zod";
 // The collector's own rules: at most PER_EDITION papers per venue edition, and the licences a paper
 // may be redistributed under, as arXiv's metadata spells them.
-import { LICENCES, PER_EDITION } from "../../scripts/grow-real-papers/rules.ts";
+import {
+  committedLicenceProblems,
+  PER_EDITION,
+} from "../../scripts/grow-real-papers/rules.ts";
 
 /**
  * The part of a `venue-manifest.json` entry this check reads. Everything but the id and the
@@ -42,11 +45,7 @@ const editionOf = (e: Entry): string | null =>
 
 const entryProblems = (e: Entry, dirs: ReadonlySet<string>): string[] => [
   ...(editionOf(e) === null ? [`${e.arxiv_id}: no series or year`] : []),
-  ...(e.license !== undefined && LICENCES.has(e.license)
-    ? []
-    : [
-        `${e.arxiv_id}: licence ${e.license ?? "missing"}, not CC BY 4.0, CC BY-SA 4.0 or CC0`,
-      ]),
+  ...committedLicenceProblems(e.arxiv_id, e.license),
   ...((e.accepted?.quote ?? "") !== "" || e.acceptance === "s2-venue-listing"
     ? []
     : [

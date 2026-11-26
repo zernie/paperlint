@@ -1,0 +1,222 @@
+\documentclass[acmsmall]{acmart}
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+\definecolor{Light}{gray}{.85}
+\newcounter{findingsCounter}
+\usepackage[most]{tcolorbox} 
+\usepackage{minted}
+\usepackage{capt-of}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{tabularx}
+\usepackage{makecell}   
+\usepackage{algpseudocode}      
+\usepackage{amsmath}                      
+\usepackage{xcolor}           
+\usepackage{graphicx}         
+\usepackage{booktabs}         
+\usepackage{caption}           
+\usepackage{float} 
+\usepackage{import}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{booktabs}
+\definecolor{promptbg}{RGB}{245, 245, 245}
+\definecolor{promptborder}{RGB}{180, 180, 180}
+\lstset{inputencoding=utf8, extendedchars=true}
+\lstdefinelanguage{comment}{
+basicstyle=\ttfamily\scriptsize,
+    numbersep = 5pt,
+    breaklines = true,
+    showstringspaces = false,
+    breakindent = 0em,
+    frame=single
+}
+\lstdefinelanguage{GPTPrompt}{
+basicstyle=\ttfamily\scriptsize,
+  numbersep=5pt,
+  breaklines=true,
+  showstringspaces=false,
+  breakindent=0em,
+  frame=single,
+  moredelim=[is][\PHkeep]{\{\{}{\}\}}
+}
+
+% \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{enumitem}
+\newcommand{\commentty}[1]{{\color{purple} \sf (TY: #1)}}
+\newcommand{\shuai}[1]{{\color{blue} \sf(S: #1)}}
+\newcommand{\sh}[1]{{\color{red} \sf (S: #1)}}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{Java}{
+  keywords={abstract, assert, boolean, break, byte, case, catch, char, class,
+    const, continue, default, do, double, else, enum, extends, final, finally,
+    float, for, goto, if, implements, import, instanceof, int, interface, long,
+    native, new, package, private, protected, public, return, short, static,
+    strictfp, super, switch, synchronized, this, throw, throws, transient, try,
+    void, volatile, while},
+  keywordstyle=\color{blue},
+  comment=[l]{//},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  morecomment=[s]{/*}{*/},
+  sensitive=true
+}
+
+\lstset{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false
+}
+
+\usepackage{tikz}
+\newcommand*\blackcircled[1]{%
+  \tikz[baseline=(char.base)]{
+    \node[shape=circle,draw,fill=black,inner sep=1pt] (char) {\color{white}\footnotesize #1};}}
+
+\newcommand{\Name}{ConFL}
+
+\setcopyright{cc}
+\setcctype{by}
+\acmDOI{10.1145/3832168}
+\acmYear{2026}
+\acmJournal{PACMSE}
+\acmVolume{3}
+\acmNumber{ISSTA}
+\acmArticle{ISSTA077}
+\acmMonth{10}
+\acmSubmissionID{issta26main-p727-p}
+\received{2026-01-30}
+\received[accepted]{2026-06-25}
+
+
+\begin{document}
+
+%%% The following is specific to  and the paper
+%%% 'ConFL: Explainable Concurrent Fault Localization via Hierarchy-Guided LLM Reasoning'
+%%% by Shuai Shao, Dingbang Wang, Yiming Zeng, and Tingting Yu.
+%%%
+
+
+\title{ConFL: Explainable Concurrent Fault Localization via Hierarchy-Guided LLM Reasoning}
+
+\author{Shuai Shao}
+\orcid{0000-0001-6736-8393}
+\affiliation{%
+  \institution{University of Connecticut}
+  \city{Storrs}
+  \country{USA}
+}
+\email{shuai.shao@uconn.edu}
+
+\author{Dingbang Wang}
+\orcid{0009-0002-9675-6824}
+\affiliation{%
+  \institution{University of Connecticut}
+  \city{Storrs}
+  \country{USA}
+}
+\email{dingbang.wang@uconn.edu}
+
+\author{Yiming Zeng}
+\orcid{0009-0006-5842-0130}
+\affiliation{%
+  \institution{University of Connecticut}
+  \city{Storrs}
+  \country{USA}
+}
+\email{yiming.zeng@uconn.edu}
+
+\author{Tingting Yu}
+\orcid{0000-0002-9461-4251}
+\affiliation{%
+  \institution{University of Connecticut}
+  \city{Storrs}
+  \country{USA}
+}
+\email{tingting.yu@uconn.edu}
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{Shuai Shao, Dingbang Wang, Yiming Zeng, and Tingting Yu}
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+Localizing concurrent bugs from bug reports alone is challenging due to incomplete information, misleading program-entity mentions, and complex cross-thread interactions, causing existing LLM-based approaches to suffer from unstable reasoning and limited explainability. We propose ConFL, an explainable concurrent fault localization framework that augments LLM reasoning with structured concurrency knowledge. ConFL constructs a Concurrent Knowledge Base (CKB) from source code and performs LLM-guided hierarchical retrieval to progressively narrow the search space from components to interaction-level concurrency contexts. An interaction-level DSL explicitly encodes cross-thread interactions over shared resources, enabling focused reasoning without traversing deep call chains. Experiments on real-world concurrent bugs from eight large-scale Java projects show that ConFL significantly outperforms state-of-the-art IR-based and LLM-based baselines, achieving an MRR of 0.503 and a MAP of 0.486, while remaining robust to noisy bug reports, unseen bugs, and different LLM backbones.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011102.10011103</concept_id>
+       <concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~Software testing and debugging}
+\keywords{Fault Localization, Concurrency Bugs, Large Language Models}
+
+
+% \received{20 February 2007}
+% \received[revised]{12 March 2009}
+% \received[accepted]{5 June 2009}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+\input{introduction}
+\input{background}
+\input{motivation}
+\input{approach}
+\input{evaluation}
+\input{discussion}
+
+\begin{acks}
+This work was supported in part by NSF awards CCF-2403747. 
+\end{acks}
+
+\section*{Data Availability}
+The full artifact is available at \url{https://github.com/sh-shao/ConFL}.
+
+
+%% consistent spelling of the heading.
+% \begin{acks}
+% To Robert, for the bagels and explaining CMYK and color spaces.
+% \end{acks}
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{sample-base}
+
+
+%%
+%% If your work has an appendix, this is the place to put it.
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-sigconf.tex'.

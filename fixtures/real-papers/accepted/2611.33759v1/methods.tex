@@ -1,0 +1,275 @@
+% =====================================================================
+% METHODS
+% =====================================================================
+
+\section{Decomposition of the MLE test loss}
+\label{sec:methods}
+
+This section develops the analytic object the rest of the paper studies. We fix
+notation and write the test loss of the maximum-likelihood plug-in as a single KL
+quantity (Section~\ref{sec:setup}), introduce reference quantities that will
+appear in the decomposition (Section~\ref{sec:refobj}), and state the inequality
+that decomposes test loss into approximation, batch-regret, prior-cost, and MLE-vs-Bayes
+contributions (Section~\ref{sec:decomp}). Section~\ref{sec:gibbs} describes how
+we approximate a Bayes predictor in practice using SGLD.
+Appendix~\ref{app:interpretation} summarizes the notation and the quantities
+measured in the experiments.
+
+\subsection{Setup}
+\label{sec:setup}
+
+We consider a measurable space $(\mathcal{X},\mu)$ and a true data-generating
+distribution $P^*\in\mathcal{P}(\mathcal{X})$ with density $p^*=dP^*/d\mu$.
+We draw training data $X_1,\dots,X_n$ and a fresh test point $X_{n+1}$ i.i.d.\
+from $P^*$. A model class is a family
+$\{P_{X\mid\theta}:\theta\in\Theta\}$ on $(\mathcal{X},\mu)$ with densities
+$p_\theta$, which we extend to product form
+$P_{X^n\mid\theta}=\prod_{i=1}^n P_{X\mid\theta}$. We make no regularity,
+identifiability, smoothness, or finite-dimensionality assumption on $\Theta$, and
+we allow $P^*$ to lie outside the class. We take the maximum-likelihood
+estimator
+\begin{equation*}
+\hat\theta_n=\hat\theta_n(X^n)\in\arg\max_{\theta\in\Theta}\prod_{i=1}^n p_\theta(X_i)
+\end{equation*}
+to be a measurable selection, breaking ties arbitrarily. We assume the
+entropies, risks, and differences below are finite. The same decomposition holds for any
+measurable plug-in rule, with expectations also taken over its internal
+randomness when applicable.
+
+\paragraph{Test loss.}
+We define the MLE plug-in predictor as the density
+$\hat p_n\triangleq p_{\hat\theta_n(X^n)}$ and write its test log-loss as
+\begin{equation}
+L_n(P^*) \;\triangleq\; \mathbb{E}_{X^n,X_{n+1}\stackrel{\textit{i.i.d.}}{\sim}P^*}\!\big[\log 1/\hat p_n(X_{n+1})\big].
+\label{eq:testloss}
+\end{equation}
+For other predictive rules $Q$, we write $L^Q_n(P)$ for the analogous loss.
+Subtracting the entropy $H(P^*)\triangleq-\mathbb{E}_{P^*}[\log p^*(X)]$ and applying
+the chain rule of KL divergence gives the identity
+\begin{equation}
+\mathcal{R}_n(P) \;\triangleq\; L_n(P)-H(P)
+\;=\; \mathbb{E}_{X^n\sim P^{\otimes n}}\!\Big[D\!\left(P\,\big\|\,p_{\hat\theta_n(X^n)}\right)\Big],
+\quad P\in\mathcal{P}(\mathcal{X}),
+\label{eq:plugin-risk}
+\end{equation}
+which we call the \emph{plug-in risk} of MLE under $P$. We define
+$\mathcal{R}_n(\cdot)$ for every $P$, in or out of the class; it depends on
+$\Theta$ only through the MLE.
+
+\paragraph{Supervised learning.}
+Our setup generalizes immediately to supervised data, by reducing a supervised
+problem to an unsupervised one with a fixed input marginal. Formally:
+for $(X_i,Y_i)\stackrel{\textit{i.i.d.}}{\sim}P^*_{XY}$, we fix the
+$X$-marginal $P_X=P_X^*$ and let the model
+parameterize the joint
+$P_{XY\mid\theta}(x,y)=P_X(x)\,P_{Y\mid X,\theta}(y\mid x)$. Substituting
+$\tilde X_i\triangleq(X_i,Y_i)$ recovers the present setup; the constant
+$H(P_X)$ cancels from both sides of the decomposition stated below; and the
+resulting MLE reduces to the conditional MLE
+$\hat\theta_n\in\arg\max_\theta\prod_i P_{Y\mid X,\theta}(Y_i\mid X_i)$.
+For this reason, we develop the rest of the theory in the unsupervised setup
+with a single variable $X\sim P^*$ rather than separate $X$ and $Y$, without
+loss of generality.
+
+\subsection{Reference predictors}
+\label{sec:refobj}
+
+The following quantities indexed by the model class and prior will enter the decomposition.
+
+\paragraph{In-class KL projection.}
+We define the closest in-class density to $P^*$ in the KL sense as
+\begin{equation}
+P^*_\Theta \;\triangleq\; P_{X\mid\theta^*(P^*)},
+\qquad
+\theta^*(P^*) \in \arg\!\inf_{\theta\in\Theta} D\!\left(P^*\,\big\|\,P_{X\mid\theta}\right).
+\label{eq:projection}
+\end{equation}
+We assume the infimum in~\eqref{eq:projection} is attained.
+Note $P^*=P^*_\Theta$ exactly when
+$P^*$ lies in the class.
+
+\paragraph{Bayes predictors and batch regret.}
+Following \citet{polyanskiy-wu}, we define the i.i.d.\ batch redundancy
+\begin{equation}
+\mathrm{BatchReg}^*_{n+1}(\Theta) \;\triangleq\;
+\inf_{Q_{n+1}(\,\cdot\,;\,x^n)} \,\sup_{\theta_0\in\Theta}\,
+\mathbb{E}_{X^n\sim P_{X^n\mid\theta_0}}\!\Big[D\!\left(P_{X\mid\theta_0}\,\big\|\,Q_{n+1}(\,\cdot\,;\,X^n)\right)\Big].
+\label{eq:batchreg}
+\end{equation}
+A \emph{minimax predictor} $Q^*_{n+1}$ is any minimizer of the outer infimum
+(when attained). For a proper
+prior $\pi$ with a well-defined posterior, the Bayes predictor is
+\begin{equation}
+Q^\pi_{n+1}(x_{n+1};\,x^n)
+= \mathbb{E}_{\theta\sim\pi(\,\cdot\mid X^n=x^n)}
+   \!\big[p_\theta(x_{n+1})\big].
+\label{eq:bayesmix}
+\end{equation}
+Write its worst-case in-class risk and its \emph{prior cost} as
+\begin{align}
+\mathrm{BatchReg}^\pi_{n+1}(\Theta)
+&\triangleq \sup_{\theta_0\in\Theta}
+\mathbb{E}_{X^n\sim P_{X^n\mid\theta_0}}
+\!\Big[D\!\left(P_{X\mid\theta_0}\,\big\|\,Q^\pi_{n+1}(\,\cdot\,;\,X^n)\right)\Big],
+\label{eq:prior-risk}\\
+\Gamma^\pi_{n+1}(\Theta)
+&\triangleq \mathrm{BatchReg}^\pi_{n+1}(\Theta)
+-\mathrm{BatchReg}^*_{n+1}(\Theta)\ge 0.
+\label{eq:prior-cost}
+\end{align}
+Non-negativity follows because $Q^\pi_{n+1}$ is feasible in~\eqref{eq:batchreg}.
+When a least-favorable prior $\pi^*$ exists whose Bayes predictor attains
+the minimax value, $\Gamma^{\pi^*}_{n+1}(\Theta)=0$.
+
+\paragraph{MLE-vs-Bayes gap.}
+For $\theta_0\in\Theta$, define
+\begin{equation}
+\Delta^{\mathrm{MLE},\pi}_n(\theta_0)
+\;\triangleq\;
+\mathcal{R}_n(P_{X\mid\theta_0})
+\;-\;
+\mathbb{E}_{X^n\sim P_{X^n\mid\theta_0}}\!\Big[D\!\left(P_{X\mid\theta_0}\,\big\|\,Q^\pi_{n+1}(\,\cdot\,;\,X^n)\right)\Big],
+\label{eq:DeltaMLE}
+\end{equation}
+the difference at the well-specified $\theta_0$ between the plug-in risk of MLE
+and the in-class risk of $Q^\pi_{n+1}$.
+
+\subsection{Decomposition}
+\label{sec:decomp}
+
+The plug-in risk under $P^*$ admits the following bound.
+
+\begin{theorem}[Test-loss decomposition]
+\label{thm:decomp}
+For every proper prior $\pi$ satisfying the assumptions above and every $n\ge 1$,
+\begin{equation}
+\begin{aligned}
+L_n(P^*)-H(P^*)
+&\;\le\;
+\underbrace{\mathcal{R}_n(P^*)-\mathcal{R}_n(P^*_\Theta)}_{\text{(I)\ approximation \& shift}}
+\;+\;
+\underbrace{\mathrm{BatchReg}^*_{n+1}(\Theta)}_{\text{(II)}}\\
+&\quad+\;
+\underbrace{\Gamma^\pi_{n+1}(\Theta)}_{\text{(II') prior cost}}
+\;+\;
+\underbrace{\sup_{\theta_0\in\Theta}\Delta^{\mathrm{MLE},\pi}_n(\theta_0)}_{\text{(III)\ MLE-vs-Bayes gap}}.
+\end{aligned}
+\label{eq:decomp}
+\end{equation}
+\end{theorem}
+\begin{proof}
+By~\eqref{eq:plugin-risk}, $L_n(P^*)-H(P^*)=\mathcal{R}_n(P^*)$. Adding and
+subtracting $\mathcal{R}_n(P^*_\Theta)$ gives
+\begin{equation*}
+L_n(P^*)-H(P^*)
+\;=\;\big[\mathcal{R}_n(P^*)-\mathcal{R}_n(P^*_\Theta)\big]
+\;+\;\mathcal{R}_n(P^*_\Theta).
+\end{equation*}
+Since $P^*_\Theta=P_{X\mid\theta^*(P^*)}$ with $\theta^*(P^*)\in\Theta$, we have
+$\mathcal{R}_n(P^*_\Theta)\le\sup_{\theta_0\in\Theta}\mathcal{R}_n(P_{X\mid\theta_0})$.
+Decomposing the well-specified plug-in risk via~\eqref{eq:DeltaMLE},
+\begin{equation*}
+\mathcal{R}_n(P_{X\mid\theta_0})
+\;=\;
+\mathbb{E}_{X^n\sim P_{X^n\mid\theta_0}}\!\Big[D\!\left(P_{X\mid\theta_0}\,\big\|\,Q^\pi_{n+1}(\,\cdot\,;\,X^n)\right)\Big]
+\;+\;\Delta^{\mathrm{MLE},\pi}_n(\theta_0),
+\end{equation*}
+and applying $\sup(a+b)\le\sup a+\sup b$ together with the definition
+of $\mathrm{BatchReg}^\pi_{n+1}(\Theta)$ in~\eqref{eq:prior-risk} yields
+(II) + (II') + (III).
+\end{proof}
+
+We use the right-hand side to separate candidate contributions to test loss. We now
+describe each term and how it relates to double descent.
+
+\paragraph{(I) Approximation and shift.}
+The first term is the difference between the plug-in risk of MLE on the experiment
+generated by $P^*$ and on the experiment generated by its in-class projection
+$P^*_\Theta$. We note that this is not the textbook approximation error
+$D(P^*\|P^*_\Theta)$. It need not be non-negative or monotone at finite $n$,
+but vanishes when $P^*=P^*_\Theta$.
+
+\paragraph{(II) Batch regret.}
+The second term is the textbook minimax batch regret of $\Theta$. It is
+monotonically non-decreasing as $\Theta$ grows: for $\Theta_1\subseteq\Theta_2$,
+any $Q$ feasible in the outer infimum of~\eqref{eq:batchreg} for $\Theta_2$ is
+also feasible for $\Theta_1$, while the inner supremum runs over a larger set,
+so $\mathrm{BatchReg}^*_{n+1}(\Theta_1)\le\mathrm{BatchReg}^*_{n+1}(\Theta_2)$.
+The additional prior cost (II') need not be monotone across model classes.
+
+\paragraph{(III) MLE-vs-Bayes gap.}
+The MLE-vs-Bayes gap does not admit a clean
+asymptotic description in the non-regular settings characteristic of
+deep neural networks. Our experiments find a large SGD-vs-ensemble gap
+near the interpolation threshold, consistent with a large contribution
+from~(III). We depict the
+intuition behind this in the left panel of Figure~\ref{fig:ensemble-collapse}.
+
+\subsection{Approximating $Q^\pi_{n+1}$ by a Gibbs ensemble}
+\label{sec:gibbs}
+
+The Bayes predictor $Q^\pi_{n+1}$ in~\eqref{eq:bayesmix} is rarely available in closed
+form. However, we can approximate it by Monte~Carlo. For an inverse temperature $\beta>0$
+and a prior $\pi$ on $\Theta$, the \emph{log-loss Gibbs estimator} is
+\begin{equation}
+\rho_{\beta,\pi}(d\theta\mid x^n)
+\;\propto\; \exp\!\big\{-\beta\,\mathcal{L}_n(\theta;x^n)\big\}\,\pi(d\theta),
+\qquad
+\mathcal{L}_n(\theta;x^n)\triangleq \sum_{i=1}^n\log\tfrac{1}{p_\theta(x_i)},
+\label{eq:gibbs}
+\end{equation}
+and at $\beta=1$, $\rho_{1,\pi}(\,\cdot\mid x^n)$ is exactly the Bayes posterior
+under $\pi$.
+
+For continuous parameters, we use temperature-one SGLD with unbiased
+stochastic gradients of the mean negative log-likelihood and the prior drift in
+Appendix~\ref{app:training}. Take
+\[
+\eta_t=\eta_0(1+t/\tau)^{-\alpha},\qquad
+\tfrac12<\alpha\le1,\qquad
+\operatorname{Cov}(\varepsilon_t)=2\eta_t I/n,
+\]
+where $\eta_0,\tau>0$ and $\varepsilon_t$ is the injected Gaussian noise.
+Under the stability assumptions of \citet[Theorem~7]{teh2016sgld},
+the step-size-weighted empirical distribution converges weakly to the posterior
+as the number of steps tends to infinity.
+For the sampling results below, we assume an ideal oracle that returns
+independent draws from this limiting posterior.
+
+Drawing
+$\theta^{(1)},\dots,\theta^{(K)}\stackrel{\textit{i.i.d.}}{\sim}\rho_{1,\pi}(\,\cdot\mid X^n)$
+and averaging the per-sample predictives gives the posterior-predictive Monte~Carlo
+estimator
+\begin{equation}
+\widehat Q^{(K)}_{n+1}(\,\cdot\,;\,X^n)
+\;\triangleq\; \frac{1}{K}\sum_{k=1}^{K} p_{\theta^{(k)}}(\cdot)
+\;\xrightarrow[K\to\infty]{\text{a.s.}}\;
+Q^\pi_{n+1}(\,\cdot\,;\,X^n),
+\label{eq:gibbs-mc}
+\end{equation}
+pointwise in $X^n$ and in the test argument \citep[Ch.~6]{robert2007bayesian}.
+
+\paragraph{Lower-bounding the MLE-vs-Bayes gap.}
+Under the posterior-sampling assumption, the ensemble is pointwise
+unbiased for $Q^\pi_{n+1}$ conditional on $X^n$.
+Jensen's inequality applied to \eqref{eq:gibbs-mc} gives
+\begin{equation}
+\mathbb{E}_{\theta^{(1)},\ldots,\theta^{(K)}}\!\left[L^{\widehat Q^{(K)}}_n(P^*)\right]
+\;\ge\; L^{Q^\pi}_n(P^*),
+\label{eq:jensen-bound}
+\end{equation}
+so an unbiased predictive approximation has test log-loss at least that of
+$Q^\pi_{n+1}$ in expectation over posterior sampling. Setting $\theta_0=\theta^*(P^*)$
+in~\eqref{eq:DeltaMLE} under $P^*_\Theta=P^*$ gives
+$\Delta^{\mathrm{MLE},\pi}_n(\theta^*(P^*))=L_n(P^*)-L^{Q^\pi}_n(P^*)$;
+combining with~\eqref{eq:jensen-bound},
+\begin{equation}
+L_n(P^*) - \mathbb{E}_{\mathrm{MC}}\!\left[L^{\widehat Q^{(K)}}_n(P^*)\right]
+\;\le\; \Delta^{\mathrm{MLE},\pi}_n(\theta^*(P^*))
+\;\le\; \sup_{\theta_0\in\Theta}\Delta^{\mathrm{MLE},\pi}_n(\theta_0)
+\;=\; (\mathrm{III}).
+\label{eq:gap-lower-bounds-III}
+\end{equation}
+Thus, in the well-specified setting, the expected MLE-vs-ensemble gap
+lower-bounds (III) for every ensemble size $K$ under the posterior-sampling
+assumption.

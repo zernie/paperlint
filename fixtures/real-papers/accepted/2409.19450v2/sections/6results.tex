@@ -1,0 +1,145 @@
+\section{Study 2 Experiment: Results}
+
+
+\subsection{Descriptive Statistics}
+
+\subsubsection{Estimates of percentage of people who have intentions to keep the use of the LLMs secret}
+\label{sec:desc-stats-secret-use-estimates}
+
+For questions measuring the two forms of intentions to hide the use of LLMs (\autoref{sec:experiemnt-operationalization-dep-var}), we grouped the options ``Somewhat agree'', ``Agree'' or ``Strongly agree'' to estimate the percentage of people who expressed intentions to hide the use of LLMs. 
+\autoref{tab:intentions-statistics} summarizes the results. 
+Compared with the other five conditions, users in the reference condition ``General Information Search'' showed lower intentions on average in both passive non-disclosure (40\% v.s 72\%, \(SD = 0.12\)) and active concealment (16\% v.s 54\%, \(SD = 0.09\)). 
+
+
+\begin{table}[]
+  \begin{threeparttable}
+    \centering
+    \caption{Estimates of the percentage of people who intend to keep the use of the LLMs secret (\%). 
+    A participant is considered as likely to hide the use of LLMs if they chose ``Somewhat agree'', ``Agree'', or ``Strongly agree'' for the corresponding statement (presented in \autoref{sec:experiemnt-operationalization-dep-var}). 
+    ``GIS''(General Information Search) is the reference condition, and the conditions that have significantly different adoption intentions in our linear regression analyses in \autoref{tab:linear-regression-results} are marked in bold.}
+    \begin{tabular}{p{0.24\linewidth}p{0.08\linewidth}p{0.1\linewidth}p{0.1\linewidth}p{0.08\linewidth}p{0.08\linewidth}p{0.12\linewidth}}
+    \toprule
+    Dependent variable&GIS&Creative Writing& Academic Writing & School Works& Work Tasks&Social \newline Connection\\
+    \midrule
+    Passive non-disclosure&40.0&\textbf{66.0}**& \textbf{70.0}***& \textbf{62.0}**& \textbf{68.0}***&\textbf{92.0}***\\
+    Active concealment&16.0&\textbf{52.0}***& \textbf{50.0}***& \textbf{50.0}***& \textbf{46.0}***&\textbf{70.0}***\\
+ \bottomrule
+    \end{tabular}
+    \label{tab:intentions-statistics}
+    \begin{tablenotes}
+      \small
+      \item **p<0.01; ***p<0.001.
+    \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{sections/figures/perceptions-statistics.png}
+    \caption{Estimates of the percentage of people who at least somewhat agree with the statements related to the internal judgement and the perceived external judgement on the use of LLMs. 
+    ``GIS''(General Information Search) is the reference condition.}
+    \label{fig:perceptions-statistics}
+\end{figure}
+
+\subsubsection{Estimates of users' internal judgement and perceived external judgement on the use of LLMs}
+We also calculated the estimates of the two mediator variables across difference conditions. 
+Results are shown in \autoref{fig:perceptions-statistics}.
+In the ``General Information Search'' reference condition, agreement with both types of perceptions was much lower compared to the other five task conditions. 
+This suggests that users exhibit more negative internal and external judgements towards using LLMs in the five specific tasks than in the reference condition. 
+These findings are consistent with our survey results (\autoref{sec: survey-context-results}), where these five tasks frequently emerged in scenarios of secret use.
+Notably, users exhibited more negative external judgements about LLM usage than internal judgements.
+For instance, while only 10\% of participants at least somewhat agreed that using LLMs for school works raised moral doubts, 70\% believed that others would view this usage as unethical or inappropriate.
+
+
+
+
+\subsection{Effects of Task Types and Individual Differences on the Intentions of Secret Use}
+\label{sec: effects-task-individual-intentions}
+We present the results for H1 and H2 based on our linear regression results.
+We built two linear regression models for the two types of secret use, passive non-disclosure and active concealment, respectively (\autoref{tab:linear-regression-results}).
+Multicollinearity was not a problem for all our linear regression analyzes because the maximum generalized variance inflation factor ($GVIF^{(1/(2*Df)}$) for our models is 1.41, which is lower than the cutoff value 2.25.
+
+\begin{table}[]
+\begin{threeparttable}
+    \centering
+    \caption{Linear regression results: The main effects of task types and individual differences on users' intentions of secret use of LLMs.}
+    \begin{tabular}{p{0.4\linewidth} p{0.25\linewidth} p{0.2\linewidth}}
+    \toprule
+    \textbf{Independent variable}& Passive non-disclosure& Active concealment\\
+ & Coef. (S.E.)&Coef. (S.E.)\\
+    \midrule
+ (Intercept)& 3.944*** (1.042)&4.071*** (1.117)\\
+    \multicolumn{3}{l}{\textbf{Task types}}\\
+        Task types (General info search=0)& & \\
+        \hspace{3mm} Creative writing& 1.080** (0.354)& 1.393*** (0.380)\\
+        \hspace{3mm} Academic writing& 1.300*** (0.355)& 1.652*** (0.381)\\
+        \hspace{3mm} School work& 1.119** (0.355)&1.536*** (0.380)\\
+        \hspace{3mm} Work tasks& 1.230*** (0.351)&1.374*** (0.377)\\
+        \hspace{3mm} Social connection& 2.459*** (0.354)&2.444*** (0.380)\\
+    \multicolumn{3}{l}{\textbf{Individual differences}}\\
+        Self-esteem& -0.193 (0.206)& -0.168 (0.221)\\
+        Self-efficacy& -0.036 (0.287)& -0.375 (0.308)\\Prosocialness& -0.138 (0.164)& -0.037 (0.176)\\General privacy concern& 0.222 (0.136)& 0.132 (0.146)\\
+        Use frequency of LLMs& -0.033 (0.063)& -0.023 (0.067)\\
+        Age& -0.008 (0.009)& -0.010 (0.010)\\
+    \multicolumn{3}{l}{Gender (Male=0)}\\
+        \hspace{3mm} Female& -0.068 (0.2132)& -0.158 (0.228)\\
+        \hspace{3mm} Non-binary / third gender& -0.117 (0.596)&-0.308 (0.639)\\
+        Education (Below bachelor=0) \\
+        \hspace{3mm} Bachelor or Above & 0.157 (0.214)& 0.265 (0.230)\\
+    \bottomrule
+        \(R^2\)& 0.170&0.161\\
+        Adjusted \(R^2\)& 0.129&0.120\\
+    \bottomrule
+    \end{tabular}
+ \begin{tablenotes}
+      \small
+      \item  **p<0.01; ***p<0.001.
+    \end{tablenotes}
+  \label{tab:linear-regression-results}
+  \end{threeparttable}  
+\end{table}
+
+
+We found that \textbf{the types of tasks involving LLMs significantly affect both forms of concealment intentions, supporting H1.}
+More specifically, all five task conditions have positive significant effects on both intentions of passive non-disclosure and active concealment.
+For example, the coefficient for \textit{Creative writing} condition for the intention of active concealment is 1.393, which represents an estimated increase in the 7-point active concealment intention rating if the task in which the LLMs used for is creative writing comparing with general information search.
+
+In contrast, \textbf{individual differences did not show significant influences on the secret use intentions (H2.1-H2.5 are not supported).}
+This finding suggests that tendencies towards secret use of LLMs are broadly consistent across various demographic and personality profiles.
+
+
+
+
+\subsection{Mediation Effect of Internal Judgement and Perceived External Judgement}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{sections/figures/review-SEM-general-results.png}
+    \caption{Structural equation model showing the mediation
+analysis of task type, two types of perception on the use of LLMs and two forms of users' intentions to conceal the usage. Values represent standardized regression coefficients. It should be noted that both ``Perceived external judgement'' and ``Internal judgement'' in our study are all presented on negative side. Here, \revision{CFI: 0.935, SRMR: 0.042, RMSEA: 0.126}, p<0.001: ***}
+    \label{fig:SEM-general-results}
+\end{figure}
+
+We conducted a mediation analysis using structural equation modeling (SEM) to test H3.1-3.2 about the mediation effect of uses' internal judgement and perceived external judgement.
+In our mediation analysis, we focused on the relationship between the task type and the intention to keep the use of LLMs secret, which showed a significant effect in our linear regression model. 
+\revision{In the SEM analysis, the task type was treated as a binary category with ``General Information Search'' set as 0 and other categories set as 1.
+This approach allows us to determine whether task type could make significant differences compared with reference condition ``General Information Search'', which is essential to explore before breaking down the impact of different task types that could be further explored in the future.}
+\revision{As shown in~\autoref{fig:SEM-general-results}, the Comparative Fit Index (CFI=0.935) and Standardized Root Mean Squared Residual (SRMR=0.042) indicate good model fit.
+The high Root Mean Square Error of Approximation (RMSEA=0.126) indicates a poor fit.
+Note that prior research suggests CFI is appropriate in more exploratory contexts, while RMSEA is appropriate in more confirmatory contexts~\cite{rigdon1996cfi}.
+Our research takes the initial step in studying the secret use of AI, and hence is more exploratory in nature. However, the high RMSEA suggests complexities within the model that are worth further investigation in future research.
+}
+
+
+As shown in~\autoref{fig:SEM-general-results}, 
+(1) Task type was significantly associated with both perceived external judgement \revision{(\(\beta\) = 2.108)} and internal judgement \revision{(\(\beta\) = 1.245)}. 
+(2) Perceived external judgement on the LLM usage has significant impact on both intention of passive non-disclosure \revision{(\(\beta\) = 0.613)} and active concealment \revision{(\(\beta\) = 0.704)}. 
+However, internal judgement showed non-significant effect on both two forms of intention.
+(3) After controlling for perceived external judgements on the LLM usage, the direct effect of task type on the intention of passive non-disclosure \revision{(\(\beta\) = 0.042, \(p\) = 0.885)} and the intention of active concealment \revision{(\(\beta\) = 0.102, \(p\) = 0.737)} became non-significant.
+
+
+\textbf{Hence, our results support H3.2, suggesting a significant mediation effect of perceived external judgment.}
+The indirect effect of \textit{task types} through the \textit{perceived external judgement} accounts for \revision{88.8\%} of the total effect on the \textit{active concealment} intention, and \revision{92.3\%} on the \textit{passive non-disclosure} intention.
+We did not find a significant mediation effect of internal judgment on the relationship between task type and intentions of secret use, so \textbf{H3.1 is not supported}.
+

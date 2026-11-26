@@ -1,0 +1,46 @@
+\section{Introduction}
+
+Large machine learning (ML) models have become a driving force behind advancements in natural language processing~\cite{openai2024gpt4, touvron2023llama, vicuna2023}, computer vision~\cite{dosovitskiy2020visiontransformer}, computer graphics~\cite{openai2024dalle3} and recommendation systems~\cite{zhang2024wukongscalinglawlargescale,10.1145/3470496.3533727,MLSYS2024_78834433}. As models grow increasingly complex, high-performance model inference~\cite{kwon2023pagedattention} and training~\cite{zheng2022alpa} have become the main focus in the ML system community. Recent advancements in the field span from efficient GPU kernel optimizations~\cite{dao2022flashattention, dao2023flashattention2, kwon2023pagedattention}, to parallelization strategies~\cite{zheng2022alpa}, and scheduling algorithms~\cite{qiao2021pollux}. When deploying ML training jobs, it is often beneficial to estimate the system’s performance (\eg, training time per iteration, model FLOPS utilization), which can help operators decide how many hardware resources to allocate for a particular job, and plan for future hardware needs.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=.88\textwidth]{figures/intro.pdf}
+    \caption{Comparison of simulators and problems of static workload simulation. Light green boxes show unmodified components; gree boxes show minimally modified components; blue boxes show simulator components and pink boxes show user input. Trace-based simulation requires workload extraction (reversing framework logic) and costly trace collection on large clusters. SimAI relies on mocked ML frameworks.}
+    \label{fig:methods}
+\end{figure*}
+
+There has been a growing interest in performance estimation methods for ML systems. Analytical models (\eg, roofline \cite{roofline}) provide rapid estimates but lack accuracy. More recently, both industry and academia have shifted towards static workload simulation. \autoref{fig:methods} shows the two methods of static workload simulation and their problems. A common method is trace-based simulation~\cite{astrasim, astrasim2,daydream,dpro,flexflow,distsim,bang2024vtrain,gui2025multiverse}, where execution traces are collected from real runs of ML workloads on large clusters. These traces are then processed to extract workloads: 
+a trace is lifted into higher levels of abstraction to make it suitable for configuration and event-driven simulation.  
+Another method is SimAI~\cite{wang2025simai}, which implements a mocked version of ML frameworks in order to generate events that can be used in a simulator. However, both methods have to reimplement the scheduling logic of the simulated ML framework (\eg, DeepSpeed~\cite{rasley2020deepspeed}, Megatron~\cite{shoeybi2019megatron}, TorchTitan~\cite{liang2025torchtitan}) and trace-based simulation may even need to implement a reversed scheduling logic in workload extraction.
+Reimplementation makes them difficult to maintain due to fast-evolving ML training frameworks.
+
+
+In this paper, we explore the following question: \textit{Can ML framework source code be directly reused in simulation-based performance estimation?}
+Modern ML frameworks already provide a rich set of configurable parallelization strategies (\eg, pipeline parallelism, expert parallelism, data parallelism) and rematerialization strategies (\eg, ZeRO~\cite{rajbhandari2020zero}, FSDP~\cite{zhao2023pytorchfsdpexperiencesscaling}, activation recomputation~\cite{korthikanti2023ac}). By reusing these implementations, we can evaluate different parallelization and rematerialization strategies without relying on the simulator’s reimplementations. In addition, the performance benchmarking code embedded in training scripts can be reused directly, allowing users to interact with the simulator in the same way they would when tuning ML system performance on a real GPU cluster. Most importantly, avoiding reimplementation of the framework greatly reduces the maintenance burden, making the simulator more sustainable as ML frameworks evolve rapidly.
+
+
+We present a fundamentally different performance estimation approach for ML systems, called \textit{hybrid simulation}. Our key idea is that we can \textit{integrate real system execution directly with event-driven simulation, creating an illusion for ML frameworks that they are running on a real GPU cluster.} 
+Based on this approach, we build \sys, a GPU cluster simulator for ML system performance estimation. The core design is to use a containerized environment, equipped with a single GPU to directly run an ML system for simulation. Each running container simulates the execution of a multi-GPU server, where each rank operates one simulated GPU and is provided with one virtual clock. \sys intercepts all the communications and GPU kernel invocations from the ML framework. CUDA kernel execution times are profiled on the single GPU, while communication execution times are calculated using an event-driven network simulator. When a rank launches a CUDA kernel or initiates communication, \sys adjusts the rank's virtual clock accordingly to maintain accurate simulated time.
+
+We still face three key research challenges. First, it is challenging to maintain the core abstractions (e.g., CUDA, NCCL) so that unmodified ML frameworks can directly run. Second, it is challenging to integrate a real, running system with an event-driven network simulator. To elaborate on the second challenge, an event-driven network simulator progresses in discrete time steps, and the timing for the next event is calculated by prior events in the system. However, in hybrid simulation, our distributed ML system (the set of containers) may inject a network flow at any time, causing the network simulator's calculation to be incorrect.
+Finally, certain distributed ML workloads may quickly exhaust the memory capacity of the simulation environment.
+
+
+\sys maintains the core abstractions used by PyTorch and uses runtime patching to dynamically rewrite their dependencies (e.g., timer), so that the ML frameworks (e.g., Megatron \cite{shoeybi2019megatron}, DeepSpeed \cite{rasley2020deepspeed}, TorchTitan \cite{liang2025torchtitan}) can run as is on top of \sys.
+\sys addresses the integration challenge by allowing an event-driven network simulator and a distributed ML system to run in a loosely synchronized manner. 
+When an event that should occur earlier is injected by the container to the network simulator, \sys rollbacks the simulator state and accommodates those past events triggered by the containers. 
+To enhance scalability, \sys allows containers to share memory, significantly reducing the simulator's memory footprint.
+We evaluate \sys using three state-of-the-art Large Language Model (LLM) training systems: Megatron~\cite{shoeybi2019megatron}, DeepSpeed~\cite{rasley2020deepspeed}, and TorchTitan~\cite{liang2025torchtitan}. 
+All three systems run out-of-the-box without any modification to the source code, and \emph{\sys can support their feature sets without the need for corresponding reimplementation.}
+Their terminal outputs remain identical (except training losses) to those produced when running on a real GPU cluster.
+Our small-scale NVIDIA H200 testbed evaluation demonstrates that \sys achieves simulation accuracy comparable to state-of-the-art workload simulation methods. \sys's simulation result on TorchTitan matches its reported performance on large-scale NVIDIA H100 and A100 clusters~\cite{liang2025torchtitan,torchtitana100}.
+
+
+This paper makes the following contributions:
+\begin{itemize}
+\item We are the first to propose \textit{hybrid GPU cluster simulation for ML systems}, which eliminates the need for reimplementing ML frameworks in the simulator.
+
+\item We design and implement \sys, which efficiently integrates real system execution with an event-driven simulation to enable hybrid simulation.
+
+\item We evaluate \sys on three state-of-the-art LLM training systems, demonstrating \sys's generality and accuracy.
+\end{itemize}

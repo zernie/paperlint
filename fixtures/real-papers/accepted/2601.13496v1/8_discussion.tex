@@ -1,0 +1,11 @@
+\vspace{-0.3cm}
+
+\section{Discussion} 
+
+While all IoT devices we encountered show stable action time distributions, some are inherently variable---HVAC varies seasonally; oven and refrigerator times depend on load, etc. Handling such non-stationarity transparently remains challenging for IoT research; \sysname’s estimators are a step toward this goal. More expressive versions of \sysname{} programs 
+can be explored, if their marginal benefit is high enough compared to the complexity they might add. 
+
+
+
+Another issue is the limited causality expressiveness in current automation interfaces (e.g., Alexa~\cite{Alexa}, Google Home~\cite{GoogleHome}).
+These platforms center on IFTTT-style~\cite{ifttt} rules that struggle with conditional, multi-stage dependencies, limiting smart spaces---especially in larger, more dynamic environments. Current scripting lacks constructs for nuanced behaviors driven by multiple conditions or real-time updates, pushing users toward suboptimal automations. Future work should integrate more expressive, flow-based (visual) systems such as Node-RED~\cite{NodeRED} and Flogo~\cite{flogo}.

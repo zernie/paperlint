@@ -1,0 +1,111 @@
+%File: WorldAgen (arXiv build using the AAAI-2026 template)
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai2026}  % AAAI-2026 style
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tabularx}
+\usepackage{afterpage}
+\usepackage{subcaption}
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\PassOptionsToPackage{round}{natbib}
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in} % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in} % DO NOT CHANGE THIS
+
+% Algorithms (used in the appendix)
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% --- arXiv build extras (NOT part of the stock AAAI template) ---------------
+% hyperref is required for the Website/Code/Models links in the abstract.
+% AAAI forbids hyperref for the official submission, but this is the arXiv
+% build, so we keep it (loaded last) to preserve clickable links.
+\usepackage{xurl}
+\usepackage{xcolor} % for the colored project-homepage link under the title
+% hypertexnames=false gives unique bookmark anchors; without it the
+% \setcounter{secnumdepth}{0} above makes unnumbered sections share an
+% anchor and hyperref warns "anchor of a bookmark and its parent's...".
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
+\usepackage{bookmark} % resolves "anchor of a bookmark and its parent's..." warnings
+
+% Appendix part-level table of contents (used by appendix_body.tex)
+\usepackage[toc,page,header]{appendix}
+\usepackage{minitoc}
+\renewcommand \thepart{}
+\renewcommand \partname{}
+% ---------------------------------------------------------------------------
+
+% Custom math macros used throughout the sections (\mat, \E, ... )
+\let\laplace\undefined
+\input{math_commands.tex}
+
+% Custom text macros used throughout the sections
+\newcommand{\worldagen}{\textsc{WorldAgen}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\cf}{\textit{cf.}}
+\newcommand{\etc}{\textit{etc.}}
+
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+
+%% footnote with no marker, for the contribution legend
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+% Title
+\title{WorldAgen: Unified State-Action Prediction with \\ Test-Time World Model Training}
+\author{
+    Chi Wan\textsuperscript{\rm 1}\textsuperscript{*},
+    Kangrui Wang\textsuperscript{\rm 1}\textsuperscript{*\dag},
+    Yuan Si\textsuperscript{\rm 1},
+    Pingyue Zhang\textsuperscript{\rm 1},
+    Manling Li\textsuperscript{\rm 1}
+}
+\affiliations{
+    \textsuperscript{\rm 1}Northwestern University \\[4pt]
+    \href{https://worldagen.github.io}{\textcolor[rgb]{0.42,0.50,0.84}{\textbf{https://worldagen.github.io}}}
+}
+
+\begin{document}
+
+\maketitle
+
+\blfootnote{\textsuperscript{*}Core contributors. \quad \textsuperscript{\dag}Project lead.}
+
+\input{sections/section0_abstract}
+
+\input{sections/section1_introduction}
+\input{sections/section3_method}
+\input{sections/section4_experiments_and_analysis}
+\input{sections/section2_related_work}
+\input{sections/section5_conclusion}
+
+% Note: aaai2026.sty already issues \bibliographystyle{aaai2026} at
+% \begin{document}; do NOT add another one here or BibTeX errors with
+% "Illegal, another \bibstyle command".
+\bibliography{aaai2026}
+
+\input{appendix_body}
+
+\end{document}

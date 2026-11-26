@@ -1,0 +1,62 @@
+\section{Introduction}
+\label{introduction}
+
+Modern deep learning (DL) programs increasingly depend on libraries such as Transformers~\cite{transformers} and Megatron~\cite{megatron}, which streamline model development, training, and deployment~\cite{zeng2024survey,alfadel2023empirical,wu2023understanding,lyu2023chronos,kula2018developers,samarinunderstanding,chen2023toward,pepe2024taxonomy,li2024knowbug,jia2021symptoms,otoom2019automated}. 
+These libraries encapsulate critical functionalities such as tokenization, optimizer scheduling, distributed communication, and memory management, enabling developers to build large-scale models efficiently.
+
+However, as these libraries grow in complexity and scale, they unavoidably introduce software defects. 
+Bugs in DL libraries may not always manifest as program crashes; instead, they often degrade performance silently, introduce numerical inconsistencies, or corrupt training dynamics under certain conditions~\cite{chen2023toward,yu2025towards}. 
+For example, a subtle error in tensor parallelism coordination or configuration parsing may lead to incorrect gradient updates or inefficient resource usage, ultimately impairing model convergence.
+In practice, such defects are often discussed in GitHub pull requests (PRs)~\cite{pr} or commits~\cite{commit}, where developers propose fixes based on user feedback or internal audits~\cite{xiao2024generative,herbold2022fine}.
+Thus, we can analyze PRs and commits to assess whether a defect impacts downstream client programs.
+However, this is highly non-trivial in practice: PRs may reference internal APIs, abstract trigger conditions, or rely on complex runtime configurations. 
+Meanwhile, downstream users may not closely monitor upstream libraries and are frequently unaware of whether such defects could impact their own programs.
+
+Although keeping dependencies up-to-date is a common practice for maintaining software reliability, frequent dependency upgrades are impractical in DL environments, as each update may trigger costly retraining and break compatibility~\cite{2024Understanding,2023Toward,2024Bug,10.5555/3767901.3767919}.
+Moreover, many defects remain silent across releases or are fixed with minimal documentation.
+Release notes are typically coarse (e.g., fix stability) and omit critical details such as affected modules, configurations, or triggering conditions.
+For instance, commit \texttt{1674ce3}~\cite{1674ce3} in \textit{Megatron} silently skewed multi-user training for months before detection, illustrating how such fixes can propagate unnoticed.
+
+Recent efforts have leveraged large language models (LLMs) to assist with code summarization and PR triage~\cite{liu2019automatic}. 
+However, these approaches typically treat commits or patches in isolation, without modeling the downstream impact on external client programs.
+Determining whether a DL library defect affects a specific client program involves several unique challenges:
+
+\noindent\textbf{Challenge 1: Noisy and informal defect representations}.
+Defect-related PRs or commits often contain unstructured descriptions, partial fixes, or discussion noise. 
+The root cause and triggering conditions are rarely formalized, making the automated extraction of defect patterns difficult.
+
+\noindent\textbf{Challenge 2: Deep semantic gap between library changes and user-visible behavior}.
+Many patches fix low-level internal logic (e.g., CUDA graphs, communication buffers), while user programs interact only with high-level APIs. 
+Mapping these low-level changes to user-facing risk factors (e.g., configuration parameters, method calls) requires semantic reasoning.
+
+\noindent\textbf{Challenge 3: Semantic alignment between defect conditions and client usage}. 
+Determining whether a client program satisfies the defect's triggering conditions requires understanding not only the patched library logic, but also the usage context in the user code—including configurations and function calls. 
+
+To address these challenges, we propose \appname, an agent coordination framework for automated defect and impact analysis in deep learning libraries. 
+\appname assists developers in determining whether a defect in an upstream DL library (e.g., Transformers) has concrete effects on their downstream programs. 
+Unlike prior approaches that rely on static dependency resolution or flat summarization, \appname leverages a modular agent architecture to reason across both the library side and the client side, enabling context-aware, condition-sensitive impact assessment.
+By integrating domain-specific coordination rules, agent self-adaptation, and AST-based structural validation, \appname turns generic multi-agent reasoning into a practical and verifiable workflow for DL defect analysis.
+\appname consists of four agents: (1) \textbf{Miner Agent} identifies whether a commit or pull request addresses a real defect and extracts structured defect metadata, including bug background, trigger conditions, and affected components.
+(2) \textbf{Code Diff Agent} analyzes the patch semantics, locating modified methods and summarizing the underlying fix logic.
+(3) \textbf{Orchestrator Agent} synthesizes the results from upstream agents into a defect pattern, capturing risk-relevant method calls and parameter combinations from the perspective of external users.
+(4) \textbf{Impact Analyzer Agent} performs contextual analysis on the client program code to determine whether it satisfies the triggering conditions, guided by static analysis and domain-specific validation rules.
+
+To mitigate the long-context limitations of LLMs, \appname incorporates a progressive context augmentation mechanism that dynamically expands or compresses the input prompt to ensure information completeness without exceeding token limits.
+Furthermore, to mitigate hallucinations in LLM-generated outputs, we design a post-processing validation module that uses AST-based static analysis to verify the existence of referenced parameters and methods within the actual client program. 
+% If hallucinations are detected, the agent is prompted to regenerate its output, up to a fixed retry threshold.
+
+We evaluate \textbf{\appname} on 157 PRs and 70 commits collected from two widely used DL libraries: \texttt{Transformers} and \texttt{Megatron}.
+Our study focuses on two core tasks: (1) whether \appname can accurately generate structured \textit{defect patterns}, and (2) whether it can determine if a downstream client program is semantically affected by a given defect.
+On the PR dataset, \appname achieves a defect classification F1-score of 95\%, and over 70\% of extracted defect pattern fields—such as bug background and trigger conditions—are rated fully accurate by domain experts.
+In downstream impact analysis across 122 real-world client programs, \appname achieves an F1-score of 85\%, substantially outperforming three strong baselines.
+We further evaluate \appname on internal commits of \texttt{Megatron}, where it successfully identifies 12 real-world client programs affected by silent defects, as confirmed by developers.
+
+In summary, the main contributions of this paper include:
+\begin{itemize}[leftmargin=*]
+\item We present \textbf{\appname}, a novel agent coordination framework for fine-grained defect and impact analysis in deep learning libraries. 
+\item We implement a practical system that integrates LLM-based agents with static analysis and domain-specific inference rules. 
+The replication package is available at~\cite{depradar}.
+\item We conduct an extensive evaluation of 227 library updates (157 PRs and 70 commits) from \texttt{Transformers} and \texttt{Megatron}. 
+Results show that \appname outperforms three strong baselines in both defect modeling (F1 = 95\%) and client impact analysis (F1 = 85\%), and identifies real affected clients.
+\end{itemize}
+

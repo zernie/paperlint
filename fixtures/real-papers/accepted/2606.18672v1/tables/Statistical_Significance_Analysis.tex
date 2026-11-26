@@ -1,0 +1,24 @@
+\begin{table}
+\centering
+\resizebox{0.95\linewidth}{!}{
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Baselinse} & \textbf{ACC} & \textbf{NMI} & \textbf{ARI} \\
+\midrule
+
+pcaReduce & $1.56 \times 10^{-2}$ & $1.56 \times 10^{-2}$ & $1.56 \times 10^{-2}$ \\
+DEC & $1.56 \times 10^{-2}$ & $1.56 \times 10^{-2}$ & $1.56 \times 10^{-2}$ \\
+contrastive-sc & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+scNAME & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+scDeepCluster & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+AttentionAE-sc & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+scDSC & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+scGNN & $< 10^{-3}$ & $< 10^{-3}$ & $< 10^{-3}$ \\
+scCDCG & $1.56 \times 10^{-2}$ & $1.56 \times 10^{-2}$ & $0.08$ \\ 
+scSiameseClu & $0.04$ & $0.06$ & $0.03$ \\ 
+\bottomrule
+\end{tabular}
+}
+\caption{Statistical significance of \method{} compared to baselines. Results with $p < 0.05$ are considered statistically significant.}
+\label{tab:significance}
+\end{table}

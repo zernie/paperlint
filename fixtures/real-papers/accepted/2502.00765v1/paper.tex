@@ -1,0 +1,195 @@
+% TEMPLATE for Usenix papers, specifically to meet requirements of
+%  USENIX '05
+% originally a template for producing IEEE-format articles using LaTeX.
+%   written by Matthew Ward, CS Department, Worcester Polytechnic Institute.
+% adapted by David Beazley for his excellent SWIG paper in Proceedings,
+%   Tcl 96
+% turned into a smartass generic template by De Clarke, with thanks to
+%   both the above pioneers
+% use at your own risk.  Complaints to /dev/null.
+% make it two column with no page numbering, default is 10 point
+
+% Munged by Fred Douglis <douglis@research.att.com> 10/97 to separate
+% the .sty file from the LaTeX source template, so that people can
+% more easily include the .sty file into an existing document.  Also
+% changed to more closely follow the style guidelines as represented
+% by the Word sample file. 
+
+% Note that since 2010, USENIX does not require endnotes. If you want
+% foot of page notes, don't include the endnotes package in the 
+% usepackage command, below.
+
+% \documentclass[letterpaper,twocolumn,10pt]{article}
+% \usepackage{usenix,epsfig,endnotes}
+
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+% inlined bib file
+\usepackage{filecontents}
+% \IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is 
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsfonts}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{amsmath}
+%\usepackage{enumitem}
+%\usepackage{amssymb}
+\usepackage{comment}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{cancel}
+\usepackage{booktabs}
+\usepackage{enumerate}
+\usepackage{amsthm}
+ \usepackage{amssymb}
+\usepackage{makecell}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage[export]{adjustbox}
+\usepackage[T1]{fontenc}
+%\usepackage[pagebackref,breaklinks,colorlinks]{hyperref}
+\newtheorem{lemma}{lemma}
+\newtheorem{theorem}{Theorem}
+\usepackage{multirow} 
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{enumitem}
+\usepackage{enumerate}
+
+\usepackage[capitalize]{cleveref}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{wrapfig}
+\usepackage{bm}
+
+
+\newcommand{\name}{\texttt{AGNNCert}}
+\newcommand{\nameE}{\texttt{AGNNCert-E}}
+\newcommand{\nameN}{\texttt{AGNNCert-N}}
+
+\begin{document}
+
+
+
+%don't want date printed
+\date{}
+
+%make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+%\title{\Large \bf Deterministic Certification of Graph Neural Networks against Arbitrary Graph Perturbations}
+
+
+\title{\Large \bf 
+{\name}: Defending Graph Neural Networks against Arbitrary Perturbations with Deterministic Certification}
+
+\author{
+{\rm Jiate Li$^{1}$, Binghui Wang$^{1,*}$}\\
+$^1$Illinois Institute of Technology, $^*$Corresponding Author
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+%\thispagestyle{empty}
+
+
+\begin{abstract}
+% Your Abstract Text Goes Here.  Just a few facts. Whet our appetites.
+
+Graph neural networks (GNNs)
+achieve the state-of-the-art on graph-relevant tasks such as node and graph classification. However, recent works show GNNs are vulnerable to adversarial perturbations include the perturbation on edges, nodes, and node features, the three components that form  a graph. 
+Empirical defenses against such attacks are soon broken by adaptive ones. While certified defenses offer robustness guarantees, they face several limitations: 1) almost all restrict the adversary’s capability to only one type
+of perturbation, which is impractical; 2) all are designed for a particular GNN task, which limits their applicability; and 3) the robustness guarantees of all methods except one are not 100\% accurate. 
+
+We address all these limitations by developing {\name}, the first certified defense for GNNs against arbitrary (edge, node, and node feature) perturbations with deterministic robustness
+guarantees, and applicable to the two most common node and graph classification tasks.    
+{\name} also encompass existing certified defenses as special cases. 
+Extensive evaluations on multiple {benchmark} node/graph classification datasets {and two real-world graph datasets}, and multiple GNNs validate the effectiveness of {\name} to provably defend against arbitrary perturbations. {\name} also shows its superiority over the state-of-the-art certified defenses against the individual edge perturbation and node perturbation.\footnote{Source code is at 
+\url{https://github.com/JetRichardLee/AGNNCert}.}
+
+
+\end{abstract}
+
+\input{intro}
+
+\input{background}
+
+\input{problem}
+
+\input{method}
+
+\input{experiments}
+
+\input{real-world}
+
+\input{discussion}
+
+\input{related}
+
+\input{conclusion}
+
+
+
+
+\iffalse
+Some embedded literal typset code might 
+look like the following :
+{\tt \small
+\begin{verbatim}
+#include <iostream>
+using namespace std;
+main()
+{
+cout << "Hello world \n";
+return 0;
+}
+
+\end{verbatim}
+}
+\fi
+% Now we're going to cite somebody.  Watch for the cite tag. Here it comes~\cite{Einstein}.  
+
+%\newpage
+\bibliographystyle{plain}
+\bibliography{refs}
+
+
+\appendix
+\input{appendix}
+
+
+
+\end{document}
+
+
+
+
+
+
+

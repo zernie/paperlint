@@ -1,0 +1,188 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Akujuobi \bgroup \em et al.\egroup }{2024}]{akujuobi2024link}
+Uchenna Akujuobi, Priyadarshini Kumari, Jihun Choi, Samy Badreddine, Kana Maruyama, Sucheendra~K Palaniappan, and Tarek~R Besold.
+\newblock Link prediction for hypothesis generation: an active curriculum learning infused temporal graph-based approach.
+\newblock {\em Artificial Intelligence Review}, 57(9):244, 2024.
+
+\bibitem[\protect\citeauthoryear{Betz \bgroup \em et al.\egroup }{2022}]{betz2022adversarial}
+Patrick Betz, Christian Meilicke, and Heiner Stuckenschmidt.
+\newblock Adversarial explanations for knowledge graph embeddings.
+\newblock In {\em IJCAI}, volume 2022, pages 2820--2826, 2022.
+
+\bibitem[\protect\citeauthoryear{Boudin \bgroup \em et al.\egroup }{2023}]{boudin2023oregano}
+Marina Boudin, Gayo Diallo, Martin Dranc{\'e}, and Fleur Mougin.
+\newblock The oregano knowledge graph for computational drug repurposing.
+\newblock {\em Scientific data}, 10(1):871, 2023.
+
+\bibitem[\protect\citeauthoryear{Chandak \bgroup \em et al.\egroup }{2023}]{chandak2023building}
+Payal Chandak, Kexin Huang, and Marinka Zitnik.
+\newblock Building a knowledge graph to enable precision medicine.
+\newblock {\em Scientific Data}, 10(1):67, 2023.
+
+\bibitem[\protect\citeauthoryear{Chen \bgroup \em et al.\egroup }{2021}]{chen2021owl2vec}
+Jiaoyan Chen, Pan Hu, Ernesto Jimenez-Ruiz, Ole~Magnus Holter, Denvar Antonyrajah, and Ian Horrocks.
+\newblock Owl2vec*: Embedding of owl ontologies.
+\newblock {\em Machine Learning}, 110(7):1813--1845, 2021.
+
+\bibitem[\protect\citeauthoryear{Chou \bgroup \em et al.\egroup }{2022}]{chou2022counterfactuals}
+Yu-Liang Chou, Catarina Moreira, Peter Bruza, Chun Ouyang, and Joaquim Jorge.
+\newblock Counterfactuals and causability in explainable artificial intelligence: Theory, algorithms, and applications.
+\newblock {\em Information Fusion}, 81:59--83, 2022.
+
+\bibitem[\protect\citeauthoryear{Das \bgroup \em et al.\egroup }{2017}]{das2017minerva}
+Rajarshi Das, Shehzaad Dhuliawala, Manzil Zaheer, Luke Vilnis, Ishan Durugkar, Akshay Krishnamurthy, Alex Smola, and Andrew McCallum.
+\newblock Go for a walk and arrive at the answer: Reasoning over paths in knowledge bases using reinforcement learning.
+\newblock {\em arXiv preprint arXiv:1711.05851}, 2017.
+
+\bibitem[\protect\citeauthoryear{Degtyarenko \bgroup \em et al.\egroup }{2007}]{degtyarenko2007chebi}
+Kirill Degtyarenko, Paula De~Matos, Marcus Ennis, Janna Hastings, Martin Zbinden, Alan McNaught, Rafael Alc{\'a}ntara, Michael Darsow, Micka{\"e}l Guedj, and Michael Ashburner.
+\newblock Chebi: a database and ontology for chemical entities of biological interest.
+\newblock {\em Nucleic acids research}, 36(suppl\_1):D344--D350, 2007.
+
+\bibitem[\protect\citeauthoryear{Dur{\'a}n}{2017}]{duran2017varying}
+Juan~M Dur{\'a}n.
+\newblock Varying the explanatory span: scientific explanation for computer simulations.
+\newblock {\em International Studies in the Philosophy of Science}, 31(1):27--45, 2017.
+
+\bibitem[\protect\citeauthoryear{Dur{\'a}n}{2021}]{duran2021dissecting}
+Juan~M Dur{\'a}n.
+\newblock Dissecting scientific explanation in ai (sxai): A case for medicine and healthcare.
+\newblock {\em Artificial Intelligence}, 297:103498, 2021.
+
+\bibitem[\protect\citeauthoryear{D’aquin}{2024}]{d2024role}
+Mathieu D’aquin.
+\newblock On the role of knowledge graphs in ai-based scientific discovery.
+\newblock {\em Journal of Web Semantics}, page 100854, 2024.
+
+\bibitem[\protect\citeauthoryear{Faria \bgroup \em et al.\egroup }{2023}]{faria2023agreementmakerlight}
+Daniel Faria, Emanuel Santos, Booma~Sowkarthiga Balasubramani, Marta~C Silva, Francisco~M Couto, and Catia Pesquita.
+\newblock Agreementmakerlight.
+\newblock {\em Semantic Web}, (Preprint):1--13, 2023.
+
+\bibitem[\protect\citeauthoryear{Gottlieb \bgroup \em et al.\egroup }{2011}]{gottlieb2011predict}
+Assaf Gottlieb, Gideon~Y Stein, Eytan Ruppin, and Roded Sharan.
+\newblock Predict: a method for inferring novel drug indications with application to personalized medicine.
+\newblock {\em Molecular systems biology}, 7(1):496, 2011.
+
+\bibitem[\protect\citeauthoryear{Hartel \bgroup \em et al.\egroup }{2005}]{hartel2005modeling}
+Frank~W Hartel, Sherri de~Coronado, Robert Dionne, Gilberto Fragoso, and Jennifer Golbeck.
+\newblock Modeling a description logic vocabulary for cancer research.
+\newblock {\em Journal of biomedical informatics}, 38(2):114--129, 2005.
+
+\bibitem[\protect\citeauthoryear{Himmelstein \bgroup \em et al.\egroup }{2017}]{himmelstein2017systematic}
+Daniel~Scott Himmelstein, Antoine Lizee, Christine Hessler, Leo Brueggeman, Sabrina~L Chen, Dexter Hadley, Ari Green, Pouya Khankhanian, and Sergio~E Baranzini.
+\newblock Systematic integration of biomedical knowledge prioritizes drugs for repurposing.
+\newblock {\em Elife}, 6:e26726, 2017.
+
+\bibitem[\protect\citeauthoryear{Holzinger \bgroup \em et al.\egroup }{2019}]{holzinger2019causability}
+Andreas Holzinger, Georg Langs, Helmut Denk, Kurt Zatloukal, and Heimo M{\"u}ller.
+\newblock Causability and explainability of artificial intelligence in medicine.
+\newblock {\em Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery}, 9(4):e1312, 2019.
+
+\bibitem[\protect\citeauthoryear{Keas}{2018}]{keas2018systematizing}
+Michael~N Keas.
+\newblock Systematizing the theoretical virtues.
+\newblock {\em Synthese}, 195(6):2761--2793, 2018.
+
+\bibitem[\protect\citeauthoryear{Krohs}{2008}]{krohs2008digital}
+Ulrich Krohs.
+\newblock How digital computer simulations explain real-world processes.
+\newblock {\em International Studies in the Philosophy of Science}, 22(3):277--292, 2008.
+
+\bibitem[\protect\citeauthoryear{Liu \bgroup \em et al.\egroup }{2021}]{liu2021neural}
+Yushan Liu, Marcel Hildebrandt, Mitchell Joblin, Martin Ringsquandl, Rime Raissouni, and Volker Tresp.
+\newblock Neural multi-hop reasoning with logical rules on biomedical knowledge graphs.
+\newblock In {\em The Semantic Web: 18th International Conference, ESWC 2021, Virtual Event, June 6--10, 2021, Proceedings 18}, pages 375--391. Springer, 2021.
+
+\bibitem[\protect\citeauthoryear{Lundberg}{2017}]{lundberg2017unified}
+Scott Lundberg.
+\newblock A unified approach to interpreting model predictions.
+\newblock {\em arXiv preprint arXiv:1705.07874}, 2017.
+
+\bibitem[\protect\citeauthoryear{Madsen \bgroup \em et al.\egroup }{2019}]{madsen2019aspects}
+Marie~Lindhard Madsen, Hanne Due, Niels Ejskj{\ae}r, Paw Jensen, Jakob Madsen, and Karen Dybk{\ae}r.
+\newblock Aspects of vincristine-induced neuropathy in hematologic malignancies: a systematic review.
+\newblock {\em Cancer chemotherapy and pharmacology}, 84:471--485, 2019.
+
+\bibitem[\protect\citeauthoryear{Meilicke \bgroup \em et al.\egroup }{2019}]{meilicke2019anytime}
+Christian Meilicke, Melisachew~Wudage Chekol, Daniel Ruffinelli, and Heiner Stuckenschmidt.
+\newblock Anytime bottom-up rule learning for knowledge graph completion.
+\newblock In {\em Proceedings of the 28th International Joint Conference on Artificial Intelligence}, pages 3137--3143, 2019.
+
+\bibitem[\protect\citeauthoryear{Napolitano \bgroup \em et al.\egroup }{2018}]{napolitano2018gene2drug}
+Francesco Napolitano, Diego Carrella, Barbara Mandriani, Sandra Pisonero-Vaquero, Francesco Sirci, Diego~L Medina, Nicola Brunetti-Pierri, and Diego Di~Bernardo.
+\newblock gene2drug: a computational tool for pathway-based rational drug repositioning.
+\newblock {\em Bioinformatics}, 34(9):1498--1505, 2018.
+
+\bibitem[\protect\citeauthoryear{Ott \bgroup \em et al.\egroup }{2022}]{ott2022linkexplorer}
+Simon Ott, Adriano Barbosa-Silva, and Matthias Samwald.
+\newblock Linkexplorer: predicting, explaining and exploring links in large biomedical knowledge graphs.
+\newblock {\em Bioinformatics}, 38(8):2371--2373, 2022.
+
+\bibitem[\protect\citeauthoryear{Ozkan \bgroup \em et al.\egroup }{2023}]{ozkan2023generating}
+Elif Ozkan, Remzi Celebi, Arif Yilmaz, Vincent Emonet, and Michel Dumontier.
+\newblock Generating knowledge graph based explanations for drug repurposing predictions.
+\newblock In {\em SWAT4HCLS}, pages 22--31, 2023.
+
+\bibitem[\protect\citeauthoryear{Reynolds \bgroup \em et al.\egroup }{2021}]{reynolds2021accelerating}
+Kimberly~A Reynolds, Eduardo Rosa-Molinar, Robert~E Ward, Hongbin Zhang, Breeanna~R Urbanowicz, and A~Mark Settles.
+\newblock Accelerating biological insight for understudied genes.
+\newblock {\em Integrative and Comparative Biology}, 61(6):2233--2243, 2021.
+
+\bibitem[\protect\citeauthoryear{Ribeiro \bgroup \em et al.\egroup }{2016}]{ribeiro2016should}
+Marco~Tulio Ribeiro, Sameer Singh, and Carlos Guestrin.
+\newblock " why should i trust you?" explaining the predictions of any classifier.
+\newblock In {\em Proceedings of the 22nd ACM SIGKDD international conference on knowledge discovery and data mining}, pages 1135--1144, 2016.
+
+\bibitem[\protect\citeauthoryear{Rosales and Morton}{2021}]{rosales2021scientific}
+Alirio Rosales and Adam Morton.
+\newblock Scientific explanation and trade-offs between explanatory virtues.
+\newblock {\em Foundations of Science}, 26:1075--1087, 2021.
+
+\bibitem[\protect\citeauthoryear{Rossi \bgroup \em et al.\egroup }{2022}]{rossi2022kelpie}
+Andrea Rossi, Donatella Firmani, Paolo Merialdo, and Tommaso Teofili.
+\newblock Kelpie: an explainability framework for embedding-based link prediction models.
+\newblock {\em Proceedings of the VLDB Endowment}, 15(12):3566--3569, 2022.
+
+\bibitem[\protect\citeauthoryear{Salmon}{1984}]{salmon1984scientific}
+Wesley~C Salmon.
+\newblock {\em Scientific explanation and the causal structure of the world}.
+\newblock Princeton University Press, 1984.
+
+\bibitem[\protect\citeauthoryear{S{\'a}nchez-Jim{\'e}nez \bgroup \em et al.\egroup }{2015}]{sanchez2015t}
+Carmen S{\'a}nchez-Jim{\'e}nez, Mar{\'\i}a~Dolores Lude{\~n}a, and Jos{\'e}~M Izquierdo.
+\newblock T-cell intracellular antigens function as tumor suppressor genes.
+\newblock {\em Cell Death \& Disease}, 6(3):e1669--e1669, 2015.
+
+\bibitem[\protect\citeauthoryear{Stork \bgroup \em et al.\egroup }{2023}]{stork2023explainable}
+Lise Stork, Ilaria Tiddi, Ren{\'e} Spijker, and Annette ten Teije.
+\newblock Explainable drug repurposing in context via deep reinforcement learning.
+\newblock In {\em European Semantic Web Conference}, pages 3--20. Springer, 2023.
+
+\bibitem[\protect\citeauthoryear{Thagard}{1978}]{thagard1978best}
+Paul~R Thagard.
+\newblock The best explanation: Criteria for theory choice.
+\newblock {\em The journal of philosophy}, 75(2):76--92, 1978.
+
+\bibitem[\protect\citeauthoryear{Thagard}{1989}]{thagard1989explanatory}
+Paul Thagard.
+\newblock Explanatory coherence.
+\newblock {\em Behavioral and brain sciences}, 12(3):435--467, 1989.
+
+\bibitem[\protect\citeauthoryear{Xiong \bgroup \em et al.\egroup }{2017}]{xiong2017deeppath}
+Wenhan Xiong, Thien Hoang, and William~Yang Wang.
+\newblock Deeppath: A reinforcement learning method for knowledge graph reasoning.
+\newblock {\em arXiv preprint arXiv:1707.06690}, 2017.
+
+\bibitem[\protect\citeauthoryear{Yuen and Jansson}{2020}]{yuen2020better}
+Ho~Yin Yuen and Jesper Jansson.
+\newblock Better link prediction for protein-protein interaction networks.
+\newblock In {\em 2020 IEEE 20th International Conference on Bioinformatics and Bioengineering (BIBE)}, pages 53--60. IEEE, 2020.
+
+\bibitem[\protect\citeauthoryear{Zhang \bgroup \em et al.\egroup }{2023}]{zhang2023page}
+Shichang Zhang, Jiani Zhang, Xiang Song, Soji Adeshina, Da~Zheng, Christos Faloutsos, and Yizhou Sun.
+\newblock Page-link: Path-based graph neural network explanation for heterogeneous link prediction.
+\newblock In {\em Proceedings of the ACM Web Conference 2023}, pages 3784--3793, 2023.
+
+\end{thebibliography}

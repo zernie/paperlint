@@ -1,0 +1,36 @@
+\subsection{Concurrent Knowledge Base}
+\label{sec:ckb}
+
+Based on the extracted concurrency entities and interaction DSL described in the previous section, we construct a \emph{Concurrent Knowledge Base (CKB)} to organize concurrency-relevant information in a hierarchical and queryable form.
+The CKB serves as the structured knowledge layer that supports hierarchical retrieval and LLM-guided fault localization.
+
+Formally, the Concurrent Knowledge Base is defined as:
+\[
+\mathcal{K} = \{ \mathcal{C}, \mathcal{P}, \mathcal{E}, \mathcal{M}, \mathcal{I} \}
+\]
+where each element captures concurrency knowledge at a different abstraction level.
+
+The Concurrent Knowledge Base (CKB) organizes concurrency-relevant information at multiple abstraction levels to support progressive fault localization.
+At coarse granularity, component- and package-level knowledge captures high-level system structure and functionality.
+Each component and package is associated with brief descriptions summarizing its responsibilities and concurrency relevance, derived from build configurations, directory structure, and developer documentation.
+This information provides early-stage guidance for narrowing the search space when analyzing large codebases.
+
+At finer granularity, the CKB records detailed concurrency semantics at the thread-entry, method, and interaction levels.
+Formally, thread-entry knowledge corresponds to the set $\mathbb{T}_e$, where each $t \in \mathbb{T}_e$ represents a concurrency entry point such as a thread, executor submission, or asynchronous callback.
+For each thread entry $t$, the CKB records the set of other entries $t' \in \mathbb{T}_e$ with which $t$ may interact through shared resource accesses.
+Method-level knowledge is defined over the set of methods $\mathbb{M}$.
+For each method $m \in \mathbb{M}$, the CKB records whether $m$ serves as a thread entry ($m \in \mathbb{T}_e$), the set of shared variables $v \in \mathbb{V}_s$ accessed by $m$, and the corresponding access types (e.g., read or write).
+This information captures how concurrency behavior manifests at the code level.
+Finally, interaction-level knowledge consists of interaction DSL elements $\mathcal{I}$.
+Each interaction $I \in \mathcal{I}$ summarizes a potential concurrent behavior between a pair of distinct thread entries $(t_1, t_2)$, where $t_1, t_2 \in \mathbb{T}_e$.
+
+\vspace{-0.5em}
+\input{tables/fun_call}
+\vspace{-0.5em}
+
+\paragraph{Retrieval Functions}
+\label{subsec:ckb-retrieval}
+
+To enable hierarchical and controlled access to the Concurrent Knowledge Base, we expose a small set of retrieval functions, summarized in Table~\ref{tab:function_calls}.
+Each function corresponds to a specific abstraction level in the knowledge base, ranging from components and packages to thread entries, methods, and interaction DSL elements.
+By restricting retrieval to these predefined functions, the framework ensures that the LLM incrementally explores only concurrency-relevant context, preventing uncontrolled traversal of the codebase and keeping the reasoning process focused and interpretable.

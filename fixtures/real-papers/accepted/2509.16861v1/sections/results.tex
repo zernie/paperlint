@@ -1,0 +1,184 @@
+\section{Experimental Results}
+\label{sec:exp_results}
+
+\subsection{RQ1: \rqone}
+% \input{tables/RQ1_unsafe}
+\subsubsection*{\underline{\textbf{Approach}}}
+% The foundation of any guardrail approach should be capable in correctly classifying safe and unsafe content in their plain forms, without the interference of jailbreak attacks. 
+% To evaluate this classification performance of \ourapp, we train our model on a balanced dataset of 16013 safe prompts from the Alpaca dataset and 15987 unsafe prompts from the BeaverTails dataset. The model is then evaluated on a held-out validation set containing 2000 safe prompts and 2000 unsafe prompts to measure standard classification metrics including accuracy, precision, recall, and F1-score. 
+% We compare \ourapp's performance against several baseline guardrail systems, including Llama Guard \cite{inan2023llama}, OpenAI's content moderation API \cite{markov2023holistic}, Nvidia's Nemo Guardrails \cite{rebedea2023nemo}, and Google's PerspectiveAPI approach \cite{lees2022new}. This comparison allows us to establish whether our approach maintains competitive classification performance. 
+To address this RQ, we compare our OOD method with three other OOD methods.
+We first train our OOD-aware \ourapp~using the guardrail training dataset and OOD-aware training dataset (see Section \ref{sec:dataset_prep}).
+Once trained, we evaluated our Mahalanobis Distance-based OOD detection method separately, alongside three other OOD methods used independently for baseline comparison:
+\begin{itemize}
+    \item Energy Score~\cite{liu2020energy}: The energy score for an input $x$ is defined as $E(x) = -\log \sum_{y} \exp(f_y(x))$, where $f_y(x)$ is the logit for class $y$. Lower energy values indicate higher model confidence in-distribution, while higher values suggest OOD samples.
+    \item Likelihood Ratio: As proposed by Ren~\ea~\cite{ren2019likelihood}, we compute the likelihood ratio between the model's predicted probability for the input and a background (noise) model: $LR(x) = \frac{P_{\text{model}}(x)}{P_{\text{background}}(x)}$. Lower ratios are indicative of OOD samples.
+    \item Ensemble Uncertainty: Following Lakshminarayanan~\ea~\cite{lakshminarayanan2017simple}, we estimate uncertainty by computing the variance of predictions from an ensemble of models or multiple stochastic forward passes (e.g., with dropout). Higher predictive variance signals greater uncertainty and potential OOD status.
+\end{itemize}
+To determine the OOD detection threshold $\tau\_{\text{OOD}}$, we follow a common approach by running inference on the in-distribution training set $\mathcal{D}_{\text{train}}^{\text{ID}}$ and collecting the model's OOD metric scores (e.g., Mahalanobis distance).
+We then set $\tau_{\text{OOD}}$ based on quantiles of these scores, using commonly adopted thresholds such as the 90th, 95th, or 99th percentile, following prior work \cite{liu2020energy}.
+Prompts whose OOD scores exceed $\tau_{\text{OOD}}$ are flagged as out-of-distribution.
+
+We evaluate OOD detection performance on our OOD detection testing dataset, containing 1,050 OOD prompts and 954 in-distribution prompts (See Section \ref{sec:dataset_prep}).
+% We use True Positive Rate (TPR) to measure detection accuracy, defined as the proportion of OOD prompts correctly identified as OOD:
+% $\text{TPR} = \frac{\text{\# correctly detected OOD prompts}}{\text{\# total OOD prompts}}$.
+% We use False Positive Rate (FPR) to quantify the frequency of misclassifying in-distribution prompts as OOD, defined as $\text{FPR} = \frac{\text{\# in-distribution prompts misclassified as OOD}}{\text{\# total in-distribution prompts}}$. 
+We measure performance using precision, recall, and F1-Score, where correctly detected OOD prompts are treated as true positives. Precision measures the proportion of correctly identified OOD prompts among all prompts flagged as OOD, recall measures the proportion of actual OOD prompts that were correctly detected, and F1-Score provides a balanced measure combining both precision and recall.
+% \mike{Ray to double check whether the definition of these metrics are correct}
+
+%We then run inference the OOD Detection Testing Dataset in Section \ref{sec:dataset_prep}, consisting of 1,039 OOD samples and 954 in-distribution samples.
+%We use the True Positive Rate (TPR) to quantify the defensive capability of guardrails, defined as the percentage of the number of the jailbreak prompts that can be the successfully detected as OOD by a runtime guardrail $\#\mathrm{Prompts}_\mathrm{success}$ and the total number of the jailbreak prompts $\#\mathrm{TotalPrompts}$:
+%\begin{equation}
+%\mathrm{TPR} = \frac{\#\mathrm{Prompts}_\mathrm{success}}{\#\mathrm{TotalPrompts}}
+%\label{DSR_formula}
+%\end{equation}
+%In this case, we define successfully defended by if they are identified as OOD at each threshold value, for each metric.
+%The False Positive Rate (FPR) is calculated by the percentage of prompts from the validation dataset that are identified as OOD at each threshold.
+
+\subsubsection*{\underline{\textbf{Results}}}
+% \input{tables/RQ1_OOD_detection}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figs/RQ1_F1.pdf}
+    \vspace{-0.3cm}
+    \caption{(RQ1 Results) OOD detection performance of each OOD method evaluated in RQ1.}
+    \label{fig:RQ1_OOD}
+\end{figure}
+
+% \begin{figure*}
+%     \centering
+%     \includegraphics[width=1\linewidth]{figs/RQ1_ood_detection_combined_vs_percentile.png}
+%     \caption{Combined OOD detection and False Positive Rate ofRQ1}
+%     \label{fig:RQ1_FPR}
+% \end{figure*}
+
+Fig. \ref{fig:RQ1_OOD} presents the Precision, Recall, and F1-Score of the four OOD detection methods, evaluated under three quantile thresholds (90th, 95th, 99th).
+
+%\textbf{The best balanced performance was Mahalanobis Distance with 95.48\% TPR and 3.50\% FPR, at the 99th quantile threshold.}
+\textbf{The Mahalanobis Distances used in our framework achieves the highest F1-Score of 96.1\% when the OOD detection threshold $\tau\_{\text{OOD}}$ is set to the 99th quantile threshold.}
+Across all methods, increasing the detection threshold $\tau\_{\text{OOD}}$ generally improves precision while reducing recall. This is because a higher threshold makes the detector more conservative, flagging fewer inputs as OOD, which reduces false positives (improving precision) but may miss some actual OOD samples (reducing recall).
+%In particular, the Mahalanobis distance achieves the highest recall of 98.7\% at the 90th percentile threshold, but with only 84.4\% precision, demonstrating how lower thresholds favor recall at the expense of precision.
+Notably, the Likelihood Ratios and Energy Scores present less balanced performance, with their precision-recall trade-offs resulting in lower F1 scores across all thresholds.
+% This represents an 8\% improvement over the best-performing baseline, the energy score, at the same threshold.
+On the other hand, the balanced F1-Score of 96.1\% confirms that Mahalanobis Distances provides the optimal trade-off between precision and recall.
+These results confirm the feasibility of leveraging OOD detection to enable guardrails to recognize unseen inputs continually. Among all methods, the Mahalanobis Distances proves to be the most effective in identifying OOD samples while maintaining a low false positive rate.
+%The TPR of all OOD detection methods except Ensemble Uncertainty achieved 84\%+ across 90\%, 95\% and 99\% quantile threshold values.
+%For instance, the Mahalanobis distance maintains high TPR (96\% - 99\%), while its FPR reduced from 20\% to 3.5\% at 99th quantile.
+%Similarly, Energy Scores achieved a strong balanced performance of around 88\% TPR at all quantiles, and the FPR dropped from 11.1\% to 1.2\%.
+%In contrast, Ensemble Uncertainties showed a significant drop in TPR, from 88\% at 90th quantile, to 8.1\% at 95th quantile, then only 1.3\% at 99th quantile. 
+%Thess results highlight that while these methods are able to identified unknown jailbreak attacks at a high ratio, threshold selection directly impacts FPR and sometimes can heavily impact TPR too.
+%However, the Energy Score and Mahalanobis Distance metrics demonstrated superior stability and effectiveness under most quantile selections.
+%This finding confirms our hypothesis that OOD detections methods are capable of detecting unusual jailbreak prompts that deviate from expected prompts in the training dataset.
+
+\subsection{RQ2: \rqtwo}
+\subsubsection*{\underline{\textbf{Approach}}}
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\textwidth]{figs/RQ2_DSR_Comparison.pdf}
+    \caption{(RQ2 Results) The performance comparison of our \ourapp~and LlamaGuard on OOD prompts when continuously updated through detected OOD prompts.}
+    \label{fig:RQ2_DSR}
+\end{figure*}
+% talk about for each new attack we use the base model again
+To address this RQ, we compare our \ourapp~approach with LlamaGuard~\cite{inan2023llama}, a state-of-the-art open-source runtime guardrail for LLM-powered systems. Although LlamaGuard shows strong performance on in-distribution data, our analysis reveals its limitations in handling unsafe prompts that differ significantly from its training distribution. We use the LlamaGuard-3-1B and LlamaGuard-3-8B models from Hugging Face as baselines.
+
+To simulate continual learning under OOD detection, we construct a Continual Learning Testing Dataset of 992 OOD jailbreak prompts, all correctly identified by our method in RQ1 (see Section~\ref{sec:dataset_prep}). These prompts span ten types of jailbreak attacks, each exhibiting distinct patterns that bypass guardrails trained on natural unsafe prompts, making them valid OOD scenarios.
+
+In real-world settings, jailbreaks tend to emerge chronologically as adversaries innovate new attack patterns. To reflect this, we organize the dataset into sequential attack waves, where each wave represents a set of related jailbreak techniques. Instead of training on all attacks simultaneously, models are updated incrementally.
+
+For each wave, we hold out 50 samples for testing and use the remaining 50 OOD samples for continual learning. Prompts are fed to the model one at a time. At each time step, we first run inference to log the model’s prediction, then update the model using the same sample. This ensures no data leakage between training and evaluation. The process continues iteratively until all non-hold-out samples are used.
+
+We evaluate two guardrails: our trained \ourapp~from RQ1 and the LlamaGuard baselines.
+For each attack wave, all models are initialized from the same pre-trained checkpoint to ensure a fair and consistent comparison.
+All models are updated using the same LoRA-based continual learning procedure after running inference.
+We measure each guardrail’s effectiveness using the Defense Success Rate (DSR), defined as the number of jailbreak prompts correctly predicted as unsafe, divided by the total number of jailbreak prompts.
+This setup allows us to assess how rapidly and effectively each guardrail adapts to unseen OOD jailbreaks using limited adaptation data.
+
+
+%To address this RQ, we investigate the effectiveness of LoRA-based continual fine-tuning for updating guardrails using jailbreak prompts identified as OOD from RQ1. We apply LoRA-based fine-tuning to both the pre-trained~\ourapp from RQ1, as well as LlamaGuard 3, a state-of-the-art guardrail, following the procedures in Section \ref{sec:exp_design}. 
+
+%In each jailbreak attack, we hold out 50 samples as the testing set, and update the guardrails using the 50 out of the remaining samples that are identified as OOD. To avoid any overlap between models, each attack will use the base pre-trained~\ourapp in RQ1, and base LlamaGuard model, at the start of the finetuning process. Each LoRA-based adaptation iteration is conducted with one jailbreak prompt only, and evaluated on the 50 hold-out testing set, allowing us to assess how~\ourapp learns with limited data. This process continues for 50 iterations or until the training dataset is exhausted. This setup enables us to observe how quickly and effectively each guardrail adapts to new OOD attacks with limited data using LoRA-based continual learning.
+
+%In an actual production environment, jailbreak attacks emerge chronologically as adversaries continuously develop new techniques to bypass model safeguards. 
+%To simulate this real-world scenario, we structure our experiment to process jailbreak attacks in temporal batches. We organise our OOD jailbreak examples into sequential 'wave' of attack, with each wave representing a collection of related jailbreak techniques that might emerge during a specific time period. 
+%Rather than training on all available data at once, we incrementally expose our models to these attack waves, allowing us to evaluate how each updating technique adapts to newly emerging threats.
+
+%For each attack wave, we apply our four updating methods independently and measure their ability to incorporate new defence capabilities without compromising existing ones. 
+%This approach closely mirrors production deployment scenarios where guardrail models must be continuously updated against evolving attack strategies while maintaining consistent performance across all previously encountered threats.
+
+% For SFT on~\ourapp, we first conducted detailed parameter sweep to identify the best hyper parameter to use on a separate jailbreak dataset. To name a few: 5e-5 learning rate, lambda value of 0.005, max gradient norm of 1. These settings were then fixed for all subsequent SFT experiments to ensure consistency and comparability.
+
+% For LoRA-based finetuning, we adopted the commonly used LoRA configuration, setting the rank to 8, the alpha parameter to 32, and a dropout rate of 0.1. These values are consistent with best practices reported in recent literature and ensure a fair comparison with SFT and full-parameter finetuning \cite{hu2022lora}.
+
+
+\subsubsection*{\underline{\textbf{Results}}}
+Fig. \ref{fig:RQ2_DSR} presents the time-wise DSR across each attack wave, showing how \ourapp, LlamaGuard-1B, and LlamaGuard-8B defend against OOD prompts over time.
+We also present three additional baselines where the continual learning (CL) is not applied.
+Each subplot represents an attack wave. The x-axis indicates the number of consecutive update steps, while the y-axis shows the DSR on the 50 held-out unsafe samples for each attack.
+
+\textbf{Our~\ourapp~+ Continual Learning (CL), consistently shows the fastest adaptation across most attack waves, achieving optimal DSR within 2 to 38 update steps, with a median of 2 update steps.
+In comparison, LlamaGuard requires between 4 to 44 update steps to achieve optimal DSR across the same attack waves, with a median of 4 steps. Guardrails that do not incorporate our continual learning (CL) framework maintain the same level of performance across time steps for each attack wave, as they are not updated with detected OOD prompts.}
+\textbf{These results confirm that our CL framework is crucial for enabling adaptive defenses, allowing the guardrails to continually improve and remain effective against evolving and previously unseen jailbreak attacks.}
+
+We also found that different attack patterns exhibited varying levels of complexity for the models to adapt to, significantly impacting their adaptation speed.
+In particular, template based attacks such as AIM and SmartGPT converged to optimal DSR in only 2 updating steps for \ourapp~+ CL, and around 4-6 steps for LlamaGuard 8B + CL. 
+On the other hand, attacks like Base64 and Zulu presented more significant challenges. Both ~\ourapp + CL and LlamaGuard + CL presented notably slower adaptation speed and often plateaued at optimal DSR values lower than those of less sophisticated attacks.
+This indicates that these more complex jailbreak attacks require more extensive adaptation.
+%In nearly every scenario, AdaptiveGuard + LoRA reaches 100\% DSR within the first 10--20 iterations,
+% \textbf{These results demonstrate the effectiveness of our \ourapp~at learning to defend against new jailbreak attacks with a small number of OOD samples.}
+%This performance is competitive with, and in many cases matches or exceeds, the LlamaGuard 1B + LoRA and LlamaGuard 8B + LoRA baselines.
+
+
+% As a baseline, \ourapp~without CL has a median DSR across 10 attacks of 81\%. With CL, its performance reaches a median DSR of 100\% (a 19\% improvement).
+% LlamaGuard-1B performs similarly, with a median DSR of 82\% without CL, improving to 100\% with CL. The larger LlamaGuard-8B model starts with a much lower median DSR of 57\%, but like the others, reaches a perfect median DSR of 100\% when CL is applied.
+
+% \ray{discuss three baseline separately, medium performance, and then after adopting CL -> how much \% improvement}
+% All three baselines without CL exhibit DSRs ranging from 0\% to 100\%, with a median performance of 74\%. 
+% In contrast, our \ourapp~approach, when updated with detected OOD prompts, achieves substantially higher DSRs—from 90\% to 100\%, with a median of 100\%.
+
+% \ray{remove 100\% change into optimum}
+% \ray{how much faster is our compare to llamaguard}
+% \ray{adaptation speed based on different attacks, what attacks are difficult}
+% \ray{intro, RQ2 motivation, RQ2 result}
+
+%In addition, the guardrails that are not updated with the detected OOD prompts, shown in the dashed lines, display varying results across different attack types.
+%AdaptiveGuard with no updates had 100\% DSR from the start against attacks such as Caesar Cipher, Combination and Self Cipher, while performed poorly against Code Chameleon attack with 0\% DSR. The LlamaGuard 8B model with no updates showed DSR ranging from 17\% to 82\%, while the 1B model had similar results but achieved 100\% DSR in Caesar Cipher and Code Chameleon attacks.
+
+%There is some variation in learning speed and final DSR across different attack types. For example, attacks such as AIM, DAN, SmartGPT and DeepInception were quickly adapted towards 100\% DSR, while a few attacks (e.g., Base84, Zulu) required more iterations to reach similar DSR. 
+
+\subsection{RQ3: \rqthree}
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figs/RQ3_F1_Comparison.pdf}
+    \caption{(RQ3 Results) The performance comparison of our \ourapp~and LlamaGuard on in-distribution prompts when continuously updated through detected OOD prompts.}
+    \label{fig:RQ3_F1}
+\end{figure*}
+
+\subsubsection*{\underline{\textbf{Approach}}}
+To answer this RQ, we reuse the experimental setup from RQ2 for continual learning (CL), with one key difference: after each continual update step, we evaluate on in-distribution (ID) data instead of out-of-distribution (OOD). This allows us to assess knowledge retention of ID prompts after updating with each OOD prompt. Specifically, we use the Aegis validation set—part of the dataset from RQ1—containing 314 safe and 640 unsafe natural language prompts. We measure performance using the F1-score to account for both safe and unsafe classes.
+
+%To answer this RQ, we reuse the experimental setup in RQ2 for continual learning (CL).
+%We evaluate the guardrails on the Aegis validation dataset (in-distribution prompts) used in RQ1 after each continuous update step to test the knowledge retention of each guardrail.
+%This dataset includes natural safe and unsafe prompts that are considered in-distribution. 
+
+%represents the original task the guardrails were trained for, and high performance on this set indicates successful knowledge retention.
+
+%Specifically, for each attack type, the guardrails are updated iteratively using OOD jailbreak samples, as described in RQ2. At each iteration, we record the performance on the original safe/unsafe validation set. This allows us to track how well each updating method preserves the guardrails' ability to correctly classify previously learnt types of prompts, even as it learns to defend against new attacks. The details of the dataset can be found in Section \ref{sec:dataset_prep}.
+
+\subsubsection*{\underline{\textbf{Results}}}
+%Figure~\ref{fig:RQ3_F1} presents the change in validation F1 score for each attack type and updating method over 50 adaptation iterations.
+Fig.~\ref{fig:RQ3_F1} presents the time-wise F1-Score across each attack wave, showing how \ourapp, LlamaGuard-1B, and LlamaGuard-8B defend against in-distribution prompts over time when continuously updated with OOD prompts.
+Similar to RQ2, we present three additional baselines where the continual learning (CL) is not applied.
+Each subplot represents an attack wave. The x-axis indicates the number of consecutive update steps, while the y-axis shows the F1-Score on the 954 in-distribution prompts from the Aegis validation set.
+
+%50 held-out unsafe samples for each attack.
+%Each subplot corresponds to a specific attack, and the y-axis represents the F1 score on the original validation set, reflecting the model’s ability to retain its in-distribution classification performance as it adapts to new OOD jailbreak prompts.
+% \textbf{The results reveal that our proposed~\ourapp~approach achieves strong adaptation to new attacks while maintaining high retention of prior knowledge.} 
+\textbf{\ourapp~+CL achieves the highest median F1-Score of 85\% on in-distribution prompts across all attacks after the final update with OOD prompts, with the F1-Score ranging from 85\% to 86\%.}
+In comparison, the best-performing baseline, LlamaGuard-8B, achieves a median F1-Score of 80\% on in-distribution prompts, with a minimum of 77\% and a maximum of 81\%.
+
+Across all attack types, \ourapp~+ CL consistently maintains the highest in-distribution F1-Score throughout the CL process, with only slight variation (ranging from –0.4\% to +0.4\%).
+This indicates that \ourapp~+CL is able to learn to defend against unseen jailbreak attacks without sacrificing its learned in-distribution knowledge.
+\textbf{In summary, \ourapp~+ CL maintains the highest performance on in-distribution prompts compared to all baselines, demonstrating minimal forgetting even after continuous updates with detected OOD prompts.}
+% This suggests that LoRA-based method on GPT2Guard are less prone to catastrophic forgetting, allowing the model to learn new attacks while preserving its original capabilities.

@@ -1,0 +1,18 @@
+
+
+
+
+
+\subsection{LLM-based Forecasting}
+Recent work integrates LLMs into forecasting through diverse paradigms. Reprogramming approaches convert time series into text-compatible representations processed by partially-tuned LLMs~\cite{Jin2024TimeLLM,zhou2023onefitsall}, while PromptCast~\cite{Xue2023PromptCast} formulates forecasting as natural language completion. TEMPO~\cite{Cao2024TEMPO} decomposes time series into trend, seasonal, and residual components with prompt-specific representations. Cross-modal alignment frameworks including CALF~\cite{Liu2025CALF} and TimeCMA~\cite{Liu2025TimeCMA} bridge semantic embeddings with temporal features through fine-tuning.
+
+Most approaches position LLMs as numerical predictors, either through tokenized sequence completion or embedding alignment, limiting exploitation of their comparative reasoning capabilities. CTRL instead leverages LLMs for diagnosing discrepancies and generating strategic guidance, while delegating numerical computation to specialized decoders. Studies integrating exogenous textual information~\cite{Zhou2025Unveiling,Jiang2025Explainable} depend on fixed representations that fail to align with evolving temporal dynamics. Recent empirical work~\cite{Tan2024LLMUseful,park2025revisiting} questions the value of LLMs as direct numerical forecasters. Alignment-based methods assume stable temporal distributions, whereas CTRL explicitly targets non-stationary settings through test-time adaptation.
+
+\subsection{Training-Free LLM Approaches}
+
+In-context learning enables frozen LLMs to adapt without gradient updates~\cite{brown2020gpt3}, while chain-of-thought prompting~\cite{wei2022cot} activates multi-step reasoning. Recent work frames LLMs as reasoning agents invoking external modules for precise computation~\cite{schick2023toolformer,yao2023react}, separating planning from execution.
+In forecasting, FPT~\cite{zhou2023onefitsall} demonstrates that GPT-2 with frozen self-attention layers performs competitively. LLMTime~\cite{gruver2023llmtime} frames forecasting as next-token prediction, enabling zero-shot forecasting competitive with supervised baselines. However, these approaches utilize LLMs primarily for pattern mapping without exploiting reasoning capabilities for temporal dynamics.
+
+\textsc{CTRL} extends this paradigm by activating reasoning through structured STL-decomposed context. The LLM serves as a diagnostic reasoner generating interpretable control signals, while numerical computation is delegated to a residual decoder, enabling adaptation to distribution shift through explicit temporal analysis.
+
+Prior approaches to distribution shift in forecasting typically require additional mechanisms. Post-hoc methods such as ResCAL~\cite{kim2022rescal} exploit autocorrelated prediction errors but train a separate estimation module. Gradient-based test-time adaptation including TENT~\cite{wang2021tent} and SAR~\cite{niu2023sar} updates model parameters during inference via entropy minimization, constituting a different evaluation protocol from standard forecasting benchmarks. CTRL instead performs label-free adaptation without gradient computation or parameter updates, detecting shift from input statistics and adjusting policies through LLM reasoning.

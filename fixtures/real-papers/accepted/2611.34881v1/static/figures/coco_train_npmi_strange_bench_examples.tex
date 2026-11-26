@@ -1,0 +1,19 @@
+\begin{figure}[t!]
+\centering
+\includegraphics[width=\linewidth]
+{static/images/fig2_npmi_examples_v2s.pdf}
+\vspace{-15pt}
+\caption{\textbf{NPMI signal on COCO \texttt{train2017} and example
+STRANGE-Bench scenes.} \emph{Left:} The $80{\times}80$ NPMI matrix over object categories computed from COCO \texttt{train2017} (Sec.~\ref{sec:diagnostic}). Hot (red) cells correspond to high-NPMI (typical) pairs, cool (blue) cells to low-NPMI (atypical) pairs, and black cells to category pairs that never co-occur in
+training. \emph{Right, top row ($T_5$):} three typical STRANGE-Bench (Sec.~\ref{sec:strange}) scenes
+(\textcolor{typcolor}{green border}: anchors \emph{knife, baseball bat, tv}) and three atypical scenes (\textcolor{atypcolor}{red border}:
+anchors \emph{fork, skis, fire hydrant}); the anchor class is shown in
+\textcolor{anchorcolor}{blue} below each panel. Anchors differ across
+columns and are matched only by NPMI tier, not by identity.
+\emph{Right, bottom row ($T_{\text{never}}$):} STRANGE-Bench scenes for
+anchor classes \emph{bench, skateboard, suitcase, zebra, microwave}, and \emph{book}, each paired with partners that never co-occur with
+the anchor in COCO \texttt{train2017}.
+}
+\label{fig:npmi_matrix}
+\vspace{-5pt}
+\end{figure}

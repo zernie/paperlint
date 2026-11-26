@@ -1,0 +1,57 @@
+\section{Introduction}
+
+Fault localization (FL) aims to identify faulty code elements that are responsible for program failures.
+Traditional approaches can be broadly categorized into spectrum-based~\cite{sp1,sp2,sp3}, information-retrieval (IR)-based~\cite{yu2008empirical,jones2005empirical,chilimbi2009holmes,santelices2009lightweight}, and learning-based techniques~\cite{dl1,dl2}.
+Spectrum-based methods leverage program execution traces or coverage information to statistically correlate failing tests with suspicious code regions.
+IR-based methods, in contrast, treat fault localization as a textual retrieval problem, matching bug reports against source code based on lexical similarity.
+Learning-based approaches further employ deep neural models to learn representations between test cases and source code, or between bug reports and code entities.
+While these techniques have shown promise, their effectiveness still heavily depends on lexical overlap and handcrafted features,
+making them less capable of capturing deeper semantic relations or reasoning about implicit faults.
+
+With the advent of large language models (LLMs), recent studies such as AutoFL~\cite{autofl}, AgentFL~\cite{agentfl}, and FlexFL~\cite{flexfl} have explored leveraging LLMs for semantic reasoning in fault localization (FL). 
+AutoFL~\cite{autofl} introduces a function-call–based prompting framework that enables an LLM to navigate the repository and produce explainable fault predictions. 
+AgentFL~\cite{agentfl} extends this idea with a multi-agent design that simulates developer-like reasoning across three stages—comprehension, navigation, and confirmation—to improve scalability on large codebases. 
+FlexFL~\cite{flexfl} further enhances flexibility by building lightweight agents on open-source LLMs, leveraging diverse bug-related information (e.g., test cases, bug reports) through a two-stage process of candidate generation and refinement.
+Notably, LLM-based systems have already surpassed traditional FL techniques, achieving up to 0.5 mean reciprocal rank (MRR) at the method level. 
+However, their performance still heavily depends on the availability of reliable test cases. 
+For example, FlexFL achieves an MRR of 0.501 when using test cases as input, but its performance drops to 0.365 when relying solely on bug reports. 
+In real-world projects, such high-quality test cases are often unavailable or incomplete, making bug-report–only fault localization a more realistic yet significantly more challenging problem.
+
+When relying solely on bug reports, LLM-based methods face several key difficulties.
+\blackcircled{1} First, knowledge insufficiency leads to unstable reasoning and hallucination: the LLM often fabricates or misinterprets program entities due to missing structural and behavioral information.
+For example, in some cases FlexFL produces inconsistent results across multiple runs on the same report, issuing different function calls each time.
+\blackcircled{2} Second, the LLM struggles to effectively narrow down the search space when bug reports provide incomplete or noisy information.
+Without reliable structural guidance, the model may explore irrelevant parts of the codebase, leading to inefficient or incorrect reasoning.
+\blackcircled{3} Third, the LLM struggles with complex call chains.
+Languages like Java introduce deep and polymorphic call hierarchies—unlike Python-based systems where graph search can be bounded—resulting in context truncation or premature termination due to limited context length.
+
+These challenges highlight a fundamental tension: while the knowledge of an entire software project is often too large and unstructured to fit within an LLM’s context window, the lack of explicit domain knowledge makes it difficult to determine which information is truly relevant.
+This motivates the use of domain-specific knowledge that can be explicitly extracted, formalized, and selectively exposed to guide LLM reasoning.
+
+In this work, we focus on the concurrency domain—a particularly challenging yet informative subspace of software systems.
+Concurrency bugs (e.g., race conditions, deadlocks, atomicity violations) often lack executable test cases and involve subtle cross-thread interactions, making them difficult to localize using existing techniques.
+At the same time, concurrency-related knowledge is comparatively structured and bounded.
+Execution contexts, shared resources, and access actions form a compact semantic core that can be explicitly identified and formalized.
+
+Based on this observation, we propose \textbf{ConFL}, a novel framework that augments LLM-based fault localization with structured concurrency knowledge.
+To address knowledge insufficiency (\blackcircled{1}), ConFL constructs a \emph{Concurrent Knowledge Base (CKB)} that explicitly captures concurrency-relevant entities and behaviors, providing reliable grounding for LLM reasoning.
+To mitigate the difficulty of narrowing the search space under incomplete or noisy bug reports (\blackcircled{2}), ConFL employs a \emph{hierarchical retrieval strategy} that progressively localizes faults from components to packages and then to thread entry points.
+Finally, to overcome the challenges posed by deep and polymorphic Java call chains (\blackcircled{3}), ConFL represents concurrency behavior using \emph{interaction-level DSL elements}, allowing the LLM to reason directly over shared-resource interactions rather than traversing long call chains.
+
+Through these complementary mechanisms, ConFL bridges the gap between unstructured bug reports and structured concurrency reasoning, enabling more stable, scalable, and explainable fault localization.
+
+We evaluate ConFL on a diverse set of real-world concurrent bugs collected from eight large-scale Java projects.
+ConFL achieves 132 Top-1 hits, 186 Top-3 hits, and 216 Top-5 hits, substantially outperforming both traditional IR-based techniques and recent LLM-based baselines.
+In terms of ranking quality, ConFL attains an MRR of 0.503 and a MAP of 0.486, improving over the strongest baseline by more than 60\%.
+These results demonstrate that explicitly modeling concurrency semantics and performing hierarchy-guided reasoning significantly improves fault localization accuracy under a bug-report–only setting.
+
+In summary, this paper makes the following contributions:
+\begin{itemize}
+    \item We propose an interaction-level domain-specific language (DSL) that compactly represents concurrency context through thread entries, shared resources, and access actions.
+    
+    \item We construct a hierarchical Concurrent Knowledge Base (CKB) that organizes structured concurrency knowledge to support controlled and explainable LLM reasoning.
+    
+    \item We design a hierarchy-guided fault localization framework that progressively narrows the search space and enables interaction-level ranking and explanation.
+    
+    \item We evaluate our approach on real-world concurrent bugs and show significant improvements in localization accuracy, robustness, and explainability over state-of-the-art baselines.
+\end{itemize}

@@ -6,6 +6,7 @@ import {
   judgeClass,
   judgeComment,
   judgeLicence,
+  committedLicenceProblems,
   judgeListedVenue,
   judgeSize,
   MAX_BYTES,
@@ -45,6 +46,16 @@ describe("rule 1: the acceptance wording", () => {
       'not accepted wording: comment says "@ NeurIPS"',
     ],
     [
+      "an AAAI symposium series code, a venue of its own",
+      say("Accepted at NeurIPS 2025-FS-ATRACC"),
+      'not accepted wording: comment says "-FS-"',
+    ],
+    [
+      "a fall or spring symposium",
+      say("Accepted at the NeurIPS 2025 Fall Symposium"),
+      'not accepted wording: comment says "Fall Symposium"',
+    ],
+    [
       "no positive word",
       say("NeurIPS 2025, 9 pages"),
       "not accepted wording: no acceptance statement",
@@ -77,16 +88,88 @@ describe("rule 1: the acceptance wording", () => {
       judgeComment(say("Accepted at NeurIPS 2025, findings"), neurips),
     ).toEqual({ ok: true, track: null });
   });
+});
 
+describe("rule 1 on a Semantic Scholar listing", () => {
   test("a Semantic Scholar venue string must be the main proceedings", () => {
     // Guards: a workshop venue string is rejected.
-    expect(judgeListedVenue("NeurIPS Workshop on X")).toEqual({
+    expect(
+      judgeListedVenue("NeurIPS Workshop on X", {
+        comment: "",
+        slot: { venue: "NeurIPS", series: "NeurIPS", year: 2025 },
+      }),
+    ).toEqual({
       ok: false,
       reason:
         'S2 venue string is not the main proceedings: "NeurIPS Workshop on X"',
     });
     // Guards: the proceedings pass.
-    expect(judgeListedVenue("OSDI")).toEqual({ ok: true, track: null });
+    expect(
+      judgeListedVenue("OSDI", {
+        comment: "",
+        slot: { venue: "OSDI", series: "OSDI", year: 2025 },
+      }),
+    ).toEqual({ ok: true, track: null });
+  });
+  test("a listed paper whose own comment names another edition is rejected", () => {
+    const eurosys = { venue: "EuroSys", series: "EuroSys", year: 2025 };
+    // Guards: the listing's year is not the edition when the comment names a later one.
+    expect(
+      judgeListedVenue("European Conference on Computer Systems", {
+        comment: "Accepted by EuroSys 2026",
+        slot: eurosys,
+      }),
+    ).toEqual({
+      ok: false,
+      reason: "the arXiv comment names EuroSys 2026, not EuroSys 2025",
+    });
+    // Guards: a two-digit year after an apostrophe is read too.
+    expect(
+      judgeListedVenue("OSDI", {
+        comment: "OSDI'26",
+        slot: { venue: "OSDI", series: "OSDI", year: 2025 },
+      }),
+    ).toEqual({
+      ok: false,
+      reason: "the arXiv comment names OSDI 2026, not OSDI 2025",
+    });
+    // Guards: the same edition, another venue's year, or no year at all pass.
+    expect(
+      [
+        "Accepted by EuroSys 2025",
+        "Extends our SOSP 2024 paper",
+        "13 pages, 10 figures",
+      ].map((comment) =>
+        judgeListedVenue("EuroSys", { comment, slot: eurosys }),
+      ),
+    ).toEqual([
+      { ok: true, track: null },
+      { ok: true, track: null },
+      { ok: true, track: null },
+    ]);
+  });
+});
+
+describe("a committed paper's recorded licence", () => {
+  test("one of LICENCES passes; any other, or none, is named", () => {
+    // Guards: the one check balance.ts and arxiv-manifest.test.ts both run, on both halves.
+    expect([
+      committedLicenceProblems(
+        "2601.00001v1",
+        "http://creativecommons.org/licenses/by/4.0/",
+      ),
+      committedLicenceProblems(
+        "2601.00002v1",
+        "http://creativecommons.org/licenses/by-nc/4.0/",
+      ),
+      committedLicenceProblems("2601.00003v1", undefined),
+    ]).toEqual([
+      [],
+      [
+        "2601.00002v1: licence http://creativecommons.org/licenses/by-nc/4.0/, not CC BY 4.0, CC BY-SA 4.0 or CC0",
+      ],
+      ["2601.00003v1: licence missing, not CC BY 4.0, CC BY-SA 4.0 or CC0"],
+    ]);
   });
 });
 

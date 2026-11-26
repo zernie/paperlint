@@ -1,0 +1,53 @@
+\section{Problem Statement}
+
+Bug reports are an important source for fault localization.
+A high-quality report may directly pinpoint faulty classes or methods; however, in practice, bug reports are often noisy, misleading, or incomplete.
+Table~\ref{tab:example} illustrates this challenge using two real-world Apache Druid bugs.
+
+In \textbf{Druid-3174}, the stack trace explicitly mentions \texttt{WorkerTaskMonitor}, yet the actual race condition resides in \texttt{RemoteTaskRunner}, where \texttt{WorkerTaskMonitor} merely serves as a triggering entry point.
+Accurate localization therefore requires reasoning beyond the reported class.
+In \textbf{Druid-1360}, the bug report contains no explicit class or method names at all, making it particularly difficult for existing fault localization techniques to establish reliable anchors in the codebase.
+Without symbolic references, both IR-based and LLM-based approaches struggle to map the report to relevant program locations.
+
+\input{tables/motivation_examples}
+
+We further examine FlexFL, a representative state-of-the-art LLM-based fault localization system that relies solely on bug reports.
+FlexFL prompts the LLM to iteratively issue function calls—first resolving class names, then enumerating methods, and finally ranking code snippets.
+While effective when bug reports precisely align with program symbols, this workflow degrades significantly under incomplete or misleading reports.
+For instance, in Druid-3174, FlexFL remains confined to \texttt{WorkerTaskMonitor}, failing to identify the true fault in \texttt{RemoteTaskRunner}.
+In Druid-1360, lacking explicit class names, it incorrectly localizes the fault to \texttt{AutoScaler}, whereas the actual issue lies in \texttt{SimpleResourceManagementStrategy} and \texttt{RemoteTaskRunner}.
+
+These cases highlight three fundamental \textbf{limitations} of bug-report–only LLM-based fault localization for concurrent programs:
+
+\textit{(1) Knowledge insufficiency.}
+Bug reports frequently omit critical structural and behavioral information required for grounding LLM reasoning.
+When program entities are missing or underspecified, the LLM is forced to infer context from incomplete natural language, leading to unstable or hallucinatory reasoning.
+We observe that FlexFL may produce inconsistent localization results across multiple runs on the same report, issuing different function calls and retrieving different candidate methods.
+
+\textit{(2) Ineffective search-space narrowing.}
+When bug reports lack explicit program identifiers, LLM-based approaches have no principled way to progressively narrow the search space.
+The LLM is therefore forced to issue broad or heuristic queries, often retrieving code only loosely related to the actual fault.
+This describes \textbf{Druid-1360}, where the report contains no class or method names and FlexFL incorrectly focuses on \texttt{AutoScaler}, a component only tangentially related to the failure.
+Without structured guidance or domain constraints, the LLM fails to identify the relevant concurrency context and repeatedly explores incorrect regions.
+
+\textit{(3) Difficulty reasoning over deep and cross-thread call chains.}
+Concurrent Java programs commonly exhibit deep, polymorphic, and cross-thread call hierarchies.
+Due to limited context capacity, LLM-based approaches struggle to reason beyond local or downward call expansion.
+In \textbf{Druid-3174}, although \texttt{WorkerTaskMonitor} appears in the report, the actual race occurs several layers downstream in \texttt{RemoteTaskRunner}.
+Tracing such cross-thread interactions exceeds the practical reasoning depth of current LLM-based pipelines, causing them to remain trapped near the reported entry point.
+
+\noindent
+\textbf{Our Solutions.}
+To overcome the above limitations, we propose three complementary design choices.
+
+\textit{(1) Structured concurrency knowledge.}
+To address knowledge insufficiency, we construct a \emph{Concurrent Knowledge Base (CKB)} that explicitly captures concurrency-relevant entities and behaviors, including thread entry points, shared variables, and synchronization mechanisms.
+By grounding LLM reasoning in structured and statically extracted concurrency knowledge, the CKB reduces hallucination and stabilizes reasoning when bug reports lack precise program details.
+
+\textit{(2) Hierarchical search-space narrowing.}
+To enable effective localization under incomplete or misleading bug reports, we design a \emph{hierarchical retrieval strategy} that progressively narrows the search space from components to packages and then to thread entry points.
+This coarse-to-fine localization process leverages the high cohesion and low coupling of software systems, allowing the LLM to focus on increasingly relevant concurrency contexts while keeping the exposed context bounded.
+
+\textit{(3) Interaction-level reasoning without deep call-chain traversal.}
+To overcome the difficulty of reasoning over deep and polymorphic Java call chains, we introduce an \emph{interaction-level DSL} that summarizes concurrency behavior in terms of shared-resource accesses across thread entries.
+This representation allows the LLM to reason directly about potential interleavings and synchronization patterns, without explicitly traversing long call chains or enumerating execution paths.

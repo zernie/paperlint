@@ -1,0 +1,26 @@
+\section{Related Work}
+\label{sec:related-work}
+
+{
+\noindent \textbf{Scheduling and Action Dependencies.}  
+A range of systems provide abstractions for coordinating IoT and cyber-physical devices. 
+Gaia~\cite{gaia}, Bundle~\cite{vicaire2010bundle}, dSpace~\cite{fu2021dspace}, and DepSys~\cite{depsys} offer middleware or dependency-based programming, but at coarse granularity without action-level progress or dynamic scheduling. 
+TransActuations~\cite{transactuations}, Rivulet~\cite{rivulet}, and IoTRepair~\cite{iotrepair2020} strengthen safety through transactional or rollback semantics, yet operate only at the level of instantaneous or fixed-length actions or routines. 
+SafeHome~\cite{SafeHomeEuroSys2021} and Hades~\cite{hades} handle routine conflicts but not fine-grained dependencies. 
+In contrast, \sysname{} captures dependencies within as well as across routines, and our schedulers ensure safety and serial equivalence even as actions progress unpredictably.
+
+\noindent \textbf{Dynamic Rescheduling.}  
+Classical resource-reclaiming algorithms in real-time systems~\cite{shen1993resource,manimaran1997new,gupta2000new} reclaim slack when tasks finish early, but assume fixed DAGs and do not address late completions. 
+Our adaptation of RV and STF extends these ideas to IoT action graphs with cross-routine serialization constraints, handling both early and delayed completions without violating safety.
+
+\noindent \textbf{Observability and Failure Detection.}  
+IoT systems often rely on coarse timeout-based detection or assume instantaneous actions~\cite{kashef2021wireless}, which is unsuitable for long-running tasks. 
+SafeHome~\cite{SafeHomeEuroSys2021} and Hades~\cite{hades} provide some exception handling but not progress-aware detection. 
+Our adaptive polling provides fine-grained observability of start/complete events, enabling efficient and accurate failure detection without overloading the system.
+While pub/sub systems~\cite{gryphon,carzaniga2001design,aguilera1999matching,segall1997elvin} are often proposed as alternatives, they are best suited for settings with many subscribers across diverse topics. \sysname{} runs on a single central hub that subscribes to all topics, so pub/sub offers little benefit, and polling remains the core challenge it addresses.
+The histogram bucket problem~\cite{scott1979optimal,freedman1981histogram,knuth2006optimal,scargle2013studies,jagadish1998optimal} is analogous: both tasks require selecting partition ranges (bins vs. polling intervals) under uncertainty, differing only in the optimization criterion—e.g., minimizing error in density estimation versus balancing observability cost and timeliness.
+
+\noindent \textbf{Commercial Systems.}  
+Commercial platforms such as Alexa~\cite{Alexa}, Google Home~\cite{GoogleHome}, SmartThings~\cite{SmartThings}, and Home Assistant~\cite{HomeAssistant} support limited forms of automation and do not guarantee conflict freedom or robust failure handling. 
+\abs{} generalizes them for expressive DAG-based routines, with progress awareness and principled scheduling guarantees.
+}

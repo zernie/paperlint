@@ -1,0 +1,25 @@
+\section{Additional Quantitative Results}
+\label{app:additional_results}
+\suppressfloats[t]
+\noindent In this section, we report the full results behind Sec.~\ref{sec:experiments} and further analyses. We first give the full results of each family in App.~\ref{app:codino_full} to~\ref{app:dinov3_lp}: the Objects365 cross-domain splits and the per-tier STRANGE-Bench breakdown for the rows of Tabs.~\ref{tab:codino_main} to~\ref{tab:dinov3_main}, and the DINOv3 linear probe. We then show the empirical selection of AAS temperature $\beta$ in App.~\ref{app:beta_sweep} and test in App.~\ref{app:circularity} whether the gaps and the AAS gains depend on COCO NPMI or on the generator of the benchmark. We finally separate pretraining data from model capacity in App.~\ref{app:scale_ladder}, test whether models also rely on the usual spatial arrangement of a pair in App.~\ref{app:spatial-arrangement}, evaluate a target-focused baseline that inpaints the partners away in App.~\ref{app:partner_mask}, and report the spread of the AAS rows over training runs in App.~\ref{app:aas_draws}. The evaluation datasets and paired splits are defined in App.~\ref{app:exp-datasets}, and the training and evaluation recipes in App.~\ref{app:exp-recipes}.
+
+\input{static/tables/codino_r50_o365}
+
+\noindent Tab.~\ref{tab:codino_extra_tiers} and Fig.~\ref{fig:strange_diagnostic_t6} report the STRANGE-Bench sub-tiers outside the grid of the main tables (App.~\ref{app:strange:tiers}).
+On T6, XPaste\,+\,AAS has the highest typical and atypical AP ($88.3 / 87.5$) and the smallest gap ($0.8$; XPaste $1.1$, SCP $5.8$, Std.\ $10.8$), and it has the highest score in every never-co-occurring column ($92.1 / 88.9 / 90.5$; tied with SCP\,+\,AAS at $k = 3$). On the small-anchor pair every gap stays within $\pm 2.2$, and SCP, XPaste and both AAS rows score the atypical arm higher ($\Delta = -0.2$ to $-1.9$).
+\input{static/tables/codino_r50_extra_tiers}
+\input{static/figures/strange_per_tier_t6}
+
+\input{static/tables/gdino_swinb_o365}
+
+\input{static/tables/dinov3_ft_full}
+\input{static/tables/dinov3_lp_full}
+
+\input{static/tables/beta_sweep}
+
+\input{static/tables/app_circularity}
+
+\input{static/tables/app_scale_ladder}
+\input{static/tables/app_spatial_arrangement}
+\input{static/tables/app_partner_mask}
+\input{static/tables/app_aas_draws}

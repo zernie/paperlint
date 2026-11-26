@@ -1,0 +1,31 @@
+\begin{figure*}[h]
+\captionof{table}{
+\textbf{Ablation study with additional metrics} on user motion and preference optimization. 
+``w/ $\mathbf{m}_u$'' indicates whether the user motion latent $\mathbf{m}_u$ is provided as input to the model during both training and inference.
+} \label{tab:apx_ablation_realtalk}
+\vspace{-0.0in}
+\centering
+    \vspace*{-2mm}
+    \resizebox{0.92\textwidth}{!}{
+        \renewcommand{\arraystretch}{1.0}
+        \renewcommand{\tabcolsep}{6pt}
+        \begin{tabular}{c c c c c c c c c c c}
+        \toprule
+         \multicolumn{2}{c}{Method} & \multicolumn{2}{c}{Reactiveness} & \multicolumn{2}{c}{Motion Richness} & \multicolumn{3}{c}{Visual Quality}  & \multicolumn{2}{c}{Lip Synchronization} \\
+         \cmidrule(l{2pt}r{2pt}){1-2}
+        \cmidrule(l{2pt}r{2pt}){3-4}
+        \cmidrule(l{2pt}r{2pt}){5-6}
+        \cmidrule(l{2pt}r{2pt}){7-9}
+        \cmidrule(l{2pt}r{2pt}){10-11}
+        w/ $\mathbf{m}_u$ & DPO & rPCC-Exp $\downarrow$ & rPCC-Pose $\downarrow$ & SID $\uparrow$ & Var $\uparrow$ & FID $\downarrow$ & FVD $\downarrow$ & CSIM $\uparrow$ & LSE-D $\downarrow$ & LSE-C $\uparrow$\\
+        
+        \midrule        
+        \redx & \redx       & 0.052 & 0.175 & 2.165 & 1.586 & 28.746 & 185.593 & 0.818 & 8.260 & 6.423\\
+        \greencheck & \redx               & 0.042 & 0.146 & 2.236 & 1.408 & 25.600 & 175.322 & \textbf{0.854} & 8.160 & \textbf{6.803} \\
+        \midrule        
+        \greencheck & \greencheck     & \textbf{0.003} & \textbf{0.036} & \textbf{2.442} & \textbf{1.734} & \textbf{24.328} & \textbf{170.874} & 0.833  &  \textbf{8.060} & 6.723\\
+        \bottomrule
+        \end{tabular}
+        }
+\vspace{-0.1in}
+\end{figure*}

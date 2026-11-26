@@ -1,0 +1,99 @@
+\section{\edit{Adaptive Partition Scanning (APS)}}
+\label{sec:adaptive_partition_scanning}
+
+Adaptive Partition Scanning (APS) dynamically determines the number of partitions to scan per query to achieve a specified recall target $\tau_R$ with minimal latency. APS adapts to evolving workloads and changing index structures, making it particularly effective in dynamic data settings. We first introduce the geometric model underlying APS, followed by a detailed description of the scanning algorithm, and conclude with key performance optimizations. We apply APS at each level of the index independently. For clarity we focus on the Euclidean distance, we discuss inner product metrics in the technical report \cite{mohoney2025quakeadaptiveindexingvector}.
+
+\paragraph{Geometric Model}
+To estimate the probability that each partition contains one of the query’s $k$ nearest neighbors, APS uses a geometric interpretation. Given query $\mathbf{q}$ and $\rho$ the distance to the $k$-th nearest neighbor, consider the hypersphere $\mathcal{B}(\mathbf{q},\rho)$. Under a uniform-density assumption, the fraction of this sphere’s volume intersecting partition $\mathcal{P}_i$ estimates the probability that $\mathcal{P}_i$ holds a nearest neighbor:
+\begin{equation}
+p_i \;=\;
+\frac{\operatorname{Vol}\!\bigl(\mathcal B(\mathbf q,\rho)\cap\mathcal P_i\bigr)}
+     {\operatorname{Vol}\!\bigl(\mathcal B(\mathbf q,\rho)\bigr)},
+\label{eq:aps-pi}
+\end{equation}
+
+Because we do not know the true distance of the $k$-th nearest neighbor apriori, we set $\rho$ to the current $k$-th nearest neighbor observed and update it online as partitions are scanned.
+
+\paragraph{Intersection Volume Approximation}
+Exact computation of intersection volumes between a sphere and high-dimensional Voronoi partition boundaries is infeasible, as partitions are intersections of multiple half-spaces. Instead, we approximate each partition as a single half-space, defined by the perpendicular bisector between the query’s nearest centroid $\mathbf{c}_0$ and each neighboring centroid $\mathbf{c}_i$. This simplification results in a hyperspherical cap whose volume $v_i$ has a closed-form expression via the regularized incomplete beta function \cite{li2010concise, lee2014concise} (see technical report \cite{mohoney2025quakeadaptiveindexingvector}).
+
+\paragraph{Nearest Partition Volume Approximation}
+The half-space approximation is invalid for the nearest partition $\mathcal{P}_0$, since the query lies within it. Instead, we first compute hyperspherical cap volumes $v_j$ for the remaining $M-1$ candidate partitions and normalize these so that $\sum_{j=1}^{M-1} v_j = 1$. The probability $p_0$ that no neighbor is located outside $\mathcal{P}_0$ is:
+
+
+\begin{equation}
+p_0 = \prod_{j=1}^{M-1}(1 - v_j),
+\label{eq:aps-p0}
+\end{equation}
+
+with the remaining probability distributed proportionally among other partitions according to their volumes $v_i$:
+
+\begin{equation}
+p_i = (1 - p_0)\, v_i.
+\label{eq:aps-pi-final}
+\end{equation}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.2\textwidth]{sections/figures/geometric_model.pdf}
+\caption{The query hypersphere (centered at $\mathbf{q}$ with radius $\rho$) intersecting partition boundaries. The intersection volumes $v_1$ and $v_2$ correspond to the probability of finding a nearest neighbor in partitions $\mathcal{P}_1$ and $\mathcal{P}_2$, respectively.}
+\label{fig:geometric_model}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\subsection{APS algorithm}
+\label{sec:aps-algo}
+%-------------------------------------------------------------------------------
+Algorithm~\ref{alg:aps} details the APS procedure. Given query $\mathbf{q}$, recall target $\tau_R$, and the initial candidate fraction $f_M$:
+\begin{enumerate}[leftmargin=*,nosep]
+    \item Scan partition $\mathcal{P}_0$, initializing the query radius $\rho$.
+    \item Compute probabilities $p_i$ for each remaining candidate partitions based on radius $\rho$.
+    \item Iteratively scan partitions in descending probability order until cumulative recall exceeds target $\tau_R$, updating radius $\rho$ and recomputing probabilities whenever $\rho$ shrinks significantly (beyond threshold $\tau_\rho$).
+\end{enumerate}
+
+This process is conducted at each level of the index. To avoid propagating errors from searching higher levels, we fix the recall target to 99\% for the higher levels (Table \ref{tab:two_level_results}).
+
+\begin{algorithm}[h]
+\small
+\caption{Adaptive Partition Scanning (APS)}
+\label{alg:aps}
+\begin{algorithmic}[1]
+\Require query $\mathbf q$, centroids $\mathcal C$, recall target $\tau_R$,
+        initial candidate fraction $f_M$, recompute threshold $\tau_\rho$, $k$
+\Ensure  $k$ nearest neighbors of $\mathbf q$
+\State $R \leftarrow$ empty max-heap of size $k$
+\State $\mathcal S \leftarrow$ $f_M *  N_l$ nearest centroids to $\mathbf q$
+\State scan $\mathcal P_0$; update $R$; set $\rho$
+\For{each $(\mathbf c_i,\mathcal P_i) \in \mathcal S\!\setminus\!\{\mathbf c_0\}$}
+    \State compute $p_i$
+\EndFor
+\State $r \leftarrow p_0$; $m \leftarrow 1$
+\While{$r<\tau_R$ \textbf{and} unscanned candidates remain}
+    \State choose $i$ with maximal $p_i$; scan $\mathcal P_i$; update $\mathcal H$
+    \State $m \leftarrow m + 1$
+    \State $\rho' \leftarrow$ distance to $k$-th in $\mathcal H$
+    \If{$|\rho' - \rho| > \tau_\rho \rho$}
+        \State $\rho \leftarrow \rho'$; recompute $p_j$
+    \EndIf
+    \State $r \leftarrow r=\sum^{m-1}_{i=0}p_i$
+\EndWhile
+\State \Return $R$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Performance Optimizations}
+APS incorporates two optimizations to minimize computational overhead. First, it precomputes values of the regularized incomplete beta function at 1024 evenly spaced points in $[0,1]$ and linearly interpolates during queries. Second, partition probabilities are recomputed only when the query radius $\rho$ shrinks by more than a relative threshold $\tau_{\rho}$. Table~\ref{tab:recall_overhead} shows these optimizations reduce query latency by 29\% on \textsc{Sift1M} without sacrificing recall.
+
+\begin{table}[t]
+\small
+\centering
+\caption{Mean single-threaded query latency and recall for APS variants on \textsc{Sift1M} dataset at recall target 90\%. \textbf{APS-RP:} recomputes probabilities after each partition scan without precomputation. \textbf{APS-R:} recomputes after each partition scan with precomputation. \textbf{APS:} recomputes probabilities only if query radius changes by more than $\tau_{\rho}=1\%$, using precomputed beta function values.}
+\label{tab:recall_overhead}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Configuration} & Recall & Search Latency \\ \hline
+APS      & 91.2\%   & .48 ms                      \\ \hline
+APS-R    & 91.2\% & .59 ms                         \\ \hline
+APS-RP   & 91.2\% & .68 ms                         \\ \hline
+\end{tabular}
+\end{table}

@@ -1,0 +1,23 @@
+\begin{figure}
+    \centering
+    % 第一张图：Scalability (上)
+    \begin{subfigure}[b]{0.9\linewidth}
+        \centering
+        % 建议将文件名改为无空格版本，如 runtime_analysis.png
+        \includegraphics[width=\linewidth]{figs/runtime_analysis.png} 
+        \caption{Scalability analysis: Runtime vs. Number of Cells}
+        \label{fig:runtime_scale}
+    \end{subfigure}
+    
+    \vspace{0.5cm} % 控制上下两图之间的间距
+    
+    \begin{subfigure}[b]{0.9\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/runtime_baselines.png}
+        \caption{Runtime comparison with baseline methods}
+        \label{fig:runtime_comp}
+    \end{subfigure}
+    
+    \caption{(a) Scalability analysis of training time with respect to the number of cells. (b) Runtime comparison with baseline methods.}
+    \label{fig:runtime}
+\end{figure}

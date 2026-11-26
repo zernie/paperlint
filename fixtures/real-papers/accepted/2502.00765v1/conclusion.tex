@@ -1,0 +1,80 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We study the robustness of GNNs against adversarial attacks. Particularly, we develop {\name}, the first certified defense for GNNs against arbitrary perturbations (on nodes, edges, and node features) with deterministic guarantees. 
+{\name} designs novel graph division strategies and  leverages the message-passing mechanism in GNNs for deriving the robustness guarantee. 
+The universality of  {\name} makes it encompass existing certified defenses as special cases.  
+Evaluation results validate  {\name}'s effectiveness and efficiency against arbitrary perturbations on GNNs and superiority over the state-of-the-art certified defenses. 
+
+\vspace{+0.05in}
+\noindent {\bf Acknowledgement:} We sincerely thank all the anonymous reviewers and our shepherd for their valuable feedback and constructive comments. We also extend our gratitude to Kexin Pei and Yuede Ji for providing the real-world code vulnerability dataset and conducting the evaluations.
+This work is partially supported by the National Science Foundation (NSF) under grant Nos. ECCS-2216926, CNS-2241713, CNS-2331302, CNS-2339686, and the Cisco Research Award. 
+Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the funding agencies.
+
+
+
+\section{Ethics Considerations}
+
+This research strictly adheres to ethical guidelines and responsibilities, ensuring compliance with established standards.
+
+\vspace{+0.1in}
+\noindent {\bf 1) Identification of Stakeholders}
+\vspace{+0.05in}
+
+\noindent {\bf Researchers:} Those advancing the field by building upon this work, focusing on both defending GNNs against adversarial attacks and exploring trustworthy GNNs (e.g., against training-time poisoning attacks and both training- and test-time backdoor attacks) in general.
+
+\noindent {\bf Developers and Practitioners of AI Systems:} Individuals and organizations implementing or applying provably robust GNNs in real-world graph-related applications such as fraud detection in social networks, web, online auction networks, intrusion detection, and software vulnerability detection.
+
+\noindent {\bf End-users:} People interacting with GNN-powered systems, including users of social networks, recommender systems, or financial platforms.
+
+\noindent {\bf Society at Large:} Individuals impacted by ethical considerations and risks associated with deploying AI technologies, especially in domains leveraging GNNs (e.g., social networks, healthcare, finance).
+
+\vspace{+0.1in}
+\noindent {\bf 2) Potential Risks for Stakeholders and Mitigations}
+\vspace{+0.05in}
+
+
+\noindent {\bf For Researchers.}
+\emph{Potential Risk:} Adversaries may develop novel attacks that surpass the guaranteed bounds of the considered threat model (e.g., perturbations beyond the certified perturbation size). \emph{Mitigation:} With larger perturbations on graph data, those perturbed graphs might have significant differences with normal graphs. Therefore, researchers can leverage detection methods, such as structural-similarity based methods, to identify the perturbed graphs. Researchers can also collaborate with ethics experts to ensure that the research aligns with best practices for responsible AI development.
+
+\noindent {\bf For Developers and Practitioners.}
+\emph{Potential Risk:}  The proposed defense method may not generalize well to other graph learning applications that are different from the considered applications.
+\emph{Mitigation:} Comprehensive empirical validation across diverse graph datasets and real-world scenarios ensures robustness. Clear communication of limitations will help developers manage risks effectively.
+
+\noindent {\bf For End-users.}
+\emph{Potential Risk:}  Robust GNN mechanisms might inadvertently compromise data privacy or produce biased outcomes.
+\emph{Mitigation:} Incorporating privacy-preserving (such as differential privacy and cryptographic methods) and fair training techniques enhances data security and fairness.
+
+\noindent {\bf For Society.}
+\emph{Potential Risk:} Misuse of robust GNNs in critical domains (e.g., healthcare, finance) could exacerbate social inequities, privacy breaches, or manipulation of vulnerable populations.
+\emph{Mitigation:} Balancing AI security advancements with societal considerations (including fairness, transparency, and accountability) mitigates potential harm. Ethical implications for vulnerable populations will be addressed, prioritizing societal well-being.
+
+\vspace{+0.1in}
+\noindent {\bf 3) Considerations Motivating Ethical-Related Decisions}
+\vspace{+0.05in}
+
+\noindent {\bf Research Goal:} The primary objective is to enhance the robustness of GNNs against adversarial attacks while minimizing potential harm to stakeholders. Defense strategies are designed to be both practical and ethical.
+
+\noindent {\bf Benefits and Harms:} \emph{Benefits:} Improved robustness 
+of GNN systems reduces risks of adversarial manipulation and protecting users. \emph{Harms:} Potential empowerment of malicious actors and overestimating the effectiveness of defense methods.
+
+\noindent {\bf Rights:} We are particularly concerned with privacy rights, as adversarial attacks can sometimes expose sensitive data or violate individuals' privacy. Our defense strategies aim to mitigate such risks, promoting the ethical use of GNNs while safeguarding individuals’ rights.
+
+
+
+\vspace{+0.1in}
+\noindent {\bf 4) Awareness of Ethical Perspectives}
+\vspace{+0.05in}
+
+\noindent We are aware that different members of the research community may hold differing views on the ethical implications of trustworthy AI. Some may prioritize transparency in revealing attack strategies to help build better defenses, while others may argue that such knowledge could be misused. In line with the principles of responsible AI research, we have opted to emphasize defense over offense, focusing on methods that mitigate risk without creating new avenues for harm.
+
+
+
+\section{Open Science}
+
+
+In compliance with the Open Science Policy, we have made our code, pretrained models, and data openly accessible at \url{https://github.com/JetRichardLee/AGNNCert}. Additionally, all artifacts have been published on the Zenodo platform \url{https://zenodo.org/records/14737141} to facilitate the reproduction of the research described in the paper. 
+
+Through these efforts, we aim to contribute to the broader scientific community while upholding the highest standards of ethical conduct.
+
+

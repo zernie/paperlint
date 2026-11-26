@@ -1,0 +1,58 @@
+\section*{Ethical Considerations}
+We structure the ethical considerations discussion by linking our stakeholder analysis to the impacts generated during two distinct phases: the \textit{research process} (vulnerability discovery and validation) and the \textit{publication of results} (disclosure and artifact release). We then detail \textit{mitigations} (specifying which stakeholder group each measure protects) and conclude with the \textit{justification} for conducting this research.
+
+
+\noindent\textbf{Stakeholder Analysis and Process Impact.} Our work involves six primary stakeholder groups. 
+(1) \textit{Open-source CN Maintainers}: the developer teams of the seven evaluated implementations (Open5GS 5G, Open5GS LTE, free5GC, OAI 5G, OAI LTE, SD-Core, and eUPF). They rely on the research process to receive clear, reproducible, and responsibly timed vulnerability reports that enable effective patching. 
+(2) \textit{Commercial CN Vendors}: two commercial core-network vendors whose products we additionally tested under vendor-sanctioned conditions. They rely on confidential disclosure channels to protect their customers during coordinated remediation. 
+(3) \textit{Network Operators and Deployers}: telecom operators, private-5G tenants, and research deployments running the affected stacks; their operational security depends on whether discovered flaws are responsibly disclosed and remediated before public release. 
+(4) \textit{End Users}: although no user was involved in our experiments, subscribers are the ultimate stakeholders whose confidentiality, availability, and session integrity are at stake when CN flaws are exploited. 
+(5) \textit{3GPP/GSMA}: their specifications encode the implicit-trust assumptions targeted by iFinder, and they rely on research findings to inform future threat models. 
+(6) \textit{Researchers}, who rely on methodologically sound and ethically scoped procedures. During the research process, all experiments were conducted in isolated, self-hosted testbeds using open-source implementations or vendor-authorized evaluation units. No production operator network, live subscriber, or real user data was accessed, and no stakeholder experienced availability or privacy impact from our experimentation.
+
+\noindent\textbf{Impact of the Research.} The publication of this work has both positive and negative impacts, affecting the stakeholders above.
+
+\noindent\textit{Positive Impacts.} (1) Strengthening Deployed Infrastructure (Impact on Maintainers, Vendors, Operators \& End Users): iFinder produced 84 previously unknown vulnerability reports, of which 83 have been confirmed and 81 have been assigned CVEs, directly improving the security of widely deployed CN stacks. As a concrete indicator that affected stakeholders view the work as net-beneficial, one of the evaluated projects has proactively requested continued access to iFinder for long-term automated scanning. (2) Informing Standards Bodies (Impact on 3GPP/GSMA): by naming and characterizing iTrue as a recurring specification-to-implementation gap rather than isolated bugs, we equip 3GPP/GSMA, operators, and defenders with a reusable lens to audit their stacks. (3) Reproducibility and Open Science (Impact on Researchers): we release the iFinder framework and the curated ground-truth dataset to allow independent replication, extension, and scrutiny.
+
+\noindent\textit{Negative Impacts.} (1) Misuse of Automated Discovery (Impact on Operators \& End Users): the iFinder pipeline lowers the cost of finding similar flaws in other stateful protocol stacks and could be repurposed by malicious actors if released without safeguards. (2) Facilitating Analogous Attacks (Impact on Operators \& End Users): public characterization of the vulnerabilities may help adversaries search for analogous bugs, especially in deployments that have not yet applied upstream fixes.
+
+\noindent\textbf{Mitigation.} To address the risks outlined above, we have implemented the following measures, each tied to the stakeholder it protects. 
+(1) \textit{Coordinated Disclosure for Maintainers \& Operators}: every confirmed vulnerability was disclosed to the respective upstream project or vendor prior to submission. 
+As of the response deadline, 81 CVEs have been assigned, and 58 of 83 confirmed vulnerabilities in open-source implementations have been patched; the per-implementation status is summarized in Table~\ref{tab:disclosure-status}.
+Vulnerabilities on the two commercial CNs were disclosed directly to the vendors.
+
+One affected commercial 5GC vendor has fixed the issues, and CVE identifiers have been assigned, including session hijacking (CVE-2026-8233) and DoS (CVE-2026-8232). 
+The second commercial 5GC vendor, which is a major 5G carrier, is still in the remediation process.
+(2) \textit{Reducing Misuse Risk for Operators}: although iFinder includes an Exploitation Agent for validating candidate findings in controlled testbeds, the public artifact will not include a collection of PoCs, and we will not provide PoCs or reproduction details for unpatched vulnerabilities. 
+(3) \textit{Protecting Commercial Vendors}: for any vendor still under coordinated remediation, we anonymize vendor identity. 
+(4) \textit{Controlled Experimental Scope for End Users}: all experiments were executed in isolated testbeds with no interaction with production networks, commercial operator infrastructure, or real subscribers.
+
+
+\begin{table}[!t]
+  \centering
+  \caption{Coordinated-disclosure status per open-source implementation.}
+  \label{tab:disclosure-status}
+  \resizebox{0.49\textwidth}{!}{
+    \begin{tabular}{lcccc}
+    \toprule
+    Implementation & \#Discovered & \#Confirmed & \#CVE & \#Fixed \\
+    \midrule
+    Open5GS 5G  & 10 & 9  & 9  & 9  \\
+    free5GC     & 14 & 14 & 12 & 12 \\
+    OAI 5G      & 11 & 11  & 11  & 0  \\
+    SD-Core     & 7  & 7  & 7  & 7  \\
+    eUPF        & 5  & 5  & 5  & 0  \\
+    \midrule
+    Open5GS LTE & 30 & 30 & 30 & 30 \\
+    OAI LTE     & 7  & 7  & 7  & 0  \\
+    \midrule
+    \textbf{Total} & \textbf{84} & \textbf{83} & \textbf{81} & \textbf{58} \\
+    \bottomrule
+    \end{tabular}
+  }
+\end{table}
+
+\noindent\textbf{Justification for Research.} This work addresses a critical and systemic security challenge in carrier core networks: as CNs migrate to cloud-native deployments, the long-standing implicit-trust assumption between internal network functions no longer holds, exposing end users and operators to risks that have received far less scrutiny than RAN or UE components. 
+Conducting this research is essential because: (1) it leads to the discovery of unknown vulnerabilities in open-source implementations and facilitates the enhancement of their security; (2) characterizing iTrue as a recurring type of security flaw, rather than reporting isolated bugs, enables standards bodies, vendors, and defenders to generalize mitigations beyond the specific cases we found; 
+(3) releasing the iFinder framework fosters transparency and community-driven improvements, reducing the risk of opaque or unilateral vulnerability discovery. 
+Under these constraints, we believe the benefits of systematically identifying and mitigating recurring implicit-trust failures in critical network infrastructure outweigh the residual risks.

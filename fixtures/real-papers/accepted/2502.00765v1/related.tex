@@ -1,0 +1,34 @@
+\section{Related Work}
+\label{sec:related}
+
+\noindent {\bf Adversarial attacks on GNNs:} Various  works~\cite{zugner2018adversarial,dai2018adversarial,wu2019adversarial,wang2019attacking,xu2019topology,sun2020adversarial,zhang2021backdoor,wan2021adversarial,zhang2022projective,ma2020towards,mu2021a,wang2022bandits,wang2023turning,chenunderstanding,ju2023let,wang2024efficient} show GNN classifiers are vulnerable to adversarial perturbations. Given a GNN (node/graph) classifier and a graph, an attacker could inject a few nodes~\cite{sun2020adversarial,ju2023let}, slightly modify the graph structure~\cite{zugner2018adversarial,dai2018adversarial,xu2019topology}, and/or perturb node features~\cite{zugner2018adversarial} such that the classifier makes wrong predictions for the perturbed graph (in graph classification) or target nodes (in node classification).    
+For instance, \cite{sun2020adversarial} utilizes reinforcement learning techniques to design node injection attacks, while \cite{dai2018adversarial} designs graph perturbation attacks to both graph and node classification.  
+Most attacks require the attacker fully/partially knows the GNN model (e.g., parameters, architecture), while \cite{mu2021a,wang2022bandits} relaxing this to  only have black-box access, i.e., only query the GNN model API. For example,  \cite{wang2022bandits} formulates this black-box attack to GNNs as an online optimization with bandit feedback. The original problem is NP-hard and they then propose an online attack based on (relaxed) bandit convex optimization which is proven to be {sublinear} to the query number. 
+
+\vspace{+0.05in}
+\noindent {\bf Defenses against attacks on GNNs:}
+Many empirical defenses~\cite{wu2019adversarial,xu2019topology,zhu2019robust,entezari2020all,tao2021adversarial,zhao2021expressive} were proposed against the adversarial attacks on GNNs. However, these defenses do not have guaranteed performance under the worst-case setting, and were soon broken by adaptive/stronger  attacks~\cite{mujkanovic2022defenses}. Hence, we focus on certified defense in this work. 
+
+Certified defenses~\cite{jin2020certified,jia2020certified,bojchevski2020efficient,wang2021certified,xia2024gnncert,lai2023nodeawarebismoothingcertifiedrobustness} design robust GNNs that guarantee the same predicted label on clean and perturbed graphs, when the perturbation size (e.g., number of perturbed edges, node features, or injected nodes) on the graph is bounded. 
+\cite{bojchevski2020efficient} and~\cite{wang2021certified} generalized randomized smoothing (RS)~\cite{lecuyer2019certified,cohen2019certified,hong2022unicr}, the state-of-the-art certified defense against adversarial perturbations on the image domain, to the graph domain and certify any GNN against the edge perturbation. \cite{lai2023nodeawarebismoothingcertifiedrobustness} designs a node-aware Bi-RS certified defense against the node injection attack and achieve the state-of-the-art. 
+Further, \cite{xia2024gnncert} extended randomized ablation~\cite{levine2020robustness}, a voting-based defense for image models, to build provably robust graph classifier against the node feature perturbation, edge perturbation, and combined edge and feature perturbations.   
+
+However, all existing certified defenses face several  limitations. First, except \cite{xia2024gnncert} against edge and node feature perturbation, all can only 
+certify 
+one type of perturbation, e.g., edge perturbation. 
+Second, they are only applied 
+for a particular task such as node classification or graph classification, but not both. Adapting these defenses for both tasks would yield unsatisfactory guarantees as shown in our results in Section~\ref{sec:eval}. 
+Third, their robustness guarantees are not 100\% (except \cite{xia2024gnncert}), implying  the guarantee could be inaccurate with certain probability. Our {\name} addresses all these limitations. 
+
+
+
+\vspace{+0.05in}
+\noindent {\bf Voting-based certified defenses:} 
+Voting is a versatile ensemble method in machine learning (ML)~\cite{dietterich2000ensemble} primarily for classification, and each method defines the voter for its own purpose. 
+Recently, voting has been also used to robustify ML models against adversarial attacks, including adversarial image perturbation~\cite{levine2020deep},  graph perturbation~\cite{xia2024gnncert,yang2024distributed,li2025provably}, image patch perturbation~\cite{levine2020randomized,xiang2021patchguard}, text perturbation~\cite{pei2023textguard,zhang2024text}, and data poisoning attacks~\cite{jia2021intrinsic,jia2022certified}.
+The key steps of this type of defense are: divide an input data (e.g., an image, a graph, or a sentence) into a set of sub-data, build a voting classifier to predict all sub-data (each prediction is a vote), and derive the robustness guarantee for the voting classifier. 
+The essential requirement is to ensure only a bounded number of predictions are changed with a bounded adversarial perturbation. 
+The key difference among these defenses is they create problem-dependent sub-data and voters for the majority voting. 
+
+
+

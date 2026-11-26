@@ -1,0 +1,15 @@
+\section{Background} \label{sec:background}
+\paragraph{Diffusion Forcing} Diffusion forcing~\citep{diffusion_forcing} stands out as an efficient sequential generative model that predicts \textit{next token} conditioned on \textit{the noisy past tokens}. Let $\mathbf{x}_1 = (x_1^{1}, x_1^2, \cdots, x_1^{N}) \in \real^{N \times 3 \times H \times W}$ denote a sequence of $N$ tokens sampled from data distribution $p_1$. Each token is corrupted with per-token independent noise levels $\boldsymbol{t}\coloneqq (t_1, t_2, \cdots, t_N) \in [0, 1]^{N}$, forming an independently noised sequence $\mathbf{x}_{\mathbf{t}} \coloneqq (x^1_{t_1}, x^2_{t_2}, \cdots, x^N_{t_N})$,
+where $x^{n}_{t_n} = t_n x_1^{n} + (1-t_n)x_0^n$ and $\mathbf{x}_0 = (x_0^{n})_{n=1}^{N}\sim p_0$. Here, we follow the noise scheduler of flow matching~\citep{cfm}. The training objective of diffusion forcing is to regress the vector field $v_\theta$ toward the target vector field $v^n_{t_n} = x^n_1-x^n_0$:
+\begin{equation}
+	\loss_{DF}(\theta)  = \mathbb{E}_{n, t_n, x^n_{t_n}} \left[ \| v_{\theta}(x^n_{t_n}, t_n) -  v^n_{t_n}\| \right]. \label{eq:train_df}
+\end{equation}
+
+Diffusion forcing reformulates conventional teacher forcing in terms of diffusion models, allowing causal sequence generation with diffusion guidance~\citep{classifier_free} for controllable generation and flexible sampling procedure.
+
+\paragraph{Direct Preference Optimization} Direct Preference Optimization (DPO)~\citep{rafailov2023dpo} aligns a model with human preferences without explicitly training a reward model. The training objective $\loss_{DPO}$ is formulated as follows:
+\begin{equation}
+    - \mathbb{E}_{c, x^w, x^l} \left[ \log \sigma \left( \beta \frac{\pi_{\theta} (x^w | c) }{\pi_{\text{ref}}(x^w | c)}  - \beta \frac{\pi_{\theta}(x^l | c)}{\pi_{\text{ref}}(x^l | c) } \right)\right], \label{eq:dpo}
+\end{equation}
+where $c$ is the condition, $x^w$ and $x^l$ denote \textit{preferred} and \textit{less preferred} samples, respectively, and $\pi_{\text{ref}}$ is a frozen reference model during the optimization, typically initialized by the pre-trained weight of $\pi_\theta$. Here, $\sigma(\cdot)$ is the sigmoid function, and $\beta$ is the deviation parameter. 
+DiffusionDPO~\citep{wallace2024diffusiondpo} extends DPO to diffusion models by reformulating the objective with diffusion likelihoods, enabling preference optimization using the evidence lower bound.

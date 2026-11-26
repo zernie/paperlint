@@ -1,0 +1,86 @@
+\section{Preliminaries}
+
+\paragraph{LLM Inference.}
+In Transformer-based LLMs, the core computational bottleneck during inference is the Multi-Head Self-Attention (MHA) mechanism~\cite{vaswani2017attention}. 
+% 
+To generate the next token $x_{T+1}$ at step $T+1$, the attention mechanism must model the relationship between the current token $x_T$ and the entire previous sequence $[x_1, \dots, x_{T-1}]$. This requires projecting the hidden states into Query ($\mQ$), Key ($\mK$), and Value ($\mV$) matrices, and computing the attention scores~\cite{vaswani2017attention}:
+\begin{align}
+    \text{Attention}(\mQ, \mK, \mV) = \text{softmax} \left( \frac{\mQ \mK^\top}{\sqrt{d_k}} \right) \mV
+\end{align}
+where $d_k$ is the scaling factor. 
+% 
+For completeness, Appendix~\ref{app:llm_inference} details the inference process of Transformer-based LLMs.
+
+A naive implementation recomputes the keys and values for all $T$ tokens at every generation step. Because $T$ increases with each step, this redundant computation leads to $\mathcal{O}(T^2)$ time complexity, which increases inference latency.
+
+\paragraph{KV Cache Mechanism.}
+To eliminate this redundancy, LLM inference engines employ the \textit{KV cache mechanism}. The key idea is that the keys ($\mK_{1:T-1}$) and values ($\mV_{1:T-1}$) of previous tokens remain static during generation. The model only needs to compute representations for the current token $x_T$. By storing these past tensors in GPU memory, we reduce the computational complexity of each step from $\mathcal{O}(T)$ to $\mathcal{O}(1)$ with respect to matrix multiplications.
+
+Specifically, for each attention head, the model only computes the query, key, and value vectors for the \textit{current} token $x_{T}$ via the projection weights $\mW_Q, \mW_K, \mW_V$:
+\begin{align}
+    \vq_{T} = \vu_{T} \mW_Q,\quad \vk_{T} = \vu_{T} \mW_K,\quad \vv_{T} = \vu_{T} \mW_V
+\end{align}
+where $\vu_{T}$ is the normalized hidden state of the current token.
+% 
+The system then appends the new key and value vectors to the existing KV cache:
+\begin{align}
+    \mK_{1:T} = [\mK_{1:T-1}; \vk_{T}],\quad \mV_{1:T} = [\mV_{1:T-1}; \vv_{T}]
+\end{align}
+
+Finally, the attention output for the current token is computed by performing the multiplication between the single query vector $\vq_T$ and the cached matrices $\mK_{1:T}$ and $\mV_{1:T}$:
+\begin{align}
+    \text{Attention}(\vq, \mK, \mV) = \text{softmax} \left( \frac{\vq_{T} \mK_{1:T}^\top}{\sqrt{d_k}} \right) \mV_{1:T}.
+\end{align}
+
+In summary, the KV cache trades memory storage for lower computational cost, which significantly reduces inference latency. Importantly, its benefits extend beyond accelerating a single user's multi-turn dialogue. By sharing the KV cache across different users, the system can further eliminate redundant computations on a global scale.
+
+\paragraph{Prefix KV Cache}  
+Prompts sent by different users often exhibit significant prefix overlap (\eg, system prompts or few-shot examples). Based on this observation, the prefix KV cache maintains a global KV cache pool shared across multiple users:
+\begin{align}\label{eq:prefix_kv_cache_pool}
+    \mathcal{P}_{\text{prefix}} = \left\{\tilde{X}, (\tilde{\mK}, \tilde{\mV})\right\},
+\end{align}
+where $\tilde{X}$ is a cached token sequence and $(\tilde{\mK}, \tilde{\mV})$ are the corresponding KV cache.
+% 
+When a new prompt $X$ arrives, the LLM inference engine searches the cache pool for a token sequence that shares the longest common prefix with $X$:
+\begin{align} 
+    \tilde{X}, (\tilde{\mK}, \tilde{\mV}) = \argmax_{\tilde{X} \in \mathcal{P}_{\text{prefix}}} \textsc{PrefixLen}(X, \tilde{X}),
+\end{align}
+where $\textsc{PrefixLen}(\ )$ returns the length of the longest common prefix. The key and value vectors $(\hat{\vk}_t, \hat{\vv}_t)$ at position $t$ during the prefill phase are defined as:
+\begin{align}\label{eq:prefix_kv}
+    (\hat{\vk}_t, \hat{\vv}_t) &= \begin{cases}
+        (\tilde{\mK}_t, \tilde{\mV}_t), & 1 \leq t \leq \textsc{PrefixLen}(X, \tilde{X}), \\
+        (\vk_t, \vv_t), & \text{otherwise},
+    \end{cases}
+\end{align}
+where $(\tilde{\mK}_t, \tilde{\mV}_t)$ denotes the cached key and values vectors at position $t$ from the cache pool, and $(\vk_t, \vv_t)$ denotes the vectors computed on-the-fly for unmatched tokens.
+
+
+\paragraph{Position-Independent KV Cache}  
+To overcome the low cache hit rates by strict prefix matching, position-independent KV cache~\cite{yao2025cacheblend, hu2025epic, wang2025mepic, yang2025kvlink} enables the matching of cached chunks against arbitrary subsequences of the input context. The system maintains a cache pool where the chunk serves as the unit of storage:
+\begin{align}\label{eq:chunk_cache_pool}
+    \mathcal{P}_{\text{chunk}} = \left\{\tilde{X}, (\tilde{\mK}, \tilde{\mV})\right\},
+\end{align}
+where $\tilde{X}$ is a cached token chunk with fixed-length $L_\text{chunk}$ and $(\tilde{\mK}, \tilde{\mV})$ are the corresponding KV cache.
+% 
+When a new prompt $X$ arrives, the LLM inference engine searches the cache pool for reusable segments that match a subsequence within $X$. Let $\mathcal{S}_\text{hit}$ denote the set of all successfully hit KV cache chunks:
+\begin{align}\label{eq:matched_segments}
+    \mathcal{S}_\text{hit} = \left\{ i, j, \tilde{X}, (\tilde{\mK}, \tilde{\mV}) \mid \tilde{X} = X_{i : j}, \tilde{X} \in \mathcal{P}_{\text{chunk}}\right\}.
+\end{align}
+where $[i, j]$ denotes the position interval in the input $X$ matched to the cached chunk $\tilde{X}$. The key and value vectors $(\hat{\vk}_t, \hat{\vv}_t)$ at position $t$ during the prefill phase for every hit cache chunk $\{i, j, \tilde{X}, (\tilde{\mK}, \tilde{\mV})\}$  are defined as:
+\begin{align}\label{eq:position_independent_kv}
+    (\hat{\vk}_t, \hat{\vv}_t) &= \begin{cases}
+        (\tilde{\mK}_{t^\prime}, \tilde{\mV}_{t^\prime}), & i \leq t \leq j, \\
+        (\vk_t, \vv_t), & \text{otherwise},
+    \end{cases}
+\end{align}
+where $t^\prime = t - i + 1$ is the relative token position.
+
+However, context discrepancies between cached chunks and the actual user input may induce \textbf{attention shift} when using a position-independent KV cache, thereby degrading generation quality. To mitigate this, researchers adopt \textbf{selective recomputation}~\cite{yao2025cacheblend, hu2025epic, yang2025kvshare}, which recomputes tokens that are semantically important or show large divergence in their key and values vectors. 
+% 
+These methods define a recomputation set $\mathcal{R} \subseteq [i, j]$ of positions that require recomputation. The Equation~\ref{eq:position_independent_kv} is then refined as:
+\begin{align}\label{eq:recomputation_position_independent_kv}
+    (\hat{\vk}_t, \hat{\vv}_t) &= \begin{cases}
+        (\tilde{\mK}_{t^\prime}, \tilde{\mV}_{t^\prime}), & t \in [i, j]\setminus \mathcal{R}, \\
+        (\vk_t, \vv_t), & \text{otherwise},
+    \end{cases}
+\end{align}

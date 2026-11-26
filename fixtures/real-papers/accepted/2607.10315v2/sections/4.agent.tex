@@ -1,0 +1,125 @@
+\section{Finding iTrues with iFinder Agents}
+
+
+Given the repeated appearance of iTrue flaws, we hypothesize that they are not isolated incidents but recurring weaknesses across core-network (CN) implementations. We therefore aim to distill the distinctive characteristics of known iTrue instances into a feature set that can guide an LLM to detect iTrues in diverse CN codebases and programming languages. However, we found that naively applying LLM inference is unreliable: it frequently produces hallucinated findings, leading to low precision and inconsistent results. Specifically, in our preliminary evaluation, direct pattern-guided LLM inference yielded only 8 true positives but 56 false positives and 14 false negatives (Precision 28.205\%, Recall 36.364\%, F1 31.769\%), indicating severe context-induced hallucinations. Most false positives arise when required validations are implemented earlier in the same protocol procedure, but are invisible in the local snippet. In contrast, many false negatives are due to the large search space. Consequently, when scanning an entire codebase, the LLM fails to focus on the right protocol-handling paths and misses the vulnerable snippet. 
+
+To address these challenges, we developed a multi-agent system, \textit{iFinder}, which integrates LLM-based backward analysis, code-specification cross-checking, and proof-of-concept (PoC) exploit generation and refinement to improve detection quality. These techniques and the design of the whole system are elaborated in the rest of the section.
+
+\subsection{Overview}
+
+\noindent\textbf{Idea}. To reduce false negatives, we focus on likely failure points, such as operations that depend on message content (e.g., reading or copying based on a length field carried in a message), and then trace back to the \textit{trigger}, such as the message-handling logic, to determine whether the expected validation is present. We also observe that a major source of hallucinations is missing protocol context, which leads the LLM to fixate on irrelevant code segments and report vulnerabilities that are infeasible along real execution paths. This issue is especially common in carrier protocols, where a single procedure spans multiple states and security-critical checks are often performed in earlier states rather than in the flagged snippet (see Figure~\ref{fig:crosscheck-case}). To mitigate this, we propose \textit{code-specification cross-checking}: grounding each vulnerability candidate in the corresponding procedure defined by 3GPP specifications, recovering the prerequisite messages, and then mapping these messages to their handlers in the codebase by searching, so the agent can reason about whether the candidate is still feasible. This procedure-level context substantially reduces context-induced false positives without requiring the LLM to reason over the entire codebase.
+
+To further reduce false positives, we use the LLM to generate proof-of-concept (PoC) exploits for identified iTrue candidates. A key challenge is that LLM-generated PoCs may fail to trigger a flaw due to implicit runtime constraints that are not evident from static code alone. Our idea is \textit{feedback-aware refinement}, which frames exploitation as an iterative process: the agent executes the PoC against a testbed and analyzes runtime logs. If the vulnerability is triggered, the agent confirms the finding; otherwise, it diagnoses the failure and extracts actionable feedback to refine the PoC accordingly. This test-and-refine loop grounds PoC generation in observed execution behavior, reducing exploitation-time hallucinations and improving the success rate of vulnerability confirmation.
+
+\vspace{2pt}\noindent\textbf{Design}. Built upon these techniques, \textit{iFinder} adopts a multi-agent design to perform four key tasks: preprocessing, discovery, vetting, and exploitation. Every agent in \textit{iFinder} is an LLM session (realized with the Claude Agent SDK) driven by a task prompt and tool calls (\texttt{Grep}, \texttt{Glob}, \texttt{Read}, and build/execute), through which all reasoning is carried out by the LLM.
+The preprocessing stage supports the other tasks through two one-time operations (Section~\ref{sec:preprocessing}). First, it extracts protocol procedures and message schemas from 3GPP specifications~\cite{etsi129244}. Second, it summarizes detection patterns from cluster-level root causes; these patterns are designed to be both general, applicable across protocols and programming languages, and accurate.
+Guided by these patterns, a Discovery Agent detects iTrue candidates via LLM-based backward analysis. However, this approach can yield a high false-positive rate when the required checks are implemented earlier in the same procedure, as discussed above. To address this challenge, \textit{iFinder} invokes a Vetting Agent to perform code-specification cross-checking (Section~\ref{sec:discovery agent}).
+The resulting candidates are further validated by an Exploitation Agent, which automatically generates a PoC from the inferred attack vector and compliant prerequisite messages, executes it against a testbed, and iteratively refines it using real-time runtime logs (Section~\ref{sec: exploitation agent}).
+
+These agents communicate via explicit intermediate artifacts, including detection patterns, iTrue candidate reports, feasible-candidate reports, and prerequisite messages, which ensures reliable information flow across agents and supports end-to-end iTrue discovery and confirmation. Figure~\ref{fig:system} illustrates the system workflow. In what follows, we present the designs of these agents and the preprocessing component. 
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/crop_core_network-system_final_v4.pdf}
+  \caption{Overview of the iFinder framework. iFinder consists of three agents: a Discovery Agent that identifies candidate implicit trust violations via LLM-based backward analysis, a Vetting Agent that cross-checks code and protocol semantics to filter false positives, and an Exploitation Agent that validates security impact in a controlled testbed.}
+  \label{fig:system}
+\end{figure*}
+
+\subsection{Preprocessing}
+\label{sec:preprocessing}
+As mentioned earlier, the preprocessing stage aims at (1) extracting procedures and message schemas from 3GPP documents, and (2) summarizing detection patterns distilled from cluster-level root causes. To ensure the reliability of the outcomes, particularly the quality of the patterns, a domain expert reviewed the generated patterns and, when necessary, re-invoked the generation process with additional feedback to improve them.
+
+\vspace{2pt}\noindent\textbf{Summarizing detection patterns}. 
+CN implementations are written in heterogeneous languages (e.g., C and Go) and span multiple protocols (e.g., PFCP and GTP-C); thus, a pattern that is both precise and general is necessary to enable more effective and reliable exploration.
+To achieve generality, we carefully design prompts so that the generated patterns are expressed in a protocol-agnostic and language-agnostic manner.
+Meanwhile, to ensure precision and reduce ambiguity for iTrue discovery, we formulate each pattern as a triple: <element, dangerous operation, missing validation>, where element denotes the involved information element (IE), dangerous operation denotes the security-critical operation performed on the IE, and missing validation denotes the necessary check that is absent before the operation is performed. Figure~\ref{fig:pattern} presents an example that can be instantiated as <mandatory IE, direct dereference, missing presence>. 
+Finally, we summarize the six iTrue patterns.
+
+\begin{figure}[t]
+\centering
+\begin{tcolorbox}[
+  colback=boxbg,
+  colframe=boxframe,
+  coltitle=black,
+  title=Absent Field Pattern,
+  width=\linewidth,
+  boxrule=0.6pt,
+  arc=2mm,
+  left=1.2mm,right=1.2mm,top=1.0mm,bottom=1.0mm
+]
+The code directly dereferences the mandatory information element without
+\textcolor{checkblue}{checking that the mandatory element is actually present.}
+\textcolor{riskorange}{These unchecked accesses can lead to null pointer dereferences, leading to DoS.}
+\end{tcolorbox}
+\caption{Example of an iTrue detection pattern (\textit{Absent Field}): a mandatory IE is dereferenced without a presence check, enabling a DoS.}
+\label{fig:pattern}
+\end{figure}
+
+
+
+\vspace{2pt}\noindent\textbf{Extracting procedures and message schemas from specifications}. 
+iFinder utilizes an instruction prompt to extract procedures and message schemas from 3GPP specifications. The prompt includes an illustrative example (e.g., the Modify Bearer procedure) to explain what constitutes a procedure and reduce ambiguity. Such extracted knowledge helps downstream agents better understand protocol behavior,
+enabling them to reason about protocol execution when validating flagged iTrues and generating PoCs.
+
+\subsection{Discovery Agent}
+\label{sec:discovery agent}
+With the inputs from the preprocessing component, particularly the summarized patterns, the Discovery Agent (DA) searches for iTrue instances across various CN implementations. 
+As mentioned earlier, directly prompting an LLM to scan the entire codebase and flag iTrue candidates matching a pattern is impractical: the codebase spans over one million lines of code, far exceeding typical context-window limits and making long-context reasoning both inefficient and prone to hallucinations.
+To address this challenge, the DA performs \textit{LLM-based backward analysis} for iTrue discovery. 
+The DA is an LLM session driven by a task prompt and carries out this analysis entirely through iterative \texttt{Grep}/\texttt{Glob}/\texttt{Read} tool calls.
+Specifically, the procedure has three steps: it first locates a dangerous operation that matches the pattern, then walks backward along caller chains to construct the execution path, and finally checks whether the validations required by the pattern are missing.
+
+\noindent\textbf{Locating risky IE usages}.
+The DA first identifies code locations where protocol-controlled Information Elements (IEs) are used in a manner that matches a given pattern. 
+As described earlier, each detection pattern is specified to be language-agnostic (e.g., ``memory operations'') to support cross-language applicability. 
+The DA begins by reading the pattern description and grounding these abstract operations into concrete, language-specific constructions before detecting them in the target CN implementation. For each detected usage site, the DA then determines which IE field is used as an argument to the dangerous operation.
+For example, given a ``Malformed Field'' pattern, the DA first locates \texttt{memcpy}-like memory operations; then it finds that \texttt{flow\_description\_len} from the \texttt{SDFFilter} IE is passed as the size argument to a memory operation at \texttt{types.c:340}.
+
+\noindent\textbf{Constructing execution path}.
+After locating a pattern-matched IE usage, the DA constructs the execution path by iteratively searching for and inspecting the callers along the backward chain, so that it can later check whether the required validations are present. Specifically, the DA iteratively expands the call chain discovered from a CN implementation by using \texttt{Grep} to identify candidate callers, \texttt{Glob} to locate relevant source files, and \texttt{Read} to inspect each caller's code, repeating these operations until it reaches the protocol message handler\footnote{We found that the agent's standard approach of constructing call graphs via Abstract Syntax Trees (ASTs) is less effective than a simple \texttt{Grep}-based method, possibly because the LLM is better optimized for such document-search commands.}. The resulting call chain spans from the protocol message handler, through intermediate parsing functions, to the operations matching the pattern.
+
+\noindent\textbf{Checking the existence of validation}.
+With the execution path constructed, and guided by the pattern specification, the DA checks whether the necessary validations for the target IE appear before the risky use. 
+Depending on the pattern, the DA may perform three kinds of validation: (1) protocol-syntax validation (e.g., the presence of mandatory field and basic format/length constraints before accessing IE fields), (2) protocol-semantics validation (e.g., range checks or state-dependent invariants on IE values), and (3) resource-availability validation (e.g., capacity checks or access control before allocating requested resources). 
+The DA reads the functions in the execution path to look for these checks; if it does not find the required validation before the dangerous operation, it flags the site as an iTrue candidate.
+\subsection{Vetting Agent}
+\label{sec: vetting agent}
+
+As mentioned earlier, the vulnerability candidates produced by the DA include many false positives, because security checks may occur in earlier states rather than in the flagged snippet. 
+Addressing this challenge is the Vetting Agent (VA), which filters candidates via code-specification cross-checking: a three-step approach that leverages 3GPP specifications to expand the analysis context and reason about each candidate's feasibility. The approach includes locating an iTrue candidate's message in the procedure of 3GPP specifications, then mapping the prerequisite messages to code by searching, and reevaluating iTrue candidates under the expanded code context.
+
+
+\vspace{2pt}\noindent\textbf{Locating an iTrue candidate in specifications}. 
+The first step is to locate the procedure that carries an iTrue candidate in the specifications. For this purpose, the VA first identifies, among the procedures extracted during the preprocessing stage, the one that contains the message involved in the candidate (as identified by the DA). It then enumerates all other messages in the same procedure that are exchanged prior to the triggering message; these messages serve as ``anchors'' to help determine, later, the code segment that implements the procedure. 
+For example, consider an iTrue candidate: the assertion \texttt{ogs\_assert\_if\_reached()} at \texttt{s11-handler.c:608}, which is triggered along the \texttt{ModifyBearerRequest} handling path when \texttt{session\_type} takes an unexpected value. Using the triggering message \texttt{ModifyBearerRequest}, the VA maps the candidate to the Modify Bearer procedure and then retrieves the prior messages in the procedure, including \texttt{CreateSessionRequest} and \texttt{CreateSessionResponse}.
+
+\vspace{2pt}\noindent\textbf{Mapping specification messages to code}. 
+After identifying the messages for a candidate, the VA maps them to their code-level handlers by searching the codebase for the message names.
+For example, given a candidate in the \texttt{ModifyBearerRequest} handler, the VA identifies two prior messages in the same procedure, \texttt{CreateSessionRequest} and \texttt{CreateSessionResponse}, and then locates their implementations by searching for these names in the codebase; as a result, the S11 \texttt{CreateSessionRequest} handling path and the S5c \texttt{CreateSessionResponse} handling path are discovered, expanding the analysis context from the flagged handler to the full procedure.
+
+\vspace{2pt}\noindent\textbf{Reevaluating iTrue candidates in expanded context}. 
+With the context expanded, the VA reevaluates whether the candidate vulnerability is still exploitable by examining the located handler code for these messages, looking for the relevant validation operations.
+For example, consider a candidate that accesses the type field in the PAA IE, where the semantic check on this IE is absent in the handler of \texttt{ModifyBearerRequest} that uses the IE; after expanding the context, however, the VA discovers that this IE is actually a reference to the IE parsed in a prior message handled by \texttt{sgwc\_s5c\_handle\_create\_session\_response()}, which performs both syntactic and semantic checks on the message. This example is illustrated in Figure~\ref{fig:crosscheck-case}. 
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/cross_check_case.png}
+  \caption{Example of locating an implicit trust violation from a real-world GitHub security issue. The issue description and discussion are used to extract missing-validation assumptions, which are then mapped to the prerequisite messages in the corresponding 3GPP procedure and to the code-level handlers that the VA then reevaluates.}
+  \label{fig:crosscheck-case}
+\end{figure}
+
+
+\subsection{Exploitation Agent}
+\label{sec: exploitation agent}
+Even after reevaluation, some false positives may still remain, because static reasoning alone cannot guarantee that a candidate is (i) triggerable under a realistic protocol state, (ii) reproducible in an actual deployment, or (iii) genuinely security-impacting. Therefore, \textit{iFinder} invokes the Exploitation Agent (EA) to automatically generate a PoC for each iTrue candidate. More specifically, the EA follows a three-step workflow. First, it derives an explicit attack vector and instantiates protocol-compliant messages using the message schemas extracted during preprocessing, and then generates the PoC strictly from these intermediate artifacts. Second, it performs pre-execution checks (e.g., compilability and consistency with the attack vector) to catch malformed or drifting PoCs. Finally, when a well-formed PoC still fails due to implicit runtime constraints, the EA invokes the \textit{feedback-aware refinement} loop: it analyzes runtime logs, updates the PoC to satisfy missing constraints, and re-executes it until the flaw is triggered or the LLM testing budget is exhausted.
+
+\vspace{2pt}\noindent\textbf{Deriving attack vector and constructing protocol messages}. 
+Given an iTrue candidate from the VA (which specifies the vulnerable IE usage site and triggering message type), the EA first derives a message-level attack vector by determining the specific IE field(s) to manipulate and the required content to trigger the target vulnerability. It then constructs the corresponding protocol message(s) according to the schemas, producing well-formed message structures with the attack payloads for PoC generation.
+For example, the VA validates a candidate flagging a heap buffer overflow risk introduced by the vulnerable \texttt{memcpy} at \texttt{s5c-handler.c:150}, which copies the \texttt{PAA} IE payload into the buffer \texttt{sess->paa} using the attacker-controlled length field \texttt{paa->len} without bounds checking; from these artifacts, the EA derives the attack vector: sending a \texttt{CreateSessionResponse} containing a malformed \texttt{PAA} IE, where the length field claims 200 bytes while the buffer \texttt{sess->paa} can only hold $\sim$21 bytes, causing an out-of-bounds write; based on the message schema for \texttt{CreateSessionResponse}, the EA populates the required mandatory header fields (e.g., the TEID and sequence number) and embeds the malformed \texttt{PAA} IE at the correct location, constructing a message instance to drive PoC generation.
+
+\vspace{2pt}\noindent\textbf{Generating PoC and performing pre-execution checks}. 
+After deriving the attack vector and protocol-compliant messages, the EA generates an initial PoC that instantiates these messages accordingly. Before execution, the EA performs lightweight, tool-assisted pre-execution checks, including (i) syntax checks by compiling the PoC and (ii) consistency checks to ensure the PoC’s message types, field values, and message sequence align with the attack vector.
+
+\vspace{2pt}\noindent\textbf{Executing in a testbed and refining with feedback}. 
+The EA then executes the generated PoC by automatically invoking a containerized testbed and analyzing runtime logs to determine whether the vulnerability is triggered. If the attack succeeds (e.g., a crash or an observable state change occurs), the EA confirms the presence of the iTrue vulnerability; otherwise, it diagnoses the failure based on the logs, refines the PoC accordingly, and re-executes it. This execute--analyze--refine loop continues until the vulnerability is triggered or the testing budget is exhausted. For example, an initial PoC may send a malformed \texttt{CreateSessionResponse} with a hardcoded TEID and sequence number. The first execution does not trigger a crash because SGW-C rejects the response: the message cannot be linked to any pending transaction (``unknown TEID''). Based on this feedback, the EA updates the PoC to extract the TEID from \texttt{CreateSessionRequest} and reuse the corresponding sequence number when crafting the response. With this refinement, SGW-C links the response with its pending transaction and processes the \texttt{CreateSessionResponse}, which leads to a crash, confirming the existence of the iTrue.

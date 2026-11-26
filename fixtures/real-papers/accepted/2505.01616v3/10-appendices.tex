@@ -1,0 +1,19 @@
+\appendix
+
+\section{Evaluation for Non-LLM Workloads}
+\label{sec:nonllm}
+
+\sys's design does not depend on any particular model architectures. Here we evaluate \sys for non-LLM workloads.
+
+We use a single NVIDIA RTX 3090 GPU for computation kernel profiling. The goal is to match the actual performance of our 4-server testbed where each server has 2 Intel Xeon Gold 5215 CPUs and 2 NVIDIA RTX 3090 GPUs. There are 8 NVIDIA RTX 3090 GPUs in total. The network topology and bandwidth of this testbed is the input to our network simulator. We evaluate a broad set of models on DeepSpeed~\cite{rasley2020deepspeed} that are known to have different performance characteristics, including ResNet-50 \cite{he2016deep}, Stable Diffusion~\cite{stable_diffusion}, 
+and Graph Attention Network (GAT)~\cite{gat}.
+
+\sys achieves accurate simulation accuracy. \autoref{fig:eval-smallmodels} compares \sys's predicted training time per iteration and grouth truth performance numbers collected on the testbed. the average simulation error is 6.6\% under these settings with the maximum error of 8.1\% on diffusion model with 2 GPUs.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/accuracy_small.pdf}
+    \caption{\textbf{Non-LLM models:} Testbed training time and \sys's simulation results with DeepSpeed. The error bars show 95\% confidence interval.
+    }
+    \label{fig:eval-smallmodels}
+\end{figure}

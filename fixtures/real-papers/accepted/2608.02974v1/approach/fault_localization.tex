@@ -1,0 +1,101 @@
+\subsection{Explainable Fault Localization}
+\label{sec:explainable-fl}
+
+Given a bug report, our fault localization procedure follows a \emph{progressive refinement} strategy over the Concurrent Knowledge Base (CKB).
+Rather than exposing large code fragments or entire program graphs to an LLM, we localize concurrency faults by performing hierarchical retrieval and reasoning over structured, DSL-encoded concurrency knowledge.
+
+The hierarchical design is motivated by the structural properties of large software systems.
+Well-engineered systems are typically organized with high cohesion and low coupling: components differ significantly in functionality, packages encapsulate closely related behaviors, and thread entry points define distinct concurrent execution contexts.
+As a result, concurrency faults are usually confined to a small region of the system and rarely span arbitrary components or unrelated execution contexts.
+This observation motivates a coarse-to-fine localization strategy that progressively narrows the search space along natural architectural boundaries.
+
+\paragraph{Hierarchical Localization Workflow.}
+Starting from the bug report, the LLM incrementally refines the localization scope by querying the CKB in the following order:
+(i) selecting the most relevant component,
+(ii) selecting a package within the chosen component,
+(iii) localizing candidate thread entry points within the package, and
+(iv) selecting a pair of interacting thread entries.
+At each stage, only a small and relevant slice of the CKB is exposed to the LLM (e.g., a list of components, packages, or thread entries), ensuring that the reasoning context remains bounded and focused.
+
+Once a thread-entry pair is selected, the framework retrieves all interaction-level records associated with the pair.
+These records are represented using the interaction DSL and summarize shared resources, access actions, and synchronization context when available.
+The interaction set provides a compact, concurrency-focused context that identifies the candidate methods involved in the interaction.
+
+\paragraph{LLM-based Interaction Ranking and Explanation.}
+Given the interaction DSL elements, the LLM performs interaction-level reasoning to assess which methods are most likely responsible for the fault.
+To support this reasoning, the LLM may selectively query method-level summaries and, when necessary, corresponding code snippets through predefined retrieval functions.
+Based on the combined interaction context and method-level information, the LLM produces a ranked list of suspicious methods.
+
+Finally, the LLM generates an explanation grounded in explicit concurrency context.
+The explanation links the ranked methods to their accessed shared variables and the corresponding thread-entry pair, describing how concurrent execution and shared-resource access may lead to the observed faulty behavior.
+
+\begin{figure}[H] \scriptsize
+\centering 
+\vspace*{3pt}
+\begin{tcolorbox}[colback=gray!5,colframe=black!30]
+
+You are an expert in concurrent fault localization. Given a bug report and access to a Concurrent Knowledge Base (CKB), iteratively retrieve relevant concurrency information through hierarchical reasoning and identify the most suspicious methods related to the reported fault.
+
+\vspace{0.3em}
+
+\textbf{Bug Report:} \verb!{{BUG_REPORT}}!
+
+\# Component-Level Retrieval
+
+First, call: \textit{$list\_components()$}. Use function calls to retrieve concurrency-related knowledge from the CKB, then analyze the returned components and identify the most relevant component associated with the bug report.
+
+\begin{verbatim}
+{{function_call}}
+\end{verbatim}
+\textbf{Output Format:} component\_name: component
+\vspace{0.3em}
+
+\# Package-Level Retrieval
+
+First, call: \textit{$list\_packages\_under\_component(component)$}. Use function calls to retrieve concurrency-related knowledge from the CKB, then analyze the returned packages and identify the most relevant package associated with the bug report. 
+
+\begin{verbatim}
+{{function_call}}
+\end{verbatim}
+\textbf{Output Format:} package\_name: package
+\vspace{0.3em}
+
+\# Thread Entry and Method-Level Retrieval
+
+First, call: \textit{$list\_entries\_under\_package(package)$}. Use function calls to retrieve concurrency-related knowledge from the CKB, then analyze the returned thread entry points and identify the most suspicious entry pair related to the reported fault. 
+
+Select the most suspicious thread-entry pair.
+
+\begin{verbatim}
+{{function_call}}
+\end{verbatim}
+\textbf{Output Format:} entry\_pair: (entry1, entry2)
+\vspace{0.3em}
+
+\# Interaction DSL Reasoning
+
+First, retrieve the interaction DSL: $get\_interaction\_dsl(entry_pair)$. Use the DSL to analyze shared resources, access actions, synchronization context, and cross-thread interactions. If more evidence is needed, continue using function calls to inspect relevant method summaries or source code:
+\begin{verbatim}
+{{function_call}}
+\end{verbatim}
+
+After sufficient evidence has been collected, apply the reasoning rules to identify suspicious methods involved in the concurrent interaction. Then return a ranked list of suspicious methods and explain how the interaction may lead to the reported fault.
+
+\textbf{Output Format:}
+
+\begin{verbatim}
+Rank 1: [Method]: ... [Shared Resource]: ... [Thread Entries]: ... [Explanation]: ...
+\end{verbatim}
+\end{tcolorbox}
+\vspace{-0.4em}
+\caption{Prompt Template} \label{template}
+\vspace{-0.15in}
+\end{figure}
+
+
+\paragraph{Prompt Template.} 
+ConFL follows the function-calling paradigm common to recent LLM-based FL approaches (e.g., AutoFL, FlexFL). Figure~\ref{template} illustrates the complete prompt template. At each hierarchical retrieval stage, the LLM is provided with the bug report and a typed set of retrieval functions (listed in Table~\ref{tab:function_calls}); it selects one function to invoke, observes the structured response, and progresses to the next stage. This constrains the LLM to operate within the CKB schema rather than generating free-form responses. At the interaction-ranking stage, each interaction DSL element is serialized as a labeled block listing the entry pair, the set of shared methods, and the per-method shared-variable accesses with their guard locks, so that the LLM can reason directly over concurrency-relevant context without traversing raw code. We use deterministic decoding (temperature = 0) and the complete prompt templates are released in the artifact.
+
+
+
+ 

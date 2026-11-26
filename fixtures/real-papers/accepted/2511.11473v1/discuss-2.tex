@@ -1,0 +1,27 @@
+\section{Limitations and risks}
+
+{\bf Limitations.} Our system is designed for scenarios in which the wearer is an active participant in a conversation, using self-speech as an anchor to identify conversational partners. It is not suited for passive listening, such as eavesdropping or passive consumption. %%In cases where the user's speech is infrequent or absent, the system may fail to maintain accurate tracking of conversational partners until additional self-speech is detected.
+
+
+
+The current implementation prioritizes real-time, on-device performance and  incorporates conversational turn-taking. While this design choice supports low-latency operation, it may limit the system's ability to disambiguate overlapping speakers, especially when multiple speakers begin speaking simultaneously. Incorporating lightweight content-aware models could be a direction for future work.
+
+
+%\st{Our evaluation is limited to conversations involving 2–3 speakers. Extending the system to handle more complex multi-party interactions remains an open challenge. } Our evaluation on real-world egocentric data is limited to conversations involving 2–3 speakers. \textcolor{red}{Although we were able to demonstrate the model generalizes to unseen number of speakers in the target conversation on our synthetic dataset, such generalization capability on real world audio remains unexplored. } \st{Extending the system to handle more complex multi-party interactions remains an open challenge.}
+
+
+In addition, while the model generalizes to real-world egocentric  recordings without fine-tuning on such data, performance could likely benefit from supervised adaptation to real-world {acoustic and conversation} conditions.
+
+{Finally, although the model achieved cross-linguistic generalization in evaluations on English, Mandarin, and Japanese datasets}, cultural and linguistic differences in turn-taking behavior~\cite{turntake2} suggest that further fine-tuning for language- or culture-specific dynamics may improve robustness.
+ 
+
+
+\vskip 0.05in\noindent{\bf Ethical considerations. } 
+Proactive hearing assistants hold promise for improving communication access for individuals with hearing loss, particularly in dynamic and crowded settings. They may be especially valuable for older adults or users with limited dexterity, for whom manual control interfaces may be impractical.
+
+
+However, there are important risks. Incorrect speaker detection may suppress relevant voices or amplify unrelated ones. Such errors are particularly concerning in high-stakes or fast-moving conversational contexts. Improving this remains a key area for future work.
+
+Additionally, if the assistant fails or behaves unpredictably, users should have a clear and intuitive means to override or adjust system behavior. One practical solution could be a physical control (e.g., a tactile button) to temporarily disable the assistant or reset its state. Addressing these through transparent design, user-centric controls, and robust real-world evaluation will be essential for safe and responsible deployment.
+
+

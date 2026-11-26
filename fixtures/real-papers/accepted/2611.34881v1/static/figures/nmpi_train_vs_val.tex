@@ -1,0 +1,6 @@
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{static/images/npmi_train_vs_val_tex.pdf}
+\caption{\textbf{NPMI matrix on COCO train vs.\ COCO val (80$\times$80 categories, same train-frequency ordering, black = never co-occur; the diagonal is black by construction).} \emph{Left:} on \texttt{train2017}, $982$ of the $80 \cdot 79 = 6{,}320$ off-diagonal cells are zero ($15.5\%$): a small minority of category pairs never co-occur in training. \emph{Right:} on \texttt{val2017}, the empty-cell fraction jumps to $49.1\%$ ($3{,}104$ zero cells), more than $3\times$ the training fraction. The added zeros are structured: the empty-cell rate is highest in the lower-right long-tail $\times$ long-tail quadrant ($78.5\%$ vs.\ $39.5\%$ elsewhere), exactly the regime where typicality bias is expected to be strongest. For nearly half of all category pairs the natural val set provides \emph{no} signal at all, irrespective of how we slice it; this is the structural coverage hole that motivates the synthetic STRANGE-Bench evaluation (\S\ref{app:strange-pipeline}).}
+\label{fig:npmi_train_vs_val}
+\end{figure}

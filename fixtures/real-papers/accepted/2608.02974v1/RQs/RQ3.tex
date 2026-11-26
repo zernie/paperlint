@@ -1,0 +1,84 @@
+\subsubsection{RQ3: What is the contribution of each component in our framework?}
+
+To quantify the contribution of each major component in ConFL, we conduct an ablation study by disabling one component at a time.
+Specifically, we evaluate three variants:
+(i) \textbf{w/o Hierarchy}, which removes hierarchical retrieval and directly performs flat retrieval over the entire search space;
+(ii) \textbf{w/o CKB}, which disables the concurrency knowledge base and provides only basic method-level information without structured concurrency semantics; and
+(iii) \textbf{w/o DSL}, which removes the interaction-level DSL representation and feeds unstructured concurrency information to the LLM.
+The full system (\textbf{ConFL}) serves as the reference.
+
+\vspace{-0.5em}
+\input{tables/results/ablation}
+
+
+\begin{wrapfigure}{r}{0.35\textwidth} 
+    \centering 
+    \includegraphics[width=0.35\textwidth]{figs/h.pdf}
+    \caption{Accuracy of Hierarchy}\label{fig:hierarchy-accuracy}
+\end{wrapfigure}
+
+As shown in Table~\ref{table:ablation}, removing any component leads to a clear degradation in localization performance, confirming that all components contribute meaningfully to the effectiveness of ConFL.
+Among the ablated variants, \textbf{w/o Hierarchy} suffers the largest performance drop, with Top-1 accuracy decreasing from 132 to 92.
+This result highlights the critical role of hierarchical retrieval in progressively constraining the search space and guiding the LLM toward relevant concurrency contexts.
+Without hierarchy, the model is more likely to explore irrelevant code regions and follow incorrect reasoning paths.
+
+The \textbf{w/o CKB} variant also shows a substantial decline (Top-1 = 104), indicating that the concurrency knowledge base provides essential structural and behavioral signals beyond method signatures.
+Without explicit knowledge of shared variables, locks, and thread-entry properties, the LLM’s ability to reason about concurrency interactions is significantly weakened.
+
+
+
+In contrast, the \textbf{w/o DSL} variant exhibits a smaller but still noticeable performance drop (Top-1 = 117).
+This suggests that while raw concurrency information is useful, the structured interaction-level DSL plays an important role in organizing this information into a form that is easier for the LLM to reason over.
+By explicitly encoding thread entries, shared resources, and access patterns, the DSL improves ranking accuracy and overall localization quality.
+
+Overall, the full ConFL framework consistently achieves the best Top-k results, demonstrating that hierarchical retrieval, the concurrency knowledge base, and the interaction-level DSL are complementary and jointly necessary for effective and explainable concurrent fault localization.
+
+% \sh{R2Q2 search space reduction is not the reason}
+
+% \shuai{The CKB is designed to preserve concurrency-relevant contexts rather than aggressively prune the program space. In practice, it still retains approximately 20\% of all methods, corresponding to 1,000--3,000 candidate methods per project. Moreover, existing fault localization approaches already implicitly narrow the search space using bug-report signals such as mentioned classes or stack traces. ConFL improves localization performance not merely through search space reduction, but by explicitly modeling structured cross-thread interactions and enabling LLM-based reasoning over these interaction contexts.}
+
+
+\paragraph{Accuracy of Hierarchy Retrieval.}
+Figure~\ref{fig:hierarchy-accuracy} reports the accuracy of hierarchical retrieval at each stage of our framework.
+Component-level accuracy measures whether the correct component is identified from the bug report, followed by package-, thread-entry-, and method-level accuracy measured conditionally at each subsequent stage.
+
+\begin{wraptable}{r}{0.3\textwidth} \footnotesize
+\vspace{-10pt}
+\centering 
+\caption{BoostN with CKB} \label{tab:boost}
+\begin{tabular}{lcc}
+\toprule
+Technique & MRR & MAP \\
+\midrule
+BoostN &  0.103  & 0.099 \\
+BoostN (CKB) &  0.167   &  0.165 \\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{wraptable}
+
+As shown in the figure, ConFL achieves consistently high accuracy across all hierarchy levels, exceeding 88\% at every stage.
+In particular, component-level and thread-entry retrieval exceed 91\% accuracy, indicating that both structural localization and concurrency-entry identification are highly reliable.
+Accuracy decreases slightly at deeper levels, such as package and method selection, which is expected as the search space becomes more fine-grained.
+
+
+
+This strong performance reflects the high-cohesion and low-coupling properties of software systems.
+Components and packages typically encapsulate related functionality and concurrency responsibilities, enabling hierarchy-guided retrieval to progressively narrow the search space while preserving correct localization decisions.
+Overall, these results demonstrate that hierarchical retrieval effectively leverages program modularity to support reliable interaction-level reasoning and LLM-based fault localization.
+
+
+We emphasize that the gains of ConFL do not come solely from search-space reduction. Restricting retrieval to the CKB improves IR-based localization: as shown in Table~\ref{tab:boost}, BoostN(CKB) improves over BoostN from 0.103 to 0.167 MRR and from 0.099 to 0.165 MAP. However, the performance remains substantially lower than ConFL, indicating that filtering irrelevant methods alone is insufficient for concurrent fault localization. Similarly, the ablation study (Table~\ref{table:ablation}) shows that removing hierarchy-guided reasoning reduces Top-1 from 132 to 92 even under the same CKB setting. These results suggest that ConFL's gains mainly come from structured concurrency interaction modeling and hierarchy-guided reasoning rather than search-space reduction alone.
+
+
+
+\vspace{-0.5em}
+\vspace*{3pt}
+\begin{tcolorbox}
+\stepcounter{findingsCounter}
+{\bf RQ\thefindingsCounter{} summary:} {
+The ablation study confirms that hierarchical retrieval, the concurrency knowledge base, and the interaction-level DSL are all essential components of ConFL.
+Hierarchical retrieval has the largest impact, as it effectively constrains the search space and guides the LLM toward relevant concurrency contexts.
+This is further supported by the hierarchy-accuracy analysis, which shows consistently high accuracy across all levels, reflecting the high-cohesion and low-coupling structure of real-world software systems.
+}
+\end{tcolorbox}

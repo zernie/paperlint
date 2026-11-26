@@ -1,0 +1,16 @@
+\section{Related Works} \label{sec:related}
+\subsection{Talking Avatar Generation}
+Talking avatar generation aims to generate a lifelike talking avatar video from a given reference image and an audio. Earlier methods in this field had focused on synthesizing accurate lip movement from the driving audio~\citep{wav2lip, makeittalk, stylelipsync, stylesync, keysync}. These approaches are extended to generate holistic head movements, including a rhythmical head motion~\citep{makeittalk, emo, float, vasa_1} and vivid facial expressions, such as eye blink and jaw movement~\citep{sadtalker, megaportrait, emoportraits, vasa_1, liveportrait}. SadTalker~\citep{sadtalker}, for instance, leverages 3D morphable models (3DMM)~\citep{bfm} as an intermediate representation for the non-verbal facial expression. EMO~\citep{emo} and its subsequent models~\citep{loopy, hallo3, echomimic} leverage the foundation image diffusion model (e.g., StableDiffusion~\citep{ldm}) for photorealistic portrait animation. 
+Recent works~\citep{vasa_1, anitalker, float} introduce generative modeling techniques, such as diffusion models or flow matching into a learned motion space~\citep{megaportrait, lia}, achieving real-time head motion generation.
+
+\subsection{Listening Avatar Generation}
+Another line of works~\citep{l2l, rlhg, mfr_net, pch, customlistener, ditailistener} focus on generating realistic listening head motions, such as nodding or focusing. Generating such responsive motions is challenging because the relationship between the speaker and listener is inherently one-to-many~\citep{l2l, diffusion_listening}, and the cues are context-dependent and weakly supervised.
+Hence, most of the works generate the \textit{personalized} listening motion~\citep{l2l, rlhg} or leverage explicit control signals, such as \textit{text instruction}~\citep{customlistener} and \textit{pose prior}~\citep{diffusion_listening}. 
+
+\subsection{Dyadic Conversational Avatar Generation}
+Recently, several studies investigated dyadic motion generation~\citep{dim, infp, arig}, which involves modeling the interactive behavior of two participants engaged in a conversational setting.
+DIM~\citep{dim} quantizes dyadic motions into two discrete latent spaces~\citep{vqvae}, one for the verbal and one for the non-verbal. However, it requires a manual role-switching signal between the two spaces, resulting in discontinuous transitions between speaker and listener states. INFP~\citep{infp} addresses this limitation by introducing audio-conditioned verbal and non-verbal memory banks within a unified motion generator. 
+However, this is ill-suited for real-time interactive generation as its bidirectional transformer~\citep{dit} requires access to the entire context of the conversation.
+ARIG~\citep{arig} generates implicit 3D keypoints~\citep{liveportrait} as its motion representation, primarily focusing on facial expressions. Yet it struggles with temporal consistency and fails to produce holistic head motions.
+
+In this work, we focus on modeling the interactive behavior of both participants continuously influencing each other through verbal and non-verbal signals. We generate holistic interactive motions, for instance, talking, head movement, listening, and focusing, using a diffusion forcing framework that promptly responds to the multimodal user signals. 

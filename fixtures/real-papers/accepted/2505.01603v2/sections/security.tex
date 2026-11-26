@@ -1,0 +1,20 @@
+\section{Security Analysis}\label{sec:security}
+
+To compare the security implications of \dandelion and systems like Firecracker, gVisor, and Wasmtime, we analyze their attack surface and trusted computing base (TCB).
+
+\fakepara{Threat model.} We assume users trust the cloud platform ,but not other users. The cloud provider does not trust users. Users do not have physical access to machines, but can exploit vulnerabilities in cloud software~\cite{linux-kernel-vulnerabilities, hypsec}
+to breach the confidentiality and integrity of other users' applications.
+Denial of service and side-channel attacks are out of scope; we assume the provider deploys necessary defenses~\cite{microsoft-prevent-sidechannels}.
+
+
+\fakepara{Attack surface.} We analyze the vulnerability of the interface that untrusted functions can directly access. Most FaaS platforms provide user functions a POSIX-like environment with various system calls available. To mitigate this large attack surface~\cite{firecracker-container-escape}, Firecracker and gVisor rely on defense-in-depth strategies, running system calls for different functions with separate OS kernels.
+Wasmtime offers a more controlled attack surface via WASI~\cite{wasi}.
+\dandelion goes further in this direction: users provide only pure compute functions and system calls are blocked during their execution (\S\ref{sec:prog:compute}).
+Although a malicious compute function could produce output data that attempts to hijack control flow when parsed by the dispatcher,
+\dandelion's function output parser is merely 100 lines of Rust, making it feasible to verify its memory safety and correctness. 
+Users may attempt to exploit communication functions by passing malicious inputs. \dandelion's communication engines guard against such attacks by checking that each input is a valid HTTP protocol request.
+
+\fakepara{Trusted computing base.}
+\dandelion, Firecracker and Spin have several TCB components in common: the Linux kernel, C standard library, and Rust compiler. 
+While the Firecracker and Spin code base has expanded to $\sim$68k and $\sim$65k lines of Rust code respectively, \dandelion consists of $\sim$12k lines of Rust code including tests, with only 2k lines directly relevant to isolation and interaction with user code.
+gVisor has $\sim$38k lines of Go, excluding third-party packages.

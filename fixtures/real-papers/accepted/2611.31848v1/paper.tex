@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+
+\usepackage[final]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+
+\usepackage[T1]{fontenc}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{microtype}
+
+\usepackage{inconsolata}
+
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{geometry}
+
+\usepackage{balance}      %
+\usepackage{booktabs}     %
+\usepackage{caption}      %
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{subcaption} %
+
+
+\usepackage{algorithm}        %
+\usepackage[noend]{algpseudocode} %
+
+\usepackage{float}
+
+\usepackage{amssymb,amsfonts}%
+\usepackage{amsmath}
+
+
+\DeclareMathOperator*{\argmax}{argmax}
+
+
+
+
+
+\title{Faithful Persona Steering under Incongruity via Dual-Stream Refinement}
+
+
+\author{Yu-An Chu \and Jen-Ren Pong \and Chia-Yao Yeh \and Meng-Fen Chiang\textsuperscript{\textbf{*}}\\
+  National Yang Ming Chiao Tung University \\
+  Hsinchu, Taiwan \\
+  \texttt{\{chu1004.ee11, jenrenpong.ee14, jiayao920406.ee14, meng.chiang\}@nycu.edu.tw} \\}
+
+
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}  
+
+\begin{document}
+\maketitle
+
+\blfootnote{$^*$Corresponding author.}
+
+\begin{abstract}
+Standard LLM personalization typically frames identity as a static retrieval task, overlooking the inherent \textit{incongruity} of human personas, where stable traits coexist with atypical, context-specific stances. Existing methods struggle to reconcile these dimensions: prompting succumbs to \textit{context drift} over long sequences, while fine-tuning often suppresses idiosyncratic ``quirks'' in favor of generic distributional patterns. To bridge this gap, we present \textsc{QuirkyMind}, a framework that disentangles identity \textit{definition} from its \textit{expression}. First, \textit{Traits Anchoring} constructs a dual-stream latent state, fusing a sentence-level summary for semantic stability with a token-level sequence for generative control. This state is stabilized via \textit{In-Context Narrative Refinement} using an alternating objective: a discriminative InfoNCE loss anchors the persona in representation space to prevent drift, while a generative cross-entropy loss ensures faithful verbalization. Finally, \textit{Persona Steered Generalization} transfers the refined state to downstream tasks via parameter-efficient adapters. Empirical evaluations on Persona-Steered QA and Narrative Inference demonstrate that QuirkyMind mitigates drift, consolidating persona knowledge without erasing authentic incongruities.
+\end{abstract}
+
+
+
+\input{ACL-main/01-intro}
+\input{ACL-main/02-preliminary}
+\input{ACL-main/03-method}
+\input{ACL-main/04-experiment}
+\input{two-column/05-related-work}
+
+
+
+
+
+\section{Conclusion}
+We presented \textsc{QuirkyMind}, a framework addressing persona incongruity by disentangling semantic identity from generative expression. By anchoring traits in a dual-stream latent state refined via alternating objectives, the model resists context drift while preserving the ``quirks'' essential for authentic personas. Empirical evaluations on PQA and PNI demonstrate that treating incongruity as a structural signal ensures both consistency and narrative stability, establishing a foundation for resilient, sociologically grounded personalization. 
+
+
+\section*{Acknowledgments}
+This work is supported by the National Science and Technology Council (NSTC), Taiwan (114-2222-E-A49-004 and 114-2639-E-A49-001-ASP). 
+
+
+
+
+
+
+
+\section*{Limitations}
+While QuirkyMind robustly handles persona incongruity, several limitations remain. 
+
+
+\noindent \textbf{Geocultural and Sociodemographic Scope.} The empirical scope of this work is circumscribed by its reliance on the American Trends Panel (ATP) and PersonaChat, both of which predominantly reflect Western ideological and sociodemographic paradigms. Consequently, the framework’s efficacy within non-Western cultural contexts or divergent identity systems remains to be established. Future research should prioritize developing cross-cultural benchmarks to ensure broader sociopolitical generalizability.
+
+\noindent \textbf{Representational Capacity.} Although our dual-stream approach mitigates context drift, extreme or highly divergent dialogue trajectories may still encounter representational bottlenecks. Specifically, a single latent state $\textbf{z}^{(\star)}$ may prove insufficient to capture the nuance of highly multifaceted or internally contradictory identities during prolonged interactions, where the required persona depth exceeds the current state's capacity.
+
+\noindent \textbf{Static vs. Dynamic Persona Alignment.} This study focuses exclusively on alignment with static backstories. We have yet to investigate how refined persona states evolve or adapt dynamically in long-form, multi-agent strategic dialogues, where identities may shift in response to adversarial pressure or collaborative negotiation.
+
+
+
+
+
+
+\bibliography{ACL-main/ref}
+\appendix
+\newpage
+\input{two-column/07-appendix}
+
+
+\end{document}

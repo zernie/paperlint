@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "icra-2025",
+      "venue": {
+        "kind": "named",
+        "name": "ICRA 2025",
+        "url": "https://arxiv.org/abs/2501.16684v1"
+      },
+      "opened": "2025-01-28",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-01-28",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

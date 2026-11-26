@@ -1,0 +1,48 @@
+% \begin{table}[t]
+% \centering
+% \small
+% \setlength{\tabcolsep}{6pt}
+% \caption{Datasets used in our experiments (after removing Xiaoping\_mouse\_bladder\_cell, Maayan\_Mouse\_Pancreas\_cell\_1, and Junyue\_worm\_neuron\_cell). We report the number of cells, genes, clusters (cell groups), sparsity, and the number of selected highly variable genes (HVGs).}
+% \label{tab:dataset_summary}
+% \begin{tabular}{lccccc}
+% \toprule
+% \textbf{Dataset} & \textbf{Cells} & \textbf{Genes} & \textbf{Cell groups} & \textbf{Sparsity} & \textbf{\#HVGs} \\
+% \midrule
+% Grace\_CITE\_CBMC\_counts\_top2000        & 8617 & 2000  & 15 & 93.26\% & 2000 \\
+% Maayan\_Human\_Pancreas\_cell\_1          & 1937 & 20125 & 14 & 90.44\% & 2000 \\
+% Maayan\_Human\_Pancreas\_cell\_2          & 1724 & 20125 & 14 & 90.59\% & 2000 \\
+% Maayan\_Human\_Pancreas\_cell\_3          & 3605 & 20125 & 14 & 91.30\% & 2000 \\
+% Maayan\_Mouse\_Pancreas\_cell\_2          & 1064 & 14878 & 13 & 87.81\% & 1500 \\
+% Muraro\_human\_Pancreas\_cell              & 2122 & 19046 & -- & --      & 2000 \\
+% Sonya\_HumanLiver\_counts\_top5000        & 8444 & 5000  & 11 & 90.77\% & 1500 \\
+% \bottomrule
+% \end{tabular}
+% \vspace{2pt}
+
+% {\footnotesize \textbf{Note:} For \texttt{Muraro\_human\_Pancreas\_cell}, the file metadata indicates \texttt{obs\_names} length (cells) and \texttt{var\_names} length (genes), but the cell-group count and sparsity were not provided in the extracted summary, so we mark them as ``--''.}
+% \end{table}
+\begin{table*}[t] % 将 table 改为 table* 以跨双栏显示
+\centering
+\small
+\setlength{\tabcolsep}{6pt} % 稍微增加了列间距，因为现在空间更宽裕了
+
+% 将宽度设置为 \textwidth (页面总宽)，而不是 \columnwidth (单栏宽)
+\resizebox{0.8\textwidth}{!}{%
+\begin{tabular}{lcccllcc}
+\toprule
+\textbf{Dataset} & \textbf{Cells} & \textbf{Genes} & \textbf{Clusters} & \textbf{Organ} & \textbf{Seq. Method} & \textbf{Sparsity} & \textbf{HVGs} \\
+\midrule
+\textbf{Muraro human Pancreas cell} & 2122 & 19046 & 9  & Pancreas & CEL-seq      & 73.02\% & 2000 \\
+\textbf{Human Pancreas cell 1}      & 1937 & 20125 & 14 & Pancreas & CEL-seq      & 90.44\% & 2000 \\
+\textbf{Human Pancreas cell 2}      & 1724 & 20125 & 14 & Pancreas & CEL-seq      & 90.59\% & 2000 \\
+\textbf{Human Pancreas cell 3}      & 3605 & 20125 & 14 & Pancreas & CEL-seq      & 91.30\% & 2000 \\
+\textbf{Mouse Pancreas cell 2}      & 1064 & 14878 & 13 & Pancreas & CEL-seq      & 87.81\% & 1500 \\
+\textbf{CITE-CBMC}                  & 8617 & 2000  & 15 & Blood    & 10X Genomics & 93.26\% & 2000 \\
+\textbf{Human Liver cells}          & 8444 & 5000  & 11 & Liver    & 10X Genomics & 90.77\% & 1500 \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Summary of the scRNA-seq datasets.}
+\label{tab:dataset_summary}
+\vspace{2pt}
+\end{table*}

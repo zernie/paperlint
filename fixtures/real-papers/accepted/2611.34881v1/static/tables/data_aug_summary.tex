@@ -1,0 +1,20 @@
+\begin{table}[t!]
+\centering
+\caption{\textbf{Taxonomy of popular data augmentations for visual recognition.} None are designed to break co-occurrence shortcuts. Columns: Std (standard: resize, crop, flip), MixUp~\cite{zhang2017mixup}, Mosaic~\cite{bochkovskiy2020yolov4}, YOLOX~\cite{ge2021yolox} (MixUp + Mosaic), SCP (Simple Copy-Paste~\cite{ghiasi2021simple}), XPaste~\cite{zhao2023x}, InstAug (InstanceAug~\cite{kupyn2024dataset}), MFusion (MosaicFusion~\cite{xie2025mosaicfusion}). Static augmentations operate within a single image; dynamic ones introduce new instances at training time.}
+\label{tab:augmentations}
+\small
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+\textbf{Property} & \textbf{Std} & \textbf{MixUp} & \textbf{Mosaic} & \textbf{YOLOX} & \textbf{SCP} & \textbf{XPaste} & \textbf{InstAug} & \textbf{MFusion} \\
+\midrule
+Non-generative         & \cmark       & \cmark         & \cmark         & \cmark          & \cmark       & \xmark          & \xmark           & \xmark           \\
+Generative             & \xmark       & \xmark         & \xmark         & \xmark          & \xmark       & \cmark          & \cmark           & \cmark           \\
+\midrule
+Static                 & \cmark       & \xmark         & \xmark         & \xmark          & \xmark       & \xmark          & \cmark           & \xmark           \\
+Dynamic                & \xmark       & \cmark         & \cmark         & \cmark          & \cmark       & \cmark          & \xmark           & \cmark           \\
+\midrule
+\textbf{Context-aware} & \xmark       & \xmark         & \xmark         & \xmark          & \xmark       & \xmark          & \xmark           & \xmark           \\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{table}

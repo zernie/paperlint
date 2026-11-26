@@ -49,6 +49,21 @@ export const LICENCES: ReadonlyMap<
   ],
 ]);
 
+/**
+ * What is wrong with the licence a committed paper's manifest records: nothing when it is one of
+ * `LICENCES`. The one check of the corpus on disk (`fixtures/real-papers/balance.ts` for the accepted
+ * papers, `fixtures/arxiv-manifest.test.ts` for the preprints); the collector's rule 2 is the gate in.
+ */
+export const committedLicenceProblems = (
+  id: string,
+  licence: string | undefined,
+): readonly string[] =>
+  licence !== undefined && LICENCES.has(licence)
+    ? []
+    : [
+        `${id}: licence ${licence ?? "missing"}, not CC BY 4.0, CC BY-SA 4.0 or CC0`,
+      ];
+
 /** One venue edition of `queries.json`. */
 export const SlotSchema = z.object({
   field: z.string(),
@@ -74,7 +89,7 @@ const no = (reason: string) => ({ ok: false, reason }) as const;
 const POSITIVE =
   /accepted|to appear|will appear|appears? in|published (in|at)|camera[- ]?ready|to be presented|will be presented|spotlight|\boral\b|proceedings of/i;
 const NEGATIVE =
-  /submitted|under review|to be accepted|extended version|full version|long version|journal version|technical report|supplementary version|pending|extended abstract|late[- ]breaking|doctoral|student research|demo(nstration)? (track|paper)|tutorial|companion|workshop|\bSRW\b|demonstrations?|\bdemo\b|\bposter/gi;
+  /submitted|under review|to be accepted|extended version|full version|long version|journal version|technical report|supplementary version|pending|extended abstract|late[- ]breaking|doctoral|student research|demo(nstration)? (track|paper)|tutorial|companion|workshop|\bSRW\b|demonstrations?|\bdemo\b|\bposter|(?:fall|spring) symposium|symposium series|-(?:FS|SS)-/gi;
 const FINDINGS_SERIES = new Set(["ACL", "EMNLP", "NAACL", "EACL"]);
 
 /** The first negative word of a comment (a poster is not one where the slot allows posters), or an «@ venue». */
@@ -121,11 +136,40 @@ export function judgeComment(
   return { ok: true, track: findings ? "Findings" : null };
 }
 
-/** Rule 1 on a Semantic Scholar listing: the venue string names the main proceedings. */
-export const judgeListedVenue = (venue: string): Verdict<{ track: null }> =>
-  /workshop|companion|poster|demo|tutorial|doctoral/i.test(venue)
-    ? no(`S2 venue string is not the main proceedings: "${venue}"`)
-    : { ok: true, track: null };
+/** The other years the comment names right after the slot's venue (`EuroSys 2026`, `OSDI'26`). */
+const otherYears = (
+  comment: string,
+  slot: Pick<Slot, "venue" | "year">,
+): readonly number[] =>
+  [
+    ...comment.matchAll(
+      new RegExp(`(?:${slot.venue})[^0-9]{0,14}((?:20)?\\d{2})(?![0-9])`, "gi"),
+    ),
+  ]
+    .map((m) => 2000 + (Number(m[1]) % 100))
+    .filter((y) => y !== slot.year);
+
+/**
+ * Rule 1 on a Semantic Scholar listing: the venue string names the main proceedings, and the
+ * paper's own arXiv comment does not name the venue with another year (the listing's year is its
+ * publication year, which for EuroSys and OSDI papers can be the year before the edition).
+ */
+export function judgeListedVenue(
+  venue: string,
+  own: Readonly<{
+    comment: string;
+    slot: Pick<Slot, "venue" | "series" | "year">;
+  }>,
+): Verdict<{ track: null }> {
+  if (/workshop|companion|poster|demo|tutorial|doctoral/i.test(venue))
+    return no(`S2 venue string is not the main proceedings: "${venue}"`);
+  const other = otherYears(own.comment, own.slot)[0];
+  return other === undefined
+    ? { ok: true, track: null }
+    : no(
+        `the arXiv comment names ${own.slot.series} ${String(other)}, not ${own.slot.series} ${String(own.slot.year)}`,
+      );
+}
 
 /** Rule 2: the `<license>` of arXiv's OAI record, exactly one of `LICENCES`. */
 export function judgeLicence(

@@ -1,0 +1,127 @@
+\documentclass[10pt,conference, review]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%Template version as of 6/27/2024
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xspace}
+%\usepackage[square,numbers]{natbib}
+\usepackage{balance}
+\usepackage{cite}
+
+
+
+% Custom commands from the original paper
+\newcommand\kla[1]{{\textcolor{red}{Kla: #1}}}
+\newcommand\mike[1]{{\textcolor{blue}{#1}}}
+\newcommand\ray[1]{{\textcolor{orange}{R: #1}}}
+\newcommand\joey[1]{{\textcolor{orange}{JC: #1}}}
+
+\newcommand{\revision}[1]{{\color{blue}{#1}}}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=0.5pt] (char) {\small{#1}};}}
+
+\newcommand{\smallsection}[1]{\textbf{#1. }}
+
+% Paper-specific commands
+\newcommand{\ourapp}{\textsc{AdaptiveGuard}\xspace}
+\newcommand{\sectopic}[1]{\vspace{0.2em}\par\noindent{\textit{\bfseries #1}}}
+\newcommand{\ea}{\textit{et al.}}
+
+%\newcommand{\rqtwo}{What is the impact of different model updating technique against jailbreak attacks identified as OOD?}
+
+\newcommand{\rqone}{How effective is our \ourapp~approach in identifying unknown jailbreak prompts?}
+
+\newcommand{\rqtwo}{How quickly does our \ourapp~approach adapt to unknown jailbreak attacks when continuously updated through detected OOD prompts?}
+
+%\newcommand{\rqthree}{How much does our \ourapp~approach forget original in-distribution prompts after continuous updates with detected OOD prompts?}
+
+\newcommand{\rqthree}{How well does our \ourapp~approach retain performance on in-distribution prompts after continuous updates with detected OOD prompts?}
+
+%\newcommand{\rqthree}{What is the impact of different model updating techniques in terms of memorising previous tasks?}
+
+%\newcommand{\rqfour}{How does setting the parameters affect the results of OOD detection?}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+%\title{AdaptiveGuard: Out-of-Distribution-Aware Guardrails for Continual Defence Against Evolving Jailbreak Attacks}
+\title{AdaptiveGuard: Towards Adaptive Runtime Safety for LLM-Powered Software}
+%\title{On the Cost and Benefits of Adopting Out-of-Distribution Detection for Updating Guardrails against Unknown Jailbreak Attacks Continuously}
+
+\author{
+    \IEEEauthorblockN{
+    Rui Yang\IEEEauthorrefmark{2}, 
+    Michael Fu\IEEEauthorrefmark{3},
+    Chakkrit Tantithamthavorn\IEEEauthorrefmark{2},
+    Chetan Arora\IEEEauthorrefmark{2}, 
+    Gunel Gulmammadova\IEEEauthorrefmark{4},
+    Joey Chua\IEEEauthorrefmark{4}
+    }
+    \IEEEauthorblockA{\textit{
+        % \IEEEauthorrefmark{4}Transurban, Australia. 
+        \IEEEauthorrefmark{2}Monash University, Australia.
+        \IEEEauthorrefmark{3}The University of Melbourne, Australia.
+        \IEEEauthorrefmark{4}Transurban, Australia. 
+    }}
+}
+
+\maketitle
+
+\begin{abstract}
+Guardrails are critical for the safe deployment of Large Language Models (LLMs)-powered software. Unlike traditional rule-based systems with limited, predefined input-output spaces that inherently constrain unsafe behavior, LLMs enable open-ended, intelligent interactions—opening the door to jailbreak attacks through user inputs. Guardrails serve as a protective layer, filtering unsafe prompts before they reach the LLM. However, prior research shows that jailbreak attacks can still succeed over 70\% of the time, even against advanced models like GPT-4o. While guardrails such as LlamaGuard report up to 95\% accuracy, our preliminary analysis shows their performance can drop sharply—to as low as 12\%—when confronted with unseen attacks. This highlights a growing software engineering challenge: how to build a post-deployment guardrail that adapts dynamically to emerging threats? To address this, we propose \ourapp, an adaptive guardrail that detects novel jailbreak attacks as out-of-distribution (OOD) inputs and learns to defend against them through a continual learning framework. Through empirical evaluation, \ourapp~achieves 96\% OOD detection accuracy, adapts to new attacks in just two update steps, and retains over 85\% F1-score on in-distribution data post-adaptation, outperforming other baselines. These results demonstrate that \ourapp~is a guardrail capable of evolving in response to emerging jailbreak strategies post deployment. We release our \ourapp~and studied datasets at \url{https://github.com/awsm-research/AdaptiveGuard} to support further research.
+%Guardrails are critical for safe deployment of Large Language Models (LLMs)-powered software, yet existing approaches suffer severe vulnerabilities against evolving jailbreak attacks, with state-of-the-art guardrails like LlamaGuard unable to adapt beyond their initial training to defend against continuously emerging threats. In this paper,
+%we propose~\ourapp, an out-of-distribution aware continual learning framework that automatically detects and adapts to novel jailbreak patterns. Through empirical evaluation,~\ourapp~achieves 96\% out-of-distribution (OOD) detection accuracy, 100\% DSR within a median of 2 update steps. Furthermore,~\ourapp~consistently maintains $\geq$85\% F1-score on in-distribution data with minimal catastrophic forgetting during the continual learning process, validating its effectiveness for real-world applications.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Safety and Reliability, LLM Safety, Out-Of-Distribution Detection, LLM Guardrails, LLM Jailbreak Attacks
+\end{IEEEkeywords}
+
+\maketitle
+
+\input{sections/introduction}
+
+\input{sections/background}
+
+\input{sections/approach}
+
+\input{sections/exp_design}
+
+\input{sections/results}
+
+\input{sections/discussion}
+
+%\input{sections/related_work}
+
+\input{sections/threats}
+
+\section{Conclusion}
+In this paper, we first show that state-of-the-art guardrails like LlamaGuard face a critical limitation, with their Defense Success Rate (DSR) dropping to as low as 12\% against jailbreak attacks not seen during training.
+To address this, we present \ourapp, an OOD-aware continual learning framework that detects and adapts to previously unseen jailbreak patterns by treating them as out-of-distribution (OOD) inputs. This builds on the observation that guardrails like LlamaGuard are trained on NL unsafe prompts, while jailbreaks often use obfuscated inputs that fall outside their training distribution.
+To evaluate \ourapp, we compile a dataset using ten state-of-the-art jailbreak methods: AIM, DAN, Self Cipher, Deep Inception, SmartGPT, and Code Chameleon.
+Through our evaluation, we found that \ourapp~achieves a 96\% true positive rate in OOD detection and reaches 100\% DSR within a median of two update steps—twice as fast as LlamaGuard under the same continual learning setup.
+Moreover, \ourapp~retains 85\% F1-score on in-distribution data after adaptation, outperforming LlamaGuard’s 80\%. These results demonstrate that \ourapp~could offer an effective post-deployment solution for adaptive jailbreak defense in dynamic production.
+%In this paper, we demonstrate that state-of-the-art guardrails such as LlamaGuard face critical vulnerabilities with Defence Success Rate (DSR) dropping to as low as 12\% under unseen jailbreak attacks. To address this, we introduce~\ourapp, an OOD-aware continual learning framework that detects and adapts to unseen jailbreak patterns. \ourapp~achieves 96\% True Positive Rate for OOD detection and reaches 100\% DSR within a median of 2 update steps, compared to LlamaGuard's 4 steps, while maintaining 85\% F1-score on in-distribution data with minimal catastrophic forgetting. Our results establish~\ourapp~as an effective solution for deploying adaptive guardrails in production environments where security threats continuously evolve.
+
+%\appendix
+%\section{Appendix}
+%...
+
+% Bibliography
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{reference}
+
+\end{document}

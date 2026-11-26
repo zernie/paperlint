@@ -9,6 +9,7 @@
  * rerunning; a quota already met adds nothing.
  */
 import { stagingPlan, sha256, unpack } from "./archive.ts";
+import { judgeDeclaredVenue } from "./declared-venue.ts";
 import { keptPaper, type Candidate, type KeptPaper } from "./paper.ts";
 import {
   judgeClass,
@@ -21,6 +22,7 @@ import {
   type Preamble,
   SlotSchema,
   type Slot,
+  type Verdict,
 } from "./rules.ts";
 import {
   arxivCandidates,
@@ -164,6 +166,9 @@ async function judgeSources(
 ): Promise<Judged> {
   const got = await fetchSources(w.get, c.id);
   if ("reason" in got) return { reason: got.reason };
+  // The comment or the listing says where it was accepted; the TeX says what this source is.
+  const edition: Verdict = judgeDeclaredVenue(got.plan.mainText, slot);
+  if (!edition.ok) return { reason: edition.reason };
   const staged = judgeStaged(slot, got.plan);
   if ("reason" in staged) return staged;
   return {
@@ -202,7 +207,9 @@ async function judge(w: Walk, st: State, c: Candidate, slot: Slot) {
   if (c.s2 !== undefined && c.updated === "")
     return { reason: "arXiv metadata missing for the listed id" };
   const rule1 =
-    c.s2 === undefined ? judgeComment(c, slot) : judgeListedVenue(c.s2.venue);
+    c.s2 === undefined
+      ? judgeComment(c, slot)
+      : judgeListedVenue(c.s2.venue, { comment: c.comment, slot });
   if (rule1.ok) return judgeSources(w, c, slot, rule1.track);
   return {
     reason: rule1.reason,

@@ -1,0 +1,50 @@
+\section{LLM Prompts}\label{sec:llm_prompts}
+
+In this section, we provide the system prompts we used in generating malicious answers and QA tasks.
+\begin{promptbox}[Question \& Answer Prompt]
+    
+Based strictly on the provided context, answer the question using the following rules:
+\begin{enumerate}
+    \item  Multiple Choice questions with labeled options (A/B/C/D): Output ONLY the corresponding uppercase letter.
+
+    \item Binary-choice questions (e.g., Yes/No, True/False, A/B, Option1/Option2): Output ONLY the option text itself, NOT the letter label. This rule OVERRIDES rule 1.
+
+    \item Open-ended questions: Answer in 1–3 words.
+\end{enumerate}
+Do not provide explanations or full sentences. Be extremely concise.
+\end{promptbox}
+
+\begin{promptbox}[Generate Malicious Answer Prompt]
+    \textbf{Role:} You are an expert data generator specializing in creating plausible incorrect answers (distractors).
+    
+    \textbf{Goal:} Given a specific Question and its Correct Answer, generate a single Wrong Answer.
+    
+    \textbf{Core Rules:} (1) The answer must be factually wrong. (2) The answer must be plausible (it should belong to the same category and context as the correct answer). (3) The answer must match the format of the correct answer.
+    
+    \textbf{Step-by-Step Instructions:}
+    \begin{icompact}
+        \item \textbf{Identify the Category of the Correct Answer}
+        \begin{icompact}
+            \item \textbf{Boolean/Binary:} Yes/No, True/False, Agree/Disagree.
+            \item \textbf{Selection:} A choice from a limited set (e.g., Red or Blue).
+            \item \textbf{Entity:} A person, place, organization, chemical, etc.
+            \item \textbf{Quantitative:} A date, number, price, or measurement.
+        \end{icompact}
+    
+        \item \textbf{Apply Generation Logic based on Category}
+        \begin{icompact} 
+            \item \textbf{If Binary or Selection (A vs B):} Return the option that is NOT the correct answer. \textit{Example:} ``High''-->``Low''.
+            
+            \item \textbf{If Entity (Open-ended):} Substitute the entity with a different one from the exact same field. The wrong answer must be related to the topic to be plausible. \textit{Example:} If the question is about US Presidents and the answer is ``Lincoln'', return ``Washington'' (another President), not ``Churchill'' (wrong country) or ``Ferrari'' (wrong type).
+            
+            \item \textbf{If Quantitative (Number/Date):} Return a value that is close to the correct answer but incorrect (a deviation). \textit{Example:} If the answer is ``1995'', return ``1994'' or ``1997''. Do not return a random number like ``5000''.
+        \end{icompact}
+    
+        \item \textbf{Format and Safety Check}
+        \begin{icompact}
+            \item Do not add negation words like ``Not'' or ``Non-'' to the correct answer (e.g., do not output ``Not Red'').
+            \item Do not provide an explanation.
+            \item Ensure the output contains ONLY the wrong string.
+        \end{icompact}
+    \end{icompact}
+\end{promptbox}

@@ -1,0 +1,44 @@
+
+\section{Related Work}
+\vspace{2pt}\noindent\textbf{Cellular Network Security.}
+A large body of research has examined the security of cellular networks across different protocol layers and interfaces. At the UE and RAN side, prior work has investigated baseband vulnerabilities~\cite{kim2021basespec, tu2024logic, maier2020basesafe}, lower-layer attacks~\cite{rupprecht2019breaking, yang2019hiding}, eavesdropping~\cite{rupprecht2020call}, privacy violations~\cite{hussain2019privacy}, and protocol compliance testing~\cite{kim2019touching, hussain2021noncompliance, park2022doltest, khandker2024astra, yang2024oranalyst}.
+However, these efforts predominantly target the air interface between UE and RAN or the NAS/RRC signaling between UE and core, leaving the \textit{internal interfaces} of the core network relatively underexplored.
+Recent work has started to examine core-network security from specific angles:
+formal verification of access-control mechanisms~\cite{akon2023formal, akon2025control},
+provenance-based attack detection~\cite{pacherkar2024prov5gc},
+context-integrity testing of the LTE core~\cite{son2025citesting},
+and GTP-U tunnel abuse that demonstrates external attackers can reach internal CN interfaces~\cite{zhang2025invade, shaik2025uncovering}.
+Motivated by the growing reachability of internal interfaces in cloud-native deployments, our work takes a complementary direction: we systematically study implementation vulnerabilities across PFCP and GTP-C protocols and characterize \textit{iTrue} as a recurring type of security flaw, where core-network components blindly trust internal messages and skip critical validations, leading to severe consequences including DoS and session hijacking.
+
+\vspace{2pt}\noindent\textbf{Automated Vulnerability Discovery in Cellular Networks.}
+Fuzzing has been applied to cellular implementations from UE-RAN side testing~\cite{kim2019touching, park2022doltest, garbelini2022towards} to core-network fuzzing~\cite{bennett2024ransacked,dong2025corecrisis, sun20255gc, yang2024feedback}, but these approaches predominantly uncover memory-safety bugs and crash-inducing issues, while many high-impact core-network failures are logic vulnerabilities that do not manifest as crashes.
+Specification-based analysis mines vulnerabilities from 3GPP documents through NLP~\cite{chen2021bookworm}, change-request analysis~\cite{chen2022seeing}, automated reasoning~\cite{chen2023sherlock}, undefined-behavior studies~\cite{klischies2023instructions}, and protocol state-machine synthesis~\cite{alishtiaq2024hermes, rahman2024cellularlint, xie2025cellsecinspector}; 
+however, these methods target design flaws at the specification level and cannot automatically validate whether identified issues are exploitable in real implementations.
+In contrast, iFinder distills recurring vulnerability patterns from previously discovered core network flaws and uses them to guide an LLM-driven multi-agent system, enabling efficient discovery of both memory-safety and deep logic vulnerabilities while closing the loop with code-specification cross-checking and runtime-verified PoC generation.
+
+\vspace{2pt}\noindent\textbf{Multi-Agent for Vulnerability Discovery.}
+LLMs have recently been applied to automate vulnerability discovery through agentic and multi-agent pipelines. 
+Previous works have used LLMs to enhance existing static-analysis tools, e.g., improving the efficiency of CodeQL~\cite{wang2026cqllm} or customizing CodeQL for JavaScript vulnerability detection~\cite{ghebremichael2026multi}.
+Others build general-purpose multi-agent pipelines to discover bugs in general programs~\cite{wu2026mulvul, liu2026synthesizing}.
+However, these systems target general-purpose code and are not tailored to stateful protocols, so they are ineffective for 5G core networks and only report vulnerability candidates without confirming exploitability.
+In contrast, \textit{iFinder} employs a pattern-guided multi-agent system that performs code-specification cross-checking to recover procedure context and iteratively refines PoCs with feedback, enabling it to detect iTrues in 5G core network implementations and confirm their exploitability.
+
+
+\vspace{2pt}\noindent\textbf{Input Validation and Specification-Driven Testing.}
+Some iTrues are related to input-validation vulnerabilities, a broad class that includes XSS~\cite{wassermann2008static}, SQL injection~\cite{al2023sqirl}, and, more recently, prompt injection~\cite{greshake2023not}, each with distinct root causes and mitigation strategies.
+However, many other iTrues do not fall under input validation: they are triggered by well-formed inputs that arrive in incorrect system states. Because PFCP and GTP-C are long-lived, stateful protocols, inconsistencies between internal states and otherwise valid inputs can introduce security risks.
+For example, a duplicate PDR ID may be syntactically valid yet still cause session hijacking. This distinction differentiates many iTrues from input-validation vulnerabilities.
+Moreover, although iTrues are not fundamentally new, their detection cannot be effectively addressed by existing techniques. Specification-driven approaches, including model-based testing~\cite{utting2012taxonomy}, primarily target design flaws, while stateful protocol testing~\cite{ba2022stateful} and stateful network fuzzing~\cite{pham2020aflnet} often rely on crash-based signals and therefore struggle to capture logic flaws that do not manifest as crashes.
+
+
+
+
+
+
+
+
+
+
+
+
+

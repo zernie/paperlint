@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "acl.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "2bd7786972cb4b4b99094cc847bc07d8ca1bcb38bb1c1714de522e0ea2959b45",
+    "acl.sty": "57ec5021756530bd01dab30657a3ca88bd20b1fd5694122b7f0daa9cfaa3e3ac"
+  }
+}

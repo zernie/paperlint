@@ -1,0 +1,212 @@
+\section{Introduction}
+\label{sec:intro}
+
+Translating C to Rust is a promising approach to enhancing the reliability of
+legacy system programs.
+%
+Since C lacks language-level mechanisms to ensure memory safety, legacy software
+written in C has suffered from critical security vulnerabilities caused by
+memory bugs~\cite{chen2011linux, msrcblog}.
+%
+Rust is a modern systems programming language that addresses this issue by
+providing a type system that guarantees memory safety at compile
+time~\cite{matsakis2014rust, jung2017rustbelt}.
+%
+Thus, translating legacy code to Rust enables developers to detect previously
+unknown bugs and reduce the risk of introducing new bugs~\cite{rust-curl,
+li2024rust}.
+
+Since code translation is laborious and error-prone when done manually, the
+industry has developed an automatic C-to-Rust translator named
+C2Rust~\cite{c2rust}.
+%
+It can process various real-world C codebases, producing Rust code that is
+syntactically valid and semantically equivalent to the original program.
+%
+Software companies and open-source projects have used C2Rust to translate their
+code~\cite{c2rust-huawei, zebra, qcms}.
+
+Unfortunately, the translation produced by C2Rust is unsatisfactory because the
+memory safety of the generated Rust code cannot be ensured by the Rust compiler,
+which contradicts the goal of the translation.
+%
+The main reason is the use of C standard library (libc) functions through Rust's
+foreign function interface.
+%
+C2Rust retains each libc function call during translation, instead of replacing
+it with an equivalent function from the Rust standard library (Rust std).
+%
+However, foreign functions are not checked by the Rust compiler, potentially
+compromising the memory safety of the entire program.
+
+Therefore, replacing libc functions in C2Rust-generated code with proper Rust
+std functions is an important problem for ensuring the safety of system programs
+through translation.
+%
+Nevertheless, little work has been done on library replacements.
+%
+Most studies aimed at improving C2Rust-generated code have focused on language
+features other than library functions, such as
+pointers~\cite{emre2021translating, emre2023aliasing, zhang2023ownership,
+wu2025genc2rust}, unions~\cite{hong2024tag}, and output
+parameters~\cite{hong2024dont}.
+%
+One exception is the work by Hong and Ryu on the Lock
+API~\cite{hong2023concrat}, but it addresses only a small subset of library
+functions used in concurrent programs.
+
+In this work, we aim to replace the I/O API in C2Rust-generated code.
+%
+The I/O API is one of the most important subsets of library functions, as almost
+all C programs use it to interact with users (through terminals), files, or even
+subprocesses, especially given C's primary role as a systems programming
+language.
+%
+Specifically, we focus on replacing the I/O API provided by the \C{stdio.h}
+header file in C with the one provided by Rust std.
+
+The task of replacing the I/O API poses challenges due to the different designs
+of the two APIs.
+%
+The libraries of the two languages differ not only syntactically, such as in
+function names and argument order, where the conversion mapping can be
+constructed manually or using existing mapping mining
+techniques~\cite{zhong2010mining, nguyen2014statistical, meng2012history}.
+%
+They also differ semantically, primarily in two aspects: (1) types and (2) error
+checking.
+
+First, the two APIs provide different sets of types to perform I/O operations.
+%
+In libc, the type of a \emph{stream}---a target of each I/O operation that the
+program reads from or writes to---is always \C{FILE*}.
+%
+In contrast, Rust std distinguishes the \emph{origins}, from which streams
+originate, by defining multiple types such as \C{Stdin} and \C{File},
+%
+and the \emph{capabilities}, which regulate the operations that can be performed
+on streams, through types such as \C{Read} and \C{Write}.
+%
+Therefore, replacing the I/O API requires determining the origin and capability
+of each stream to assign the correct type to it.
+
+Second, the two APIs offer different error checking mechanisms.
+%
+Since I/O operations may fail for various reasons,
+%
+% such as reaching the end of a file or running out of space on the device
+%
+the APIs provide ways to check whether each operation succeeded.
+%
+In libc, each operation silently sets an error indicator on the stream, which
+the program can later inspect by calling functions like \C{ferror}.
+%
+This allows programs to check for errors at a different location (e.g., in
+another function) from where the I/O operation was performed.
+%
+In contrast, each function in Rust std directly reports whether an error
+occurred by returning a \C{Result} value, which is either \C{Ok} or \C{Err}.
+%
+As a result, replacing the I/O API requires propagating the directly returned error
+indication values to the locations where the original program checks them.
+
+\begin{figure}[t]
+\begin{tikzpicture}[
+  node distance=0.2cm and 0.4cm,
+  auto,
+  data/.style={
+    rectangle,
+    align=center,
+    minimum height=1.8em
+  },
+  comp/.style={
+    rectangle,
+    draw,
+    align=center,
+    minimum height=1.8em
+  },
+  line/.style={draw, -Latex}
+]
+  \node [data, minimum height=1em] (ccode) {\scriptsize C Code};
+  \node [comp, below=1.1em of ccode] (c2rust) {\scriptsize C2Rust};
+  \node [data, right=of c2rust] (rustcode1) {\scriptsize Rust code\\[-0.6em]\scriptsize (libc I/O)};
+  \node [comp, below=of rustcode1] (analyzer)
+  {
+    \scriptsize Origin and capability analysis (\cref{sec:analysis:oricap})\\[-0.6em]
+    \scriptsize Error source analysis (\cref{sec:analysis:error})
+  };
+  \node [data, right=of analyzer] (result)
+  {
+    \scriptsize Streams' origins \& capabilities\\[-0.6em]
+    \scriptsize Indicator-checking calls' sources
+  };
+  \node [comp, above=of result] (transformer) {\scriptsize Program transformation (\cref{sec:transformation})};
+  \node [data, minimum height=1em, above=1.3em of transformer] (rustcode2)
+    {\scriptsize Rust code\\[-0.6em]\scriptsize (Rust std I/O)};
+  \path [line] (ccode) -- (c2rust);
+  \path [line] (c2rust) -- (rustcode1);
+  \path [line] (rustcode1) -- (transformer);
+  \path [line] (transformer) -- ($(rustcode2.south)!0.1!(rustcode2.north)$);
+  \path [line] ($(rustcode1.south)!0.1!(rustcode1.north)$) -- (analyzer);
+  \path [line] (analyzer) -- (result);
+  \path [line] ($(result.south)!0.8!(result.north)$) -- (transformer);
+  \node[draw, inner xsep=3pt, inner ysep=6pt, fit=(c2rust) (rustcode1) (transformer) (analyzer) (result)] (largebox) {};
+\end{tikzpicture}
+  \vspace{-1em}
+\caption{The workflow of the proposed approach}
+  \vspace{-1.5em}
+\label{fig:workflow}
+\end{figure}
+
+To address these challenges, we propose a static-analysis-based approach,
+depicted in \cref{fig:workflow}.
+%
+Once C2Rust generates Rust code that still uses the libc I/O API, we perform two
+static analyses on this code:
+%
+(1) \emph{origin and capability analysis}, a flow-insensitive analysis that
+collects constraints on the origins and capabilities of streams and solves them,
+%
+and (2) \emph{error source analysis}, an interprocedural dataflow analysis that
+identifies the API function calls responsible for setting indicators read by
+each indicator-checking call.
+%
+We then transform the program to replace the I/O API, using the analysis results
+to determine the type of each stream and to propagate errors.
+
+Overall, our contributions are as follows:
+%
+\begin{itemize}
+    %
+  \item
+    %
+    We propose two static analyses, origin and capability analysis and error
+    source analysis, to resolve the discrepancies between the I/O APIs of libc
+    and Rust std (\cref{sec:analysis}).
+    %
+  \item
+    %
+    We propose program transformation techniques that replace the I/O API by
+    assigning correct types to streams and propagating errors using the analysis
+    results (\cref{sec:transformation}).
+    %
+  \item
+    %
+    We realize the proposed approach as a tool, Forcrat ({\bf F}\C{ILE*} {\bf
+    O}peration {\bf R}eplacing {\bf C}-to-{\bf R}ust {\bf A}utomatic {\bf
+    T}ranslator),
+    %
+    and evaluate it on 62 real-world C programs, showing that the approach is
+    %
+    (1) correct, with all 32 programs that have test suites passing the tests
+    after transformation,
+    %
+    (2) efficient, analyzing and transforming 422k LOC in 14 seconds, and
+    %
+    (3) widely applicable, replacing 82\% of the API function calls
+    (\cref{sec:evaluation}).
+    %
+\end{itemize}
+%
+We also discuss related work (\cref{sec:related}) and conclude
+(\cref{sec:conclusion}).

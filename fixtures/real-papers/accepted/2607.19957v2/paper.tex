@@ -1,0 +1,166 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix}
+\usepackage[available,functional,reproduced]{usenixbadges}
+
+\makeatletter
+\renewcommand\paragraph{%
+  \@startsection{paragraph}{4}{\z@}%
+  {1.15ex plus .2ex minus .2ex}
+  {-0.3em}
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{graphicx}
+\usepackage{xspace}
+\usepackage[table]{xcolor}
+
+\definecolor{sectionbg}{gray}{0.92}
+
+\usepackage{filecontents}
+\usepackage{supertabular}
+\usepackage{xcolor}
+\definecolor{readableyellow}{rgb}{0.8, 0.6, 0.0} 
+\definecolor{readablegreen}{rgb}{0.0, 0.6, 0.0}
+\usepackage{tabularx}
+\usepackage{bm}
+\usepackage{amssymb}
+\usepackage[ruled,linesnumbered,vlined]{algorithm2e}
+\input{macros} 
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+
+\usepackage{tcolorbox}
+\usepackage{xcolor}
+\newtcolorbox{promptbox}[1][]{
+  colback=gray!5,
+  colframe=gray!60,
+  fonttitle=\bfseries\small,
+  title=#1,
+  boxrule=0.5pt,
+  left=6pt,
+  right=6pt,
+  top=4pt,
+  bottom=4pt,
+  fontupper=\small
+}
+
+\newcommand{\rvcolor}{}
+\renewcommand{\rvcolor}{red}
+\newcommand{\rv}[1]{%
+  \ifstrempty{\rvcolor}{#1}{\textcolor{\rvcolor}{#1}}%
+}
+\usepackage{todonotes}
+\definecolor{orange}{RGB}{255,127,0}
+\def\yuchen#1{{\color{red}[Yuchen: \color{orange}#1]}} 
+\def\yichi#1{{\color{red}[Yichi: \color{orange}#1]}} 
+
+\usepackage{xcolor}
+\definecolor{lightyellow}{RGB}{255,245,200}
+\definecolor{lightred}{RGB}{255,220,220}
+\definecolor{lightblue}{RGB}{220,235,255}
+
+
+\newcommand{\tightfbox}[3]{%
+  \begingroup
+  \fcolorbox{#1}{#2}{#3}%
+  \endgroup
+}
+
+\usepackage{tikz}
+
+\newcommand{\roundtightfbox}[3]{%
+  \begin{tikzpicture}[baseline=(char.base)]
+    \node[
+      draw=#1,          % Border color
+      fill=#2,          % Background color
+      rounded corners=5pt, % The "roundness"
+      inner sep=2pt,    % The "tightness" (adjust as needed)
+      line width=0.5pt  % Thickness of the line
+    ] (char) {#3};
+  \end{tikzpicture}%
+}
+
+
+
+\newenvironment{icompact}{
+  \begin{list}{$\bullet$}{
+    \itemindent -.05em
+    \parsep 0pt plus 1pt
+    \partopsep 0pt plus 1pt
+    \topsep 2pt plus 2pt minus 2pt
+    \itemsep 0pt plus 1.3pt
+    \parskip 0pt plus 2pt
+    \leftmargin 0.13in}
+      }
+{\normalsize
+\end{list}
+}
+
+\newenvironment{icompactindent}{
+  \begin{list}{$\bullet$}{
+    \itemindent -.05em
+    \parsep 0pt plus 1pt
+    \partopsep 0pt plus 1pt
+    \topsep 2pt plus 2pt minus 2pt
+    \itemsep 0pt plus 1.3pt
+    \parskip 0pt plus 2pt
+    \leftmargin 2.1em}
+      }
+{\normalsize
+\end{list}
+}
+
+\newcommand{\sys}{{\textsc{HijackKV}}\xspace}
+
+\newcommand{\huan}[1]{\textcolor{blue}{Huan: #1}}
+
+\begin{document}
+\date{}
+\title{\textsc{HijackKV}: New Threat in Position-Independent KV Cache Reuse}
+
+\author{
+\rm{Yichi Zhang$^1$,
+Zhiqi Wang$^1$,
+Huan Zhang$^2$,
+Yuchen Yang$^1$}\\
+$^1$The Pennsylvania State University,
+$^2$University of Illinois Urbana-Champaign \\
+\{yichi.zhang, zhiqi.wang, yuchen.yang\}@psu.edu, huan@huan-zhang.com
+}
+
+\maketitle
+
+\input{sections/0_abstract}
+\input{sections/1_introduction}
+\input{sections/2_related_work}
+\input{sections/3_preliminaries}
+\input{sections/4_problem_formulation}
+\input{sections/5_method}
+\input{sections/6_experimentsetup}
+\input{sections/7_experiment}
+\input{sections/8_discussion}
+\input{sections/9_conclusion}
+
+
+% \cleardoublepage
+\appendix
+\input{sections/ethics}
+
+
+% \newpage
+\input{appendices/notions}
+\input{appendices/llm}
+\input{appendices/rebuttal}
+\input{appendices/prompt}
+\end{document}

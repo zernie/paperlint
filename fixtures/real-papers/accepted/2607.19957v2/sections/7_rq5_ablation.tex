@@ -1,0 +1,85 @@
+
+\subsection{Ablation Studies}~\label{sec: ablation}
+In this section, we conduct ablation studies to evaluate the impact of the hyperparameters of \sys that controlled by the attacker on effectiveness: (1) the adversarial prefix length $L_p$ (default $L_p = L_\mathrm{chunk}$), (2) the number of GCG optimization steps $T $(default $T = 250$), (3) the top-$k$ candidates (default $k = 512$), and (4) the search width $\eta$ (default $\eta = 0.5$).
+% 
+We also investigate the following questions: (1) necessity of GCG optimization, (2) robustness to paraphrased queries, and (3) feasibility under real-world scenario.
+% 
+All experiments are conducted on the HotpotQA dataset using Llama-3.1-8B and the same hyperparameters as in Section~\ref{sec:rq1}. 
+
+\paragraph{Impact of Adversarial Prefix Length $L_p$.}
+Since the attention mechanism attends to all preceding tokens, the prefix length $L_p$ significantly impacts the effectiveness. To ensure the prefix is correctly processed as a single chunk, we set $L_p$ as an integer multiple of $L_{\text{chunk}}$ ($N\times L_{\text{chunk}}$). 
+% 
+Figure~\ref{fig:ablation}~(a) illustrates that as $L_p$ increases, the T-ASR of \sys improves significantly. However, a larger $L_p$ requires more optimization steps and increases the computation time per step. 
+
+
+\paragraph{Impact of GCG Optimization Steps $T$.} 
+Since the adversarial suffix $p$ is generated via gradient-based greedy search, the number of iterations directly determines the search depth within the discrete token space. As illustrated in Figure~\ref{fig:ablation}~(b), the T-ASR performance exhibits a trend of rapid initial growth followed by saturation. This indicates that while increasing the number of iterations improves performance, the marginal returns gradually diminish after reaching a certain threshold. Considering the trade-off between optimization time and efficacy, we select a balanced number of optimization steps.
+
+\paragraph{Impact of Top-$k$ Candidates.}
+This parameter controls the scope of the token substitution pool by selecting the $k$ tokens with the largest negative gradients at each position. This parameter plays a pivotal role in balancing the trade-off between considering a diverse set of tokens and focusing on those most likely to minimize the loss. 
+% 
+Figure \ref{fig:ablation}(c) shows that performance peaks at an optimal candidate pool size. Beyond this point, performance slightly declines due to noise, indicating that a moderate size is sufficient.
+
+\paragraph{Impact of Search Width $\eta$.}
+The search width $\eta$ represents the ratio of candidates selected for loss verification. A higher ratio allows \sys to validate a broader segment of the candidates suggested by the gradients. As illustrated in Figure~\ref{fig:ablation}~(d), we observe that a higher verification proportion yields higher T-ASR, as it prevents the optimization from discarding valid adversarial tokens that were underestimated by the gradient approximation. However, a larger $\eta$ increases the computational overhead during the verification phase.
+
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Comparison with baseline prefixes.} This table compares the optimized prefix with baseline prefixes and reports  T-ASR and average prefix length.}
+\footnotesize
+\setlength{\tabcolsep}{5pt} 
+\label{tab:baseline-prefix}
+\begin{tabular}{lcccc}
+\toprule
+Metric 
+& GCG 
+& \makecell{Random\\prefix} 
+& \makecell{Instruction\\prefix} 
+& \makecell{Plain-text\\misinfo.} \\
+\midrule
+T-ASR & 100.0\% & 0.0\% & 17.5\% & 23.5\% \\
+\makecell{Avg. Prefix Length} & 32 & 32 & 10.9 & 103.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{20pt} 
+\caption{\textbf{Robustness to paraphrased queries.} This table presents the T-ASR of \sys on HotpotQA after paraphrasing each query into five semantically equivalent variants.}
+\label{tab:paraphrased}
+\begin{tabular}{lcc}
+\toprule
+Dataset & \makecell{\# Paraphrases\\per query} & T-ASR \\
+\midrule
+HotpotQA & 5 & $94.0 \pm 2.6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Impact of GCG}
+We compare the optimized GCG prefix with three simple baselines: (1) a random prefix with the same token length, (2) a short instruction-style prefix, ``Please output the answer as \{XXX\},'' and (3) a longer plain-text misinformation prefix. We report T-ASR and average prefix length in Table~\ref{tab:baseline-prefix}. GCG achieves $100\%$ T-ASR with only 32 tokens, while the random prefix fails completely and the instruction-style and misinformation prefixes achieve only $17.5\%$ and $23.5\%$ T-ASR, respectively. This suggests that \sys relies on the optimized adversarial prefix rather than arbitrary or longer misleading text.
+
+\paragraph{Impact of Paraphrased Queries.}
+We further test whether \sys is robust to natural variations in user wording by paraphrasing each HotpotQA query into five semantically equivalent variants. Using the same attack setting, \sys achieves $94.0 \pm 2.6\%$ T-ASR on the paraphrased queries, as shown in Table~\ref{tab:paraphrased}. This indicates that the attack does not rely on exact surface-form matching of the original query.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{10pt} 
+\caption{\textbf{Real-world evaluation on HumanEval.} This table presents the ASR of \sys on the HumanEval code generation task under different decoding temperatures $\tau$.}
+\label{tab:rwe}
+\begin{tabular}{lccccc}
+\toprule
+$\tau$ & 0.3 & 0.7 & 1.0 & 1.5 & Avg. \\
+\midrule
+ASR & 98.1\% & 96.9\% & 95.1\% & 92.0\% & 95.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Impact of Temperatures on Code Task.}
+We further evaluate \sys in a realistic code-generation scenario using HumanEval~\cite{chen2021evaluating}. Specifically, we poison shared code-skill files to induce nonsensical prefixes during the early stage of code generation, thereby corrupting the final completion. To reflect realistic decoding conditions, we test multiple sampling temperatures $\tau \in \{0.3, 0.7, 1.0, 1.5\}$ and report ASR. As shown in Table~\ref{tab:rwe}, \sys achieves consistently high ASR across all temperatures, with an average ASR of $95.5\%$, demonstrating its robustness to stochastic decoding.
+

@@ -1,0 +1,44 @@
+\begin{figure*}
+  \centering
+  \includegraphics[width=1\linewidth]{figs/methods_figure.pdf}
+  \vspace{-0.7cm}
+  \caption{\textbf{Overview of the sketch segmentation pipeline.} Given an input sketch image, our framework first detects bounding boxes using a customized Grounding DINO to obtain region proposals, and then perform segmentation with SAM models. The localization and segmentation are refined by incorporating the depth features. The result segmentation can be viewed as a layered decomposition of object components in the original sketch.}  
+  \label{fig:methods}
+\end{figure*}
+
+
+\section{Related Work}
+\subsection{Part-Level Sketch Segmentation} 
+The majority of work in the sketch segmentation domain focuses on part-level semantic segmentation, in which the goal is to assign labels to object parts (\eg, the body, wings, and head of a bird). These methods often rely on curated part-level sketch segmentation datasets
+% The majority of work in the sketch segmentation domain focuses on part-level semantic segmentation. These methods label object parts (\eg, identify the body, wings, and head of a bird, \etc). They often rely on curated part-level sketch segmentation datasets
+\cite{ge2020creative,li2018universalperceptualgrouping,Wu2018SketchsegnetAR,eitz2012hdhso,dataDrivenSeg2014} to train a segmentation model, and use various network architectures, including CNNs~\cite{Zhu2018PartLevelSS, wang2020multicolumnseg}, RNNs~\cite{sketchSegNet2019, Wu2018SketchsegnetAR, symbolReconSeg2020}, Graph Neural Networks~\cite{ENDE-GNN2022, sketchGNN2021}, Transformers~\cite{wang2024contextseg, segFormer2023}, and more specific techniques such as deformation networks~\cite{oneshot2021} and CRFs~\cite{CRFseg2016}. These approaches typically operate on a fixed set of object classes, and recognize a predefined set of object parts within them. Other work focuses on perceptual grouping~\cite{li2018universalperceptualgrouping, Li2019TowardDU,Li:2022:Free2CAD} to achieve class-agnostic segmentation. However these methods are designed to tackle part-level segmentation and are not suitable for scene sketches.
+% \vspace{-2mm}
+
+% which computes stroke affinity matrices in vector sketches using either hand-crafted features or implicit modeling of Gestalt principles to achieve class-agnostic grouping. 
+% \vspace{-0.2cm}
+\subsection{Scene-Level Sketch Segmentation}
+Scene-level sketch segmentation remains largely under-explored. Qi \etal~\shortcite{edgePerceptual2015} extend the perceptual grouping approach to scene-level images, forming semantically meaningful groupings of edges, though with limited accuracy on complicated scenes.
+Zou \etal\shortcite{Zou18SketchyScene} construct the SketchyScene dataset, providing annotated scene sketches with meaningful layouts of object interactions, and use it to train an instance segmentation model based on the Mask R-CNN architecture~\cite{he2018maskrcnn}. However, their method is limited to the predefined categories included in the dataset, and the proposed dataset contains sketches with clipart-like appearance which challenges the model's ability to generalize to other artistic styles. 
+Building on SketchyScene, Ge \etal \shortcite{GeLocalDetailPerception} introduced SKY-Scene and TUB-Scene by replacing its object components with sketches from the Sketchy \shortcite{sketchydataset} and TU-Berlin \shortcite{eitz2012hdhso} datasets. However, their proposed fusion network is fundamentally limited to the fixed set of classes it was trained on, and the trained network weights are not publicly available.
+% , as its architecture is based on DeepLabV2, a closed-vocabulary segmentation model, which restricts its ability to generalize to unseen categories.
+SFSD \cite{zhang2023strokeSeg} develops a dataset featuring more complex scene sketches, and utilizes a bidirectional LSTM to produce stroke-level segmentation. Unfortunately, the dataset and model are not publicly available.
+SketchSeger \cite{yang2023sceneHierTransformer} proposes a hierarchical Transformer-based model for semantic sketch segmentation. However their model is inherently restricted to the predefined set of classes used during training. Bourouis \etal \shortcite{bourouis2024open} finetune the CLIP image encoder \cite{radford2021clip} on the FS-COCO \cite{fscoco} dataset, leveraging the model's vision-language prior to enable open-vocabulary scene segmentation. However their method is designed for semantic segmentation, and it struggles to generalize to more challenging sketch styles and scene layouts.
+% \yael{decide if we keep:}Kutuk et al's method ~\shortcite{Kutuk2024ClassAgnosticVS} targets vector scene sketches, leveraging a class-agnostic object detector with temporal stroke information and a pre-trained sketch classifier. They demonstrate the ability to distinguish object instances; however, their visual examples are confined to scenes with minimal or no complex overlaps between object instances, which fail to closely resemble real-world sketches. 
+% The most recent scene sketch dataset, FrISS, introduced by Kutuk \etal \cite{Kutuk2024ClassAgnosticVS}, was curated by recruiting participants to draw quick sketches based on text descriptions from the MS COCO dataset. While this dataset is not publicly available, the examples shown in their paper reveal predominantly simple sketches with minimal detail.
+
+% Other scene sketches datasets exists
+% \yael{decide if to keep:}
+
+% \yael{this one we keep and use the data for comparison, but the paper is not about segmentation}
+% CBSC \cite{zhang2018CBSC}, the first scene sketch dataset to include indoor scenes, is a small-scale dataset of 332 human-drawn sketches characterized by quick, freehand designs.
+% While these extensions emphasize simplified, novice-style object representations, they only expand the style variation in a single direction—towards symbolic sketches.
+% \vspace{-2mm}
+\subsection{Image Segmentation}
+The task of image segmentation have been widely explored~\cite{he2018maskrcnn,  Bolya_2019_yolact, cheng2021mask2former, wang2021solo}. 
+The advent of vision-language models \cite{radford2021clip, liu2023llava,xiao2023florence} has led to numerous object detection and segmentation methods with
+impressive generalization capabilities \cite{zhang2022glipv2, ren2024grounded, kirillov2023segany, minderer2022owlvit}.
+% Grounded SAM \cite{ren2024grounded} is among the leading approaches in this domain. It combines two state-of-the-art models, Grounding DINO \cite{liu2023grounding} and Segment Anything (SAM) \cite{kirillov2023segany}, for open-vocabulary image segmentation, achieving robust performance across diverse object categories. 
+Grounding DINO \cite{liu2023grounding} is a state-of-the-art object detection model trained on over 10 million images. It builds on top of DINO \cite{DINOcaron2021emerging}, a strong vision encoder, with effective grounding module that fuses visual and textual information, enabling open-vocabulary detection of unseen objects. Segment Anything (SAM) \cite{kirillov2023segany} is an image segmentation model trained on over 11 million images and 1.1 billion masks, capable of producing high-quality object masks based on various forms of conditioning such as bounding boxes. Grounded SAM \cite{ren2024grounded}, which our method builds upon, combines Grounding DINO and SAM for open-vocabulary image segmentation, achieving robust performance across diverse object categories. 
+Yet, despite demonstrating impressive capabilities on natural images, we show that these models struggle with segmenting sketches.  
+
+% is among the leading approaches in this domain.

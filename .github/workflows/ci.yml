@@ -265,7 +265,7 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
-      # Every rule over every real paper of the corpus (98 accepted, 108 arXiv preprints), dealt into
+      # Every rule over every real paper of the corpus (157 accepted, 108 arXiv preprints), dealt into
       # 4 shards (fixtures/real-papers/shard-<n>.test.ts) that vitest runs at once, one worker each,
       # each one `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
       # outside `unit` so the macOS shards and the coverage run do not repeat it. No TeX needed.

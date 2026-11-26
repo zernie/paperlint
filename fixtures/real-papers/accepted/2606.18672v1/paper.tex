@@ -1,0 +1,321 @@
+% %%%% ijcai26.tex
+
+% \typeout{IJCAI--ECAI 26 Instructions for Authors}
+
+% % These are the instructions for authors for IJCAI--ECAI 26.
+
+% \documentclass{article}
+% \pdfpagewidth=8.5in
+% \pdfpageheight=11in
+
+% % The file ijcai26.sty is a copy from ijcai22.sty
+% % The file ijcai22.sty is NOT the same as previous years'
+% \usepackage{ijcai26}
+
+% % Use the postscript times font!
+% \usepackage{times}
+% \usepackage{soul}
+% \usepackage{url}
+% \usepackage[hidelinks]{hyperref}
+% \usepackage[utf8]{inputenc}
+% \usepackage[small]{caption}
+% \usepackage{graphicx}
+% \usepackage{amsmath}
+% \usepackage{amsthm}
+% \usepackage{booktabs}
+% \usepackage{algorithm}
+% \usepackage{algorithmic}
+% \usepackage[switch]{lineno}
+% \usepackage[algo2e,ruled,linesnumbered]{algorithm2e}
+
+% % Comment out this line in the camera-ready submission
+% \linenumbers
+
+% \urlstyle{same}
+
+% % the following package is optional:
+% %\usepackage{latexsym}
+% \usepackage{multirow}
+% \usepackage{enumitem}
+% \usepackage{float}
+% \usepackage{subcaption}
+% \usepackage{caption}
+% \usepackage{amsfonts}
+% \usepackage{bm}
+% \usepackage[T1]{fontenc}
+% \usepackage{hyperref}
+
+% \usepackage{tabularx}
+% \usepackage{colortbl} 
+% \usepackage{xcolor}
+% \usepackage{wrapfig}
+% \usepackage{multicol}
+% \usepackage{subcaption}
+% \usepackage{enumitem}
+
+% \newcommand{\revise}[1]{{\color{red}{#1}}}
+
+% \def\method{\texttt{scGTN}}
+
+% % See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% % for a nice explanation of how to define new theorems, but keep
+% % in mind that the amsthm package is already included in this
+% % template and that you must *not* alter the styling.
+% \newtheorem{example}{Example}
+% \newtheorem{theorem}{Theorem}
+% \usepackage{bm}
+% \usepackage{pifont}
+% \newcommand{\circlefir}{\ding{182}}%
+% \newcommand{\circlesec}{\ding{183}}%
+% \newcommand{\circlethi}{\ding{184}}%
+% \newcommand{\circlefou}{\ding{185}}%
+
+% % Following comment is from ijcai97-submit.tex:
+% % The preparation of these files was supported by Schlumberger Palo Alto
+% % Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% % Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% % Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% % preparation.
+
+% % These instructions can be modified and used in other conferences as long
+% % as credit to the authors and supporting agencies is retained, this notice
+% % is not changed, and further modification or reuse is not restricted.
+% % Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% % contacts for providing assistance without their prior permission.
+
+% % To use for other conferences, change references to files and the
+% % conference appropriate and use other authors, contacts, publishers, and
+% % organizations.
+% % Also change the deadline and address for returning papers and the length and
+% % page charge instructions.
+% % Put where the files are available in the appropriate places.
+
+
+% % PDF Info Is REQUIRED.
+
+% % Please leave this \pdfinfo block untouched both for the submission and
+% % Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+% \pdfinfo{
+% /TemplateVersion (IJCAI.2026.0)
+% }
+
+
+% \title{\method{}: Deep Siamese Graph Transformer Network for Single-cell \\ RNA Sequencing Clustering}
+
+% % Single author syntax
+% \author{
+%     Author Name
+%     \affiliations
+%     Affiliation
+%     \emails
+%     email@example.com
+% }
+
+% % Multiple author syntax (remove the single-author syntax above and the \iffalse ... \fi here)
+% \iffalse
+% \author{
+% First Author$^1$
+% \and
+% Second Author$^2$\and
+% Third Author$^{2,3}$\And
+% Fourth Author$^4$\\
+% \affiliations
+% $^1$First Affiliation\\
+% $^2$Second Affiliation\\
+% $^3$Third Affiliation\\
+% $^4$Fourth Affiliation\\
+% \emails
+% \{first, second\}@example.com,
+% third@other.example.com,
+% fourth@example.com
+% }
+% \fi
+
+% \begin{document}
+
+% \maketitle
+
+% \input{1_abstract}
+% \input{2_introduction}
+% \input{4_method}
+% \input{5_experiment}
+% \input{6_conclusion}
+
+
+% % \appendix
+
+% % \section*{Ethical Statement}
+
+
+% % \section*{Acknowledgments}
+
+
+
+% %% The file named.bst is a bibliography style file for BibTeX 0.99c
+% \bibliographystyle{named}
+% \bibliography{ijcai26}
+
+% \input{8_appendix.tex}
+
+% \end{document}
+
+
+%%%% ijcai26.tex
+
+\typeout{IJCAI--ECAI 26 Instructions for Authors}
+
+% These are the instructions for authors for IJCAI--ECAI 26.
+
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
+
+% The file ijcai26.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai26}
+
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[switch]{lineno}
+\usepackage[algo2e,ruled,linesnumbered]{algorithm2e}
+
+% % Comment out this line in the camera-ready submission
+% \linenumbers
+
+\urlstyle{same}
+
+% the following package is optional:
+%\usepackage{latexsym}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{caption}
+\usepackage{amsfonts}
+\usepackage{bm}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+
+\usepackage{tabularx}
+\usepackage{colortbl} 
+\usepackage{xcolor}
+\usepackage{wrapfig}
+\usepackage{multicol}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+\newcommand{\revise}[1]{{\color{red}{#1}}}
+
+\def\method{\texttt{scGTN}}
+
+% See https://www.overleaf.com/learn/latex/theorems_and_proofs
+% for a nice explanation of how to define new theorems, but keep
+% in mind that the amsthm package is already included in this
+% template and that you must *not* alter the styling.
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+\usepackage{bm}
+\usepackage{pifont}
+\newcommand{\circlefir}{\ding{182}}%
+\newcommand{\circlesec}{\ding{183}}%
+\newcommand{\circlethi}{\ding{184}}%
+\newcommand{\circlefou}{\ding{185}}%
+
+% Following comment is from ijcai97-submit.tex:
+% The preparation of these files was supported by Schlumberger Palo Alto
+% Research, AT\&T Bell Laboratories, and Morgan Kaufmann Publishers.
+% Shirley Jowell, of Morgan Kaufmann Publishers, and Peter F.
+% Patel-Schneider, of AT\&T Bell Laboratories collaborated on their
+% preparation.
+
+% These instructions can be modified and used in other conferences as long
+% as credit to the authors and supporting agencies is retained, this notice
+% is not changed, and further modification or reuse is not restricted.
+% Neither Shirley Jowell nor Peter F. Patel-Schneider can be listed as
+% contacts for providing assistance without their prior permission.
+
+% To use for other conferences, change references to files and the
+% conference appropriate and use other authors, contacts, publishers, and
+% organizations.
+% Also change the deadline and address for returning papers and the length and
+% page charge instructions.
+% Put where the files are available in the appropriate places.
+
+
+% PDF Info Is REQUIRED.
+
+% Please leave this \pdfinfo block untouched both for the submission and
+% Camera Ready Copy. Do not include Title and Author information in the pdfinfo section
+\pdfinfo{
+/TemplateVersion (IJCAI.2026.0)
+}
+
+
+\title{\method{}: Deep Siamese Graph Transformer Network for Single-cell RNA Sequencing Clustering}
+
+\author{
+Jinke Wu$^{1}$,
+Yifan Wang$^{2}$,
+Siyu Yi$^{1\dagger}$,
+Caiyang Yu$^{1}$,
+Ziyue Qiao$^{3}$,
+Nan Yin$^{4}$,\\
+Jiancheng Lv$^{1}$, {\normalfont and}
+Wei Ju$^{1\dagger}$
+\\
+{\normalfont
+$^{1}$Sichuan University\\
+$^{2}$University of International Business and Economics\\
+$^{3}$Great Bay University\\
+$^{4}$The Education University of Hong Kong\\
+w\_rmsl@stu.scu.edu.cn,
+\{siyuyi, lvjiancheng, juwei\}@scu.edu.cn,
+yifanwang@uibe.edu.cn,\\
+\{yucy324, ziyuejoe, yinnan8911\}@gmail.com
+}
+}
+\begin{document}
+
+\maketitle
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+% \footnotetext[1]{Equal contribution.}
+\footnotetext[2]{Corresponding authors.}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\setcounter{footnote}{0}
+\input{1_abstract}
+\input{2_introduction}
+\input{4_method}
+\input{5_experiment}
+\input{6_conclusion}
+
+
+% \appendix
+
+% \section*{Ethical Statement}
+
+\section*{Contribution Statement}
+Jinke Wu and Yifan Wang contributed equally to this work.
+
+\section*{Acknowledgments}
+This work is supported in part by the National Natural Science Foundation of China under Grant 62306014 and 12501344, Postdoctoral Fellowship Program (Grade A) of CPSF under Grant BX20250376 and BX20240239, China Postdoctoral Science Foundation under Grant 2024M762201, Sichuan Science and Technology Program under Grant 2025ZNSFSC1506 and 2025ZNSFSC0808, Sichuan University Interdisciplinary Innovation Fund.
+
+
+%% The file named.bst is a bibliography style file for BibTeX 0.99c
+\bibliographystyle{named}
+\bibliography{ijcai26}
+
+\input{8_appendix.tex}
+
+\end{document}
+

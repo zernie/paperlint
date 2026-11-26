@@ -1,0 +1,1156 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[final]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+%以下是我添加的
+
+\usepackage{CJKutf8}
+
+\newcommand{\PARASPACE}[1]{\setlength{\baselineskip}{0.7\baselineskip}#1}
+\newcommand{\MYFONTSIZE}[1]{\PARASPACE{{\fontsize{8}{9}\selectfont {{#1}}}}}
+
+%以上是我添加的
+
+
+\title{Can ChatGPT Really Understand Modern Chinese Poetry?}
+
+% Can ChatGPT Really Understand Modern Poetry?
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+% \author{Author 1 \and ... \and Author n \\
+%         Address line \\ ... \\ Address line}
+% if the names do not fit well on one line use
+%         Author 1 \\ {\bf Author 2} \\ ... \\ {\bf Author n} \\
+% For authors from different institutions:
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \And  ... \And
+%         Author n \\ Address line \\ ... \\ Address line}
+% To start a separate ``row'' of authors use \AND, as in
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \AND
+%         Author 2 \\ Address line \\ ... \\ Address line \And
+%         Author 3 \\ Address line \\ ... \\ Address line}
+
+
+
+\author{
+       Shanshan Wang$^1$~~~~
+        Derek F. Wong$^1\thanks{Corresponding Author}$~~~~
+        Jingming Yao$^2$~~~~
+        \textbf{Lidia S. Chao$^1$}~~~~
+       \\
+    $^1$NLP$^2$CT Lab, Department of Computer and Information Science, University of Macau \\
+    {nlp2ct.shanshan@gmail.com, \{derekfw,lidiasc\}@um.edu.mo} \\
+    % $^2$Guangzhou DataStory Information Technology Ltd, Guangzhou, China \\
+     $^2$Department of Portuguese, Faculty of Arts and Humanities, University of Macau\\
+       {jmyao@um.edu.mo} \\
+    }
+
+
+
+
+
+
+%\author{
+%  \textbf{First Author\textsuperscript{1}},
+%  \textbf{Second Author\textsuperscript{1,2}},
+%  \textbf{Third T. Author\textsuperscript{1}},
+%  \textbf{Fourth Author\textsuperscript{1}},
+%\\
+%  \textbf{Fifth Author\textsuperscript{1,2}},
+%  \textbf{Sixth Author\textsuperscript{1}},
+%  \textbf{Seventh Author\textsuperscript{1}},
+%  \textbf{Eighth Author \textsuperscript{1,2,3,4}},
+%\\
+%  \textbf{Ninth Author\textsuperscript{1}},
+%  \textbf{Tenth Author\textsuperscript{1}},
+%  \textbf{Eleventh E. Author\textsuperscript{1,2,3,4,5}},
+%  \textbf{Twelfth Author\textsuperscript{1}},
+%\\
+%  \textbf{Thirteenth Author\textsuperscript{3}},
+%  \textbf{Fourteenth F. Author\textsuperscript{2,4}},
+%  \textbf{Fifteenth Author\textsuperscript{1}},
+%  \textbf{Sixteenth Author\textsuperscript{1}},
+%\\
+%  \textbf{Seventeenth S. Author\textsuperscript{4,5}},
+%  \textbf{Eighteenth Author\textsuperscript{3,4}},
+%  \textbf{Nineteenth N. Author\textsuperscript{2,5}},
+%  \textbf{Twentieth Author\textsuperscript{1}}
+%\\
+%\\
+%  \textsuperscript{1}Affiliation 1,
+%  \textsuperscript{2}Affiliation 2,
+%  \textsuperscript{3}Affiliation 3,
+%  \textsuperscript{4}Affiliation 4,
+%  \textsuperscript{5}Affiliation 5
+%\\
+%  \small{
+%    \textbf{Correspondence:} \href{mailto:email@domain}{email@domain}
+%  }
+%}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+ChatGPT has demonstrated remarkable capabilities on both poetry generation and translation, yet its ability to truly understand poetry remains unexplored. Previous poetry-related work merely analyzed experimental outcomes without addressing fundamental issues of comprehension. This paper introduces a comprehensive framework for evaluating ChatGPT's understanding of modern poetry. We collaborated with professional poets to evaluate ChatGPT's interpretation of modern Chinese poems by different poets along multiple dimensions. Evaluation results show that ChatGPT's interpretations align with the original poets' intents in over 73\% of the cases. However, its understanding in certain dimensions, particularly in capturing poeticity, proved to be less satisfactory. These findings highlight the effectiveness and necessity of our proposed framework. This study not only evaluates ChatGPT’s ability to understand modern poetry but also establishes a solid foundation for future research on LLMs and their application to poetry-related tasks.
+
+% establishes a solid foundation for future investigations into poetry-related applications of LLMs.
+
+% Large Language Models (LLMs) 
+
+
+% Large Language Models (LLMs) have shown remarkable capabilities across a variety of tasks, yet their ability to truly understand poetry remains unexplored. While previous studies have focused mainly on poetry generation and translation, they have merely analyzed experimental outcomes without addressing the foundational question of comprehension. This paper introduces a comprehensive framework for evaluating ChatGPT's understanding of modern poetry. We began by identifying multiple dimensions crucial for understanding poetry, in collaboration with professional poets. Using these dimensions, ChatGPT generated interpretations of unpublished poems from various poets based on our designed prompts. Interpretations of poetry can vary significantly among different readers, reflecting a degree of subjectivity. However, the intent of the original poet provides a unique benchmark for evaluation. To assess the validity of ChatGPT's interpretations, we invited the original poets to evaluate them across different dimensions. The human evaluation results show that ChatGPT's interpretations align with the poets' intents in over 76\% of the cases. However, its understanding in certain dimensions, particularly in capturing poeticity, proved to be less satisfactory. This study not only evaluates ChatGPT’s ability to understand modern poetry but also establishes a solid foundation for future investigations into poetry-related applications of LLMs.
+
+
+\end{abstract}
+
+
+
+
+
+%% 是coling写作时的
+%  是ACL2025（ARR-12）写作时的
+
+
+\section{Introduction}
+
+% ChatGPT outperforms other LLMs such as Llama 2 on tasks including reading comprehension \cite{kumar2024towards,sauberli2024automatic}, the evaluation results of GPT-4 are most similar to those of human annotators in terms of comprehension ability.
+
+% In particular, ChatGPT outperforms other LLMs such as Llama 2 on tasks including reading comprehension \cite{kumar2024towards,sauberli2024automatic}, the evaluation results of GPT-4 are most similar to those of human annotators in terms of comprehension ability. 
+
+
+%As one of the most popular LLMs, ChatGPT has demonstrated exceptional capabilities across a variety of tasks \cite{wu2023brief,wang2023chatgpt,li2023evaluating,jiao2023chatgpt,ye2025unveiling}. 
+Large language models (LLMs) have been widely used for various tasks \cite{zhang2024electionsim,shen2025measuring,chatterjee2025assessing,lan-etal-2025-f2bench,ye2025unveiling,lin-etal-2025-large}. Previous studies have explored the application of ChatGPT to poetry-related tasks, primarily focusing on poetry generation \cite{antar2023effectiveness,deng2024can,hutson2023poetry}, translation \cite{virvou2023chatgpt, wang-etal-2024-best}, and detection \cite{wang-etal-2025-benchmarking}. However, without exception, these studies have drawn conclusions solely based on ChatGPT's outputs. In other words, their scope has been limited to the evaluation and analysis of experimental results. For example, \citet{virvou2023chatgpt} conducted an evaluative study examining the interpretation of poetry generated by ChatGPT. They suggest that ChatGPT has the potential to delve into the depth of poetic content. However, the fundamental question remains: Does ChatGPT truly understand poetry? Poetry, particularly modern poetry, has long faced the difficulty of being interpreted and read \cite{ZhangTaozhou2022Problems}. Despite its significance, the issue of understanding poetry has not been adequately addressed in prior research.
+
+% Poetry, particularly modern poetry, is notoriously challenging to understand and has long faced the difficulty of being interpreted and read
+
+% As one of the most popular large language models (LLMs), ChatGPT has demonstrated exceptional capabilities across a variety of tasks \cite{wu2023brief,wang2023chatgpt,li2023evaluating,jiao2023chatgpt,virvou2023chatgpt}. Previous studies have explored the application of ChatGPT to poetry-related tasks, primarily focusing on poetry generation \cite{antar2023effectiveness,deng2024can,hutson2023poetry,virvou2023chatgpt} and poetry translation \cite{virvou2023chatgpt, wang-etal-2024-best}. 
+
+
+% Their findings suggest
+
+
+
+% 12.15  As the currently most popular large language model (LLM), ChatGPT has demonstrated exceptional capabilities across a variety of tasks \cite{wu2023brief,wang2023chatgpt,li2023evaluating,jiao2023chatgpt,virvou2023chatgpt}. Previous works have applied ChatGPT to poetry-related tasks, focusing on poetry generation \cite{antar2023effectiveness,deng2024can,hutson2023poetry,virvou2023chatgpt} and translation \cite{virvou2023chatgpt, wang-etal-2024-best}. Without exception, all conclusions drawn from these works involving ChatGPT and poetry were based on ChatGPT' outputs. In other words, these works have been confined to the evaluation and analysis of experimental results. For example, in an evaluative study \cite{virvou2023chatgpt}, the interpretation of poetry generated by ChatGPT was examined, and it was found that ChatGPT has the potential to delve into the depth of poetic content. However, does ChatGPT truly understand poetry? Poetry is the most difficult to understand, and modern poetry has always faced the challenge of reading \cite{ZhangTaozhou2022Problems}. Previous work has not addressed the fundamental issue of understanding.
+
+% primarily focusing on poetry generation 
+
+
+% all conclusions drawn from these works involving ChatGPT and poetry were based on the outputs generated by ChatGPT.
+
+
+% In other words, these works have been confined to the evaluation and analysis of experimental results, aimed at ascertaining ChatGPT's performance. For example, in an evaluative study \cite{virvou2023chatgpt}, the interpretation of poetry generated by ChatGPT was examined, and it was found that ChatGPT has the potential to delve into the depth of poetic content, as it is capable of interpreting the meanings and themes within poems.
+
+
+
+
+% This paper evaluates the capability of ChatGPT to understand modern Chinese poetry. 
+
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=1.0\textwidth]{picture/framework.pdf}
+    \caption{The framework for evaluating ChatGPT's understanding of modern poetry.}
+    \label{framework}
+\end{figure*}
+
+% The framework for evaluating the understanding of modern poetry by ChatGPT.
+
+
+
+% 12.15  Understanding poetry \cite{tate1940understanding,pierce2003defining,mcgrath2018understating} is a prerequisite for all poetry-related tasks. Only by addressing and emphasizing the issue of ChatGPT's comprehension of poetry can we better facilitate the advancement of other poetry-related tasks, such as poetry generation \cite{manurung2004evolutionary,zhang2014chinese,oliveira2017survey,van2020automatic,yi2018automatic} and translation \cite{GuoMoruo1983GuoMoruoonCreation,boase2013poetry}. 
+
+The ability to understand poetry \cite{tate1940understanding,pierce2003defining,mcgrath2018understating} is a prerequisite for all poetry-related tasks. Without this foundation, advancements in tasks like poetry generation \cite{manurung2004evolutionary,zhang2014chinese,yi2018automatic,van2020automatic} and poetry translation \cite{genzel2010poetic,ghazvininejad2018neural,chakrabarty2021don,song-etal-2023-towards} remain constrained. Therefore, to effectively advance these tasks, it is essential to first address and emphasize the issue of ChatGPT's comprehension of poetry. In this paper, we aim to explore whether ChatGPT is capable of understanding modern poetry. Specifically, we propose a comprehensive framework for evaluating ChatGPT's understanding of modern Chinese poetry. Our approach is as follows. Firstly, in collaboration with professional poets, we identified five key dimensions crucial for understanding poetry: content, expression methods \cite{yuhaizhang2001,wangguangming1998}, thought \& emotion \cite{XiYunshuTwoCharacteristics,Emotionalclassification,WangShuting2006,WangMi2019}, modernity \cite{ChengBo2005,LongQuanming2005,ZangDi1998} and poeticity \cite{wang-etal-2024-best}. Then, we developed and refined prompts to enable ChatGPT to interpret modern poetry more accurately. Reading poetry is inherently subjective, as interpretations often vary significantly among readers \cite{Brodsky1999WitnessandPleasure, JiangYongjun2012,ZhangTaozhou2022Problems}. However, the poet's original intent provides a unique benchmark for evaluation. To assess the validity of ChatGPT's interpretations, we invited the original poets to evaluate its outputs across the identified dimensions. Our evaluation results reveal that ChatGPT's interpretations align with the poets' original intent in over 73\% of the cases. However, its performance in certain dimensions, particularly in capturing poeticity, is less satisfactory. 
+
+
+% Without this foundation, advancements in tasks like poetry generation \cite{manurung2004evolutionary,zhang2014chinese,yi2018automatic,van2020automatic} and poetry translation \cite{genzel2010poetic,ghazvininejad2018neural,chakrabarty2021don,song-etal-2023-towards} remain constrained.
+
+
+
+% poetry generation \cite{manurung2004evolutionary,zhang2014chinese,oliveira2017survey,yi2018automatic,van2020automatic} 
+
+% poetry translation \cite{genzel2010poetic,greene2010automatic,ghazvininejad2018neural,chakrabarty2021don,chakrawarti2022machine} 
+
+%poetry translation \cite{GuoMoruo1983GuoMoruoonCreation,boase2013poetry} remain constrained.
+
+
+% 12.15  All poetry-related tasks should be grounded in the understanding of poetry. In this paper, we explored whether ChatGPT can actually understand modern poetry. Specifically, we propose a comprehensive framework for evaluating ChatGPT's understanding of modern Chinese poetry.\footnote{Unless otherwise specified, the poetry mentioned in the rest refer to modern Chinese poetry.} First, we collaborated with professional poets to identify five dimensions crucial for understanding poetry, including content, expression methods \cite{yuhaizhang2001,wangguangming1998}, thought \& emotion \cite{XiYunshuTwoCharacteristics,Emotionalclassification,WangShuting2006,WangMi2019}, modernity \cite{ChengBo2005,LongQuanming2005,ZangDi1998}, and poeticity \cite{wang-etal-2024-best}. Then, we designed and optimized prompts to enable ChatGPT to correctly understand modern poetry. Reading is a personalized behavior, interpretations of poetry can vary significantly among different readers \cite{ZhangTaozhou2022Problems,Brodsky1999WitnessandPleasure, JiangYongjun2012}, reflecting a degree of subjectivity. However, the intent of the original poet provides a unique benchmark for evaluation. To evaluate the validity of ChatGPT's interpretations, we invited the original poets to evaluate them from multiple dimensions. Evaluation results show that ChatGPT's interpretations align with the poets' intents in over 73\% of the cases. However, its understanding in certain dimensions, particularly in capturing poeticity, proved to be less satisfactory. 
+
+
+% To assess the validity of ChatGPT's interpretations, we invited the original poets to evaluate them from multiple dimensions. Evaluation results show that ChatGPT's interpretations align with the poets' intents in over 73\% of the cases. However, its understanding in certain dimensions, particularly in capturing the essence of poeticity, proved to be less satisfactory. 
+
+% \footnote{The reasons for choosing modern Chinese poetry are shown in the Appendix \ref{subsec: Why Modern Chinese Poetry}} 
+
+
+% Using the identified dimensions, ChatGPT generated interpretations of unpublished poems from various poets based on our designed prompts. 
+
+% Reading is a personalized behavior, with experiences varying among individual readers \cite{ZhangTaozhou2022Problems,Brodsky1999WitnessandPleasure}. So interpretations of poetry can vary significantly among different readers \cite{JiangYongjun2012}, reflecting a degree of subjectivity.
+
+
+% This study not only evaluates ChatGPT's ability to understand modern poetry, substantiates the efficacy of ChatGPT as a tool to aid in the comprehension of poetry, but also establishes a solid foundation for future investigations into poetry-related applications of LLMs. 
+
+
+The primary contributions of our work are as follows: 1)  We are the first to systematically evaluate ChatGPT's ability to understand poetry. 2) We introduce a comprehensive framework to assess ChatGPT's understanding of modern Chinese poetry. 3) We define key dimensions necessary for understanding poetry and establish a systematic evaluation methodology. 4) We involved professional poets to evaluate ChatGPT's interpretations, ensuring a reliable and nuanced assessment.
+
+% 12.15 The contributions of our work are: 1) We are the first to evaluate ChatGPT's ability to understand poetry. 2) We propose a comprehensive framework for evaluating ChatGPT's understanding of modern Chinese poetry. 3) We identify the critical dimensions for understanding poetry and establish a system for the evaluation of poetry's understanding. 4) We engaged several professional poets to evaluate ChatGPT's understanding of poetry.
+
+
+
+% The contributions of our work are: 1) Our work is the first to evaluate ChatGPT's ability to understand poetry from the source. 2) We propose a comprehensive framework for evaluating ChatGPT's understanding of modern Chinese poetry. 3) We identify the critical dimensions for understanding poetry and established a system for the evaluation of understanding of poetry. 4) We engaged several professional poets to evaluate ChatGPT's understanding of poetry.
+
+
+% Our approach can be extended to modern poetry in other languages.
+
+%% laying a solid foundation for future research on the interaction between Large Language Models (LLMs) and poetry-related tasks.
+
+%% \item Our work is the first to evaluate ChatGPT's ability to understand modern Chinese poetry, laying a solid foundation for future research on the interaction between Large Language Models (LLMs) and poetry-related tasks.
+ 
+
+
+
+
+
+% ChatGPT's work in poetry-related tasks has primarily focused on poetry generation \cite{antar2023effectiveness,deng2024can,hutson2023poetry,virvou2023chatgpt} and poetry translation \cite{virvou2023chatgpt, wang-etal-2024-best}. Without exception, all conclusions drawn from these works involving ChatGPT and poetry to date have been based on the outputs generated by ChatGPT. In other words, these works have been confined to the evaluation and analysis of experimental results, aimed at ascertaining ChatGPT's performance. For example, in an evaluative study \cite{virvou2023chatgpt}, the interpretation of poetry generated by ChatGPT was examined, and it was found that ChatGPT has the potential to delve into the depth of poetic content, as it is capable of interpreting the meanings and themes within poems. However, does ChatGPT truly understand poetry? Poetry is the most difficult to understand, and modern poetry has always faced the challenge of reading \cite{ZhangTaozhou2022Problems}. Previous work has not addressed the fundamental issue of understanding.
+
+
+%%Poetry has exerted a significant influence on the development of various countries, ethnic groups, and cultures since ancient times \cite{yi2018chinese,rutherford2009poetry,hanauer2003multicultural}.
+
+% 为什么是现代诗而不是古代诗？ Poetry has exerted a significant influence on the development of various countries and cultures since ancient times \cite{yi2018chinese,rutherford2009poetry,hanauer2003multicultural}. When poetry is mentioned, it usually refers to a specific type of poetry \cite{stevenson1957poem}. Chinese poetry can be divided into two categories: classical poetry and modern poetry, which have obvious differences \cite{wang-etal-2024-best}. Classical poetry is constrained by features including format, meter, sentence length, and rhythm. In contrast, modern Chinese poetry is very free, which is completely different from classical Chinese poetry especially in terms of form and style \cite{skerratt2013form, awan2015new,wang2006guoview}. The peak of classical poetry appeared in ancient China. With the development of literature and culture, modern Chinese poetry has replaced classical Chinese poetry and become the mainstream poetry type \cite{LiuXinmin1994Imagism,DengChengontheRhythm}, which holds an irreplaceable position in the history of Chinese literature \cite{mcdougall1994preview}. At present, most poets write modern poetry rather than classical poetry. Therefore, studying modern poetry has realistic and sustainable significance.
+
+
+%% At present, most Chinese poets write modern poetry rather than classical poetry. Therefore, studying modern Chinese poetry has realistic and sustainable significance.
+
+%% Modern Chinese poetry is among the most crucial literary forms in Chinese literature and has had a profound impact on the development of modern Chinese culture \cite{lin1972modern,yeh2015modern,skerratt2013form}. 
+
+
+% 为什么选择中国现代诗而不是其他国家的？中国现代诗可以扩展到其他语言诗歌的原因。From its emergence to the present, modern Chinese poetry has been profoundly influenced by world poetry \cite{owen1990world,xuting2012poetry,lvjin1997}, such as French \cite{LongQuanming1996onChina}, British, and German works. It has assimilated new knowledge from foreign poetic writing, techniques, and styles. As of today, modern Chinese poetry has established itself as a vital component of the global poetry landscape, with little distinction from foreign poetry in terms of external form and internal thought. However, understanding modern Chinese poetry can be even more challenging than understanding Western poetry, as it not only draws from Western influences but also preserves certain intrinsic qualities of classical Chinese poetry \cite{xiemian2017,xionghui2009}. Therefore, for poetry itself, if ChatGPT can fully understand modern Chinese poetry, understanding modern poetry in other languages will not be difficult. The evaluation of ChatGPT's understanding of modern Chinese poetry, to a certain extent, can be generalized to modern poetry in other languages. Please note that in this paper, all mentions of poetry refer to modern Chinese poetry unless specifically stated otherwise. 
+
+%% Therefore, for poetry itself, if ChatGPT can fully understand modern Chinese poetry, understanding modern poetry in other languages will not be difficult. The evaluation of ChatGPT's understanding of modern Chinese poetry, to a certain extent, can be generalized to modern poetry in other languages.【?】
+
+%% We focus on two types of modern Chinese poetry, one of which is the most common type of modern Chinese poetry (which is almost indistinguishable from the style of modern poetry in other languages), and the other is a special type of modern poetry (which retains some inherent qualities of Chinese classical poetry).
+
+
+
+
+
+
+%% More details about professional poets are provided in Appendix \ref{subsec: Professional Poets}.
+
+%% Expression methods can be further subdivided into five aspects: language \cite{ZhangTaozhou2002,XuTingranked2003,ChenAizhong2007}, imagery \cite{LongQuanming1996onChina,WangShuting2006,WangShuting2007Theoryand,WangZelong2009evolution}, rhetorical techniques \cite{LiYi1994Metaphor}, rhythm \cite{XuTing2008Theory,WangShuting2006,WangShuting2007Theoryand,WangMi2019}, and defamiliarization \cite{QinLan2010,xiemaisi2011,YuanXun2023}. 
+
+
+% The contributions of our work are as follows:
+
+%\begin{itemize}
+
+%\item We propose a comprehensive framework for evaluating ChatGPT's understanding of modern Chinese poetry. 
+
+%\item Our work is the first to evaluate ChatGPT's ability to understand modern Chinese poetry from the source.
+
+%%laying a solid foundation for future research on the interaction between Large Language Models (LLMs) and poetry-related tasks.
+
+%% \item Our work is the first to evaluate ChatGPT's ability to understand modern Chinese poetry, laying a solid foundation for future research on the interaction between Large Language Models (LLMs) and poetry-related tasks.
+
+%\item We identify the critical dimensions for understanding poetry and established a system for the evaluation of understanding of poetry.
+
+%\item We engaged several professional poets to evaluate ChatGPT's understanding of modern poetry.
+
+%\end{itemize}
+
+
+
+\section{Evaluating ChatGPT’s Understanding of Modern Poetry}
+\label{Evaluating ChatGPT’s Understanding of Modern Poetry}
+
+To investigate whether ChatGPT can truly understand modern poetry, we propose a comprehensive framework called \textbf{ECUMP} (\textbf{E}valuation of \textbf{C}hatGPT’s \textbf{U}nderstanding of \textbf{M}odern \textbf{P}oetry). The framework, as illustrated in Figure \ref{framework}, consists of four components:
+
+
+% 12.15  To explore whether ChatGPT can really understand modern poetry, we propose a comprehensive framework for \textbf{e}valuating \textbf{C}hatGPT's \textbf{u}nderstanding of \textbf{m}odern \textbf{p}oetry, called ECUMP. Figure \ref{framework} shows the framework of ECUMP, consisting of four parts:
+
+% In order to explore whether ChatGPT can really understand modern poetry, we propose a comprehensive framework for \textbf{e}valuating \textbf{C}hatGPT's \textbf{u}nderstanding of \textbf{m}odern \textbf{p}oetry, called ECUMP. As shown in Figure \ref{framework}, ECUMP framework consists of four parts, namely identify dimensions for understanding modern poetry, design prompt, ChatGPT understand poetry, and original poets evaluation.
+
+
+% Figure \ref{framework} shows the framework for evaluating the understanding of modern poetry by ChatGPT.
+
+
+
+\paragraph{Identify Dimensions for Understanding Modern Poetry}
+
+% \subsection{Identify Dimensions for Understanding Modern Poetry}
+% \label{Identify Dimensions for Understanding Modern Poetry}
+
+% Based on the recommendations of eight professional modern poets, we have identified five dimensions that are critical for understanding modern poetry:
+
+Referring to prior research on modern poetry comprehension \cite{ChangYinabrieflytalks2012} and informed by the recommendations of eight professional modern poets, we identified five critical dimensions for understanding modern poetry: 1) \textbf{Cont}ent, which refers to what the poem describes; 2) Expression Methods, which refer to the techniques employed in writing the poem. These include linguistic features (\textbf{Lang}uage), the use of visual and sensory images (\textbf{Imag}ery), rhetorical strategies such as metaphor, simile, or symbolism (\textbf{Rhet}orical Techniques), the poem's internal rhythm reflected in external forms like pauses, line breaks, and stanzas (\textbf{Rhyt}hm), and innovation through challenging conventional perceptions (\textbf{Defa}miliarization); 3) \textbf{Thou}ght \& Emotion, which captures the ideas and emotions conveyed by the poem; 4) \textbf{Mode}rnity, referring to the contemporary consciousness or modern sensibility embedded in the poem; and 5) \textbf{Poet}icity, a subjective quality encapsulating the poem's poetic essence. There may be multiple sentences in a poem with varying degrees of poetic quality, but only one sentence is considered the most poetic. To measure poeticity, we identify the most poetic sentence in the poem as a benchmark for evaluation.
+
+% 1) \textbf{Cont}ent, which refers to the subject matter or theme of the poem, i.e., what the poem describes; 
+
+
+
+% There may be multiple sentences in a poem that have poetic quality, but only one sentence is considered the most poetic. 
+
+% \footnote{More information on the professional poets involved in our work are provided in Appendix \ref{subsec: Professional Poets}} 
+
+% 12.15  Referring to previous work on understanding modern poetry \cite{ChangYinabrieflytalks2012}, and based on the recommendations of eight professional modern poets, we identified five dimensions that are critical for understanding modern poetry: \footnote{Details about professional poets involved in our work are provided in Appendix \ref{subsec: Professional Poets}} 
+
+% 12.15 \begin{itemize}
+
+% 12.15 \item \textbf{Content (Cont):} The content of the poem, that is, what the poem describes.
+
+% 12.15 \item \textbf{Expression Methods:} The method of expression of the poem, that is, how is the poem written? Expression methods include five aspects: \textbf{1) Language (Lang):} The linguistic features of the poem. \textbf{2) Imagery (Imag):} The use of images within the poem. \textbf{3) Rhetorical Techniques (RT):} The rhetorical strategies employed in the poem. \textbf{4) Rhythm (Rhyt):} The internal rhythm of the poem, which often manifests in external forms such as pauses, lines, and stanzas. \textbf{5) Defamiliarization (Defa):} A common method of expression in modern poetry that highlights the poem's innovation.
+% 12.15  \item \textbf{Thought \& Emotion (TE):} The thought and emotion conveyed by the poem.
+% 12.15  \item \textbf{Modernity (Mode):} The modernity and contemporary consciousness of the poem.
+% 12.15  \item \textbf{Poeticity (Poet):} Poeticity is subjective, and while there may be multiple sentences with poetic qualities, there is only one that is considered the most poetic. So we use the most poetic sentence within the poem to measure ChatGPT's understanding of poeticity.
+
+
+
+% 12.15  \end{itemize}
+
+
+\paragraph{Design Prompt}
+
+%\subsection{Design Prompt}
+%\label{Design Prompt}
+
+% 添加ChatGPT自己给出的prompt,最终整合得到以下指令。
+
+% Inspired by previous work on prompt designing  \cite{jiao2023chatgpt,gao2023design} and modern poetry comprehension\cite{ZhangTaozhou2021How}, we design a prompt that enables ChatGPT to correctly understand modern poetry. To better stimulate ChatGPT’s understanding of poetry, we optimized the designed prompts. All experiments used the optimized prompts shown in Table \ref{The prompt we designed}. More details are shown in Appendix \ref{subsec: Details about Prompt Optimization}. 
+
+Inspired by previous work on prompt designing \cite{jiao2023chatgpt,gao2023design} and modern poetry comprehension \cite{ZhangTaozhou2021How}, we designed and optimized a prompt to enable ChatGPT to accurately interpret modern poetry. The final prompt is presented in Table \ref{The prompt we designed}, with additional details provided in Appendix \ref{subsec: Details about Prompt Optimization}.
+
+% The final version of the prompt
+
+% 12.15  Inspired by previous work on prompt designing  \cite{jiao2023chatgpt,gao2023design} and modern poetry comprehension \cite{ZhangTaozhou2021How}, we designed a prompt and optimized it to enable ChatGPT to correctly understand modern poetry. The final prompt is shown in Table \ref{The prompt we designed}. More details are provided in Appendix \ref{subsec: Details about Prompt Optimization}.
+
+% All experiments used the prompts shown in Table \ref{The prompt we designed}. 
+
+% Finally, all experiments used the optimized prompts shown in Table \ref{The prompt we designed}. More details are shown in Appendix \ref{subsec: Details about Prompt Optimization}. 
+
+% The first step in understanding a poem is to read its title \cite{ZhangTaozhou2021How}, so we included the title \textit{Ti} of the poem in the prompt. The prompt we designed is shown in Table \ref{The prompt we designed}.
+
+% we designed a prompt that allows ChatGPT to understand modern poetry.
+
+
+% \paragraph{Prompt Optimization} To better stimulate ChatGPT’s understanding of poetry, we optimized the designed prompts. Finally, all experiments used the optimized prompts shown in Table \ref{The prompt we designed}. More details are shown in Appendix \ref{subsec: Details about Prompt Optimization}.
+
+%\MYFONTSIZE{Please understand the following modern poem titled $T_i$ from the five dimensions of content, expression methods, thought and emotion, modernity, and the most poetic sentence, and finally give your interpretation of the poem. In addition to content, please provide examples and specific explanations for each dimension. The specific definitions of each dimension are as follows:}  \\
+
+\begin{table}[ht]
+% \begin{table}[h]
+% \begin{table}[H]
+\centering
+% \begin{adjustbox}{width=\}
+\renewcommand{\arraystretch}{0.9}
+\begin{tabular}{p{7cm}}
+\hline
+\MYFONTSIZE{Please understand the following modern poem titled $T_i$ from the five dimensions of content, expression methods, thought and emotion, modernity, and the most poetic sentence, and finally give your interpretation of the poem. In addition to content, please provide examples and specific explanations for each dimension. Please note that this is a complete modern poem. The specific definitions of each dimension are as follows:}  \\
+%\vspace{0.001cm}
+\MYFONTSIZE{Content: Summarize what the poem is about.}  \\
+\MYFONTSIZE{Expression Methods: Understand how this poem is written from five aspects: language, imagery, rhetorical techniques, rhythm, and defamiliarization. The five specific aspects are as follows: 1) What are the characteristics of the language of this poem? Is it innovative? 2) What imageries are used in this poem and what are their functions? 3) What rhetorical techniques is used in this poem? What is the function? 4) How is the rhythm of this poem? Such as pauses, lines, and stanzas. 5) Does this poem contain any expression of defamiliarization? If there is any unfamiliar expression, please point it out; if not, you can skip it.}  \\
+\MYFONTSIZE{Thought \& Emotion: What thought and emotion does this poem express?}  \\
+\MYFONTSIZE{Modernity: Is the poem modern or modern-minded?}  \\
+% \vspace{0.01cm}
+\MYFONTSIZE{Poeticity: Choose the most poetic sentence in this poem.}  \\
+\MYFONTSIZE{Poem: \{\{$P_i$\}\} (Directly used the original Chinese poem) } \\
+\MYFONTSIZE{Interpretation of this poem: \{\{$I_i$\}\}}  \\
+
+\hline
+
+\end{tabular}
+\renewcommand{\arraystretch}{1.0}
+% \end{adjustbox}
+\caption{\label{The prompt we designed}The prompt we designed for ChatGPT to understand modern poetry.
+}
+\end{table}
+
+% The prompt we designed for ChatGPT to understand modern Chinese poetry
+
+
+\paragraph{ChatGPT Interpret Poetry}
+
+Using the designed prompt, ChatGPT generates poems' interpretations on identified dimensions, facilitating a systematic evaluation of its comprehension ability.
+
+% Using the designed prompt, ChatGPT generates interpretations of poems across the identified dimensions, facilitating a systematic evaluation of its comprehension ability.
+
+
+% \subsection{ChatGPT Understand Poetry}
+
+% 12.15  Utilizing the designed prompt, ChatGPT generates interpretations of poems from the identified dimensions.
+
+% Utilizing the prompt designed in Section \ref{Design Prompt}, ChatGPT was tasked to generate interpretations of poems from the various dimensions identified in Section \ref{Identify Dimensions for Understanding Modern Poetry}. 
+
+
+\paragraph{Original Poets’ Evaluation}
+% \subsection{Original Poets Evaluation}
+
+Automatic evaluation methods are unsuitable for poetry-related tasks due to the unique characteristics of modern poetry \cite{refaee2023okaz,novikova2017we,wang-etal-2024-best}. Static evaluation methods may be unreliable under distribution shifts \cite{shen2026preconditioned}. Instead, we rely on human evaluation conducted by the original poets themselves. While interpretations of a poem often vary among readers \cite{JiangYongjun2012}, the author’s original intent provides a definitive benchmark. Therefore, the primary evaluation of ChatGPT’s interpretations is based on assessments by the original poets. Details of the evaluation process can be found in Section \ref{Evaluation}.
+
+% due to the inherent subjectivity and unique characteristics of modern poetry
+
+% 12.15  Automatic evaluation is not suitable for poetry-related tasks due to the unique characteristics of modern poetry \cite{refaee2023okaz,novikova2017we,wang-etal-2024-best}, so our work relies on human evaluation. The interpretations of the same poem often varies subjectively among different readers \cite{JiangYongjun2012}, yet the author's original intention in writing their own poem is unique. Therefore, our evaluation mainly relies on the human evaluation conducted by the original poets, please see Section \ref{Evaluation} for details.
+
+
+\section{Experiment}
+
+% \paragraph{Data} 
+
+% Referring to the scale of poetry datasets used in previous studies \cite{wang-etal-2024-best, virvou2023chatgpt, hutson2023poetry, antar2023effectiveness}, we selected a collection of 48 modern Chinese poems for our experiments. 
+
+Referring the dataset scale established in prior works \cite{wang-etal-2024-best, virvou2023chatgpt, hutson2023poetry, antar2023effectiveness}, we selected a collection of 48 modern Chinese poems for our experiments. Specifically, we collaborated with six professional modern Chinese poets, each of whom contributed eight poems they recently written. This process resulted in a high-quality dataset of 48 modern Chinese poems, comprising 147 stanzas and 750 lines in total. The dataset is divided into two categories: 40 poems from five poets that represent common types of modern poetry (denoted as Com-Poetry) and 8 poems from one poet that represent special types of modern poetry (denoted as Spe-Poetry). The Spe-Poetry category is characterized by its incorporation of content from ancient Chinese literature, making extensive use of classical imagery \cite{yeh1990new}. These poems may feature protagonists who are historical figures. Despite these characteristics, both the external forms and the underlying thoughts of Spe-Poetry align with the conventions of modern poetry, and they are therefore classified as part of this genre. Using the designed prompts, GPT-4 (gpt-4-0125) \cite{achiam2023gpt} was tasked with interpreting these 48 poems across multiple dimensions, as specified in our framework. The temperature of the model is set to \texttt{0.5}, and the top\_p is set to \texttt{1.0}. Examples of experimental output are provided in Appendix \ref{subsec: Example of the Experiment}.
+
+
+
+% Understanding is not a creative task, but understanding the same content can be described in different ways. So the temperature of the model is set to 0.5, and the top\_p is set to 1.0.
+
+
+
+% OpenAI. 2024b. GPT-4 Turbo and GPT-4.
+
+
+% 12.15  \paragraph{Data} Referring to the amount of poetry data used in previous poetry work \cite{wang-etal-2024-best, virvou2023chatgpt, hutson2023poetry, antar2023effectiveness}, we selected 48 modern Chinese poems. Specifically, we invited six professional modern Chinese poets to each provide eight modern Chinese poems they wrote that had never been published, ultimately compiling 48 high-quality modern Chinese poems, consisting of 147 stanzas and 750 lines. These 48 poems are composed of 40 modern poems (from 5 poets) of common types and 8 modern poems (from 1 poet) of special types. Common and special types of poetry are denoted as Com-Poetry and Spe-Poetry respectively.
+
+% Specifically, we invited six professional modern Chinese poets to each provide eight modern Chinese poems they wrote that had never been published, ultimately compiling 48 high-quality modern Chinese poems, consisting of 147 stanzas, 750 lines, and 6,547 tokens.
+
+
+% 12.15  Spe-Poetry incorporates content from ancient Chinese literature and make extensive use of classical imagery \cite{yeh1990new}. The protagonists within these poems may even be historical figures. However, both in terms of external form and underlying thought, these works align with the characteristics of modern poetry and belong to modern poetry. 
+
+% Please see the Appendix \ref{Differences Between Modern Chinese Poetry and Classical Chinese Poetry} for the differences between modern Chinese poetry and classical Chinese poetry.
+
+% Subsequently, the 48 poems were interpreted and provided analyses of the poems by GPT-4 (gpt-4-0125) through prompts designed as Section \ref{Design Prompt}, from multiple dimensions in section \ref{Identify Dimensions for Understanding Modern Poetry}. Specific examples of the experiment are shown in Appendix \ref{subsec: Example of the Experiment}.
+
+% 12.15  Subsequently, GPT-4 (gpt-4-0125) interpreted these 48 poems from multiple dimensions by using the prompts we designed. Experimental examples are shown in Appendix \ref{subsec: Example of the Experiment}.
+
+% Subsequently, the 48 poems were interpreted by GPT-4 (gpt-4-0125) through prompts designed as Section \ref{Design Prompt}, from multiple dimensions in Section \ref{Identify Dimensions for Understanding Modern Poetry}. Examples of the experiment are shown in Appendix \ref{subsec: Example of the Experiment}.
+
+
+% 用原诗，没有英译的原因。已在prompt中说明。 The translation process may cause some important potential information of poetry (such as poetic meaning, style, and culture) to be lost \cite{chakrabarty2021don,song2023towards,wang-etal-2024-best}. Therefore, in order to ensure the fairness of the research results, we did not translate Chinese poetry into English during the experiment, but directly used the original Chinese poetry in the prompts input to ChatGPT.
+
+
+
+
+\begin{table*}
+  \centering
+  \begin{tabular}{llllllllll}
+    \hline
+    &  Cont         & Lang   & Imag & Rhet
+ & Rhyt & Defa  & Thou & Mode \\
+    \hline
+    Com-Poems & 80.33  & 79.05 & \textbf{81.18}  & 77.83  & 76.15 & 79.40 & 78.80 & 79.88 &     \\
+    Spe-Poems & 77.50  & 73.75 & 81.25  & \textbf{88.75}  & 82.50 & 77.50 & 78.75 & 82.50  \\
+    \hline
+  \end{tabular}
+  \caption{\label{40 common types of poems}
+    Evaluation results of different types of poems by the original poets. 
+  }
+\end{table*}
+
+% Cont, Lang, Imag, Rhet, Rhyt, Defa, Thou, Mode, and Poet respectively represent content, language, imagery, rhetorical techniques, rhythm, defamiliarization, thought \& emotion, modernity, and poeticity. 
+
+
+    % Human evaluation results of 40 Com-Poems by 5 original poets and 8 special types of poems by original poet.
+
+\section{Evaluation}
+\label{Evaluation}
+
+% The criteria such as fluency and coherence in previous works have been proven to be unsuitable for modern poetry \cite{manurung2012using,zhang2014chinese,wang-etal-2024-best}, so we determined new evaluation criteria.
+
+
+\subsection{Original Poets’ Evaluation}
+\label{Original Poets Evaluation}
+
+We invited the six original poets to evaluate GPT-4’s interpretations of their own poems across five dimensions: content, expression methods, thought \& emotion, modernity, and poeticity, The definitions of these dimensions are consistent with those introduced in Section \ref{Evaluating ChatGPT’s Understanding of Modern Poetry}.
+
+% 12.15  We invited the six original poets to score GPT-4's interpretation of their own poems from five dimensions: content, expression methods, thought and emotion, modernity, and poeticity. The definitions of each dimension are the same as in the Section \ref{Evaluating ChatGPT’s Understanding of Modern Poetry}.
+
+% We invited the six original poets who provided the 48 poems to score GPT-4's interpretation of their own poems on five dimensions: content, expression methods, thought and emotion, modernity, and poeticity. The definition of each dimension is the same as in Section \ref{Evaluating ChatGPT’s Understanding of Modern Poetry}.
+
+
+
+% The definition of each dimension is the same as in Section \ref{Identify Dimensions for Understanding Modern Poetry}, and the original poet is aware of these definitions before the evaluation.
+
+% We invited the six original poets who provided the 48 poems to score GPT-4's interpretation of their own poems on five dimensions: content, expression methods, thought and emotion, modernity, and poeticity. Expression methods were further divided into five subcategories: language, imagery, rhetorical techniques, rhythm, and defamiliarization. The definition of each dimension is the same as in Section \ref{Identify Dimensions for Understanding Modern Poetry}, and the original poet is aware of these definitions before the evaluation.
+
+
+% Note that the original poets do not interact with each other, they only evaluate GPT-4's interpretation of their own poems.
+
+
+
+
+
+\paragraph{Evaluation Rules}
+
+The evaluation methodology is identical for both Com-Poetry and Spe-Poetry. Each original poet evaluated only GPT-4’s interpretations of their own poems. For poeticity, scores were restricted to 0, 50, or 100 points. A score of 0 indicates that ``the most poetic sentence'' selected by GPT-4 lacks poeticity entirely, while 100 signifies that the sentence is also recognized by the original poet as the most poetic. 50 indicates that the sentence possesses poeticity but is not considered the most poetic by the original poet.
+
+% 12.15  The evaluation method is the same for both Com-Poetry and Spe-Poetry. Each original poet only evaluates GPT-4's interpretation of his or her own poems.
+
+% 12.15  \begin{itemize}
+
+% 12.15  \item Poeticity is scored exclusively with 0, 50, or 100 points. 0 indicates that "the most poetic sentence" selected by GPT-4 has no poeticity. 100 signifies that the sentence is also considered the most poetic by the original poets themselves. 50 means that the sentence has poeticity, but is not the most poetic sentence.
+
+
+For the other four dimensions (content, expression methods, thought \& emotion, and modernity), scores ranged from 0 to 100. A score of 0 indicates that GPT-4’s interpretation of the poem is completely inconsistent with the poet’s intentions, while a score of 100 signifies complete alignment with the original poet’s thoughts. Higher scores represent a greater overlap between GPT-4’s understanding and the original poet’s intent.
+
+
+% 12.15  \item All dimensions except poeticity have a score range of 0-100. 0 means that GPT-4's interpretation of the poem is completely wrong and does not overlap with the original poet's intention. 100 means that GPT-4's interpretation is completely consistent with the original poet's thoughts. Higher scores indicate a greater degree of overlap between GPT-4's understanding and the original poet's intent.
+
+% All dimensions except poeticity have a scoring range of 0-100. 0 means that GPT-4's interpretation of the poem is completely wrong and does not overlap with the original poet's intention at all. 100 means that GPT-4's interpretation is completely consistent with the original poet's thoughts and understanding. Higher scores indicate a greater degree of overlap between GPT-4's understanding and the original poet's intent.
+
+
+
+% 评分结果没有出现200或-200的情况 \item Special Cases: If GPT-4's interpretation of the poem is surprisingly accurate and correct, the score is 200. If GPT-4's interpretation is utterly unrelated or even contrary to the poem itself, the score is -200.
+
+% Poeticity is scored exclusively with 0, 50, or 100 points. A score of 0 indicates that the sentence has no poeticity; a score of 100 signifies that the sentence is also deemed the most poetic by the original poets themselves; a score of 50 indicates that the sentence has poeticity, but is not the most poetic sentence within the poem.
+
+
+
+% For all dimensions other than poeticity, the scoring range is from 0 to 100. A score of 0 denotes that GPT-4's interpretation of the poem is entirely incorrect and does not overlap with the original poet's understanding at all. A score of 100 indicates that GPT-4's interpretation is in complete alignment with the original poet's thoughts, reflecting a perfect congruence with the poet's own understanding. Higher scores indicate a greater degree of overlap between GPT-4's understanding and the original poet's intent.
+
+
+% 12.15  \end{itemize}
+
+
+\paragraph{Evaluation Results}
+
+Table \ref{40 common types of poems} presents the evaluation results provided by the six original poets on GPT-4’s interpretation of 48 poems across all dimensions except poeticity. Table \ref{Evaluation results of poeticity} summarizes the poets’ evaluations of GPT-4’s understanding of poeticity. Figure \ref{figure of 40 poems} illustrates the distribution of scores for GPT-4’s interpretation of 48 poems, evaluated by six poets across different dimensions, with a focus on the range of scores.
+
+% 12.15  Table \ref{40 common types of poems} shows the evaluation results of 6 original poets on GPT-4's interpretation of 48 poems in all dimensions except poeticity. Table \ref{Evaluation results of poeticity} shows the evaluation results of the original poets on GPT-4's understanding of poeticity. Figure \ref{figure of 40 poems} shows the evaluation results of 6 original poets on GPT-4’s interpretation of 48 Com-Poems from different dimensions, focusing mainly on the range of scores. 
+
+% Among them, GPT-4's interpretation of 40 Com-Poems were evaluated by 5 original poets, and GPT-4's interpretation of 8 Spe-Poems were evaluated by 1 original poet. 
+
+
+% Table \ref{40 common types of poems} shows the human evaluation results of 5 original poets on GPT-4's understanding of 40 Com-Poems in all dimensions except poeticity. %Cont., Lang., Imag., RT, Rhyt., Defa., TE., Mode., and Poet. respectively represent content, language, imagery, rhetorical techniques, rhythm, defamiliarization, thought \& emotion, modernity, and poeticity. 
+% "100", "0", "<50" and "50" in the first column of the table respectively represent the number of occurrences of 100 points, 0 points, less than 50 points and equal to 50 points. 
+
+
+% Table \ref{8 special types of poems} shows the results of human evaluation of 8 Spe-Poems by the original poet. 
+
+
+% &  \textbf{Cont}         & \textbf{Lang}   & \textbf{Imag} & \textbf{RT}  & \textbf{Rhyt} & \textbf{Defa}  & \textbf{TE} & \textbf{Mode} & \textbf{Poet} \\
+
+
+
+
+
+
+\begin{table}
+  \centering
+  \begin{tabular}{llllllllll}
+    \hline
+  & N-100  & N-0   & N-50 \\
+    \hline
+    Com-Poems   & 17   & 2  & 21   \\
+    Spe-Poems   & 3  & 1 & 4  \\
+    \hline
+  \end{tabular}
+  \caption{\label{Evaluation results of poeticity}
+    Evaluation results of ChatGPT's understanding of poeticity. ``N-100'', ``N-0'' and ``N-50'' respectively represent the number of occurrences of 100, 0, and 50.
+  }
+\end{table}
+
+
+%Evaluation results of ChatGPT's understanding of poeticity. "N-100", "N-0" and "N-50" in the first row respectively represent the number of occurrences of 100, 0, and 50.
+
+% Figure \ref{EAPMT prompt} shows the prompts we designed for Explanation-Assisted Poetry Machine Translation.
+
+
+%\begin{figure*}[t]
+\begin{figure}[t]
+\centering
+    \includegraphics[width=\columnwidth]{picture/EvaluationResults.pdf}
+    \caption{The distribution of evaluation scores for GPT-4’s interpretation of 48 poems.}
+    \label{figure of 40 poems}
+\end{figure}
+
+% Evaluation results of 6 original poets on GPT-4’s interpretation of 48 poems.
+
+
+\subsection{LLMs’ Evaluation}
+
+% Automatic evaluation is not well-suited for poetry-related tasks due to the unique characteristics of poetry \cite{novikova2017we, refaee2023okaz, wang-etal-2024-best}. Therefore, we conducted additional evaluations using LLMs, applying the same evaluation rules as those used for human evaluators. 
+
+% In addition to the original poet's evaluation of GPT-4's understanding of poetry, we conducted additional evaluations using **gpt-4-turbo** and **gpt-4o**, applying the same evaluation rules as those used for human evaluators (as described in Section 4). However, the results from these models deviated significantly from the evaluations provided by professional poets, indicating that **GPT-4 variants are not yet reliable for evaluating poetic understanding**.
+
+
+Traditional automatic evaluation methods are not well-suited for poetry-related tasks due to the unique characteristics of poetry \cite{novikova2017we, refaee2023okaz, wang-etal-2024-best}. Fortunately, LLMs were used as evaluation tools due to their obvious potential and advantages \cite{chiang2023can, wang2023chatgpt, liu2023g}, and have made effective progress in the evaluation of multiple tasks such as open-domain conversations \cite{lin2023llm}, text summarization \cite{chu2024pre}, dialogue response generation, and open-ended question answer \cite{chan2023chateval}. Therefore, we use LLMs as evaluation tools to evaluate the interpretations generated by GPT-4, applying the same evaluation rules as human evaluators. Table \ref{The Prompt we designed for the LLMs (without enhancement) as the evaluators} presents the prompt we designed for LLMs as the evaluators to evaluate GPT-4’s understanding of poems.
+Table \ref{Evaluation results for GPT-4's understanding of Com-Poems by LLMs} and Table \ref{Evaluation results for GPT-4's understanding of Spe-Poems by LLMs} present the evaluation results of LLMs as the evaluators on GPT-4's understanding of Com-Poems and Spe-Poems, respectively.
+
+
+\begin{table}[t]
+% \begin{table}[h]
+% \begin{table}[H]
+%\centering
+% \begin{adjustbox}{width=\}
+%\renewcommand{\arraystretch}{0.9}
+\small
+\begin{tabular}{p{7.0cm}} 
+\hline
+Please score the following ``readers' understanding of the poem'' from the eight dimensions of content, language, imagery, rhetorical techniques, rhythm, defamiliarization, thought and emotion, and modernity, and give detailed reasons for your score. Please note that you only need to score and give reasons for the ``Readers' Understanding of this poem, not the poem itself.  \\
+\vspace{0.001cm}
+\textbf{Scoring Dimensions:} Same as human evaluation. \\
+\vspace{0.001cm}
+% Poeticity: Choose the most poetic sentence in this poem.
+\textbf{Scoring Rules:} Each dimension ranges from 0 to 100. A score of 0 means that you think the reader's understanding of a certain dimension is completely wrong, and 100 indicates that you think the reader's understanding of a certain dimension is completely correct; the more correct the reader's understanding of a certain dimension is, the higher the score you will give.  \\
+% If you give 50 points, please provide the sentence you think is the most poetic. 
+\vspace{0.001cm}
+\textbf{Poem:} \{\{$P_i$\}\}   \\
+\vspace{0.001cm}
+\textbf{Readers' Understanding of this Poem:} \{\{$U_i$\}\}  \\
+% \vspace{0.01cm}
+% \MYFONTSIZE{Poem: \{\{$P_i$\}\} (Directly used the original Chinese poem) } \\
+% \MYFONTSIZE{Interpretation of this poem: \{\{$I_i$\}\}}  \\
+\hline
+\end{tabular}
+% \end{adjustbox}
+\caption{\label{The Prompt we designed for the LLMs (without enhancement) as the evaluators}The prompt we designed for the LLMs as the evaluators to evaluate GPT-4’s understanding of poems.}
+\end{table}
+
+
+
+
+
+% Table \ref{Evaluation results for GPT-4's understanding of Com-Poems by LLMs} presents the evaluation results of LLMs as the evaluators on GPT-4's understanding of Com-Poems. Table \ref{Evaluation results for GPT-4's understanding of Spe-Poems by LLMs} presents the evaluation results of LLMs as the evaluators on GPT-4's understanding of Spe-Poems. 
+
+% Disappointingly, the results from LLMs deviated significantly from the evaluations provided by professional poets, indicating that LLMs are not yet reliable for evaluating the understanding of poetry. 
+
+
+\begin{table*}
+  \centering
+%\small
+  \begin{tabular}{lllllllll}
+    \hline
+   & Cont         & Lang   & Imag & Rhet
+ & Rhyt & Defa  & Thou & Mode \\
+    \hline
+%   GPT-4-Turbo &  95.25	& 92.25	& 97.00	& 93.13	& 88.75	& 90.38	& 96.50	& 94.38  \\
+   
+   o1-preview &  94.70	& 92.03	& 96.33	& 91.40	& 90.35	& 93.90	& 95.23	& 96.75 \\
+       
+   GPT-4o & 92.38	& 89.38	& 94.00	& 88.50	& 88.00	& 87.38	& 91.75	& 93.25 \\
+    
+%   GPT-3.5-Turbo &  94.25	& 89.63	& 94.63	& 89.63	& 88.13	& 89.75	& 94.25	& 93.25  \\
+
+%   Claude3.5-sonnet &  91.45	& 88.55	& 91.55	& 84.15	& 88.45	& 89.25	& 92.83	& 94.50 \\
+   
+%   DeepSeek-R1 & 91.45	& 89.93	& 92.58	& 89.20	& 86.85	& 96.38	& 92.75	& 94.35  \\
+   Qwen2.5-Plus &  94.50	& 89.50	& 94.50	& 90.00	& 85.13	& 91.25	& 90.25	& 94.88  \\
+   
+   Qwen2.5-Max & 95.00	& 89.13	& 94.13	& 93.00	& 90.00	& 86.13	& 95.00	& 95.00  \\
+   
+
+    
+   % Qwen2.5-Turbo &  90.00	& 88.25	& 90.00	& 90.00	& 80.00	& 83.00	& 90.00	& 90.00  \\
+
+    \hline
+  \end{tabular}
+  \caption{\label{Evaluation results for GPT-4's understanding of Com-Poems by LLMs}
+    The evaluation results of LLMs as the evaluators on GPT-4's understanding of Com-Poems.
+  }
+\end{table*}
+
+
+\begin{table*}
+  \centering
+%  \small
+  \begin{tabular}{llllllllll}
+    \hline
+   &  Cont         & Lang   & Imag & Rhet
+ & Rhyt & Defa & Thou & Mode \\
+    \hline
+%    GPT-3.5-Turbo & 95.00	& 90.00	& 95.00	& 90.00	& 90.00	& 90.00	& 95.00	& 95.00  \\
+    
+%    GPT-4-Turbo & 94.38	& 89.38	& 93.13	& 88.13	& 90.00	& 83.13	& 95.00	& 89.38 \\
+
+    o1-preview & 95.00	& 92.50	& 96.25	& 88.75	& 93.13	& 83.13	& 96.25	& 94.38 \\
+    
+    GPT-4o & 91.88	& 91.25	& 94.38	& 87.50	& 93.75	& 81.88	& 92.50	& 93.75 \\
+
+    Qwen2.5-Plus & 95.00	& 90.00	& 95.00	& 90.00	& 85.00	& 91.25	& 90.00	& 95.00 \\
+
+    Qwen2.5-Max & 95.00	& 90.00	& 95.00	& 90.00	& 90.00	& 85.00	& 95.00	& 95.00 \\
+
+    \hline
+  \end{tabular}
+  \caption{\label{Evaluation results for GPT-4's understanding of Spe-Poems by LLMs}
+    The evaluation results of LLMs as the evaluators on GPT-4's understanding of Spe-Poems.
+  }
+\end{table*}
+
+
+
+
+
+
+
+
+\section{Analysis}
+% As can be observed from Table \ref{40 common types of poems}, 
+%As can be seen from the second line of the Table \ref{40 common types of poems}, GPT-4 demonstrates an understanding of over 76\% of the content in line with the original poets' intentions for 40 Com-Poems. Figure \ref{figure of 40 poems} reveals that, except for poeticity, GPT-4's understanding is concentrated between scores of 60 and 90 across all dimensions. Subsequently, we conduct a detailed analysis of the scores across the different dimensions, ordered from highest to lowest:
+
+\paragraph{Human Evaluation}
+Table \ref{40 common types of poems} and Figure \ref{figure of 40 poems} show that, except for poeticity, GPT-4 demonstrates a strong understanding of poetry across all dimensions, achieving at least 73\% alignment with the original poets' intentions. And the scores are concentrated between 60 and 90, indicating a reasonably consistent performance. However, GPT-4’s understanding of poeticity is unsatisfactory. When tasked with identifying the most poetic sentences, GPT-4’s responses (28 sentences) were incorrect in more than half of the cases (Table \ref{Evaluation results of poeticity}). Notably, GPT-4 selected three sentences that were entirely devoid of poeticity, highlighting significant limitations in its ability to discern poetic essence. For Com-Poems, GPT-4 demonstrates the strongest understanding of imagery, achieving an average score of 81.18 (Table \ref{40 common types of poems}). This result aligns with expectations, as imagery is a salient and explicit feature of poetry. Additionally, GPT-4 is capable of accurately grasping much of the poem’s content, with a score of 80.33. Notably, GPT-4 performs better with poems that have clear themes or narrative structures, providing more comprehensive and accurate summaries with fewer omissions. For Spe-Poems, GPT-4’s performance diverges significantly from its results with Com-Poems. It demonstrates the strongest understanding of rhetorical techniques (88.75), rhythm (82.50), and modernity (82.50). For example, GPT-4 is generally able to identify pauses in Spe-Poems and analyze them in ways that align closely with the original poets’ intentions. However, GPT-4 struggles with language in Spe-Poems, scoring the lowest (73.75) in this dimension. While it can recognize that some of the language originates from ancient Chinese literature, the inherent complexity of Spe-Poems poses challenges to GPT-4’s ability to fully comprehend the nuances of the language. This aligns with previous works \cite{lan2025mcbe, LyuBias, QiBias} that the cultural context behind a text influences the performance of LLMs. 
+
+There are several key insights emerge from the analysis. First, in addition to identifying external imagery, GPT-4 can detect the implicit modern consciousness embedded within the poems. Second, GPT-4 performs better when the language expression is straightforward, with greater coherence and stronger correlations between words leading to more accurate comprehension. Third, GPT-4 can reliably identify similes in sentences with explicit cues such as ``like,'' ``as,'' and ``is.'' However, its ability to interpret rhetorical techniques diminishes significantly, or even fails entirely, when such explicit cues are absent. More detailed analyses are provided in Appendix \ref{subsec: Detailed Analysis}.
+
+
+
+
+
+
+\paragraph{LLMs Evaluation}
+Disappointingly, the results from LLMs deviated significantly from the evaluations provided by professional poets, indicating that LLMs are not yet reliable for evaluating the understanding of poetry. For Com-Poems, although GPT-4o performed slightly closer to human evaluations compared to other models, all LLMs' results were still significantly different from those of the professional poets. This finding highlights the necessity and reliability of human evaluation in tasks requiring nuanced and culturally embedded understanding, such as poetry.
+
+Our findings further highlight the reliability and necessity of human evaluation in poetry domain. Poetry is inherently nuanced, with elements such as imagery, rhythm, and thought requiring a deep cultural and contextual understanding that current AI models cannot fully replicate. As such, human evaluation remains indispensable for accurately assessing poetic comprehension in our study.
+
+
+% 12.15  Table \ref{40 common types of poems} and Figure \ref{figure of 40 poems} show that, except for poeticity, GPT-4's understanding of poetry in all dimensions reaches at least 73\% of the poet's original intention and the Com-Poems' scores are concentrated between 60 and 90.
+
+% Com-Poems and Spe-Poems 
+
+% 12.15  GPT-4's understanding of \textbf{poeticity} is unsatisfactory. When identifying the most poetic sentences, GPT-4’s responses (28 sentences) were incorrect in more than half (Table \ref{Evaluation results of poeticity}). Notably, GPT-4 erroneously selected 3 sentences that were completely devoid of poeticity. 
+
+% 推断原因 We observed that GPT-4 typically focus on individual sentences in isolation when selecting the most poetic sentences, rather than in the context of the entire poem, which we believe leads to its misjudgment of poeticity.
+
+
+% GPT-4's understanding of \textbf{poeticity} is unsatisfactory. Specifically, in the task of identifying the most poetic sentence from 48 poems (Table \ref{Evaluation results of poeticity}), GPT-4's responses (28 sentences)  were incorrect for more than half of the cases. Notably, GPT-4 erroneously selected 3 sentences that were completely devoid of poetic sense as the most poetic. We observed that GPT-4 typically focus on individual sentences in isolation when selecting the most poetic sentences, rather than in the context of the entire poem, which we believe leads to its misjudgment of poeticity.
+
+
+% 12.15  \paragraph{Com-Poems} GPT-4 has the strongest understanding of \textbf{imagery}, with an average score of 81.18 (Table \ref{40 common types of poems}). This aligns with our expectations, as imagery constitutes a salient and explicit feature in poetry. Furthermore, GPT-4 is capable of grasping most of the poem's \textbf{content}, scoring 80.33. Significantly, we observed that GPT-4's understanding of poems with clear themes or narrative structures was more accurate, as evidenced by its more comprehensive summaries of the content with fewer omissions.  
+
+% GPT-4 demonstrated the greatest comprehension in the dimension of \textbf{imagery}, with an average score of 81.18 (Table \ref{40 common types of poems}), and there were 18 occurrences where GPT-4's interpretation of imagery scored above 80 (Figure \ref{figure of 40 poems}), substantiating its relatively superior capability in grasping this particular dimension. This aligns with our expectations, as imagery constitutes a salient and explicit characteristic in poetry.  
+
+
+
+% Furthermore, GPT-4 is capable of grasping the majority of a poem's \textbf{content}, with a score of 80.33, 19 occurrences with scores above 80 that ranked among the top in all dimensions above 80. Interestingly, we observed that GPT-4 shows more accurate understanding of poems with clear themes or narrative structures, as evidenced by its more comprehensive summaries of the content with few omissions. 
+
+
+% \paragraph{1) Imagery} Among all dimensions evaluated, GPT-4 demonstrated the greatest comprehension in the dimension of imagery, with an average score of 81.18 (refer to Table \ref{40 common types of poems}). This aligns with our expectations, as imagery constitutes a salient and explicit characteristic in poetry. As depicted in Figure \ref{figure of 40 poems}, there were 18 occurrences where GPT-4's interpretation of imagery scored above 80, further substantiating its relatively superior capability in grasping this particular dimension.
+
+
+% \paragraph{2) Content} In terms of content comprehension, GPT-4 scored 80.33, suggesting that the model is fundamentally capable of grasping the majority of a poem's content, which means GPT-4 is able to discern what the poem is about. Additionally, we observed that GPT-4 shows more accurate understanding of poems with clear themes or narrative structures, as evidenced by its more comprehensive summaries of the content with few omissions. As shown in figure \ref{figure of 40 poems}, GPT-4 scored above 80 for content'understanding 19 times (14 were between 80 and 90 points, and 5 were between 90 and 100 points), ranking highest in all dimensions above 80. This once again validates GPT-4's proficiency in understanding the content of most modern poetry.
+
+% \paragraph{3) Modernity} Modernity scored 79.88, just behind imagery and content. This outcome is in line with our expectations, as the imagery in modern Chinese poetry is distinctly different from that found in classical Chinese poetry. Modern imagery is a crucial characteristic of modern poetry and is also one of the most evident manifestations of modernity. In addition to external modern imagery, we were pleasantly surprised to discover that GPT-4 is able to recognize the modern consciousness embedded within the content of poems, which is more implicit in nature.
+
+% \paragraph{4) Defamiliarization} The score for GPT-4's understanding of defamiliarization is 79.40, which positions it between the scores for language and modernity. The most palpable manifestations of defamiliarization are found in the expression of language and the utilization of modernist techniques, so GPT-4's comprehension of modernity is consistent with common knowledge in poetry analysis.
+
+% \paragraph{5) Language} GPT-4's score for language understanding is not low, registering at 79.05. Nevertheless, we noted that GPT-4 tends to resort to a set of similar, generalized phrases to analyze poetry. These analyses are broadly applicable to a wide array of modern poems but lack specificity for individual works. For instance, in characterizing the linguistic features of poetry, a response from GPT-4 has been: "The poem employs a succinct and direct modern Chinese language, with a straightforward and unembellished lexicon that conveys profound emotions, a common stylistic trait in contemporary poetry." Such descriptions by GPT-4 typify the language characteristics of a majority of modern poems without delving into the particularities of each poem. Additionally, it has been found that the less abrupt the linguistic leaps in a poem, and the greater the coherence, the more precise GPT-4's understanding of the poem becomes. The more straightforward the language expression and the stronger the correlation between the vocabulary, the more accurate is GPT-4's comprehension of the poem.
+
+% \paragraph{6) Thought \& Emotion} GPT-4 scored 78.80 in understanding thought and emotion. Our research reveals that for poems with distinctly clear imagery, GPT-4 is adept at capturing the emotional undertones of the poetry. However, when the imagery becomes less pronounced and the themes more complex and diverse, GPT-4 struggles to grasp the underlying meanings and the cognitive and emotional nuances of the poetry. This finding reinforces the critical role that imagery plays in the poetic domain.
+
+% \paragraph{7) Rhetorical Techniques} The comprehension of rhetorical techniques by GPT-4 assessed with a concordance rate of 77.83\% with the original poets' intent, marginally outperforming its capability in understanding rhythm. It has been observed that GPT-4 can generally identify the use of simile in sentences that contain explicit comparative words such as "like," "as," and "is," with most of these recognitions being correct. Nevertheless, in instances where such explicit cues are absent, GPT-4's ability to accurately discern rhetorical techniques is compromised. We noted instances where GPT-4's understanding of rhetoric was completely erroneous, resulting in a score of 0. For example, the line "When your message arrives on my phone, I hear your voice," which GPT-4 misinterpreted as using personification, attributing human-like qualities to the sound conveyed through the message. This judgment is evidently incorrect because:
+% \begin{itemize}
+
+% \item This line of poem in question is a straightforward recital of events without the application of any rhetorical device.
+
+% \item The "message" and "voice" within the line relate to each other in a sequential or causal manner: the poet receives a message and subsequently hears a voice. The voice is a type of content within the message, and there is no personification between the two.
+
+% \end{itemize}
+
+%\paragraph{8) Rhythm} GPT-4's capability to comprehend rhythm is relatively inferior compared to other dimensions, with a score of 76.15. Upon examining the experimental outcomes, it is evident that GPT-4 lacks a detailed analysis of rhythm. Instead, it predominantly responds with the inherent rhythmic characteristics present in modern poetry, such as stating that "the poem controls rhythm through the variation in sentence length, pauses, and line breaks." As depicted in Figure 2, GPT-4's understanding of rhythm scoring above 80 is the least frequent, with only 8 occurrences; whereas, scores at or below 70 and those between 70 to 80 account for 16 occurrences each.
+
+%\paragraph{9) Poeticity} As can be seen from Table \ref{Evaluation results of poeticity}, GPT-4's understanding of poeticity is unsatisfactory, ranking as the weakest among all evaluated dimensions. Specifically, in the task of identifying the most poetic sentence from 40 different poems, GPT-4's responses were incorrect (23 sentences) for more than half of the cases. Notably, GPT-4 erroneously selected two sentences that were completely devoid of poetic sense as the most poetic. For instance, GPT-4 considered the phrase 'tempering a rod of iron into a needle' to be rich in poetic expression, interpreting it as not only a depiction of material transformation but also as a metaphor for the dedication involved in refining something from the crude to the exquisite. Each poem is a vibrant entity \cite{ZhangTaozhou2021How}, where lines within the poem are both independent and yet intimately interconnected. However, in selecting the most poetic sentences, GPT-4 typically considers individual sentences in isolation rather than in the context of the entire poem, which we believe leads to its misjudgment of poeticity.
+
+
+%% As can be seen from the second line of the table \ref{40 common types of poems}, GPT-4 demonstrates an understanding of over 76\% of the content in line with the original poets' intentions for 40 Com-Poems. Figure \ref{figure of 40 poems} reveals that, except for poeticity, GPT-4's understanding is concentrated between scores of 60 and 90 across all dimensions. Apart from rhythm, GPT-4 has shown instances of perfect alignment with the original poets' thoughts across all dimensions, such as 5 instances where the understanding of content matched the poets' intentions exactly, thus each receiving a perfect score of 100. Subsequently, we conduct a detailed analysis of the scores across the different dimensions, ordered from highest to lowest:
+
+%% Notably, within the 80 to 90 point range, modernity scores the highest, with 15 instances; conversely, rhythm scores the lowest, with only 8 instances. 
+
+
+
+%% \paragraph{1) Imagery} Among all dimensions evaluated, GPT-4 demonstrated the greatest comprehension in the dimension of imagery, with an average score of 81.18 (refer to Table \ref{40 common types of poems}), including four instances where it achieved the maximum score of 100. This aligns with our expectations, as imagery constitutes a salient and explicit characteristic in poetry. As depicted in Figure \ref{figure of 40 poems}, there were 18 occurrences where GPT-4's interpretation of imagery scored above 80, further substantiating its relatively superior capability in grasping this particular dimension.
+
+
+
+%% This reinforces GPT-4's proficiency in understanding the content of most modern poetry.
+
+
+%% In terms of content comprehension, GPT-4 scored 80.33, suggesting that the model is fundamentally capable of grasping the majority of a poem's content, which means GPT-4 is able to discern what the poem is about. Additionally, we observed that GPT-4 shows more accurate understanding of poems with clear themes or narrative structures, as evidenced by its more comprehensive summaries of the content with few omissions. As illustrated in Figure \ref{figure of 40 poems}, GPT-4's scores for content comprehension fell within the 80 to 90 range on 14 occasions, ranking second only to modernity. This reinforces the notion that GPT-4 is adept at understanding the bulk of modern poetry's content.
+
+
+% 12.15  \paragraph{Spe-Poems}
+
+% Before the experiment started, we suspected that GPT-4 might have difficulty understanding Spe-Poems that references ancient literary content, but the experimental results were unexpected. 
+
+
+% Based on literary common sense, we suspected that GPT-4 might have difficulty understanding Spe-Poems, but the experimental results were unexpected. 
+
+
+% 12.15  Significantly diverges from Com-Poems' results, GPT-4 has the strongest understanding of Spe-Poems in \textbf{rhetorical techniques} (88.75) and \textbf{rhythm} (82.50). For example, GPT-4 is basically able to identify pauses in Spe-Poems and conduct an analysis closer to the original poet's thoughts. In addition, GPT-4’s understanding of \textbf{language} for Spe-Poems is the worst (73.75), although which can identify some of the language comes directly from ancient China. We speculate that the inherent characteristics of Spe-Poems pose a challenge for GPT-4 to fully understand the language.
+
+
+% 12.15  \paragraph{Meaningful Findings} 
+% 12.15  1) In addition to external imagery, GPT-4 can identify the implicit modern consciousness embedded within the poems. 2) The more straightforward the \textbf{language} expression, the greater the coherence, and the stronger the correlation between words, the more accurate is GPT-4's comprehension of the poem. 3) GPT-4 can accurately identify similes in most sentences that contain explicit cues such as ``like,'' ``as,'' and ``is.'' But GPT-4's ability to understand \textbf{rhetorical techniques} is impaired or even completely incorrect when these clear cues are lacking.
+
+% GPT-4 tends to resort to a set of similar, generalized phrases to analyze poetry. 
+
+% 我们邀请了专业诗人（不与提供48首诗的诗人重合）从诗歌角度对实验结果进行了详细的分析
+% 12.15  More detailed analysis are shown in Appendix \ref{subsec: Detailed Analysis}.
+
+
+% Within our dataset, there are eight poems classified as Spe-Poetry. Before the experiment started, we suspected that GPT-4 might have difficulty understanding these poems, but the experimental results were unexpected. In order to better analyze GPT-4's understanding of this type of poetry, we calculated the average scores given by the original poets to GPT-4's interpretation of the eight Spe-Poems, as shown in Table \ref{40 common types of poems}. And the evaluation results of the original poets on GPT-4's understanding of poeticity are shown in Table \ref{Evaluation results of poeticity}. Our analysis of some of these dimensions is as follows:
+
+% \paragraph{1) Rhetorical Techniques} For Spe-Poems that references ancient literary content, GPT-4 has the strongest understanding of rhetorical techniques across all dimensions. Specifically, GPT-4’s understanding of rhetorical techniques is 88.75\% identical to the original poet’s ideas, which is an astonishing result. For instance, in its analysis of rhetorical strategies, GPT-4 correctly identifies the use of metaphor, as in the line "The undulating mountain ranges resemble a giant hastening along his way," vividly illustrating the fluctuations of the terrain. It is evident that GPT-4 accurately assesses sentences containing explicit cues such as "resemble," identifying the use of metaphor and providing an error-free analysis of this rhetorical device. This finding is consistent with GPT-4's understanding of rhetorical techniques in Com-Poetry.
+
+% \paragraph{2) Rhythm} GPT-4’s understanding of rhythm in Spe-Poems scored 82.5, only lower than the score of rhetoric. This finding significantly diverges from results obtained for Com-Poetry. Specifically, we found that GPT-4 is basically able to identify pauses in Spe-Poems and perform an analysis that was closer to the original poet's thoughts.
+
+% \paragraph{3) Language} GPT-4's alignment with the original poets in terms of language comprehension for Spe-Poems stands at 73.75\%, which is the relatively lowest score across all dimensions evaluated. We posit that the inherent characteristics of this category of poetry inherently pose challenges for GPT-4's full comprehension of the linguistic elements, as these poems may employ classical Chinese imagery and lexicon. Such ancient imageries are often laden with rich cultural connotations and intrinsic meanings that transcend their literal interpretations, necessitating an understanding rooted in the relevant cultural background. However, in instances of overt classical Chinese literary styles, GPT-4, despite not fully grasping the concepts, seems to possess the potential for recognition. Specifically, GPT-4 can recognize that some languages come directly from ancient China, but it also mistakenly identifies languages that appear in ancient Chinese poetry as modern languages.
+
+% \paragraph{4) Poeticity} As can be seen from Table \ref{Evaluation results of poeticity}, GPT-4’s ability to understand poeticity in Spe-Poems is unsatisfactory. The specific performance is that when GPT-4 judges the most poetic sentences among the 8 poems, more than half (5 sentences) of the answers are incorrect, and one sentence is chosen that is not poetic at all. This result regarding poeticity is consistent with the result for Com-Poetry, which once again proves that ChatGPT can not understand poeticity correctly. This is consistent with what we would expect, since poeticity is the most important yet highly subjective dimension of poetry. It is also difficult for humans to understand poeticity without writing or studying it, which is the main reason why we evaluate ChatGPT's understanding of poeticity by selecting "the most poetic sentences."
+
+
+%% In our dataset, eight poems are classified as Spe-Poetry. Before the experiment began, we suspected that GPT-4 might struggle to understand the poems, but the results were unexpected. To better analyze GPT-4's understanding of this type of poetry, we calculated the average score of the original poet for the eight poems, as shown in Table \ref{8 special types of poems}. Our analysis of some of these dimensions is as follows:
+
+
+%% For a special type of modern poetry, that is, modern poetry that references ancient literary content, GPT-4 has the strongest understanding of rhetorical techniques across all dimensions.
+
+%% For Spe-Poems that references ancient literary content, GPT-4 has the strongest understanding of rhetorical techniques across all dimensions. Specifically, GPT-4’s understanding of rhetorical techniques is 88.75\% identical to the original poet’s ideas, which is an astonishing result. For instance, in its analysis of rhetorical strategies, GPT-4 can correctly identifies the use of metaphor. It is evident that GPT-4 accurately assesses sentences containing explicit cues such as "resemble," identifying the use of metaphor and providing an error-free analysis of this rhetorical device. This finding is consistent with GPT-4's understanding of rhetorical techniques in Com-Poetry.
+
+
+%% , as in the line "The undulating mountain ranges resemble a giant hastening along his way," vividly illustrating the fluctuations of the terrain
+
+% For Spe-Poetry that references ancient literary content, GPT-4 has the strongest understanding of rhetorical techniques across all dimensions. Specifically, GPT-4’s understanding of rhetorical techniques is 88.75\% identical to the original poet’s ideas, which is an astonishing result. For instance, in its analysis of rhetorical strategies, GPT-4 correctly identifies the use of metaphor, as in the line "The undulating mountain ranges resemble a giant hastening along his way," vividly illustrating the fluctuations of the terrain. It is evident that GPT-4 accurately assesses sentences containing explicit cues such as "resemble," identifying the use of metaphor and providing an error-free analysis of this rhetorical device. This finding is consistent with GPT-4's understanding of rhetorical techniques in Com-Poetry.
+
+
+%%% \paragraph{2) Modernity} It was surprisingly found that GPT-4's comprehension of the modernity within these Spe-Poems is in 82.50\% agreement with the original poets' intentions. 
+
+
+%% It was surprisingly found that GPT-4's comprehension of the modernity within these Spe-Poetry is in 82.50\% agreement with the original poets' intentions. For example, GPT-4 interprets although the poem "Lotus Leaves as Clothing (I)" is themed around the ancient poet Qu Yuan, it integrates modern elements into its language and emotional expression, such as the direct mention of "296 BC," and combines ancient imagery with modern psychological experiences, reflecting modernity or modern consciousness. By blending the classical with the modern, the poet explores the universal human emotional experiences that transcend time and space, such as loneliness, confusion, and the pursuit of beauty.
+
+
+
+%% GPT-4’s understanding of rhythm in Spe-Poetry scored 82.5, only lower than the score of rhetoric. This finding significantly diverges from results obtained for Com-Poetry. For example, GPT-4 believes that the rhythm of the poem "Lotus Leaves as Clothing (I)" is controlled through line breaks and pauses, as in the brief sentences "Night. The lodge." which create a tranquil and solitary atmosphere. This analysis is correct and completely consistent with the original poet's idea.
+
+
+
+%%\begin{CJK}{UTF8}{gkai}屈原带着皱纹和晚春\end{CJK}
+
+
+
+%% GPT-4's alignment with the original poets in terms of language comprehension stands at 73.75\%, which is the relatively lowest score across all dimensions evaluated. We posit that the inherent characteristics of this category of poetry inherently pose challenges for GPT-4's full comprehension of the linguistic elements, as these poems may employ classical Chinese imagery and lexicon. Such ancient imageries are often laden with rich cultural connotations and intrinsic meanings that transcend their literal interpretations, necessitating an understanding rooted in the relevant cultural background. However, in instances of overt classical Chinese literary styles, GPT-4, despite not fully grasping the concepts, seems to possess the potential for recognition. For instance, GPT-4 correctly identifies the poem "Lotus Leaves as Clothing (I)" utilizes a classical poetic style, as seen in phrases like "\begin{CJK}{UTF8}{gkai}徊兮\end{CJK}" while blending with modern language, such as "\begin{CJK}{UTF8}{gkai}皱纹和晚春\end{CJK} (wrinkles and late spring)" demonstrating innovation.
+
+%%\begin{CJK}{UTF8}{gkai}屈原带着皱纹和晚春\end{CJK}
+
+% GPT-4 correctly judged the language style of classical poetry, which is worthy of recognition. In addition, GPT-4 also recognized that words such as "\begin{CJK}{UTF8}{gkai}徊兮\end{CJK}" come from ancient times. But GPT-4 mistakenly judged "wrinkles and late spring" as modern language, because in fact, "wrinkles" and "late spring" are commonly used images in ancient Chinese poetry. This poem indeed embodies innovation, but the innovation is specifically reflected in the sentence "\begin{CJK}{UTF8}{gkai}屈原带着皱纹和晚春\end{CJK} (Qu Yuan carrying wrinkles and late spring)." This sentence uses modern writing techniques to materialize "wrinkles and late spring" through the word "carrying".
+
+
+
+\section{Conclusion}
+
+Understanding poetry is a fundamental prerequisite for all poetry-related tasks. In this paper, we propose a comprehensive framework to evaluate ChatGPT’s ability to understand modern poetry and examine the extent of its comprehension. Specifically, we identify several critical dimensions essential for understanding poetry, informed by professional expertise in the field. Using these dimensions, ChatGPT was tasked with interpreting the poems provided by various poets, based on carefully designed prompts. To assess these interpretations’ quality, we invited the original poets to evaluate GPT’s outputs across the identified dimensions. The evaluation results show that over 73\% of ChatGPT’s interpretations align with the original poets’ intentions and thoughts. However, significant room for improvement remains in specific dimensions, particularly poeticity. These findings highlight the effectiveness and necessity of our proposed framework. This study establishes a solid foundation for future research on LLMs and their application to poetry-related tasks.
+
+
+% Our study not only evaluates ChatGPT’s capabilities in understanding modern poetry but also establishes a solid foundation for future research on Large Language Models (LLMs) and their application to poetry-related tasks.
+
+
+% 12.15  All poetry-related tasks should be grounded in the understanding of poetry. In this paper, we propose a comprehensive framework for evaluating ChatGPT's understanding of modern poetry, and examine the extent to which ChatGPT is capable of understanding modern poetry.  Specifically, we first identify several critical dimensions for the understanding of poetry, guided by professional knowledge in the domain of poetry. Utilizing these dimensions, ChatGPT generated interpretations of unpublished poems by various poets based on prompts we designed. Finally, we invited the original poets to evaluate the interpretations generated by ChatGPT across these different dimensions. Evaluation results indicate that over 73\% of ChatGPT's understanding of poetry is consistent with the original poets' intentions and thoughts on their poems. However, there remains huge potential for improvement on certain dimensions, including poeticity, which proves the effectiveness and necessity of our work. Our study not only evaluates ChatGPT's ability to understand modern poetry, but also lays a solid foundation for future research on Large Language Models (LLMs) and poetry-related tasks.
+
+% This study not only evaluates ChatGPT's ability to understand modern poetry, substantiates the efficacy of ChatGPT as a tool to aid in the comprehension of poetry, but also establishes a solid foundation for future investigations into poetry-related applications of LLMs. 
+
+
+\section*{Limitations}
+The data we utilized consists of recently written poems by professional poets, so there has been no prior human analysis of these poems to date. Consequently, in our study, the evaluation of ChatGPT's poetic comprehension was conducted manually by the original poets themselves, which required a high cost. Fortunately, our work substantiates the effectiveness of ChatGPT as a tool to assist poetry comprehension, which lays a solid foundation for future research on LLMs related to poetry.
+
+% This study not only evaluates ChatGPT's ability to understand modern poetry, substantiates the efficacy of ChatGPT as a tool to aid in the comprehension of poetry, but also establishes a solid foundation for future investigations into poetry-related applications of LLMs. 
+
+
+%% In future work, to promote the sustainability of the assessment, we plan to invite professional poets to document their thoughts and interpretations at the time of writing their poems.
+
+%% \paragraph{Scope of Applicability} The ECUMP framework we propose is tailored for understanding modern Chinese poetry and may be extended to modern poetry in other languages. However, it is not entirely suitable for classical Chinese poetry because certain dimensions used for understanding modern poetry, such as "modernity," are inherently lacking in classical Chinese poetry.
+
+\section*{Ethical Considerations}
+Our work has validated the effectiveness of ChatGPT as a tool for assisting in the understanding of poetry, as it is capable of providing human readers with interpretations that largely align with the original poets' intentions. However, this could potentially lead to an over-reliance on ChatGPT's interpretations by human readers.
+
+
+\section*{Acknowledgements}
+
+% This work was supported in part by the Science and Technology Development Fund of Macau SAR (Grant No. FDCT/0007/2024/AKP), the UM and UMDF (Grant Nos. MYRG-GRG2024-00165-FST-UMDF, MYRG-GRG2025-00236-FST, EF2023-00151-FST, EF2024-00185-FST), the Stanley Ho Medical Development Foundation (Grant No. SHMDF-AI/2026/001), and the National Natural Science Foundation of China (Grant No. 62266013).
+
+This work was supported in part by the Science and Technology Development Fund of Macau SAR (Grant No. FDCT/0007/2024/AKP), the UM and UMDF (Grant Nos. MYRG-GRG2024-00165-FST-UMDF, MYRG-GRG2025-00236-FST, EF2024-00185-FST), the Tencent AI Lab (EF2023-00151-FST), the Stanley Ho Medical Development Foundation (Grant No. SHMDF-AI/2026/001), and the National Natural Science Foundation of China (Grant No. 62266013).
+
+
+
+
+
+
+% Bibliography entries for the entire Anthology, followed by custom entries
+%\bibliography{anthology,custom}
+% Custom bibliography entries only
+\bibliography{main}
+
+\appendix
+
+\section{Appendix}
+\label{sec: appendix}
+
+
+
+%\subsection{Why Modern Chinese Poetry}
+%\label{subsec: Why Modern Chinese Poetry}
+
+%% Poetry has exerted a significant influence on the development of various countries and cultures since ancient times \cite{yi2018chinese,rutherford2009poetry,hanauer2003multicultural}. When poetry is mentioned, it usually refers to a specific type of poetry \cite{stevenson1957poem}. 
+
+% Modern Chinese poetry is among the most crucial literary forms in Chinese literature and has had a profound impact on the development of modern Chinese culture \cite{lin1972modern,yeh2015modern,skerratt2013form}. Chinese poetry can be divided into two categories: classical poetry and modern poetry, which have obvious differences \cite{wang-etal-2024-best}. Classical poetry is constrained by features including format, meter, sentence length, and rhythm. In contrast, modern Chinese poetry is very free, which is completely different from classical Chinese poetry especially in terms of form and style \cite{skerratt2013form, awan2015new,wang2006guoview}. The peak of classical poetry appeared in ancient China. With the development of literature and culture, modern Chinese poetry has replaced classical Chinese poetry and become the mainstream poetry type \cite{LiuXinmin1994Imagism,DengChengontheRhythm}, which holds an irreplaceable position in the history of Chinese literature \cite{mcdougall1994preview}. At present, most poets write modern poetry rather than classical poetry. Therefore, studying modern poetry has realistic and sustainable significance.
+
+%% At present, most Chinese poets write modern poetry rather than classical poetry. Therefore, studying modern Chinese poetry has realistic and sustainable significance.
+
+% From its emergence to the present, modern Chinese poetry has been profoundly influenced by world poetry \cite{owen1990world,xuting2012poetry,lvjin1997}, such as French \cite{LongQuanming1996onChina}, British, and German works. It has assimilated new knowledge from foreign poetic writing, techniques, and styles. As of today, modern Chinese poetry has established itself as a vital component of the global poetry landscape, with little distinction from foreign poetry in terms of external form and internal thought. However, understanding modern Chinese poetry can be even more challenging than understanding Western poetry, as it not only draws from Western influences but also preserves certain intrinsic qualities of classical Chinese poetry \cite{xiemian2017,xionghui2009}. Therefore, the evaluation of ChatGPT's understanding of modern Chinese poetry, to a certain extent, can be generalized to modern poetry in other languages. 
+
+% Please note that in this paper, all mentions of poetry refer to modern Chinese poetry unless specifically stated otherwise. 
+
+%% Therefore, for poetry itself, if ChatGPT can fully understand modern Chinese poetry, understanding modern poetry in other languages will not be difficult. 
+
+\subsection{Professional Poets}
+\label{subsec: Professional Poets}
+ 
+The poets involved in this work are not only poetry creators but also seasoned researchers of poetry theory, including members of the Chinese Writers Association\footnote{https://www.chinawriter.com.cn/n1/2025/0417/c403937-40462301.html}, poetry editors, and university professors. They are all excellent Chinese poets who have published many poetry collections, published many articles on modern Chinese poetry, and won many poetry awards. 
+
+% All the poets involved in this work are professional poets who write modern Chinese poetry, including members of the Chinese Writers Association\footnote{https://www.chinawriter.com.cn/n1/2025/0417/c403937-40462301.html} , senior poetry editors, and university professors. They are all excellent Chinese poets who have published many poetry collections, published many articles on modern Chinese poetry, and won many poetry awards. They are not only professional poetry creators, but also senior poetry theory researchers.
+
+
+
+
+% Among them, the basic condition for becoming a member of the Chinese Writers Association is to publish works of no less than 300K words in literary journals or newspapers published nationwide, of which at least 150K words are published in literary journals or newspapers at least the provincial level.  However, in reality, these poets have published works far exceeding 30K words.
+
+
+% \subsection{Differences Between Modern Chinese Poetry and Classical Chinese Poetry}
+% \label{Differences Between Modern Chinese Poetry and Classical Chinese Poetry}
+
+\subsection{Details About Prompt Optimization} 
+\label{subsec: Details about Prompt Optimization}
+During the experimental process, we observed that when GPT-4 generated the interpretation of poetry, a reminder ``You did not provide the complete text of the poem'' appeared before the interpretation. To quantify this occurrence, we tallied the frequency of such prompts and discovered that in the analysis of 48 poems, more than one-third of the cases (18 poems in total) elicited a similar response. This suggests that GPT-4 may not fully understand the completeness of poetry. To better stimulate GPT-4’s understanding of poetry, we added the content ``This is a complete modern poem'' to the designed prompt. Finally, all experiments used the optimized prompts 
+shown in Table \ref{The prompt we designed}.
+
+
+\subsection{Example of the Experiment}
+\label{subsec: Example of the Experiment}
+
+Here is an example of the experiment on GPT-4.
+
+%\begin{CJK}{UTF8}{gkai}
+%\end{CJK}
+% font: gkai: 楷体, gbsn: 宋体
+% \begin{CJK}{UTF8}{gkai}锚定\end{CJK}
+
+
+\textbf{Poem:}
+
+\begin{center}
+\begin{CJK}{UTF8}{gkai}醉酒一事\end{CJK}
+
+(The Matter of Being Drunk)\\\
+
+
+\begin{CJK}{UTF8}{gkai}在酒的国度里，鱼鳌可以\end{CJK}
+
+(In the kingdom of wine, turtles might)
+
+\begin{CJK}{UTF8}{gkai}离开海洋，鸟雀不必站在树上\end{CJK}
+
+(Depart the sea, and birds need not perch in trees)
+
+\begin{CJK}{UTF8}{gkai}男人醉酒后，很放心地\end{CJK}
+
+(A man, inebriated, with carefree trust)
+
+\begin{CJK}{UTF8}{gkai}把自己摆到了街边。人间之事\end{CJK}
+
+(Lay himself along the street’s edge, where worldly matters)
+
+\begin{CJK}{UTF8}{gkai}全都碎在杯里，一饮而尽后\end{CJK}
+
+(All shattered in the cup, drained in one gulp)
+
+\begin{CJK}{UTF8}{gkai}在肠胃里激荡，像巨浪冲刷着堤防\end{CJK}
+
+(Surging in the stomach, like giant waves washing over the embankment)\\\
+
+
+
+
+\begin{CJK}{UTF8}{gkai}车辆在街灯的重影里轰鸣、拉扯\end{CJK}
+
+(Vehicles roar and tug in the doubled shadows of streetlights)
+
+\begin{CJK}{UTF8}{gkai}犹如那些轻易给出的诺言，在黑暗中\end{CJK}
+
+(Like promises too lightly made, in dark)
+
+\begin{CJK}{UTF8}{gkai}徒劳地撒网，没人会在意一个醉汉\end{CJK}
+
+(Casting nets in vain. No one cares about a drunk)
+
+\begin{CJK}{UTF8}{gkai}倒置的身体和语言，他只是马路上的一块礁石\end{CJK}
+
+(Inverted body and language, he is just a rock on the road)
+
+\begin{CJK}{UTF8}{gkai}是礁石上一条搁浅的鱼，鱼腹里的一根刺\end{CJK}
+
+(It's a stranded fish on the reef, a thorn in its belly)\\\
+
+
+
+\begin{CJK}{UTF8}{gkai}想到这里，他真的像一根鱼刺一样\end{CJK}
+
+(Thinking of this, he really looks like a fishbone)
+
+\begin{CJK}{UTF8}{gkai}卡住了道路的喉咙\end{CJK}
+
+(Stuck in the throat of the road)
+\end{center} 
+
+
+
+\textbf{Interpretation of this poem by GPT-4:}
+
+\begin{itemize}
+
+\item \textbf{Content:}  
+This poem describes the state and feelings of a drunkard. It depicts how alcohol allows one to escape reality, making the drunkard feel as if they are in a ``kingdom of wine'' where they are not bound by the rules of the real world. However, this escapism ultimately renders him a mere rock in the city, a stranded fish, even a fishbone stuck in the throat of the road.
+
+\item \textbf{Expression Methods:}
+\textit{1) Language Characteristics.} The poem uses direct and concrete language, innovatively comparing the drunkard to a rock and a fishbone, which is a common language feature in modern poetry.
+\textit{2) Imagery.} The poem uses images like ``turtles,'' ``birds,'' ``giant waves,'' and ``vehicles,'' comparing the state of drunkenness to the freedom of animals and the power of natural disasters, which enhances the expressiveness of the poem.
+\textit{3) Rhetorical Techniques.} The poem employs rhetorical devices such as metaphor (comparing the drunkard to a rock and fishbone) and hyperbole (e.g., ``all shattered in the cup''), which enhance the expressiveness and emotional impact of the language.
+\textit{4) Rhythm.} The poem controls the rhythm through short lines and pauses, simulating the discontinuous stream of consciousness of the drunkard and his unsteady presence in the city.
+\textit{5) Defamiliarization.} The poem achieves a defamiliarizing effect by comparing people to objects (rock, fishbone), allowing readers to see the image and state of the drunkard from a new perspective.
+
+\item \textbf{Thought \& Emotion:}
+The poem conveys a deep understanding of the state of drunkenness and sympathy for the isolated and unsupported state of the drunkard in society. Through the image of the drunkard, the poet reflects the potential for people to become lost and lonely in modern society.
+
+\item \textbf{Modernity:}
+This poem has modernity; it takes the experience of an ordinary person in modern society as a starting point, using modern poetic language and expression to explore the individual's isolated state in society and the complexity of the inner world. Through the portrayal of the drunkard, the poet reflects the inner struggle of modern people and their longing for freedom.
+
+\item \textbf{Poeticity:}
+The sentence ``Surging in the stomach, like giant waves washing over the embankment'' is particularly poetic. It vividly describes the effect of alcohol in the body and metaphorically alludes to the inner turmoil and conflict within a person.
+
+
+\end{itemize}
+
+
+%\subsection{Detailed Analysis}
+%\label{subsec: Detailed Analysis}
+
+% GPT-4’s understanding of thought and emotion in Com-Poems scored 78.80 (Table \ref{40 common types of poems}), outperforming only rhetorical techniques and rhythm. Interestingly, we observed that for poems with distinctly clear imagery, GPT-4 is adept at capturing the emotional undertones of the poetry. However, when the imagery becomes less pronounced, GPT-4 struggles to grasp the poem’s underlying meaning and the nuances of thought and emotion. This finding reinforces the critical role that imagery plays in the poetry domain.
+
+
+% 12.16 GPT-4’s understanding of thought and emotion in Com-Poems scored 78.80 (Table \ref{40 common types of poems}), outperforming only rhetorical techniques and rhythm. Interestingly, we observed that for poems with distinctly clear imagery, GPT-4 is adept at capturing the emotional undertones of the poetry. However, when the imagery becomes less pronounced, GPT-4 struggles to grasp the underlying meanings and the thought and emotion's nuances of the poetry. This finding reinforces the critical role that imagery plays in the poetic domain.
+
+% GPT-4’s understanding of thought and emotion in Com-Poems scored 78.80. Our research reveals that for poems with distinctly clear imagery, GPT-4 is adept at capturing the emotional undertones of the poetry. However, when the imagery becomes less pronounced and the themes more complex and diverse, GPT-4 struggles to grasp the underlying meanings and the cognitive and emotional nuances of the poetry. This finding reinforces the critical role that imagery plays in the poetic domain.
+
+% GPT-4's capability to comprehend the rhythm of Com-Poems is relatively inferior compared to other dimensions, with a score of 76.15. Upon examining the experimental outcomes, it is evident that GPT-4 lacks a detailed analysis of rhythm. Instead, it predominantly responds with the inherent rhythmic characteristics present in modern poetry, such as stating that ``the poem controls rhythm through the variation in sentence length, pauses, and line breaks.''
+
+
+
+
+
+
+\subsection{Detailed Analysis}
+\label{subsec: Detailed Analysis}
+
+
+% Analysis for GPT-4's Understanding of Poetry
+
+\paragraph{Com-Poems} Detailed analysis of Com-Poems across dimensions (From highest to lowest performance): 
+
+\textbf{1) Imagery}. GPT-4 achieved the highest comprehension score in the imagery dimension, with an average score of 81.18 (Table \ref{40 common types of poems}). This aligns with expectations, as imagery is a salient and explicit characteristic of poetry. Notably, GPT-4 scored above 80 in imagery interpretation 18 times (Figure \ref{figure of 40 poems}), demonstrating its relatively strong capability in recognizing and interpreting visual and descriptive elements in poetry. This finding highlights GPT-4's ability to engage with one of the most concrete and explicit dimensions of poetic language.
+
+\textbf{2) Content}. GPT-4 scored 80.33 in content comprehension, indicating its capability to discern the core subject matter and themes of poems. We observed that GPT-4 performs particularly well with poems that have clear themes or straightforward narrative structures, often generating comprehensive summaries with minimal omissions. For instance, GPT-4 scored above 80 in content understanding 19 times (14 scores between 80–90 and 5 scores above 90), the highest frequency among dimensions with scores above 80 (Figure \ref{figure of 40 poems}). This finding underscores GPT-4's proficiency in grasping the explicit content of modern poetry.
+
+\textbf{3) Modernity}. Scoring 79.88, GPT-4 demonstrated a strong ability to recognize modernity, particularly through the imagery unique to modern Chinese poetry. While external modern imagery is relatively explicit, we were surprised to find that GPT-4 also identified implicit modern consciousness embedded within the poems. This nuanced capability reflects its potential to go beyond surface-level comprehension when analyzing modern poetic elements.
+
+\textbf{4) Defamiliarization}. GPT-4 scored 79.40 in defamiliarization, placing it between modernity and language. Defamiliarization, often expressed through innovative linguistic techniques and modernist stylistics, was recognized by GPT-4 in a manner consistent with established poetic analysis. This suggests that GPT-4 can reasonably interpret creative deviations in language and style, even if its understanding of such techniques is not perfect.
+
+\textbf{5) Language}. GPT-4 scored 79.05 in language comprehension. While this score is relatively high, our analysis revealed limitations in its interpretative depth. GPT-4 often resorts to generalized phrases when analyzing linguistic features, which, while broadly applicable, lack specificity for individual poems. For example, GPT-4 frequently describes the language characteristics of modern poetry as employing ``succinct and direct modern Chinese language'' with ``a straightforward and unembellished lexicon.'' These descriptions are accurate at a general level but fail to capture the unique linguistic features of specific poems. Additionally, we found that GPT-4's comprehension improves with simpler and more coherent language. When linguistic leaps are minimal and word correlations are stronger, GPT-4's interpretations are more precise.
+
+
+\textbf{6) Thought \& Emotion}. GPT-4 scored 78.80 in thought \& emotion. We find that GPT-4 is adept at capturing emotional undertones in poems with clear and vivid imagery. However, its performance declines when themes become more complex or abstract, indicating a limitation in its ability to grasp deeper cognitive and emotional nuances. This finding emphasizes the critical role of imagery in facilitating GPT-4's understanding of a poem's emotional and intellectual depth.
+
+% Our analysis revealed that 
+
+
+\textbf{7) Rhetorical Techniques}. GPT-4 scored 77.83 in rhetorical techniques, slightly outperforming its understanding of rhythm. Our analysis shows that GPT-4 reliably identifies similes with explicit cues (e.g., ``like,'' ``as,'' ``is''). However, its ability to recognize more subtle or implicit rhetorical devices is significantly weaker, often leading to incorrect interpretations. For example, GPT-4 misidentified the line ``When your message arrives on my phone, I hear your voice'' as employing personification. This interpretation is incorrect because: the line does not attribute human-like qualities to inanimate objects; the relationship between ``message'' and ``voice'' is sequential and causal, not rhetorical.
+
+% \begin{itemize}
+% \item The line does not attribute human-like qualities to inanimate objects.
+% \item The relationship between "message" and "voice" is sequential and causal, not rhetorical.
+
+% \end{itemize}
+
+Such errors highlight GPT-4's limitations in detecting rhetorical techniques without explicit cues.
+
+\textbf{8) Rhythm}. GPT-4's comprehension of rhythm scored a relatively low 76.15. We observed that GPT-4 lacks the ability to perform a detailed rhythmic analysis. Instead, it defaults to generalized observations, such as noting variations in sentence length, pauses, and line breaks as indicators of rhythm. Notably, GPT-4 scored above 80 in rhythm comprehension only 8 times, while scores at or below 70 accounted for 16 occurrences. This finding indicates that GPT-4 struggles to capture the nuanced rhythmic patterns that are integral to poetic expression.
+
+\textbf{9) Poeticity}. Poeticity was the weakest dimension, with GPT-4 scoring the lowest overall (Table \ref{Evaluation results of poeticity}). In the task of identifying the most poetic sentence from 40 poems, GPT-4's selections were incorrect for more than half the cases (23 sentences). For example, GPT-4 misidentified the phrase ``tempering a rod of iron into a needle'' as highly poetic, interpreting it as a metaphor for dedication and refinement. While this interpretation is valid in isolation, GPT-4 failed to consider the line's context within the poem, leading to an erroneous judgment of poeticity. Each poem is a vibrant entity \cite{ZhangTaozhou2021How}, where lines within the poem are both independent and yet intimately interconnected. This suggests that GPT-4 tends to analyze sentences in isolation rather than considering their interplay within the holistic structure.
+
+% This suggests that GPT-4 tends to analyze sentences in isolation rather than considering their interplay within the holistic structure of a poem.
+
+\paragraph{Spe-Poems}
+
+Within our dataset, Spe-Poetry represents a unique type of modern poetry, often incorporating references to ancient literary content. Prior to conducting the experiments, we anticipated that GPT-4 might struggle with understanding this type of poetry, but the experimental results were surprising, revealing both strengths and limitations. For Spe-Poems, detailed findings for key dimensions are as follows:
+
+\textbf{1) Rhetorical Techniques}. For Spe-Poems, GPT-4 demonstrated the strongest understanding of rhetorical techniques, with an impressive agreement rate of 88.75\% with the original poets' ideas, the highest score across all dimensions. This result is particularly noteworthy. For example, GPT-4 correctly identified the use of metaphor in the line, ``The undulating mountain ranges resemble a giant hastening along his way,'' accurately recognizing the explicit cue word ``resemble'' and providing an error-free analysis of the rhetorical device. This finding is consistent with GPT-4's performance in common modern poetry, where it excels in recognizing rhetorical techniques with explicit signals. The high accuracy in this dimension highlights GPT-4's capability to analyze and interpret rhetorical elements in poetry where cues are explicit.
+
+\textbf{2) Modernity}. GPT-4's comprehension of modernity in Spe-Poems reached 82.50\% agreement with the original poets' intentions, which was a surprising and encouraging result. For instance, in the poem ``Lotus Leaves as Clothing (I),'' GPT-4 correctly recognized the modern elements interwoven with ancient themes. While the poem is centered on the ancient poet Qu Yuan, it incorporates modern elements such as the mention of ``296 BC'' and juxtaposes ancient imagery with modern psychological experiences. GPT-4 successfully identified the poem's reflection of universal human emotions, such as loneliness, confusion, and the pursuit of beauty, that transcend time and space, effectively interpreting the modern consciousness embedded within the poem. This demonstrates GPT-4's potential to bridge classical and modern elements in poetic interpretation.
+
+\textbf{3) Rhythm}. GPT-4's understanding of rhythm in Spe-Poems scored 82.50, second only to rhetorical techniques. This result stands in contrast to its relatively weaker performance in rhythm comprehension for common types of modern poetry. For example, GPT-4 accurately analyzed the rhythm of ``Lotus Leaves as Clothing (I),'' recognizing how line breaks and pauses, such as in the brief sentences ``Night. The lodge.'', create a tranquil and solitary atmosphere. This analysis was entirely consistent with the original poet's intent, demonstrating that GPT-4 can effectively recognize rhythmic features when they are explicitly designed to evoke particular moods or tones.
+
+\textbf{4) Language}. GPT-4’s alignment with the original poets in language comprehension for Spe-Poems was 73.75\%, the lowest among all dimensions. This lower score can be attributed to the inherent challenges posed by this category of poetry, which often employs classical Chinese imagery and lexicon. These elements are laden with rich cultural connotations and intrinsic meanings that require a deep understanding of the relevant cultural and historical context. For example, in analyzing the poem ``Lotus Leaves as Clothing (I),'' GPT-4 correctly observed the use of a classical poetic style, accurately identifying ancient phrases like ``huai xi'' while also recognizing the integration of modern language. However, GPT-4 mistakenly categorized ``wrinkles and late spring'' as modern language, despite their frequent use as poetic images in ancient Chinese poetry. While GPT-4 correctly identified the innovation in the poem, it misunderstood that the sentence ``Qu Yuan carrying wrinkles and late spring'' innovatively materializes ``wrinkles and late spring'' through the word "carrying,'' blending modern techniques with classical imagery. Although GPT-4 struggles with fully grasping the linguistic nuances of classical elements, it exhibits the potential to identify their presence and stylistic relevance. This suggests that its understanding of language in Spe-Poems, while imperfect, demonstrates a promising foundation for further improvement.
+
+
+% accurately identifying ancient phrases like "\begin{CJK}{UTF8}{gkai}徊兮\end{CJK}" while also recognizing the integration of modern language. 
+
+
+% While GPT-4 correctly identified the innovation in the poem, it misunderstood that the sentence "\begin{CJK}{UTF8}{gkai}屈原带着皱纹和晚春\end{CJK} (Qu Yuan carrying wrinkles and late spring)" innovatively materializes "wrinkles and late spring" through the word "carrying," blending modern techniques with classical imagery.
+
+\textbf{5) Poeticity}. GPT-4's ability to understand poeticity in Spe-Poems remains unsatisfactory, consistent with its performance on common modern poetry. When tasked with identifying the most poetic sentence from 8 poems, GPT-4's selections were incorrect in more than half the cases (5 out of 8). In one instance, it selected a sentence entirely devoid of poetic sense as the most poetic. This finding reinforces GPT-4's tendency to analyze sentences in isolation, overlooking their contextual interplay within the broader structure of a poem. This limitation highlights an area where future improvements are necessary to enhance GPT-4's capacity for holistic poetic interpretation.
+
+The detailed analysis presented above demonstrates the analytical depth of our work. By systematically evaluating GPT-4's performance across multiple poetic dimensions and providing specific examples, we offer nuanced insights into its strengths and limitations when analyzing Com-Poems and Spe-Poems. 
+
+
+
+
+
+
+\end{document}
+
+

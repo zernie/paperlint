@@ -1,0 +1,250 @@
+\begin{thebibliography}{36}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Chen et~al.(2020{\natexlab{a}})Chen, Chen, Yao, Zheng, Zhang, and
+  Tsang}]{chen2020learning}
+Chen, X.; Chen, S.; Yao, J.; Zheng, H.; Zhang, Y.; and Tsang, I.~W.
+  2020{\natexlab{a}}.
+\newblock Learning on attribute-missing graphs.
+\newblock \emph{IEEE transactions on pattern analysis and machine
+  intelligence}, 44(2): 740--757.
+
+\bibitem[{Chen, Wu, and Zaki(2020)}]{chen2020iterative}
+Chen, Y.; Wu, L.; and Zaki, M. 2020.
+\newblock Iterative deep graph learning for graph neural networks: Better and
+  robust node embeddings.
+\newblock \emph{Advances in neural information processing systems}, 33:
+  19314--19326.
+
+\bibitem[{Chen et~al.(2024)Chen, Mao, Li, Jin, Wen, Wei, Wang, Yin, Fan, Liu
+  et~al.}]{chen2024exploring}
+Chen, Z.; Mao, H.; Li, H.; Jin, W.; Wen, H.; Wei, X.; Wang, S.; Yin, D.; Fan,
+  W.; Liu, H.; et~al. 2024.
+\newblock Exploring the potential of large language models (llms) in learning
+  on graphs.
+\newblock \emph{ACM SIGKDD Explorations Newsletter}, 25(2): 42--61.
+
+\bibitem[{Chen et~al.(2020{\natexlab{b}})Chen, Xiao, Li, Ye, Sun, and
+  Deng}]{chen2020esam}
+Chen, Z.; Xiao, R.; Li, C.; Ye, G.; Sun, H.; and Deng, H. 2020{\natexlab{b}}.
+\newblock Esam: Discriminative domain adaptation with non-displayed items to
+  improve long-tail performance.
+\newblock In \emph{Proceedings of the 43rd international ACM SIGIR conference
+  on research and development in information retrieval}, 579--588.
+
+\bibitem[{Chien et~al.(2020)Chien, Peng, Li, and
+  Milenkovic}]{chien2020adaptive}
+Chien, E.; Peng, J.; Li, P.; and Milenkovic, O. 2020.
+\newblock Adaptive universal generalized pagerank graph neural network.
+\newblock \emph{arXiv preprint arXiv:2006.07988}.
+
+\bibitem[{Ding et~al.(2022)Ding, Xu, Tong, and Liu}]{ding2022data}
+Ding, K.; Xu, Z.; Tong, H.; and Liu, H. 2022.
+\newblock Data augmentation for deep graph learning: A survey.
+\newblock \emph{ACM SIGKDD Explorations Newsletter}, 24(2): 61--77.
+
+\bibitem[{Fan et~al.(2019)Fan, Ma, Li, He, Zhao, Tang, and Yin}]{fan2019graph}
+Fan, W.; Ma, Y.; Li, Q.; He, Y.; Zhao, E.; Tang, J.; and Yin, D. 2019.
+\newblock Graph neural networks for social recommendation.
+\newblock In \emph{The world wide web conference}, 417--426.
+
+\bibitem[{Fatemi, El~Asri, and Kazemi(2021)}]{fatemi2021slaps}
+Fatemi, B.; El~Asri, L.; and Kazemi, S.~M. 2021.
+\newblock SLAPS: Self-supervision improves structure learning for graph neural
+  networks.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34:
+  22667--22681.
+
+\bibitem[{Franceschi et~al.(2019)Franceschi, Niepert, Pontil, and
+  He}]{franceschi2019learning}
+Franceschi, L.; Niepert, M.; Pontil, M.; and He, X. 2019.
+\newblock Learning discrete structures for graph neural networks.
+\newblock In \emph{International conference on machine learning}, 1972--1982.
+  PMLR.
+
+\bibitem[{Gasteiger, Bojchevski, and
+  G{\"u}nnemann(2018)}]{gasteiger2018predict}
+Gasteiger, J.; Bojchevski, A.; and G{\"u}nnemann, S. 2018.
+\newblock Predict then propagate: Graph neural networks meet personalized
+  pagerank.
+\newblock \emph{arXiv preprint arXiv:1810.05997}.
+
+\bibitem[{Grill et~al.(2020)Grill, Strub, Altch{\'e}, Tallec, Richemond,
+  Buchatskaya, Doersch, Avila~Pires, Guo, Gheshlaghi~Azar
+  et~al.}]{grill2020bootstrap}
+Grill, J.-B.; Strub, F.; Altch{\'e}, F.; Tallec, C.; Richemond, P.;
+  Buchatskaya, E.; Doersch, C.; Avila~Pires, B.; Guo, Z.; Gheshlaghi~Azar, M.;
+  et~al. 2020.
+\newblock Bootstrap your own latent-a new approach to self-supervised learning.
+\newblock \emph{Advances in neural information processing systems}, 33:
+  21271--21284.
+
+\bibitem[{Hou et~al.(2023)Hou, He, Cen, Liu, Dong, Kharlamov, and
+  Tang}]{hou2023graphmae2}
+Hou, Z.; He, Y.; Cen, Y.; Liu, X.; Dong, Y.; Kharlamov, E.; and Tang, J. 2023.
+\newblock Graphmae2: A decoding-enhanced masked self-supervised graph learner.
+\newblock In \emph{Proceedings of the ACM web conference 2023}, 737--746.
+
+\bibitem[{Hou et~al.(2022)Hou, Liu, Cen, Dong, Yang, Wang, and
+  Tang}]{hou2022graphmae}
+Hou, Z.; Liu, X.; Cen, Y.; Dong, Y.; Yang, H.; Wang, C.; and Tang, J. 2022.
+\newblock Graphmae: Self-supervised masked graph autoencoders.
+\newblock In \emph{Proceedings of the 28th ACM SIGKDD conference on knowledge
+  discovery and data mining}, 594--604.
+
+\bibitem[{Jin et~al.(2020)Jin, Ma, Liu, Tang, Wang, and Tang}]{jin2020graph}
+Jin, W.; Ma, Y.; Liu, X.; Tang, X.; Wang, S.; and Tang, J. 2020.
+\newblock Graph structure learning for robust graph neural networks.
+\newblock In \emph{Proceedings of the 26th ACM SIGKDD international conference
+  on knowledge discovery \& data mining}, 66--74.
+
+\bibitem[{Jin et~al.(2022)Jin, Zhao, Ding, Liu, Tang, and
+  Shah}]{jin2022empowering}
+Jin, W.; Zhao, T.; Ding, J.; Liu, Y.; Tang, J.; and Shah, N. 2022.
+\newblock Empowering graph representation learning with test-time graph
+  transformation.
+\newblock \emph{arXiv preprint arXiv:2210.03561}.
+
+\bibitem[{Ju et~al.(2023)Ju, Zhao, Yu, Shah, and Ye}]{ju2023graphpatcher}
+Ju, M.; Zhao, T.; Yu, W.; Shah, N.; and Ye, Y. 2023.
+\newblock Graphpatcher: Mitigating degree bias for graph neural networks via
+  test-time augmentation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:
+  55785--55801.
+
+\bibitem[{Kim et~al.(2024)Kim, Kim, Yeo, Jeon, Kim, Lee, and
+  Lee}]{kim2024content}
+Kim, J.; Kim, E.; Yeo, K.; Jeon, Y.; Kim, C.; Lee, S.; and Lee, J. 2024.
+\newblock Content-based graph reconstruction for cold-start item
+  recommendation.
+\newblock In \emph{Proceedings of the 47th International ACM SIGIR Conference
+  on Research and Development in Information Retrieval}, 1263--1273.
+
+\bibitem[{Kipf and Welling(2016{\natexlab{a}})}]{kipf2016semi}
+Kipf, T.~N.; and Welling, M. 2016{\natexlab{a}}.
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock \emph{arXiv preprint arXiv:1609.02907}.
+
+\bibitem[{Kipf and Welling(2016{\natexlab{b}})}]{kipf2016variational}
+Kipf, T.~N.; and Welling, M. 2016{\natexlab{b}}.
+\newblock Variational graph auto-encoders.
+\newblock \emph{arXiv preprint arXiv:1611.07308}.
+
+\bibitem[{Li et~al.(2023)Li, Wang, Sun, Luo, Zhu, Chen, Luo, Zhou, Liu, Wu
+  et~al.}]{li2023gslb}
+Li, Z.; Wang, L.; Sun, X.; Luo, Y.; Zhu, Y.; Chen, D.; Luo, Y.; Zhou, X.; Liu,
+  Q.; Wu, S.; et~al. 2023.
+\newblock Gslb: The graph structure learning benchmark.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:
+  30306--30318.
+
+\bibitem[{Liu et~al.(2021)Liu, Ding, Jin, Xu, Ma, Liu, and Tang}]{liu2021graph}
+Liu, X.; Ding, J.; Jin, W.; Xu, H.; Ma, Y.; Liu, Z.; and Tang, J. 2021.
+\newblock Graph neural networks with adaptive residual.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34:
+  9720--9733.
+
+\bibitem[{Liu et~al.(2022)Liu, Zheng, Zhang, Chen, Peng, and
+  Pan}]{liu2022towards}
+Liu, Y.; Zheng, Y.; Zhang, D.; Chen, H.; Peng, H.; and Pan, S. 2022.
+\newblock Towards unsupervised deep graph structure learning.
+\newblock In \emph{Proceedings of the ACM Web Conference 2022}, 1392--1403.
+
+\bibitem[{Rong et~al.(2020)Rong, Bian, Xu, Xie, Wei, Huang, and
+  Huang}]{rong2020self}
+Rong, Y.; Bian, Y.; Xu, T.; Xie, W.; Wei, Y.; Huang, W.; and Huang, J. 2020.
+\newblock Self-supervised graph transformer on large-scale molecular data.
+\newblock \emph{Advances in neural information processing systems}, 33:
+  12559--12571.
+
+\bibitem[{Song et~al.(2024)Song, Mao, Xiao, Liu, Chen, Jin, Yang, Tang, and
+  Liu}]{song2024pure}
+Song, Y.; Mao, H.; Xiao, J.; Liu, J.; Chen, Z.; Jin, W.; Yang, C.; Tang, J.;
+  and Liu, H. 2024.
+\newblock A pure transformer pretraining framework on text-attributed graphs.
+\newblock \emph{arXiv preprint arXiv:2406.13873}.
+
+\bibitem[{Thakoor et~al.(2021)Thakoor, Tallec, Azar, Munos,
+  Veli{\v{c}}kovi{\'c}, and Valko}]{thakoor2021bootstrapped}
+Thakoor, S.; Tallec, C.; Azar, M.~G.; Munos, R.; Veli{\v{c}}kovi{\'c}, P.; and
+  Valko, M. 2021.
+\newblock Bootstrapped representation learning on graphs.
+\newblock In \emph{ICLR 2021 workshop on geometrical and topological
+  representation learning}.
+
+\bibitem[{Thakur et~al.(2021)Thakur, Reimers, Daxenberger, and
+  Gurevych}]{thakur-2020-AugSBERT}
+Thakur, N.; Reimers, N.; Daxenberger, J.; and Gurevych, I. 2021.
+\newblock Augmented {SBERT}: Data Augmentation Method for Improving Bi-Encoders
+  for Pairwise Sentence Scoring Tasks.
+\newblock In \emph{Proceedings of the 2021 Conference of the North American
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies}, 296--310. Online: Association for Computational Linguistics.
+
+\bibitem[{Veli{\v{c}}kovi{\'c} et~al.(2017)Veli{\v{c}}kovi{\'c}, Cucurull,
+  Casanova, Romero, Lio, and Bengio}]{velivckovic2017graph}
+Veli{\v{c}}kovi{\'c}, P.; Cucurull, G.; Casanova, A.; Romero, A.; Lio, P.; and
+  Bengio, Y. 2017.
+\newblock Graph attention networks.
+\newblock \emph{arXiv preprint arXiv:1710.10903}.
+
+\bibitem[{Veli{\v{c}}kovi{\'c} et~al.(2018)Veli{\v{c}}kovi{\'c}, Fedus,
+  Hamilton, Li{\`o}, Bengio, and Hjelm}]{velivckovic2018deep}
+Veli{\v{c}}kovi{\'c}, P.; Fedus, W.; Hamilton, W.~L.; Li{\`o}, P.; Bengio, Y.;
+  and Hjelm, R.~D. 2018.
+\newblock Deep graph infomax.
+\newblock \emph{arXiv preprint arXiv:1809.10341}.
+
+\bibitem[{You et~al.(2020)You, Chen, Sui, Chen, Wang, and Shen}]{you2020graph}
+You, Y.; Chen, T.; Sui, Y.; Chen, T.; Wang, Z.; and Shen, Y. 2020.
+\newblock Graph contrastive learning with augmentations.
+\newblock \emph{Advances in neural information processing systems}, 33:
+  5812--5823.
+
+\bibitem[{Yu et~al.(2021)Yu, Zhang, Jiang, Wu, and Yang}]{yu2021graph}
+Yu, D.; Zhang, R.; Jiang, Z.; Wu, Y.; and Yang, Y. 2021.
+\newblock Graph-revised convolutional network.
+\newblock In \emph{Machine learning and knowledge discovery in databases:
+  European conference, ECML PKDD 2020, Ghent, Belgium, September 14--18, 2020,
+  proceedings, part III}, 378--393. Springer.
+
+\bibitem[{Yun et~al.(2019)Yun, Jeong, Kim, Kang, and Kim}]{yun2019graph}
+Yun, S.; Jeong, M.; Kim, R.; Kang, J.; and Kim, H.~J. 2019.
+\newblock Graph transformer networks.
+\newblock \emph{Advances in neural information processing systems}, 32.
+
+\bibitem[{Zhang et~al.(2019)Zhang, Song, Gao, Chen, Bao, and
+  Ma}]{zhang2019your}
+Zhang, L.; Song, J.; Gao, A.; Chen, J.; Bao, C.; and Ma, K. 2019.
+\newblock Be your own teacher: Improve the performance of convolutional neural
+  networks via self distillation.
+\newblock In \emph{Proceedings of the IEEE/CVF international conference on
+  computer vision}, 3713--3722.
+
+\bibitem[{Zhao et~al.(2023)Zhao, Wu, Yang, and Yan}]{zhao2023graphglow}
+Zhao, W.; Wu, Q.; Yang, C.; and Yan, J. 2023.
+\newblock Graphglow: Universal and generalizable structure learning for graph
+  neural networks.
+\newblock In \emph{Proceedings of the 29th ACM SIGKDD Conference on Knowledge
+  Discovery and Data Mining}, 3525--3536.
+
+\bibitem[{Zheng et~al.(2021)Zheng, Huang, Rao, Katariya, Wang, and
+  Subbian}]{zheng2021cold}
+Zheng, W.; Huang, E.~W.; Rao, N.; Katariya, S.; Wang, Z.; and Subbian, K. 2021.
+\newblock Cold brew: Distilling graph node representations with incomplete or
+  missing neighborhoods.
+\newblock \emph{arXiv preprint arXiv:2111.04840}.
+
+\bibitem[{Zhou et~al.(2020)Zhou, Cui, Hu, Zhang, Yang, Liu, Wang, Li, and
+  Sun}]{zhou2020graph}
+Zhou, J.; Cui, G.; Hu, S.; Zhang, Z.; Yang, C.; Liu, Z.; Wang, L.; Li, C.; and
+  Sun, M. 2020.
+\newblock Graph neural networks: A review of methods and applications.
+\newblock \emph{AI open}, 1: 57--81.
+
+\bibitem[{Zhu et~al.(2020)Zhu, Xu, Yu, Liu, Wu, and Wang}]{zhu2020deep}
+Zhu, Y.; Xu, Y.; Yu, F.; Liu, Q.; Wu, S.; and Wang, L. 2020.
+\newblock Deep graph contrastive representation learning.
+\newblock \emph{arXiv preprint arXiv:2006.04131}.
+
+\end{thebibliography}

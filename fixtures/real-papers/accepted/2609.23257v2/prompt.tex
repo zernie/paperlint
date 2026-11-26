@@ -1,0 +1,157 @@
+\subsection{Multi-Agent Control Signal Generation}
+
+CTRL employs three specialized agents for STL component-aware control signal generation. Each agent receives multi-scale context (global statistics, few-shot examples, current STL comparison) and outputs structured control signals.
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.8cm}p{5.2cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Trend Specialist Agent}} \\
+\midrule
+Role & First specialist handling TREND correction \\
+Focus & Low-frequency patterns: direction, level shifts, drift, slope accuracy \\
+Key Questions & (1) Slope sign match? (2) Slope value match? (3) Systematic over/under-prediction? \\
+\midrule
+\multicolumn{2}{l}{\textit{Output: 4D control signal}} \\
+\texttt{scale} & Trend amplitude adjustment ($>$1 if underestimate, $<$1 if overestimate) \\
+\texttt{bias} & Level correction ($+$ if too low, $-$ if too high) \\
+\texttt{gate} & Correction aggressiveness \\
+\texttt{confidence} & Agent certainty \\
+\midrule
+\multicolumn{2}{l}{\textit{Dynamic context provided}} \\
+Comparison & Historical vs backbone: direction, slope, strength \\
+\bottomrule
+\end{tabular}
+\caption{Trend Agent prompt structure.}
+\label{tab:prompt_trend}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.8cm}p{5.2cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Seasonal Specialist Agent}} \\
+\midrule
+Role & Second specialist handling SEASONAL correction \\
+Focus & High-frequency periodic patterns: daily/weekly cycles, amplitude, phase \\
+Key Questions & (1) Correct periodicity? (2) Amplitude correct? (3) Phase aligned? \\
+\midrule
+\multicolumn{2}{l}{\textit{Output: 4D control signal}} \\
+\texttt{scale} & Amplitude adjustment ($>$1 if dampened, $<$1 if exaggerated) \\
+\texttt{bias} & Baseline shift (usually $\approx 0$) \\
+\texttt{gate} & Correction aggressiveness \\
+\texttt{confidence} & Agent certainty \\
+\midrule
+\multicolumn{2}{l}{\textit{Dynamic context provided}} \\
+Comparison & Historical vs backbone: amplitude, dominance, period \\
+\bottomrule
+\end{tabular}
+\caption{Seasonal Agent prompt structure.}
+\label{tab:prompt_seasonal}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{1.8cm}p{5.2cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Irregular Pattern Agent}} \\
+\midrule
+Role & Third specialist handling noise/anomalies not explained by trend or seasonality \\
+Task & Generate concise text description converted to numerical embedding \\
+\midrule
+\multicolumn{2}{l}{\textit{Analysis priorities (ordered)}} \\
+1. Noise & Variance level: high/low/changing \\
+2. Anomalies & Outliers, spikes present? \\
+3. Autocorr. & Correlated or white noise? \\
+4. Difficulty & Correction predictability \\
+5. Distribution & Skewness, tail behavior \\
+\midrule
+Output & JSON: \texttt{\{"irregular\_analysis": "..."\}} \\
+Encoding & Text $\rightarrow$ GPT-2 $\rightarrow$ $d_I$-dim embedding \\
+\bottomrule
+\end{tabular}
+\caption{Irregular Agent prompt structure.}
+\label{tab:prompt_irregular}
+\end{table}
+
+\subsection{Test-Time Adaptation}
+
+Test-time adaptation detects distribution shift between held-out training and test data using STL decomposition statistics. When shift exceeds threshold $\tau$, agents generate adaptation parameters.
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{2.2cm}p{4.8cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Trend/Seasonal Adaptation}} \\
+\midrule
+Input & Component shift analysis: validation slope/dominance vs test, shift ratio (\%), direction change \\
+\midrule
+\multicolumn{2}{l}{\textit{Output (JSON)}} \\
+\texttt{shift\_diagnosis} & Description of detected shift \\
+\texttt{impact\_assessment} & Expected effect on predictions \\
+\texttt{scale\_multiplier} & Multiplicative adjustment to scale \\
+\texttt{bias\_shift} & Additive adjustment to bias \\
+\texttt{gate\_multiplier} & Multiplicative adjustment to gate \\
+\texttt{confidence\_penalty} & Reduction in confidence $\in [0, 0.5]$ \\
+\texttt{reasoning} & Explanation of adaptation strategy \\
+\bottomrule
+\end{tabular}
+\caption{Trend/Seasonal adaptation prompt structure.}
+\label{tab:prompt_adapt_ts}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{2.2cm}p{4.8cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Irregular Adaptation}} \\
+\midrule
+Input & Original analysis text, statistics comparison (std, mean, spike ratio, autocorr) for validation vs test \\
+\midrule
+\multicolumn{2}{l}{\textit{Output (JSON)}} \\
+\texttt{needs\_adjustment} & Boolean flag \\
+\texttt{updated\_text} & Revised irregular analysis \\
+\texttt{adapted\_params} & \{scale, bias, gate, confidence\} adjustments \\
+\texttt{reasoning} & Explanation \\
+\bottomrule
+\end{tabular}
+\caption{Irregular adaptation prompt structure.}
+\label{tab:prompt_adapt_irreg}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{2.2cm}p{4.8cm}}
+\toprule
+\multicolumn{2}{l}{\textbf{Unified Distribution Shift Adaptation}} \\
+\midrule
+\multicolumn{2}{l}{\textit{Input: STL decomposition comparison}} \\
+Trend shift & Validation vs test slope, shift ratio, significance \\
+Seasonal shift & Validation vs test dominance, shift ratio, significance \\
+Raw statistics & Mean, std comparison, overall shift score \\
+\midrule
+\multicolumn{2}{l}{\textit{Output (JSON)}} \\
+Base params & shift\_diagnosis, impact\_assessment, scale\_multiplier, bias\_shift, gate\_multiplier, confidence\_penalty \\
+Component adj. & trend\_scale\_adjust, seasonal\_scale\_adjust \\
+\texttt{reasoning} & Adaptation rationale \\
+\midrule
+\multicolumn{2}{l}{\textit{Guidance}} \\
+Trend shift & Use bias\_shift for systematic change; trend\_scale\_adjust for magnitude \\
+Seasonal shift & Use seasonal\_scale\_adjust for magnitude \\
+\bottomrule
+\end{tabular}
+\caption{Unified adaptation prompt structure.}
+\label{tab:prompt_adapt_unified}
+\end{table}

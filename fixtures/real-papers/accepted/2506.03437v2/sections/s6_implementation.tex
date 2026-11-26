@@ -1,0 +1,85 @@
+\section{Quake Implementation}
+\label{sec:numa_aware_query_processing}
+
+Here we discuss NUMA-aware query processing and implementation details of Quake.
+
+\paragraph{NUMA Data Placement and Query Processing} Query processing in partitioned vector indexes is memory-bound, and therefore increasing the effective memory bandwidth available to the system will reduce query latency. NUMA-aware intra-query parallelism has been applied in the context of relational database systems to great success \cite{10.1145/2588555.2610507, 10.14778/3015274.3015275}, but has yet to be applied to vector databases. 
+
+In order to maximize memory bandwidth utilization, Quake distributes index partitions across NUMA nodes and ensures that cores only scan partitions resident in their respective node. Quake assigns index partitions to specific NUMA nodes using round-robin assignment. This assignment procedure allows for simple load balancing as partitions are added to the index by the maintenance procedure.
+
+To maximize the benefits of data placement, Quake employs partition affinity and NUMA-aware work scheduling. Partitions are bound to specific CPU cores. This binding ensures that partitions are always scanned by the same core to maximize cache utilization. Queries are scheduled to worker threads based on the location of the data partitions they need to access. When a query requires scanning multiple partitions, the work is divided among threads on the relevant NUMA nodes where the partitions reside. By aligning thread execution with data placement, Quake minimizes remote memory accesses to maximize memory bandwidth utilization.
+
+% Placeholder for Figure
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.8\textwidth]{figures/numa_architecture.png}
+% \caption{Illustration of NUMA-aware data placement and query processing in Quake.}
+% \label{fig:numa_architecture}
+% \end{figure}
+
+\paragraph{NUMA-Aware Query Execution with APS} Quake integrates NUMA-aware processing with Adaptive Partition Selection (APS) to dynamically select which partitions to scan based on query requirements and desired recall. The query processing involves both worker threads scanning local partitions and a main thread coordinating the process.
+
+\begin{algorithm}[h]
+\small
+\caption{NUMA-Aware Query Processing with Adaptive Partition Selection}
+\label{alg:numa_aps_query_processing}
+\begin{algorithmic}[1]
+\Require Query vector $q$, Index partitions ${P_i}$ with locations ${Node_j}$, Recall threshold $\tau_R$, Period to check recall $T_{wait}$
+\Ensure Top-$k$ nearest neighbors to $q$ satisfying recall threshold $\tau$
+\State \textbf{Initialize}: $R \leftarrow \emptyset$ (global result set), $S \leftarrow$ sorted list of partitions based on distance to $q$ (obtained from searching parent)
+\State \textbf{Distribute} $q$ to local memory of NUMA nodes
+\ForAll{NUMA nodes $Node_j$ \textbf{in parallel}}
+\State $W_j \leftarrow$ worker threads on $Node_j$
+\State $P_j \leftarrow$ partitions on $Node_j$ from $S$
+\State \textbf{Enqueue} partitions $P_j$ to local job queue
+\EndFor
+\While{not \textbf{all} partitions in $S$ have been processed}
+\State \textbf{Main Thread}:
+\State \textbf{Wait} for a predefined interval $T_{wait}$
+\State \textbf{Merge} partial results from worker threads into $R$
+\State \textbf{Estimate} current recall $r$ using Eqn. \ref{eq:aps-pi}
+\If{$r \geq \tau_R$}
+\State \textbf{Break} and terminate worker threads
+\EndIf
+\EndWhile
+\State \textbf{Return} top-$k$ results from $R$
+\Function{WorkerThread}{$q$, Local Job Queue}
+\While{Job Queue not empty}
+\State $P_i \leftarrow$ \textbf{Dequeue} next partition from Job Queue
+\State Compute distances between $q$ and vectors in $P_i$
+\State Update local partial results $R_j$
+\State \textbf{Signal} Main Thread about new partial results
+\EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Algorithm Explanation:} In Algorithm~\ref{alg:numa_aps_query_processing}, the main steps are:
+
+\begin{enumerate}[leftmargin=*, itemsep=-.25em, topsep=0pt]
+\item \textbf{Initialization}: The query vector $q$ is distributed to the local memory of NUMA nodes with relevant partitions. Partitions are sorted using their centroid distance to $q$.
+
+\item \textbf{Worker Threads Execution}: Each NUMA node has worker threads that process partitions assigned to that node. They compute distances between $q$ and vectors in their local partitions, updating their local partial results.
+
+\item \textbf{Main Thread Coordination}: The main thread periodically merges partial results from all worker threads. It uses the APS recall model to estimate the current recall based on the results accumulated so far.
+
+\item \textbf{Adaptive Termination}: If the estimated recall meets or exceeds the threshold $\tau_R$, the main thread returns the top-$k$ results and signals the worker threads to terminate the processing of remaining partitions.
+
+\end{enumerate}
+
+This adaptive approach ensures that the system processes only as much data as needed to meet the recall requirements, improving efficiency and reducing query latency. 
+
+\paragraph{Implementation Details}
+We implemented Quake in 7,500 lines of C++ and provide a Python API for ease-of-use. We used primitives in Faiss \cite{douze2024faisslibrary}, PyTorch \cite{libtorch}, and SimSIMD \cite{simsimd} to enable high-performance management of inverted lists, efficient batch tensor operations, and AVX512 intrinsics for fast distance comparisons. We also used a high performance concurrent queue \cite{moody} to prevent contention during coordination of query processing. In addition, we developed a workload generator and evaluation framework in Python to create and evaluate vector search workloads. Quake is open-sourced at \href{https://github.com/marius-team/quake}{https://github.com/marius-team/quake}.
+
+% \subsection{Design Considerations and Future Work}
+
+% While the current NUMA-aware implementation in Quake provides substantial performance gains by saturation memory bandwidth (see evaluation), ongoing development focuses on further optimizations:
+
+% \begin{itemize}
+% \item \textbf{Dynamic Data Placement}: Future enhancements may include dynamically adjusting data placement based on real-time access patterns to further balance the workload across NUMA regions.
+% \item \textbf{Partition Replication}: For extremely hot partitions, replicating these partitions across NUMA regions could reduce latency at the cost of increased memory usage.
+% \item \textbf{Distributed Query Processing}: Our work can be directly applied to the distributed setting, where instead of distributing only across NUMA regions, partitions are distributed across the memory of multiple machines. Supporting distribution allows for increasing the effective memory bandwidth available for query processing, and thereby will decrease query latency.
+% \end{itemize}
+
+% These considerations can refine and extend Quake’s NUMA-aware processing to achieve even higher levels of performance and efficiency, especially under imbalanced workloads. We leave these for future work.

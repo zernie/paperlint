@@ -1,0 +1,18 @@
+\section{Related Work}
+\label{related_work}
+\textbf{Commit and Pull Request Understanding}
+Understanding and analyzing PRs/commits is a fundamental task in software engineering research, aiming to support tasks such as code review, bug triage, and change impact analysis~\cite{icsik2025enhancing,chen2022untangling,li2022utango,dias2015untangling,muylaert2018untangling,herbold2022fine,liu2019automatic,xiao2024generative,bai2025clg,meng2024keytitle,meijer2024ecosystem,venigalla2024exploratory,pan2022automated}.
+Liu et al.\cite{liu2019automatic} proposed a sequence-to-sequence model with a pointer-generator mechanism to automatically generate pull request (PR) descriptions by leveraging commit messages and code comments. 
+They further applied reinforcement learning to directly optimize ROUGE scores and mitigate the mismatch between training objectives and evaluation metrics.
+Bai et al.~\cite{bai2025clg} introduced the CLG framework, which generates PR checklists automatically from contribution guidelines by combining multi-label classification and text generation techniques. 
+Their method significantly outperformed baselines on summarization tasks and demonstrated practical value in open-source community management.
+% Meng et al.~\cite{meng2024keytitle} developed KeyTitle, a method that formulates the generation of bug report titles as a single-sentence summarization task. 
+% By integrating keyword planning with a Transformer-based encoder-decoder model, their approach achieved up to 30.4\% improvement in ROUGE scores on GitHub datasets.
+
+
+\textbf{Security and Maintenance Challenges in Third-Party Library Dependencies.}
+Prior work has extensively studied the risks posed by third-party libraries, including vulnerability propagation, delayed patch adoption, and ecosystem-wide dependency management challenges~\cite{zimmermann2019small,duan2020towards, huang2022characterizing,decan2019empirical,alfadel2023empirical,liu2022demystifying,chen2023identifying,zhang2023compatible,williams2025research,zhao2023software,zhang2023mitigating,zhang2024does,zhang2024vulnerability,gao2025vulnerability,zhou2024magneto,chen2025diffploitfacilitatingcrossversionexploit,liu2025empirical}. 
+Zeng et al.~\cite{zeng2024survey} present a comprehensive survey on the security of third-party dependencies, highlighting trends in detection, mitigation, and secure integration practices.
+Wu et al.~\cite{wu2023understanding} perform a large-scale empirical study over 44,450 triplets in the Maven ecosystem, revealing that 73.3\% of downstream projects depending on vulnerable libraries remain practically unaffected—underscoring the importance of precise impact assessment.
+Chen et al.~\cite{chen2024exploiting} propose \textsc{Vesta} a vulnerability-oriented test generation framework that uses exploit code migration to evaluate real-world vulnerability reachability, improving detection success by 53.4\% over baselines.
+Unlike prior work, \appname targets subtle, non-crashing defects in DL libraries by bridging defect modeling and downstream impact analysis through extracting fine-grained trigger conditions from code changes and semantically matching them to real client usage.

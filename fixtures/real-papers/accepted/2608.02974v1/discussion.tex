@@ -1,0 +1,118 @@
+\section{Discussion}
+\subsection{\Name{}’s Failed Case Study}
+
+Although \Name{} achieves strong overall performance, we observe several representative failure modes that reflect inherent challenges in concurrent fault localization and point to directions for future improvement.
+
+\noindent
+\textit{Hierarchy Retrieval Failure.}
+\Name{} relies on hierarchical retrieval (component $\rightarrow$ package $\rightarrow$ entry point).
+In some cases, incorrect components or packages are selected due to sparse documentation, misleading summaries, or missing concurrency-specific semantics (e.g., thread ownership or resource roles).
+Once an early decision is wrong, subsequent retrieval is constrained to an incorrect scope.
+Future work could mitigate this issue by enriching component-level summaries with explicit concurrency information and enabling limited backtracking or re-ranking across hierarchy levels.
+
+\noindent
+\textit{Third-Party Library Effects.}
+Some failures arise when key concurrency behavior is encapsulated in third-party libraries such as Netty or Jetty.
+Because \Name{} analyzes only project source code, it cannot observe implicit thread creation, callbacks, or scheduling logic implemented inside external libraries.
+This may cause important execution paths to be missed.
+Potential extensions include incorporating lightweight library summaries, LLM-generated abstractions, or bytecode-level signals.
+
+\noindent
+\textit{Noise in the Concurrent Knowledge Base (CKB).}
+The CKB is built using over-approximate static analysis, favoring recall over precision.
+As a result, it may introduce noise such as spurious call-graph edges, excessive shared-variable candidates, or imprecise aliasing, especially in polymorphic code.
+This noise can reduce ranking stability and obscure the true fault.
+We observe that manually refining the CKB (e.g., improving alias precision) leads to noticeable accuracy gains, suggesting that more precise static context would further strengthen \Name{}’s reasoning.
+
+\subsection{Runtime and Token Cost}
+CKB construction relies on lightweight static analysis based on JavaParser and Datalog rules, without expensive pointer or alias analysis. As shown in Table~\ref{tab:cost}, the average project in our benchmark contains 1,808 files and 14,252 methods, while the average CKB construction time is only 24.6 seconds. This indicates that the preprocessing overhead of ConFL remains low even for large-scale real-world systems.
+
+\vspace{-0.5em}
+\begin{table}[H] 
+\centering
+\caption{CKB Construction and LLM Cost}
+\vspace{-8pt}
+\label{tab:cost}
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Avg. Files} &
+\textbf{Avg. Methods} &
+\textbf{Avg. Build Time} &
+\textbf{Avg. DSL Tokens} &
+\textbf{Avg. LLM Calls} &
+\textbf{Avg. Tokens/Bug} \\
+\midrule
+1808.1
+ & 14251.6
+ &  24.6(s)
+ & 163.7
+ & 8.94
+ & 4261.23 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\vspace{-0.5em}
+
+
+The token cost during fault localization is also bounded. Instead of exposing large code regions or long call chains to the LLM, ConFL summarizes concurrency-relevant behaviors using compact interaction DSLs. On average, each interaction DSL contains 163.7 tokens, and the hierarchical retrieval process requires only 8.94 LLM calls per bug. As a result, the average token usage is 4,261 tokens per bug, remaining comparable to existing LLM-based fault localization approaches while providing substantially richer concurrency-aware context for reasoning.
+
+
+
+\subsection{Performance on Different Concurrent Bug Types}
+\label{sec:discussion-bugtype}
+
+Our approach focuses on localizing concurrency faults based on observed symptoms described in bug reports.
+Large language models are particularly effective at reasoning from such symptom-level information.
+Introducing explicit bug-type labels (e.g., race condition, deadlock, etc) would add an additional source of bias, as concurrency bug classification itself is a challenging and often ambiguous task. 
+Accordingly, our interaction-level DSL does not encode explicit bug-type categories.
+Instead, it uniformly captures shared resources, execution contexts, and access actions that are directly relevant to concurrency behavior.
+Our results suggest that fault localization performance is more strongly influenced by the quality of the bug report than by the nominal bug type.
+When bug reports provide concrete concurrency-related information, localization accuracy remains consistently high regardless of the underlying fault category.
+These observations motivate a holistic evaluation without enforcing potentially ambiguous concurrency bug classifications.
+
+\subsection{Comparison with Other FL Techniques}
+\label{sec:discussion-comparison}
+
+We do not directly compare our approach with all existing fault localization techniques, as our problem setting differs fundamentally in terms of input assumptions and applicability.
+
+Our approach operates using \emph{bug reports as the only input}. Under this constraint, applicable baselines are limited.  Traditional IR-based fault localization techniques fall into this category, as well as recent methods such as FlexFL. In contrast, many learning-based approaches require large, project-specific training datasets, often consisting of hundreds or thousands of historical bug reports.
+In our setting, each project contains only tens of concurrency-related bug reports, making such approaches impractical.
+
+Similarly, several recent LLM-based fault localization techniques (e.g., AutoFL and AgentFL) rely on dynamic execution information, such as test cases, coverage, or execution traces.
+These methods are designed for settings where runnable test suites are available, which is not assumed in our work.
+Our goal is to localize concurrency faults in scenarios where only bug reports and source code are accessible.
+
+Other approaches, such as graph-based LLM reasoning methods, are often developed for Python projects and rely on constructing program graphs for reasoning.
+Directly extending these techniques to large-scale Java systems is challenging due to the size and complexity of Java program graphs, including extensive virtual dispatch, framework-level abstractions, and dense dependency structures.
+Constructing and reasoning over such graphs would significantly increase analysis overhead and is orthogonal to the lightweight, interaction-level abstraction adopted in our approach.
+
+Taken together, these considerations motivate our comparison with IR-based and bug-report-driven baselines, which share the same input assumptions.
+Our approach is complementary to execution-based and learning-based techniques, and is designed to address a distinct and practically relevant fault localization setting.
+
+\section{Threats to Validity}
+\label{sec:threats}
+
+We discuss potential threats to the validity of our study from three perspectives.
+
+\textbf{Internal Validity.}
+Internal validity threats mainly stem from the use of large language models in the localization process.
+Although LLMs may exhibit nondeterministic behavior, our approach mitigates this issue through hierarchical retrieval, constrained context, and deterministic decoding settings.
+Nevertheless, different LLM implementations or inference configurations may still lead to variations in results.
+To reduce such effects, we apply identical prompts, workflows, and decoding parameters across all evaluated models.
+
+\textbf{External Validity.}
+Our experiments are conducted on real-world Java projects with documented concurrency bugs. Although the entity-extraction layer is tailored to Java concurrency primitives, the benchmark includes diverse concurrency styles, ranging from lock-heavy systems (e.g., Redisson) to executor- and async-heavy systems (e.g., Pulsar). While adapting the extraction layer to other languages would require additional engineering effort, the hierarchy-guided retrieval and interaction-level reasoning components are largely language-agnostic.
+
+\textbf{Construct Validity.}
+Our interaction DSL captures shared-resource accesses and cross-thread interactions but does not model fine-grained synchronization semantics such as happens-before relations or memory-model effects. Consequently, the DSL is most effective for shared-access concurrency bugs such as races and atomicity violations, and less suitable for ordering-related bugs. We leave detailed subtype-specific evaluation to future work.
+
+\section{Conclusion}
+
+In this paper, we proposed \Name{}, an explainable fault localization framework for concurrent programs using bug reports alone.
+By combining hierarchical retrieval with a concurrency-aware knowledge base and interaction-level DSL, \Name{} enables LLMs to reason over thread entries and shared-resource interactions in a structured and focused manner.
+Extensive experiments on real-world concurrent bugs show that \Name{} consistently outperforms state-of-the-art IR-based and LLM-based approaches across different report qualities, unseen bugs, and LLM backbones.
+These results indicate that effective fault localization depends more on structured concurrency modeling and guided retrieval than on raw LLM capacity.
+Future work includes improving the precision of static concurrency knowledge, better handling concurrency behavior in third-party libraries, and integrating additional signals when available to further enhance robustness and explainability.

@@ -1,0 +1,27 @@
+\vspace{-0.5em}
+\begin{table}[h] \small
+\centering
+\caption{Bug Reports from Apache Druid} \label{tab:example}
+\vspace{-8pt}
+\begin{tabularx}{\textwidth}{X}
+\Xhline{1.0pt}
+\textbf{Title:} Overlord assigns too many tasks to middle manager \textit{\#3174} \\\hline
+\textbf{Description:} RTR has a guard against multiple things trying to launch on the same worker via \\
+workersWithUnacknowledgedTask.putIfAbsent(immutableZkWorker.get().getWorker().getHost(), ...\\
+INFO [WorkerTaskMonitor] io.druid.indexing.worker.WorkerTaskMonitor - Submitting runnable for task ... \\
+INFO [WorkerTaskMonitor] io.druid.indexing.worker.WorkerTaskMonitor - Affirmative. Running task ... \\ \hline
+\textbf{FlexFL:} 1. \textit{find\_class}("WorkerTaskMonitor") $\rightarrow$ 2. \textit{get\_methods\_of\_class}("WorkerTaskMonitor") $\rightarrow$ 3. \textit{get\_code\_snippet\_of\_method}("mainLoop()") $\rightarrow$ 4. \textit{find\_class}("ForkingTaskRunner") ...\\[5pt]
+\textbf{Top 1}: io.druid.indexing.worker.WorkerTaskMonitor.mainLoop() \\
+\textbf{Top 2}: io.druid.indexing.overlord.ForkingTaskRunner.run(Task) ... \\
+% \textbf{Top 3}: io.druid.indexing.common.task.Task.getId() ...\\
+\Xhline{1.0pt}
+\textbf{Title:} Race condition in autoscaling terminates nodes that were just assigned tasks \textit{\#1360}\\ \hline
+\textbf{Description:} It is possible for the indexing service auto-scaling to terminate nodes that have just been assigned a task, but that have not updated the task status to running yet.
+... If you are unlucky and autoscaling checks right after the task has been assigned, but right before the worker announces the task status, and the worker is not running any other tasks, your tasks will get killed. ...\\ \hline
+\textbf{FlexFL:} 1. \textit{find\_class}("autoscaling") $\rightarrow$ 2. \textit{get\_methods\_of\_class}("AutoScaler") $\rightarrow$ \\ 3. \textit{get\_code\_snippet\_of\_method}("terminate(List<String>)") ...\\
+\textbf{Top 1}: io.druid.indexing.overlord.autoscaling.AutoScaler.terminate(List<String>) \\
+\textbf{Top 2}: io.druid.indexing.overlord.autoscaling.AutoScaler.terminateWithIds(List<String>) ... \\
+\Xhline{1.0pt}
+\end{tabularx}
+\end{table}
+\vspace{-0.5em}

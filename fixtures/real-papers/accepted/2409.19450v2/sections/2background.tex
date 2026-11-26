@@ -1,0 +1,88 @@
+\section{Background and Related Work}
+
+
+
+\subsection{Secretive Behavior}
+
+We consider the secret use of LLMs one special case of secretive behavior, and review the psychology literature on secretive behavior in other contexts.
+A broader view of secrecy regards it as an intention to keep information unknown to one or more one individual, with two main psychological paths~\cite{slepian2022process, slepian2017experience}. 
+One is ``mind-wandering to secret,'' an internal and subconscious process where secret occupies an individual's mind~\cite{slepian2022process, slepian2017experience}. 
+The other is ``concealment of secret,'' an external process where one makes conscious decisions to not disclose the information to others~\cite{slepian2022process, slepian2017experience}.
+Our study falls under the path of ``concealment of secrets'', focusing on the secretive behavior or intentions that associate with their external actions.
+
+
+Several studies on secretive behavior lies in secret consumption in different areas, such as secrete consumption on counterfeit~\cite{bian2016new}, secret consumption of meat~\cite{khara2020we} and secret snack consumption behavior~\cite{forbes2016analysis}.
+A large portion of studies about specific secretive behavior lies in area of ``knowledge hiding behavior''~\cite{connelly2012knowledge, serenko2016understanding, arshad2018workplace, kumar2018you}.
+\citet{connelly2012knowledge} and \citet{serenko2016understanding} introduced early research that formally studied the factors influencing people's knowledge hiding behavior in organizations. 
+They used a mixed-methods approach, asking participants to share their personal related stories and then measuring participant's perceptions related to the behavior~\cite{connelly2012knowledge, serenko2016understanding}.
+These studies inspired our study design, which also employed a mixed-methods approach, including an open-ended case-listing survey followed by a controlled online experiment.
+
+
+Research on users' secret use of AI or LLMs is limited, showing a gap that our study aims to address. 
+One related study about AI Ghostwriter Effect~\cite{draxler2023ai} found that users refrain from declaring AI authorship even though they do not consider themselves the owners and authors of AI-generated text.
+Their study design focused on an AI-assisted postcard writing task, while our research examined tasks that could broadly engender passive non-disclosure and active concealment behaviors.
+Through the unique lens of secret use behaviors, our work identifies new social factors that affect these behaviors, such as users' own moral judgments and their perceived social expectations.
+
+
+\subsection{AI Transparency}
+
+With the deeper integration of AI into people's daily lives and decision-making, the lack of transparency in AI systems can lead to doubts about the reliability of decisions made by AI~\cite{von2021transparency, larsson2020transparency, toy2023transparency, chander2018working}. 
+Current research in the field of HCI aimed at enhancing AI transparency can be divided into two primary categories: the ways in which users perceive these AI systems, and the development of tools by researchers and engineers to increase the explainability of AI systems.
+
+Researchers conducted lots of studies to understand how users perceive AI systems \cite{rzepka2018user, shin2020user, kocielnik2019will, shin2021effects}.
+\citet{shin2021effects} found that users tend to view algorithms as more trustworthy and useful when they perceive them to be fair, accountable, transparent, and explainable.
+Similarly, \citet{yu2022artificial}, through interviews with 235 employees about their views on AI at work, found that transparency in AI decision-making improved both its perceived effectiveness and addressed the associated discomfort.
+
+
+Given the insights about users' perceptions and needs, researchers have developed tools to enhance users' ability to assess the transparency of the AI systems they use \cite{zhang2020lay, lundberg2019explainable, hu2021xaitk, karim2023explainable, dwivedi2023explainable}.
+For example, Transparency-Check~\cite{schelenz2023transparency} is a tool to aid users in evaluating the transparency of AI-based systems, particularly those with personalization.
+This tool includes questions around data collection, algorithmic models, personalized recommendations, and user control.
+
+
+Prior research of AI transparency has primarily viewed AI researchers and practitioners as the information provider, with users being the recipients of the information~\cite{corbett2023interrogating}.
+However, the user-driven, open-ended nature of the use scenarios of large language models (LLMs) and the extensive use of LLM-based conversational agents in critical domains have raised concerns about the transparency of how LLMs are used by users, anticipating users to play an important role as information providers as well.
+By examining the contextual factors and psychological process that affect users' secret use behavior, our findings shed light on users' ability to fulfill their responsibility towards AI transparency.
+Our research broadens the scope of research in the field of AI transparency.
+
+
+
+
+
+
+\subsection{Existing Community-Level Requirements of Transparency for LLM Use}
+\label{sec:community-level-requirements-of-transparency}
+With the rapid growth of LLMs, some agencies have announced regulations or recommendations regarding the use of LLMs in their respective communities. 
+Despite their different strategies of handling the impact of LLMs, a common theme among these regulations and recommendations is transparency.
+We summarize major examples below.
+
+\paragraph{Universities} 
+Universities have implemented varied regulations regarding students' obligations to disclose their use of LLMs in coursework.
+For example, University of Minnesota requires students to reference all the content in their assignment generated by the AI tools, or they will be regarded as scholastic dishonesty~\cite{UMNLib2024LibGuide}.
+University of British Columbia allows students to use LLMs with instructors' approvals and provides a guide on how to cite contents generated by LLMs~\cite{UBCLibrary2024CitingGenAI}. 
+
+
+\paragraph{Journalism, Social Media and Blog} 
+Journalism and social media platforms also put regulations to standardize the use of LLMs.
+The Associated Press encourages its journalists to verify that material received from other sources is also free from AI-generated content, which relies on a reliable source of whether AI is involved in the generation of the content~\cite{AP2024ChatGPTStance}.
+Medium, an online publishing platform, announced that the use of LLMs is permitted for writing stories~\cite{Medium2024DistStandards}.
+However, to promote transparency, stories that incorporate AI assistance must be clearly labeled as such.
+YouTube encourages its content creators to maintain transparency regarding the use of AI~\cite{YouTube2024ResponsibleAI}.
+
+
+\paragraph{Academia}
+Academia conferences and journals often request authors to fully reveal their use of LLMs. 
+For example, the Association for Computing Machinery (ACM) and Elsevier have updated their policy regarding authorship and the use of LLMs~\cite{ACM2023AuthorshipPolicy, Elsevier2024AIWritingPolicy}.
+The creation of content with LLM tools and technologies is permitted, but it must be fully disclosed in the work.
+
+
+\paragraph{Intergovernmental and governmental organization}
+Regulations requiring the disclosure of LLM use are evolving globally and vary across regions and specific applications. As an example,
+The Canadian federal government has released new guidelines for employees who wish to use artificial intelligence tools like ChatGPT in their work~\cite{Canada2024GenerativeAI}.
+The guidelines require employees to clearly identify content generated by LLMs and to inform users when they are interacting with an AI tool. 
+
+
+\paragraph{Workplaces}
+Companies and platforms are increasingly concerned about their employees' use of LLMs. 
+For instance, Upwork, a freelancing platform, mandates its freelancers to explicitly disclose to clients whenever artificial intelligence is used in content creation~\cite{Upwork2024ChatGPTStance}. This includes job proposals and direct messages.
+Additionally, an article titled ``Writing A ChatGPT Policy For Your Organization'' published on LinkedIn advises employers to establish a LLMs policy for their companies, emphasizing the importance of transparency in AI use in the workplace~\cite{LinkedIn2024ChatGPTPolicy}.
+

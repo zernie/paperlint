@@ -1,0 +1,123 @@
+\section{Experimental Design}
+\label{sec:exp_design}
+% We evaluate our~\ourapp against baseline SOTA guardrails. Overall, we observe that 1)~\ourapp achieves a 85\% OOD detection rate when prompted with jailbreak attacks, and 2)~\ourapp 
+In this section, we present the motivation of our three research questions, the studied dataset, the studied jailbreak attacks, and our experimental setup.
+
+\subsection{Research Questions}
+To evaluate our \ourapp~approach, we formulate the following three research questions.
+
+{\bf RQ1)} {\bf \rqone}
+Existing guardrails, such as LlamaGuard, achieve state-of-the-art performance on defending known unsafe prompts. However, our preliminary analysis shows that LlamaGuard’s defense success rate drops by 20\%-60\% when confronted with jailbreak attacks that are unseen during its training, highlighting a key limitation of current runtime guardrails. To address this, we propose \ourapp, a continual learning guardrail that detects and adapts to such unseen attacks using out-of-distribution (OOD) detection. Nevertheless, a prerequisite for continual updating is the ability to detect unseen jailbreak prompts as OOD. Thus, we first formulate this RQ to evaluate \ourapp's~effectiveness in identifying unknown jailbreak prompts as OOD.
+%Guardrail models inevitably encounter novel jailbreak attacks that weren't present in their training data. To identify these attacks, we first frame this problem as an OOD detection problem, as these jailbreak attacks are bypassing the guardrails due to be OOD from the guardrails' training data. To identify which OOD detection method works the best, we first evaluate the performance of each different OOD detection method in this RQ.
+
+{\bf RQ2)} {\bf \rqtwo}
+A key goal of \ourapp~is to serve as an adaptive runtime guardrail that can adapt to evolving jailbreak attacks over time. To achieve this, \ourapp~incorporates continual updates triggered by detected out-of-distribution (OOD) jailbreak prompts. However, it remains unknown whether this adaptive process enables \ourapp~to quickly reach optimal defense performance against unseen jailbreak attacks. Thus, we formulate this research question to assess how rapidly \ourapp~can achieve optimal Defense Success Rate (DSR) in a simulation-based evaluation of evolving jailbreak scenarios.
+%After jailbreak prompts are detected as OOD, we want to teach the model to learn from them so they can be correctly identified in the future. To understand which updating technique can most effectively improve defence capabilities, while only utilising limited new data is crucial for maintaining robust guardrails. Thus, this research question attempts to identify the immediate performance improvements of different guardrail updating techniques, namely SFT and LoRA. 
+
+% In real-world deployment scenarios, collecting and annotating jailbreak examples is a resource-intensive and time-consuming task. 
+% The guardrail updating technique that can achieve high defence success rates with minimal additional data offers significant practical advantages, especially when rapid response to new attacks is necessary. This question examines the data efficiency of guardrail updating technique, which is critical for operational feasibility.
+
+{\bf RQ3)} {\bf \rqthree}
+A common concern in continual learning frameworks such as our \ourapp~is catastrophic forgetting—a phenomenon where a model adapts to new data but loses previously acquired knowledge \cite{kirkpatrick2017overcoming}. In our setting, \ourapp~continuously updates using detected out-of-distribution (OOD) jailbreak prompts. However, it remains unclear whether this update process causes \ourapp~to forget knowledge of the original in-distribution prompts, which include both safe and unsafe examples. Thus, we formulate this research question to evaluate the extent to which \ourapp~exhibits forgetting after continual updates.
+%An ideal updating technique should maintain high performance on existing threats while adapting to new ones. This question evaluates the stability-plasticity trade-off essential for long-term model maintenance.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figs/dataset_overview.pdf}
+    \caption{Overview of dataset preparation for training \ourapp~and evaluating it in RQ1–RQ3.}
+    \label{fig:dataset_overview}
+\end{figure}
+
+\subsection{Dataset Preparation}
+\label{sec:dataset_prep}
+Fig.~\ref{fig:dataset_overview} presents an overview of our dataset preparation for training and evaluation. 
+We build our \ourapp~approach using a guardrail training dataset with an OOD-aware training dataset.
+We use a separate OOD detection testing dataset for RQ1, and the continual learning testing Dataset for RQ2 and RQ3. Below, we describe each dataset in detail.
+
+\begin{itemize}
+    \item Guardrail Training Dataset of \ourapp~ ($\mathcal{D}_{\text{train}}^{\text{ID}}$): 
+    To adapt the GPT-2 model to a guardrail, we use the Aegis train dataset~\cite{ghosh2025aegis2}. This dataset provides a collection of safe, and unsafe prompts sourced from real-world interactions. We limit this dataset to only contain prompts less than 100 characters to align the training data with the typical length of user queries encountered in production as observed by Transurban. This results in a total of 6,905 safe and 12,233 unsafe prompts after filtering. This dataset is considered in-distribution when computing the out-of-distribution loss term $\mathcal{L}_{OOD}$, as it represents common prompts in natural language.
+    % While Aegis offers valuable content covering various harmful request categories and refusal scenarios, it does not specifically focus on sophisticated jailbreak attacks designed to circumvent model guardrails.
+    %\ray{can we quote transurban for this?} \mike{to check with Kla}
+    
+    \item OOD-Aware Training Dataset of \ourapp~ ($\mathcal{D}_{\text{train}}^{\text{OOD}}$): 
+    % \ray{For this bit, we still use the jailbreak dataset during training GPT2 initially to let the model learn about how to assign energy loss, but not used for classification loss, is it ok to say it here?} \mike{yes, we might explain this in E-1, just to clarify, we use validation jailbreak set for training OOD loss, and testing jailbreak set for testing RQ2 and 3, right?} \ray{separate jailbreak dataset (jailbreak28k) for training OOD loss, and then our own crafted dataset with 10 attacks for testing in RQ1, then split into training + testing for RQ2, 3}
+    To enhance the OOD awareness of our model, we incorporate the Jailbreakv-28k dataset~\cite{luo2024jailbreakv} during training. Specifically, a set of 17,176 prompts is used to guide the optimization of the OOD loss denoted in Section \ref{sec:build_ood}, enabling the model to distinguish between in-distribution and OOD prompts. Notably, the Jailbreakv-28k samples are not used for the primary classification CE loss, but solely to inform the model’s OOD awareness.
+    
+    \item OOD Detection Testing Dataset (RQ1):
+    For testing OOD detection, we randomly sample 1,050 unsafe prompts from the Aegis test set and transform them into 10 distinct jailbreak attacks: AIM \cite{jailbreakchat2023}, DAN \cite{shen2023anything}, Combination (Prefix injection + Refusal Suppression) \cite{wei2024jailbroken}, Self Cipher \cite{yuan2023gpt}, Deep Inception \cite{li2023deepinception}, Caesar Cipher \cite{yuan2023gpt}, Zulu \cite{yong2023low}, Base64 \cite{wei2024jailbroken}, SmartGPT \cite{kang2024exploiting} and Code Chameleon \cite{lv2024codechameleon}. This results in a total of 1,050 jailbreak prompts (105 per attack type), where each jailbreak prompt is transformed from a distinct unsafe prompt. 
+    Examples illustrating how unsafe prompts are transformed by each of the ten attack methods are included in our replication package. 
+    These transformed prompts represent out-of-distribution (OOD) data in our setting, as they deviate from natural language (NL) and are not typical of standard unsafe inputs.
+    In addition, we use the Aegis validation set—comprising 314 safe and 640 unsafe NL prompts—to test the false positive rate of our OOD detection method. These prompts are considered in-distribution (ID), since they reflect the kind of NL inputs the guardrail is expected to encounter.
+    %\ray{For testing, we apply 10 jailbreak techniques (as described in Section~\ref{}) to a total of 1,039 unsafe prompts from the Aegis dataset, which are not present in the training of the model, distributed evenly across the 10 attack types. 
+    %In addition, we use 954 Aegis validation prompts, of which 314 are safe and 640 are unsafe, to evaluate the false positive rate of our OOD method, where in-distribution samples are evaluated as OOD.}
+    
+    \item Continual Learning Testing Dataset (RQ2 \& RQ3): 
+    To construct the continual learning (CL) dataset, we select 992 OOD jailbreak prompts correctly identified by our OOD method in RQ1. For each attack type, 50 prompts are held out for testing the guardrail’s defense capability, while the remaining prompts are used for continual updates.
+    To evaluate catastrophic forgetting—whether the guardrail loses its ability to defend against in-distribution (ID) unsafe prompts after learning from OOD data—we reuse the same 954 ID prompts from the Aegis validation set as in RQ1.
+    
+\end{itemize}
+% To address our three research questions, we require a comprehensive dataset encompassing jailbreak prompts, unsafe prompts, and safe prompts. We prepared a dataset comprising 46,709 jailbreak prompts, 17,401 unsafe prompts, and 17,423 safe prompts. Jailbreak prompts were both sourced from the Jailbreak28k dataset \cite{}, and also generated by applying 10 distinct jailbreak attack techniques to the 1,879 unsafe prompts sourced from four benchmark datasets: Do-Not-Answer \cite{wang2023not}, CatQA \cite{bhardwaj2024language}, AdvBench \cite{zou2023universal}, and Forbidden Questions \cite{shen2023anything}, transforming them into adversarial examples designed to bypass guardrails. Unsafe prompts were sourced from the BeaverTails dataset \cite{ji2023beavertails}. For safe prompts, we utilised the Alpaca dataset \cite{taori2023alpaca}.
+
+% To answer RQ1, we first train the model using a split of 16013 safe prompts and 15987 unsafe prompts, with 17176 jailbreak prompts from the Jailbreak28k dataset used to assist in calculating the energy loss during training. Then, we test the model using our generated jailbreak dataset of 18,790 jailbreak prompts, under new distribution for OOD detection performance, as well as validating the classification performance using a validation set containing 1410 safe prompts and 1414 unsafe prompts.
+
+% To answer RQ2, we use the same model after training from RQ1, then split the detected OOD prompts into training, testing, and validation sets. We then proceed to retrain the model from the previous checkpoints, using the training set of identified OOD jailbreak prompts. After training, we pass both the testing set of identified OOD jailbreak prompts to investigate whether the model has learned to identify these jailbreak prompts, as well as the previous validation set from RQ1, to check that whether catastrophic forgetting has occurred.
+
+%\subsection{Guardrail Baseline}
+%Building on our preliminary analysis, we compare \ourapp~to LlamaGuard~\cite{inan2023llama}, a leading open-source runtime guardrail for LLM-powered systems. While LlamaGuard demonstrates strong accuracy, our findings show it struggles to generalize to unsafe prompts that differ significantly from its content moderation training data. For evaluation, we use the LlamaGuard-3-1B and LlamaGuard-3-8B models from Huggingface as baselines.
+%\begin{itemize}
+    %\item Low-Rank Adaptation (LoRA): To enable continual updates and address RQ2 and RQ3, we use Low-Rank Adaptation (LoRA) \cite{hu2022lora}, which efficiently adapts language models by introducing a small number of trainable parameters. We apply LoRA to fine-tune the model on detected OOD jailbreak prompts while keeping the original parameters fixed to preserve in-distribution knowledge.
+    %\item Supervised Fine Tuning (SFT): In this approach, we take the pre-trained GPT-2 model and apply the finetuning step to the entirety of the weights on the OOD jailbreak samples. This method aims to adapt the model to new attack patterns while leveraging its existing knowledge, potentially offering a balance between updating efficiency and performance.
+    %\item One-shot/Few-shot Learning: This technique leverages in-context learning capabilities without model parameter updates. We format one example (one-shot) or multiple examples (few-shot) of OOD attacks as context for the model to learn from during inference. This approach requires no additional training but tests the model's ability to recognise patterns from minimal examples.
+%\end{itemize}
+%To compare~\ourapp against current open-source guardrails, we select the LlamaGuard LLM Guardrail as the baseline.
+%\ray{LlamaGuard is an open-source, state-of-the-art external guardrail for human-AI conversations~\cite{inan2023llama}. It is a Llama3 LLM fine-tuned on a diverse taxonomy of safety risks, enabling it to classify prompts and responses as either ``safe'' or ``unsafe.'' When a prompt is deemed unsafe, LlamaGuard also provides the relevant risk category. }
+
+%\ray{Despite LlamaGuard’s larger parameter size—the smallest model contains 1B parameters compared to just 117M in our~\ourapp—we consider it a suitable baseline for comparison, as it is an LLM that can be fine-tuned for custom taxonomies and adapted to defend against unknown jailbreak attacks.
+%Specifically, we use the LlamaGuard-3-1B and LlamaGuard-3-8B models as baselines to compare against our proposed~\ourapp. 
+%The models are used through the stored checkpoints downloaded from HuggingFace. \footnote{\url{https://huggingface.co/meta-llama/Llama-Guard-3-1b}}
+%\footnote{\url{https://huggingface.co/meta-llama/Llama-Guard-3-8b}}}
+
+%\subsection{OOD Detection Baselines}
+%\label{sec:ood_baselines}
+%In RQ1, we compare our method with three OOD detection methods as follows:
+
+\subsection{Model Update Technique for Continual Learning}
+To enable continual updates and address RQ2 and RQ3, we use Low-Rank Adaptation (LoRA) \cite{hu2022lora}, which efficiently adapts language models by introducing a small number of trainable parameters. We apply LoRA to fine-tune the model on detected OOD jailbreak prompts while keeping the original parameters fixed to preserve in-distribution knowledge.
+
+\subsection{Experiment Setup}
+\label{sec:experiment_setup}
+\subsubsection{Model Implementation \& Optimisation}
+\label{sec:model_impl}
+To implement our \ourapp~guardrail for defending against unsafe prompts, we leveraged two Python libraries: Transformers~\cite{wolf2019huggingface} and PyTorch~\cite{paszke2017automatic}. The Transformers library provides APIs for pre-trained transformer architecture, while PyTorch facilitates tensor computations and backpropagation during training.
+We downloaded the pre-trained GPT-2 checkpoint (``openai-community/gpt2'') consisting of 137M parameters and adapted it for binary classification by appending a linear classification head to the final hidden state of the transformer.
+
+All parameters in the model were fine-tuned on our labelled dataset of safe and unsafe prompts using one NVIDIA RTX 3090 GPU, with a total training time of 1.5 hours. The training set consists of the Aegis dataset as outlined in \ref{sec:dataset_prep}.
+For optimization, as described in Section~\ref{sec:build_ood}, we use a combined loss function to train an OOD-aware guardrail. Specifically, we compute $\mathcal{L}_{\text{CE}}$ for the main binary classification task and $\mathcal{L}_{\text{OOD}}$ as an auxiliary loss for OOD detection. The total loss is defined as:
+$\mathcal{L} = \lambda \mathcal{L}_{\text{OOD}} + (1 - \lambda) \mathcal{L}_{\text{CE}}$
+where $\lambda$ (set to 0.5 in our experiments) balances the contribution of the two objectives.
+
+%The cross-entropy loss for binary classification is given by:
+%\begin{equation}
+%\mathcal{L}_{\text{CE}} = - \left[ y \log p(y|x) + (1-y) \log (1-p(y|x)) \right]
+%\end{equation}
+%where $y=1$ for unsafe and $y=0$ for safe prompts.
+
+%The total loss is a weighted sum of the energy and classification losses:
+%\begin{equation}
+%\mathcal{L} = \lambda \mathcal{L}_{\text{OOD}} + (1-\lambda) \mathcal{L}_{\text{CE}}
+%\end{equation}
+%with the weighting parameter $\lambda$ (set to 0.5 in our experiments) controlling the trade-off between the two objectives.
+
+%During training, we mask out all tokens except the final classification token to ensure the model is only penalised for incorrect safety predictions.
+
+\subsubsection{Hyper-parameters Settings (\ourapp~Training)}
+We use the AdamW optimizer with a learning rate of $1 \times 10^{-4}$, a batch size of 8, and a maximum sequence length of 512 tokens. Training runs for 10 epochs with gradient clipping (max norm 2.0). The best model is selected based on the lowest validation loss $\mathcal{L}$ across epochs. All training details are open-sourced at \url{https://github.com/awsm-research/AdaptiveGaurd}.
+%For all guardrail training experiments, we set the learning rate to $1 \times 10^{-4}$ and used a constant learning rate scheduler. The Adam optimiser was employed to update model parameters throughout training. The batch size was set to 8, and the maximum sequence length was fixed at 512 tokens. Gradient clipping was applied with a maximum norm of 1.0 to ensure stable updates. The model was trained for 10 epochs. 
+%To select the optimal configuration, we conducted a hyperparameter sweep over learning rate, batch size, and gradient clipping norm, and the best-performing settings were used this section.
+%During training, we mask out all tokens except the final classification token to ensure the model is only penalised for incorrect safety predictions.
+
+\subsubsection{Hyper-parameters Settings (Continual Learning)}
+For the continual learning experiments in RQ2 and RQ3, we use LoRA adaptation to update the model. A constant learning rate of $1 \times 10^{-4}$ is applied throughout, using the AdamW optimizer. Following the original LoRA paper~\cite{hu2022lora}, we set the rank ($r$) to 32, alpha ($\alpha$) to 32, and apply a dropout rate of 0.1.
+LoRA is applied to the attention and projection modules in the transformer architecture used by both \ourapp~and the LlamaGuard baseline. Each continual learning step uses a batch size of 1, a maximum sequence length of 512 tokens, and trains for one epoch per batch.
+%The continual learning pipeline is orchestrated by iteratively fine-tuning the model on batches of jailbreak prompts.

@@ -1,0 +1,412 @@
+\section{Our Voting-based Defense: {\name}}
+\label{sec:defense}
+
+In this section we introduce our voting-based certified defense {\name} for GNNs against arbitrary perturbations. We first give an overview of {\name} in Section~\ref{Sec:overview}, which consists of three critical steps, e.g., the first step is to divide a graph into multiple subgraphs with disjoint edges. We then 
+design two distinct graph division strategies (one is edge-centric in Section~\ref{Sec:edgebased} inspired by \cite{xia2024gnncert} and the other is node-centric in Section~\ref{Sec:nodebased} by further enhancing the robustness guarantee).  
+Within each strategy, we derive our deterministic certified robustness results, which can treat existing defenses as special cases. 
+Figure~\ref{fig:overview} briefly illustrates our {\name}.
+
+\begin{figure*}[t]
+%\vspace{-4mm}
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \includegraphics[width=0.98\linewidth]{figs/NodeVote.jpg}
+    \vspace{-2mm}
+    \caption{Overview of our {\name} (use node classification for illustration), which consists of three steps. Assume we are given an input graph $G$, a GNN node classifier $f$, and a target node $v$ with label $y_v$ for classification. {\bf Step I:}  it divides $G$ into a set of (e.g., 4) subgraphs via the proposed \emph{Edge-Centric Graph Division} (Section~\ref{Sec:edgebased}) or \emph{Node-Centric Graph Division} (Section~\ref{Sec:nodebased}) strategy. 
+    {\bf Step II:} it builds a voting node classifier $\bar{f}$ based on all the subgraphs. Specifically, the target node's predicted class  by $f$ on all subgraphs are treated as votes, and $\bar{f}$ returns the class with the most vote as the final prediction. {\bf Step III:} it derives the certified perturbation size $M$ for $\bar{f}$  against arbitrary perturbations with a deterministic (100\%) guarantee. 
+    }
+    \label{fig:overview}
+    \vspace{-4mm}
+\end{figure*}
+
+\vspace{-2mm}
+\subsection{Overview}
+\label{Sec:overview}
+
+Given a graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$, 
+a GNN node/edge classifier $f$, the set of classes $\mathcal{Y}$, and a target node $v\in\mathcal{V}$ if the task is node classification. 
+At a high level, our defense framework is similar to \cite{xia2024gnncert} that consists of three steps below:  
+
+\vspace{+0.05in}
+\noindent {\bf Step I:  divide the graph into multiple subgraphs.} We divide $G$ into 
+a set of $T$ subgraphs $\mathcal{G}_T=\{G_{1},G_{2},\dots,G_{T}\}$ via a hash function and ensure  
+edges in different subgraphs are \emph{disjoint}. 
+
+
+\vspace{+0.05in}
+\noindent {\bf Step II: build a voting-based node/graph classifier:} We apply the GNN classifier $f$  to make predictions on all the $T$ subgraphs, and count the vote $c_y$ for every class $y$ in $\mathcal{Y}$. 
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+%\label{eqn:vote}
+& \textbf{Node classifier: } c_{y_v} = \sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i})_v=y_v), \forall y_v \in \mathcal{Y} \label{eqn:vote_NC} \\
+& \textbf{Graph clasifier: } c_{y_G} = \sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i})=y_G), \forall y_G \in \mathcal{Y} \label{eqn:vote_GC} 
+\end{align}
+}%
+
+
+We then define our \emph{voting node/graph classifier} $\bar{f}$ as returning the class with the most vote:  
+
+
+{
+\vspace{-4mm}
+%\small
+\begin{align}
+& \textbf{Voting node classifier: } \bar{f}(G)_v = \underset{y_v \in \mathcal{Y}}{\arg\max} c_{y_v} \label{eqn:vc_NC} \\
+& \textbf{Voting graph classifier: } \bar{f}(G) = \underset{y_G \in \mathcal{Y}}{\arg\max} c_{y_G} \label{eqn:vc_GC} 
+\end{align}
+}%
+
+
+\vspace{-2mm}
+\noindent {\bf Step III: derive the deterministic robustness guarantee.} 
+We denote $y_a$ and $y_b$  as the class with the most vote $c_{y_a}$ and 
+the second-most vote $c_{y_b}$, respectively.   
+We pick the class with a smaller index if ties exist.  
+Denote $G'$ as the perturbed graph of $G$ under arbitrary perturbation, and  $\mathcal{G}_T'=\{G'_{1},G'_{2},\dots,G'_{T}\}$ be the set of $T$ subgraphs generated for $G'$ under the same graph division strategy.  
+Then we have the below condition for certified robustness against arbitrary attacks on GNNs.  
+
+
+
+\begin{theorem}[Sufficient Condition for Certified Robustness]
+\label{thm:suffcond}
+\vspace{-1mm}
+Let $y_a, y_b, c_{y_a}, c_{y_b}$ be defined above in node classification or graph classification, and let $M = {\lfloor c_{y_a}-c_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor} / {2}$. The voting classifier $\bar{f}$ guarantees the same prediction on both $G'$ and $G$ for the target node $v$ in node classification or the target graph $G$ in graph classification, if the number of subgraphs' predictions on $\{G_i\}$'s and $\{G'_i\}$' that are different under the arbitrary perturbation is bounded by $M$. I.e., 
+
+{
+\vspace{-4mm}
+\small
+\begin{align}
+    & \forall G': \sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) \leq M \implies \bar{f}(G)_v = \bar{f}(G')_v \label{eqn:suff-NC} \\ 
+    & \forall G': \sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i}) \neq f(G'_{i})) \leq M  \implies \bar{f}(G) = \bar{f}(G')
+    \label{eqn:suff-GC}
+\end{align}
+}
+%\vspace{-2mm} 
+\end{theorem}
+
+\noindent \emph{Proof.} See Appendix \ref{app:suffcond}. 
+
+ 
+\vspace{+0.05in}
+The above theorem motivates us to design the graph division method such that: 1) the number of different subgraph predictions on $\mathcal{G}_T$ and $\mathcal{G}'_T$ can be upper bounded (and the smaller the better).  
+% as small as possible; 
+2) the difference between the most vote $c_{y_a}$ and second-most vote  $c_{y_b}$ is as large as possible, in order to ensure larger certified perturbation size.  
+
+Next, we introduce our two graph division methods.  
+Figure~\ref{fig:subgraphs} visualizes the divided subgraphs of the two methods without and with the adversarial manipulation.  
+
+
+\begin{figure*}[t]
+%\vspace{-4mm}
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \subfloat[{(a) Edge-Centric Graph Division against edge injection and node injection attacks}]{
+     \includegraphics[width=0.9\linewidth]{figs/edge-division-attack.jpg}}
+   
+    \hspace{+20mm}
+    \subfloat[{(b) Node-Centric Graph Division against edge injection and node injection attacks}]{
+    \includegraphics[width=0.9\linewidth]{figs/node-division-attack.jpg}}
+    
+    \vspace{-2mm}
+    \caption{Illustration of our edge-centric and node-centric graph division strategies for node classification. 
+    We use edge injection and node injection attacks to show the bounded number of altered predictions on the generated subgraphs after the attack. {\bf To summarize:} 1 injected edge  affects at most 1 subgraph prediction in both graph division strategies. In contrast, 1 injected node with, e.g., $3$ injected edges can affect (at most) 3 subgraph predictions with edge-centric graph division, but at most 1 subgraph prediction with node-centric graph division. Figures~\ref{fig:subgraphs_NC_more}-\ref{fig:subgraphs_GC} 
+    in Appendix 
+    also show other attacks and on graph classification.    
+    }
+    %\vspace{-4mm}
+    \label{fig:subgraphs}
+    \vspace{-4mm}
+\end{figure*}
+
+\label{Sec:Subgraph}
+
+\subsection{Edge-Centric Graph Division}
+\label{Sec:edgebased}
+
+Our first graph division method is edge-centric inspired by~\cite{xia2024gnncert}. 
+The idea is 
+to divide \emph{edges} in a graph into different subgraphs, such that each edge is deterministically mapped into \emph{only one subgraph}. 
+With this strategy, we can bound the number of altered predictions on these subgraphs before and after the arbitrary perturbation (Theorem~\ref{thm:edgebased}), which facilitates deriving the certified perturbation size (Theorem~\ref{thm:certifyedgebased}).
+Next, we show our edge-centric graph division method in detail. 
+
+
+%\vspace{+0.05in}
+\noindent {\bf Generating edge-centric subgraphs:} 
+We follow \cite{xia2024gnncert} to 
+use the hash function to map edges as shown in Equation \ref{eqn:edgehash}. 
+We build $T$ subgraphs for $G$ as $\mathcal{G}_T = \{ {G}_i = (\mathcal{V},{\bf X}, \mathcal{E}^i): i=1,2,\cdots, T\}$, where 
+$\mathcal{E}^i \cap \mathcal{E}^j =  \emptyset, \forall i,j \in \{1, \cdots, T\}, i \neq j$. 
+
+
+
+Recall that \cite{xia2024gnncert} maps both edges and node features to generate two sets of subgraphs to defend against node feature and edge manipulations. Instead, our method only needs to map edges into a set of subgraphs, which is not only efficient, but also obtains much defense performance. 
+
+%\vspace{+0.05in}
+\noindent {\bf Bounding the number of different subgraph predictions:} 
+For a perturbed graph $G'$, we use the same graph division strategy to generate a set of $T$ subgraphs $\mathcal{G}'_T = \{G'_1, G'_2, \cdots, G'_T\}$. Then, we can upper bound the number of different subgraph predictions on $\mathcal{G}_T$ and $\mathcal{G}'_T$ against any individual perturbation. 
+
+\begin{theorem}[]
+\label{thm:edgeperturb}
+Assume a graph $G$ is under the edge manipulation $\{\mathcal{E}_+,\mathcal{E}_-\}$, 
+then at most $|\mathcal{E}_+| + |\mathcal{E}_-|$ subgraphs generated by our edge-centric graph division have different predictions between $\mathcal{G}'_T$ and $\mathcal{G}_T$. 
+\end{theorem}
+
+\begin{proof}
+Edges in all subgraphs of $\mathcal{G}_T$ are disjoint. 
+Hence, when any edge in $G$ is deleted or added by an adversary, only one subgraph from $\mathcal{G}_T$ is affected. Further, when any $|\mathcal{E}_+| + |\mathcal{E}_-|$ edges in $G$ are perturbed, there are at most $|\mathcal{E}_+| + |\mathcal{E}_-|$ subgraphs between $\mathcal{G}_T$ and $\mathcal{G}'_T$ are different.
+By applying the node/graph classifier on $\mathcal{G}_T$ and $\mathcal{G}'_T$, there are at most $|\mathcal{E}_+| + |\mathcal{E}_-|$ predictions that are different between them.  
+\end{proof}
+
+
+ Unlike edge manipulation, both node and node feature manipulations involve all components (i.e., edges, nodes, and node features) in the graph. At first glance, it seems hard to bound the alter subgraph predictions in this case. After careful analysis, we observe 
+ the underlying  message-passing mechanism in GNNs (Section~\ref{sec:background}) still facilitates us to obtain the upper bound shown below. 
+
+\begin{theorem}[]
+\label{thm:nodeperturb} 
+Assume a graph $G$ is under the node manipulation  
+$\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+},{\bf X}'_{\mathcal{V}_+},\mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$,
+then at most $|\mathcal{E}_{\mathcal{V}_+}| + | \mathcal{E}_{\mathcal{V}_-}| $ subgraphs generated by our edge-centric graph division have different predictions between $\mathcal{G}'_T$ and $\mathcal{G}_T$. 
+\end{theorem}
+
+
+\begin{theorem}[]
+\label{thm:nodefeaperturb} 
+Assume a graph $G$ is under the node feature manipulation 
+$\{\mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r},{\bf X}'_{\mathcal{V}_r}\}$, 
+then at most $|\mathcal{E}_{\mathcal{V}_r}|$ subgraphs generated by our edge-centric graph division have different predictions between $\mathcal{G}'_T$ and $\mathcal{G}_T$. 
+\end{theorem}
+
+\begin{proof}
+Our proof for the above two theorems is based on the key observation that manipulations on isolated nodes have no influence on other nodes' representations in GNNs. 
+Take node injection for instance and the proof for other cases are similar.  
+Note that all subgraphs after node injection will contain the newly injected nodes, but they still do not have overlapped edges between each other via the hash mapping. Hence, the edges $E_{\mathcal{V}_+}$ induced by the injected nodes $\mathcal{V}_+$ exist in at most $|E_{\mathcal{V}_+}|$ subgraphs. In other word, the injected nodes $\mathcal{V}_+$ in at least $T-|E_{+}|$ subgraphs have no  edges and are isolated. 
+
+Due to the message passing mechanism in GNNs, every node only uses its neighboring nodes' representations to update its own representation. Hence, 
+the isolated injected nodes, whatever their features ${\bf X}'_{\mathcal{V}_+}$ are, would have no influence on other nodes' representations, implying at least $T-|E_{+}|$ subgraphs' predictions maintain the same. 
+\vspace{-2mm}
+\end{proof}
+
+
+With above theorems, we can bound the total number of different subgraph predictions with \emph{arbitrary perturbation}.
+
+\begin{theorem}[Bounded Number of Edge-Centric Subgraphs with Altered Predictions under Arbitrary Perturbation]
+\label{thm:edgebased} 
+Given any GNN node/graph classifier $f$, a graph $G$,  
+and $T$ edge-centric subgraphs $\mathcal{G}_T$ for $G$. 
+A perturbed graph $G'$ of 
+$G$ is 
+with arbitrary edge manipulation $\{\mathcal{E}_+,\mathcal{E}_-\}$, node manipulation  
+$\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+}, \mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$, and node feature manipulation 
+$\{{\bf X}_{\mathcal{V}_r}, \mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r}\}$. 
+Then at most $m=|\mathcal{E}_+| + |\mathcal{E}_-| + |\mathcal{E}_{\mathcal{V}_+}| + |\mathcal{E}_{\mathcal{V}_-}| + |\mathcal{E}_{\mathcal{V}_r}|$ 
+predictions are different by the node/graph classifier $f$ on the subgraphs $\mathcal{G}'_T$ generated for the perturbed graph $G'$ and on $\mathcal{G}_T$. 
+In other words, $\sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) \leq m$ for any target node $v \in G$ in node classification or $\sum_{i=1}^{T}\mathbb{I}(f(G_{i})\neq f(G'_{i})) \leq m$ in graph classification. 
+\end{theorem}
+
+%\vspace{+0.05in}
+\noindent {\bf Deriving the robustness guarantee against arbitrary perturbation:} 
+Based on Theorem~\ref{thm:suffcond} and Theorem~\ref{thm:edgebased}, we can derive the certified perturbation size as the maximal perturbation such that Equation~\ref{eqn:suff-NC} or Equation~\ref{eqn:suff-GC} is satisfied. Formally,
+
+\begin{theorem}[Certified Robustness Guarantee with Edge-Centric Subgraphs against Arbitrary Perturbation]
+\vspace{-2mm}
+\label{thm:certifyedgebased} 
+Let $f, y_a, y_b, c_{y_a}, c_{y_b}$ be defined above for edge-centric subgraphs, and   
+$m$ be the perturbation size induced by an arbitrary perturbed graph $G'$ on $G$. 
+The voting classifier $\bar{f}$ guarantees the same prediction on both $G'$ and $G$ for the target node $v$ in node classification (i.e., $\bar{f}(G')_v = \bar{f}(G)_v$) or target graph $G$ in graph classification (i.e., $\bar{f}(G') = \bar{f}(G)$), when $m$ satisfies
+\begin{align}
+\label{eqn:cpz_edge}
+m \leq M = {\lfloor c_{y_a}-c_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor} / {2}.
+\end{align}
+In other words, the maximum certified perturbation size is  $M$.
+\end{theorem}
+\noindent \emph{Remark:} We have the following remarks from our theoretical result in Theorem \ref{thm:certifyedgebased}. 
+
+\begin{itemize}[leftmargin=*]
+\vspace{-2mm}
+\item {No (adaptive/unknown) attack can break {\name} if its perturbation budget is within the derived bound $M$, regardless of the attack knowledge of ANNCert.}
+\vspace{-2mm}
+\item It can be applied for any GNN node/graph classifier. 
+\vspace{-2mm}
+
+\item The  guarantee is true with a probability 100\%. 
+\vspace{-2mm}
+\item It treats existing robustness guarantees as special cases. 
+\begin{itemize}[leftmargin=*]
+    \item For edge manipulation $\{\mathcal{E}_+,\mathcal{E}_-\}$~\cite{bojchevski2020efficient,wang2021certified,xia2024gnncert}, the voting classifier $\bar{f}$ is certified robust if $
+    |\mathcal{E}_+|+|\mathcal{E}_-|\leq M$.  
+    \vspace{-1mm}
+    
+    \item For node manipulation $\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+}, 
+    {\bf X}'_{\mathcal{V}_r}, \mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$ \cite{lai2023nodeawarebismoothingcertifiedrobustness}, %the voting classifier 
+    $\bar{f}$ is certified robust if $|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|\leq M$.
+    \vspace{-1mm}
+    
+    \item For node feature manipulation $\{ \mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r}, {\bf X}_{\mathcal{V}_r}\}$~\cite{jin2020certified,xia2024gnncert}, 
+$\bar{f}$ is certified robust if $|\mathcal{E}_{\mathcal{V}_r}|\leq M$.
+    \vspace{-1mm}
+    \item For both edge {and} node feature manipulation \cite{xia2024gnncert}, 
+    $\bar{f}$ is certified robust if $|\mathcal{E}_+|+|\mathcal{E}_-| + |\mathcal{E}_{\mathcal{V}_r}|\leq M$. 
+    
+\end{itemize}
+
+\end{itemize}
+
+
+
+
+
+\subsection{Node-Centric Graph Division}
+\label{Sec:nodebased}
+
+
+We observe the robustness guarantee under edge-centric graph division is largely dominated by the  
+edges (i.e., $\mathcal{E}_{\mathcal{V}_+}, \mathcal{E}_{\mathcal{V}_-}$) induced by the manipulated nodes $\mathcal{V}_+, \mathcal{V}_-$, and edges $\mathcal{E}_{\mathcal{V}_r}$ by the perturbed node features ${\bf X}'_{\mathcal{V}_r}$. 
+This guarantee could be weak against node or node feature manipulation, 
+as the number of edges (i.e., $|\mathcal{E}_{\mathcal{V}_+}|, |\mathcal{E}_{\mathcal{V}_-}|, |\mathcal{E}_{\mathcal{V}_r}|$) could be much larger, compared with the number of the nodes (i.e., $|{\mathcal{V}_+}|, |{\mathcal{V}_-}|, |{\mathcal{V}_r}|$). 
+For instance, an injected node could link with many edges to a given graph in practice, and when the number exceeds $M$ in Equation~\ref{eqn:cpz_edge},  the certified robustness guarantee is ineffective. 
+
+This flaw inspires us to generate subgraphs, where we expect at most one subgraph is affected 
+under every node or node feature manipulation (this means all edges of a manipulated node should be in a same subgraph). 
+We design a tailored {node-centric graph division} strategy to achieve our goal. 
+
+
+
+\noindent {\bf Naive solutions are ineffective:}  
+A first solution is to map nodes into different subgraphs that are \emph{non-overlapped}, like mapping edges into subgraphs that are non-overlapped in edge-centric method.  
+Though this method may work for graph classification, 
+ it completely fails for node classification, as every node only appears once in all subgraphs and all target nodes can only receive one vote, yielding vacuous robustness. 
+
+A second solution is to 
+retain all nodes in every subgraph (say $G_i$), but keep only edges connected to nodes with the index $i$.  However, this idea still does not work, because some nodes not with index $i$ may still connect to nodes with index $i$, and manipulations on nodes with index $i$ would still influence representations of those nodes with a different index. 
+
+%\vspace{+0.05in}
+\noindent {\bf Generating node-centric directed subgraphs:} 
+We notice the failure of the second solution is because the message passing between two connected nodes $u$ and $v$ is bidirectional. 
+If we decompose an undirected edge into two directed edges, and only use the outgoing edges of nodes, e.g., with index $i$, then the message 
+is passed in one direction, i.e., from index $i$ nodes to their connected nodes. 
+Hence, we propose dividing graphs into directed subgraphs.
+
+
+We use a hash function $h$ to generate directed subgraphs for a given graph $G=(\mathcal{V},\mathcal{E},{\bf X})$. 
+Our node-centric graph division strategy as follow: (1) we treat every undirected edge $e=(u,v) \in G$ as two directed edges for $u$\footnote{GNNs inherently handles directed graphs with directed message passing. Particularly, each node only uses its incoming neighbors' message for update.}: the outgoing edge $u \rightarrow v$ and incoming edge $v \rightarrow u$; (2) for every node $u$, we compute the subgraph index of its every outgoing edge $u \rightarrow v$: 
+\begin{align}
+\label{eqn:nodehash}
+i_{u \rightarrow v} = h[\mathrm{str}(u)] \, \, \mathrm{mod} \, \, T+1. 
+\end{align}
+Note all outgoing edges of $u$ are mapped in the same subgraph.
+
+We use $\vec{\mathcal{E}}_i$ to denote the set of directed edges whose subgraph index is $i$, i.e., $\vec{\mathcal{E}}_i = \{\forall u \rightarrow v \in {\mathcal{E}}: i_{u \rightarrow v}= i \}.$ 
+Then, we can construct $T$ \emph{directed} subgraphs for $G$ as $\vec{\mathcal{G}}_T = \{ \vec{G}_i = (\mathcal{V},\vec{\mathcal{E}}_i,{\bf X}): i=1,2,\cdots, T\}$. 
+{Here, we mention that we need to further postprocess the subgraphs for graph classification, in order to derive the robustness guarantee. 
+Particularly, in each subgraph $\vec{G}_i$, we remove all other nodes whose subgraph index is not $i$. This is because although they have no influence on other nodes' representation, their information would still be passed to the global graph embedding aggregation. To make up the loss of connectivity between nodes and simulate the aggregation, we add an extra node with a zero feature, and add an outgoing edge from every node with index $i$ to it.}
+
+
+
+
+\vspace{+0.05in}
+\noindent {\bf Bounding the number of different subgraph predictions:} 
+Similarly, for a perturbed graph ${G}'$, we use the same graph division strategy to generate a set of $T$ \emph{directed subgraphs} $\vec{\mathcal{G}}'_T = \{\vec{G}'_1, \vec{G}'_2, \cdots, \vec{G}'_T\}$. 
+We first show the theoretical results that can upper bound the number of different subgraph predictions on $\vec{\mathcal{G}}_T$ and $\vec{\mathcal{G}}'_T$ against any individual perturbation. 
+
+
+\begin{theorem}[]
+\label{thm:edgeperturb2}
+Assume a graph $G$ is under the edge manipulation $\{\mathcal{E}_+,\mathcal{E}_-\}$, 
+then at most $|\mathcal{E}_+| + |\mathcal{E}_-|$ subgraphs generated by our node-centric graph division have different predictions between $\vec{\mathcal{G}}'_T$ and $\vec{\mathcal{G}}_T$.  
+\end{theorem}
+
+\begin{proof}
+We simply analyze when an arbitrary edge $(u, v)$ is deleted/added from $G$. It is obvious at most two subgraphs $G_{i_{u \rightarrow v} }$ and $G_{i_{v \rightarrow u} }$ are perturbed after perturbation, but via detailed analysis, at most one subgraph's prediction is affected. 
+
+We consider the following two cases: i)  $i_{u \rightarrow v} = i_{v \rightarrow u}$. This means $u$ and $v$ are in the same subgraph, hence at most one subgraph's prediction is affected. ii) $i_{u \rightarrow v} \neq i_{v \rightarrow u}$. In subgraph $\vec{G}_{i_{u \rightarrow v}}$, $v$ only has incoming edges. Due to the message passing mechanism in GNNs, only the node $v$'s representation $\bm{h}_v^{(K)}$ is affected. Symmetrically in subgraph $\vec{G}_{i_{v \rightarrow u}}$,  only node $u$'s representation $\bm{h}_u^{(K)}$ is affected. Therefore, for node classification on a target node $w \in \mathcal{V}$, there exists at most one subgraph whose prediction is affected (when $w=u$ or $w=v$); for  graph classification, since $u$ (or $v$) is removed in subgraph $\vec{G}_{i_{v \rightarrow u}}$ (or $\vec{G}_{i_{u \rightarrow v}}$), no prediction is changed on the two subgraphs.
+
+
+Generalizing the analysis to any $|\mathcal{E}_+| + |\mathcal{E}_-|$ edges in $G$ being perturbed, at most $|\mathcal{E}_+| + |\mathcal{E}_-|$ predictions are different between $\mathcal{G}_{T}$ and  $\mathcal{G}_{T}'$.  
+\vspace{-2mm}
+\end{proof}
+
+
+\begin{theorem}[]
+\label{thm:nodeperturb2} 
+Assume a graph $G$ is under the node manipulation  
+$\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+}, {\bf X}'_{\mathcal{V}_+}, \mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$,
+then at most $|\mathcal{V}_+| + |\mathcal{V}_-| $ subgraphs generated by our node-centric graph division have different predictions between $\vec{\mathcal{G}}'_T$ and $\vec{\mathcal{G}}_T$. 
+\end{theorem}
+
+\begin{theorem}[]
+\label{thm:nodefeaperturb2} 
+Assume a graph $G$ is under the node feature manipulation 
+$\{\mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r},{\bf X}'_{\mathcal{V}_r}\}$, 
+then at most $|\mathcal{V}_r|$ subgraphs generated by our edge-centric graph division have different predictions between $\vec{\mathcal{G}}'_T$ and $\vec{\mathcal{G}}_T$. 
+\end{theorem}
+
+\begin{proof}
+Our proof for the above two theorems is based on the key observation that: \emph{in a directed graph, manipulations on nodes with no outgoing edge have no influence on other nodes' representations in GNNs}. For any node  $u \in G$, only one subgraph $\vec{G}_{h[\mathrm{str}(u)] \, \, \texttt{mod} \, \, T+1}$ has outgoing edges.
+Take node injection for instance and the proof for other cases are similar. Note that all subgraphs after node injection will contain newly injected nodes $V_{+}$, but they still do not have overlapped nodes with outgoing edges between each other via the hashing mapping. Hence, the injected nodes only have outgoing edges in at most $|V_{+}|$ subgraphs. 
+Due to the directed message passing mechanism in GNNs, every node only uses its incoming neighboring nodes' representation to update its own representation. Hence, 
+the injected nodes with no outgoing edges, whatever their features ${\bf X}'_{\mathcal{V}_+}$ are, would have no influence on other nodes' representations, implying at least $T-|V_{+}|$ subgraphs' predictions maintain the same.
+\vspace{-2mm}
+\end{proof}
+
+\noindent \emph{Remark:} 
+With edge manipulation, like Theorem~\ref{thm:edgeperturb}, Theorem~\ref{thm:edgeperturb2} has the same bounded number of altered subgraph predictions w.r.t. manipulated edges. 
+Unlike Theorems~\ref{thm:nodeperturb} and~\ref{thm:nodefeaperturb}, Theorems~\ref{thm:nodeperturb2} and~\ref{thm:nodefeaperturb2} bound the number of altered subgraph predictions w.r.t. manipulated nodes. \emph{Importantly, we highlight these two bounds allow a manipulated node to link with many even infinite number of edges. Hence, these bounds are inherently robust against node inject attacks which often inject few nodes but with moderate number of edges, and node feature perturbations where the perturbed nodes have high degrees.} 
+
+
+With above  theorems, the total number of different subgraph predictions between  $\vec{\mathcal{G}}'_T$ and $\vec{\mathcal{G}}_T$ with \emph{arbitrary perturbation} can be straightforwardly bounded below.  
+
+\begin{theorem}[Bounded Number of Node-Centric Subgraphs with Altered Predictions under Arbitrary Perturbation]
+\label{thm:nodebased}
+Let $f, v, G, \mathcal{E}_+, \mathcal{E}_-, {\mathcal{V}_+}, {\mathcal{V}_-}, \mathcal{V}_{r}$ be defined in Theorem~\ref{thm:edgebased}, and $\vec{\mathcal{G}}_T, \vec{\mathcal{G}}'_T$ contain directed subgraphs under the node-centric graph division.  
+Then, at most $\bar{m} = |\mathcal{E}_+|+|\mathcal{E}_-| + |{\mathcal{V}_+}| + |{\mathcal{V}_-}| + |{\mathcal{V}_r}|$ predictions are different by the node/graph classifier $f$ on $\vec{\mathcal{G}}'_T$ and on $\vec{\mathcal{G}}_T$.   
+In other words, $\sum_{i=1}^{T}\mathbb{I}(f(\vec{G}_{i})_v\neq f(\vec{G}'_{i})_v) \leq \bar{m}$ for any target node $v \in G$ in node classification or $\sum_{i=1}^{T}\mathbb{I}(f(\vec{G}_{i})\neq f(\vec{G}'_{i})) \leq \bar{m}$ in graph classification. 
+\end{theorem}
+
+%\vspace{+0.05in}
+\noindent {\bf Deriving the robustness guarantee against arbitrary perturbation:} Based on Theorem~\ref{thm:suffcond} and Theorem~\ref{thm:nodebased}, we can derive the certified perturbation size formally stated below
+
+
+\begin{theorem}[Certified Robustness Guarantee with Node-Centric Subgraphs against Arbitrary Perturbation]
+\label{thm:certifynodebased} 
+Let $f, y_a, y_b, c_{y_a}, c_{y_b}$\footnote{Note that $c_{y_a}, c_{y_b}$ have different values with those in edge-centric graph division, as the generated node-centric subgraphs are different from edge-centric subgraphs. Here we use the same notation for description brevity.} be defined above for node-centric subgraphs, and   
+$\bar{m}$ be the perturbation size induced by an arbitrary perturbed graph $G'$ on $G$. 
+With a probability 100\%, the voting classifier $\bar{f}$ guarantees the same prediction on both $G'$ and $G$ for the target node $v$ in node classification (i.e., $\bar{f}(G')_v = \bar{f}(G)_v$) or the target graph $G$ in graph classification (i.e., $\bar{f}(G') = \bar{f}(G)$), 
+if 
+\begin{align}
+\label{eqn:cpz_node}
+\bar{m} \leq M = {\lfloor c_{y_a}-c_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor} / {2}.
+\end{align}
+\end{theorem}
+
+
+\noindent \emph{Remark:} 
+Similarly,  our theoretical result can be applied for any GNN node/graph classifier, is true with probability 100\%, {and cannot be broken by any attack with perturbation budget $\leq M$.} 
+Further, it can treat existing defenses as special cases. 
+
+\begin{itemize}[leftmargin=*]
+    \vspace{-1mm}
+    \item For edge manipulation $\{\mathcal{E}_+,\mathcal{E}_-\}$~\cite{bojchevski2020efficient,wang2021certified,xia2024gnncert}, the voting classifier $\bar{f}$ is certified robust if $|\mathcal{E}_+|+|\mathcal{E}_-|\leq M$.
+        
+    \vspace{-1mm}
+    \item For node manipulation $\{\mathcal{V}_+, \mathcal{E}_{\mathcal{V}_+}, {\bf X}'_{\mathcal{V}_+},\mathcal{V}_-, \mathcal{E}_{\mathcal{V}_-}\}$~\cite{lai2023nodeawarebismoothingcertifiedrobustness}, 
+    %the voting classifier 
+    $\bar{f}$ is certified robust if $|{\mathcal{V}_+}|+|{\mathcal{V}_-}|\leq M$.
+
+    \vspace{-1mm}
+    \item For node feature manipulation $\{\mathcal{V}_r, \mathcal{E}_{\mathcal{V}_r},{\bf X}'_{\mathcal{V}_r}\}$~\cite{jin2020certified,xia2024gnncert}, 
+$\bar{f}$ is certified robust if $|{\mathcal{V}_r}|\leq M$. 
+
+    \vspace{-1mm}
+    \item For both edge {and} node feature manipulation \cite{xia2024gnncert}, 
+    $\bar{f}$ is certified robust if $|\mathcal{E}_+|+|\mathcal{E}_-| + |{\mathcal{V}_r}|\leq M$. 
+
+\end{itemize}
+
+
+
+

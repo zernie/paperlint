@@ -1,0 +1,95 @@
+\usepackage{caption}
+\usepackage{amsmath,amsfonts, amssymb}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\usepackage{url}
+\def\UrlBreaks{\do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M\do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X\do\Y\do\Z\do\[\do\\\do\]\do\^\do\_\do\`\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z\do\.\do\@\do\\\do\/\do\!\do\_\do\ \do\;\do\>\do\]\do\)\do\,\do\?\do\'\do+\do\=\do\#}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{colortbl}
+\usepackage[misc]{ifsym}
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{threeparttable}
+\usepackage{subfigure}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\let\labelindent\relax
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage[normalem]{ulem}
+\usepackage{dblfloatfix}	
+\usepackage[euler]{textgreek}
+
+% \usepackage{mdframed}
+\usepackage{framed}
+\definecolor{formalshade}{rgb}{0.95,0.95,0.97}
+\definecolor{darkblue}{rgb}{0.14,0.22,0.52}
+\newenvironment{formal}{
+  \def\FrameCommand{
+    \hspace{0pt}
+    {\color{darkblue}\vrule width 1.5pt}
+    \colorbox{formalshade}
+  }
+  \MakeFramed{\advance\hsize-\width\FrameRestore}
+  \noindent\hspace{-4.55pt}
+  % \begin{adjustwidth}{}{7pt}
+}
+{
+  % \end{adjustwidth}
+  \endMakeFramed%
+}
+
+\SetKwInput{KwInput}{Input}                % Set the Input
+\SetKwInput{KwOutput}{Output}              % set the Output
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{example}{Example}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{property}{Property}
+\DeclareMathOperator{\E}{\mathbb{E}}
+
+\def\eg{\emph{e.g.,}\xspace}
+\def\etc{\emph{etc.,}\xspace}
+\def\ie{\emph{i.e.,}\xspace}
+\def\etal{\emph{et al.}\xspace}
+\def\vs{\emph{vs.}\xspace}
+\def\cf{\emph{cf.}\xspace}
+
+\newcommand{\one}{({\em i}\/)\xspace}
+\newcommand{\two}{({\em ii}\/)\xspace}
+\newcommand{\three}{({\em iii}\/)\xspace}
+\newcommand{\four}{({\em iv}\/)\xspace}
+\newcommand{\five}{({\em v}\/)\xspace}
+\newcommand{\six}{({\em vi}\/)\xspace}
+\newcommand{\seven}{({\em vii}\/)\xspace}
+
+\newcommand{\todo}[1]{}
+\renewcommand{\todo}[1]{{\color{red} TODO: {#1}}}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{blue}{#1}}
+\SetCommentSty{mycommfont}
+
+\usepackage{cleveref}
+\crefformat{section}{\S\textcolor{purple}{#2#1#3}} 
+\crefformat{subsection}{\S\textcolor{purple}{#2#1#3}}
+\crefformat{subsubsection}{\S\textcolor{purple}{#2#1#3}}
+\crefformat{figure}{#2{\color{blue}#1}#3}
+\crefformat{table}{#2{\color{blue}#1}#3}
+\crefformat{appendix}{Appendix \textcolor{purple}{#2#1#3}}
+
+\newcommand{\tool}{\textsc{CAUSE}\xspace}
+
+\pagenumbering{gobble}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\newcommand{\ruoxi}[1]{\textcolor{violet}{Ruoxi: #1}}
+
+\newcommand{\jason}[1]{\textcolor{red}{Jason: #1}}
+
+\newcommand{\update}[1]{\textcolor{blue}{#1}}

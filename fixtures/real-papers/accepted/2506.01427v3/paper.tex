@@ -1,0 +1,206 @@
+\documentclass[10pt,conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{stmaryrd}
+\usepackage{mathpartir}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{etoolbox}
+\usepackage[capitalise,nameinlink]{cleveref}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+
+\crefformat{section}{#2\S{}#1#3}
+\crefname{algocf}{Alg.}{Algorithms}
+
+\definecolor{RoyalBlue}{HTML}{0071BC}
+\definecolor{ForestGreen}{HTML}{009B55}
+\definecolor{ACMPurple}{cmyk}{0.55,1,0,0.15}
+\definecolor{ACMDarkBlue}{cmyk}{1,0.58,0,0.21}
+\definecolor{backcolor}{rgb}{0.95,0.95,0.95}
+
+\hypersetup{%
+  linktocpage=true, pdfstartview=FitV,
+  breaklinks=true, pageanchor=true, pdfpagemode=UseOutlines,
+  plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=3,
+  hypertexnames=true, pdfhighlight=/O,
+  colorlinks=true,
+  linkcolor=ACMPurple,
+  citecolor=ACMPurple,
+  urlcolor=ACMDarkBlue
+}
+
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolor},
+  keywordstyle=\color{RoyalBlue},
+  commentstyle=\color{ForestGreen},
+  basicstyle=\linespread{0.8}\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=none,
+  numbersep=1pt,
+  numberstyle=\scriptsize,
+  showspaces=false,
+  showstringspaces=false,
+  escapechar=$,
+}
+\lstset{style=mystyle}
+
+\lstdefinelanguage{Rust}{
+  keywords={as,break,const,continue,crate,else,enum,extern,false,fn,for,if,
+  impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,
+  super,trait,true,type,unsafe,use,where,while,async,await,dyn,abstract,become,
+  box,do,final,macro,override,priv,typeof,unsized,virtual,yield,try,union,raw},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+}
+
+\newcommand{\embox}[1]{{\mbox{\textit{#1}}}}
+\newcommand{\C}[1]{{\small\ensuremath{\tt#1}}}
+\newcommand{\CT}[1]{{\small\texttt{#1}}}
+\newcommand{\ostdin}{{\sf stdin}}
+\newcommand{\ostdout}{{\sf stdout}}
+\newcommand{\ostderr}{{\sf stderr}}
+\newcommand{\ofile}{{\sf file}}
+\newcommand{\opipe}{{\sf pipe}}
+\newcommand{\cread}{{\sf read}}
+\newcommand{\cbufread}{{\sf bufread}}
+\newcommand{\cwrite}{{\sf write}}
+\newcommand{\cseek}{{\sf seek}}
+\newcommand{\cclose}{{\sf close}}
+\newcommand{\powerset}[1]{\mathcal{P}(#1)}
+\newcommand{\loc}[1]{{\it Loc}(#1)}
+\newcommand{\struct}[1]{{\it Struct}(#1)}
+\newcommand{\oriset}[1]{\llbracket#1\rrbracket_o}
+\newcommand{\capset}[1]{\llbracket#1\rrbracket_c}
+\newcommand{\boundof}[1]{{\it bound}(#1)}
+\newcommand{\tyof}[1]{{\it type}(#1)}
+\newcommand{\param}[1]{{\it param}(#1)}
+\newcommand{\tread}{{\tt Read}}
+\newcommand{\tbufread}{{\tt BufRead}}
+\newcommand{\twrite}{{\tt Write}}
+\newcommand{\tseek}{{\tt Seek}}
+\newcommand{\tstdin}{{\tt Stdin}}
+\newcommand{\tstdout}{{\tt Stdout}}
+\newcommand{\tstderr}{{\tt Stderr}}
+\newcommand{\tfile}{{\tt File}}
+\newcommand{\tbufreader}{{\tt BufReader\texttt{<}File\texttt{>}}}
+\newcommand{\tbufwriter}{{\tt BufWriter\texttt{<}File\texttt{>}}}
+\newcommand{\tchild}{{\tt Child}}
+\newcommand{\tptr}[1]{{\tt *mut}\ #1}
+\newcommand{\tbox}[1]{{\tt Box\langle dyn}\ #1\rangle}
+\newcommand{\tdynptr}[1]{{\tt *mut\ dyn}\ #1}
+\newcommand{\timpl}[1]{{\tt impl}\ #1}
+\newcommand{\eptr}[1]{{\tt\&raw\ mut}\ #1}
+\newcommand{\econv}[2]{#1\rightsquigarrow#2}
+\newcommand{\assignconv}[4]{#1:#2\triangleright#3\rightsquigarrow#4}
+\newcommand{\callconv}[3]{#1:#2\ \triangleright_{\tt impl}\rightsquigarrow#3}
+
+\begin{document}
+
+\title{Forcrat: Automatic I/O API Translation from C to Rust via Origin and Capability Analysis}
+
+\author{
+  \IEEEauthorblockN{
+    Jaemin Hong\IEEEauthorrefmark{1}\IEEEauthorrefmark{2} and Sukyoung Ryu\IEEEauthorrefmark{3}}
+  %
+  \IEEEauthorblockA{\IEEEauthorrefmark{1}
+  \textit{Institute of Information and Electronics}, \textit{KAIST}, Daejeon, South Korea}
+  %
+  \IEEEauthorblockA{\IEEEauthorrefmark{2}
+  \textit{Department of Computer Science}, \textit{Yale University}, New Haven,
+  Connecticut, USA}
+  %
+  \IEEEauthorblockA{\IEEEauthorrefmark{3}
+  \textit{School of Computing}, \textit{KAIST}, Daejeon, South Korea}
+  %
+  \IEEEauthorblockA{jaemin.hong@kaist.ac.kr, sryu.cs@kaist.ac.kr}
+}
+
+\maketitle
+
+\begin{abstract}
+
+  Translating C to Rust is a promising way to enhance the reliability of legacy
+  system programs.
+  %
+  Although the industry has developed an automatic C-to-Rust translator, C2Rust,
+  its translation remains unsatisfactory.
+  %
+  One major reason is that C2Rust retains C standard library (libc) function
+  calls instead of replacing them with functions from the Rust standard library
+  (Rust std).
+  %
+  However, little work has been done on replacing library functions in
+  C2Rust-generated code.
+  %
+  In this work, we focus on replacing the I/O API, an important subset of
+  library functions.
+  %
+  This poses challenges due to the semantically different designs of I/O APIs in
+  libc and Rust std.
+  %
+  First, the two APIs offer different sets of types that represent the
+  \emph{origins} (e.g., standard input, files) and \emph{capabilities} (e.g.,
+  read, write) of streams used for I/O.
+  %
+  Second, they use different error-checking mechanisms: libc uses internal
+  indicators, while Rust std uses return values.
+  %
+  To address these challenges, we propose two static analysis techniques,
+  \emph{origin and capability analysis} and \emph{error source analysis}, and
+  use their results to replace the I/O API.
+  %
+  Our evaluation shows that the proposed approach is
+  %
+  (1) correct, with all 32 programs that have test suites passing the tests
+  after transformation,
+  %
+  (2) efficient, analyzing and transforming 422k LOC in 14 seconds, and
+  %
+  (3) widely applicable, replacing 82\% of I/O API calls.
+
+\end{abstract}
+
+% \begin{IEEEkeywords}
+% \end{IEEEkeywords}
+
+\input{intro}
+\input{background}
+\input{analysis}
+\input{transformation}
+\input{evaluation}
+\input{related}
+\input{conclusion}
+
+\section*{Acknowledgment}
+
+This material is based upon work supported in part by
+%
+the Defense Advanced Research Projects Agency (DARPA) under Agreement No.
+HR00112590130,
+%
+the National Research Foundation of Korea (NRF) (2022R1A2C2003660 and
+2021R1A5A1021944),
+%
+Institute of Information \& Communications Technology Planning \& Evaluation
+(IITP) grant funded by the Korea government (MSIT) (2024-00337703),
+%
+the KAIST Jang Young Sil Fellow Program,
+%
+and Samsung Electronics Co., Ltd. (G01240469).
+%
+Any opinions, findings, and conclusions or recommendations expressed in this
+material are those of the authors and do not necessarily reflect the views of
+the funding agencies.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

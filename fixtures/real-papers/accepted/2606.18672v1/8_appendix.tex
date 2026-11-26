@@ -1,0 +1,68 @@
+\newpage
+\twocolumn \flushbottom \sloppy
+\begin{appendix}
+
+\input{3_related_work}
+
+\section{Detailed Experimental Setup}
+\label{sec:setup}
+Our proposed \method{} is implemented using PyTorch and optimized on a NVIDIA RTX 4090 GPU. Details of the datasets are summarized in Table~\ref{tab:dataset_summary}. In the graph construction phase, the neighborhood size $K$ is set to 20. For the dual augmentation module, we set the edge dropping rate to 0.1 to remove spurious connections, and the diffusion coefficient $\eta$ in the graph diffusion view is set to 0.2. The training consists of two stages: the framework is first pre-trained for 200 epochs to initialize the feature embeddings, followed by 200 epochs of joint training for the clustering task to ensure convergence. The entire model is optimized using the Adam optimizer~\cite{kingma2014adam}. For the clustering, the centroid of the soft assignment probability is initialized by $k$-means and updated based on the embeddings. Regarding the specific embedding construction for the Siamese Graph Transformer, the input $\bm{Y}_i^* \in \mathbb{R}^{(K+1)\times d}$ is derived via three specific mapping functions: $\bm{Y}_i^* = \bm{E}_i^* + \bm{P}_i^* + \bm{H}_i^*$. Specifically, the gene expression mapping $\mathcal{F}_{ge}(\cdot)$ is implemented as a learnable linear layer that projects the GNNs-aggregated features into a hidden dimension of $d=128$. The position mapping $\mathcal{F}_{pos}(\cdot)$ utilizes an embedding lookup table to encode rank-based indices, where the central node is assigned 0 and neighbors are assigned 1 to $K$ based on similarity sorting. Similarly, the shortest-path mapping $\mathcal{F}_{sp}(\cdot)$ employs a separate embedding layer to transform BFS-calculated hop counts into dense vectors. Finally, the fused embeddings are regularized with a dropout rate of 0.1 before entering the Transformer layers.
+
+
+\input{tables/Statistical_Significance_Analysis}
+\section{Statistical Significance Analysis} To strictly verify performance improvements, we conducted significance analysis between \method{} and ten baselines across seven benchmark datasets using the Wilcoxon signed-rank test. As reported in Table~\ref{tab:significance}, our \method{} demonstrates statistical significance ($p < 0.05$) in 93.8\% of pairwise comparisons. Specifically, it achieves overwhelming dominance over early methods (e.g., pcaReduce) with $p$-values typically below $10^{-3}$. Against strong SOTA competitors like scSiameseClu, \method{} maintains a competitive edge; although isolated metrics show marginal significance due to dataset variance, \method{} consistently yields the highest mean performance averaged across the seven datasets, confirming its superior robustness across diverse scenarios.
+\input{tables/datasets}
+
+\input{figs/trajectory}
+
+
+\section{Trajectory Inference}
+\label{sec:trajectory}
+To substantiate the capability of \method{} in preserving global structural dependencies and the continuous developmental manifold, we perform trajectory inference on the Human Liver cells dataset using PAGA~\cite{wolf2019paga} and Slingshot~\cite{street2018slingshot}. As illustrated in Figure~\ref{fig:trajectory}, the PAGA graph constructed from \method{} embeddings effectively reconstructs a hierarchical lineage backbone originating from the progenitor populations located in Cluster 0 and Cluster 8. These clusters correspond to the regions with the earliest pseudotime states and exhibit strong connectivity to the transitional central hub identified as Cluster 2, which acts as a critical intermediate state bridging differentiation branches. Subsequently, the trajectory bifurcates into distinct functional lineages, such as the major differentiation path progressing through Clusters 1 and 9 towards the terminal states in Clusters 3 and 6. This topological structure is further corroborated by the continuous gradient observed in the Slingshot pseudotime visualization, confirming that \method{} successfully mitigates the over-smoothing issue typical of GNNs and captures the intrinsic non-linear manifold of cellular differentiation.
+
+
+% \input{figs/TOP3_DEGs}
+% \section{Maker Gene Dotplot}
+% For instance, \method{} accurately captures \textbf{\textit{COL3A1}} as the maker gene for \textbf{Cluster 7}, which corresponds to pancreatic stellate cells.
+
+
+
+\section{Hyperparameter Sensitivity Analysis} 
+\label{sec:hyperparameter}
+To assess the robustness of \method{} against hyperparameter variations, we conduct a comprehensive sensitivity analysis on the Human Liver cells dataset. We specifically evaluate four key hyperparameters: the graph diffusion coefficient $\eta$ and three trade-off weights for the loss terms, denoted as $\alpha$ for the correlation loss, $\beta$ for the reconstruction loss, and $\gamma$ for the ZINB loss. As illustrated in Figure~\ref{fig:sensitivity_4params}, \method{} demonstrates remarkable stability across a broad range of parameter settings. Notably, the correlation weight $\alpha$  exhibit minimal impact on clustering accuracy, maintaining high performance even as values span multiple orders of magnitude. For the reconstruction and clustering constraints, optimal performance is consistently achieved when $\beta$ and $\gamma$ are set around 1.0. While extreme values can lead to performance degradation by over-emphasizing reconstruction at the expense of clustering structure, the model remains robust within a reasonable range. Regarding the graph diffusion coefficient $\eta$, a value between 0.2 and 0.3 yields the best results, effectively balancing local neighborhood information with global structural context. These results confirm that \method{} is not overly sensitive to specific hyperparameter tuning, making it practical for diverse scRNA-seq applications. We further report the sensitivity with respect to $K$ and $L$ measured by ARI. As shown in Figure~\ref{fig:sensitivity_ari}, the trend is consistent with that of ACC and NMI, confirming the robustness of \method{}. This consistency across ACC, NMI, and ARI confirms the strong performance of our methods across all benchmarks.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\linewidth]{figs/sensitivity/sim_3dbar_ARI_clean.pdf}
+    \caption{The impact of neighborhood size $K$ and the number of Transformer layers $L$ on clustering performance in terms of ARI on the Muraro Human Pancreas dataset.}
+    \label{fig:sensitivity_ari}
+\end{figure}
+\input{figs/sensitivity_more}
+
+
+\section{Analysis of Runtime}
+\label{sec:runtime}
+To evaluate the computational efficiency and scalability of \method{}, we conduct a comprehensive runtime analysis on datasets of varying scales. Regarding scalability with respect to data size, Figure~\ref{fig:runtime}(a) records the training time of \method{} on seven datasets. The results exhibit a near-linear relationship between runtime and the number of cells, demonstrating that our framework scales efficiently to large-scale scRNA-seq datasets. This efficiency is attributed to the graph construction and the optimized implementation of the Siamese Graph Transformer, which avoids the quadratic complexity typically associated with attention mechanisms. We further compare the runtime of \method{} against ten representative and competitive baselines. As depicted in Figure~\ref{fig:runtime}(b), even though \method{} explicitly incorporates complex structural priors, specifically shortest-path and position embeddings, its computational cost remains comparable to or even lower than other GNNs-based methods like scGNN. This indicates that our proposed \method{} achieves a superior trade-off between clustering performance and computational efficiency, ensuring practical feasibility for real-world applications.
+\input{figs/runtime_analysis_fig}
+\input{tables/main_ablation_more}
+\section{Extended Ablation Study on Loss Terms}
+\label{sec:extended_ablation}
+We extend the ablation study to include scenarios where pairs of loss components are removed simultaneously. As detailed in Table~\ref{tab:main_ablation_more}, removing dual components leads to a distinct performance decline compared to single-component ablation. While single omissions maintain ACC above 80\%, dual omissions drop to the 50\%--72\% range, indicating strong interdependency among modules. Specifically, the results highlight the dominance of the optimal transport clustering loss $\mathcal{L}_{\text{clu}}$. Configurations retaining $\mathcal{L}_{\text{clu}}$ consistently outperform those excluding it  by approximately 15--20\%. Notably, relying solely on reconstruction objectives $\mathcal{L}_{\text{ZINB}}$ and $\mathcal{L}_{\text{rec}}$ yields the lowest performance, demonstrating that feature learning alone is insufficient for separating complex cell states without explicit clustering guidance. The full model's superior performance still confirms the necessity of jointly optimizing structural, feature, and distribution constraints.
+
+% \noindent\textbf{Evaluation Metrics}. To evaluate the performance of spatial domain identification, we employ two widely used clustering metrics: Adjusted Rand Index (ARI)~\cite{rand1971objective} and Normalized Mutual Information (NMI)~\cite{knops2006normalized}. ARI is calculated as the formula:
+% \begin{equation*}
+% \text{ARI} = \frac{\sum_{ij} \binom{n_{ij}}{2} - \left[\sum_i \binom{a_i}{2} \sum_j \binom{b_j}{2}\right] / \binom{n}{2}}{\frac{1}{2} \left[\sum_i \binom{a_i}{2} + \sum_j \binom{b_j}{2}\right] - \left[\sum_i \binom{a_i}{2} \sum_j \binom{b_j}{2}\right] / \binom{n}{2}},
+% \end{equation*}
+% while NMI is defined as:
+% \begin{equation*}
+% \text{NMI}(U,V) = \frac{2 \cdot I(U;V)}{H(U) + H(V)}.
+% \end{equation*}
+% ARI ranges from -1 to 1, while NMI ranges from 0 to 1. For both metrics, higher values indicate better clustering performance.
+
+% \noindent\textbf{Implemental Details}. Our proposed \method{} is optimized on a NVIDIA RTX 3090 GPU. In feature and spatial hypergraph convolution, the top‑k value $k$ is set to 14 and the spatial proximity range $r$ to 200 $\mu$m, with hidden layer's and output layer's dimensions of 256 and 128, respectively. For the ZINB-based reconstruction, the hidden and output dimensions are 64 and 128. The entire framework is trained with the Adam~\cite{kingma2014adam} optimizer for 100 epochs at a learning rate of 0.007 to ensure convergence. For the multi-view self-supervised clustering, the centroid of the soft assignment probability is initialized by K-means and updates based on current epoch’s embeddings.
+
+
+
+
+\end{appendix}

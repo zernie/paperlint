@@ -1,0 +1,205 @@
+\section{Approach}
+\label{sec:approach}
+
+We propose \textbf{\appname}, an agent coordination framework for automated defect impact analysis in DL libraries.
+As shown in Figure~\ref{fig:approach}, \appname consists of three steps: (1) extracting structured defect semantics from PRs/commits via dual agents, (2) synthesizing complete defect patterns, and (3) verifying whether clients satisfy the triggering conditions.
+The framework is built on AutoGen~\cite{autogen} to enable coordinated, multi-turn reasoning across agents.
+
+\subsection{Defect Semantics Extraction}
+This step involves two specialized agents that collaboratively extract defect semantics from different perspectives: the \textit{Commit/PR Miner Agent} processes natural language descriptions (e.g., commit messages, PR discussions), while the \textit{Code Diff Analyzer Agent} focuses on structural code changes.
+To enable multi-agent coordination, we introduce an \textit{Orchestrator Agent} that validates intermediate outputs and synthesizes final defect patterns by combining upstream results.
+In this step, the \textbf{Orchestrator Agent} monitors the completeness of extracted semantics.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{miner_agent.pdf}
+\caption{Prompt design for the Miner Agent: mining defect patterns from unstructured PR metadata for PR~\#38811 and associated PR~\#38105.}
+\label{fig:miner_agent}
+\vspace{-0.65cm}
+\end{figure}
+
+\subsubsection{Commit/PR Miner Agent}
+The Miner Agent is designed to extract structured defect representations from noisy and loosely formatted PR or commit metadata.
+Given a PR, \appname processes the title, body, associated issue references, and developer comments to generate a structured defect semantic representation containing three fields: \texttt{bug\_background}, \texttt{impact\_scope}, and \texttt{trigger\_conditions}.
+
+Considering the substantial number of PRs—most of which involve routine updates or feature additions rather than defect fixes, comprehensive analysis of all PRs proves inefficient. 
+To address this, we implement a two-step filtering mechanism.
+The Miner Agent integrates the GitHub API as a tool to retrieve full metadata for each PR.
+It then applies keyword-based heuristics to retain candidates containing defect-related cues (e.g., \textit{fix}, \textit{bug}, \textit{error}) while excluding clearly benign updates (e.g., \textit{doc}, \textit{refactor}, \textit{feat}).
+To ensure reliability, we manually inspected all excluded PRs in this period and did not find missed defect-fixing PRs.
+The full keyword list and filtering script are released in the reproduction package for transparency~\cite{depradar}.
+
+\noindent \textbf{Progressive Context Augmentation.}
+To handle noisy, lengthy, or fragmented PR metadata, \appname adopts a progressive context augmentation strategy coordinated by the Orchestrator Agent.
+As illustrated in Figure~\ref{fig:miner_agent}, the Miner Agent processes PR content in fixed-size chunks (default $k=3$ items per round) and generates intermediate summaries capturing partial semantics such as bug background or triggering conditions.
+After each round, the Orchestrator Agent validates the content completeness of the extracted fields (e.g., \texttt{trigger\_conditions}, \texttt{bug\_background}).
+If the output is insufficient, the Orchestrator Agent  will provide feedback to the Miner Agent. 
+The previous semantic representation is preserved as historical context and augmented with the next chunk of PR content.
+This iterative refinement continues until all required fields are confidently populated or the full PR metadata is exhausted.
+This mechanism ensures that the agent remains within prompt length limits while gradually expanding coverage, enabling robust reasoning over scattered or delayed defect signals.
+
+For example, in PR~\#38811 as shown in Figure~\ref{fig:miner_agent}, although the title reported a \textit{video inference failure} without disclosing root causes or triggering conditions, the Miner Agent coordinated by the Orchestrator—automatically followed linked PR~\#38105 and developer comments to retrieve additional context. 
+Through progressive context augmentation, \appname accurately reconstructed the defect pattern, identifying the underlying cause as a frame sampling misalignment in multi-frame video inference pipelines and extracting the specific conditions under which the bug is triggered.
+
+\subsubsection{Code Diff Analyzer Agent}
+While PR metadata offers surface-level explanations, the actual bug fix logic is encoded within the code changes.
+The Code Diff Agent analyzes these changes to identify repair intent and recover trigger conditions from the changes.
+Given a modified patch, we first apply a denoising phase using AST-level parsing to eliminate non-functional edits such as comment updates, formatting, or import reordering.
+We retain only structural code changes (e.g., control-flow updates, function/method additions, and validation logic) for downstream analysis.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{codediff_agent.pdf}
+\caption{Prompt design for the Code Diff Agent: summarizing patch semantics for PR~\#38491.}
+\label{fig:codediff_agent}
+\vspace{-0.4cm}
+\end{figure}
+
+As shown in Figure~\ref{fig:codediff_agent}, the CodeDiff Agent analyzes the code-level patch to extract structured defect semantics from the perspective of program edits. 
+Specifically, it captures both the surface fix operations and their underlying rationale, producing a dual-perspective output that complements textual representations from the Miner Agent. 
+The extracted semantics consist of three key components: (1) modified code entities annotated with semantic change types (e.g., \textit{added null check}, \textit{modified tensor shape validation}), (2) a synthesized explanation of the root cause underlying the defect (e.g., \textit{missing boundary check}), and (3) a set of key program elements—such as parameters and method names—that are relevant to the defect’s trigger conditions. 
+These elements are subsequently used as search keys in the downstream client-side code matching.
+
+\noindent \textbf{Progressive Context Augmentation.}
+To process large or multi-file patches where code diffs exceed the input limit of a single LLM prompt, \appname adopts a progressive augmentation strategy similar to that of the Miner Agent. 
+As shown in Figure~\ref{fig:codediff_agent}, the CodeDiff Agent segments the patch into logical units (e.g., grouped by file) and analyzes $k=3$ edits per round. 
+At each step, the agent generates intermediate summaries that describe fix actions (e.g., API adjustments, parameter constraints) and defect-related semantics.
+
+The Orchestrator Agent then validates whether key semantic fields—such as \texttt{fix\_description}, \texttt{trigger\_conditions} are sufficiently captured. 
+If not, the next round’s input includes both new code chunks and the prior semantics. 
+This iterative feedback loop continues until either all semantic slots are confidently filled or the full patch is exhausted.
+This feedback loop continues until all required semantics are covered or the patch is fully processed.
+
+% This progressive design enables \appname to handle fragmented, lengthy, or multi-component patches robustly, ensuring that meaningful defect information is distilled even from complex refactorings or tightly coupled changes.
+% It also maintains prompt efficiency and mitigate hallucinations by grounding reasoning in localized diffs.
+
+
+\begin{table}
+\centering
+\caption{Domain-Specific Rules for Defect Pattern Inference.}
+\label{tab:orchestrator-rules}
+\begin{tabular}{p{1.5cm}|p{6cm}}
+\toprule
+\textbf{Rule Type} & \textbf{Description and Example} \\
+\midrule
+\textbf{Entity Lifting} & Promote internal symbols (e.g., \texttt{\_flash \_kernel}) to nearest user-facing API (e.g., \texttt{generate()}) based on call graph or naming patterns. \\
+\hline
+\textbf{Parameter Exposure} & Include only parameters visible in public constructors or config (e.g., \texttt{attention\_impl}). \\
+\hline
+\textbf{Trigger Synthesis} & Combine condition fragments (e.g., hardware flags, dtype checks) into a minimal executable client snippet. Example: map \texttt{device\_mesh != None} to \texttt{device\_map="auto"}. \\
+\hline
+\textbf{Semantic Merge} & When multiple triggers appear (e.g., backend flag + precision), enforce conjunction to avoid partial matches. \\
+\bottomrule
+\end{tabular}
+\vspace{-0.5cm}
+\end{table}
+
+\subsection{Defect Pattern Generation}
+At this step, the Orchestrator combines outputs from prior agents and applies domain rules to generate a structured defect pattern for impact analysis.
+Prior work on bug summarization often stops at generating human-readable descriptions or identifying changed APIs~\cite{liu2019automatic,xiao2024generative}.
+However, this is insufficient for determining downstream impact.
+Many bugs involve internal implementation details or latent behaviors (e.g., device-specific logic) whose consequences are only visible when mapped to concrete usage patterns in clients.
+% This step bridges that gap by combining textual semantics, code changes, and domain rules to infer externally observable triggers.
+
+The output follows a structured schema that captures bug-fix semantics from a user-facing perspective.
+It contains:(1) Defect Attributes: Whether the patch fixes a bug, its background, and impact.
+(2) Risk Factors: Externally visible method names and parameters that can trigger the bug.
+(3) Minimal Trigger Example: A synthesized code snippet illustrating the minimal condition required to activate the bug using client-facing APIs.
+The Orchestrator Agent integrates upstream outputs and applies rule-based reasoning to transform internal fixes into client-relevant risk factors.
+
+To bridge the semantic gap between low-level fixes in patches and user-facing patterns, we design a domain-informed inference layer guided by a configurable set of rules.
+Defect fixes in DL libraries often modify internal methods that users rarely invoke directly; therefore, mapping internal changes to the minimal user-visible trigger scenario is essential for impact analysis.
+Our rules steer the Agent to reason beyond raw diffs, identify exposed parameters or configuration keys, and synthesize the smallest usage example that can reproduce the defect in a client context.
+These rules are implemented as declarative templates stored in an external configuration file, making them easy to extend for additional libraries or edge cases.
+Table~\ref{tab:orchestrator-rules} illustrates representative rule types and their objectives; the full specification and domain-specific variations (e.g., for distributed training flags) are included in our artifact~\cite{depradar}.
+
+
+Figure~\ref{fig:defect-pattern-example} shows the defect pattern generated for PR~\#37575.
+This patch fixes an internal bug in Ascend NPU’s Flash Attention implementation, where setting \texttt{softmax\_scale=None} in functions such as \texttt{npu\_flash\_attn\_func} and \texttt{npu\_flash\_attn\_varlen\_ func} leads to incorrect attention scaling.
+Although these changes modify low-level device-specific logic, the Orchestrator Agent infers that users who enable Flash Attention v2 without explicitly setting \texttt{softmax\_scale} are silently affected.
+Moreover, the generated \texttt{minimal\_client\_example} captures a representative code snippet that satisfies the trigger conditions.
+In the subsequent analysis step, this example serves as a search anchor: static analyzers extract parameter names and API calls from the snippet to match against client code contexts.
+Overall, the structured defect pattern enables downstream tasks including parameter matching, condition validation, and precise retrieval of affected user code segments.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.97\linewidth]{defect_pattern_exp.pdf}
+\caption{Defect Pattern example synthesized for PR~\#37575.}
+\label{fig:defect-pattern-example}
+\vspace{-0.4cm}
+\end{figure}
+
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{analysis_agent.pdf}
+\caption{Prompt design for the Impact Analyzer Agent: verifying trigger condition satisfaction from matched client code.}
+\label{fig:analysis_agent}
+\vspace{-0.4cm}
+\end{figure}
+
+
+\subsection{Client-Side Defect Impact Analysis}
+In the final step, \appname employs an Impact Analyzer Agent to perform semantic alignment and context-aware reasoning, determining whether the client is affected by the defect.
+\begin{figure*}
+\centering
+\includegraphics[width=0.85\linewidth]{verify.pdf}
+\caption{Post-processing and verification: combining impact reports with AST analysis to validate methods and parameters.}
+\label{fig:verify}
+\vspace{-0.4cm}
+\end{figure*}
+
+
+
+\subsubsection{Version-Aware File Matching.} 
+The first prerequisite for reliable impact analysis is verifying whether the client depends on a version of the DL library that contains the defect.
+In Python, this is non-trivial due to varied dependency declarations across pip requirements or manually installed snapshots.
+When a version is explicitly pinned (e.g., \texttt{transformers==4.30.2}), \appname aligns the PR/commit-level file changes with the target version via conservative AST-based subtree matching.
+
+However, many projects omit strict versioning (e.g., \texttt{transfor mers\textgreater=4.0}), making resolution uncertain.
+In such cases, \appname conservatively assumes potential exposure if the defect existed prior to the client’s runtime or install date—reflecting how \texttt{pip} typically resolves to the latest version.
+This prevents false negatives in real deployments, where latent defects may propagate silently through frequent updates.
+By this strategy, \appname automatically determines whether the client is likely to include the defect and continues to the impact analysis only when risk cannot be ruled out.
+
+
+
+\subsubsection{Contextual Searching via Syntax-Aware Extraction.}
+Given the defect pattern extracted in Step~2, \appname traverses the entire client code and constructs ASTs for each Python file. 
+It then searches for occurrences of risk factors, such as specific parameter names, method calls, or triggering constants defined in the pattern.
+
+Instead of analyzing the entire file, \appname extracts the minimal AST subtree that encloses each matched element (e.g., a model constructor or loop-level invocation). 
+This localized context is then converted back to source code and passed to the Impact Analyzer Agent.
+This syntax-aware extraction serves two purposes: (1) it preserves semantic locality by capturing only the immediate usage scenario, and (2) it reduces prompt size and noise, enabling focused reasoning. 
+All extracted code regions are aggregated into a candidate context list for downstream defect impact analysis.
+
+
+\noindent\textbf{Assessing Trigger Conditions.}
+For each matched client context, the Impact Analyzer Agent determines whether the conditions required to activate the defect are satisfied. 
+Figure~\ref{fig:analysis_agent} illustrates the prompt used for this analysis.
+This includes checking the presence and values of risk-bearing parameters (e.g., \texttt{attn\_implementation ="flash\_attention\_2"}) and verifying that corresponding configurations are active in scope.
+
+To handle variation in code style and naming, we incorporate domain-adapted prompting strategies that normalize synonyms (e.g., \texttt{enable\_flash\_attn\_v2} vs \texttt{use\_flash\_attention2}) and allow flexible argument ordering. 
+If explicit conditions (e.g., use of GPU) are not contradicted in code, the agent conservatively assumes they hold.
+This reasoning enables precise filtering: contexts that satisfy all trigger conditions proceed to reporting, while ambiguous or missing evidence leads to conservative rejection or re-analysis.
+
+
+\noindent \textbf{Progressive Context Augmentation.}
+Not all matched client contexts are sufficient for reliable impact assessment.
+Similar to earlier agents, we adopt an adaptive multi-round inference loop coordinated by the Orchestrator Agent.
+Each round starts with the minimal AST subtree containing the matched parameter or call.
+If the agent’s reasoning yields incomplete or uncertain results—due to ambiguous control flow, shadowed variables, or overridden parameters—the Orchestrator expands the context upward along the AST, from the current node to enclosing blocks, functions, or classes.
+All intermediate outputs are retained in memory for iterative refinement.
+This process continues until either a confident conclusion is reached or no broader context remains.
+It ensures both token efficiency and semantic completeness across diverse code structures.
+
+\subsubsection{Post-processing and Verification.}
+To mitigate the hallucinations commonly observed in LLM-generated predictions, we perform static validation by extracting predicted parameters and method calls (e.g., \texttt{softmax\_scale=None}) from the LLM output and verifying their presence in the client code. 
+These predicted indicators are existence-checked against the client's source code using ASTs constructed via Python’s built-in \texttt{ast} module.
+As illustrated in Figure~\ref{fig:verify}, the \appname checks whether each referenced element in the report—such as \texttt{use\_flash\_attention\_2} or specific API calls—can be confirmed by traversing the AST of the matched client context.
+If any required evidence is missing, the orchestrator triggers a corrective re-analysis.
+If the evidence remains insufficient after all retries, \appname conservatively marks the client as unaffected to avoid over-reporting.
+This conservative strategy prioritizes precision by reducing false positives, ensuring that downstream impact is reported only when strongly supported by code evidence.
+
+\subsubsection{Impact Report Generation.}
+The final output of this step is a structured \textit{Impact Report}, which includes: (1) a binary \texttt{is\_affected} flag, (2) the set of matched parameters and method calls contributing to the judgment, and (3) a justification summary with both reasoning trace and static evidence. 
+These reports are not only valuable for informing users of downstream risks, but also serve as input to potential mitigation strategies, such as patch recommendation or warning generation during CI workflows.

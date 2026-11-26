@@ -1,0 +1,54 @@
+\section{Introduction}
+
+
+
+
+Human hearing is remarkably adaptable, yet fundamentally limited in crowded auditory environments. In such settings, isolating relevant voices, known as the cocktail party problem, becomes especially difficult. For individuals with hearing loss, distinguishing overlapping conversations can result in cognitive overload and listening fatigue~\cite{hearingaidscocktail}.
+
+%Recent advances in hearing assistants, like augmented devices and hearing aids, use deep learning for {\it manual} sound source selection, with spatial filtering  or phone-based interfaces~\cite{semantichearing,tsh}. However, these approaches struggle in multi-party conversations where speakers are spatially dispersed or involve more than two speakers, making manual enrollment impractical.
+
+Existing hearing assistants, like augmented devices, wireless earbuds and hearing aids, are ``reactive'' in that users manually prompt the devices to pick specific sound sources via spatial filtering or phone-based interfaces~\cite{semantichearing,tsh}. However, these approaches struggle in multi-party conversations where speakers are spatially dispersed or involve more than two speakers, making manual enrollment impractical.
+
+We propose an alternative: real-time proactive hearing assistants that automatically identify and enhance the voices involved in a conversation with the wearer, without explicit prompts. Our system processes egocentric binaural audio to dynamically track conversational partners and suppress others, adapting to engagement naturally and seamlessly, without explicit user commands or prompts.
+
+
+\begin{figure}[t!]
+    \centering
+    \vskip -0.1in
+    \includegraphics[width=\linewidth]{figs/teaser_figure.pdf}
+    \vskip -0.1in
+    \caption{In multi-conversation settings, our proactive hearing assistant uses conversational turn-taking  dynamics to automatically infers the wearer's conversation  partners and suppresses others in real-time. }
+    \vskip -0.15in
+    \label{fig:teaser}
+\end{figure}
+
+This task poses three key challenges:
+(1) identifying and separating conversational partners,
+(2) operating on-device in real-time with low latency, and
+(3) generalizing to real-world, egocentric, multi-party  environments.
+
+Our approach builds on insights from core NLP tasks like turn-taking prediction, speaker diarization, and dialog modeling, to design a proactive hearing assistant. We make three key contributions:
+(1) an anchoring mechanism based on the wearer’s self-speech to track conversation partners,
+(2) a dual-model architecture that enables low-latency, real-time processing, and
+(3) a real-world end-to-end evaluation using egocentric binaural conversational recordings captured with wearable hardware.
+
+
+Concretely, we anchor the system on the wearer’s self-speech, extracted using a beamformer trained on egocentric audio. The assistant activates when the wearer speaks  for a few seconds, signaling conversational intent. The assistant leverages  turn-taking cues, such as alternating speech, low overlap, and temporal coordination, to identify conversational partners. These interactional patterns, well-studied in dialogue systems~\cite{turntake2,frontiers,tce}, allow the proactive assistant to infer engagement in real time and selectively separate the voices of relevant speakers.
+
+
+To meet real-time constraints, the system processes audio in short streaming chunks. However, as conversations unfold, the sequence length grows, increasing the memory demands of attention-based models. Since full self-attention scales quadratically with sequence length~\cite{ainslie2020etcencodinglongstructured,10889061}, achieving both long-context awareness and low-latency performance requires a carefully designed architecture.
+
+
+
+To balance real-time responsiveness and conversational context length, we use a dual-model architecture:  A fast streaming model runs every 12.5~ms, extracting the target conversation in real time. A slower  model runs once per second  and provides periodic longer-term conversational embeddings, capturing conversation turn-taking and discourse structure without incurring full-attention memory.
+
+
+
+
+We train on diverse speech and conversational English and Mandarin datasets, including  Candor~\cite{candor}, LibriTTS~\cite{zen2019libritts} and RAMC~\cite{ramc}, spatialized to emulate egocentric conditions. We evaluate our models on out-of-distribution  SpokenWOZ~\cite{si2023spokenwoz} and the Japanese Duplex Conversation Dataset \cite{JapaneseDuplex2025}. We also collect real-world  2- and 3-speaker conversational testset using binaural egocentric hardware from 11 participants, totaling 6.8 hours.
+
+In both out-of-distribution and real-world  egocentric  settings, our system accurately identifies conversational partners, with accuracies and confusion rates of 80-92\% and 1.5-2.2\% respectively. It also improves speech quality of the conversation partners by 7.22-11.95~dB (SISDRi), and operates in real time on embedded and mobile devices.
+
+
+This work shows a path toward proactive hearing assistants that go beyond source separation to infer who the user wants to hear, adapting to  conversation dynamics in a way that aligns closely with goals in dialogue systems, speech understanding, and human-AI interaction.  It also offers future potential for adapting LLM agents to track spoken conversations in noisy, multi-party settings.
+

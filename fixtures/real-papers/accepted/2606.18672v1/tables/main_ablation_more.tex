@@ -1,0 +1,25 @@
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{cccc|ccc}
+\toprule
+\boldmath$\mathcal{L}_{\text{clu}}$ & \boldmath$\mathcal{L}_{\text{cor}}$ & \boldmath$\mathcal{L}_{\text{ZINB}}$ & \boldmath$\mathcal{L}_{\text{rec}}$ & \textbf{ACC} & \textbf{NMI} & \textbf{ARI} \\
+\midrule
+$\checkmark$ & $\checkmark$ & $\checkmark$ & $\times$      & 84.57 & 78.93 & 76.08 \\
+$\checkmark$ & $\checkmark$ & $\times$      & $\checkmark$ & 84.18 & 78.36 & 75.62 \\
+$\checkmark$ & $\times$      & $\checkmark$ & $\checkmark$ & 83.47 & 77.58 & 74.36 \\
+$\times$      & $\checkmark$ & $\checkmark$ & $\checkmark$ & 81.24 & 74.79 & 70.68 \\
+\midrule
+$\checkmark$ & $\checkmark$ & $\times$      & $\times$      & 72.36 & 66.07 & 62.28 \\
+$\checkmark$ & $\times$      & $\checkmark$ & $\times$      & 71.64 & 64.98 & 61.07 \\ 
+$\checkmark$ & $\times$      & $\times$      & $\checkmark$ & 68.49 & 61.95 & 58.42 \\
+$\times$      & $\checkmark$ & $\checkmark$ & $\times$      & 56.27 & 48.14 & 43.46 \\ 
+$\times$      & $\checkmark$ & $\times$      & $\checkmark$ & 54.83 & 46.17 & 41.72 \\ 
+$\times$      & $\times$      & $\checkmark$ & $\checkmark$ & 51.76 & 43.18 & 38.57 \\ 
+\midrule
+$\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{96.02} & \textbf{89.15} & \textbf{93.10} \\
+\bottomrule
+\end{tabular}
+\caption{Ablation experiment results of major loss terms}
+\label{tab:main_ablation_more}
+\end{table}

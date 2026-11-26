@@ -1,0 +1,226 @@
+\begin{thebibliography}{34}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Advani and Saxe(2017)]{advani2017high}
+Madhu~S. Advani and Andrew~M. Saxe.
+\newblock High-dimensional dynamics of generalization error in neural networks.
+\newblock \emph{arXiv preprint arXiv:1710.03667}, 2017.
+
+\bibitem[Barron et~al.(1998)Barron, Rissanen, and Yu]{barron1998minimum}
+Andrew Barron, Jorma Rissanen, and Bin Yu.
+\newblock The minimum description length principle in coding and modeling.
+\newblock \emph{IEEE Transactions on Information Theory}, 44\penalty0
+  (6):\penalty0 2743--2760, 1998.
+
+\bibitem[Bartlett and Mendelson(2002)]{bartlett2002rademacher}
+Peter~L. Bartlett and Shahar Mendelson.
+\newblock Rademacher and {G}aussian complexities: Risk bounds and structural
+  results.
+\newblock \emph{Journal of Machine Learning Research}, 3:\penalty0 463--482,
+  2002.
+
+\bibitem[Bartlett et~al.(2020)Bartlett, Long, Lugosi, and
+  Tsigler]{bartlett2020benign}
+Peter~L. Bartlett, Philip~M. Long, G{\'a}bor Lugosi, and Alexander Tsigler.
+\newblock Benign overfitting in linear regression.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 117\penalty0
+  (48):\penalty0 30063--30070, 2020.
+
+\bibitem[Belkin et~al.(2019)Belkin, Hsu, Ma, and Mandal]{belkin2019reconciling}
+Mikhail Belkin, Daniel Hsu, Siyuan Ma, and Soumik Mandal.
+\newblock Reconciling modern machine-learning practice and the classical
+  bias--variance trade-off.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 116\penalty0
+  (32):\penalty0 15849--15854, 2019.
+
+\bibitem[Belkin et~al.(2020)Belkin, Hsu, and Xu]{belkin2020two}
+Mikhail Belkin, Daniel Hsu, and Ji~Xu.
+\newblock Two models of double descent for weak features.
+\newblock \emph{SIAM Journal on Mathematics of Data Science}, 2\penalty0
+  (4):\penalty0 1167--1180, 2020.
+
+\bibitem[Breiman(2001)]{breiman2001random}
+Leo Breiman.
+\newblock Random forests.
+\newblock \emph{Machine Learning}, 45\penalty0 (1):\penalty0 5--32, 2001.
+
+\bibitem[Chen et~al.(2021)Chen, Min, Belkin, and Karbasi]{chen2021multiple}
+Lin Chen, Yifei Min, Mikhail Belkin, and Amin Karbasi.
+\newblock Multiple descent: Design your own generalization curve.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2021.
+
+\bibitem[Chen et~al.(2023)Chen, Lau, Mendel, Wei, and
+  Murfet]{chen2023dynamical}
+Zhongtian Chen, Edmund Lau, Jake Mendel, Susan Wei, and Daniel Murfet.
+\newblock Dynamical versus {B}ayesian phase transitions in a toy model of
+  superposition.
+\newblock \emph{arXiv preprint arXiv:2310.06301}, 2023.
+
+\bibitem[Chipman et~al.(2010)Chipman, George, and McCulloch]{chipman2010bart}
+Hugh~A. Chipman, Edward~I. George, and Robert~E. McCulloch.
+\newblock {BART}: Bayesian additive regression trees.
+\newblock \emph{The Annals of Applied Statistics}, 4\penalty0 (1):\penalty0
+  266--298, 2010.
+\newblock \doi{10.1214/09-AOAS285}.
+
+\bibitem[Davisson(1973)]{davisson1973universal}
+Lee~D. Davisson.
+\newblock Universal noiseless coding.
+\newblock \emph{IEEE Transactions on Information Theory}, 19\penalty0
+  (6):\penalty0 783--795, 1973.
+
+\bibitem[Hastie et~al.(2022)Hastie, Montanari, Rosset, and
+  Tibshirani]{hastie2022surprises}
+Trevor Hastie, Andrea Montanari, Saharon Rosset, and Ryan~J. Tibshirani.
+\newblock Surprises in high-dimensional ridgeless least squares interpolation.
+\newblock \emph{Annals of Statistics}, 50\penalty0 (2):\penalty0 949--986,
+  2022.
+
+\bibitem[Haussler and Opper(1997)]{haussler1997mutual}
+David Haussler and Manfred Opper.
+\newblock Mutual information, metric entropy and cumulative relative entropy
+  risk.
+\newblock \emph{Annals of Statistics}, 25\penalty0 (6):\penalty0 2451--2492,
+  1997.
+
+\bibitem[Hoogland et~al.(2024)Hoogland, Wang, Farrugia-Roberts, Carroll, Wei,
+  and Murfet]{hoogland2024towards}
+Jesse Hoogland, George Wang, Matthew Farrugia-Roberts, Liam Carroll, Susan Wei,
+  and Daniel Murfet.
+\newblock Loss landscape degeneracy and stagewise development in transformers.
+\newblock \emph{arXiv preprint arXiv:2402.02364}, 2024.
+
+\bibitem[Mei and Montanari(2022)]{mei2022generalization}
+Song Mei and Andrea Montanari.
+\newblock The generalization error of random features regression: Precise
+  asymptotics and the double descent curve.
+\newblock \emph{Communications on Pure and Applied Mathematics}, 75\penalty0
+  (4):\penalty0 667--766, 2022.
+
+\bibitem[Merhav and Feder(1998)]{merhav1998universal}
+Neri Merhav and Meir Feder.
+\newblock Universal prediction.
+\newblock \emph{IEEE Transactions on Information Theory}, 44\penalty0
+  (6):\penalty0 2124--2147, 1998.
+
+\bibitem[Muthukumar et~al.(2020)Muthukumar, Vodrahalli, Subramanian, and
+  Sahai]{muthukumar2020harmless}
+Vidya Muthukumar, Kailas Vodrahalli, Vignesh Subramanian, and Anant Sahai.
+\newblock Harmless interpolation of noisy data in regression.
+\newblock \emph{IEEE Journal on Selected Areas in Information Theory},
+  1\penalty0 (1):\penalty0 67--83, 2020.
+
+\bibitem[Nakkiran(2019)]{nakkiran2020optimal}
+Preetum Nakkiran.
+\newblock More data can hurt for linear regression: Sample-wise double descent.
+\newblock \emph{arXiv preprint arXiv:1912.07242}, 2019.
+
+\bibitem[Nakkiran et~al.(2021{\natexlab{a}})Nakkiran, Kaplun, Bansal, Yang,
+  Barak, and Sutskever]{nakkiran2021deep}
+Preetum Nakkiran, Gal Kaplun, Yamini Bansal, Tristan Yang, Boaz Barak, and Ilya
+  Sutskever.
+\newblock Deep double descent: where bigger models and more data hurt.
+\newblock \emph{Journal of Statistical Mechanics: Theory and Experiment},
+  2021\penalty0 (12):\penalty0 124003, 2021{\natexlab{a}}.
+
+\bibitem[Nakkiran et~al.(2021{\natexlab{b}})Nakkiran, Venkat, Kakade, and
+  Ma]{nakkiran2021optimal}
+Preetum Nakkiran, Prayaag Venkat, Sham~M. Kakade, and Tengyu Ma.
+\newblock Optimal regularization can mitigate double descent.
+\newblock In \emph{International Conference on Learning Representations},
+  2021{\natexlab{b}}.
+
+\bibitem[Polyanskiy and Wu(2024)]{polyanskiy-wu}
+Yury Polyanskiy and Yihong Wu.
+\newblock \emph{Information Theory: From Coding to Learning}.
+\newblock Cambridge University Press, first edition, 2024.
+\newblock Draft, August 2024.
+
+\bibitem[Power et~al.(2022)Power, Burda, Edwards, Babuschkin, and
+  Misra]{power2022grokking}
+Alethea Power, Yuri Burda, Harri Edwards, Igor Babuschkin, and Vedant Misra.
+\newblock Grokking: Generalization beyond overfitting on small algorithmic
+  datasets.
+\newblock \emph{arXiv preprint arXiv:2201.02177}, 2022.
+
+\bibitem[Rissanen(1984)]{rissanen1984universal}
+Jorma Rissanen.
+\newblock Universal coding, information, prediction, and estimation.
+\newblock \emph{IEEE Transactions on Information Theory}, 30\penalty0
+  (4):\penalty0 629--636, 1984.
+
+\bibitem[Rissanen(1996)]{rissanen1996fisher}
+Jorma Rissanen.
+\newblock Fisher information and stochastic complexity.
+\newblock \emph{IEEE Transactions on Information Theory}, 42\penalty0
+  (1):\penalty0 40--47, 1996.
+
+\bibitem[Robert(2007)]{robert2007bayesian}
+Christian~P. Robert.
+\newblock \emph{The {B}ayesian Choice: From Decision-Theoretic Foundations to
+  Computational Implementation}.
+\newblock Springer, second edition, 2007.
+
+\bibitem[Schaeffer et~al.(2023)Schaeffer, Khona, Robertson, Boopathy,
+  Pistunova, Rocks, Fiete, and Koyejo]{schaeffer2023double}
+Rylan Schaeffer, Mikail Khona, Zachary Robertson, Akhilan Boopathy, Kateryna
+  Pistunova, Jason~W. Rocks, Ila~Rani Fiete, and Oluwasanmi Koyejo.
+\newblock Double descent demystified: Identifying, interpreting \& ablating the
+  sources of a deep learning puzzle.
+\newblock \emph{arXiv preprint arXiv:2303.14151}, 2023.
+
+\bibitem[Shtarkov(1987)]{shtarkov1987universal}
+Yurii~M. Shtarkov.
+\newblock Universal sequential coding of single messages.
+\newblock \emph{Problems of Information Transmission}, 23\penalty0
+  (3):\penalty0 3--17, 1987.
+
+\bibitem[Steinke and Zakynthinou(2020)]{steinke2020reasoning}
+Thomas Steinke and Lydia Zakynthinou.
+\newblock Reasoning about generalization via conditional mutual information.
+\newblock In \emph{Conference on Learning Theory}, 2020.
+
+\bibitem[Teh et~al.(2016)Teh, Thiery, and Vollmer]{teh2016sgld}
+Yee~Whye Teh, Alexandre~H. Thiery, and Sebastian~J. Vollmer.
+\newblock Consistency and fluctuations for stochastic gradient langevin
+  dynamics.
+\newblock \emph{Journal of Machine Learning Research}, 17\penalty0
+  (7):\penalty0 1--33, 2016.
+\newblock URL \url{https://jmlr.org/papers/v17/teh16a.html}.
+
+\bibitem[Vapnik and Chervonenkis(1971)]{vapnik1971uniform}
+Vladimir~N. Vapnik and Alexey~Ya. Chervonenkis.
+\newblock On the uniform convergence of relative frequencies of events to their
+  probabilities.
+\newblock \emph{Theory of Probability and Its Applications}, 16\penalty0
+  (2):\penalty0 264--280, 1971.
+
+\bibitem[Watanabe(2009)]{watanabe2009algebraic}
+Sumio Watanabe.
+\newblock \emph{Algebraic Geometry and Statistical Learning Theory}.
+\newblock Cambridge University Press, 2009.
+
+\bibitem[Welling and Teh(2011)]{welling2011sgld}
+Max Welling and Yee~Whye Teh.
+\newblock Bayesian learning via stochastic gradient langevin dynamics.
+\newblock In \emph{Proceedings of the 28th International Conference on Machine
+  Learning}, pages 681--688, 2011.
+\newblock URL \url{https://icml.cc/2011/papers/398_icmlpaper.pdf}.
+
+\bibitem[Wilson and Izmailov(2020)]{wilson2020bayesian}
+Andrew~Gordon Wilson and Pavel Izmailov.
+\newblock {B}ayesian deep learning and a probabilistic perspective of
+  generalization.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2020.
+
+\bibitem[Xu and Raginsky(2017)]{xu2017information}
+Aolin Xu and Maxim Raginsky.
+\newblock Information-theoretic analysis of generalization capability of
+  learning algorithms.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2017.
+
+\end{thebibliography}

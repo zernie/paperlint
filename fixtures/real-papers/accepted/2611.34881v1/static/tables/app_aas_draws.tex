@@ -1,0 +1,13 @@
+\subsection{Variability of the AAS Rows over Training Runs}
+\label{app:aas_draws}
+
+\noindent Tabs.~\ref{tab:codino_main} to~\ref{tab:dinov3_main} show one training run per AAS row. Grounding DINO has two draws per row: the late stage (epochs 9 to 12) run twice from the same epoch-8 checkpoint without a fixed seed. DINOv3 has four seeds ($42$ to $45$), each a separate run from the pretrained backbone. Tab.~\ref{tab:app_aas_draws} gives the mean and standard deviation over the runs of each row. The control rows of the tables are single runs.
+
+\begin{table*}[!htp]%
+\centering
+\small
+\setlength{\tabcolsep}{3.3pt}%
+\caption{\textbf{Spread of the AAS rows over training runs.} The standard deviation is at most $0.5$ p.p.\ in every column. Mean $\pm$ sample standard deviation of the AAS rows of Tabs.~\ref{tab:grounding_dino_main} and~\ref{tab:dinov3_main} on COCO and STRANGE-Bench: Grounding DINO over two late-stage draws, DINOv3 over seeds $42$ to $45$.}
+\label{tab:app_aas_draws}
+\input{static/tables/generated/app_aas_draws_tabular}
+\end{table*}

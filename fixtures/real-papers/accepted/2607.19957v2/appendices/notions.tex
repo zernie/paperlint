@@ -1,0 +1,130 @@
+\section{Notations}\label{app:notations}
+
+\tablefirsthead{%
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule}
+\tablehead{%
+\multicolumn{2}{@{}l}{\small\textit{(continued)}} \\
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule}
+\tabletail{\midrule}
+\tablelasttail{\bottomrule}
+
+\small
+\begin{supertabular}{@{}cl@{}}
+\multicolumn{2}{@{}l}{\textit{Sequences and Tokens}} \\
+$X$ & Input prompt / token sequence \\
+$\tilde{X}$ & Cached token sequence / target text chunk \\
+$X_{a:b}$ & Contiguous segment $[x_a, \ldots, x_b]$ of $X$ \\
+$q$ & Target query \\
+$r$ & Ground-truth answer \\
+$\tilde{r}$ & Target malicious answer \\
+$p$ & Adversarial prefix \\
+$S$ & Length of matched prefix \\
+$L_\text{chunk}$ & Fixed chunk length for cache storage \\
+$L_p$ & Adversarial prefix length \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Model Architecture}} \\
+$N$ & Number of transformer layers \\
+$d$ & Model hidden dimension \\
+$d_k$ & Key/query/value head dimension \\
+$\mW_Q^{(\ell)}, \mW_K^{(\ell)}, \mW_V^{(\ell)}$ & Q, K, V projection matrices at layer $\ell$ \\
+$\mW_O^{(\ell)}$ & Output projection matrix at layer $\ell$ \\
+$\mW_\text{FFN}^{(\ell)}$ & FFN weight matrix at layer $\ell$ \\
+$W_\text{FFN}$ & Upper bound on $\|\mW_\text{FFN}^{(\ell)}\|_2$ \\
+$\mW_\text{out}$ & Final output embedding matrix \\
+$W_\text{embed}$ & Token embedding matrix \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Vectors (at position $t$, layer $\ell$)}} \\
+$\vh_t^{(\ell)}$ & Hidden state \\
+$\vu_t$ & Normalized hidden state \\
+$\vq_t^{(\ell)}, \vk_t^{(\ell)}, \vv_t^{(\ell)}$ & Query, Key, Value vectors \\
+$\va_t^{(\ell)}$ & Attention output \\
+$\hat{\vk}_t, \hat{\vv}_t$ & Effective Key, Value (with cache reuse) \\
+$\ve_p$ & Continuous embedding of prefix $p$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Matrices}} \\
+$\mK_{1:t}^{(\ell)}, \mV_{1:t}^{(\ell)}$ & Stacked K, V (positions $1$ to $t$) at layer $\ell$ \\
+$\tilde{\mK}, \tilde{\mV}$ & Cached (hit) Key, Value matrices \\
+$\mK, \mV$ & Ground-truth Key, Value matrices \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{KV Cache System}} \\
+$\mathcal{P}_\text{prefix}$ & Prefix cache pool \\
+$\mathcal{P}_\text{chunk}$ & Chunk-based cache pool \\
+$\mathcal{S}_\text{hit}$ & Set of matched (hit) cache chunks \\
+$\mathcal{T}^p_{\tilde{X}}$ & KV cache of $\tilde{X}$ conditioned on prefix $p$ \\
+$\mathcal{R}$ & Recomputation set of token positions \\
+$[i, j]$ & Position interval of matched segment in input \\
+$t'$ & Relative token position ($t' = t - i + 1$) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Attack \& Optimization}} \\
+$T$ & Number of GCG optimization steps \\
+$B$ & Number of candidate prefixes per step \\
+$k$ & Top-$k$ candidate tokens per position \\
+$\eta$ & Search width (verification ratio) \\
+$\mathcal{L}_\text{CE}$ & Cross-entropy loss \\
+$\mathcal{V}_\text{cand}^l$ & Candidate token set at position $l$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Evaluation Metrics \& System Parameters}} \\
+$\delta$ & Cache ratio (proportion of cached chunks) \\
+$\rho$ & Recomputation ratio \\
+$L_\text{context}$ & Multi-turn filler context length \\
+Acc & Accuracy ($x = r$) \\
+U-ASR & Untargeted Attack Success Rate ($y \neq x$) \\
+T-ASR & Targeted Attack Success Rate ($y = \tilde{r} \land y \neq x$) \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{Operators}} \\
+$\softmax(\cdot)$ & Softmax function \\
+$\concat / \oplus$ & Concatenation operation \\
+$\textsc{PrefixLen}(\cdot, \cdot)$ & Longest common prefix length \\
+$\textsc{OneHot}(\cdot)$ & One-hot encoding \\
+\end{supertabular}
+
+% \subsection{Transformer Layer Computation}\label{app:transformer_layer}
+
+% For completeness, we formally define the computation performed at each layer of a transformer model with $N$ layers. Let $\vh_t^{(\ell)}$ denote the hidden representation at layer $\ell \in \{0, 1, \ldots, N\}$ and position $t$. The computation proceeds as follows:
+
+% \begin{definition}[Input Embedding]\label{def:embedding}
+% At layer $0$, the hidden representation is initialized as the token embedding with positional information:
+% \begin{align}
+%     \vh_t^{(0)} = \text{Embed}(x_t) + \text{PE}(t),
+% \end{align}
+% where $\text{Embed}(x_t) \in \mathbb{R}^{d}$ maps the discrete token $x_t$ to a continuous embedding vector, and $\text{PE}(t) \in \mathbb{R}^{d}$ denotes the positional encoding at position $t$.
+% \end{definition}
+
+% \begin{definition}[Query-Key-Value Projection]\label{def:qkv_projection}
+% For each layer $\ell \in \{1, \ldots, N\}$, the query, key, and value vectors are computed via linear projections:
+% \begin{align}
+%     \vq_t^{(\ell)} &= \vh_t^{(\ell-1)} \mW_Q^{(\ell)}, \\
+%     \vk_t^{(\ell)} &= \vh_t^{(\ell-1)} \mW_K^{(\ell)}, \\
+%     \vv_t^{(\ell)} &= \vh_t^{(\ell-1)} \mW_V^{(\ell)},
+% \end{align}
+% where $\mW_Q^{(\ell)}, \mW_K^{(\ell)}, \mW_V^{(\ell)} \in \mathbb{R}^{d \times d_k}$ are learnable projection matrices.
+% \end{definition}
+
+% \begin{definition}[Causal Self-Attention]\label{def:causal_attention}
+% The causal self-attention mechanism computes the attention output at position $t$ as:
+% \begin{align}
+%     \va_t^{(\ell)} = \softmax\left( \frac{\vq_t^{(\ell)} {\mK_{1:t}^{(\ell)}}^\top}{\sqrt{d_k}} \right) \mV_{1:t}^{(\ell)},
+% \end{align}
+% where $\mK_{1:t}^{(\ell)} = [\vk_1^{(\ell)}; \ldots; \vk_t^{(\ell)}]^\top \in \mathbb{R}^{t \times d_k}$ and $\mV_{1:t}^{(\ell)} = [\vv_1^{(\ell)}; \ldots; \vv_t^{(\ell)}]^\top \in \mathbb{R}^{t \times d_k}$ denote the stacked key and value matrices from positions $1$ to $t$.
+% \end{definition}
+
+% \begin{definition}[Output Projection and Residual]\label{def:output_residual}
+% The hidden state at layer $\ell$ is updated via output projection and residual connection:
+% \begin{align}
+%     \vh_t^{(\ell)} = f^{(\ell)}\left(\vh_t^{(\ell-1)} + \va_t^{(\ell)} \mW_O^{(\ell)}\right),
+% \end{align}
+% where $\mW_O^{(\ell)} \in \mathbb{R}^{d_k \times d}$ is the output projection matrix, and $f^{(\ell)}(\cdot)$ denotes the composition of feed-forward network, layer normalization, and other deterministic operations.
+% \end{definition}
+
+% \paragraph{Causality Property.}\label{par:causality}
+% The causal attention mechanism ensures that the hidden state $\vh_t^{(\ell)}$ at position $t$ depends \emph{only} on:
+% \begin{itemize}
+%     \item The token embeddings $\{\text{Embed}(x_i)\}_{i=1}^{t}$,
+%     \item The positional encodings $\{\text{PE}(i)\}_{i=1}^{t}$,
+%     \item The parameters $\{\mW_Q^{(\ell')}, \mW_K^{(\ell')}, \mW_V^{(\ell')}, \mW_O^{(\ell')}\}_{\ell'=1}^{\ell}$.
+% \end{itemize}
+% Crucially, $\vh_t^{(\ell)}$ is \emph{independent} of any tokens at positions $t' > t$. This property is essential for the correctness of KV cache mechanisms.

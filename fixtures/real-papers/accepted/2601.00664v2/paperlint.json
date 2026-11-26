@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "cvpr-2026",
+      "venue": {
+        "kind": "named",
+        "name": "CVPR 2026",
+        "url": "https://arxiv.org/abs/2601.00664v2"
+      },
+      "opened": "2026-05-30",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-05-30",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}
