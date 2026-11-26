@@ -89,7 +89,7 @@ export function presetFor(
   }: Readonly<{
     slot: Pick<Slot, "series" | "year">;
     preamble: Preamble;
-    style?: string;
+    style?: string | undefined;
     shipped: ReadonlySet<string>;
   }>,
   evidence: string,
