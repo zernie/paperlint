@@ -265,11 +265,12 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
-      # Every rule over every real paper of the corpus (98 accepted, 108 arXiv preprints) in ONE
-      # `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
+      # Every rule over every real paper of the corpus (98 accepted, 108 arXiv preprints), dealt into
+      # 4 shards (fixtures/real-papers/shard-<n>.test.ts) that vitest runs at once, one worker each,
+      # each one `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
       # outside `unit` so the macOS shards and the coverage run do not repeat it. No TeX needed.
       # Why every paper runs, and what it costs: fixtures/real-papers/preprints/README.md. The lint
-      # of the 206 papers took 582.7 s locally (2026-11-19), past the 10 minutes this step had.
+      # of the 206 papers took 582.7 s locally in one run (2026-11-19), 378.8 s in 4 shards (2026-11-27).
       - name: vitest run --project real-papers
         run: npx vitest run --project real-papers
         timeout-minutes: 20
