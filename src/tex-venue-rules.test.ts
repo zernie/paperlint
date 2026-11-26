@@ -505,15 +505,6 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
     ])
       expect(lint(paper(cls), FSE)).toEqual([]);
   });
-
-  it("an ACL paper — article at 11pt, acl.sty as a package — passes realm", () => {
-    expect(
-      lint(paper("\\documentclass[11pt]{article}\n\\usepackage[review]{acl}"), {
-        extends: "paperlint:realm-2026",
-        kind: "long",
-      }),
-    ).toEqual([]);
-  });
 });
 
 const PORTING = {
@@ -1562,16 +1553,22 @@ describe("tex/template — a style file the template loads (`template_style`): w
     expect(lint(tex, NEURIPS, { extra })).toEqual([]);
   });
 
-  it("silent for a preset that names no style: REALM's article takes any package", () => {
+  it("silent for a preset that names no style: a project's own article takes any package", () => {
+    const own = `${PAPER}/own.jsonc`;
     expect(
       lint(
         paper(
           "\\documentclass[11pt]{article}\n\\usepackage{neurips_2026}",
           "Text.",
         ),
+        { extends: "./own.jsonc" },
         {
-          extends: "paperlint:realm",
-          kind: "long",
+          extra: {
+            [own]: JSON.stringify({
+              type: "family",
+              template: "\\documentclass[11pt]{article}",
+            }),
+          },
         },
       ),
     ).toEqual([]);

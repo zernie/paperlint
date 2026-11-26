@@ -113,7 +113,7 @@ it("1. the shipped data: at least one acmart venue is shipped (else the next che
 // dictionaries diverged. Since the ACM venues extend the `acm-sigconf` family, only the family
 // declares the template's packages, so this holds by construction; the check stays for any two
 // standalone presets that name the same template. A template is its class AND the style it loads
-// (`template_style`): NeurIPS's `article` + `neurips_2026` is not REALM's bare `article`.
+// (`template_style`): NeurIPS's `article` + `neurips_2026` is not ACL's `article` + `acl`.
 const styleOf = (v: string): string =>
   parseTemplateStyle(presetOf(v).templateStyle ?? "")?.name ?? "";
 const templateKey = (v: string): string =>
@@ -123,13 +123,13 @@ for (const v of venues.filter((x) => presetOf(x).extends === null)) {
   const t = templateKey(v);
   byTemplate.set(t, [...(byTemplate.get(t) ?? []), v]);
 }
-// Guards: the key tells a style family from a bare class — else every article-based style would be
-// held to REALM's list.
-it("1. the shipped data: neurips-style and acl-latex are two templates: article + neurips_2026, article + no style", () => {
+// Guards: the key tells one style family from another on the same class — else every article-based
+// style would be held to ACL's list.
+it("1. the shipped data: neurips-style and acl-latex are two templates: article + neurips_2026, article + acl", () => {
   check(
-    "neurips-style and acl-latex are two templates: article + neurips_2026, article + no style",
+    "neurips-style and acl-latex are two templates: article + neurips_2026, article + acl",
     templateKey("neurips-style") === "article + neurips_2026" &&
-      templateKey("acl-latex") === "article + no style",
+      templateKey("acl-latex") === "article + acl",
     `${templateKey("neurips-style")} · ${templateKey("acl-latex")}`,
   );
   for (const [t, vs] of byTemplate)
