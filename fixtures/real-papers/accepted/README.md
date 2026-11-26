@@ -9,8 +9,8 @@ answers which question.
 
 The folder holds two groups, run together by `fixtures/real-papers.test.ts` and told apart below:
 
-- **Camera-ready papers, each linted against the venue that accepted it** (152, arXiv ids as
-  directory names: 12 chosen on 2026-11-19, 76 sampled by a script on 2026-11-20, 64 more on
+- **Camera-ready papers, each linted against the venue that accepted it** (151, arXiv ids as
+  directory names: 12 chosen on 2026-11-19, 76 sampled by a script on 2026-11-20, 63 more on
   2026-11-27). They measure
   precision on the venue's own rules. [`sampling/`](sampling/) holds the record of the sample:
   the script, its queries and quotas, and every candidate it looked at.
@@ -105,13 +105,13 @@ Over all fields the most frequent reasons: the arXiv non-exclusive licence 321, 
 statement 203, «Workshop» in the comment 197 (and «workshop» 34), over 300 KB 188, CC BY-NC-ND 58,
 CC BY-NC-SA 51, class `article` where `acmart` is required 50.
 
-#### The third batch (2026-11-27): 64 papers, the same script with higher quotas
+#### The third batch (2026-11-27): 63 papers, the same script with higher quotas
 
 The quotas in `sampling/queries.json` were raised and committed before the run: ml 30, nlp 24,
 ai 16, security 20, se 16, hci 16, systems 20, other 12 (154; they were 80). The rules, sources and
 editions are those of the second batch. The run resumed from the log, so no candidate of the
 second batch was judged again. It judged 522 new candidates (80 from the Semantic Scholar listing)
-and kept 73, in 40 minutes. No rule was loosened. Nine of the 73 were then removed, in three steps.
+and kept 73, in 40 minutes. No rule was loosened. Ten of the 73 were then removed, in four steps.
 
 - **The arXiv comment names the next edition.** Four came from the Semantic Scholar listing of one
   edition while their own comment names the next («Accepted by EuroSys 2026» for 2509.26529v2 and
@@ -127,26 +127,33 @@ and kept 73, in 40 minutes. No rule was loosened. Nine of the 73 were then remov
   2608.12144v1 (`SPLASH Companion '26`, a demo), 2603.08080v1 (`CHI EA '26`) and 2501.15915v1
   (`\acmConference[Conference]{2025}{Under Review}`, a submission's placeholder) were kept from an
   accepted comment or a listing, while their own TeX says they are not the main proceedings' camera-ready.
+- **The comment names another venue.** 2511.10837v1, «Accepted at AAAI 2025-FS-ATRACC», is a paper
+  of the AAAI Fall Symposium Series (its own `aaai25.sty` repeats the designation), a venue of its own
+  and not the AAAI conference. A comment naming a fall or spring symposium, a symposium series or an
+  `-FS-`/`-SS-` code is now rejected (`judgeComment`); over the 123 papers kept on a comment, it
+  rejected this one alone.
 
 Every candidate is now also judged on what its own `\acmConference` and `\acmBooktitle` declare
 (`judgeDeclaredVenue`): a companion, extended-abstract, demo, poster, workshop or preliminary track,
 or another `'YY` edition, is rejected. A workshop slot's own series (`AgenticDev '26`) is its main
 track. `\acmYear` is not read: on CSCW, a PACM venue, it is the journal volume's year (2024 for a
 CSCW 2025 paper). Run over the 159 papers kept before it, the rule rejected exactly the seven named
-here and in the second batch. The table counts the 64 kept.
+here and in the second batch.
+
+The table counts the 63 kept.
 
 | field | kept this run | total / quota | probed this run | yield |
 | --- | ---: | --- | ---: | ---: |
 | ml | 12 | 30 / 30 | 83 | 14.5% |
 | nlp | 12 | 24 / 24 | 55 | 21.8% |
-| ai | 8 | 16 / 16 | 50 | 16.0% |
+| ai | 7 | 15 / 16 | 50 | 14.0% |
 | security | 9 | 19 / 20 | 31 | 29.0% |
 | se | 6 | 12 / 16 | 66 | 9.1% |
 | hci | 7 | 14 / 16 | 157 | 4.5% |
 | systems | 5 | 14 / 20 | 48 | 10.4% |
 | other | 5 | 11 / 12 | 32 | 15.6% |
 
-**systems is six short, se four, hci two, other one**: the papers removed above, which the next run replaces. **security is one
+**systems is six short, se four, hci two, ai one, other one**: the papers removed above, which the next run replaces. **security is one
 short:** each of its editions ended full (5 papers) or exhausted (no candidate
 left that passes), so 19 is what the editions hold today, not a stopped run. One `other` walk
 (ICCV 2025) ended on a Semantic Scholar 429; `other` was full without it when the run ended. `node
@@ -363,7 +370,7 @@ The 76 of the 80 sampled on 2026-11-20 that remain, generated from `venue-manife
 | [2502.00626v2](2502.00626v2/README.md) | other | SIGGRAPH 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 175 KB |
 | [2501.10143v1](2501.10143v1/README.md) | other | SIGIR 2025, S2 listing | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 103 KB |
 
-The 64 of the 69 sampled on 2026-11-27 that remain, generated the same way:
+The 63 of the 69 sampled on 2026-11-27 that remain, generated the same way:
 
 | paper | field | accepted at | linted as | class | licence | text |
 | --- | --- | --- | --- | --- | --- | ---: |
@@ -391,7 +398,6 @@ The 64 of the 69 sampled on 2026-11-27 that remain, generated the same way:
 | [2611.30052v1](2611.30052v1/README.md) | nlp | EMNLP 2026 | `paperlint:emnlp-2026` | `article` + `acl[final]` | CC BY 4.0 | 211 KB |
 | [2505.22993v1](2505.22993v1/README.md) | nlp | NAACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 128 KB |
 | [2506.11076v1](2506.11076v1/README.md) | nlp | NAACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 141 KB |
-| [2511.10837v1](2511.10837v1/README.md) | ai | AAAI 2025 | `paperlint:aaai-press` | `article` + `aaai25` | CC BY-SA 4.0 | 114 KB |
 | [2601.06406v1](2601.06406v1/README.md) | ai | AAAI 2025 | `paperlint:aaai-press` | `article` + `aaai25` | CC BY 4.0 | 183 KB |
 | [2609.08162v1](2609.08162v1/README.md) | ai | AAAI 2026 | `paperlint:aaai-press` | `article` + `aaai2026` | CC BY 4.0 | 175 KB |
 | [2610.02517v1](2610.02517v1/README.md) | ai | AAAI 2026 | `paperlint:aaai-press` | `article` + `aaai2026` | CC BY 4.0 | 66 KB |

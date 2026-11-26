@@ -89,7 +89,7 @@ const no = (reason: string) => ({ ok: false, reason }) as const;
 const POSITIVE =
   /accepted|to appear|will appear|appears? in|published (in|at)|camera[- ]?ready|to be presented|will be presented|spotlight|\boral\b|proceedings of/i;
 const NEGATIVE =
-  /submitted|under review|to be accepted|extended version|full version|long version|journal version|technical report|supplementary version|pending|extended abstract|late[- ]breaking|doctoral|student research|demo(nstration)? (track|paper)|tutorial|companion|workshop|\bSRW\b|demonstrations?|\bdemo\b|\bposter/gi;
+  /submitted|under review|to be accepted|extended version|full version|long version|journal version|technical report|supplementary version|pending|extended abstract|late[- ]breaking|doctoral|student research|demo(nstration)? (track|paper)|tutorial|companion|workshop|\bSRW\b|demonstrations?|\bdemo\b|\bposter|(?:fall|spring) symposium|symposium series|-(?:FS|SS)-/gi;
 const FINDINGS_SERIES = new Set(["ACL", "EMNLP", "NAACL", "EACL"]);
 
 /** The first negative word of a comment (a poster is not one where the slot allows posters), or an «@ venue». */

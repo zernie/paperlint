@@ -2521,28 +2521,6 @@
     "acceptance": "arxiv-comment"
   },
   {
-    "arxiv_id": "2511.10837v1",
-    "field": "ai",
-    "series": "AAAI",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
-    "source_sha256": "68ebe4cc36a8028cec6ce976a3ca802586dabfeb1d8c972e1aec9465223a3a66",
-    "main_tex": "./Main.tex",
-    "class": "article",
-    "category": "cs.LG",
-    "size_bytes": 116378,
-    "dir": "2511.10837v1",
-    "accepted": {
-      "quote": "Accepted at AAAI 2025-FS-ATRACC",
-      "url": "https://arxiv.org/abs/2511.10837v1",
-      "venue": "AAAI 2025"
-    },
-    "preset": "paperlint:aaai-press",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
     "arxiv_id": "2609.08162v1",
     "field": "ai",
     "series": "AAAI",

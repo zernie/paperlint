@@ -46,6 +46,16 @@ describe("rule 1: the acceptance wording", () => {
       'not accepted wording: comment says "@ NeurIPS"',
     ],
     [
+      "an AAAI symposium series code, a venue of its own",
+      say("Accepted at NeurIPS 2025-FS-ATRACC"),
+      'not accepted wording: comment says "-FS-"',
+    ],
+    [
+      "a fall or spring symposium",
+      say("Accepted at the NeurIPS 2025 Fall Symposium"),
+      'not accepted wording: comment says "Fall Symposium"',
+    ],
+    [
       "no positive word",
       say("NeurIPS 2025, 9 pages"),
       "not accepted wording: no acceptance statement",

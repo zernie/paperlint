@@ -1,4 +1,0 @@
----
-stages: []
----
-# PIPELINE-STATUS

@@ -1304,19 +1304,6 @@
     ],
     "title": "Speaking Numbers to LLMs: Multi-Wavelet Number Embeddings for Time Series Forecasting"
   },
-  "2511.10837v1": {
-    "clsOpts": "letterpaper",
-    "style": "aaai25",
-    "styleOpts": "",
-    "mainCandidates": 1,
-    "presetWhy": "the AAAI Press style family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "Main.bbl to paper.bbl",
-      "Main.tex to paper.tex"
-    ],
-    "title": "The Map of Misbelief: Tracing Intrinsic and Extrinsic Hallucinations Through Attention Patterns"
-  },
   "2609.08162v1": {
     "clsOpts": "letterpaper",
     "style": "aaai2026",
