@@ -167,7 +167,10 @@ const pickMain = (
   mains.find((f) => /(^|\/)(main|paper|ms)\.tex$/.test(f.path)) ??
   mains.toSorted((a, b) => b.bytes.length - a.bytes.length)[0];
 
-/** Rewrites an `\input`/`\include` of the main file to `paper`, noting each «from to to». */
+/**
+ * Rewrites an `\input`/`\include` of the main file (or its `.bbl`) to `paper`, noting each «from to
+ * to». A space before the brace and a leading `./` name the same file, so both are matched.
+ */
 const pointAtPaper = (
   f: ArchiveFile,
   stem: string,
@@ -175,7 +178,7 @@ const pointAtPaper = (
   if (ext(f.path) !== "tex" || stem === "paper")
     return { bytes: f.bytes, edits: [] };
   const re = new RegExp(
-    `\\\\(input|include)\\{${escape(stem)}(\\.tex|\\.bbl)?\\}`,
+    `\\\\(input|include)\\s*\\{(?:\\./)?${escape(stem)}(\\.tex|\\.bbl)?\\}`,
     "g",
   );
   const text = latin1(f.bytes);

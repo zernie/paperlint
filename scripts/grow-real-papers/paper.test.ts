@@ -4,7 +4,8 @@
 import * as R from "remeda";
 import { describe, expect, test } from "vitest";
 import { recordOf, stagingPlan, type StagingPlan } from "./archive.ts";
-import { keptPaper, presetFor, slug, type Kept } from "./paper.ts";
+import { keptPaper, type Kept } from "./paper.ts";
+import { slug } from "./preset.ts";
 import { preambleOf, type Slot } from "./rules.ts";
 import { file, mainTex } from "./testkit.ts";
 
@@ -66,65 +67,6 @@ const README = `# A Title
 
 \`paperlint.json\` records one attempt, accepted, whose evidence is this file. Its dates are those of the arXiv version that states the acceptance: the real decision day is earlier and not known here. \`record-by-hand.json\` is NOT TeX's answer: it lists \`paper.tex\`, the class and style files at the root, then the \`\\input\`/\`\\include\` files in the order the source names them, hashed over the bytes here. See [\`../README.md\`](../README.md).
 `;
-
-describe("the preset", () => {
-  const ccs = { series: "ACM CCS", year: 2025 };
-  test.each([
-    {
-      name: "a shipped edition, by its alias",
-      s: ccs,
-      cls: "{acmart}",
-      style: undefined,
-      preset: "paperlint:ccs-2025",
-    },
-    {
-      name: "the style's family",
-      s: slot,
-      cls: "{article}",
-      style: "neurips_2025",
-      preset: "paperlint:neurips-style",
-    },
-    {
-      name: "acmart sigconf",
-      s: slot,
-      cls: "[sigconf]{acmart}",
-      style: undefined,
-      preset: "paperlint:acm-sigconf",
-    },
-    {
-      name: "acmart in another format",
-      s: slot,
-      cls: "[acmtog]{acmart}",
-      style: undefined,
-      preset: null,
-    },
-    {
-      name: "IEEEtran conference",
-      s: slot,
-      cls: "[conference]{IEEEtran}",
-      style: undefined,
-      preset: "paperlint:ieee-conference",
-    },
-    {
-      name: "IEEEtran journal",
-      s: slot,
-      cls: "[journal]{IEEEtran}",
-      style: undefined,
-      preset: null,
-    },
-    {
-      name: "no family",
-      s: slot,
-      cls: "{article}",
-      style: undefined,
-      preset: null,
-    },
-  ])("$name", ({ s, cls, style, preset }) => {
-    const p = preambleOf(`\\documentclass${cls}`);
-    // Guards: which preset, never a guess outside the families.
-    expect(presetFor(s, p, style, new Set(["ccs-2025"])).preset).toBe(preset);
-  });
-});
 
 describe("a kept paper", () => {
   test("its files: the sources, the record, the status, the cycle and the README", () => {

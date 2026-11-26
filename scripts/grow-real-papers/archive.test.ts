@@ -211,6 +211,32 @@ describe("renaming the main file", () => {
       ],
       wrap: ["\\input{paper}\\include{paper.tex}\\input{other}"],
     });
+    const spaced = stagingPlan([
+      file("00README.XXX", "doc.tex toplevelfile"),
+      file("doc.tex", mainTex("\\input {doc.bbl}\\input{./doc.bbl}")),
+      file("doc.bbl", "refs"),
+      file("wrap.tex", "\\input {doc}\\include{./doc.tex}"),
+    ]);
+    // Guards: a space before the brace or a leading ./ still names the renamed file, .tex and .bbl.
+    expect(
+      spaced.ok && {
+        edits: spaced.edits,
+        texts: spaced.staged
+          .filter((f) => f.path.endsWith(".tex"))
+          .map((f) => [f.path, text(f)]),
+      },
+    ).toEqual({
+      edits: [
+        "\\input {doc.bbl} to \\input{paper.bbl}",
+        "\\input{./doc.bbl} to \\input{paper.bbl}",
+        "\\input {doc} to \\input{paper}",
+        "\\include{./doc.tex} to \\include{paper.tex}",
+      ],
+      texts: [
+        ["paper.tex", mainTex("\\input{paper.bbl}\\input{paper.bbl}")],
+        ["wrap.tex", "\\input{paper}\\include{paper.tex}"],
+      ],
+    });
     const already = stagingPlan([
       file("paper.tex", mainTex("")),
       file("w.tex", "\\input{paper}"),
