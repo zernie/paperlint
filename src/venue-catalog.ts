@@ -5,8 +5,12 @@
 // when that file is not what this module builds. Pure.
 
 import * as R from "remeda";
-import { FIELD_TITLES, VENUE_FIELDS, type VenueField } from "./domain/venue-field.ts";
-import type { Preset } from "./presets.ts";
+import {
+  FIELD_TITLES,
+  VENUE_FIELDS,
+  type VenueField,
+} from "./domain/venue-field.ts";
+import { labelOf, type Preset } from "./presets.ts";
 
 /** One kind of paper an edition takes, and its page limits; null where the preset sets none. */
 export interface CatalogKind {
@@ -74,9 +78,8 @@ const byEdition = <T extends Pick<CatalogEdition, "series" | "year">>(
 ): readonly T[] =>
   R.sortBy(editions, [(e) => e.series, "asc"], [(e) => e.year, "desc"]);
 
-/** The catalog of the resolved shipped presets. Throws, naming the preset, on a fact it lacks. */
-export function venueCatalog(presets: readonly Preset[]): VenueCatalog {
-  const families = R.sortBy(
+const familiesOf = (presets: readonly Preset[]): readonly CatalogFamily[] =>
+  R.sortBy(
     presets.flatMap((p) =>
       p.identity.type === "family"
         ? [
@@ -92,17 +95,25 @@ export function venueCatalog(presets: readonly Preset[]): VenueCatalog {
     ),
     (f) => f.id,
   );
-  const venues = presets.flatMap((p) =>
-    p.identity.type === "venue" ? [{ preset: p, identity: p.identity }] : [],
-  );
-  const editionOf = (p: Preset): CatalogEdition => {
-    const family =
-      [...p.chain]
-        .reverse()
-        .map(idOfFile)
-        .map((id) => families.find((f) => f.id === id))
-        .find((f) => f !== undefined) ??
-      fail(`${p.id} extends no family`);
+
+/** The id of the conference a venue is held at; null for a conference. */
+const parentOf = (p: Preset): string | null =>
+  p.parent === null ? null : labelOf(p.parent.spec);
+
+/** The nearest family the edition's chain builds on. */
+const familyOf = (
+  p: Preset,
+  families: readonly CatalogFamily[],
+): CatalogFamily =>
+  [...p.chain]
+    .reverse()
+    .map((file) => families.find((f) => f.id === idOfFile(file)))
+    .find((f) => f !== undefined) ?? fail(`${p.id} extends no family`);
+
+const editionOf =
+  (families: readonly CatalogFamily[]) =>
+  (p: Preset): CatalogEdition => {
+    const family = familyOf(p, families);
     return {
       id: p.id,
       series: p.label,
@@ -118,33 +129,39 @@ export function venueCatalog(presets: readonly Preset[]): VenueCatalog {
       })),
     };
   };
-  const conferences = venues.filter((v) => v.preset.parentId === null);
-  const workshops = venues.filter((v) => v.preset.parentId !== null);
+
+/** A conference's field; throws when the preset names none. */
+const fieldOf = (p: Preset): VenueField =>
+  (p.identity.type === "venue" ? p.identity.field : null) ??
+  fail(`the conference ${p.id} has no "field"`);
+
+/** The catalog of the resolved shipped presets. Throws, naming the preset, on a fact it lacks. */
+export function venueCatalog(presets: readonly Preset[]): VenueCatalog {
+  const families = familiesOf(presets);
+  const edition = editionOf(families);
+  const venues = presets.filter((p) => p.identity.type === "venue");
+  const [conferences, workshops] = R.partition(
+    venues,
+    (v) => parentOf(v) === null,
+  );
   const orphan = workshops.find(
-    (w) => !conferences.some((c) => c.preset.id === w.preset.parentId),
+    (w) => !conferences.some((c) => c.id === parentOf(w)),
   );
   if (orphan !== undefined)
     fail(
-      `the workshop ${orphan.preset.id} is held at ${String(orphan.preset.parentId)}, which is no shipped conference`,
+      `the workshop ${orphan.id} is held at ${String(parentOf(orphan))}, which is no shipped conference`,
     );
+  const conferenceOf = (c: Preset): CatalogConference => ({
+    ...edition(c),
+    workshops: byEdition(
+      workshops.filter((w) => parentOf(w) === c.id).map(edition),
+    ),
+  });
   const fields = VENUE_FIELDS.map((field) => ({
     field,
     title: FIELD_TITLES[field],
     conferences: byEdition(
-      conferences
-        .filter(
-          (c) =>
-            (c.identity.field ??
-              fail(`the conference ${c.preset.id} has no "field"`)) === field,
-        )
-        .map((c) => ({
-          ...editionOf(c.preset),
-          workshops: byEdition(
-            workshops
-              .filter((w) => w.preset.parentId === c.preset.id)
-              .map((w) => editionOf(w.preset)),
-          ),
-        })),
+      conferences.filter((c) => fieldOf(c) === field).map(conferenceOf),
     ),
   })).filter((f) => f.conferences.length > 0);
   return { fields, families };

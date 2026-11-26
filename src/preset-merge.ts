@@ -56,7 +56,7 @@ const namesOf = (i: PresetIdentity): readonly string[] =>
 /** What the merge carries from file to file: the preset without what only the whole chain knows. */
 type Merging = Omit<
   Preset,
-  "id" | "label" | "chain" | "identity" | "parentNames" | "parentId" | "year"
+  "id" | "label" | "chain" | "identity" | "parentNames" | "year"
 > & {
   readonly name: string | null;
   readonly parent: ParentLink | null;

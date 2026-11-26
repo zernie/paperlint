@@ -42,7 +42,9 @@ For an existing edition, start with its preset and card. Recheck the affected fa
    (`AGENT`, not `AGENT 2027`): the year is the id's. A workshop sets `"workshop": true` and
    `"parent": "paperlint:<conference>-<year>"` of its own year; a parent not shipped yet gets a
    minimal preset (name, aliases, url, the family its call names, no limits) whose card says only
-   the format is checked.
+   the format is checked. A conference also sets `"field"` (one of the schema's enum); a workshop
+   takes its parent's. Then `npm run catalog` rewrites `presets/catalog.json`, which paperlint.dev
+   reads.
 7. **Register the name where shipped presets are listed**, or tests fail: its label and year in
    `test/shipped-venues.ts`, `src/presets.test.ts`, `src/preset-card-rule.test.ts`,
    `src/venue-rules.test.ts`, `src/paper-settings-commands.test.ts`, the count in
