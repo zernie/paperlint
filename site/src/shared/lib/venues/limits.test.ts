@@ -11,7 +11,7 @@ const kind = (
 describe("limitsText", () => {
   it("says the format only when the edition has no kinds", () => {
     // Guards: a minimal preset (ICSE 2027) reads as a format, not as an empty sentence.
-    expect(limitsText([])).toBe("The format only, no page limit.");
+    expect(limitsText([])).toBe("The format only; page limits not checked.");
   });
 
   it("lists body pages once, then the references they share", () => {
@@ -47,7 +47,7 @@ describe("limitsText", () => {
     );
     expect(
       limitsText([kind("full", 8, null, null), kind("talk", null, null, null)]),
-    ).toBe("full 8 pages; talk no page limit.");
+    ).toBe("full 8 pages; talk page limit not checked.");
   });
 
   it("names the kinds when none has a page limit", () => {
@@ -56,6 +56,6 @@ describe("limitsText", () => {
         kind("long", null, null, null),
         kind("short", null, null, null),
       ]),
-    ).toBe("long, short: no page limit.");
+    ).toBe("long, short: page limits not checked.");
   });
 });

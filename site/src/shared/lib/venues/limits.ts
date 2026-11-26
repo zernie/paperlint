@@ -27,20 +27,20 @@ const ownRefs = (n: string): string => ` + ${n} of references`;
 const clause = (k: CatalogKind): string => {
   const pages = pagesOf(k);
   return pages === null
-    ? `${k.kind} no page limit`
+    ? `${k.kind} page limit not checked`
     : `${k.kind} ${String(pages)} pages${tailOf(k, ownRefs)}`;
 };
 
 /**
  * «short 5, full 10 pages, + 2 pages of references.» when every kind has a limit of the same
- * shape; each kind spelled out, by «;», when they differ; «The format only, no page limit.» for a
+ * shape; each kind spelled out, by «;», when they differ; «The format only; page limits not checked.» for a
  * preset with no kinds.
  */
 export const limitsText = (kinds: readonly CatalogKind[]): string => {
   const first = kinds[0];
-  if (first === undefined) return "The format only, no page limit.";
+  if (first === undefined) return "The format only; page limits not checked.";
   if (kinds.every((k) => pagesOf(k) === null))
-    return `${kinds.map((k) => k.kind).join(", ")}: no page limit.`;
+    return `${kinds.map((k) => k.kind).join(", ")}: page limits not checked.`;
   const tails = R.unique(kinds.map((k) => tailOf(k, sharedRefs)));
   return kinds.every((k) => pagesOf(k) !== null) && tails.length === 1
     ? `${kinds.map((k) => `${k.kind} ${String(pagesOf(k))}`).join(", ")} pages${tailOf(first, sharedRefs)}.`

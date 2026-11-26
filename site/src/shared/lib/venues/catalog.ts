@@ -34,9 +34,9 @@ const conferenceSchema = editionSchema.extend({
   workshops: z.array(editionSchema).readonly(),
 });
 
-/** src/domain/venue-field.ts › VENUE_FIELDS; a field the site does not know fails the build. */
+/** The field's id and title come from the catalog, so the site keeps no list of fields of its own. */
 const fieldSchema = z.strictObject({
-  field: z.enum(["software-engineering", "security", "nlp", "ml-ai"]),
+  field: z.string().min(1),
   title: z.string().min(1),
   conferences: z.array(conferenceSchema).readonly(),
 });

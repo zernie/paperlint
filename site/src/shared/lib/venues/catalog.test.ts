@@ -86,8 +86,8 @@ describe("parseCatalog", () => {
     );
   });
 
-  it("fails the build on an unknown field", () => {
-    const bad = { ...SMALL, fields: [{ ...field, field: "hci" }] };
+  it("fails the build on a field with no id", () => {
+    const bad = { ...SMALL, fields: [{ ...field, field: "" }] };
     expect(() => parseCatalog(text(bad))).toThrow(
       "site: presets/catalog.json is not a venue catalog: fields.0.field:",
     );
