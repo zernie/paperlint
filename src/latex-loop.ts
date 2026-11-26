@@ -10,11 +10,11 @@
  *      final log carrying a warning on latex-log's list of
  *      failing ones (`FAILING_WARNINGS`)?                  → fail, with its lines
  *      Or does the aux name a database or a style that
- *      cannot be found, with no paper.bbl of the author's
- *      to fall back on (`bib-source.ts`)?                  → fail, naming them
+ *      cannot be found, with no paper.bbl to fall back
+ *      on (`bib-source.ts`)?                               → fail, naming them
  *   2. did the citations, a .bib or the style change since
- *      bibtex last ran? Never when paper.bbl is the
- *      author's: it is typeset as it shipped.              → bibtex
+ *      bibtex last ran? Never when one cannot be found:
+ *      the paper.bbl on disk is typeset as it is.          → bibtex
  *   3. did the last pass change a tracked file, or did the
  *      log ask for a rerun?                                → latex (fail after MAX_PASSES)
  *   4. otherwise                                           → one FINAL latex pass, then done
@@ -75,9 +75,9 @@ const RERUN: readonly LogMarker[] = [
  */
 export type BibInput =
   | { readonly kind: "none" }
-  /** The author's `paper.bbl`: typeset as it is, bibtex never runs. */
+  /** A database or the style cannot be found: the `paper.bbl` on disk is typeset as it is. */
   | { readonly kind: "shipped-bbl"; readonly missing: readonly string[] }
-  /** A database or the style cannot be found, and no paper.bbl of the author's: the build stops. */
+  /** A database or the style cannot be found, and there is no paper.bbl: the build stops. */
   | { readonly kind: "missing"; readonly missing: readonly string[] }
   | {
       readonly kind: "run-bibtex";
@@ -215,7 +215,7 @@ const bibMissing = (
   step: "bibtex",
   cause: { kind: "bib-missing", missing },
   lines: [
-    `bibtex cannot find ${missing.join(", ")}, which the .aux names, and there is no paper.bbl of the author's to fall back on.`,
+    `bibtex cannot find ${missing.join(", ")}, which the .aux names, and there is no paper.bbl to fall back on.`,
     `Add the file to the paper directory, fix the name in \\bibliography or \\bibliographystyle, or install its TeX Live package.`,
   ],
 });

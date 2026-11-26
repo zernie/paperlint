@@ -1,14 +1,14 @@
 /**
  * WHERE A BUILD'S BIBLIOGRAPHY COMES FROM, as the `.aux` and the disk stand after a pdflatex pass:
  * the facts `src/domain/bib-source.ts` decides from (paperlint#708). The `.aux` names the databases
- * and the style; `kpsewhich` says where bibtex would find each; `paper.bbl` and `paper.blg` say whose
- * `.bbl` it is. Reads through the `Files` port and runs `kpsewhich` through the `Runner` the build
+ * and the style; `kpsewhich` says where bibtex would find each; a `paper.bbl` on disk is what is
+ * typeset when one cannot be found. Reads through the `Files` port and runs `kpsewhich` through the `Runner` the build
  * already uses, so a test fakes both.
  */
 import { resolve } from "node:path";
 import { filter, isNonNull } from "remeda";
 import { callerPath } from "./caller-path.ts";
-import { bblOwner, bibSource } from "./domain/bib-source.ts";
+import { bibSource } from "./domain/bib-source.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { JOBNAME } from "./domain/sources-record.ts";
 import { printed } from "./domain/text.ts";
@@ -57,13 +57,6 @@ function located(
   return r.status === 0 && path !== "" ? at(deps, path) : null;
 }
 
-/** Whose paper.bbl it is, by the paper.blg bibtex writes beside its own (`bib-source.ts`). */
-const ownerOf = (deps: BibDeps) =>
-  bblOwner({
-    bbl: deps.files.isFile(at(deps, `${JOBNAME}.bbl`)),
-    blg: deps.files.isFile(at(deps, `${JOBNAME}.blg`)),
-  });
-
 /** Where the bibliography comes from, as the `.aux` and the disk stand now. */
 export function bibInput(deps: BibDeps): BibInput {
   const aux = textOf(deps, `${JOBNAME}.aux`);
@@ -78,7 +71,7 @@ export function bibInput(deps: BibDeps): BibInput {
       style === null
         ? null
         : { name: style, found: located(deps, "bst", style) !== null },
-    owner: ownerOf(deps),
+    bbl: deps.files.isFile(at(deps, `${JOBNAME}.bbl`)),
   });
   if (source.kind !== "run-bibtex") return source;
   // Every database was found, or the source would not be run-bibtex; one gone since is no bytes.
@@ -96,13 +89,10 @@ export function bibInput(deps: BibDeps): BibInput {
 }
 
 /**
- * The line a build that typeset the author's paper.bbl prints: bibtex did not run, so nothing
- * checked the references, and how to have it run. Empty for any other bibliography.
+ * The line a build that typeset the paper.bbl on disk prints: bibtex did not run, so nothing checked
+ * the references, and what it could not find. Empty for any other bibliography.
  */
 export function shippedBblNote(bib: BibInput): string {
   if (bib.kind !== "shipped-bbl") return "";
-  const lost = bib.missing.length
-    ? `; it could not be regenerated: ${bib.missing.join(", ")} not found`
-    : `; delete ${JOBNAME}.bbl to regenerate it with bibtex`;
-  return `; bibliography: the author's ${JOBNAME}.bbl, typeset as shipped — bibtex not run, references not checked${lost}`;
+  return `; bibliography: the ${JOBNAME}.bbl on disk, typeset as it is — bibtex not run (${bib.missing.join(", ")} not found), references not checked`;
 }

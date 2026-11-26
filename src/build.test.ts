@@ -63,10 +63,9 @@ function latexPass(f: Fake, cwd: string, pass: number) {
   if (status === 0) writeFileSync(join(cwd, "paper.pdf"), "%PDF-fake");
   return f.noLog ? { status } : { status, stdout: "", stderr: "" };
 }
-/** A bibtex run: writes the .bbl and the .blg, as real bibtex does even when it fails; status and output as the case says. */
+/** A bibtex run: writes the .bbl, as real bibtex does even when it fails; status and output as the case says. */
 function bibtexRun(f: Fake, cwd: string) {
   writeFileSync(join(cwd, "paper.bbl"), "\\begin{thebibliography}{1}");
-  writeFileSync(join(cwd, "paper.blg"), "This is BibTeX\n");
   if (f.bibtex === undefined)
     return { status: 0, stdout: "This is BibTeX\n", stderr: "" };
   return f.bibtexOut === undefined
@@ -210,7 +209,7 @@ test("compile's plan line names the options, a missing class and the venue", () 
   );
 });
 
-test("compile: the author's paper.bbl is typeset as shipped, bibtex never runs; a database nowhere stops the build", async () => {
+test("compile: a paper.bbl whose refs.bib is nowhere is typeset as it is, bibtex never runs; a database nowhere stops the build", async () => {
   const aux = "\\citation{k}\n\\bibdata{refs}\n";
   const dir = paper({ "paper.tex": TEX, "paper.bbl": "shipped" });
   const shipped = await build(dir, { aux });
@@ -218,7 +217,7 @@ test("compile: the author's paper.bbl is typeset as shipped, bibtex never runs; 
   assert.equal(readFileSync(join(dir, "paper.bbl"), "utf8"), "shipped");
   assert.match(
     shipped.line,
-    /0 bibtex runs; .*the author's paper\.bbl, typeset as shipped/,
+    /0 bibtex runs; .*the paper\.bbl on disk, typeset as it is — bibtex not run \(refs\.bib not found\)/,
   );
   const lost = await build(paper(), { aux });
   // Guards: no "full log" line: bibtex did not run, so no paper.blg is this build's.

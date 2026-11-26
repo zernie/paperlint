@@ -411,7 +411,7 @@ it("what a fail carries: the step, the cause, the lines", () => {
     { kind: "exit", code: 2 },
     nope,
   ]);
-  // Guards: #708 — the author's paper.bbl is typeset as it is; bibtex would truncate it.
+  // Guards: #708 — a paper.bbl whose refs.bib is nowhere is typeset as it is; bibtex would truncate it.
   const shipped = { kind: "shipped-bbl", missing: ["refs.bib"] } as const;
   expect(failOf(latex({ bib: shipped }))).toBe("latex-final");
   // Guards: #708 — bibtex is never run on a database it cannot find; a pdflatex error outranks it.

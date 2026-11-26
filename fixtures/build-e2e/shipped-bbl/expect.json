@@ -1,12 +1,12 @@
 {
-  "$comment": "The author's paper.bbl, with no refs.bib: typeset as shipped, bibtex never runs, and the build says so (#708).",
+  "$comment": "A paper.bbl with no refs.bib: typeset as it is, bibtex never runs, and the build says so (#708).",
   "build": {
     "outcome": "pdf",
     "pages": 1
   },
   "says": [
     "0 bibtex runs",
-    "bibliography: the author's paper.bbl, typeset as shipped — bibtex not run, references not checked; it could not be regenerated: refs.bib not found"
+    "bibliography: the paper.bbl on disk, typeset as it is — bibtex not run (refs.bib not found), references not checked"
   ],
   "text": {
     "contains": ["[1]", "The Shipped Bibliography"],

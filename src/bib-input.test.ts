@@ -81,20 +81,13 @@ describe("where a build's bibliography comes from", () => {
 });
 
 describe("where a build's bibliography comes from, when a file is not there", () => {
-  it("a database or the style nowhere: missing, even over bibtex's own paper.bbl", () => {
+  it("a database or the style nowhere, and no paper.bbl: missing", () => {
     // Guards: #708 — bibtex is never run on a file it cannot find.
-    for (const own of [{}, { "paper.bbl": "x", "paper.blg": "x" }])
-      expect(
-        bibInput(
-          at(
-            paper({
-              "paper.aux": aux("plain", "gone,here"),
-              "here.bib": "",
-              ...own,
-            }),
-          ),
-        ),
-      ).toEqual({ kind: "missing", missing: ["gone.bib"] });
+    expect(
+      bibInput(
+        at(paper({ "paper.aux": aux("plain", "gone,here"), "here.bib": "" })),
+      ),
+    ).toEqual({ kind: "missing", missing: ["gone.bib"] });
     expect(
       bibInput(
         at(paper({ "paper.aux": aux("nosuchstyle", "here"), "here.bib": "" })),
@@ -102,8 +95,8 @@ describe("where a build's bibliography comes from, when a file is not there", ()
     ).toEqual({ kind: "missing", missing: ["nosuchstyle.bst"] });
   });
 
-  it("a paper.bbl with no paper.blg: the author's, typeset as shipped", () => {
-    // Guards: #708 — the shipped .bbl is never handed to bibtex, whatever else is missing.
+  it("a database or the style nowhere, and a paper.bbl: typeset as it is", () => {
+    // Guards: #708 — a paper.bbl bibtex cannot regenerate is never handed to it.
     const dir = paper({
       "paper.aux": aux("nosuchstyle", "gone,here"),
       "here.bib": "",
@@ -128,12 +121,11 @@ describe("where a build's bibliography comes from, when a file is not there", ()
 });
 
 describe("the line a build prints for the bibliography", () => {
-  it("the author's paper.bbl: not checked, and what would regenerate it", () => {
-    expect(shippedBblNote({ kind: "shipped-bbl", missing: [] })).toBe(
-      "; bibliography: the author's paper.bbl, typeset as shipped — bibtex not run, references not checked; delete paper.bbl to regenerate it with bibtex",
-    );
-    expect(shippedBblNote({ kind: "shipped-bbl", missing: ["refs.bib"] })).toBe(
-      "; bibliography: the author's paper.bbl, typeset as shipped — bibtex not run, references not checked; it could not be regenerated: refs.bib not found",
+  it("the paper.bbl on disk: not checked, and what was not found", () => {
+    expect(
+      shippedBblNote({ kind: "shipped-bbl", missing: ["refs.bib", "x.bst"] }),
+    ).toBe(
+      "; bibliography: the paper.bbl on disk, typeset as it is — bibtex not run (refs.bib, x.bst not found), references not checked",
     );
   });
   it("any other bibliography: nothing", () => {
