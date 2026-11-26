@@ -122,6 +122,22 @@ describe("a preset that lacks what the catalog shows", () => {
     ).toThrow('the family icml-style has no "template_label"');
   });
 
+  it("🔴 an edition whose chain builds on no family throws, naming it", () => {
+    const presets = presetsWith({});
+    const planted = presets.map((p) =>
+      p.id === "ase-2026" ? { ...p, chain: [p.chain.at(-1) ?? ""] } : p,
+    );
+    expect(() => venueCatalog(planted)).toThrow("ase-2026 extends no family");
+  });
+
+  it("🔴 an edition with no year throws, naming it", () => {
+    const presets = presetsWith({});
+    const planted = presets.map((p) =>
+      p.id === "ase-2026" ? { ...p, year: null } : p,
+    );
+    expect(() => venueCatalog(planted)).toThrow("ase-2026 has no edition year");
+  });
+
   it("🔴 a workshop whose conference is not shipped throws", () => {
     const presets = presetsWith({});
     const withoutAse = presets.filter((p) => p.id !== "ase-2026");

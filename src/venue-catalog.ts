@@ -130,16 +130,22 @@ const editionOf =
     };
   };
 
+/** A preset whose identity is a venue's, so its field can be read without asking again. */
+type VenuePreset = Preset & {
+  readonly identity: Extract<Preset["identity"], { type: "venue" }>;
+};
+
+const isVenue = (p: Preset): p is VenuePreset => p.identity.type === "venue";
+
 /** A conference's field; throws when the preset names none. */
-const fieldOf = (p: Preset): VenueField =>
-  (p.identity.type === "venue" ? p.identity.field : null) ??
-  fail(`the conference ${p.id} has no "field"`);
+const fieldOf = (p: VenuePreset): VenueField =>
+  p.identity.field ?? fail(`the conference ${p.id} has no "field"`);
 
 /** The catalog of the resolved shipped presets. Throws, naming the preset, on a fact it lacks. */
 export function venueCatalog(presets: readonly Preset[]): VenueCatalog {
   const families = familiesOf(presets);
   const edition = editionOf(families);
-  const venues = presets.filter((p) => p.identity.type === "venue");
+  const venues = presets.filter(isVenue);
   const [conferences, workshops] = R.partition(
     venues,
     (v) => parentOf(v) === null,
