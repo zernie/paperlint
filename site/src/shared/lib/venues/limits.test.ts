@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { limitsText } from "./limits.ts";
+import { limitsText, reviewText } from "./limits.ts";
 
 const kind = (
   name: string,
@@ -57,5 +57,15 @@ describe("limitsText", () => {
         kind("short", null, null, null),
       ]),
     ).toBe("long, short: page limits not checked.");
+  });
+});
+
+describe("reviewText", () => {
+  it("names double-blind review when the preset says so, and nothing otherwise", () => {
+    // Guards: the popover never claims a review mode the preset does not record.
+    expect([reviewText(true), reviewText(false)]).toEqual([
+      "Double-blind review.",
+      null,
+    ]);
   });
 });

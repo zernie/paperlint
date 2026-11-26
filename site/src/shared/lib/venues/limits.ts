@@ -46,3 +46,7 @@ export const limitsText = (kinds: readonly CatalogKind[]): string => {
     ? `${kinds.map((k) => `${k.kind} ${String(pagesOf(k))}`).join(", ")} pages${tailOf(first, sharedRefs)}.`
     : `${kinds.map(clause).join("; ")}.`;
 };
+
+/** «Double-blind review.» when the preset says the venue reviews double-blind; null otherwise. */
+export const reviewText = (blind: boolean): string | null =>
+  blind ? "Double-blind review." : null;

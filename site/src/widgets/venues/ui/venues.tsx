@@ -4,6 +4,7 @@ import {
   editionName,
   limitsText,
   orList,
+  reviewText,
   venueCount,
   type CatalogConference,
   type CatalogEdition,
@@ -19,13 +20,19 @@ import {
   SectionLabel,
 } from "@/shared/ui/section-heading";
 
-/** What a name's popover says: the format, then the page limits. */
-const Limits = ({ e }: { readonly e: CatalogEdition }) => (
-  <>
-    <span className="block font-medium text-foreground">{e.templateLabel}</span>
-    <span className="mt-1 block">{limitsText(e.kinds)}</span>
-  </>
-);
+/** What a name's popover says: the format, the page limits, then the review mode where known. */
+const Limits = ({ e }: { readonly e: CatalogEdition }) => {
+  const review = reviewText(e.blind);
+  return (
+    <>
+      <span className="block font-medium text-foreground">
+        {e.templateLabel}
+      </span>
+      <span className="mt-1 block">{limitsText(e.kinds)}</span>
+      {review === null ? null : <span className="mt-1 block">{review}</span>}
+    </>
+  );
+};
 
 /** A conference on its own line; the workshops held at it beneath, small and muted, by series. */
 const ConferenceLines = ({ c }: { readonly c: CatalogConference }) => (

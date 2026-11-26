@@ -10,4 +10,4 @@ export {
   type CatalogKind,
   type VenueCatalog,
 } from "./catalog.ts";
-export { limitsText } from "./limits.ts";
+export { limitsText, reviewText } from "./limits.ts";
