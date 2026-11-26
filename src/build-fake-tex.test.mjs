@@ -12,7 +12,6 @@
  */
 import {
   mkdtempSync,
-  mkdirSync,
   writeFileSync,
   rmSync,
   realpathSync,
@@ -23,6 +22,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, expect, it, vi } from "vitest";
+import { fakeKpsewhich, writeTree } from "../test/support.ts";
 
 // Several tests here run real ESLint, spawn processes or walk the repository.
 vi.setConfig({ testTimeout: 120_000 });
@@ -55,20 +55,11 @@ const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
 // `~/.cache/paperlint/banal` present, the measure step would run the real banal on the fake reader's pages.
 const ENV = { PAPERLINT_BANAL_DIR: join(root, "no-banal") };
-const paper = (name, files) => {
-  const dir = join(root, "papers", name);
-  mkdirSync(dir, { recursive: true });
-  for (const [rel, body] of Object.entries(files)) {
-    mkdirSync(dirname(join(dir, rel)), { recursive: true });
-    writeFileSync(join(dir, rel), body);
-  }
-  return dir;
-};
+const paper = (name, files) => writeTree(join(root, "papers", name), files);
 
 /**
  * A fake TeX. `pdflatex` writes paper.aux / paper.log (and paper.pdf on success) in its cwd;
- * `bibtex` writes paper.bbl; `kpsewhich` finds a file in its cwd, or `plain.bst` in the TeX tree.
- * Every call is recorded with its argv, cwd and TEXINPUTS.
+ * `bibtex` writes paper.bbl. Every call is recorded with its argv, cwd and TEXINPUTS.
  */
 function fakeTex({
   aux = "\\relax\n",
@@ -83,6 +74,9 @@ function fakeTex({
 } = {}) {
   const calls = [];
   const run = (bin, args, opts) => {
+    // kpsewhich, not recorded: the calls below are the build's passes.
+    if (bin === "kpsewhich" && !missing)
+      return fakeKpsewhich(opts.cwd, args.at(-1));
     calls.push({ bin, args, cwd: opts?.cwd, texinputs: opts?.env?.TEXINPUTS });
     if (missing)
       return {
@@ -100,14 +94,6 @@ function fakeTex({
     if (bin === "bibtex") {
       writeFileSync(join(opts.cwd, "paper.bbl"), "\\begin{thebibliography}{1}");
       return { status: 0, stdout: "This is BibTeX\n", stderr: "" };
-    }
-    if (bin === "kpsewhich") {
-      const name = args.at(-1);
-      if (existsSync(join(opts.cwd, name)))
-        return { status: 0, stdout: `./${name}\n`, stderr: "" };
-      return name === "plain.bst"
-        ? { status: 0, stdout: "/texmf/bibtex/bst/plain.bst\n", stderr: "" }
-        : { status: 1, stdout: "", stderr: "" };
     }
     return { status: 99 };
   };
@@ -269,8 +255,8 @@ it("a clean build, with leftover scripts that must NOT run", async () => {
     !existsSync(join(clean, "RAN")) && !existsSync(join(clean, "RAN2")),
   );
   check(
-    "🔴 and nothing but pdflatex/bibtex (and the kpsewhich lookup) was started",
-    tex.calls.every((c) => ["pdflatex", "bibtex", "kpsewhich"].includes(c.bin)),
+    "🔴 and nothing but pdflatex/bibtex was started",
+    tex.calls.every((c) => c.bin === "pdflatex" || c.bin === "bibtex"),
   );
   check(
     "one line per ignored script tells the author it is ignored",
@@ -374,16 +360,15 @@ it("the bibtex path", async () => {
   });
   check("a paper with a \\cite builds", rb.status === "built");
   const bibCalls = btex.calls.filter((c) => c.bin === "bibtex");
-  const passes = btex.calls.filter((c) => c.bin !== "kpsewhich");
   check(
     "bibtex ran exactly once, on the job name",
     bibCalls.length === 1 && bibCalls[0].args.join(" ") === "paper",
   );
   check(
     "…between two pdflatex passes, and the build still ends on the final pass",
-    passes[0].bin === "pdflatex" &&
-      passes[1].bin === "bibtex" &&
-      passes.at(-1).args.at(-1).includes("\\finalpass"),
+    btex.calls[0].bin === "pdflatex" &&
+      btex.calls[1].bin === "bibtex" &&
+      btex.calls.at(-1).args.at(-1).includes("\\finalpass"),
   );
 });
 

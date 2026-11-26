@@ -9,7 +9,12 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
 import { test } from "vitest";
-import { present, useTempDir, writeTree } from "../test/support.ts";
+import {
+  fakeKpsewhich,
+  present,
+  useTempDir,
+  writeTree,
+} from "../test/support.ts";
 import {
   buildPaper,
   buildPapers,
@@ -72,11 +77,6 @@ function bibtexRun(f: Fake, cwd: string) {
     ? { status: f.bibtex }
     : { status: f.bibtex, stdout: f.bibtexOut };
 }
-/** kpsewhich: a file of the paper directory, as `./name`, or plain.bst, which every TeX Live has. */
-function kpsewhich(cwd: string, name: string) {
-  const found = existsSync(join(cwd, name)) || name === "plain.bst";
-  return found ? { status: 0, stdout: `./${name}\n` } : { status: 1 };
-}
 function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
   let pass = 0;
   return (bin, args, opts) => {
@@ -87,7 +87,7 @@ function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
       };
     // The build always runs a pass in the paper's directory.
     const cwd = present(opts.cwd, "the pass's cwd");
-    if (bin === "kpsewhich") return kpsewhich(cwd, args.at(-1) ?? "");
+    if (bin === "kpsewhich") return fakeKpsewhich(cwd, args.at(-1) ?? "");
     return bin === "pdflatex" ? latexPass(f, cwd, ++pass) : bibtexRun(f, cwd);
   };
 }
