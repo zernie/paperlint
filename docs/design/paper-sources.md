@@ -176,6 +176,9 @@ The files are the numbers; this document does not copy them.
   did, so a wrong belief about TeX cannot be written into both the code and its test.
 - **The post-build check, not emulation** — no parser recovers as bibtex does; bibtex's own output
   is compared instead.
+- **bibtex runs only on what it can read** — every `.bib` and the `.bst` found, or the `paper.bbl` on
+  disk is typeset as it is (latexmk's rule, #708). The forks behind it, and the corpus decisions of
+  the same session: [`real-papers-decisions.md`](real-papers-decisions.md).
 
 ## 10. Scope: what this PR does not decide
 
