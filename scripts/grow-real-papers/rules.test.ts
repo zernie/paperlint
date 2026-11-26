@@ -77,7 +77,9 @@ describe("rule 1: the acceptance wording", () => {
       judgeComment(say("Accepted at NeurIPS 2025, findings"), neurips),
     ).toEqual({ ok: true, track: null });
   });
+});
 
+describe("rule 1 on a Semantic Scholar listing", () => {
   test("a Semantic Scholar venue string must be the main proceedings", () => {
     // Guards: a workshop venue string is rejected.
     expect(
@@ -98,7 +100,6 @@ describe("rule 1: the acceptance wording", () => {
       }),
     ).toEqual({ ok: true, track: null });
   });
-
   test("a listed paper whose own comment names another edition is rejected", () => {
     const eurosys = { venue: "EuroSys", series: "EuroSys", year: 2025 };
     // Guards: the listing's year is not the edition when the comment names a later one.
