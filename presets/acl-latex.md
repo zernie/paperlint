@@ -15,6 +15,10 @@ conferences (ACL, EMNLP, NAACL, EACL) and their workshops.
 - **The class**: `\documentclass[11pt]{article}`. ACL's template is not a class: `acl_latex.tex`
   opens with that line and loads `acl.sty` as a package, so `tex/template` compares the paper's
   class line against `article` at 11pt.
+- **The style**: `\usepackage{acl}`, with no option. `tex/template` requires the paper to load
+  `acl.sty`, so plain `article` without it fails. The kit loads `[review]` for review and drops it
+  for the final version (`[preprint]` is a third form), so any of them passes; of the 12 ACL papers
+  in the test corpus, 10 load `[final]`, 1 `[review]` and 1 none (measured 2026-11-26).
 - **TeX packages** on top of the base set: lineno, and the Times, Helvetica, Courier, Symbol and
   Zapf Dingbats fonts `acl.sty` loads (`psnfss`, `times`, `helvetic`, `courier`, `symbol`,
   `zapfding`); without them the build stops at «Font ptmr8t not loadable».

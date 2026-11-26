@@ -90,7 +90,7 @@ const legacyCeilings = {
   "src/talk-rules.test.ts": 427,
   "src/talk-rules.ts": 562,
   "src/tex-requirements.ts": 454,
-  "src/tex-venue-rules.test.ts": 2067,
+  "src/tex-venue-rules.test.ts": 2065,
   "src/tex-venue-rules.ts": 615,
   "src/toolchain-mirror.test.mjs": 631,
   "src/toolchain.ts": 605,
