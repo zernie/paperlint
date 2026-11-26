@@ -77,6 +77,21 @@
       "type": "string",
       "minLength": 1
     },
+    "field": {
+      "description": "The field of research a CONFERENCE belongs to, one of a fixed list: paperlint.dev groups the shipped editions by it. Set on a conference only: a workshop takes its parent conference's field, so it is refused with `workshop`, and on a family. Read by the venue catalog (src/venue-catalog.ts), never by a rule.",
+      "type": "string",
+      "enum": ["software-engineering", "security", "nlp", "ml-ai"]
+    },
+    "template_label": {
+      "description": "A family's template as a reader names it (`ACM acmart, sigconf (two columns)`): what paperlint.dev shows as the format of an edition that extends this family. Refused on a venue. Read by the venue catalog (src/venue-catalog.ts), never by a rule.",
+      "type": "string",
+      "minLength": 1
+    },
+    "any_conference_of": {
+      "description": "The organisation every one of whose conferences may use this family as its preset (`ACM`, `IEEE`, `ACL`): paperlint.dev then says «any ACM conference». Set only where that holds; a family that one venue alone uses (neurips-style, aaai-press) leaves it out, even when its owner is a publisher. Refused on a venue. Read by the venue catalog (src/venue-catalog.ts), never by a rule.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z]+$"
+    },
     "portal": {
       "description": "Where the venue takes submissions, read by `paperlint submission`: the portal's kind (an adapter exists for `hotcrp`) and the site's base URL, the one its pages and `/api/` hang off. A paper says which submission is its own with `submission: { id }` in its paperlint.json. A child's value replaces its parent's.",
       "type": "object",
@@ -563,7 +578,8 @@
         "properties": { "type": { "const": "venue" } }
       },
       "then": {
-        "required": ["name", "url"]
+        "required": ["name", "url"],
+        "properties": { "template_label": false, "any_conference_of": false }
       }
     },
     {
@@ -575,6 +591,7 @@
         "properties": {
           "name": false,
           "url": false,
+          "field": false,
           "parent": false,
           "workshop": false,
           "scope": false
@@ -593,7 +610,7 @@
     },
     {
       "if": { "required": ["workshop"] },
-      "then": { "required": ["parent"] }
+      "then": { "required": ["parent"], "properties": { "field": false } }
     }
   ],
   "definitions": {

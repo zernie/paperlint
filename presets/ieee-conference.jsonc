@@ -29,6 +29,8 @@
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
+  "template_label": "IEEE IEEEtran, conference",
+  "any_conference_of": "IEEE",
 
   "template": "\\documentclass[conference]{IEEEtran}",
 

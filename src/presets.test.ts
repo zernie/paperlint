@@ -29,6 +29,7 @@ import {
   presetProblemText,
   resolvePreset,
 } from "./presets.ts";
+import { DECLARED } from "../test/declared-presets.ts";
 
 const VENUES = presetsDir();
 const live = Object.fromEntries(
@@ -91,6 +92,7 @@ describe("shipped presets", () => {
       type: "venue",
       name: "AgenticDev",
       url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
+      field: null,
     });
   });
 
@@ -394,123 +396,6 @@ const FAMILIES = PARSED.filter((p) =>
   PARSED.some((q) => q.preset.extends === `${SHIPPED_PREFIX}${p.name}`),
 );
 
-// What each shipped preset declares itself to be; a new preset adds its row here.
-const DECLARED = {
-  "aaai-press.jsonc": { type: "family" },
-  "aaai-2027.jsonc": {
-    type: "venue",
-    name: "AAAI",
-    url: "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
-  },
-  "acl-latex.jsonc": { type: "family" },
-  "acm-acmsmall.jsonc": { type: "family" },
-  "acm-sigconf.jsonc": { type: "family" },
-  "agenticdev-2026.jsonc": {
-    type: "venue",
-    name: "AgenticDev",
-    url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
-  },
-  "acsac-2026.jsonc": {
-    type: "venue",
-    name: "ACSAC",
-    url: "https://www.acsac.org/2026/submissions/papers/",
-  },
-  "agent-2027.jsonc": {
-    type: "venue",
-    name: "AGENT",
-    url: "https://conf.researchr.org/home/icse-2027/agent-2027",
-  },
-  "agentverify-2027.jsonc": {
-    type: "venue",
-    name: "AGENTVERIFY",
-    url: "https://agentverify2027.github.io/cfp.html",
-  },
-  "aidc-2026.jsonc": {
-    type: "venue",
-    name: "AIDC",
-    url: "https://aidcworkshop.github.io/",
-  },
-  "aisec-2026.jsonc": {
-    type: "venue",
-    name: "AISec",
-    url: "https://aisec.cc/",
-  },
-  "ase-2026.jsonc": {
-    type: "venue",
-    name: "ASE",
-    url: "https://conf.researchr.org/track/ase-2026/ase-2026-research-track",
-  },
-  "ccs-2026.jsonc": {
-    type: "venue",
-    name: "ACM CCS",
-    url: "https://www.sigsac.org/ccs/CCS2026/call-for/call-for-papers.html",
-  },
-  "emnlp-2026.jsonc": {
-    type: "venue",
-    name: "EMNLP",
-    url: "https://2026.emnlp.org/calls/main_conference_papers/",
-  },
-  "fse-2027.jsonc": {
-    type: "venue",
-    name: "FSE",
-    url: "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
-  },
-  "icml-style.jsonc": { type: "family" },
-  "icml-2027.jsonc": {
-    type: "venue",
-    name: "ICML",
-    url: "https://icml.cc/Conferences/2027/CallForPapers",
-  },
-  "icse-2027.jsonc": {
-    type: "venue",
-    name: "ICSE",
-    url: "https://conf.researchr.org/track/icse-2027/icse-2027-research-track",
-  },
-  "icse-2028.jsonc": {
-    type: "venue",
-    name: "ICSE",
-    url: "https://conf.researchr.org/track/icse-2028/icse-2028-papers",
-  },
-  "ieee-conference.jsonc": { type: "family" },
-  "langcode-2027.jsonc": {
-    type: "venue",
-    name: "LangCode",
-    url: "https://langcode2027.github.io/",
-  },
-  "msr-2027.jsonc": {
-    type: "venue",
-    name: "MSR",
-    url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
-  },
-  "naacl-2027.jsonc": {
-    type: "venue",
-    name: "NAACL",
-    url: "https://2027.naacl.org/calls/main_conference_papers/",
-  },
-  "neurips-style.jsonc": { type: "family" },
-  "neurips-2026.jsonc": {
-    type: "venue",
-    name: "NeurIPS",
-    url: "https://neurips.cc/Conferences/2026/CallForPapers",
-  },
-  "nlbse-2027.jsonc": {
-    type: "venue",
-    name: "NLBSE",
-    url: "https://conf.researchr.org/home/icse-2027/nlbse-2027",
-  },
-  "realm-2026.jsonc": {
-    type: "venue",
-    name: "REALM",
-    url: "https://realm-workshop.github.io/call_for_papers",
-  },
-  "sp-2027.jsonc": {
-    type: "venue",
-    name: "IEEE S&P",
-    url: "https://sp2027.ieee-security.org/cfpapers.html",
-  },
-  "tex-base.jsonc": { type: "base" },
-};
-
 describe("what each shipped preset declares itself to be", () => {
   it("every shipped preset loads and declares what it is; a venue links its call", () => {
     const declared = Object.fromEntries(
@@ -612,7 +497,11 @@ describe("a project's own preset, by relative path", () => {
       }),
     });
     expect(r.ok && r.value.label).toBe("usenix-sec");
-    expect(r.ok && r.value.identity).toEqual({ type: "family" });
+    expect(r.ok && r.value.identity).toEqual({
+      type: "family",
+      templateLabel: null,
+      anyConferenceOf: null,
+    });
   });
 });
 
@@ -887,6 +776,7 @@ describe("chains that do not resolve: the files themselves", () => {
       type: "venue",
       name: "Our Workshop",
       url: "https://example.org/cfp",
+      field: null,
     });
   });
 });

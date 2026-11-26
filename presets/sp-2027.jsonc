@@ -36,6 +36,7 @@
   // The call quoted above.
   "url": "https://sp2027.ieee-security.org/cfpapers.html",
   "extends": "paperlint:ieee-conference",
+  "field": "security",
 
   // «Papers must be submitted in a form suitable for anonymous review» (the call above), and
   // `"blind":true` in the status data of both cycles' portals

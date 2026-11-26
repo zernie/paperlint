@@ -41,6 +41,7 @@
   // The call quoted above.
   "url": "https://aaai.org/conference/aaai/aaai-27/main-technical-track-call/",
   "extends": "paperlint:aaai-press",
+  "field": "ml-ai",
 
   // No `template`: the family's two lines are the kit's («DO NOT CHANGE THIS»), and the call names
   // no options of its own.

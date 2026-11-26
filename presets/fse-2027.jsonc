@@ -32,6 +32,7 @@
   // The call quoted above.
   "url": "https://conf.researchr.org/track/fse-2027/fse-2027-papers",
   "extends": "paperlint:acm-acmsmall",
+  "field": "software-engineering",
 
   // No `template`, on purpose: the call requires `acmsmall` («with the acmsmall option», desk
   // reject otherwise), which the family's `\documentclass[acmsmall]{acmart}` already requires, and

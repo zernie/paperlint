@@ -12,6 +12,7 @@
   // The call quoted above.
   "url": "https://www.acsac.org/2026/submissions/papers/",
   "extends": "paperlint:ieee-conference",
+  "field": "security",
 
   // What the conference is called in a paper's text (tex/venue-leftover). It stood in
   // aidc-2026.jsonc's aliases until AIDC named this preset as its `parent`.

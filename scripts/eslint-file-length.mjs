@@ -70,7 +70,7 @@ const legacyCeilings = {
   "src/paper-settings-commands.test.ts": 318,
   "src/paper-settings.test.ts": 519,
   "src/pdf-facts.ts": 343,
-  "src/presets.test.ts": 1199,
+  "src/presets.test.ts": 1091,
   "src/presets.ts": 404,
   "src/readability.test.ts": 331,
   "src/references.test.ts": 715,

@@ -209,8 +209,8 @@ test("a venue is parsed into its identity; a family and the base set carry none 
       read({ type: "base", tex: { packages: { a: ["a.sty"] } } }),
     ],
     [
-      { type: "venue", name: "X", url: "https://x.org/cfp" },
-      { type: "family" },
+      { type: "venue", name: "X", url: "https://x.org/cfp", field: null },
+      { type: "family", templateLabel: null, anyConferenceOf: null },
       { type: "base" },
     ],
   );

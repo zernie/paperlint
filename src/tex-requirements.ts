@@ -46,6 +46,13 @@ import {
 import type { VenuePortal } from "./domain/submission.ts";
 import type { Reading } from "./domain/deadline.ts";
 import type { VenueFields } from "./domain/submission-fields.ts";
+import {
+  identityOf,
+  type IdentityJson,
+  type PresetIdentity,
+} from "./domain/preset-identity.ts";
+
+export type { PresetIdentity };
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -185,16 +192,6 @@ export interface RequiredSection {
   readonly position: "last" | null;
 }
 
-/**
- * What a preset file IS, as its `type` declares it. A venue names itself and its call for papers; a
- * template family and the base set name no venue, so they cannot carry either — the union has no
- * field to put them in, the way the schema refuses them.
- */
-export type PresetIdentity =
-  | { readonly type: "venue"; readonly name: string; readonly url: string }
-  | { readonly type: "family" }
-  | { readonly type: "base" };
-
 /** A preset's kind of file: `venue`, `family` or `base`. */
 export type PresetType = PresetIdentity["type"];
 
@@ -280,11 +277,7 @@ interface FormatJson {
  * The preset's JSON after the schema accepted it — the shape `venue-profile.schema.json` allows,
  * the identity included: a venue has its `name` and `url`, a family and the base set have neither.
  */
-type PresetJson = PresetBodyJson &
-  (
-    | { readonly type: "venue"; readonly name: string; readonly url: string }
-    | { readonly type: "family" | "base" }
-  );
+type PresetJson = PresetBodyJson & IdentityJson;
 
 /** Every key of a preset but its identity. */
 interface PresetBodyJson {
@@ -363,12 +356,6 @@ const sectionsOf = (
   r === undefined
     ? null
     : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
-
-/** The identity a preset's `type` declares. Pure. */
-const identityOf = (j: PresetJson): PresetIdentity =>
-  j.type === "venue"
-    ? { type: "venue", name: j.name, url: j.url }
-    : { type: j.type };
 
 /** One ajv error, as far as the hints read it. */
 interface SchemaError {

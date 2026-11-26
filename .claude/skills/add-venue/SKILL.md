@@ -4,7 +4,7 @@ description: Create or update a conference or workshop edition in paperlint. Use
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebFetch]
 ---
 
-<!-- vigiles:sha256:a7bec2c6a92d0e8b compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9e5785b5dd9b565a compiled from .claude/skills/add-venue/SKILL.md.spec.ts -->
 
 # add-venue — a call for papers becomes a preset and a card, with the proof beside every number
 
@@ -39,7 +39,9 @@ For an existing edition, start with its preset and card. Recheck the affected fa
    (`AGENT`, not `AGENT 2027`): the year is the id's. A workshop sets `"workshop": true` and
    `"parent": "paperlint:<conference>-<year>"` of its own year; a parent not shipped yet gets a
    minimal preset (name, aliases, url, the family its call names, no limits) whose card says only
-   the format is checked.
+   the format is checked. A conference also sets `"field"` (one of the schema's enum); a workshop
+   takes its parent's. Then `npm run catalog` rewrites `presets/catalog.json`, which paperlint.dev
+   reads.
 7. **Register the name where shipped presets are listed**, or tests fail: its label and year in
    `test/shipped-venues.ts`, `src/presets.test.ts`, `src/preset-card-rule.test.ts`,
    `src/venue-rules.test.ts`, `src/paper-settings-commands.test.ts`, the count in

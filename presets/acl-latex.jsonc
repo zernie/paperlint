@@ -9,6 +9,8 @@
 // numbers bind every venue that extends it.
 {
   "type": "family",
+  "template_label": "article + \\usepackage{acl}",
+  "any_conference_of": "ACL",
 
   // ACL's template is not a class: `acl_latex.tex` opens with `\documentclass[11pt]{article}` and
   // loads `acl.sty` as a package (https://github.com/acl-org/acl-style-files, checked 2026-09-27).
