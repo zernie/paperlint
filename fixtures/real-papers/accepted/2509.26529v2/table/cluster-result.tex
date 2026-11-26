@@ -1,0 +1,34 @@
+\begin{table}[tbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+
+\caption{Number of \vcs reported by \tool and the clustering results. Column ``System'' is the targeted distributed system. Columns ``Cycle'', ``Cluster'', and ``TP'' shows the number of cycles reported, distinct cycle clusters, and true positive clusters respectively. The numbers outside the parentheses are from a beam search with unlimited number of injected faults, while the numbers inside are from a beam search limiting to one delay injection.}
+% \vspace{-3mm}
+\begin{tabular}{lccc||lccc}
+\toprule
+\textbf{System} & \textbf{Cycle} & \textbf{Cluster} & \textbf{TP} &
+\textbf{System} & \textbf{Cycle} & \textbf{Cluster} & \textbf{TP}\\
+\midrule 
+
+HDFS 2 & \phantom{0}38 (23) & 15 \phantom{0}(9) & 6 (6) &
+
+Flink & 48 (27) & 35 (17) & \phantom{0}2 (2)\phantom{x} \\
+
+HDFS 3* & 149 (59) & 36 (14) & 4 (3) &
+
+OZone & 29 (17) & 11 \phantom{0}(7) & \phantom{0}3 (3)\phantom{x} \\
+
+HBase & \phantom{0}72 (26) & 24 \phantom{0}(7) & 2 (2) &
+
+\textbf{Total}* & & \multicolumn{2}{r}{\textbf{\NumOfNewVCAllowDupe (\NumOfNewVCOneDelayAllowDupe)}} \\
+
+\bottomrule
+\end{tabular}
+
+\hspace{9em}\scriptsize{*Including two duplicated clusters also detected in HDFS 2}
+
+
+
+\label{tab:cluster-result}
+\end{table}

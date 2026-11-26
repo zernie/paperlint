@@ -1,0 +1,17 @@
+\section{\sailor}\label{sec:sailor}
+
+To address the above challenges, we propose \textit{\sailor}, a distributed training ecosystem that consists of a profiler, planner, simulator, and distributed training framework.  
+As shown in Figure~\ref{fig:sailor_system}, ML developers submit their model training specifications (model, optimizer, global batch size, etc), resource quotas (the maximum number of GPUs for each type and zone), an objective (e.g., maximize throughput or minimize cost), and optionally also constraints (e.g, a maximum budget per iteration or a maximum iteration time). \sailor also receives feedback about the current availability of hardware resources (which may be less than the quotas). 
+
+
+\noindent\textbf{Workflow}. 
+The \sailor profiler \circled{1}  collects information about the training job, the compute nodes and network bandwidth (\S \ref{profiler}). The \sailor planner \circled{2} uses this information to select a near-optimal \textit{resource allocation} from the pool of available hardware and a \textit{job parallelization plan} that optimizes the user's objective within the provided constraints (\S\ref{planner}). The planner uses the simulator \circled{3} to accurately evaluate various candidate plans (\S\ref{simulator}) in terms of throughput, memory footprint, and cost. \sailor then launches the job with the selected configuration using its distributed training framework \circled{4} (\S\ref{framework}), which is implemented on top of Megatron-DeepSpeed~\cite{megatron-deepspeed}. \sailor dynamically re-configures the job as resource availability changes.
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/system/sailor_overview.png}
+    \caption{\sailor system overview. 
+    }
+\label{fig:sailor_system}
+\end{figure}

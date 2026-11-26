@@ -1,0 +1,98 @@
+%\usepackage{cite}
+% \usepackage{algorithmicx}
+% \usepackage{algorithmic}
+% \usepackage{algpseudocode} 
+% \usepackage{algorithm}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+\usepackage{subfig}
+\usepackage{subcaption}
+\usepackage{makecell}
+\usepackage{pifont}
+\usepackage{enumitem}
+\usepackage{calligra}
+\usepackage{mdframed}
+\usepackage{fontawesome}
+\usepackage{amsmath}
+% \usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{balance}
+\usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{colortbl}
+\usepackage{forest}
+\usepackage{array}
+\usepackage[most]{tcolorbox}
+
+\captionsetup[lstlisting]{position=bottom}
+
+
+\usepackage{wrapfig}
+
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+\usepackage{forest}
+\usepackage[most]{tcolorbox}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+% \renewcommand\footnotetextcopyrightpermission[1]{}
+% \settopmatter{printacmref=false}
+% \setcopyright{none}
+
+\lstdefinestyle{codeStyle}{
+    basicstyle=\small\ttfamily,
+    commentstyle=\color{green},
+    keywordstyle=\color{blue},
+    stringstyle=\color{blue},
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{white},
+    captionpos=b,
+    aboveskip=10pt,
+    belowskip=10pt
+}
+\lstset{
+    language=Java,  
+    basicstyle=\ttfamily\scriptsize,%\footnotesize, 
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{purple}, 
+    showstringspaces=false, 
+    breaklines=true, 
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=1pt,
+    xleftmargin=3pt,
+    frame=tb,
+    tabsize=1,
+    name={},
+    captionpos=b
+}
+
+
+
+\newcommand{\find}[1]{
+\begin{tcolorbox}[tile,size=fbox,boxsep=2mm,boxrule=0pt,top=0pt,bottom=0pt,
+borderline west={1mm}{0pt}{blue!50!white},colback=blue!5!white]
+\em #1
+\end{tcolorbox}
+}
+\definecolor{lightgreen}{rgb}{0.9,1,0.9}
+\definecolor{grayheader}{gray}{0.85}
+\definecolor{codebackground}{RGB}{240,240,240} % 
+
+\newcommand{\appname}{{\sc DepRadar}\xspace}
+
+\newcommand{\h}[1]{\textcolor{blue}{{\it [gao says: #1]}}}

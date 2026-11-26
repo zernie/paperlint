@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "usenix-security-2026",
+      "venue": {
+        "kind": "named",
+        "name": "USENIX Security 2026",
+        "url": "https://arxiv.org/abs/2608.00543v1"
+      },
+      "opened": "2026-08-01",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-08-01",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

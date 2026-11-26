@@ -1,0 +1,125 @@
+\section{Introduction}
+Sketches serve as a powerful tool for visual exploration, ideation,
+and planning. Traditional sketching workflows often begin with artists
+working on a single canvas layer (either physical or digital) to
+maintain creative momentum. As the sketch evolves and requires
+refinement (e.g., adjustments to composition, perspective, or other
+elements), artists face the tedious task of manually segmenting
+different elements of the sketch into discrete, editable layers.
+Automating the sketch segmentation process offers a promising
+solution. However, this task presents unique challenges due to the
+sparse and abstract nature of line drawings, as well as the inherent
+variability in human sketching styles.
+Existing methods for scene-level sketch segmentation typically rely on training dedicated models using annotated sketch datasets \cite{sketchydataset, Zou18SketchyScene, fscoco}. 
+However, most available datasets are confined to specific sketch styles and a limited set of object categories, restricting the generalization capabilities of existing methods.
+
+% However, constructing such datasets is challenging and requires extensive manual effort. As a result, most available datasets are confined to specific sketch styles and a limited set of categories \cite{sketchydataset, Zou18SketchyScene, fscoco}. 
+% Consequently, these methods are often restricted to predefined class labels and sketch styles, limiting their generalization and applicability to real-world sketching scenarios.
+
+% There have been active efforts to address scene-level sketch segmentation 
+% \cite{bourouis2024open, Kutuk2024ClassAgnosticVS, Zou18SketchyScene}. However, existing
+% works are often restricted by the limited sketch style variation across available datasets and the predefined set of class labels as shown in
+% \cref{fig:existing_dataset}, limiting their generalization and applicability to sketching scenarios in the real-world. 
+% Furthermore, the existing works mainly focus on semantic segmentation, 
+% \mia{Only one \cite{Zou18SketchyScene} out of all the existing works is capable of instance segmentation, but is limited to a predefined set of class labels.}
+
+In this work, we introduce \methodname{}, a method for instance segmentation of raster scene sketches that outperforms previous approaches in accommodating a wider variety of sketch styles and concepts. 
+% SketchSeg produces a segmentation layer for each object instance and sorts the layers to support effective sketch editing.
+We use the segmentation map to divide the sketch into sorted layers to support effective sketch editing.
+% We also introduce a synthetic scene-level annotated sketch dataset that extends existing datasets by covering a broader range of object categories and a wider diversity of styles, including variations in appearance, level of detail, and stroke style.
+% SketchSeg leverages the rich knowledge of large pretrained image segmentation models, adapting them to the unique domain of sketches through class-agnostic fine-tuning and the integration of depth cues.
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=0.5\linewidth]{figs/existing_datasets.png} 
+%   \caption{\textcolor{red}{Mia please update}Examples of different sketch styles from existing sketch segmentation datasets: SketchyCOCO~\cite{gao2020sketchycocoimagegenerationfreehand}, SketchyScene~\cite{Zou18SketchyScene}, and CBSC~\cite{zhang2018CBSC}. \yael{could be useful to demonstrate here how a model that was trained on one dataset fails to generalize to the other.}}  
+%   \label{fig:existing_dataset}
+% \end{figure}
+
+Our method builds upon Grounded SAM~\cite{ren2024grounded}, a state-of-the-art approach for open-vocabulary image segmentation, which has demonstrated remarkable capabilities in segmenting complex scenes across diverse object categories. Grounded SAM combines two models to achieve this: Grounding DINO~\cite{liu2023grounding} for object detection and Segment Anything (SAM)~\cite{kirillov2023segany} for mask generation. We analyze the performance of these models on sketch, revealing that the domain gap between real and sketched objects presents significant challenges for Grounding DINO. In contrast, SAM exhibits a surprising ability to generalize to sketches, though it still faces difficulties specific to the sketch domain.
+% Image instance segmentation pipelines typically consist of two key
+% stages: object detection and object mask generation. 
+% In this work, we focus on two state-of-the-art models for these tasks - Grounding
+% DINO~\cite{liu2023grounding} for object detection, and Segment
+% Anything (SAM)~\cite{kirillov2023segany} for mask generation -- and
+% analyze their domain transfer capabilities. We demonstrate that the
+% domain gap between real and sketched objects poses significant
+% challenges for Grounding DINO, whereas SAM exhibits a surprising
+% capacity to generalize to sketches, while still struggling with
+% sketch-specific challenges.
+To address the gap in object detection, we fine-tune Grounding DINO on
+a small subset of annotated scene sketches from the SketchyScene
+dataset~\shortcite{Zou18SketchyScene}.
+% , showing that fine-tuning Grounding DINO on a single sketch style generalizes effectively across diverse styles and abstraction levels. 
+% By removing the dependency on predefined object categories, we aim to encourage the model to focus on structural and relational cues, drawing inspiration from Gestalt principles such as closure, continuity, and emergence.
+Our fine-tuning technique achieves a substantial improvement in Grounding DINO's detection performance on sketches, with Average Precision increasing from \rev{26\%} to \rev{74\%}.
+
+For object segmentation, we apply SAM \cite{kirillov2023segany} in the sketch domain, using detected object regions from our finetuned Grounding DINO. This is followed by a depth-based refinement stage to resolve ambiguities in overlapping regions.
+Finally, we decompose the segmented sketch into sorted layers and employ a pretrained image inpainting model \shortcite{von-platen-etal-2022-diffusers} to fill in missing regions. This layered representation facilitates sketch editing, allowing users to drag or manipulate segmented objects without the need to manually sketch the affected regions, as we demonstrate in the provided video.
+
+
+To evaluate our method on diverse scene sketches, we construct \datasetname{}, a synthetic annotated dataset of sketched scenes that extends existing benchmarks along three key dimensions: drawing style, stroke style, and object categories. The dataset integrates two complementary pipelines to enhance diversity.
+The first pipeline builds on SketchyScene \cite{Zou18SketchyScene}, expanding its clipart-like sketches with styles ranging from high-fidelity representations to symbolic, abstract sketches, introducing challenging out-of-distribution cases. The scenes are created in vector format to allow for stroke style variations, including Calligraphic
+Pen, Charcoal, and Brush Pen styles.
+The second pipeline leverages the Visual Genome dataset \cite{VisualGenome2017}, which provides annotated scenes with object variety. Using the InstantStyle method \cite{Wang2024InstantStyleFL}, we generate expressive, natural-looking sketches spanning 72 categories, extending SketchyScene's original 45 categories by 53 new categories. Our dataset contains 20,542 annotated scene sketches in total, and is highly extensible.
+Our evaluations demonstrate that \methodname{} generalizes well to these challenging variations, significantly advancing the state of the art. 
+% We demonstrate that applying our fine-tuning technique significantly improves Grounding DINO's detection performance on sketches, increasing the Average Precision from 24\% to 75\%.
+
+
+% To facilitate future research, we will make our dataset and method publicly available.
+% To evaluate our method, we construct a synthetic annotated scene-level sketch dataset. We utilize the scene layouts provided in the SketchyScene dataset, which were manually crafted by users, and generate new sketches using recent vector sketch generation methods \cite{vinker2022clipasso,vinker2024sketchagent}. We utilize the vector representation to introduce variations in stroke styles. \yael{add instantstyle if we have it} 
+% \maneesh{I might describe the overall attributes of the data set since its a contribution -- number os sketches, number of styles, etc.}
+% We evaluate our method on existing annotated scene sketch datasets and our newly proposed dataset, and observe superior performance compared to existing methods across a variety of sketch styles.
+
+
+
+% Lastly, we construct an intuitive interface 
+
+% spans sketches from various styles and abstraction levels. 
+
+% \yael{we can cite CLIPascene here, its basically the same abstraction axes.}
+
+
+% Built upon Grounded SAM, we utilize two state-of-the-art methods, Grounding DINO and SAM, both trained on large-scale natural images datasets.
+% We utilize Grounded SAM, a state-of-the-art semantic segmentation method designed for natural images.    
+
+% Grounded SAM \yael{cite?}\cite{}, which our method builds upon, is among the leading approaches in this domain. It integrates the Segment Anything Model (SAM) \yael{cite?}\cite{} and Grounding DINO \yael{cite?}\cite{} to enable text-guided object segmentation, achieving robust performance across diverse object categories. Grounding DINO is a transformer-based open-set object detector trained on over 10 million images, enabling robust zero-shot detection across diverse categories. SAM is a promptable segmentation model trained on over 11 million images and 1.1 billion masks, capable of segmenting any object based on inputs like points, boxes, and masks.
+
+
+% Our project introduces an instance segmentation method for sketches, leveraging pre-trained vision-language models. To bridge the domain gap, we fine-tune an object detection model. Then, motivated by how humans use depth perception to distinguish overlapping strokes, we train a depth-guided segmentation refinement network. 
+% We introduce a method that leverages pre-trained vision-language models that are originally trained on natural images, and transfer their knowledge onto the distinct domain of sketches.
+% \textbf{Sketch-aware Object Detection. }Object detection in sketches poses unique challenges unlike natural images. The domain gap between real and sketched objects, plus the ability to draw imaginary items, makes traditional object recognition and localization approaches ineffective. We address sketch object detection by fine-tuning GroundingDINO \citep{liu2023grounding} on 5k scene sketches as a class-agnostic detector, treating all objects as the same class to develop a general understanding of ``objectness" rather than specific object categories.
+% \textbf{Pixel Segmentation. }We use Segment Anything \citep{kirillov2023segany} to generate initial masks from the detected boxes, followed by a refinement step using a fine-tuned Stable Diffusion model. This refinement process takes a color-coded sketch (where colors indicate different instances) and focuses on improving segmentation quality, especially in areas where bounding boxes overlap.
+
+% Furthermore, the lack of large-scale sketch datasets that vary across styles and abstraction levels is a major challenge to enable generalizable methods.
+
+% Sketches serve as a powerful, universal tool for communication and ideation. Traditional sketching workflows often begin with artists working on a single canvas layer to maintain creative momentum during the ideation phase. However, as the sketch evolves and requires refinement, artists face the tedious task of manually separating different elements into discrete, editable layers. This decomposition process is not only time-consuming but can also disrupt the creative flow, creating a significant bottleneck in the artistic process.
+
+% \yael{the following two sentences are redundent here:}
+% The ability to separate sketches into object instance layers not only facilitates efficient editing but also enables advanced applications such as layer-based animation. \mia{Furthermore, these granular instance layers provide semantic understanding of the sketch components, laying the foundation for future developments in automated colorization and sketch generation techniques.}
+
+% \noindent \yael{-> from here we need to define the task of sketch segmentation.} 
+
+% Automating the sketch segmentation process offers a promising solution to this challenge. Unlike semantic segmentation, which only differentiates between object categories, instance segmentation provides a more granular understanding by distinguishing between multiple instances of the same object class. However, sketch instance segmentation presents unique challenges due to the sparse and abstract nature of line drawings, requiring specialized approaches that differ from natural image segmentation methods.
+
+% \begin{itemize}
+%     \item \yael{worth thinking about highlighting what makes this task challenging for computational models (given limitations of existing works)}
+% \end{itemize}
+
+% Sketch segmentation presents significant computational challenges due to the inherent variability in human sketching styles and abstraction levels. The complexity is further amplified by the broad spectrum of subject matter, spanning from realistic natural scenes to imaginative worlds. Furthermore, the lack of large-scale sketch datasets that vary across styles and abstraction levels is a major challenge to enable generalizable methods.
+
+% \noindent \yael{describing existing work and their limitations (the gap we wish to narrow in this work) concisely:} 
+
+% There has been active research on sketch segmentation, with the majority of works focusing on semantic segmentation of object parts, relying on existing annotated vector sketch data. Scene sketch segmentation is less explored, with existing works either dedicated to tackle sketches of specific style seen in training, or bounded by a predefined set of class labels available in the dataset used. \yael{we need to make sure these are the main limitations of existing works and add citations} 
+
+% In this work we present a method, for instance segmentation of scene sketches, that can handle sketches of various concepts and of various types and styles.
+
+
+
+
+
+
+% LocalWords:  ideation SOTA SketchyCOCO SketchyScene CBSC pretrained
+% LocalWords:  objectness DINO's MagicFixup pre photorealistic nd
+% LocalWords:  MagicFixup's Yael tooncrafter inpaint
+
+

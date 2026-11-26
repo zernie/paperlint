@@ -1,0 +1,13 @@
+\subsection{Spatial Arrangement as a Typicality Axis}\label{app:spatial-arrangement}
+NPMI scores whether two classes co-occur, not how they are arranged. To test whether models also rely on the usual arrangement of a pair, we measure how stereotyped it is: for each ordered COCO \texttt{train2017} pair with at least $10$ co-occurring images, we take the direction from the largest anchor box to the largest partner box in every such image, bin it into eight $45^\circ$ sectors, and compute the normalized entropy $H \in [0, 1]$ of the histogram. Low $H$ means one dominant arrangement, such as a rider above a horse. STRANGE-Bench layouts are generated without regard to these arrangements, so a model that relies on them should recognize the anchor less often in stereotyped pairs. We use the single-partner tier $T_2$ (both arms) and the \dinov{} ViT-B linear probe, count an anchor as recognized when its score is at least $0.5$, and keep pairs with at least two scenes.
+
+\begin{table}[!htp]%
+\centering
+\small
+\setlength{\tabcolsep}{4pt}%
+\caption{\textbf{No measurable effect of a stereotyped arrangement on anchor recognition.} Neither interval of the correlation with recognition excludes zero, and its sign differs between the two versions. $H$: normalized entropy of the anchor-to-partner direction in COCO \texttt{train2017} (low $H$: one dominant arrangement); recognition: \dinov{} ViT-B linear probe on $T_2$, anchor score $\geq 0.5$, per tertile of $H$. Brackets: 95\% pair-bootstrap intervals.}
+\label{tab:app_spatial_entropy}
+\input{static/tables/generated/app_spatial_entropy_tabular}
+\end{table}
+
+Tab.~\ref{tab:app_spatial_entropy} gives the result. On STRANGE-Bench, anchor recognition is highest for the most stereotyped pairs (Pearson $r(H, \text{recognition}) = -0.09$); on an initial version of the benchmark the order reverses ($r = 0.10$). Neither interval excludes zero, and $H$ correlates with the NPMI of the pair, so arrangement and co-occurrence are entangled at this sample size. We therefore find no measurable effect of spatial arrangement beyond co-occurrence. A direct test would render the same pair in its usual and in a violated arrangement, which the layout stage of the pipeline (\S\ref{sec:strange}) supports; we leave this, and object count as a further axis, to future work.

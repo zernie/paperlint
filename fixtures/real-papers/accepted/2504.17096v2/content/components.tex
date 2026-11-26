@@ -1,0 +1,146 @@
+
+\subsection{\sailor Profiler}\label{profiler}
+
+\textbf{Training job profiling:} When a user submits a training job, the \sailor profiler collects information about the job's compute and memory requirements. \sailor profiles a training job on a \textit{single} GPU node for each different GPU node type in the available resource pool. To minimize profiling time and enable single-node profiling, the profiler reduces repeated layers to a single instance (e.g., it uses one transformer layer for a given LLM).  We use PyTorch hooks~\cite{torch_hooks} to collect information per layer: the time required for the forward pass, backward pass, and update phase with different microbatch sizes and tensor parallel degrees. We use CUDA Events for accurate GPU measurements~\cite{torch_cuda_events}. We also track the number of parameters, output activation, and the memory required for intermediate stages per layer, using the PyTorch CUDA memory allocator~\cite{torch_cuda_mem_alloc}. The profiling overhead is negligible (a couple of minutes) \new{for the LLMs we consider. For models with non-uniform layers, all layers need to be profiled, which increases profiling time. Our profiling approach can be used with any dense layers, while profiling Mixture-of-Experts (where layer load may vary dynamically during training) is left for future work.} 
+
+\textbf{Cluster profiling:} \sailor also collects information about the network bandwidth between any pair of different machine types. Since network bandwidth depends on the message size, \sailor collects network bandwidth measurements (using PyTorch collectives with NCCL backend) by varying the message size and fitting a polynomial function to get a set of coefficients for any pair of node types.
+Our profiling methodology applies to all GPU types.
+Adding a new GPU type requires collecting model and cluster profiling data as described above.
+
+
+\subsection{\sailor Planner}\label{planner}
+
+The \sailor planner takes as input the training job and cluster profiling information from the profiler, a performance or cost objective, and optionally a constraint such as a budget. The planner selects a resource allocation and a parallelization plan to optimize the objective under the constraints.
+The parallelization plan defines the number of pipeline stages $P$ (which we refer to simply as \textit{stages}), the data parallelism degree of each stage $D$, the $D$ pairs of $(GPU_j, TP_j, Zone_j)$ for each stage, and the microbatch size $mbs$. The \sailor planner does \underline{not} change the global batch size, thus it does not affect the job's training dynamics. 
+
+The combination of resource allocation and parallelization plan candidates creates a vast search space. To find efficient solutions \textit{quickly}, \sailor: 1) prunes the search space with heuristics that consider training memory footprint, GPU capacity, and scalability constraints (\S\ref{planner_heuristics}), and 2) applies dynamic programming to reuse information about the performance of parallelization plans (\S\ref{planner_dp}). These techniques allow \sailor to find training plans in 10s of seconds even for large heterogeneous, geo-distributed scenarios (\S\ref{sec:eval_planner}). 
+
+The planner iterates through different parallelism degrees and microbatch sizes (based on model characteristics and profiling information). For a given layer partitioning and microbatch size, it finds the tensor parallelism degree for each GPU type, based on memory constraints and scaling heuristics. Then, it iterates through all cloud region combinations and selects the data parallelism degrees to evaluate for a combination. For a fixed data parallelism degree, the planner invokes the $solve\_dp()$ function (Listing \ref{alg:dp}) that applies dynamic programming to determine the optimal stage configuration (\S \ref{planner_dp}). The planner considers the configuration valid only when it is within the user-specified constraint.
+
+Finally, the planner sorts the configurations according to the objective and returns the best configuration.
+
+
+\subsubsection{Pruning the large search space with heuristics}\label{planner_heuristics} We introduce heuristics to prune the search, omitting cases early-on that would lead to suboptimal or invalid results:
+
+\textit{H1: Limit tensor parallelism within a node.}\label{H1} Tensor parallelism performance is known to degrade when spanning multiple nodes~\cite{shoeybi2020megatronlm, strati2024dejavu}. We restrict tensor parallelism to a single node and do not explore cross-node pairs (unlike Metis~\cite{Um24Metis}). As a result, each tensor parallel replica of a stage only uses a single GPU type.
+
+\textit{H2: Prune OOM configurations early.}  Since each stage replica performs tensor parallelism only among GPUs of the same type, we can easily compute the \textit{minimum} tensor parallelism degree of each GPU type, for a given pipeline parallel stage and microbatch size. We exclude cases with tensor parallelism below this minimum. To find the minimum tensor parallelism degree per GPU for a stage, we compute the memory footprint of that stage as described in \S\ref{simulator}, and identify the minimum number of GPUs required based on the available memory per GPU. The minimum tensor parallelism for each stage is independent of the number of available GPUs per type, so we can reuse it when resource availability changes.
+
+\textit{H3: When maximizing throughput, consider data parallelism degrees in decreasing order, until throughput stops increasing.} \sailor uses the same data parallelism for each stage.  We observe that, with a fixed pipeline parallel degree, increasing data parallelism (by using more machines) benefits training throughput as more pipelines process minibatches independently. However, as the data parallelism degree increases, the time required for gradient synchronization also increases, negatively affecting training throughput. Thus, when optimizing for throughput, we first determine the maximum feasible data parallelism degree based on available resources, and then progressively reduce it, until throughput stops improving.
+
+\textit{H4: When minimizing cost, consider data parallelism degrees in increasing order, until cost per iteration stops decreasing.} Following the logic from \textit{H3}, for a fixed pipeline, doubling the data parallelism degree will lead to doubling the number of resources, but will not half the iteration time (due to all-reduce scaling overheads). Thus, configurations with a lower data parallelism degree lead to lower cost/iteration. Thus, when the user objective is minimizing cost/iteration, we search for \textit{increasing} data parallel degrees $D$ until a solution within the throughput constraint is found.
+
+\textit{H5: Keep data parallel communication within a single region, while spreading pipeline parallel communication across more than one region.} As shown by earlier work~\cite{strati24crossregion, palak2024atlas}, data parallelism performs poorly across regions due to the low network bandwidth. We constraint all data parallel pairs of a stage within a single region.
+
+\textit{H6: Treat multiple zones within the same region as a single zone.} Within a cloud region, the network bandwidth across zones is  similar to the network bandwidth within a zone~\cite{strati24crossregion}. Thus, to reduce the search space, we consolidate all zones in a region into a single zone and do the geo-distributed partitioning at a region granularity.
+
+\subsubsection{Selecting per-stage configurations with dynamic programming}\label{planner_dp}
+We now describe how we find optimal resource configuration per stage for a given pipeline and data parallelism degree, microbatch size, tensor parallel degrees per stage, and GPU type. The formulation we describe below assumes an iteration time minimization objective and \S\ref{planner_dp_cost} describes how we further incorporate cost constraints. For brevity, we omit the reverse optimization (monetary cost minimization under throughput constraints).
+
+\textbf{Problem formulation and goal:} Given a pipeline parallel degree $P$, a microbatch size $mbs$, a data parallel degree $D$, and tensor parallel degrees $tp_{ij}$ for GPU $j$ and stage $i$, we want to find, for each stage $i$,  the $D$ replicas, where each replica is a tuple $(j, tp_{ij}, zone_k)$ that minimizes iteration time. Note that \sailor precomputes $tp_{ij}$ (Heuristic \textit{H2}). 
+
+\textbf{Why dynamic programming?} Optimizing resource allocation per stage is challenging, as assigning resources to one stage impacts overall runtime and availability for other stages. In a heterogeneous, multi-zone setup, the number of possible resource combinations per stage explodes. Related works on homogeneous clusters used  Integer Linear Programming (ILP)~\cite{zheng2022alpa, Jang2023Oobleck}, exhaustive search ~\cite{Athlur22Varuna}, or dynamic programming~\cite{li2022amp, Tarnawski21Piper}. We adopt dynamic programming for its ability to decompose the problem into subproblems and reuse intermediate results.
+
+\textbf{Dynamic programming formulation:} Assume we have a pipeline with degree $P$, and we want to solve the dynamic programming problem for stage $i$ that has $L$ layers, with $l0$ being the first layer. We formulate selecting a resource configuration per stage as finding $r$ resources to give to stage $i$ while minimizing the iteration time $T_{iter}$ as follows: \begin{equation}\label{eq:dp}
+T_{iter}[l_0][P][R] = min_r\{T_{total}(T_{iter}[l_0+L][P-1][R-r], T_i(r))\}
+\end{equation}
+for a given pipeline parallel degree $P$, stage $i$, and available resources $R$. 
+We give $r$ resources to stage $i$, and $R-r$ resources are available for the subsequent stages. In \sailor, $r$ represents a map of different GPU types and zones, and should be enough to get $D$ replicas of this stage. Based on heuristic \textit{H5}, we keep each stage within a single region. $T_{total}$ is calculated by identifying the straggler between stage $i$ and the rest pipeline, the pipeline communication cost between stage $i$ and $i+1$, and the synchronization bottleneck between stage $i$ and the rest pipeline.
+
+More specifically, assuming $X-i$ is the pipeline without stage $i$, and $N_b$ is the number of microbatches processed per pipeline, $t_j$ is the time per stage, and $sync_j$ is the time for synchronization:
+$$
+T_{total} = max(t_i(r), Straggler_{X-i}(R-r)) \cdot N_b \newline
+$$
+$$
++ max(sync_i(r), sync_{X-i}(R-r)) + \sum_0^{P-1} t_j 
+$$
+Our formulation aims to minimize iteration time and reduce pipeline stragglers, inherently excluding imbalanced pipelines with large stage time differences.
+
+
+\textbf{Implementation:} Listing \ref{alg:dp} implements the above formulation for heterogeneous GPUs and various cloud zones and regions. The procedure starts by generating all resource combinations of different GPU types that could fit this stage with the specified data parallelism (line 2). Then, for each combination $r$, it finds the next available region that fits stage $i$ with $r$ resources (lines 6 and 14). If $i$ is the last stage, it returns the configuration that minimizes the stage time.
+
+
+\subsubsection{Adding a monetary cost constraint}\label{planner_dp_cost}
+
+
+So far, we have formulated the iteration time minimization as a dynamic programming problem, and we split the problem at per-stage subproblems as shown in Eq~\ref{eq:dp} and Listing \ref{alg:dp}. When introducing a budget constraint, we need to account for the \textit{remaining} budget per stage, to solve the DP subproblem for that stage. The monetary cost depends both on the resources used and the iteration time. However, the iteration time depends on the pipeline straggler, which is not yet known when solving the resource allocation subproblem for stage $i$. To overcome this limitation, when solving the subproblem for stage $i$, we approximate the remaining budget by first considering that stage $i$ is the straggler, and solving for the remaining stages with the respective remaining budget. At the end, we determine the actual straggler. If our straggler assumption was not correct,  we adjust the budget with the new straggler and we solve the subproblems again.
+
+\textbf{Problem formulation:} The monetary cost per iteration includes the cost due to compute resources $C_{comp}$ and due to data transfer $C_{comm}$. When introducing a monetary cost constraint $C$, the cost per iteration should satisfy:
+$$
+C_{iter} = C_{comp} + C_{comm} <= C
+=>\sum_{i=0}^{i=P-1}{Ccomp_i}\cdot T_{iter} + C_{comm} <= C  \newline
+$$
+$$
+\sum_{0}^{P-1}{Ccomp_i}\cdot (\sum_0^{P-1}{t_i} + N_b \cdot t_{straggler} + max_0^P(t_{sync_i}) ) + C_{comm} <= C 
+$$ where $\sum_0^{P-1}{t_i}$ stands for the pipeline warmup and cooldown phase, $N_b$ is the number of microbatches processed per pipeline, and $t_{sync_i}$ is the time required for the synchronization of all replicas of stage $i$. Since large models usually train with large global batch sizes, the $N_b \cdot t_{straggler}$ term usually determines the iteration time, we can rewrite as:
+\begin{equation}\label{eq:cost_simple}
+\sum_{0}^{P-1}{C_{{comp}_i}}\cdot (N_b \cdot t_{straggler})  + C_{comm} <= C 
+\end{equation}
+From a dynamic programming perspective, assuming we are at pipeline stage $i$, which has a maximum budget limit $C_{cur}$, the cost constraint will be: $C_i + C_{rem} <= C_{cur}$, where $C_{rem}$ is the cost of the remaining stages, and $C_i$ is the cost of stage $i$. From Eq.~\ref{eq:cost_simple}, we have that $C_i = C_{comp_i} \cdot (N_b \cdot t_{straggler})  + C_{comm_i}
+$.
+In Listing \ref{alg:dp}, line 14, when exploring a resource combination $r$, we can easily find $C_{comp_i}$, and $C_{comm_i}$ for stage $i$. Since we do not know $t_{straggler}$, which is required to specify the remaining budget for the next stages, we use the approximation in lines 17-32: We begin assuming stage $i$ is the straggler ($t_{straggler}==t_i$), and compute the $C_{rem}$ for the next stages accordingly. We call the \textit{solve\_dp} function for the next stages giving $C_{rem}$ as the budget constraint (line 20). If a solution cannot be found, we proceed with the next resource combination for stage $i$ (line 22). If a solution is found,  we check whether it is within the cost limit and keep the one with the maximum throughput (line 26). We also check the straggler of the found solution: if it is the same with the one we assumed, we break, and proceed to the next resource combination (lines 26-28). Otherwise, we adjust the budget with the new straggler (lines 31-32) and iterate again.
+
+
+\begin{lstlisting}[float, caption=Resource-Stage assignment algorithm, basicstyle=\small, label=alg:dp]
+def solve_dp(P, i, R, D, tp_gpu_stages, Ci):
+    Rcombos = generate_combos(R,D,tp_gpu_stages[i])
+    if i==P-1:
+        time_i = None
+        for r in Rcombos:
+            next_region = find_region_fits(i, r, curr_region)
+            time_ir = time_for_stage(i,r,next_region)
+            cost_ir = cost_for_stage(i, r, next_region, time_ir)
+            if cost_ir <= Ci: time_i = min(time_i, time_ir)
+        T_iter[P][i][R] = time_i
+    else:
+        time_all = None, min_time = None
+        for r in Rcombos:
+            next_region = find_region_fits(i, r, curr_region)
+            time_i = time_for_stage(i,r,next_region)
+            cost_i = cost_for_stage(i, r, next_region, time_i)
+            C_rem = Ci - cost_i
+            assumed_straggler = time_i
+            while (C_rem > 0):
+                nextconf = solve_dp(P, i+1, R-r,
+                    next_region, all_regions, C_rem)
+                if nextconf is None: break
+                time_all = total_time(time_i, nextconf.time)
+                cost_all = total_cost(cost_i, nextconf.cost)
+                if nextconf.straggler < assumed_straggler:
+                    if (cost_all <= Ci):
+                        min_time = min(time_all, min_time)
+                    break
+                cost_i = cost_for_stage(i, r, next_region,
+                    straggler=nextconf.straggler)
+                C_rem = Ci - cost_i
+                assumed_straggler = nextconf.straggler
+        T_iter[P][i][R] = min_time
+    return  T_iter[P][i][R]
+\end{lstlisting} \label{alg:dp}
+%\vspace{-5pt}
+%\end{minipage}
+
+\subsection{\sailor Simulator}\label{simulator}
+
+
+The planner uses the simulator to evaluate the performance and memory footprint of the generated plans. The \sailor simulator takes as input a training job specification (model, global batch size, optimizer, hyperparameters) and a job parallelization plan. It then estimates the memory footprint per GPU, the iteration time, and the cost per iteration. The simulator allows the planner to easily specify different types of heterogeneity: hardware heterogeneity (GPU type, number of GPUs per node, and network bandwidth) and job configuration heterogeneity (number of pipelines and different stage configurations per pipeline). 
+The training configuration also specifies the microbatch size. 
+The simulator also incorporates the information collected by the profiler about the training job and network bandwidth of the used links.  Both the \sailor planner and simulator treat GPUs as black-box compute units, thus they can seamlessly support GPUs from different generations, vendors, and even different accelerators (e.g. TPUs).
+
+\textbf{Memory footprint estimation:} The \sailor simulator accurately estimates a training job's memory footprint by: 1) calculating memory footprint per GPU, per-stage and 2) considering \textit{all} main sources of memory footprint during training. Compared to prior works that assume a homogeneous memory footprint per stage, we observe that for a given parallelism configuration, the memory footprint of a training worker depends on its layer partitioning, pipeline stage index, tensor parallelism degree, and microbatch size. Hence, memory footprint varies among workers and needs to be analyzed per worker to detect OOM scenarios.
+
+Second, the peak memory footprint of a worker throughout training consists of various sources, often ignored in prior works. The peak memory footprint $M_{peak}$ of a worker is given by: $M_{peak} = M_{model} + M_{activation}$, where $M_{model}$ corresponds to the memory needed to keep copies of model parameters and is given by $M_{model} = num\_params \cdot mul\_factor \cdot data\_type\_size$. $num\_params$ is found by the stage id and tensor parallelism degree of the worker, while $mul\_factor$ accounts for multiple copies needed for the model itself, the optimizer, gradients, and communication~\cite{Rajbhandari21Zero}. $M_{activation}$ is the memory needed for storing layer activations and depends on the stage id and tensor parallelism degree of a worker, and microbatch size. By computing the memory footprint for each worker and comparing with the worker's GPU capacity, the simulator can easily detect OOM cases.
+
+\textbf{Iteration time estimation:} We define one iteration as a full pass over the user-defined global batch size. The iteration time is calculated as:
+$T_{iter} = \max(T_{ppi}) + T_{sync} + T_{update}$, where $T_{ppi}$ is the time needed for pipeline $i$, $T_{sync}$ is the time needed for gradient synchronization at the end of an iteration, and $T_{update}$ is the time for model update. We compute $T_{{pp}_i}$ and $T_{sync}$ following the formulas described in \cite{strati24crossregion} for 1F1B pipeline parallelism,  using our profiling for network bandwidth with respect to the message size per network link, to estimate communication time (for peer-to-peer and collectives). For each pipeline, the 1F1B pipeline parallelism schedule includes a warm-up, steady, and cool-down phase per iteration, where the steady phase is determined by the stage with the largest computation time (straggler). After computing the iteration time per pipeline, we compute synchronization time. Taking the maximum time per pipeline accounts for straggler effects caused by heterogeneity in GPU generations, inter-GPU, and CPU-GPU interconnects.
+
+\textbf{Iteration cost estimation:} Related works (Table \ref{table:planners}) do not compute the monetary cost of different resource allocation and job configuration combinations, since they only optimize for throughput. However, a very important metric to account for is \textit{cost per iteration}, especially with geo-distributed training, due to costs associated with across-zone communication. Since \sailor does not change the global batch size and training hyperparameters, the number of iterations needed to reach convergence is constant, regardless of the cluster setup and parallelization strategy. Thus, the monetary cost per iteration indicates the total budget needed for the whole training. The metric depends both on the cost of allocated resources, as well as the training throughput and communication cost. The cost per iteration is given by $C_{iter} = C_{comp} + C_{comm}$, where $C_{comp}$ is the cost due to compute resources, and is calculated as $\sum_i({N_i \cdot cost\_per\_gpu_i}) \cdot T_{iter}$, for all different GPU types $i$ in the cluster. $C_{comm}$ stands for the cost for data exchange per iteration (e.g., when using geo-distributed training in public cloud) and is given by $C_{comm} = \sum_{ij}(bytes_{ij} \cdot cost\_per\_byte\_{ij})$ for all zones $i,j$ in the cluster. $bytes_{ij}$ might include traffic for data and pipeline parallel communication.
+
+\subsection{\sailor Distributed Training Framework}\label{framework}
+
+The \sailor training framework receives the job configuration that the planner generates, sets up the cluster, and starts training. We modified Megatron-DeepSpeed~\cite{megatron-deepspeed} to support heterogeneous plans and seamless elasticity, to make it compatible to planner's output and allow for fast reconfiguration when resource availability changes.
+
+\textbf{Support for heterogeneous plans:} We added support for varying tensor-parallel degrees across data-parallel pairs per pipeline stage. The framework takes as input a rank topology for each stage, allowing each rank to belong to distinct tensor-parallel groups. Different tensor parallelism per stage affects the pipeline and data parallel communication, requiring workers to split or replicate activations and gradients across multiple peers. To accommodate this, we adjust the PyTorch communication groups and modify the send/recv and all-reduce operations accordingly.
+
+\textbf{Support for fault-tolerance and elasticity:} The Megatron-DeepSpeed framework lacks failure recovery and dynamic resource reconfiguration: the whole training needs to stop, and the user needs to \textit{manually} reconfigure and restart the job. However, resource availability frequently changes both in the cloud (especially with spot instances)~\cite{Thorpe23Bamboo, strati24crossregion} and in on-premise datacenters as jobs start or finish~\cite{wagenlander24tenplex}. We introduce modifications for fast reconfiguration. Each job consists of a controller and multiple workers. The workers handle training, while the controller monitors their status and detects resource availability changes. Upon detecting a change, the controller reinvokes the planner to generate a new plan and instructs workers to adjust accordingly. We follow a kill-free approach to minimize reconfiguration time: existing workers destroy the current communication group, clean up their GPU memory, repartition the model, and setup a new communication group.  If additional resources become available, the controller waits for new workers to initialize before updating the training configuration.  Training restarts from the latest available checkpoint.
+We use asynchronous checkpointing to minimize the rollback time~\cite{Mohan21CheckFreq, strati25pccheck}.

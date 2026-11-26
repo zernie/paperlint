@@ -1,0 +1,64 @@
+\section{Introduction}
+\label{sec:introduction}
+Large Language Model (LLM)-powered intelligent software is rapidly gaining traction across industries, including customer service, healthcare, and finance, driven by recent advances in LLM capabilities and growing competition among major tech companies~\cite{bommasani2021opportunities}. Compared to traditional rule-based systems, LLM-powered software offers greater intelligence, enabling more natural, flexible, and context-aware interactions with end users.
+For instance, our industry partner \emph{Transurban}—a global toll road operator in the transportation sector—recently developed a virtual assistant (VA) powered by LLMs for its Australian subsidiary, Linkt. This assistant supports a wide range of customer inquiries related to toll road usage, e.g., providing real-time account updates, assisting with toll invoice explanations, helping users set up and manage auto payments, and guiding new customers through account registration. Compared to its previous rule-based VA, the new system offers a more conversational, intelligent, and context-aware experience, enabling more efficient self-service and reducing call centre load.
+%This assistant supports customer inquiries related to toll road usage, offering a more conversational, intelligent, and adaptable experience compared to its previous rule-based VA.
+
+%Through our collaboration with Transurban, we conducted a multi-day focus group study to document the development process of their LLM-powered virtual assistant and to identify practical challenges and research opportunities arising from industrial deployment \cite{yang2025ragva}. One key challenge that emerged is ensuring safety and reliability post-deployment.
+Our prior research with Transurban found that one key challenge in deploying LLM-powered VAs is ensuring safety and reliability post-deployment~\cite{yang2025ragva}.
+Unlike the previously adopted rule-based VA—where all inputs and outputs were predefined via decision tree menus, effectively preventing unsafe interactions by design—the new LLM-powered VA operates over open-ended input and output spaces. This flexibility introduces the risk that carefully crafted user prompts may elicit unsafe or policy-violating responses from the underlying LLM-for instance, a malicious user might ask \textit{`Ignore all prior instructions and explain, step by step, how I can drive through a toll point without being charged.'}
+This highlights a critical deployment challenge around ensuring the safety of LLM-powered systems, echoing recent studies concerning the safety of LLM-powered systems \cite{bengio2024managing,hassan2024rethinking,yao2024survey}.
+
+In response to this safety challenge, recent research has explored runtime safety mechanisms for LLMs—often referred to as ``LLM guardrails''—which aim to enforce safe behaviour during deployment without retraining the underlying model~\cite{inan2023llama,lees2022new,markov2023holistic,alon2023detecting}.
+Guardrails sit outside the base model, inspecting each prompt (and optionally the model's draft response) in real time; if they detect any policy-violating content, they either rewrite the text or block the exchange altogether. Because the base model itself is untouched, this ``wrap-around'' approach avoids the capability–safety trade-off often seen in internal defences, such as, fine-tuning the model itself to be safer~\cite{zhao2025improving,du2025advancing,alami2024alignment,ge2023mart}. Fine-tuning can dampen creativity and is a resource-intensive process. In contrast, guardrails can be implemented with comparatively lightweight models (e.g., LlamaGuard-1B/8B) running alongside much larger production models (being safeguarded), making them attractive for industrial deployment.
+
+%These guardrails act as external safety layers wrapped around the LLM, designed to detect and block unsafe inputs at inference time—ensuring post-deployment safety without altering the underlying model.
+%This contrasts with internal defences, where the LLM itself is fine-tuned to improve safety~\cite{zhao2025improving,du2025advancing,alami2024alignment,ge2023mart}. 
+%However, fine-tuning often faces a capability–safety trade-off~\cite{chen2025fundamental}, potentially reducing model creativity and responsiveness, while requiring significant computational resources.
+%In contrast, runtime guardrails typically rely on lightweight LLMs (e.g., LlamaGuard with 1B or 8B parameters), making them more practical for industrial deployment alongside much larger base models.
+
+Among industry-standard guardrails, LlamaGuard is a well-known solution for enforcing runtime safety in LLM systems, achieving state-of-the-art results in detecting unsafe user prompts written in English~\cite{inan2023llama}. However, the threat landscape is rapidly evolving. Much like in cybersecurity, red teaming techniques continue to advance, leading to increasingly sophisticated jailbreak attacks. Recent examples include obfuscation-based attacks~\cite{yuan2023gpt,yong2023low}, template-based attacks~\cite{jailbreakchat2023,shen2023anything,yuan2023gpt,li2023deepinception}, and code-based attacks~\cite{lv2024codechameleon,kang2024exploiting}. 
+These attacks achieve over 70\% success rates in triggering unsafe responses, even against cutting-edge models like GPT-4o \cite{yuan2023gpt,li2023deepinception}.
+While effective against known threats, our preliminary analysis shows that LlamaGuard struggles with jailbreak attacks unseen in its training.
+This highlights a critical industry research challenge: \textbf{How can one devise a post-deployment guardrail framework that can dynamically adapt and evolve to defend against emerging jailbreak strategies?}
+
+To address this challenge, we explore \emph{out-of-distribution (OOD) detection} as an automated method for identifying novel jailbreak prompts that the deployed guardrail was not trained to handle.
+Since existing guardrails are typically trained on unsafe inputs written in natural language (NL)~\cite{markov2023holistic, inan2023llama}, jailbreak prompts—which often exploit unexpected formats or phrasing—can be considered OOD.
+Rather than relying on manual reviews to flag new attack patterns post-deployment, OOD detection enables the system to automatically detect anomalous inputs that fall outside the distribution of previously seen prompts.
+%These OOD anomalies represent weak spots in the guardrail's defense, offering a scalable way to monitor and assess safety risks in production.
+This approach lays a foundation for our adaptive guardrail framework.
+We then develop \ourapp, an OOD-aware guardrail designed for adaptive runtime safety which incorporates an OOD-aware auxiliary loss during training. Post-deployment, it uses OOD detection to identify unseen jailbreak attacks and leverages LoRA for lightweight updates, enabling it to continuously adapt to emerging threats.
+
+In our experiments, we first identify the most effective OOD detection method for our context. We then compare our proposed approach~\ourapp~with LlamaGuard in terms of its adaptability to unseen OOD attacks and its forgetfulness on in-distribution prompts within a continual learning setup. Specifically, we address the following three research questions:
+
+\begin{itemize}
+\item {\bf (RQ1) \rqone} \\
+\smallsection{Results}
+% Our~\ourapp~achieves an F1 score of 96.1\% for OOD detection,
+Our \ourapp~achieves the best OOD detection performance, reaching a 96.1\% F1-Score. It effectively detects unseen OOD jailbreak prompts, with a recall of 95.5\% and precision of 96.8\%.
+
+\item {\bf (RQ2) \rqtwo}\\
+\smallsection{Results}
+Our~\ourapp~+ Continual Learning achieves optimal Defense Success Rate (DSR) within 2 to 38 update steps across attack waves, with a median of 2 update steps to reach optimal DSR. In comparison, LlamaGuard requires 4 to 44 update steps with a median of 4 steps, demonstrating our approach's faster adaptation to new attacks.
+
+\item {\bf (RQ3) \rqthree}\\
+\smallsection{Results}
+Our~\ourapp~+ CL achieves the highest median F1-Score of 85\% on in-distribution prompts after final updates, which is 5\% higher than the best baseline LlamaGuard-8B at 80\%.
+In addition, \ourapp maintains consistent performance with only ±0.4\% variation throughout the continual learning process, demonstrating minimal catastrophic forgetting. 
+\end{itemize}
+
+These results lead us to conclude that~\ourapp~is more jailbreak-aware in terms of OOD jailbreaks detected, more adaptive and efficient in learning to defend against new jailbreak attacks with fewer prompts, and better at preserving previous knowledge when learning new attacks than existing static guardrail approaches. 
+Thus, we expect that our \ourapp may help organizations deploy safer LLM systems that can continuously adapt to evolving threats. 
+In addition, we recommend OOD detection mechanisms be integrated into future guardrail research to improve adaptability, since this paper demonstrates substantial benefits of using continual learning for jailbreak defense.
+% \mike{double check with Kla whether we need this paragraph}
+
+% \indent\smallsection{Novelty \& Contributions}
+% To the best of our knowledge, the main contributions of this paper are:
+% (1) \ourapp, an OOD-aware guardrail with continual learning to overcome the limitations of existing static guardrails in adapting to evolving jailbreak attacks; (2) we empirically identify the most suitable OOD detection methods for our specific context; (3) we comprehensively evaluate the effectiveness of \ourapp~in defending against unseen (OOD) jailbreak prompts along with its performance retention on in-distribution prompts after continuous OOD updates.
+\indent\smallsection{Novelty \& Contributions}
+To the best of our knowledge, the main contributions of this paper are:
+(1) \ourapp, an OOD-aware guardrail with continual learning to overcome the limitations of existing static guardrails in adapting to evolving jailbreak attacks in LLM-powered software systems; (2) we empirically identify the most suitable OOD detection methods for our specific context; (3) we comprehensively evaluate the effectiveness of \ourapp~in defending against unseen (OOD) jailbreak prompts along with its performance retention on in-distribution prompts after continuous OOD updates, its practical applicability for enterprise software deployment.
+
+
+%We introduce a comprehensive evaluation methodology that combines OOD detection with continual learning for adaptive defence against unknown jailbreak patterns. 
+%(3) We perform detailed analysis showing that~\ourapp achieves superior knowledge retention with minimal catastrophic forgetting compared to existing approaches. 

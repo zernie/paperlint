@@ -1,0 +1,35 @@
+\section{\tool Usage}
+% \ali{Make sure all links to YouTube and GitHub are shortened \via \url{aub.ie}.}
+\tool is implemented in Python and can be used through a command-line interface.
+After checking out the source code from the GitHub repository~\cite{adept}, users can create the required Python environment using the provided \texttt{environment.yml} file.
+The framework currently accepts NumPy (\texttt{.npy}) datasets as input and supports Keras-based DNN models for metrics that require access to the tested model.
+
+Once the environment is set up, users can execute an adequacy metric by specifying the target model, dataset name, test inputs, optional training data, and a metric-specific configuration file.
+The following command illustrates the general usage pattern:
+% \vspace{-0.1cm}
+\begin{small}
+\begin{verbatim}
+python -m adequacy.cli run \
+  --metric [metric-name] \
+  --model path/to/model.keras \
+  --dataset [dataset-name] \
+  --test-data path/to/test_inputs.npy \
+  --test-labels path/to/test_outputs.npy \
+  --config configs/[metric-name].yaml
+\end{verbatim}
+\end{small}
+% \vspace{-0.1cm}
+For metrics that require additional inputs, such as training data for neuron profiling, activation-trace extraction, or mutation-score computation, \tool checks the required arguments before execution and reports missing inputs to the user.
+\input{tables/config}
+
+Metric-specific options are specified through YAML configuration files.
+Table~\ref{tab:config} summarizes representative configuration parameters for different adequacy metrics in \tool.
+These configuration files allow users to adjust processing and scoring behavior without modifying the source code.
+If a configuration file is not provided, \tool falls back to default values defined in each metric module, enabling users to apply the supported adequacy metrics under common settings. These default configurations are documented in the GitHub repository~\cite{adept} README.
+
+During processing, \tool stores reusable intermediate artifacts in the cache directory.
+% These artifacts may include neuron profiles, activation traces, decision-boundary models, and generated mutant models.
+When compatible cached artifacts are available, the framework prompts users to choose whether to reuse the existing artifacts or regenerate them; this choice determines whether the framework skips metric-specific processing and proceeds directly to scoring.
+% This mechanism allows users to avoid repeated expensive preprocessing while still keeping the execution process explicit and reproducible.
+
+After each run, \tool generates a structured JSON report containing the final adequacy score, important configuration, preprocessing time, scoring time, and cache utilization information. These outputs allow users to inspect each run, reproduce adequacy evaluations, and compare multiple metrics under a consistent workflow.

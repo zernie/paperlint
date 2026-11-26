@@ -1,0 +1,110 @@
+\mysection{GPU Memory Ballooning for Multi-LLMs}
+\label{sec:sys}
+
+This section describes how \tool enables flexible cross-model memory sharing with our balloon driver, providing a foundation for adapting policies to dynamic workloads.
+
+\mysubsection{Requirements and Challenges}
+\label{sec:flex-mem}
+
+Mainstream LLM serving engines~\cite{sglang@arxiv23,kwon2023efficient} adopt block-based KV token management (\eg, PagedAttention~\cite{kwon2023efficient}). 
+While this design effectively reduces \emph{request-level} memory fragmentation \emph{within a single} LLM, it requires the application (serving engine) to manage the GPU physical memory directly, by pre-allocating a large portion of GPU memory as the KV block pool.
+This memory thus remains occupied even when there is no active request, and the KV blocks within the tensor are unused.
+This prevents the redistribution of unused memory across different LLMs, limiting the ability to support flexible time- and space-sharing among multiple LLMs. 
+This leads to four key requirements for \tool.
+
+\MyPara{R1: Fast memory reallocation between model weights and KV cache.}
+When a model is swapped out, the memory released by its weights should be quickly repurposed by other models as KV cache. Similarly, when an idle model is reactivated upon new requests, the running models must promptly release unused KV cache memory for the new model's weights and KV cache.
+However, this is hard with statically reserved KV pool tensors, whose physical GPU memory cannot be partially released.
+A workaround is to copy active token blocks into a smaller tensor and then destroy the old one. 
+However, this not only requires waiting for the slow copy to complete, but also demands enough GPU memory to hold both tensors during the transient period.
+
+\MyPara{R2: KV cache sharing across diverse model architectures.}
+For models colocated on a GPU, their KV cache memory should be flexibly shared; \eg, unused KV cache memory from one LLM can be easily reused by others.
+However, LLMs often have diverse KV cache layouts, resulting in different tensor shapes, \eg, different head dimensions and number of attention heads. 
+Therefore, simply using a pool of unified KV tensors across models is infeasible: different token sizes lead to misaligned tensor shapes, and different layer counts cause inconsistent numbers of tensors.
+
+\MyPara{R3: Minimal redistribution overhead and memory fragmentation.} 
+Since memory redistribution may occur frequently, it must incur low overhead while minimizing fragmentation to improve utilization. 
+This rules out a strawman design that splits the reserved KV pool tensor into multiple smaller segments so that free segments from one model can be reused by another. 
+This is because choosing the segment size is inherently challenging: too many small segments increase second-level indexing overhead, while too few large segments cause severe fragmentation.
+
+\MyPara{R4: Transparent to existing serving frameworks.} 
+The new mechanism should remain fully compatible with existing serving frameworks, where the KV block pool is allocated as large tensors, and require no changes to attention kernels. 
+The previously mentioned segment-based method violates this requirement, as it splits the tensor into segments, which necessitates extensive kernel modifications. 
+
+\MyPara{Summary.} 
+Multi-LLM serving must efficiently cope with heterogeneous memory demands (\eg, different model weights and KV token blocks), each with distinct semantics (\eg, head dimensions and layer counts) and lifecycles. 
+Existing single-LLM systems manage GPU memory entirely at the application level, imposing their own semantics on top of a fixed GPU allocation. 
+This approach works well for a single model, which can efficiently manage its memory in isolation. 
+In multi-LLM settings, however, such isolation becomes a barrier, as memory needs to be shared and reallocated across models dynamically to accommodate bursty group behavior and workload volatility.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\linewidth]{figs/kvcached.pdf}
+    \caption{Memory ballooning for effective multi-LLM serving.}
+    \vspace{-0mm}
+    \label{fig:elastic-engine}
+\end{figure}
+
+\mysubsection{Solution: GPU Memory Ballooning}
+
+To meet all the above requirements,
+our key insight is that memory management should be \emph{pushed down to the GPU runtime level.}
+At this level, the system can treat all models uniformly, allowing GPU memory to be transparently redistributed across models, while applications manage only the memory allocated to them with their own semantics.
+
+Building on this idea, \tool introduces a \emph{balloon driver}, named \codeIn{kvcached}, which sits as a shim between inference engines and GPU memory. 
+Open sourced at \url{https://github.com/ovg-project/kvcached}, \codeIn{kvcached} manages the entire GPU physical memory for LLM serving, including both model weights and the KV cache pool.
+Meanwhile, \codeIn{kvcached} reserves a large contiguous virtual address space for each engine, which presents it to the engine as if it were dedicated GPU memory. 
+On top of this reserved space, \codeIn{kvcached} translates application-level semantics (\eg, weights, KV caches, and intermediate buffers) into allocations of physical GPU memory pages. 
+Physical pages are created only on demand and mapped to virtual addresses lazily,
+allowing memory to expand and shrink as workloads change, as illustrated in Figure~\ref{fig:elastic-engine}. 
+
+Specifically, \codeIn{kvcached} meets all the requirements in \S\ref{sec:flex-mem} through the following designs.
+
+\MyPara{D1: Unified model weights and KV cache management.} 
+\codeIn{kvcached} achieves fast memory redistribution between model weights and KV cache through unified virtual and physical memory management. 
+Since \codeIn{kvcached}-managed memory is agnostic to application semantics, both weights and KV cache can be seamlessly reallocated across engines.
+Moreover, \codeIn{kvcached} dynamically adjusts physical memory 
+limits: when an evicted model is reactivated, it shrinks the limits of other models on the same GPU, bounding their allocations and immediately freeing space for the new model.
+The opposite happens when a model is evicted.
+
+\MyPara{D2: Automatic token block mapping.} 
+To support models with different layer counts and token sizes, \codeIn{kvcached} employs an internal KV cache manager to map token blocks onto underlying virtual and physical GPU pages. \tool assigns token blocks to available slots within a virtual page, or allocates a new physical page when necessary. To prevent size conflicts and ensure portability across architectures, the KV cache manager further segregates token blocks from different models onto distinct memory pages.
+
+\MyPara{D3: Overhead and fragmentation optimizations.} 
+\codeIn{kvcached} minimizes memory redistribution overhead and fragmentation through three key optimizations.
+First, mainstream serving frameworks maintain separate K and V tensors per layer, 
+requiring $2L$ page allocations across all layers each time. To reduce this overhead, \codeIn{kvcached} reorganizes the memory layout in virtual space, so that all layers' K and V vectors of a token are stored in contiguous virtual space, requiring only one batch allocation for all pages ($2L\times$ speedup). 
+Second, \codeIn{kvcached} uses a pre-allocation thread to asynchronously prepare a small buffer of GPU pages. Engines draw new pages from this buffer first, while released pages are returned to it and only physically freed if the buffer exceeds its limit or memory must be reclaimed for a new model.
+Finally, to reduce fragmentation, \codeIn{kvcached} uses 2MB memory pages, and prioritizes using partially filled pages.
+
+\MyPara{D4: Elastic tensor abstraction.} 
+\codeIn{kvcached} ensures transparency with existing LLM serving frameworks by introducing an \textit{elastic tensor (eTensor)} abstraction, implemented via PyTorch's extension interface
+to abstract away the details of physical page allocation from the serving engine. 
+Elastic tensors can be used exactly like regular PyTorch tensors, requiring no modifications to attention kernels and remaining fully compatible with CUDA graph optimizations commonly used in LLM serving frameworks.
+
+\mysubsection{Fast Model Loading}
+\label{sec:model-loading}
+Model swapping speed directly impacts the flexibility of GPU sharing. High latency can hinder the timely swapping of models with strict SLOs, limiting policy adaptability.
+While deactivation is straightforward, \ie, terminating the engine and releasing all memory, reactivation is more complicated, which involves:
+(1) initializing a new serving engine and reserving a new virtual address space for KV cache pool; and
+(2) loading the model weights from CPU DRAM.
+If done \naively, this process can take tens of seconds---far exceeding the TTFT SLOs of online LLM inference, which are often within a few seconds or less.
+
+\MyPara{Reusable engine pools.}
+The root cause of (1) lies in the tight coupling between the engine and the model it serves. In current systems, an engine shares the same lifecycle as its model---when a model is evicted, its engine is also terminated, along with its virtual address space. As a result, every model activation incurs the full cost of engine initialization.
+\\
+\tool eliminates this overhead by decoupling the lifecycles of the engines and models. Specifically, it maintains an engine pool on each GPU, where engines are pre-initialized with virtual address space and distributed contexts. Upon model activation, \tool selects an available engine from the pool and starts model loading directly. When a model is evicted, its physical memory is released, but its engine with virtual address space is returned to the engine pool for future reuse.
+\\
+However, an engine cannot directly reuse previously reserved virtual memory space to serve a new model. 
+This is because current inference engines perform index-based token access, which depends on a model-specific memory layout that is incompatible with models of different architectures, \eg, different numbers of layers or token sizes.
+To address this, \tool introduces a KV cache virtual memory manager to manage the pre-reserved virtual memory spaces in the engine pool. When a new model is loaded, the manager dynamically aligns the reserved virtual space to match the memory layout required by the new model (one-time effort), and then creates a new \kvcached based on the aligned memory spaces.  
+The \kvcached can then correctly and efficiently locate the virtual memory page where each token resides during inference. 
+\\
+\MyPara{Parallel model weight loading.}
+The time spent on (2) model weight loading is heavily influenced by the utilization of the CPU–GPU interconnect bandwidth. 
+We found that loading models \naively via the \texttt{cudaMemcpyAsync} API to a GPU fails to saturate the interconnect bandwidth, even when invoked from multiple threads. This may be due to all \texttt{cudaMemcpyAsync} operations targeting the same GPU executing serially, limited by the CUDA driver and hardware.
+\\
+\tool overcomes this bottleneck by chunking model weights into smaller segments, loading them in parallel across multiple GPUs on the same node, and then aggregating them to the target GPU via high-speed NVLink interconnects. This parallelized strategy significantly accelerates model loading.
+To minimize interference with running workloads on GPUs, \tool partitions model weights at the granularity of individual weight tensors and loads them in a streaming fashion. As a result, each GPU only needs to maintain a small buffer (\eg, 30MB), minimizing possible memory contention.
+

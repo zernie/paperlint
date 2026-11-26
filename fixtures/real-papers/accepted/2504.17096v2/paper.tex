@@ -1,0 +1,186 @@
+\documentclass[sigplan,screen]{acmart}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%\setcopyright{acmlicensed}
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[SOSP '25]{ACM SIGOPS 31st Symposium on Operating Systems Principles}{October 13--16, 2025}{Seoul, Republic of Korea}
+\acmBooktitle{ACM SIGOPS 31st Symposium on Operating Systems Principles (SOSP '25), October 13--16, 2025, Seoul, Republic of Korea}\acmDOI{10.1145/3731569.3764839}
+\acmISBN{979-8-4007-1870-0/2025/10}
+
+
+\usepackage[usenames,dvipsnames]{xcolor,colortbl}
+%\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsthm}
+\usepackage{MnSymbol}
+\usepackage{cleveref}
+\usepackage{listings, fancyvrb, multicol}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{tikz-cd}
+\usepackage{microtype}
+%\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{comment}
+\usepackage{xspace}
+\usepackage{graphicx, graphics}
+\usepackage{subcaption}
+\captionsetup[subfigure]{labelfont=rm}
+\usepackage{svg}
+\usepackage{balance}
+\usepackage{etoolbox}
+\lstset{
+	language=Python,
+	numbers=left,
+	basicstyle=\tiny,
+	numberstyle=\tiny,
+	frame=tb,
+	columns=fullflexible,
+	showstringspaces=false,
+	captionpos=t,
+	mathescape=true,
+	escapeinside={@}{@},
+	tabsize=3,
+	moredelim=[is][\underbar]{@}{@},
+	moredelim=[is][\bfseries\underbar]{^}{^},
+	morekeywords={nullptr,uint64_t},
+	xleftmargin=5.0ex
+}
+
+
+
+\newcommand{\todo}[1]{{\textcolor{red}{[~TODO:~#1~]}}}
+\newcommand{\fot}[1]{{\textcolor{purple}{[~FOT:~#1~]}}}
+\newcommand{\ana}[1]{{\textcolor{orange}{[~ANA:~#1~]}}}
+\newcommand{\qh}[1]{{\textcolor{blue}{[~QH:~#1~]}}}
+\newcommand{\ixe}[1]{{\textcolor{teal}{[~IXE:~#1~]}}}
+\newcommand{\sailor}{{Sailor}\xspace}
+
+%\newcommand{\new}[1]{{\textcolor{blue}{#1~}}}
+\newcommand{\new}[1]{{#1~}}
+
+
+%\def\UrlBreaks{\do\/\do-}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
+\begin{document}
+
+
+\title[\sailor: Automating Distributed Training over Dynamic, \\ Heterogeneous, and Geo-distributed Clusters]{\sailor: Automating Distributed Training over Dynamic, Heterogeneous, and Geo-distributed Clusters}
+\settopmatter{authorsperrow=5}
+
+\author{Foteini Strati}
+\authornote{Correspondence to \href{foteini.strati@inf.ethz.ch}{foteini.strati@inf.ethz.ch}}
+\affiliation{%
+  \institution{ETH Zurich}
+  \country{Switzerland}
+}
+
+
+\author{Zhendong Zhang}
+\affiliation{%
+  \institution{ETH Zurich}
+  \country{Switzerland}
+}
+
+
+\author{George Manos}
+\affiliation{%
+  \institution{ETH Zurich}
+  \country{Switzerland}
+}
+
+
+\author{Ixeia Sánchez Périz}
+\authornote{Work done while at ETH Zurich}
+\affiliation{%
+  \institution{}
+  \country{}
+}
+
+\author{Qinghao Hu}
+\affiliation{%
+  \institution{MIT}
+   \country{USA}
+}
+
+\author{Tiancheng Chen}
+\affiliation{%
+  \institution{ETH Zurich}
+  \country{Switzerland}
+}
+
+\author{Berk Buzcu}
+\affiliation{%
+  \institution{HES-SO}
+  \country{Switzerland}
+}
+
+\author{Song Han}
+\affiliation{%
+  \institution{MIT}
+  \country{USA}
+}
+
+\author{Pamela Delgado}
+\affiliation{%
+  \institution{HES-SO}
+  \country{Switzerland}
+}
+
+\author{Ana Klimovic}
+\affiliation{%
+  \institution{ETH Zurich}
+  \country{Switzerland}
+}
+
+\renewcommand{\shortauthors}{Strati, et al.}
+
+\begin{abstract}
+The high GPU demand of ML training makes it hard to allocate large homogeneous clusters of high-end GPUs in a single availability zone. Leveraging  heterogeneous GPUs available within and across zones can improve throughput at a reasonable cost. However, training ML models on heterogeneous resources introduces significant challenges, such as stragglers and a large search space of possible job configurations. Current systems lack support for efficiently training models on heterogeneous resources. We present \sailor, a system that automates distributed training over heterogeneous, geo-distributed, and dynamically available resources. \sailor combines an efficient search space exploration algorithm, accurate runtime and memory footprint simulation, and a distributed training framework that supports different types of heterogeneity to optimize training throughput and cost.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257</concept_id>
+       <concept_desc>Computing methodologies~Machine learning</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Machine learning}
+\keywords{Distributed Training}
+
+\maketitle
+
+
+\input{content/intro}
+\input{content/background}
+\input{content/motivation}
+\input{content/sailor_overview}
+\input{content/components}
+\input{content/evaluation}
+\input{content/discussion}
+
+\input{content/related_work}
+\input{content/conclusion}
+\input{content/acknowledgements}
+
+\newpage
+\bibliographystyle{ACM-Reference-Format}
+\balance
+\bibliography{bibliography}
+
+
+\end{document}

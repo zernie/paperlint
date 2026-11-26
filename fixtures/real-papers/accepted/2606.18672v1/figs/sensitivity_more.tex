@@ -1,0 +1,41 @@
+\begin{figure}
+    \centering
+    % --- 第一行 ---
+    % 1. Diffusion Coefficient (Eta)
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/sensitivity/heatmap_ppr_alpha.png} 
+        \caption{$\eta$}
+        \label{fig:sens_eta}
+    \end{subfigure}
+    \hfill % 左右间距
+    % 2. Correlation Weight (Alpha)
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/sensitivity/heatmap_factor_ort.png}
+        \caption{$\alpha$}
+        \label{fig:sens_alpha}
+    \end{subfigure}
+    
+    \vspace{0.2cm} % 上下行间距
+    
+    % --- 第二行 ---
+    % 3. Reconstruction Weight (Beta)
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/sensitivity/heatmap_factor_construct.png}
+        \caption{$\beta$}
+        \label{fig:sens_beta}
+    \end{subfigure}
+    \hfill
+    % 4. ZINB Weight (Gamma)
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/sensitivity/heatmap_factor_KL.png}
+        \caption{$\gamma$}
+        \label{fig:sens_gamma}
+    \end{subfigure}
+    
+    \caption{Impact of four parameters on clustering performance.}
+    \label{fig:sensitivity_4params}
+\end{figure}

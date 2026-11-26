@@ -1,0 +1,329 @@
+\begin{thebibliography}{39}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell et~al.}]{brown2020gpt3}
+Tom~B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan,
+  Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+  Askell, and 1 others. 2020.
+\newblock \href {https://doi.org/10.48550/arXiv.2005.14165} {Language models
+  are few-shot learners}.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~33, pages 1877--1901.
+
+\bibitem[{Cao et~al.(2024)Cao, Jia, Arik, Pfister, Zheng, Ye, and
+  Liu}]{Cao2024TEMPO}
+Defu Cao, Furong Jia, Sercan~O Arik, Tomas Pfister, Yixiang Zheng, Wen Ye, and
+  Yan Liu. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2310.04948} {{TEMPO}:
+  Prompt-based generative pre-trained transformer for time series forecasting}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Chang et~al.(2023)Chang, Peng, and Chen}]{Chang2023LLM4TS}
+Ching Chang, Wen-Chih Peng, and Tien-Fu Chen. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2308.08469} {{LLM4TS}:
+  Two-stage fine-tuning for time-series forecasting with pre-trained {LLMs}}.
+\newblock \emph{arXiv preprint arXiv:2308.08469}.
+
+\bibitem[{Das et~al.(2024)Das, Kong, Sen, and Zhou}]{das2024timesfm}
+Abhimanyu Das, Weihao Kong, Rajat Sen, and Yichen Zhou. 2024.
+\newblock A decoder-only foundation model for time-series forecasting.
+\newblock In \emph{International Conference on Machine Learning (ICML)}.
+
+\bibitem[{Geng et~al.(2024)Geng, Cai, Wang, Koeppl, Nakov, and
+  Gurevych}]{geng2024survey-conf}
+Jiahui Geng, Fengyu Cai, Yuxia Wang, Heinz Koeppl, Preslav Nakov, and Iryna
+  Gurevych. 2024.
+\newblock A survey of confidence estimation and calibration in large language
+  models.
+\newblock In \emph{Proceedings of the 2024 Conference of the North American
+  Chapter of the Association for Computational Linguistics (NAACL)}, pages
+  6577--6595.
+
+\bibitem[{Gruver et~al.(2023)Gruver, Finzi, Qiu, and
+  Wilson}]{gruver2023llmtime}
+Nate Gruver, Marc Finzi, Shikai Qiu, and Andrew~Gordon Wilson. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2310.07820} {Large language
+  models are zero-shot time series forecasters}.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~36.
+
+\bibitem[{Hacohen et~al.(2022)Hacohen, Dekel, and
+  Weinshall}]{hacohen2022active}
+Guy Hacohen, Avihu Dekel, and Daphna Weinshall. 2022.
+\newblock \href {https://doi.org/10.48550/arXiv.2202.02794} {Active learning on
+  a budget: Opposite strategies suit high and low budgets}.
+\newblock In \emph{Proceedings of the 39th International Conference on Machine
+  Learning (ICML)}, pages 8175--8195.
+
+\bibitem[{Hochreiter and Schmidhuber(1997)}]{hochreiter1997lstm}
+Sepp Hochreiter and J{\"u}rgen Schmidhuber. 1997.
+\newblock \href {https://doi.org/10.1162/neco.1997.9.8.1735} {Long short-term
+  memory}.
+\newblock \emph{Neural Computation}, 9(8):1735--1780.
+
+\bibitem[{Jiang et~al.(2025)Jiang, Yu, Lee, Song, Shin, Cheng, Liu, and
+  Chen}]{Jiang2025Explainable}
+Yushan Jiang, Wenchao Yu, Geon Lee, Dongjin Song, Kijung Shin, Wei Cheng,
+  Yanchi Liu, and Haifeng Chen. 2025.
+\newblock \href {https://doi.org/10.48550/arXiv.2503.01013} {{TimeXL}:
+  Explainable multi-modal time series prediction with {LLM}-in-the-loop}.
+\newblock \emph{arXiv preprint arXiv:2503.01013}.
+
+\bibitem[{Jin et~al.(2024)Jin, Wang, Ma, Chu, Zhang, Shi, Chen, Liang, Li, Pan,
+  and Wen}]{Jin2024TimeLLM}
+Ming Jin, Shiyu Wang, Lintao Ma, Zhixuan Chu, James~Y Zhang, Xiaoming Shi,
+  Pin-Yu Chen, Yuxuan Liang, Yuan-Fang Li, Shirui Pan, and Qingsong Wen. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2310.01728} {{Time-LLM}: Time
+  series forecasting by reprogramming large language models}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Kim et~al.(2022{\natexlab{a}})Kim, Cho, Kim, Park, and
+  Choo}]{kim2022rescal}
+Daejin Kim, Youngin Cho, Dongmin Kim, Cheonbok Park, and Jaegul Choo.
+  2022{\natexlab{a}}.
+\newblock \href {https://doi.org/10.1145/3511808.3557432} {Residual correction
+  in real-time traffic forecasting}.
+\newblock In \emph{Proceedings of the 31st ACM International Conference on
+  Information and Knowledge Management (CIKM)}, pages 962--971.
+
+\bibitem[{Kim et~al.(2022{\natexlab{b}})Kim, Kim, Tae, Park, Choi, and
+  Choo}]{Kim2022RevIN}
+Taesung Kim, Jinhee Kim, Yunwon Tae, Cheonbok Park, Jang-Ho Choi, and Jaegul
+  Choo. 2022{\natexlab{b}}.
+\newblock \href {https://openreview.net/forum?id=cGDAkQo1C0p} {Reversible
+  instance normalization for accurate time-series forecasting against
+  distribution shift}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Liang et~al.(2024)Liang, Wen, Nie, Jiang, Jin, Song, Pan, and
+  Wen}]{Liang2024Foundation}
+Yuxuan Liang, Haomin Wen, Yuqi Nie, Yushan Jiang, Ming Jin, Dongjin Song,
+  Shirui Pan, and Qingsong Wen. 2024.
+\newblock \href {https://doi.org/10.1145/3637528.3671451} {Foundation models
+  for time series analysis: A tutorial and survey}.
+\newblock In \emph{Proceedings of the 30th ACM SIGKDD Conference on Knowledge
+  Discovery and Data Mining}, pages 6555--6565.
+
+\bibitem[{Liu et~al.(2024{\natexlab{a}})Liu, Xu, Miao, Yang, Zhang, Long, Li,
+  and Zhao}]{Liu2025TimeCMA}
+Chenxi Liu, Qianxiong Xu, Hao Miao, Sun Yang, Lingzheng Zhang, Cheng Long,
+  Ziyue Li, and Rui Zhao. 2024{\natexlab{a}}.
+\newblock \href {https://arxiv.org/pdf/2406.01638} {{TimeCMA}: Towards
+  {LLM}-empowered multivariate time series forecasting via cross-modality
+  alignment}.
+\newblock \emph{arXiv preprint arXiv:2406.01638}.
+
+\bibitem[{Liu et~al.(2024{\natexlab{b}})Liu, Yang, Xu, Li, Long, Li, and
+  Zhao}]{Liu2024STLLM}
+Chenxi Liu, Sun Yang, Qianxiong Xu, Zhishuai Li, Cheng Long, Ziyue Li, and Rui
+  Zhao. 2024{\natexlab{b}}.
+\newblock \href {https://doi.org/10.48550/arXiv.2401.10134} {Spatial-temporal
+  large language model for traffic prediction}.
+\newblock \emph{arXiv preprint arXiv:2401.10134}.
+
+\bibitem[{Liu et~al.(2025)Liu, Guo, Dai, Li, Bao, Ren, Jiang, and
+  Xia}]{Liu2025CALF}
+Peiyuan Liu, Hang Guo, Tao Dai, Naiqi Li, Jigang Bao, Xudong Ren, Yong Jiang,
+  and Shu-Tao Xia. 2025.
+\newblock \href {https://doi.org/10.1609/aaai.v39i18.34082} {{CALF}: Aligning
+  {LLMs} for time series forecasting via cross-modal fine-tuning}.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}.
+
+\bibitem[{Liu et~al.(2024{\natexlab{c}})Liu, Hu, Li, Diao, Liang, Hooi, and
+  Zimmermann}]{Liu2024UniTime}
+Xu~Liu, Junfeng Hu, Yuan Li, Shizhe Diao, Yuxuan Liang, Bryan Hooi, and Roger
+  Zimmermann. 2024{\natexlab{c}}.
+\newblock \href {https://doi.org/10.1145/3589334.3645434} {{UniTime}: A
+  language-empowered unified model for cross-domain time series forecasting}.
+\newblock In \emph{Proceedings of the ACM Web Conference (WWW)}, pages
+  4095--4106.
+
+\bibitem[{Liu et~al.(2023{\natexlab{a}})Liu, Li, Wang, and Long}]{Liu2023Koopa}
+Yong Liu, Chenyu Li, Jianmin Wang, and Mingsheng Long. 2023{\natexlab{a}}.
+\newblock \href {https://doi.org/10.48550/arXiv.2305.18803} {Koopa: Learning
+  non-stationary time series dynamics with {Koopman} predictors}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 12271--12290.
+
+\bibitem[{Liu et~al.(2024{\natexlab{d}})Liu, Qin, Huang, Wang, and
+  Long}]{Liu2024AutoTimes}
+Yong Liu, Guo Qin, Xiangdong Huang, Jianmin Wang, and Mingsheng Long.
+  2024{\natexlab{d}}.
+\newblock \href {https://doi.org/10.52202/079017-3882} {{AutoTimes}:
+  Autoregressive time series forecasters via large language models}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}.
+
+\bibitem[{Liu et~al.(2023{\natexlab{b}})Liu, Cheng, Li, Huang, Liu, Xie, and
+  Chen}]{Liu2023AdaptiveNorm}
+Zhiding Liu, Mingyue Cheng, Zhi Li, Zhenya Huang, Qi~Liu, Yanhu Xie, and Enhong
+  Chen. 2023{\natexlab{b}}.
+\newblock \href {https://doi.org/10.52202/075280-0628} {Adaptive normalization
+  for non-stationary time series forecasting: A temporal slice perspective}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 14273--14292.
+
+\bibitem[{Nie et~al.(2023)Nie, Nguyen, Sinthong, and
+  Kalagnanam}]{Nie2023PatchTST}
+Yuqi Nie, Nam~H. Nguyen, Phanwadee Sinthong, and Jayant Kalagnanam. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2211.14730} {A time series is
+  worth 64 words: Long-term forecasting with transformers}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Niu et~al.(2023)Niu, Wu, Zhang, Wen, Chen, Zhao, and
+  Tan}]{niu2023sar}
+Shuaicheng Niu, Jiaxiang Wu, Yifan Zhang, Zhiquan Wen, Yaofo Chen, Peilin Zhao,
+  and Mingkui Tan. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2302.12400} {Towards stable
+  test-time adaptation in dynamic wild world}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Pan et~al.(2024)Pan, Jiang, Garg, Schneider, Nevmyvaka, and
+  Song}]{Pan2024S2IP}
+Zijie Pan, Yushan Jiang, Sahil Garg, Anderson Schneider, Yuriy Nevmyvaka, and
+  Dongjin Song. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2403.05798} {{S$^{2}$IP-LLM}:
+  Semantic space informed prompt learning with {LLM} for time series
+  forecasting}.
+\newblock In \emph{International Conference on Machine Learning (ICML)}.
+
+\bibitem[{Park et~al.(2025)Park, Lee, Lee, Gwak, and Choo}]{park2025revisiting}
+Junwoo Park, Hyuck Lee, Dohyun Lee, Daehoon Gwak, and Jaegul Choo. 2025.
+\newblock \href {https://doi.org/10.18653/v1/2025.acl-short.71} {Revisiting
+  {LLM}s as zero-shot time series forecasters: Small noise can break large
+  models}.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association
+  for Computational Linguistics (Volume 2: Short Papers)}, pages 906--922,
+  Vienna, Austria. Association for Computational Linguistics.
+
+\bibitem[{Perez et~al.(2018)Perez, Strub, de~Vries, Dumoulin, and
+  Courville}]{perez2018film}
+Ethan Perez, Florian Strub, Harm de~Vries, Vincent Dumoulin, and Aaron
+  Courville. 2018.
+\newblock \href {https://doi.org/10.1609/aaai.v32i1.11671} {{FiLM}: Visual
+  reasoning with a general conditioning layer}.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}.
+
+\bibitem[{Schick et~al.(2023)Schick, Dwivedi-Yu, Dess{\`i}, Raileanu, Lomeli,
+  Zettlemoyer, Cancedda, and Scialom}]{schick2023toolformer}
+Timo Schick, Jane Dwivedi-Yu, Roberto Dess{\`i}, Roberta Raileanu, Maria
+  Lomeli, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2302.04761} {Toolformer:
+  Language models can teach themselves to use tools}.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~36.
+
+\bibitem[{Singh and Strouse(2024)}]{Singh2024TokenizationCounts}
+Aaditya~K. Singh and DJ~Strouse. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2402.14903} {Tokenization
+  counts: The impact of tokenization on arithmetic in frontier {LLMs}}.
+\newblock \emph{arXiv preprint arXiv:2402.14903}.
+
+\bibitem[{Sun et~al.(2024)Sun, Li, Li, and Hong}]{Sun2023TEST}
+Chenxi Sun, Hongyan Li, Yaliang Li, and Shenda Hong. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2308.08241} {{TEST}: Text
+  prototype aligned embedding to activate {LLM's} ability for time series}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Tan et~al.(2024)Tan, Merrill, Gupta, Althoff, and
+  Hartvigsen}]{Tan2024LLMUseful}
+Mingtian Tan, Mike~A. Merrill, Vinayak Gupta, Tim Althoff, and Thomas
+  Hartvigsen. 2024.
+\newblock \href {https://doi.org/10.52202/079017-1922} {Are language models
+  actually useful for time series forecasting?}
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}.
+
+\bibitem[{Wang et~al.(2021)Wang, Shelhamer, Liu, Olshausen, and
+  Darrell}]{wang2021tent}
+Dequan Wang, Evan Shelhamer, Shaoteng Liu, Bruno Olshausen, and Trevor Darrell.
+  2021.
+\newblock \href {https://doi.org/10.48550/arXiv.2006.10726} {Tent: Fully
+  test-time adaptation by entropy minimization}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le,
+  and Zhou}]{wei2022cot}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia,
+  Ed~Chi, Quoc~V Le, and Denny Zhou. 2022.
+\newblock \href {https://doi.org/10.48550/arXiv.2201.11903} {Chain-of-thought
+  prompting elicits reasoning in large language models}.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~35, pages 24824--24837.
+
+\bibitem[{Xiong et~al.(2024)Xiong, Hu, Lu, Li, Fu, He, and
+  Hooi}]{xiong2024llms-conf}
+Miao Xiong, Zhiyuan Hu, Xinyang Lu, Yifei Li, Jie Fu, Junxian He, and Bryan
+  Hooi. 2024.
+\newblock \href {https://doi.org/10.48550/arXiv.2306.13063} {Can {LLM}s express
+  their uncertainty? {An} empirical evaluation of confidence elicitation in
+  {LLMs}}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Xue and Salim(2023)}]{Xue2023PromptCast}
+Hao Xue and Flora~D. Salim. 2023.
+\newblock \href {https://doi.org/10.1109/tkde.2023.3342137} {{PromptCast}: A
+  new prompt-based learning paradigm for time series forecasting}.
+\newblock \emph{IEEE Transactions on Knowledge and Data Engineering}, pages
+  6851--6864.
+
+\bibitem[{Yao et~al.(2023)Yao, Zhao, Yu, Du, Shafran, Narasimhan, and
+  Cao}]{yao2023react}
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+  and Yuan Cao. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2210.03629} {{ReAct}:
+  Synergizing reasoning and acting in language models}.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}.
+
+\bibitem[{Zeng et~al.(2023)Zeng, Chen, Zhang, and Xu}]{Zeng2023DLinear}
+Ailing Zeng, Muxi Chen, Lei Zhang, and Qiang Xu. 2023.
+\newblock \href {https://doi.org/10.1609/aaai.v37i9.26317} {Are transformers
+  effective for time series forecasting?}
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}.
+
+\bibitem[{Zhang et~al.(2025)Zhang, Han, Fang, Ansari, Zhang, Maddix, Hu,
+  Wilson, Mahoney, Wang et~al.}]{Zhang2025DoesMultimodality}
+Xiyuan Zhang, Boran Han, Haoyang Fang, Abdul~Fatir Ansari, Shuai Zhang,
+  Danielle~C. Maddix, Cuixiong Hu, Andrew~Gordon Wilson, Michael~W. Mahoney,
+  Hao Wang, and 1 others. 2025.
+\newblock \href {https://doi.org/10.48550/arXiv.2506.21611} {Does multimodality
+  lead to better time series forecasting?}
+\newblock arXiv preprint arXiv:2506.21611.
+
+\bibitem[{Zhang et~al.(2023)Zhang, Wen, Wang, Chen, Sun, Zhang, Wang, Jin, and
+  Tan}]{Wen2023OneNet}
+Yi-Fan Zhang, Qingsong Wen, Xue Wang, Weiqi Chen, Liang Sun, Zhang Zhang, Liang
+  Wang, Rong Jin, and Tieniu Tan. 2023.
+\newblock {OneNet}: Enhancing time series forecasting models under concept
+  drift by online ensembling.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, pages 69949--69980.
+
+\bibitem[{Zhou et~al.(2023)Zhou, Niu, Wang, Sun, and Jin}]{zhou2023onefitsall}
+Tian Zhou, Peisong Niu, Xue Wang, Liang Sun, and Rong Jin. 2023.
+\newblock \href {https://doi.org/10.48550/arXiv.2302.11939} {{One Fits All}:
+  Power general time series analysis by pretrained {LM}}.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~36.
+
+\bibitem[{Zhou et~al.(2025)Zhou, Wang, Qu, Zhang, and
+  Bergmeir}]{Zhou2025Unveiling}
+Xin Zhou, Weiqing Wang, Shilin Qu, Zhiqiang Zhang, and Christoph Bergmeir.
+  2025.
+\newblock \href {https://doi.org/10.48550/arXiv.2501.07048} {Unveiling the
+  potential of text in high-dimensional time series forecasting}.
+\newblock \emph{arXiv preprint arXiv:2501.07048}.
+
+\end{thebibliography}

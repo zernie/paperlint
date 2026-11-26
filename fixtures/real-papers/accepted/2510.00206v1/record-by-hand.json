@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "extra_settings.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/0_Abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/root.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/1_Introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/2_Background.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/background-tab-1-notation.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/3_Motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/4_KeyIdeas.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/5_0_SystemDesign_Preface.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/5_1_SystemDesign_Kernel.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/5_2_SystemDesign_Scheduler.tex",
+      "role": "body"
+    },
+    {
+      "path": "algorithms/algo_1_data_batching.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/6_Evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/8_Discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/7_RelatedWork.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/9_Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/10_Acknowledgement.tex",
+      "role": "body"
+    },
+    {
+      "path": "contents/11_ArtifactEvaluation.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "72036fbe8dd6d4520c4bd424f78a85f13cc60bbd42fbb17ad1943caa44d9c1b2",
+    "extra_settings.tex": "417f184ad587f718ddd903f7e0dd095f48c7b18ce10bac5b75d056d5bf6efc52",
+    "contents/0_Abstract.tex": "612798186aeffe1d6e3f358422245fb2afe245dedcbc46855be7b1a330ef791b",
+    "contents/root.tex": "ab7f4efe6e96f4d9cc07d643b8cecbfcde17fe971aad85e4f068114e26965bdc",
+    "contents/1_Introduction.tex": "855b358611b89683b2a1841c38e3b11de66c10dca63ae46e60286c5755dc6e76",
+    "contents/2_Background.tex": "e4cfde9d8c5dda9557aaed91f96ccf6c92d76a26cbc02c9ec5887e9fcc9ad764",
+    "tables/background-tab-1-notation.tex": "1e7d1e3ef3ce87ad8eb7ae59f51938d97543167ba94ce165e083daac029a1c6d",
+    "contents/3_Motivation.tex": "8820cf5f60c80f8f3b66a185d48a2d8a4dccdbf8cb6666e83765629cb3ba3381",
+    "contents/4_KeyIdeas.tex": "6630e574adee148f4fec617999ca61d286b68317cdc7c32c4298d28e80f4d661",
+    "contents/5_0_SystemDesign_Preface.tex": "ae3642dd25e9c4a72bfc37033f99a5d6802ed325dd67ccf3160e7a96f49dc849",
+    "contents/5_1_SystemDesign_Kernel.tex": "d9070e12f5a1707498a1b2780a3fb96dd4a54b51f473a45f993e55b61f5e1fc2",
+    "contents/5_2_SystemDesign_Scheduler.tex": "6e4615d1b57a1f81e0386de85591f9d1a129164b5de9762f3debdb62252c2dd5",
+    "algorithms/algo_1_data_batching.tex": "08482d92910f7b80b8093b32581878ad08ddcf5122e463c7273747322453a0e2",
+    "contents/6_Evaluation.tex": "72e0f98716c7b2d05cfcf8e3fea2d652f9cccb68840c7165e4dd27d2814d8899",
+    "contents/8_Discussion.tex": "e8723c6378827acad1530eb7a51b65013ec1a08d342537b5b7ed4c86c826a3f8",
+    "contents/7_RelatedWork.tex": "598928fe0d1988bed7ef024950846c0aa986d36aa4e4b2071307161a541753f4",
+    "contents/9_Conclusion.tex": "fab4829fff55b5eb0821a93fa0e748092542f35a8b93f8d5be284668a27785ad",
+    "contents/10_Acknowledgement.tex": "c3f1e41a9aab7124552ac170824aabf2e3ec862eaf86416b211896dc6edcc177",
+    "contents/11_ArtifactEvaluation.tex": "819ceb85c5a50b744475888d34d63a6c428804ba34592d97e8a598ba56fcce19"
+  }
+}

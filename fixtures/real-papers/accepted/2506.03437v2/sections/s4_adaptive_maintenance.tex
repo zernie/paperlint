@@ -1,0 +1,227 @@
+\section{\edit{Adaptive Incremental Maintenance}}
+\label{sec:maintenance}
+
+We present our adaptive maintenance methodology, beginning with a cost model that estimates each partition’s contribution to query latency and guides maintenance decisions. Next, we describe the available maintenance actions, analyzing their impact on the cost model. We then detail the multi-stage decision workflow that prioritizes beneficial actions and conclude with a concrete example.
+
+\subsection{Cost Model}
+
+The cost model estimates the query latency contributed by each partition in the index. Estimating the per-partition latency contribution enables targeted maintenance to the partitions most affecting query performance.
+
+\paragraph{Partition Properties} 
+Consider an index with $L$ levels, numbered $l = 0,1,\dots,L-1$. Level $l$ contains $N_l$ partitions. The base level corresponds to $l=0$ and contains partitions of the original dataset vectors. Higher levels contain partitions of centroid vectors that summarize the partitions in the level below. At the top level, $l=L-1$, there is a single partition containing top-level centroids.
+
+Each partition $j$ at level $l$ has a size $s_{lj}$ (the number of vectors it contains) and an access frequency $A_{l,j} \in [0.0, 1.0]$. $A_{l,j}$ denotes the fraction of queries, measured in a sliding window $W$, that scan the partition $j$ at level $l$. The cost model is primarily driven by these sizes and access frequencies.
+
+\paragraph{Partition Cost}
+A partition $(l,j)$ contributes latency proportional to its size and how frequently it is accessed. Let $\lambda(s)$ be the latency function for scanning $s$ vectors. We measure $\lambda(s)$ through offline profiling. The cost of partition $(l,j)$ is:
+\begin{equation}
+C_{lj} = A_{lj} \cdot \lambda(s_{lj})
+\label{eq:CostPartition}
+\end{equation}
+
+\paragraph{Total Cost}
+The overall query latency (cost) estimate is the sum across all levels and partitions
+\begin{equation}
+C = \sum_{l=0}^{L-1} \sum_{j=0}^{N_l-1} A_{lj} \cdot \lambda(s_{lj})
+\label{eq:CostTotal}
+\end{equation}
+
+\paragraph{Interpretation} The cost model reflects the relationship between partition size, access frequency, and query latency. The fundamental trade-off that needs to be balanced is the number and size of partitions. Larger partitions require more time to scan, increasing latency, but reducing the total number of partitions and the overhead of scanning centroids. Conversely, smaller, fine-grained partitions reduce the number of vectors needed to scan to reach a high recall but increase the overhead of scanning centroids. The model further captures that frequently accessed partitions dominate the total cost, motivating targeted maintenance actions to balance these trade-offs.
+
+\paragraph{Guiding Maintenance Decisions} Maintenance actions such as splitting or deleting aim to reduce the total cost \(C\). Each action is evaluated based on its predicted change in cost:
+\begin{equation}
+\Delta C = C_{\text{after}} - C_{\text{before}}
+\label{eq:DeltaC}
+\end{equation}
+where \(C_{\text{before}}\) and \(C_{\text{after}}\) are the total costs before and after the action, respectively. Actions are applied only if \(\Delta C < -\tau\), where $\tau$ is a non-negative tunable threshold, ensuring monotonic improvement in query performance. By focusing on reducing \(C\), the index is dynamically restructured to maintain efficient query performance under varying workloads.
+
+\subsection{Conducting Maintenance}
+\label{sec:maintenance_actions}
+
+Maintenance at each level of the index proceeds in three phases—\emph{estimate}, \emph{verify},
+and \emph{commit / reject}.  We first list the available actions,
+then derive their cost deltas, describe the workflow, and finally walk
+through a concrete example.
+
+\subsubsection{Maintenance Actions}
+
+To minimize query latency, Quake employs a series of maintenance actions that dynamically adjust the index structure in response to evolving workloads. Here we define the maintenance actions and then analyze the impact of each maintenance action on the overall cost model. 
+
+\paragraph{Split Partition} If a partition $(l,j)$ is too large or frequently accessed, we consider splitting it into two partitions $(l,j_L)$ and $(l,j_R)$. We apply $k$-means clustering within that partition, forming two smaller partitions with their own centroids. The original partition is removed and its vectors are reassigned. A subsequent \emph{partition refinement} step adjusts vector assignments to ensure minimal overlap and balanced partition sizes.
+
+\paragraph{Partition Refinement} After a split, refinement uses $k$-means (seeded by current centroids) on nearby partitions to mitigate overlap and ensure that each vector is assigned to its most representative partition. Nearby partitions are determined by finding the $r_f$ nearest centroids to the split centroids, where $r_f$ is a tunable parameter (typically between 10 and 100). This is a generalization of the reassignment procedure used in SpFresh/LIRE \cite{xu_spfresh_2023}, using additional rounds of k-means prior to reassignment, and has been applied successfully by recent index maintenance works \cite{mageirakos2025cracking} and \cite{mohoney2024incremental}. Refinement avoids performance degradation by mitigating overlap and ensuring vectors are assigned to their most representative partition.
+
+\paragraph{Merge Partition} If a partition is rarely accessed and below a minimum size threshold, we consider deleting it to remove the cost of maintaining its centroid. After deletion, the vectors are reassigned to their respective nearest existing partitions. This can reduce total cost by removing a low-benefit partition, although the reassignment may increase the size (and thus cost) of other partitions, and therefore careful consideration is needed before conducting a merge.
+
+\paragraph{Adding and Removing Levels} If the number of centroids in the top level grows beyond a threshold, we add a new top level by clustering those centroids. Conversely, if the top level becomes too sparse (below a configured lower threshold), we remove the top level and merge its centroids in the level below. Both actions help maintain hierarchy balance and control centroid-scanning overhead. We defer discussion of this to our technical report \cite{mohoney2025quakeadaptiveindexingvector}.
+
+% ------------------------------------------------------------
+\subsubsection{Cost Deltas}
+\label{sec:maintenance_actions:deltas}
+
+The maintenance loop treats every candidate action as a \emph{proposed
+edit} to the index and scores it by the change it would induce in the
+total cost (Eq.~\eqref{eq:DeltaC}).
+
+We tentatively accept an action whenever $\Delta C < -\tau$.  Below we give the exact
+$\Delta C$ formulas for the primary maintenance actions:
+\emph{split} and \emph{merge}.  Full derivations are in the
+technical report \cite{mohoney2025quakeadaptiveindexingvector}; here we show only the final expressions.
+
+\paragraph{Exact Split Delta}
+Splitting a hot or oversized partition $(l,j)$ into children
+$(l,j_L)$ and $(l,j_R)$ inserts one new centroid at the parent level,
+changing the overhead by
+$\Delta O^{+} = \lambda(N_{l}+1) - \lambda(N_{l})$.  The resulting
+cost difference is
+
+\begin{equation}
+\begin{aligned}
+\Delta\text{Split}_{l,j} \;=\;
+  &\underbrace{\Delta O^{+}}_{\text{new centroid}}
+  - A_{l,j}\,\lambda(s_{l,j})  \\
+  &+ A_{l,j_L}\,\lambda(s_{l,j_L})
+  + A_{l,j_R}\,\lambda(s_{l,j_R})
+\end{aligned}
+\label{eq:delta_split_exact}
+\end{equation}
+
+where the first term pays for the extra centroid, the second removes
+the old scan cost, and the last two add the costs of scanning the new,
+smaller partitions. Note that we do not explicitly model the effect of refinement, as refinement does not change the number of partitions. Its impact is captured automatically as statistics are collected from future queries, so we omit it from the $\Delta$-formula and let later maintenance iterations adjust if necessary.
+
+\paragraph{Exact Merge Delta}
+Deleting a cold, tiny partition $(l,j)$ removes a centroid
+($\Delta O^{-}= \lambda(N_{l}-1)-\lambda(N_{l})$) and redistributes
+its vectors to a receiver set $R_{l,j}$.  Let $\Delta s_{m}$ and
+$\Delta A_{m}$ be the resulting size and frequency bumps for each
+receiver $m$.  Then
+
+\begin{equation}
+\begin{aligned}
+\Delta\text{Merge}_{l,j} \;=\;
+  &\Delta O^{-} - A_{l,j}\,\lambda(s_{l,j}) \\
+  &+ \sum_{m\in R_{l,j}}
+     \bigl[(A_{m}{+}\Delta A_{m})\,
+           \lambda(s_{m}{+}\Delta s_{m})
+           - A_{m}\,\lambda(s_{m})\bigr]
+\end{aligned}
+\label{eq:delta_merge_exact}
+\end{equation}
+
+captures both the benefit of deleting the partition and the
+penalty of swelling its neighbors.
+
+\paragraph{Estimating Deltas}
+At decision time we do not yet know the post-action quantities
+$\{s_{l,j_L},A_{l,j_L},\dots\}$ or the true $\Delta s_{m},
+\Delta A_{m}$.  We therefore use a lightweight \emph{estimate}
+based on two assumptions: 1) \textbf{Balanced Split: } $s_{l,j_L}\!\approx\!s_{l,j_R}\!\approx\!\tfrac{s_{l,j}}{2}$, and 2) \textbf{Proportional-Access Scaling}: each child inherits a fixed
+      fraction~$\alpha$ of the parent’s frequency.
+
+Under these assumptions the split estimate becomes
+
+\begin{equation}
+\begin{aligned}
+\Delta'\text{Split}_{l,j} \;=\;
+  &\Delta O^{+}
+  - A_{l,j}\,\lambda(s_{l,j}) \\
+  &+ 2\alpha\,A_{l,j}\,
+    \lambda\!\bigl(\tfrac{s_{l,j}}{2}\bigr).
+\end{aligned}
+\label{eq:delta_split_est}
+\end{equation}
+
+and the analogous merge estimate, derived with a uniform
+redistribution assumption, is located in the technical report \cite{mohoney2025quakeadaptiveindexingvector}.
+Immediately after a tentative action we measure the
+\emph{actual} sizes (and, for merges, the exact receiving partitions) and
+re-evaluate Eqs.~\eqref{eq:delta_split_exact}
+or~\eqref{eq:delta_merge_exact}.  If the recomputed gain is still
+below $-\tau$ the action is committed; otherwise it is rolled back
+(\S\ref{sec:maintenance_actions:workflow}).  This “estimate-then-verify”
+strategy is crucial for ensuring
+monotonic cost improvement.
+
+\subsubsection{Decision Workflow}
+\label{sec:maintenance_actions:workflow}
+
+Maintenance is a \textit{bottom-up} pass over the hierarchy.  
+Each level executes the five stages below starting from the base level. This workflow is triggered by the user. An avenue for future work is to develop scheduling policies to call this workflow and limit its scope. In our evaluation, we trigger maintenance after a set amount of queries have been run.
+
+\paragraph{Stage 0: Track Statistics}
+At the end of each query batch we update, for every partition
+$(l,j)$: (i) size $s_{l,j}$, (ii) access count over the sliding window of queries 
+$W$, giving $A_{l,j}= \text{hits}(l,j)/|W|$.
+These values are inputs of the cost model.
+
+\paragraph{Stage 1: Estimate}
+For the current level $l$ compute the estimate
+$\Delta'$ (\S\ref{sec:maintenance_actions:deltas}) of splitting and deleting for every
+partition.  Tentatively apply any action with $\Delta' < -\tau$.
+
+\paragraph{Stage 2: Verify}
+Immediately after performing a tentative action, we measure the actual resulting partition sizes (and the exact receiver partitions for merges). We recompute the cost delta using these known values but retain the original frequency assumptions from Stage 1.
+
+\paragraph{Stage 3: Commit / Reject}
+\[
+\Delta<-\tau\;\rightarrow\;\textit{commit},\quad
+\Delta\ge-\tau\;\rightarrow\;\textit{reject}.
+\]
+Rejection discards the action and keeps the previous state of the partition(s), in order to prevent cost increases.
+
+\paragraph{Stage 4: Propagate Upward.}
+Repeat Stages 1-3 on the next level $l{+}1$,  
+
+\smallskip
+\noindent\textit{Safety:}  
+Because every level enforces the same
+\mbox{$\Delta<-\tau$} guard, total cost across \emph{all} levels
+monotonically decreases and the hierarchy converges to a stable state
+under a fixed workload distribution (proof in technical report \cite{mohoney2025quakeadaptiveindexingvector}).
+
+
+\subsubsection{Example Maintenance Workflow}
+Below we walk through the \emph{estimate → verify → commit /
+reject} loop for two example partitions and show how an
+imbalanced split is automatically rejected to prevent accidental cost increases.
+
+%--- set-up ---------------------------------------------------------
+\noindent\textit{Set-up:}\;
+Consider partitions $P_1$ and $P_2$ with identical size and access frequency, where both contain
+$\;s\!=\!500\;$ vectors and appear in
+$\;A\!=\!0.10\;$ of queries. From profiling we observe non-linear \footnote{Scan latency is non-linear w.r.t. size due to top-k sorting overhead.} scan latencies for the following partition sizes: $\lambda(50)=250\,\mu\text{s}$, $\lambda(250)=550\,\mu\text{s}$, $\lambda(450)=1050\,\mu\text{s}$, $\lambda(500)=1200\,\mu\text{s}$ Adding a centroid costs $\Delta O^{+}=60\,\mu\text{s}$.
+We use a decision threshold of $\tau=4\,\mu\text{s}$ and $\alpha=.5$
+
+\medskip
+\begin{enumerate}[leftmargin=*, nosep]
+
+%--- 1. estimate ----------------------------------------------------
+\item \textbf{Estimate}\;
+   For $P_1$ and $P_2$ the estimate assumes a balanced $250/250$ split
+   and $\alpha=0.5$ traffic per child:
+\begin{align*}
+C_{\text{before}} &= 0.10 \times 1200 = 120\,\mu\text{s},\\
+C_{\text{est}}    &= 0.05 \times (550+550)=55\,\mu\text{s},\\
+\Delta'           &= 60 - 120 + 55 = -5\,\mu\text{s}.
+\end{align*}
+Because $\Delta' < -\tau$, \emph{both $P_1$ and $P_2$ are tentatively
+split}.
+
+%--- 2. verify ------------------------------------------------------
+\item \textbf{Verify}\;
+   After splitting we see that $P_1$ has a $250/250$ split, but $P_2$ comes out $450/50$:
+\begin{align*}
+C_{\text{verify}}(P_2) &= 0.05 \times (1050+250)=65\,\mu\text{s},\\
+\Delta(P_2)            &= 60 - 120 + 65 = +5\,\mu\text{s}.
+\end{align*}
+
+%--- 3. commit / rollback ------------------------------------------
+\item \textbf{Decide}\;
+\begin{itemize}[leftmargin=1.3em,itemsep=2pt]
+  \item $P_1$: \emph{commit} because $\Delta=-5\,\mu$s $<-\tau = -4 \mu$s
+  \item $P_2$: \emph{reject} because $\Delta=+5\,\mu$s $>-\tau = -4 \mu$s
+\end{itemize}
+   The verify step therefore blocks an imbalanced split that would
+   otherwise \emph{increase} query latency.
+\end{enumerate}

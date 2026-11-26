@@ -1,0 +1,80 @@
+\appendix
+
+\section{Extended Analysis of the Adaptive Polling Algorithm}
+\label{app:rasc-proofs}
+
+\begin{reptheorem}[Adaptive Poll Placement with Fixed Budget $k$]{1}
+Given a time distribution $p(t)$ on $(0,U]$, a poll budget $k$, and a terminal tolerance $\varepsilon>0$,
+polls
+$0<{L_1^{\!*}}<\cdots<L_{k-1}^{\!*}<L_k^{\!*}$
+that minimize
+expected detection time $Q$ satisfy $\lvert L_k^{\!*}-U\rvert\le\varepsilon$ are given by the following recurrent relation:
+\[
+L_i^{\!*} =
+\begin{cases} 
+\frac{1}{p(L_{i-1}^{\!*})} \cdot \int_{L_{i-2}^{\!*}}^{L_{i-1}^{\!*}} p(t)\, dt + L_{i-1}^{\!*} & \text{for } i \in \{2,\dots,k\}, \\
+\text{value } \in (0,U] & \text{for } i=1
+\end{cases} \tag{5} \label{eq:rep-recurrence}
+\]
+\end{reptheorem}
+
+\begin{proof}
+Only the $i$-th and $(i+1)$-th terms of $Q$ depend on $L_i$:
+\[
+A_i=\int_{L_{i-1}}^{L_i} (L_i-t)\,p(t)\,dt,\qquad
+A_{i+1}=\int_{L_i}^{L_{i+1}} (L_{i+1}-t)\,p(t)\,dt.
+\]
+By Leibniz’s rule,
+\[
+\frac{\partial A_i}{\partial L_i}
+= (L_i{-}L_i)p(L_i) + \int_{L_{i-1}}^{L_i} \frac{\partial}{\partial L_i}\big[(L_i{-}t)p(t)\big]\,dt
+= \int_{L_{i-1}}^{L_i} p(t)\,dt,
+\]
+and
+\[
+\frac{\partial A_{i+1}}{\partial L_i}
+= -\,(L_{i+1}-L_i)\,p(L_i).
+\]
+The first-order optimality condition $\partial Q/\partial L_i=0$ gives
+\[
+\int_{L_{i-1}}^{L_i} p(t)\,dt \;-\; (L_{i+1}-L_i)\,p(L_i) \;=\;0,
+\]
+which rearranges to \eqref{eq:rep-recurrence}.
+Under $p>0$ and continuity, these conditions determine a unique sequence once $L_1$ is fixed.
+
+Fix $L_1\in(0,U)$ and generate $L_2,\dots,L_k$ via \eqref{eq:rep-recurrence}.
+Then $L_k(L_1)$ is strictly increasing in $L_1$.
+Hence, there exists a unique $L_1^*\in(0,U)$ such that the generated sequence satisfies $L_k^*=U$.
+\end{proof}
+
+\begin{reptheorem}[Meeting a Detection Tolerance SLO]{2}
+Given a detection window $Q_w\in(0,U]$, an SLO $\text{slo}\in(0,1]$, and
+a placement $\mathcal{L}=\{L_1<\dots<L_k=U\}$, its covered set is
+\[
+C(\mathcal{L})=\bigcup_{i=1}^{k}\big((L_i-Q_w)^+,\,L_i\big]\cap(0,U],
+\quad (x)^+=\max\{x,0\},
+\]
+and its coverage is
+\[
+\mathrm{Cover}(\mathcal{L})=\int_{C(\mathcal{L})}\!p(t)\,dt.
+\]
+Let $A_k(Q_w)$ denote the best achievable coverage with $k$ polls,
+\[
+\begin{aligned}
+A_k(Q_w) &= \max_{\mathcal{L}}\, \mathrm{Cover}(\mathcal{L}),\\
+k^*(\text{slo},Q_w) &= \min\{\,k\in\mathbb{N}: A_k(Q_w)\ge \text{slo}\,\}.
+\end{aligned}
+\]
+
+Assume a binary search over $k$ is run with initial bracket $\texttt{left}=0$, $\texttt{right}=\lceil U/Q_w\rceil$,
+using an oracle \texttt{examineQw} that returns \texttt{true} exactly when there exists a placement $\mathcal{L}$ with $\mathrm{Cover}(\mathcal{L})\ge \text{slo}$.
+Then the search returns $k^*(\text{slo},Q_w)$ together with an SLO-feasible placement.
+\end{reptheorem}
+
+\begin{proof}
+\noindent\textbf{Monotonicity.} If $k'<k$, any $k'$-poll placement can be extended to $k$ polls by inserting additional polls; this cannot reduce $C(\mathcal{L})$, hence $A_k(Q_w)\ge A_{k'}(Q_w)$. The oracle predicate is therefore nondecreasing in $k$.
+
+\noindent\textbf{Bracketing.} For $k=\lceil U/Q_w\rceil$, equal spacing $L_i=iU/k$ yields $\bigcup_i ((L_i-Q_w)^+,L_i]\supseteq(0,U]$, so $\mathrm{Cover}(\mathcal{L})=1\ge \text{slo}$. Thus the upper bracket is feasible, while $k=0$ is not.
+
+\noindent\textbf{Minimality via binary search.} Binary search on a nondecreasing predicate with a feasible upper bracket returns the smallest $k$ for which the predicate holds; by definition this is $k^*(\text{slo},Q_w)$.
+\end{proof}

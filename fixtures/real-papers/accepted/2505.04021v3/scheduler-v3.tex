@@ -1,0 +1,122 @@
+\mysection{A Memory-Centric Control Plane}\label{sec:scheduling}
+
+The memory ballooning mechanism in \S\ref{sec:sys} provides the elasticity needed to unify spatial and temporal sharing, but leveraging it effectively requires policies that adapt to evolving bursty groups and volatile request patterns. Our goal is to improve memory efficiency and maximize SLO attainment for TTFT and TPOT through coordinated memory sharing. Because TTFT and TPOT can interfere~\cite{zhong2024distserve}, we prioritize TTFT, whose prompt length is known, while noting that the resulting improvements in resource scheduling also benefit TPOT by reducing memory-induced preemptions.
+
+\MyPara{Challenges.}
+Unifying time and space sharing complicates scheduling because decisions must jointly span models, requests, and tokens, all of which shape GPU memory usage and latency. These layers are tightly coupled: model residency sets memory availability, request concurrency determines consumption, and token execution affects both utilization and SLOs. Optimizing any one dimension in isolation—e.g., maximizing colocation or strictly protecting SLOs—can destabilize the others. Consequently, time- and space-sharing choices form a large, interdependent decision space where placement, memory pressure, and request scheduling continually interact in non-trivial ways.
+
+A natural formulation of this problem is a joint optimization over model placement, request scheduling, and memory allocation (\eg, via an ILP), but this quickly becomes intractable. The placement space alone is enormous: with 
+$M$ models and $N$ GPUs, there are N$^M$
+ possible assignments even before considering migration decisions. Request scheduling is likewise combinatorial, as differing prompt lengths, arrival times, SLOs, output lengths, and engine states yield a factorial explosion in possible execution orders. Moreover, placement and scheduling are tightly coupled—migrating even one model changes which GPUs can serve which requests and how KV caches evolve, thereby altering future scheduling decisions. All of this must be decided online, with the scheduler observing only recent arrivals while lacking knowledge of future bursts, output lengths, or concurrency.
+
+\MyPara{Insight.} Our key insight is that \emph{this complexity simplifies when managed through a memory-centric lens}. Models, requests, and tokens influence system behavior primarily through how they consume and contend for GPU memory, while SLO attainment is directly governed by the availability of that memory at execution time. By making memory the central optimization target, we unify multiple interacting objectives, utilization efficiency, latency control, and stability, under a single principle: controlling memory contention. This reduces a multi-metric, multi-level scheduling problem into a tractable design centered on memory management.
+
+Memory contention manifests at multiple scopes: cluster-level model activity drives coarse-grained memory demand, while fine-grained request dynamics determine SLO outcomes. No single control loop can manage both effectively, motivating a memory-centric hierarchical scheduler: a macro, cluster-level plane that shapes memory pressure via model placement, and a micro, GPU-level plane that allocates memory per request to satisfy heterogeneous SLOs. Coordinating these layers enables \tool to maintain high utilization and robust SLO attainment.
+
+\mysubsection{Load-Aware Model Placement} \label{sec:sch-global}
+
+The objective of the global model placement strategy is to place models across GPUs to maximize the headroom available for memory ballooning.  If too many models from the same active bursty group are colocated, they will simultaneously demand memory for KV-cache expansion, leading to severe contention and out-of-memory errors.
+
+To prevent this, \tool employs a load-aware placement strategy. Because predicting exact memory usage is difficult due to unknown output lengths of LLM inference requests, we utilize a robust heuristic referred to as the KV Pressure Ratio (KVPR). KVPR quantifies the intensity of memory contention on a GPU by comparing the aggregate urgency of memory demand against the remaining capacity, calculated as $\frac{w\_token\_rate}{shared\_kv}$, where $w\_token\_rate = \frac{token\_rate * token\_size}{SLO}$ represents the SLO-weighted token memory usage rate of a model,
+indicating its memory demand per unit time. By counting both input tokens from newly admitted requests and decode tokens produced by running requests per unit time, $token\_rate$ captures the full KV-cache growth rate and helps KVPR accurately reflect GPU memory pressure. We use the TPOT SLO for $SLO$ because autoregressive decoding dominates generation latency and is especially sensitive to KV-cache memory contention. 
+$shared\_kv$ is the memory available for the KV cache on a GPU.  A high KVPR indicates a high-pressure GPU where memory ballooning is likely to be stifled. 
+
+Algorithm~\ref{alg:global} realizes our model placement strategy. \tool prioritizes the most aggressive memory consumers by sorting models in descending order of their SLO-weighted token usage rates $w\_token\_rate$, ensuring that high-demand workloads are allocated resources first (Lines 1–3). For each model, the scheduler identifies the GPU that minimizes the resulting KVPR. This step inherently enforces complementarity: by targeting the device with the lowest existing pressure, \tool effectively colocates high-demand models with low-demand ones, thereby maximizing the capacity available for the high-demand model to balloon its memory usage (Lines 5–8). 
+If the selected GPU differs from the model's current GPU, \tool migrates the model accordingly. However, this migration incurs overhead from engine switching and model weight loading.
+To avoid unnecessary migrations with marginal benefit, \tool compares the KVPR of the best and current GPUs, and proceeds only if the improvement exceeds a threshold $\tau$ (Line 8).
+Finally, \tool assigns the model to its selected GPU and updates the corresponding GPU states (Lines 9–12).
+
+\MyPara{Analysis.} This greedy approach approximates the optimal solution by bounding the maximum KVPR across the cluster, ensuring that no single GPU becomes a disproportionate bottleneck that stifles memory sharing. A detailed formal analysis is provided in Appendix~\ref{ap:alg-gloabl}. The algorithm also seamlessly supports large models utilizing Tensor Parallelism (TP). By treating each TP partition as a distinct scheduling unit with anti-affinity constraints, \tool ensures they are placed on separate GPUs, thereby aggregating memory capacity across devices to satisfy massive KV demands. 
+
+\MyPara{Model eviction and activation.}
+The placement strategy evicts a model if it remains idle and GPU resources become constrained for other models. \tool performs eviction based on an empirical threshold, which can be determined by analyzing the idle interval distribution; a detailed sensitivity analysis is provided in Appendix~\ref{sec:sensitivity}.
+When the model receives new requests, \tool immediately reactivates it by placing it on the GPU with the lowest KV pressure ratio, drawing from a pre-warmed engine pool with reusable distributed contexts and buffers to avoid re-initialization, and using parallel weight loading to keep cold-start latency within TTFT budgets (\S\ref{sec:model-loading}).
+
+\MyPara{Model migration.}
+Model migration is designed to preserve TTFT during placement changes. Rather than stopping request processing while the destination instance is prepared, \tool keeps the source instance active and continues serving requests until the target is ready. This allows migration latency to be overlapped with ongoing execution, so requests experience only the short switch-over delay. 
+Therefore, \tool's effectiveness does not depend on fast interconnects. Practically, when the source and target GPUs are connected via NVLink, \tool uses NVLink as an optional shortcut for migrating model weights and resident KV caches. In non-NVLink environments, \tool leverages GPUDirect RDMA~\cite{gpudirect-rdma} if available, or falls back to standard eviction and reactivation, which takes at most a few seconds for <70B models.
+
+\begin{algorithm}[t]
+\small
+\caption{Model Placement to Maximize Memory Headroom.}
+\label{alg:global}
+\begin{algorithmic}[1]
+\Require 
+    Number of GPUs $N$, GPU memory capacity $C$, migration threshold $\tau$, and $M$ models. Each model $m_j$ has: token rate $t_j$, weight $w_j$, token size $tz_j$, current device index $g_j$, and latency SLO $s_j$.
+
+\Ensure Assign each model to a GPU to balance the resource demand and remaining memory capacity.
+
+\State Sort models by \red{$\frac{t_j * tz_j}{s_j}$} in descending order. Denote the sorted sequence as $m_1, m_2, \dots, m_M$. 
+
+\For{$i=1$ to $N$}
+  \State $shared\_kv_i \leftarrow C$; $w\_token\_rate_i \leftarrow 0$
+\EndFor
+
+\For{$k=1$ to $M$}
+  \State \textcolor{blue}{/* find the GPU $best\_idx$ that minimizes KVPR */}
+  \State   $best\_r,\ best\_idx \leftarrow \text{(min, argmin)}\frac{w\_token\_rate_i}{shared\_kv_i}$
+  \State   $current\_r \leftarrow \frac{w\_token\_rate_{g_k}}{shared\_kv_{g_k}}$
+  \State   $best\_gpu \gets 
+  \begin{cases}
+    best\_idx, & \text{if } current\_r - best\_r > \tau \\
+    g_k,       & \text{otherwise}
+  \end{cases}$
+
+  \State Assign model $m_k$ to $best\_gpu$
+  \State $w\_token\_rate_{best\_gpu} \gets w\_token\_rate_{best\_gpu} + \frac{r_k}{s_k}$
+  \State $shared\_kv_{best\_gpu} \gets shared\_kv_{best\_gpu} - w_k$
+\EndFor
+\State \Return Model-to-GPU placement
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Slack-Aware Request Arbitration} \label{sec:sch-gpu}
+
+While global placement balances demand, memory contention arises locally when resident models process requests concurrently. Under unified sharing, strict isolation causes fragmentation, whereas uncontrolled sharing risks starvation, with urgent requests blocked by long-running ones. Models on the same GPU may compete for KV cache memory, and without coordination a high-rate, relaxed-SLO model can monopolize memory and degrade SLO attainment for stricter workloads.
+
+A \naive approach is to cap each model’s memory usage, but choosing appropriate limits is difficult under dynamic workloads and heterogeneous SLOs: conservative caps throttle throughput, while generous ones starve other models. Adapting limits at runtime helps but cannot take effect immediately, since memory must be freed by completing in-flight requests—a process that can take seconds depending on request length and load. This coordination challenge arises because each engine maintains its own queue and greedily schedules requests as memory becomes available.
+
+To resolve this, \tool employs a slack-aware request arbitration strategy. Instead of maintaining separate queues per model, \tool uses a shared per-GPU request queue that arbitrates access to each GPU's physical memory pool to coordinate the memory usage for heterogeneous SLO requests. Our goal is to prioritize requests that are most critical for maximizing SLO attainment. \tool goes beyond simple deadline prioritization by leveraging the exact time slack of each request, which is defined as the buffer between a request's deadline and its required execution time.
+
+With both the deadline ($d_r$) and execution cost ($e_r$) known, \tool transforms the scheduling challenge into a classic deadline problem. We adopt the Moore-Hodgson algorithm~\cite{moore1968n}, which minimizes the number of deadline misses.
+As shown in Algorithm~\ref{alg:local}, given a set of requests $R$, \tool first sorts them in ascending order of their prefill completion deadlines (Line 1).
+Then, for each request in the sorted list, \tool appends it to the schedule list $S$ and checks whether it can finish within its TTFT SLO (Lines 3-7). 
+If the most recently added request cannot meet its deadline, \tool evicts the request in $S$ with the longest execution time (Lines 9–11). It then moves to the next request and continues this process until evaluating all requests.
+Finally, \tool dispatches the accepted requests in $S$ following their order in the schedule.
+
+\begin{algorithm}[t]
+\small
+\caption{GPU-Local Request Scheduling}
+\label{alg:local}
+\begin{algorithmic}[1]
+\Require A set of $n$ requests $R = \{r_1, r_2, \dots, r_n\}$. Each request $r_i$ has: a prompt length $p_i$, a chunked-prefill speed $c_i$ determined by the model serves it, a TTFT SLO $s_i$, and an arrival time $a_i$.
+
+\Ensure A subset of requests $S \subseteq R$ that can be executed in order to maximize TTFT SLO attainment.
+
+\State Sort $R$ in ascending order of deadlines $d_i = a_i + s_i$: 
+$r_1, r_2, \dots, r_n$ such that $d_1 \leq d_2 \leq \dots \leq d_n$.
+\State Initialize $S \leftarrow \emptyset$, $current\_time \leftarrow$ Timer.time()
+
+\For{$k=1$ to $n$}
+  \State Let $r \leftarrow r_{k}$, $e_r \leftarrow \frac{p_r}{c_r}$
+  \State Append $r$ to $S$
+  \State Update $current\_time \leftarrow current\_time + e_r$.
+  \If{$current\_time > a_{r} + s_{r}$}
+    \State \textcolor{blue}{/* pop the request with longest execution time */}
+    \State Let $r_{\text{max}} \leftarrow \arg\max\limits_{r' \in S} \frac{p_{r'}}{c_{r'}}$
+    \State Remove $r_{\text{max}}$ from $S$
+    \State Update $current\_time \leftarrow current\_time - \frac{p_{r_{\text{max}}}}{c_{r_{\text{max}}}}$
+  \EndIf
+\EndFor
+
+\State \Return $S$
+
+\end{algorithmic}
+\end{algorithm}
+
+\MyPara{Analysis.} \tool focuses arbitration on TTFT attainment because it gates when a request can start; once admitted, a request runs through decoding under its TPOT SLO, which is governed by memory headroom rather than queue ordering. Long-running decode requests are preempted only when memory is severely constrained, so a single heavy request cannot stall many newly admitted ones, matching the batch scheduling policies of SGLang and vLLM~\cite{sglang@arxiv23, kwon2023efficient}.
+
+Request scheduling ensures optimal TTFT attainment when chunked-prefill has prefill running at each inference step.
+This is because the prefill time $e_r$ of a request $r$ can be estimated as $e_r=\frac{p_r}{c_r}$, allowing us to compute the prefill completion time of any request $r_i$ in a sequence using $d_{r_i}=a_{r_i} + \sum_{i=1}^{n}\frac{p_{r_i}}{c_{r_i}}$, where $n$ is the number of requests (including $r_i$) waiting for processing.
+With this information, we can follow the proof of the original Moore-Hodgson algorithm~\cite{cheriyan2021simple} to prove the optimality of our scheduling algorithm.
+Our admission control ensures prefill runs at each inference step (so no starvation) by admitting a proper number of requests to each engine and preempting long decoding requests.

@@ -1,0 +1,135 @@
+
+
+
+\section{Methodology}\label{sec:method}
+We present \textsc{QuirkyMind}, a framework designed to encode, refine, and transfer persona representations across congruous and incongruous contexts. The core idea of QuirkyMind is to decouple persona \textit{stability} from its \textit{expression}, reconciling both into a unified latent state $\mathbf{z}$.
+
+
+
+
+\subsection{Overall Framework}
+As illustrated in Figure \ref{fig:framework}, the framework operates in three progressive stages:
+(a) \textbf{Traits Anchoring:} encodes dialogue history and transient stances into an initial latent state $\mathbf{z}^{(0)}$ via a dual stream encoder.
+(b) \textbf{In-Context Narrative Refinement:} iteratively updates the state through simulated dialogue, alternating between discriminative alignment (fixing semantic drift) and generative refinement (fixing verbalization).
+(c) \textbf{Persona-Steered Generalization:} transfers the refined state $\mathbf{z}^{(*)}$ to downstream tasks via parameter efficient adaptation.
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Traits Anchoring}\label{sec:encode}
+A persona with incongruity must blend long-term backstory traits with transient, context-specific stances. A single modality is insufficient: pure token sequences are prone to context override, while pure embeddings lack generative control. We propose anchoring the persona in two aligned spaces.
+
+
+
+
+\noindent \textbf{Token-Level Stream.}
+Given a background $\mathcal{B}$, a question $q$, and a human response $r$, we concatenate them into a unified text sequence. Let $E_{\text{tok}}$ denote the token embedding layer of the LLM. The token-level stream is defined as:
+\begin{equation}
+    X = E_{\text{tok}}([\mathcal{B}; q]); \quad X \in \mathbb{R}^{T \times H},
+\end{equation}
+where $T$ is the sequence length and $H$ is the hidden size. This stream preserves the precise lexical surface form required for text generation.
+
+
+
+
+\noindent \textbf{Sentence-Level Stream.}
+Simultaneously, we extract a semantic summary using a frozen sentence encoder $E_{\text{sent}}$ (e.g., Sentence-BERT). This provides a stable anchor invariant to minor phrasing changes. The sentence representation is:
+\begin{equation}
+    \hat{X} = E_{\text{sent}}([\mathcal{B}; q]); \quad \hat{X} \in \mathbb{R}^{d_p},
+\end{equation}
+where $d_p$ is the encoder dimension. To interface this semantic vector with the token space of the LLM, we project $\hat{X}$ into $S$ soft tokens using a parameterized MLP adapter $g_\phi: \mathbb{R}^{d_p} \to \mathbb{R}^{S \times H}$.
+
+
+
+ 
+
+\noindent \textbf{Initial Persona State.} 
+The initial persona state $\mathbf{z}^{(0)}$ is formed by concatenating the token stream (lexical details) and the projected sentence stream (semantic anchor):
+\begin{equation}
+    \mathbf{z}^{(0)} = [X; g_\phi(\hat{X})], \quad \mathbf{z}^{(0)} \in \mathbb{R}^{(T+S) \times H}.
+\end{equation}
+This state $\mathbf{z}^{(0)}$ is fed into the frozen backbone to produce the hidden state $\mathbf{h}^{(0)}$, serving as a compact summary of the identity before dialogue evolution.
+
+
+
+
+
+
+
+
+
+
+\subsection{In-Context Narrative Refinement}\label{sec:refine}
+Persona salience often fades or drifts as dialogue length increases. To counter this, we introduce an iterative refinement phase that simulates a multi-turn dialogue over turns $t=1 \dots m$. We employ an alternating optimization strategy to stabilize the persona state.
+
+
+\subsubsection{Discriminative Alignment Phase}
+To prevent the latent persona state from drifting toward generic priors as dialogue length grows, we anchor the persona representation in sentence space via a contrastive objective.
+Let $\mathbf{h}^{(t)} \in \mathbb{R}^H$ be the persona-conditioned hidden state at turn $t$. We map this state to the sentence space via a projection head $f_\theta: \mathbb{R}^H \to \mathbb{R}^{d_p}$:
+\begin{equation}
+    \mathbf{z}^{(t)}_{\text{sem}} = f_\theta(\mathbf{h}^{(t)}).
+\end{equation}
+For a question $q_t$, let $r_t$ be the correct persona response and $\mathcal{A}_{q_t} \setminus \{r_t\}$ be the set of incorrect options. We apply an InfoNCE objective to attract the persona state $\mathbf{z}^{(t)}_{\text{sem}}$ toward the true response embedding $E_{\text{sent}}(r_t)$ while repelling negatives:
+\begin{equation}
+\label{eq:disc-infonce}
+\begin{split}
+    &\mathcal{L}_{\text{InfoNCE}}(t, \theta) = - \log \frac{\exp(s(r_t))}{\sum_{r' \in \mathcal{A}_{q_t}} \exp(s(r'))}, 
+\end{split}
+\end{equation}
+where $s(r) = \cos(\mathbf{z}^{(t)}_{\text{sem}}, E_{\text{sent}}(r)) / \tau$, with $\tau$ as the temperature parameter. This explicitly penalizes drift by re-anchoring the latent state to the true stance at every turn.
+
+
+
+
+\subsubsection{Generative Refinement Phase}
+While discriminative alignment anchors the \textit{what} of persona identity, the model must also learn \textit{how} to verbalize these latent traits in natural language.
+To decouple these objectives, we freeze the projection head $f_\theta$ and optimize the soft prompt adapter $g_\phi$ by minimizing the negative log-likelihood of the target response $x^{(t)}$:
+\begin{equation}
+\label{eq:disc-ce}
+\begin{split}
+    \mathcal{L}_{\text{CE}}(t; \phi) = - \sum_{i=1}^{N_t} \log P_\Phi(x_i^{(t)} \mid x_{<i}^{(t)}, g_\phi(\hat{X}^{(t)})),
+\end{split}
+\end{equation}
+where $P_\Phi$ denotes the fixed conditional distribution of the LLM. This objective trains the adapter to project abstract semantic states into the LLM's input space, yielding soft token prefixes that effectively condition autoregressive generation.
+
+
+
+\subsubsection{Multi-Turn Optimization}
+Alternating between the two phases prevents overfitting to either representation geometry or surface form, ensuring the persona is both semantically anchored and fluently expressed.
+We alternate these phases to align representation geometry (InfoNCE\cite{rusak2024infonce}) with token-level fidelity (CE). Formally, over $m$ dialogue turns, we update the refinement parameters:
+
+
+
+
+\paragraph{Adaptation with Low-Rank Updates.}
+To adapt the refined state $\mathbf{z}^{(\star)}$ to downstream tasks without backbone disruption, we employ Low-Rank Adaptation (LoRA) \citep{hu2022lora}, injecting learnable matrices $\Phi = \{A, B\}$ into frozen weights $W$: 
+\begin{equation}
+\label{eq:lora}
+    W_{\text{eff}} = W + \frac{\alpha}{r}AB,
+\end{equation}
+where $r$ is the rank and $\alpha$ a scaling factor. We optimize only $\Phi$ on task data, keeping $W$ and the refinement adapters ($\theta, \phi$) frozen to effectively disentangles ``personality'' ($\mathbf{z}^{(\star)}$) from ``task capability'' ($\Phi$), facilitating robust transfer.
+    
+
+
+
+
+
+
+\subsection{Persona Steered Generalization}\label{sec:transfer}
+To enable task-specific formatting and logic without altering the underlying persona definition, \textsc{QuirkyMind} supports two exemplar adaptation tasks: (i) \textbf{Persona-Steered QA (PQA)}, which predicts categorical answers $\hat{Y}_q$ by maximizing the probability $p_{\phi,\theta,\Phi}(r \mid q, \mathcal{B}, \mathbf{z}^{(\star)})$; and (ii) \textbf{Narrative Inference (PNI)}, which samples open-ended responses $x$ from the distribution $p_{\phi,\theta,\Phi}(x \mid q, \mathcal{B}, \mathbf{z}^{(\star)})$. Algorithm~\ref{alg:quirkymind} (Appendix~\ref{sec:algo}) details the procedure. The per-layer update cost is $\mathcal{O}(LH)$, preserving linear scaling with sequence length $L$.
+
+
+
+
+
+
+
+

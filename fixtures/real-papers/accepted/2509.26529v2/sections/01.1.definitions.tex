@@ -1,0 +1,91 @@
+\section{Problem Statement}
+\label{sec:def}
+
+To introduce our problem definition, 
+we first present 
+a model of fault injection experiments of cascading failures 
+extending the model of general fault injection experiments 
+\cite{natella2016assessing}, 
+as well as our fault model and causality model. 
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\columnwidth]{figure/cascading-failure-model-new.pdf}
+    \caption{Model of fault injection experiments of cascading failures, 
+    characterized by different system states.}
+    \label{fig:cascade-fault}
+\end{figure}
+
+\textbf{Model of Fault Injection}. As shown in \Cref{fig:cascade-fault}, 
+fault injection experiments 
+are modeled using transitions between system states. 
+During normal system execution (\circledtext{4}), 
+a \textit{fault} can be injected (\circledtext{1}) at different time points (Correct State1 and State2) to trigger an \textit{error} (Error1 and Error2). 
+The injection can be performed in multiple experiments with different \textit{workloads} (i.e., system inputs). 
+An error 
+could be masked or corrected (\circledtext{2}) 
+by fault tolerance mechanisms such as 
+replication~\cite{hdfs_ha} and recomputation~\cite{Zaharia:2012}. 
+Under special conditions, 
+it could propagate (\circledtext{3}) 
+and corrupt other parts of the system state to \textit{cause} additional errors. 
+Such propagations (e.g., Error1 $\rightarrow$ Error2 and Error2 $\rightarrow$ Failure) may require distinct \textit{conditions} to be \textit{activated}. A \textit{condition} is a logical predicate over the system state. 
+
+Compared to the general fault injection model~\cite{natella2016assessing}, 
+our model captures the causal relationships between faults across \textbf{multiple} fault injection experiments.  
+Specifically, in one experiment, a fault ($f_1$) injected into Correct State1 triggers Error1 and subsequently \textit{causes} Error2 (without leading to Failure). 
+In a separate experiment, a fault ($f_2$) injected into Correct State2 triggers Error2 and subsequently \textit{causes} Failure. 
+The model captures the possible fault propagation Error1 $\rightarrow$ Error2 $\rightarrow$ Failure, provided that the activation conditions for each causal relationship are \textit{compatible}. 
+The definitions of \textit{fault}, \textit{causality}, and \textit{compatibility} are provided below. 
+
+\textbf{Fault Model}. 
+Traditionally, 
+\textit{error} refers to an incorrect system state, 
+while \textit{fault} refers to its cause, 
+such as software bugs and hardware faults~\cite{natella2016assessing}. 
+In the remainder of this paper, 
+we use \textit{fault} and \textit{error} interchangeably, 
+because we perform a specific type of fault injection 
+-- \textit{software-implemented fault injection}~\cite{natella2016assessing}, 
+which injects the \textit{effects} of a fault, 
+such as exceptions and delays, to simulate \textit{errors} directly and accelerate the experiment, 
+instead of injecting the actual faults. 
+
+\textbf{Causality Model}. 
+To capture the causal relationship between \textit{faults} (\textit{errors}), 
+we use \textit{counterfactual causality}: 
+$f_1$ is a counterfactual cause of $f_2$ if and only if $f_2$ would not occur unless $f_1$ occurs. 
+According to the ladder of causation~\cite{pearl2018book}, 
+\textit{counterfactual causality} offers 
+the strongest bond between cause and effect. 
+To the best of our knowledge, 
+although recently utilized in root cause localization~\cite{fariha2020causality,johnson2020causal}, 
+\textit{counterfactual causality} has not been used in fault injection 
+to analyze how faults propagate. 
+Existing analysis of failure propagation~\cite{li2018pcatch,li2024exchain} 
+utilizes the happens-before relationship~\cite{li2018pcatch} 
+and program dependencies~\cite{li2024exchain}, 
+both of which are weaker forms of causality.  
+
+\textbf{Problem Definition}. 
+Given a set of workloads $W = \{w_1, w_2, ...\}$, 
+our main goal is to identify the causal relationships between faults 
+($f_1 \rightarrow f_2$) across workloads, 
+and connect \textit{compatible} 
+identified causal relationships 
+to detect \textit{cycles}, 
+where a fault causes itself through a chain of connected causal relationships.
+
+Because the causal relationships may be identified 
+in different workloads (e.g., $f_1 \rightarrow f_2$ identified in $w_1$ and $f_2 \rightarrow f_3$ in $w_2$), 
+blindly connecting them could result in invalid causal chains 
+when the workloads are \textit{incompatible} -- the \textit{conditions} required to activate $f_1 \rightarrow f_2$ in $w_1$ and $f_2 \rightarrow f_3$ in $w_2$ are mutually exclusive. 
+Therefore, 
+we require the connected causal relationships to be \textit{compatible}, 
+meaning the conjunction of their activating conditions is satisfiable. 
+
+
+For simplicity of the paper, in a causal relationship $f_1 \rightarrow f_2$ identified from $w_1$, we name $f_2$ the \textit{interference} of $f_1$ on the system due to the fault injection. The causal relationship also forms a \textit{fault propagation chain} of length 1 from $f_1$ to $f_2$.
+
+

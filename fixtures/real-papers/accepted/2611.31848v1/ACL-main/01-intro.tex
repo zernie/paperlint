@@ -1,0 +1,31 @@
+\section{Introduction}\label{sec:intro}
+
+
+Personalization in Large Language Models (LLMs) is frequently treated as a static conditioning task. This view overlooks the reality that identity is not a fixed enumeration of attributes but a dynamic construct that unfolds through dialogue. A speaker can be simultaneously consistent with a long-term backstory yet surprising in specific contexts . A critical failure mode of current methods is their inability to model \textit{persona incongruity}, namely, instances where stable values collide with atypical stances (e.g., a ``climate activist'' who supports ``nuclear energy''). Figure~\ref{fig:motivation} illustrates how baselines drift into generic responses under such tension, whereas our framework maintains faithful steering.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figure/motivationcasev5.pdf}
+    \caption{\textbf{Faithful Persona Steering under Incongruity.} 
+(a) \textbf{Baselines (Llama 3.1-8B):} Standard prompting methods succumb to \textit{context override} ; salient but atypical stances (incongruities) fade over long contexts, causing the model to drift toward generic priors.
+(b) \textsc{QuirkyMind (Ours):} Anchors traits via a stable latent state refined by in-context evidence. This mitigates drift, preserving consistent performance in PQA and PNI even when identities defy stereotypes.}
+    \label{fig:motivation}
+\end{figure}
+
+
+
+Existing methods struggle to reconcile these tensions. Approaches relying on prompt engineering or Retrieval-Augmented Generation (RAG) often succumb to \textit{context drift}, where the persona fades over long contexts, or \textit{context override}, where the model favors recent tokens over the foundational backstory. Conversely, fine-tuning approaches tend to smooth the distribution, averaging out idiosyncratic traits to fit generalized patterns \citep{choi2024picle}. Consequently, models fail to control where the persona resides in the representation space, leading to inconsistent answers or loss of distinctiveness.
+
+
+
+
+
+To tackle the challenge of faithful steering, we propose \textsc{QuirkyMind}, a novel framework for in-context persona learning that robustly models both congruous and incongruous traits. Our key insight is to disentangle the \textit{definition} of identity from its \textit{expression}. QuirkyMind operates via three stages. First, \textbf{Traits Anchoring} constructs a robust initial persona state by fusing a sentence-level summary (semantic stability) with a token-level sequence (generative control) into a single latent state. Second, \textbf{In-Context Narrative Refinement} stabilizes this state through simulated multi-turn dialogue. We employ a dual-objective strategy: a discriminative InfoNCE loss anchors the persona in representation space to prevent drift, while a generative Cross-Entropy loss ensures faithful verbalization in token space. Finally, \textbf{Persona Steered Generalization} transfers this refined state to downstream tasks using parameter-efficient lightweight adapters, keeping the backbone frozen.
+Empirical evaluations across single and multi-turn settings demonstrate that QuirkyMind significantly outperforms baselines in Persona-Steered Question Answering (PQA) and Narrative Inference (PNI). It successfully consolidates persona knowledge without erasing necessary incongruities, maintaining alignment with both the backstory and issue-specific stances.
+Our contributions are as follows:
+\begin{itemize}[leftmargin=1em]
+    \item We formalize the challenge of \textit{persona incongruity}, revealing how existing methods fail to reconcile stable traits with atypical stances.
+    \item We propose \textsc{QuirkyMind}, a framework coupling semantic stability with expressive control via an alternating discriminative-generative objective.
+    \item Evaluations across diverse backstories show that our approach yields superior alignment and narrative coherence without suppressing the ``quirks'' that render a persona authentic.
+\end{itemize}

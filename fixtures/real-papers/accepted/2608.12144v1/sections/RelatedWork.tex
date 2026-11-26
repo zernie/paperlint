@@ -1,0 +1,26 @@
+% \vspace{-0.5cm}
+\section{Related Works}
+% \ali{Perhaps you can provide a more thorough related work and cite things like MC/DC-style adequacy by Sun \etal. and Ma \etal's DeepCT and so on.}
+
+DL test adequacy metrics have been widely studied and can be organized according to classical software testing coverage perspectives~\cite{bib:ammann2008introduction}, depending on the type of signal used to assess test effectiveness. 
+
+\textbf{Structural adequacy metrics.}
+Structural-based methods evaluate test adequacy using internal structural features and activation dynamics of the network. NC by Pei \etal~\cite{bib:pei2017deepxplore} and its variants in DeepGauge~\cite{bib:ma2018deepgauge} measure how test inputs activate neurons or cover activation patterns within the network. Beyond single-neuron activation, interaction-based criteria such as DeepCT~\cite{bib:ma2019deepct} and MC/DC-style adequacy by Sun \etal~\cite{bib:sun2018testing} extend structural testing principles to neuron interaction relationships, capturing complex inter-dependencies among layer activations.
+
+\textbf{Input-space adequacy metrics.}
+Input-space adequacy metrics estimate test adequacy by characterizing how test inputs cover or deviate within input-related representation spaces.
+SA~\cite{bib:kim2018guiding} evaluates test inputs by measuring their deviation from training data behavior in activation space.
+These methods quantify input novelty using activation traces and statistical distance measures, reflecting how ``surprising'' a test input is with respect to previously observed behaviors.
+IDC~\cite{bib:dola2023input} assesses test adequacy in learned feature spaces, employing VAE~\cite{bib:kingma2014autoencoding,bib:higgins2017betavae} and combinatorial interaction testing over latent features to measure coverage of input feature interactions.
+
+\textbf{Boundary-based metrics.}
+Boundary-based approaches evaluate test adequacy using model uncertainty and decision-region characteristics. DeepBoundary by Liu \etal~\cite{bib:liu2022deepboundary} characterizes test dataset adequacy by modeling the distribution of inputs with respect to the distance to the decision boundary, capturing how close test inputs are to boundary regions.
+
+\textbf{Mutation-based metrics.}
+Mutation-based approaches evaluate test dataset effectiveness by introducing model-level or source-level mutations and measuring whether the test dataset can distinguish the original model from its mutated versions.
+Representative methods include DeepMutation++~\cite{bib:hu2019deepmutation++}, DeepMutation~\cite{bib:ma2018deepmutation}, and DeepCrime~\cite{bib:humbatova2021deepcrime}.
+
+Existing available implementations, such as DeepXplore~\cite{bib:pei2017deepxplore}, IDC~\cite{bib:dola2023input}, and DeepCrime~\cite{bib:humbatova2021deepcrime}, only focus on specific metrics rather than providing a unified workflow. More broadly, many proposed adequacy metrics remain difficult to run in practice: some lack publicly available implementations, while others depend on broken packages, limited maintenance, or complicated environment setup. A recent empirical study by You \etal~\cite{bib:you2025navigating} further highlights these practical challenges. Practitioners report difficulties in selecting and applying adequacy metrics due to a lack of unified tooling and inconsistent workflows across implementations.
+
+
+In contrast, \tool provides a unified and extensible framework for DL test adequacy evaluation, enabling consistent execution and reuse of representative metrics under a common workflow.

@@ -1,0 +1,13 @@
+\section{Limitations and Broader Impacts}
+\label{app:discussion}
+
+\noindent\textbf{Limitations.}
+\emph{(i) Synthetic eval coverage.} STRANGE-Bench reflects SD~3.5L's rendering distribution and is best read as a paired comparison instrument alongside natural-image evaluation, not in place of it.
+\emph{(ii) Vocabulary scope.} Both the diagnostic and STRANGE-Bench operate on COCO-$80$ as it is important to study on a manageable scale to exactly quantify typicality bias. Richer vocabularies (long-tail and fine-grained categories) require further regeneration, which our pipeline supports. 
+Future work could be devoted to studying the impact on long-tail and finer-grained categories based on our protocol.
+\emph{(iii) NPMI as a typicality proxy.} NPMI captures statistical co-occurrence regularities, not semantic or functional plausibility. Refining the typicality axis with semantic priors or human ratings is a natural follow-up. 
+\emph{(iv) VLM / LMM mitigation.} CLIP, OpenCLIP, and \llava{}
+appear in our diagnostic but not the mitigation study. Studying augmentations that lend themselves to VLM / LMM pre-training or fine-tuning is an obvious next step.
+
+\noindent\textbf{Broader impacts.} Co-occurrence shortcuts inflate in-distribution metrics while silently degrading behavior on under-represented compositions. Our contribution is a model-agnostic diagnostic (NPMI-paired splits, STRANGE-Bench) and a data-side mitigation (AAS) that together let practitioners \emph{measure} this shortcut and, where it matters, push back. The construction recipe is general (\S\ref{app:strange:release}): swapping the vocabulary or co-occurrence source instantiates a fresh probe for any task family. Releasing dataset, code, and pipeline under permissive licenses (CC-BY 4.0 / MIT) is intended to lower the cost of auditing co-occurrence shortcuts in domains beyond COCO to LVIS, Objects365, fine-grained or medical vocabularies. We restrict the dataset's intended use to evaluation to keep the distinction between probe and training distribution intact.
+As with any generative-model output, STRANGE-Bench may inherit cultural or demographic biases from SD~3.5L's training distribution, occasionally producing unintended or sensitive imagery. We restrict the vocabulary to common COCO object categories and audit each scene at the consistency-check stage to mitigate this risk.

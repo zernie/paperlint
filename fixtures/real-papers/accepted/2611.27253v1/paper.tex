@@ -1,0 +1,2411 @@
+%%%%%%%% ICML 2026 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+\usepackage{makecell} % for \makecell command
+\usepackage{enumitem}
+\usepackage{adjustbox}
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2026} with \usepackage[nohyperref]{icml2026} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage[accepted]{icml2026}
+
+% For preprint, use
+% \usepackage[preprint]{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2026}
+
+\usepackage{multirow}
+\usepackage{cancel}
+\input{notations.tex}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Proactive Defense Benchmark against Deepfake Generation}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Proactive Defense Benchmark against Deepfake Generation}
+
+  % It is OKAY to include author information, even for blind submissions: the
+  % style file will automatically remove it for you unless you've provided
+  % the [accepted] option to the icml2026 package.
+
+  % List of affiliations: The first argument should be a (short) identifier you
+  % will use later to specify author affiliations Academic affiliations
+  % should list Department, University, City, Region, Country Industry
+  % affiliations should list Company, City, Region, Country
+
+  % You can specify symbols, otherwise they are numbered in order. Ideally, you
+  % should not use this facility. Affiliations will be numbered in order of
+  % appearance and this is the preferred way.
+  \icmlsetsymbol{equal}{*}
+
+  \begin{icmlauthorlist}
+    \icmlauthor{Joonhyuk Baek}{equal,unist_1}
+    \icmlauthor{Wonjune Seo}{equal,unist_2}
+    \icmlauthor{Jae-yun Kim}{unist_1}
+    \icmlauthor{Saerom Park}{unist_1,unist_3}
+    \icmlauthor{Hoki Kim}{cau}
+  \end{icmlauthorlist}
+
+  \icmlaffiliation{unist_1}{Department of Industrial Engineering, Ulsan National Institute of Science and Technology (UNIST), Ulsan, South Korea}
+  \icmlaffiliation{unist_2}{Department of Computer Science and Engineering, Ulsan National Institute of Science and Technology (UNIST), Ulsan, South Korea}
+  \icmlaffiliation{unist_3}{Artificial Intelligence Graduate School, Ulsan National Institute of Science and Technology (UNIST), Ulsan, South Korea}
+  \icmlaffiliation{cau}{Department of Industrial Security, Chung Ang University, Seoul, South Korea}  
+  % \icmlaffiliation{yyy}{Department of XXX, University of YYY, Location, Country}
+  % \icmlaffiliation{comp}{Company Name, Location, Country}
+  % \icmlaffiliation{sch}{School of ZZZ, Institute of WWW, Location, Country}
+
+  \icmlcorrespondingauthor{Saerom Park}{srompark@unist.ac.kr}
+  \icmlcorrespondingauthor{Hoki Kim}{hokikim@cau.ac.kr}
+
+  % You may provide any keywords that you find helpful for describing your
+  % paper; these are used to populate the "keywords" metadata in the PDF but
+  % will not be shown in the document
+  \icmlkeywords{Deepfake, Adversarial Attack, Benchmark}
+
+  \vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column listing the
+% affiliations and the copyright notice. The command takes one argument, which
+% is text to display at the start of the footnote. The \icmlEqualContribution
+% command is standard text for equal contribution. Remove it (just {}) if you
+% do not need this facility.
+
+% Use ONE of the following lines. DO NOT remove the command.
+% If you have no special notice, KEEP empty braces:
+% \printAffiliationsAndNotice{}  % no special notice (required even if empty)
+% Or, if applicable, use the standard equal contribution text:
+\printAffiliationsAndNotice{\icmlEqualContribution}
+
+\begin{abstract}
+Despite the proliferation of proactive defenses against deepfakes, the lack of a unified evaluation protocol precludes fair comparison and masks critical vulnerabilities. To bridge this gap, we present the first comprehensive benchmark that systematically assesses disruption, robustness, and transferability encompassing pixel, perceptual, and identity metrics. Our extensive analysis reveals that fidelity and identity metrics capture orthogonal performance axes, often leading to conflicting interpretations when relied upon individually. Furthermore, we identify a fundamental trade-off where peak white-box performance signals overfitting, and we introduce a calibrated evaluation to correct generator-induced identity bias. By exposing these blind spots, we establish a rigorous standard to guide the development of genuinely generalizable protections. Project page is available at: https://proactivedefensebenchmark.github.io/
+\end{abstract}
+
+\section{Introduction}
+Since the emergence of deepfake generation techniques~\cite{tolosana2020deepfakes}, publishing facial images online has inherently exposed individuals to the risk of malicious misuse~\cite{harris2018deepfakes, chesney2019deep}. As deepfake generation becomes increasingly accessible and realistic, post-hoc detection methods~\cite{choi2024exploiting, ba2024exposing, tan2024frequency, yang2025d} alone are often insufficient to mitigate harm, as they operate only after manipulated content has already been created. This has motivated increasing interest in proactive defense~\cite{li2024landmarkbreaker}, where images are protected before publication to interfere with deepfake generation itself.
+\begin{figure}[!t]
+    \centerline{\includegraphics[width=0.8\linewidth]{figures/simswap_radar.png}}
+    \caption{Performance of proactive defenses on SimSwap using multiple evaluation metrics. Additional results for other generators are provided in Appendix~\ref{appendix:qualitative}.}
+    \label{fig:simswap_performance} 
+\end{figure}
+
+\begin{figure*}[t!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/Overview.pdf}
+    \caption{Overview of the proactive defense benchmark considered in this work. The figure illustrates the end-to-end evaluation pipeline, from image preparation and proactive defense to deepfake generation, robustness and transferability analysis, and evaluation.}
+    \label{fig:overview}
+\end{figure*}
+
+Recent years have seen a rapid diversification of proactive defense strategies~\cite{ruiz2020disrupting, zhang2024dual, lee2025scol}. However, unlike the domain of deepfake detection where unified protocols and comprehensive benchmarks are well-established~\cite{yan2023deepfakebench, deng2024towards, le2025sok}, the evaluation for proactive defense remains critically fragmented. Although recent surveys~\cite{nguyen2025survey} exist, they primarily focus on methodological taxonomy rather than providing comprehensive empirical benchmarks. Consequently, existing studies rely on incompatible choices of metrics and generators, rendering cross-paper comparisons ambiguous and difficult. Furthermore, current evaluations frequently overlook the critical gap between ideal settings and real-world deployment. In practice, facial images are frequently subjected to transformations such as JPEG compression and degradation~\cite{pasquini2021media}. While these transformations can substantially degrade the effectiveness of proactive defense~\cite{guo2017countering, tian2024evaluating}, their effects are often neglected in current protocols. Moreover, assessments of transferability are often misleading. While some prior studies address black-box scenarios, they predominantly rely on a narrow set of target generators or those sharing similar architectures~\cite{wang2022anti, qu2024df, shim2025leat}. This restricted evaluation scope masks the severe performance collapse that typically occurs against architecturally diverse models, thereby risking a significant overestimation of defense generalizability against realistic, unknown threats~\cite{dong2023restricted}.
+
+To address these limitations, establishing a comprehensive benchmark is essential not only for ensuring fair comparison but also for uncovering the complex trade-offs between disruption, robustness, and transferability, as reflected in Figure~\ref{fig:simswap_performance}. Through this unified protocol, we aim to shift the research focus from maximizing performance in isolated scenarios to developing defenses that are genuinely robust and generalizable against diverse practical threats.
+
+Our main contributions are summarized as follows:
+\begin{itemize}[leftmargin=*, nosep]
+    \item We present the first comprehensive benchmark for proactive defense that systematically defines and assesses the complex correlations between the three key factors: \textbf{Disruption}, \textbf{Robustness}, and \textbf{Transferability}. This work provides a rigorous standard for the integrated assessment of diverse defense mechanisms.
+    
+    \item We concretize the definition of ``disruption'' by establishing a comprehensive taxonomy of evaluation metrics across four key dimensions: \textbf{Pixel-level Fidelity}, \textbf{Perceptual Fidelity}, \textbf{Identity Disruption}, and \textbf{Visual Quality}. %Furthermore, we introduce a \textbf{calibrated identity ratio (CIDR)} to decouple defense efficacy from generative artifacts, constructing a multi-dimensional system that prevents bias from partial metrics.
+    
+    \item Through extensive empirical experiments, we identify critical blind spots in current practices, revealing a \textbf{fundamental trade-off} between optimization specificity and cross-model generalizability. We demonstrate that fidelity and identity metrics capture distinct performance axes, and that peak white-box performance often signals overfitting rather than genuine protection, underscoring the necessity of a balanced evaluation protocol.
+\end{itemize}
+
+\section{Related Work}
+\paragraph{Deepfake Generation Models.}
+\label{subsec:deepfake_gen}
+Deepfake generation models exhibit significant diversity in their synthesis objectives and architectural designs, which leads to fundamental differences in how facial information is manipulated~\cite{choi2018stargan, chen2020simswap}. These approaches can be broadly categorized into attribute manipulation and face swap~\cite{pei2024deepfake}. Attribute manipulation models~\cite{choi2018stargan,patashnik2021styleclip,preechakul2022diffusion} aim to modify specific attributes (e.g., hairstyle, age, or facial expression) while preserving the underlying identity. These methods mainly leverage Generative Adversarial Networks (GANs) or Diffusion Models (DMs) to disentangle and traverse the latent representation space for precise or localized control of facial attributes without altering identity. In contrast, face swap models~\cite{chen2020simswap, richardson2021encoding, shiohara2023blendface} aim to replace the identity of a target face by injecting identity-related features from a source image while preserving pose, facial expression, and lighting conditions of the target. Earlier face swap approaches~\cite{oldpan_faceswap_pytorch} typically used encoder-decoder structures, in which identity transfer can be achieved through manipulation of latent representations. Subsequent works have incorporated stronger generative priors such as GANs and DMs to improve synthesis fidelity, leading to more diverse methods of deepfake generation~\cite{preechakul2022diffusion, kim2022diffusionclip, zhao2023diffswap, kim2025diffface}. These continuous architectural evolutions have significantly narrowed the gap between real and generated facial imagery, achieving unprecedented levels of photorealism and identity consistency.
+
+\begin{table*}[t!]
+    \centering
+    \small
+    \scriptsize
+    \caption{Categorization of evaluation metrics. Metrics are grouped by their measurement goals. Metrics adopted in our main benchmark are highlighted in \textbf{bold}, while auxiliary metrics evaluated in the Appendix are \underline{underlined}.}
+    \label{tab:metric_reference}
+
+    % \begin{tabular}{p{3.2cm} c c p{8.5cm}}
+    \begin{tabular}{c c c p{9.5cm}}
+        \toprule
+        \textbf{Measurement Goal} & \textbf{Metric} & \textbf{Proposed} & \textbf{Used in Prior Works} \\
+        \midrule
+
+        \multirow{1}{*}{\textbf{Pixel-wise Fidelity}}
+         & \textbf{MSE} & - & \cite{ruiz2020disrupting}, \cite{wang2022anti}, \cite{qiao2024scalable}, \cite{qu2024df}, \cite{tang2024feature}, \cite{jeong2025faceshield}, \cite{shim2025leat} \\
+         & \underline{PSNR} & - & \cite{wang2022anti}, \cite{aneja2022tafim}, \cite{van2023anti}, \cite{qiao2024scalable}, \cite{qu2024df}, \cite{tang2024feature}, \cite{jeong2025faceshield}, \cite{lee2025scol}, \cite{wang2025nullswap} \\
+         & \underline{SR} & \cite{ruiz2020disrupting} & \cite{ruiz2020disrupting}, \cite{wang2022anti}, \cite{qu2024df} \\
+         & MAE & - & \cite{ruiz2020disrupting}, \cite{qu2024df} \\
+         & $\text{SR}_{mask}$ & \cite{huang2022cmua} & \cite{huang2022cmua}, \cite{zhang2024dual}, \cite{qiao2024scalable},\cite{tang2024feature}, \cite{qu2025id} \\
+        \cmidrule(lr){1-4}
+
+        \multirow{1}{*}{\textbf{Perceptual Fidelity}}
+         & \textbf{LPIPS} & \cite{zhang2018unreasonable} & \cite{aneja2022tafim}, \cite{van2023anti}, \cite{qu2024df}, \cite{shim2025leat}, \cite{wang2025nullswap}, \cite{wang2025faceswapguard} \\
+         & \underline{SSIM} & \cite{wang2004image} & \cite{wang2022anti}, \cite{dong2023restricted}, \cite{qiao2024scalable}, \cite{qu2024df}, \cite{tang2024feature}, \cite{lee2025scol}, \cite{wang2025nullswap} \\
+         & FSIM & \cite{zhang2011fsim} & \cite{dong2023restricted} \\
+         & VGG Loss & \cite{johnson2016perceptual} & \cite{aneja2022tafim} \\
+         & FID & \cite{heusel2017gans} & \cite{huang2022cmua}, \cite{tang2024feature}\\
+         & CDSR & \cite{shim2025leat} & \cite{shim2025leat} \\
+        \cmidrule(lr){1-4}
+
+        \multirow{1}{*}{\textbf{Identity Disruption}}
+        & \textbf{CIDR} & \textbf{ours} & - \\
+          & \underline{ID Loss} & \cite{deng2019arcface} & \cite{van2023anti}, \cite{qu2024df}, \cite{qu2025id} , \cite{jeong2025faceshield}, \cite{shim2025leat}, \cite{wang2025nullswap}, \cite{lee2025scol} \\
+          & $\text{FN}_{acc}$ & \cite{zhang2024dual} & \cite{zhang2024dual} \\
+          & FMR & \cite{wang2025faceswapguard} & \cite{wang2025faceswapguard} \\
+         
+        \cmidrule(lr){1-4}
+
+        \multirow{1}{*}{\textbf{Visual Quality}}
+         & \textbf{BRISQUE} & \cite{mittal2012no} & \cite{dong2023restricted}, \cite{van2023anti} \\
+         & \underline{FDFR} & \cite{van2023anti} & \cite{van2023anti} \\
+         & TFHC & \cite{hyperfas2020} & \cite{huang2022cmua}, \cite{tang2024feature} \\
+         & SER-FQA & \cite{terhorst2020ser} & \cite{van2023anti} \\
+
+        \bottomrule
+    \end{tabular}
+    % \vspace{-10pt}
+\end{table*}
+
+\paragraph{Proactive Defense against Deepfake Generation.}
+\label{subsec:proactive}
+Proactive defense aims to disrupt the deepfake generation process by preemptively modifying input images prior to their release to prevent downstream misuse. %While most proactive defenses share the common goal of disrupting deepfake synthesis, their implementation and underlying mechanisms differ significantly. 
+Early studies on deepfake proactive defense adopted pixel-level adversarial attacks designed to maximize distortion in the output space of deepfake generators with imperceptible perturbations~\cite{ruiz2020disrupting, aneja2022tafim, huang2022cmua}. Subsequent studies extended these manipulations beyond raw pixel space or Lab color space~\cite{wang2022anti} to more robust feature representations by considering latent space disruption~\cite{shim2025leat} or identity disruption~\cite{lee2025scol}. In addition, identity disruption methods have also been explored under black-box assumptions, disrupting the synthesis process by perturbing the identity extraction process~\cite{wang2025nullswap} or obfuscating identity-related semantic embeddings~\cite{wang2025faceswapguard} rather than requiring access to the deepfake generator itself. 
+
+% Appendix~\ref{sec:appendix_deepfake} presents representative deepfake generation models and proactive defense methods studied in prior literature.
+
+\section{Analysis of Proactive Defense Evaluations}
+\label{sec:analysis}
+To demonstrate the necessity of a comprehensive benchmark, we formalize the evaluation objectives of proactive defenses and identify the systemic limitations inherent in current evaluation protocols.
+
+\subsection{Notation and Definitions}
+\label{sec:definition}
+Let $\gX$ denote the image space. Given a target deepfake generation model $G: \gX \rightarrow \gX$, the objective of proactive defense is to find a transformation $f$ that solves:
+\begin{equation}
+\label{eq:proactive_obj}
+\max_f \gL\big(G(\vx), G(f(\vx))\big) \quad \text{s.t. } d\big(\vx, f(\vx)\big) \leq \epsilon,
+\end{equation}
+where $\gL: \gX \times \gX \rightarrow \mathbb{R}^{+}$ is a discrepancy function (e.g., MSE, LPIPS, or identity distance) measuring the degradation of the synthesis result, with higher values indicating stronger disruption of deepfake generation. $d$ denotes perceptual constraint (typically an $\ell_p$-norm) ensuring the protected image $f(\vx)$ is visually indistinguishable from the original $\vx$. Thus, a proactive defense is defined as a transformation function $f_G: \gX\rightarrow \gX$ that maps an original image $\vx \in \gX$ to a protected counterpart $\vx_{\text{adv}} = f_G(\vx)$.  In the context of adversarial perturbations, $f_G$ typically adopts an additive form, $f_G(\vx) = \vx + \vdelta$.
+ %While $\gD$ is often realized as an $L_p$-norm in pixel space, it may also include more complex constraints in transformed domains to ensure the perturbation remains imperceptible to humans. 
+%The detailed formulations of proactive methods are provided in Appendix~\ref{appendix:detail_proactive}.
+
+In this study, we consider two categories of deepfake generation models, which differ in inputs and synthesis objectives:
+\begin{itemize}[leftmargin=*, nosep]
+    \item \emph{Attribute Manipulation} aims to modify specific semantic attribute condition $c$ (e.g., age, expression, or hairstyle) of the input image $\vx$. The synthesis process, denoted as $G_{\text{attr}}(\vx, c)$, requires the generator to perform the manipulation while preserving the original identity and image quality.
+    \item \emph{Face Swap} involves a source image $\vx_s$ (providing identity) and a target image $\vx_t$ (providing attributes, pose, and illumination). A face swap generator $G_{\mathrm{swap}}(\vx_s, \vx_t)$ aims to transfer the source
+    identity onto the target while preserving the target’s structural and visual attributes.
+\end{itemize}
+
+\subsection{Defense Objectives and Dimensions}
+\label{sec:formulation}
+
+A proactive defense aims to neutralize deepfake generation from the input image $\vx$. Given a generation model $G_{\mathrm{att}}(\vx, c)$, the defense generates a protected image $\vx_{\adv} = f_{G_{\mathrm{att}}}(\vx)$ such that the resulting output $G_{\mathrm{att}}(\vx_{\adv}, c)$ fails to execute the intended manipulation. In the context of a face swapping model $G_{\mathrm{swap}}(\vx_s, \vx_t)$, the defense typically produces $\vx_{\adv} = f_G(\vx_s)$ which induces generation failure, thereby protecting the source image $\vx_s$.
+
+The primary challenge in evaluating proactive defenses lies in the lack of standardized success metrics and the disparate assumptions across prior studies. To address this, we formalize evaluation goals by identifying specific synthesis failure modes aligned with the objectives defined in Section~\ref{sec:definition}.
+%
+The effectiveness of these defenses is measured by their ability to induce specific failure modes in deepfake models. We categorize these failures into three primary disruptions:
+\begin{itemize}[leftmargin=*, nosep]
+    \item \emph{Synthesis Disruption}: A model fails to apply the attribute $c$ or maintain the structural property of the target image.
+    \begin{itemize}[nosep]
+        \item $G_{\mathrm{att}}(\vx_{\adv}, c) \neq G_{\mathrm{att}}(\vx, c)$
+        \item $G_{\mathrm{swap}}(\vx_{\adv}, \vx_t) \neq G_{\mathrm{swap}}(\vx_s, \vx_t)$
+    \end{itemize}    
+    \item \emph{Identity Disruption}: The synthesized output fails to preserve the identity of the source image. 
+    \begin{itemize}[nosep]
+        \item $id(\vx) \neq id\big(G_{\mathrm{att}}(\vx_{\adv}, c)\big)$
+        \item $id(\vx_s) \neq id\big(G_{\mathrm{swap}}(\vx_{\adv}, \vx_t)\big)$
+    \end{itemize}    
+    \item \emph{Visual Quality Degradation}: The defense induces noticeable artifacts, blurring, or unnatural distortions in the synthesized output.
+\end{itemize}
+For notational simplicity in the subsequent analysis, we denote both generative paradigms as $G$, omit explicit reference to the target attribute $c$ or image $\vx_t$, and let $\vx$ represent the original image (where $\vx = \vx_s$ for face swap).
+
+We also characterize proactive defenses across four fundamental technical dimensions to provide a structured analysis of the defensive landscape:
+\begin{itemize}[leftmargin=*, nosep]
+\item \emph{Access Regime (White-box vs. Black-box)}: We consider white-box settings operating under full access to the generator $G$, and black-box settings where the defender has no direct knowledge of $G$ and relies on cross-model transferability or surrogate models.
+\item \emph{Imperceptibility Constraints}: Imperceptibility $d(\vx,\vx_\adv)$ can be formalized using pixel-space $L_p$-norm constraints or perceptual metrics such as LPIPS.
+\item \emph{Methodologies (Optimization vs. Model-based Learning)}: We distinguish between optimization-based approaches that compute an explicit perturbation $\vdelta = \vx_{\adv} - \vx$, and model-based approaches that learn a perturbation or reconstruction function $f_G$ to generate protected images.
+\item \emph{Defense Objectives (disruption vs. identity)}: We differentiate between disruption methods aiming for global synthesis failure, and identity-related methods specifically targeting the obfuscation or invalidation of facial identity.
+\end{itemize}
+Beyond these core dimensions, additional properties such as ensemble-based strategies, universal perturbations, and robustness-aware training can further differentiate defense methods. 
+%
+In Appendix~\ref{sec:appendix_deepfake}, Table~\ref{tab:baselines_overview} provides a concise overview of representative deepfake generation models and proactive defense methods from prior literature.
+% \paragraph{Limitations of Current Evaluations.}
+% Despite the formal clarity of these failure modes, current evaluation practices often rely on implicit simplifications that can lead to a systematic overestimation of defensive utility. Current studies typically evaluate defenses under isolated settings, such as a fixed manipulation task or a limited set of metrics. As a result, the reported performance may conflate different failure behaviors or overlook critical dimensions of robustness. In particular, evaluations restricted to a narrow set of generators may obscure the limited transferability of defenses across architectures or generative priors. Similarly, relying on individual metrics in isolation can lead to ambiguous conclusions because of metric entanglement, as identity disruption, visual degradation, and attribute failure are often interdependent. Moreover, many evaluations assume idealized input conditions, where protected images are directly consumed by generators without intermediate transformations, which may not hold in realistic deployment scenarios. These limitations suggest that accurately assessing proactive defenses requires evaluation protocols that jointly consider generator diversity, multi-aspect failure behaviors, and practical robustness. This observation further motivates the need for a unified and systematic benchmarking framework.
+
+\section{Our Benchmark}
+\label{sec:benchmark}
+This section introduces our benchmark for the unified evaluation of proactive deepfake defenses. Addressing the limitations identified in Section~\ref{sec:analysis}, our benchmark aims to standardize evaluation across three key aspects: (i) diverse deepfake generators and proactive defense methods, (ii) multi-dimensional evaluation metrics that capture distinct synthesis failure behaviors, and (iii) consideration of practical deployment conditions.
+Figure~\ref{fig:overview} illustrates our evaluation pipeline. Each defense generates a protected version of an original image, both of which are processed by deepfake generators. We then quantify synthesis disruption, identity disruption, and visual quality by comparing the resulting outputs. To reflect practical deployment scenarios, we further evaluate robustness and transferability.
+
+\subsection{Evaluation Datasets and Algorithms}
+\label{sec:data_alg}
+\paragraph{Standard Dataset.}
+We adopt representative face datasets that are well-suited to support both attribute manipulation and face swap tasks. We utilize the CelebA-HQ~\cite{karras2017progressive} dataset as our primary benchmark due to its high quality and wide adoption in the field. To ensure consistent input dimensions across diverse generators and defense methods, all images are resized to a resolution of $256 \times 256$. Appendix~\ref{appendix:dataset} summarizes datasets commonly used in prior proactive defense studies. To further validate the generalizability of our findings, we additionally conduct experiments on FFHQ and VGGFace2-HQ in Appendix~\ref{appendix:ffhq} and~\ref{appendix:vggface}, where consistent trends are observed across all metrics and generators.
+
+\paragraph{Deepfake Generators.}
+To evaluate the generation tasks categorized in Section~\ref{sec:definition}, we select deepfake generation models: StarGAN~\cite{choi2018stargan}, StyleCLIP~\cite{patashnik2021styleclip}, and DiffAE~\cite{preechakul2022diffusion} for attribute manipulation, and SimSwap~\cite{chen2020simswap}, pSp-mix~\cite{richardson2021encoding}, BlendFace~\cite{shiohara2023blendface}, DiffSwap~\cite{zhao2023diffswap}, and DiffFace~\cite{kim2025diffface} for face swap. These models have been widely used in prior proactive defense studies and provide publicly available implementations, facilitating reproducibility and fair comparison.
+
+\paragraph{Proactive Defenses.}
+Regarding proactive defenses, we leverage the taxonomy defined in Section~\ref{sec:definition} to select a diverse set of representative baselines that span various access regimes, methodological paradigms, and defense objectives. As summarized in Table~\ref{tab:baselines_overview}(b), our benchmark includes: PGD~\cite{madry2017towards}, Disrupting~\cite{ruiz2020disrupting}, Anti-Forgery~\cite{wang2022anti}, DF-RAP~\cite{qu2024df}, Latent Attack~\cite{kos2018adversarial}, SCOL~\cite{lee2025scol}, and NullSwap~\cite{wang2025nullswap}. We prioritize official implementations whenever available; for NullSwap, we reproduce the method following the algorithmic details reported in the original work. 
+
+\subsection{Multi-Dimensional Evaluation Metrics}
+\label{subsec:evaluation}
+Designing evaluation metrics for proactive defense poses unique challenges, as effective defenses may induce qualitatively different failure behaviors depending on the target deepfake generation task and model architecture. Guided by the failure mode analysis in Section~\ref{sec:formulation}, we evaluate the \emph{protectability} of proactive defenses along several complementary dimensions that collectively capture their effectiveness, specificity, and operational reliability. Table~\ref{tab:metric_reference} categorizes evaluation metrics used in prior work according to their measurement domain and evaluation objective.
+\begin{itemize}[leftmargin=*, nosep]
+    \item \emph{Synthesis Disruption} can be measured by the discrepancies between $G(\vx)$ and $G(\vx_{\adv})$ using:
+    \begin{itemize}[leftmargin=*, nosep]
+        \item \emph{Pixel-level Fidelity} captures low-level reconstruction differences such as MSE, $\gL_\mathrm{MSE}(G(\vx), G(\vx_\adv))$, and PSNR, $\gS_\mathrm{PSNR}(G(\vx), G(\vx_\adv))$.
+        \item \emph{Perceptual Fidelity} reflects perceptually meaningful deviations in the generated outputs such as SSIM, $\gS_{\mathrm{SSIM}}(G(\vx), G(\vx_\adv))$, and LPIPS, $\gL_{\mathrm{LPIPS}}(G(\vx), G(\vx_\adv))$.
+    \end{itemize}
+    \item \emph{Identity Disruption} can be evaluated by failures in preserving or transferring identity, measured using a pretrained face recognition model to compute ID Loss ($\gL_{\mathrm{ID}}$), face matching rate ($\mathrm{FMR}$), or accuracy ($FN_{acc}$)~\cite{deng2019arcface, wang2025faceswapguard, zhang2024dual}. In this study, we introduce a calibrated identity ratio (CIDR, detailed below) to decouple the inherent domain shift induced by $G(\cdot)$. 
+    \item \emph{Visual Quality Degradation} can be measured by no-reference quality and face-specific operational metrics on $G(\vx_{\adv})$, such as BRISQUE, face detection failure rate (FDFR), and true face with high confidence (TFHC).
+\end{itemize}
+We provide detailed explanations of all evaluation metrics in Appendix~\ref{appendix:metrics}. While our primary evaluation focuses on the disruption effectiveness, we also provide comparisons between $\vx$ and $\vx_{\adv}$ in Appendix~\ref{appendix:impercep} to verify the imperceptibility.
+% . We do not explicitly include imperceptibility of protected images as an evaluation dimension, as we enforce a unified perturbation budget for defenses that operate in pixel space, ensuring fair comparison across methods.
+
+\paragraph{Calibrated Identity Metric for Unbiased Evaluation.}
+In most studies, identity disruption is measured by ID Loss using $\gL_{\mathrm{ID}}(G(\vx), G(\vx_{\adv}))$~\cite{van2023anti, shim2025leat, wang2025nullswap, lee2025scol} or $\gL_{\mathrm{ID}}(\vx, G(\vx_{\adv}))$. However, they often fail to isolate defensive efficacy because ID Loss is inherently biased by the domain shift and artifacts introduced by the generator $G$ itself.
+To decouple the defense's impact from these generative artifacts, we introduce a calibrated identity ratio (CIDR):
+\begin{equation}
+\label{eq:rel_idloss}
+\mathcal{R}_{\mathrm{ID}}(\mathbf{x}, \mathbf{x}_{\mathrm{adv}})
+= 1 - \frac{\mathcal{L}_{\mathrm{ID}}(\mathbf{x}, G(\mathbf{x}))}
+{\mathcal{L}_{\mathrm{ID}}(\mathbf{x}, G(\mathbf{x}_{\mathrm{adv}}))} 
+\end{equation}
+By normalizing the distance between the source identity $\vx$ and the protected output $G(\vx_{\adv})$ against the baseline synthesis error $\gL_{\mathrm{ID}}(\vx, G(\vx))$, CIDR\footnote{For numerical stability and consistent aggregation, ROB and TE are clipped at an upper bound of $1$, while CIDR is clipped at $0$. \label{setting}} explicitly accounts for the generator’s inherent identity distortion, providing a more objective and unbiased measure of identity obfuscation. 
+
+% \begin{figure}[t!]
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{figures/avgRank_main.pdf}
+%     \caption{Qualitative comparison of selected proactive defenses based on the AvgRank. We visualize the most effective (Top-1, 2) and the least effective (Top-6, 7) methods for StyleCLIP and BlendFace, according to their AvgRank. The complete rankings of all evaluated methods are provided in Appendix~\ref{appendix:avgRank_full}.}
+%     \label{fig:avgrank_main}
+%     \vspace{-13pt}
+% \end{figure}
+
+\begin{table*}[t!]
+\centering
+\small
+\scriptsize
+\caption{Comprehensive evaluation of proactive defense methods across attribute manipulation and face swap tasks. We report pixel-wise fidelity, perceptual fidelity, identity disruption, and visual quality, along with Average Rank (AvgRank), robustness (ROB), and transferability (TE). Additional results are provided in Appendix~\ref{appendix:full_table}.}
+\label{tab:comprehensive_results}
+
+\begin{tabular}{lllrrrrrrr}
+\toprule
+\multirow{3}{*}{\textbf{Task}} & \multirow{3}{*}{\textbf{Generator}} & \multirow{3}{*}{\textbf{Metrics}} & \multicolumn{7}{c}{\textbf{Proactive Defenses}} \\
+\cmidrule(lr){4-10}
+& & & \multicolumn{5}{c}{White-box} & \multicolumn{2}{c}{Black-box} \\
+\cmidrule(lr){4-8}\cmidrule(lr){9-10}
+& & & PGD & Disrupting & DF-RAP & Anti-Forgery & Latent Attack & SCOL & NullSwap \\
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Attribute Manipulation}}} 
+& \multirow{9}{*}{StarGAN}
+& MSE ($\uparrow$) & \underline{1.3715} & 0.3003 & 0.2694 & \textbf{1.6180} & 0.0958 & 0.0590 & 0.0054 \\
+& & LPIPS ($\uparrow$) & \underline{0.6878} & 0.4872 & 0.4477 & \textbf{0.6950} & 0.4368 & 0.2317 & 0.0340 \\
+& & CIDR ($\uparrow$) & \underline{0.3764} & 0.1384 & 0.1002 & \textbf{0.4102} & 0.1712 & 0.2390 & 0.2792 \\
+& & BRISQUE ($\uparrow$) & \underline{36.4792} & 25.0217 & 33.9631 & 29.6181 & \textbf{37.0453} & 21.8716 & 18.3381 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \underline{2.00} & 4.25 & 4.50 & \textbf{1.75} & 4.00 & 5.50 & 6.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7008 & 0.8495 & 0.8027 & 0.6253 & 0.7250 & \textbf{0.9883} & \underline{0.9787} \\
+& & TE ($\uparrow$) & 0.4440 & \underline{0.5755} & \textbf{0.5871} & 0.5457 & 0.4290 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{StyleCLIP}
+& MSE ($\uparrow$) & \textbf{5.4086} & 0.3308 & 0.3917 & \underline{0.8045} & 0.2117 & 0.0481 & 0.0108 \\
+& & LPIPS ($\uparrow$) & \textbf{0.7042} & 0.4069 & 0.5030 & 0.4493 & \underline{0.6439} & 0.3344 & 0.1046 \\
+& & CIDR ($\uparrow$) & 0.5344 & 0.3079 & 0.3287 & 0.2809 & \textbf{0.5852} & 0.3938 & \underline{0.5676} \\
+& & BRISQUE ($\uparrow$) & \textbf{31.2795} & \underline{21.7907} & 13.3239 & 21.0689 & 12.2354 & 6.5536 & 12.8330 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & \textbf{1.50} & 4.25 & 3.75 & 4.00 & \underline{3.50} & 5.75 & 5.25 \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.7493 & 0.9506 & 0.9480 & 0.7350 & 0.8448 & \textbf{0.9921} & \underline{0.9759} \\
+& & TE ($\uparrow$) & 0.5075 & \textbf{0.6795} & \underline{0.6563} & 0.6157 & 0.5282 & - & - \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffAE}
+& MSE ($\uparrow$) & \textbf{0.1186} & 0.0178 & 0.0186 & 0.0020 & \underline{0.0619} & 0.0546 & 0.0053 \\
+& & LPIPS ($\uparrow$) & \underline{0.4070} & 0.1757 & 0.1301 & 0.0315 & \textbf{0.4598} & 0.1759 & 0.0353 \\
+& & CIDR ($\uparrow$) & 0.1183 & 0.0275 & 0.0215 & 0.0105 & 0.0117 & \underline{0.3769} & \textbf{0.5028} \\
+& & BRISQUE ($\uparrow$) & \textbf{96.5489} & 19.5244 & 33.4323 & 12.5174 & 28.0547 & \underline{38.4324} & 28.2317 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & \textbf{1.75} & 4.75 & 4.25 & 7.00 & 3.50 & \underline{2.50} & 4.25 \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.5733 & 0.8821 & 0.8196 & \textbf{0.9710} & 0.7868 & \underline{0.9283} & 0.9255\\
+& & TE ($\uparrow$) & 0.4514 & \underline{0.5018} & \textbf{0.5359} & 0.4262 & 0.4106 & - & - \\
+
+\midrule
+
+\multirow{45}{*}{\rotatebox[origin=c]{90}{\textbf{Face Swap}}} 
+& \multirow{9}{*}{SimSwap}
+& MSE ($\uparrow$) & \textbf{0.0440} & \underline{0.0320} & 0.0238 & 0.0190 & 0.0123 & 0.0050 & 0.0060 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0963} & \underline{0.0801} & 0.0695 & 0.0577 & 0.0653 & 0.0315 & 0.0358 \\
+& & CIDR ($\uparrow$) & 0.4407 & 0.3820 & 0.3708 & 0.2935 & \textbf{0.6139} & 0.3519 & \underline{0.5113} \\
+& & BRISQUE ($\uparrow$) & \underline{1.7925} & \textbf{1.9301} & 1.4151 & 1.2399 & 0.8187 & 1.7359 & 1.0041 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & \textbf{1.75} & \underline{2.25} & 3.75 & 5.25 & 4.25 & 5.75 & 5.00 \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.7269 & 0.9882 & 0.9244 & 0.7077 & 0.7764 & \underline{0.9937} & \textbf{0.9981} \\
+& & TE ($\uparrow$) & 0.4686 & \textbf{0.6866} & \underline{0.6464} & 0.5588 & 0.5166  & - & - \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{pSp-mix}
+& MSE ($\uparrow$) & \textbf{0.5427} & 0.1270 & 0.2104 & \underline{0.2496} & 0.0830 & 0.0463 & 0.0044 \\
+& & LPIPS ($\uparrow$) & \textbf{0.3331} & 0.1557 & 0.1984 & 0.2038 & \underline{0.2118} & 0.1058 & 0.0254 \\
+& & CIDR ($\uparrow$) & 0.1936 & 0.1090 & 0.1172 & 0.0781 & \underline{0.2069} & 0.1678 & \textbf{0.2856} \\
+& & BRISQUE ($\uparrow$) & \textbf{7.1814} & \underline{6.7925} & 6.1890 & 6.2846 & 5.0783 & 5.9274 & 5.6176 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & \textbf{1.50} & 4.25 & 4.00 & \underline{3.75} & 4.00 & 5.25 & 5.25 \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.8470 & 0.9558 & 0.9476 & 0.7831 & 0.8735 & \underline{0.9981} & \textbf{0.9995} \\
+& & TE ($\uparrow$) & 0.4954 & \textbf{0.6582} & \underline{0.6519} & 0.6049 & 0.5067 & - & - \\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{BlendFace}
+& MSE ($\uparrow$) & \textbf{0.0591} & 0.0233 & 0.0088 & \underline{0.0383} & 0.0040 & 0.0013 & 0.0018 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0552} & 0.0291 & 0.0164 & \underline{0.0412} & 0.0151 & 0.0059 & 0.0080 \\
+& & CIDR ($\uparrow$) & 0.3848 & 0.2644 & 0.2077 & 0.3668 & \textbf{0.5364} & 0.2293 & \underline{0.3982} \\
+& & BRISQUE ($\uparrow$) & 1.7485 & 2.1221 & 2.2879 & 2.1080 & 2.3089 & \underline{2.4045} & \textbf{2.4165} \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & \textbf{3.00} & 4.00 & 4.75 & \underline{3.50} & \underline{3.50} & 5.50 & 3.75 \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.7876 & 0.9205 & 0.9580 & 0.6122 & 0.8478 & \textbf{0.9992} & \underline{0.9924} \\
+& & TE ($\uparrow$) & 0.4654 & \textbf{0.6362} & \underline{0.6329} & 0.5323 & 0.4645 & - & - \\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffSwap}
+& MSE ($\uparrow$) & 0.0046 & 0.0046 & 0.0047 & 0.0043 & \textbf{0.0097} & 0.0051 & \underline{0.0053} \\
+& & LPIPS ($\uparrow$) & 0.0293 & 0.0283 & 0.0294 & 0.0309 & \textbf{0.0693} & 0.0309 & \underline{0.0316} \\
+& & CIDR ($\uparrow$) & 0.0363 & 0.0425 & 0.0459 & 0.0430 & \textbf{0.2674} & 0.1139 & \underline{0.2131} \\
+& & BRISQUE ($\uparrow$) & \underline{4.0007} & 3.8500 & \textbf{4.0877} & 3.5432 & 3.5636 & 3.8448 & 3.7283 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & 5.13 & 5.38 & 3.50 & 5.63 & \textbf{2.25} & 3.38 & \underline{2.75} \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & \underline{0.4438} & 0.4319 & \textbf{0.4594} & 0.4137 & 0.3498 & 0.4395 & 0.4157 \\
+& & TE ($\uparrow$) & 0.2895 & 0.3628 & \textbf{0.4956} & 0.4128 & \underline{0.4375} & - & - \\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffFace}
+& MSE ($\uparrow$) & 0.0069 & 0.0064 & 0.0068 & 0.0065 & \textbf{0.0142} & 0.0101 & \underline{0.0103} \\
+& & LPIPS ($\uparrow$) & 0.0282 & 0.0269 & 0.0283 & 0.0281 & \textbf{0.0528} & 0.0395 & \underline{0.0410} \\
+& & CIDR ($\uparrow$) & 0.0359 & 0.0385 & 0.0534 & 0.0361 & \textbf{0.6913} & 0.4120 & \underline{0.5628} \\
+& & BRISQUE ($\uparrow$) & \underline{1.8878} & 1.7522 & 1.7187 & 1.7217 & 1.3969 & \textbf{2.0021} & 1.8001 \\
+\cmidrule(lr){3-10}
+& & AvgRank ($\downarrow$) & 4.50 & 5.75 & 4.75 & 5.75 & \underline{2.50} & \underline{2.50} & \textbf{2.25} \\
+\cmidrule(lr){3-10}
+& & ROB ($\uparrow$) & 0.9968 & \underline{0.9984} & 0.9923 & \textbf{1.000} & 0.8331 & 0.9807 & 0.9930 \\
+& & TE ($\uparrow$) & 0.3015 & 0.3884 & \textbf{0.4926} & 0.4316 & \underline{0.4612}& - & - \\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{table*}
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/robustness/robust_mse_partial.png}
+        \caption{MSE}
+        \label{fig:robustness_mse}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figures/robustness/robust_cidr_partial.png}
+        \caption{CIDR}
+        \label{fig:robustness_CIDR}
+    \end{subfigure}
+    \caption{Robustness against post-processing for StyleCLIP and BlendFace. The axes represent transformation types (JPEG compression, blur, Gaussian noise, and salt-and-pepper noise) with varying intensities. Subfigure (a) reports MSE, and subfigure (b) reports CIDR. Solid lines indicate performance under post-processing, while dashed lines denote reference performance without transformations. Complete visualizations for all generators are provided in Appendix~\ref{appendix:vis_robust_appendix}.}
+    \label{fig:robustness_radar}
+\end{figure*}
+
+\begin{figure*}[ht!]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \resizebox{0.9\linewidth}{!}{%
+            \includegraphics{figures/MSE_heatmap_down.png}}
+        \caption{MSE}
+        \label{fig:MSE_blackbox}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{\linewidth}
+        \resizebox{0.9\linewidth}{!}{%
+            \includegraphics{figures/CIDR_heatmap_down.png}}
+        \caption{CIDR}
+    \end{subfigure}
+    
+    \caption{Transferability of proactive defenses across deepfake generators. Rows denote source generators used to generate protected images, and columns denote target generators used for evaluation. Diagonal elements correspond to the white-box setting. Darker colors indicate better performance. (a) reports MSE, and (b) reports CIDR. All heat maps use a uniform color scale for fair comparison. Results for additional metrics are provided in Appendix~\ref{appendix:transferability}.}
+    \label{fig:blackbox_heatmap_main}
+\end{figure*}
+
+\paragraph{Robustness and Transferability.}
+To evaluate the practical utility of proactive defenses, we consider two critical dimensions beyond basic settings. 
+\begin{itemize}[leftmargin=*, nosep]
+    \item \emph{Robustness to Post-processing Transformations}: Proactive protections often encounter lossy transformations such as JPEG compression and Gaussian blurring before reaching a generator. To quantify defensive resilience under such distortions, we define a relative robustness (ROB) for a given transformation $T$ and metric $\gL$ as:
+    \begin{equation}
+        \mathcal{R}_{\mathrm{ROB}}(\vx, \vx_{\adv}; T, \gL) = \frac{\gL\!\left(\vx_{\mathrm{ref}},\,G\!\left(T(\vx_{\adv})\right)\right)}{\gL\!\left(\vx_{\mathrm{ref}},\, G(\vx_{\adv})\right)}
+    \end{equation}
+    where $\vx_{\mathrm{ref}}$ denotes the reference input (e.g., $\vx$ or $G(\vx)$), or is omitted for no-reference quality measures. This ratio quantifies the relative degradation in defensive effectiveness induced by the transformation $T$. To obtain a holistic measure of robustness, we report an aggregated ROB\footref{setting} for each proactive method, computed by averaging $\mathcal{R}_{\mathrm{ROB}}$ over all evaluated transformations $T$ and metrics $\gL$.
+    
+    \item \emph{Cross-generator Transferability}: We assess transferability by applying protected images optimized for a source generator to previously unseen target generators. This setting quantifies the extent to which a defense generalizes across different architectures and generative priors. Formally, given a source generator $G_{\mathrm{s}}$ and a target generator $G_{\mathrm{t}}$, a protected image $\vx_{\adv}^{\mathrm{s}} = f_{G_{\mathrm{s}}}(\vx)$ is evaluated on $G_{\mathrm{t}}$. To isolate the transfer effect from the target model's baseline vulnerability, we define a transfer efficiency (TE) as:     
+    \begin{equation}
+        \mathcal{R}_{\mathrm{TE}}^{\mathrm{s}\rightarrow \mathrm{t}}(\vx, \vx_{\adv}^{\mathrm{s}}, \vx_{\adv}^{\mathrm{t}},\gL) = 
+        \frac{\gL\!\left(\vx_{\mathrm{ref}},\, G_{\mathrm{t}}(\vx_{\adv}^{\mathrm{s}})\right)}{\gL\!\left(\vx_{\mathrm{ref}},\, G_{\mathrm{t}}(\vx_{\adv}^{\mathrm{t}})\right)
+        }
+    \end{equation}
+    where $\vx_{\mathrm{ref}}$ follows the same convention as above, with $G$ replaced by $G_{\mathrm{t}}$, and $\vx_{\adv}^{\mathrm{t}} = f_{G_{\mathrm{t}}}(\vx)$. This ratio captures the percentage of the maximum possible degradation achieved through transfer. We report the aggregated TE\footref{setting} by averaging these scores across all source-target pairs ($G_s$, $G_t$) and evaluation metrics $\gL$ to provide each defense's black-box effectiveness.    
+    % The denominator corresponds to the white-box effectiveness on the target generator. We further compute an Aggregated Transfer efficiency score (TE) by averaging $\mathcal{R}_{\mathrm{trans}}^{\mathrm{s}\rightarrow \mathrm{t}}$ across all target generators and evaluation metrics.
+\end{itemize}
+
+% \paragraph{Population-level effectiveness.}
+% Beyond individual samples, proactive defenses should exhibit consistent behavior across a dataset. Accordingly, we summarize dataset-level effectiveness by reporting average statistics of the above metrics or newly defined dataset-level measures, including ratio-based metrics, such as proportion of samples exceeding predefined failure thresholds (e.g., identity disruption rates or synthesis failure rates). These population-level metrics summarize the reliability of defenses under diverse inputs and enable normalized comparison across methods.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/avgRank_main.pdf}
+    \caption{Qualitative comparison of selected proactive defenses based on the AvgRank. We visualize the most effective (Top-1, 2) and the least effective (Top-6, 7) methods for StyleCLIP and BlendFace, according to their AvgRank. The complete rankings of all evaluated methods are provided in Appendix~\ref{appendix:avgRank_full}.}
+    \label{fig:avgrank_main}
+    \vspace{-13pt}
+\end{figure}
+
+\paragraph{Unified Performance Aggregation.}
+To assess the holistic effectiveness of proactive defenses, we aggregate performance across data samples and disparate metrics. At the population level, we report dataset-wide averages or ratio-based measures such as the proportion of samples exceeding predefined failure thresholds to ensure operational reliability under diverse inputs. Furthermore, to unify these multi-dimensional measurements into a single interpretable indicator, we employ Average Rank (AvgRank). This approach avoids the pitfalls of directly aggregating metrics with incompatible scales or directions by averaging a defense's rank across all evaluation criteria. A lower AvgRank indicates that a defense method achieves consistently strong relative performance across multiple generators and metrics.
+\paragraph{Correlation of Evaluation Metrics.}
+To mitigate redundancy among the evaluation metrics, we conducted a pairwise correlation analysis across widely adopted metrics (detailed in Appendix~\ref{sec:correlation}). Our results reveal that metrics sharing similar underlying objectives, such as pixel-wise fidelity (MSE, PSNR) or perceptual fidelity (SSIM, LPIPS), exhibit strong positive correlations. Conversely, metrics across distinct categories show negligible correlation, specifically visual quality and identity disruption. Based on these, we select one representative metric from each category in Table~\ref{tab:metric_reference} to ensure a concise yet comprehensive evaluation.
+
+% Table~\ref{tab:metric_reference} categorizes evaluation metrics used in prior literature according to both their measurement domain and objective. Proactive defense effectiveness cannot be fully characterized by a single metric, as different defenses affect generation outputs in fundamentally different ways. Accordingly, our benchmark reports a comprehensive set of evaluation metrics that have been widely adopted in prior work, covering both sample-level and population-level measurements. Sample-level metrics quantify discrepancies or similarities between generated outputs from the original and protected images. Population-level metrics summarize how a defense behaves across a dataset by using statistics that are based on rates or distributions. In addition to the domain, evaluation metrics differ in their measurement goals. Some metrics focus on pixel-level fidelity, others capture perceptual similarity or quality, while others assess identity consistency or defense success rates at the dataset level.
+
+% To synthesize these diverse measurements into a compact summary indicator, we employ the \textit{Average Rank} (AvgRank), as direct aggregation of heterogeneous metrics with different scales, directions, and semantic meanings can be misleading. This metric is computed by averaging the ranks of a defense method across all evaluation metrics. A lower Average Rank indicates that a defense method achieves consistently strong relative performance across multiple generators and metrics.
+
+\section{Experiments and Analysis}
+\label{sec:experiments}
+
+\paragraph{Defense performance relies on deepfake generator.}
+Table~\ref{tab:comprehensive_results} summarizes the performance of proactive defenses across diverse deepfake generators. Critically, we observe that defense effectiveness varies significantly depending on the target generator. For instance, Anti-Forgery achieves strong disruption on StarGAN, yet it fails to induce meaningful disruption on DiffAE or SimSwap. This indicates that the effectiveness of Anti-Forgery is heavily conditioned on specific generative mechanisms. Conversely, while originally designed strictly for face swap tasks, SCOL demonstrates non-trivial disruption even when extended to unexpected tasks like attribute manipulation. This trend is further amplified in diffusion-based generators such as DiffSwap and DiffFace, where optimization-based methods (e.g., PGD, Disrupting, DF-RAP) show markedly reduced effectiveness despite achieving strong disruption on GAN-based models. This suggests that the iterative denoising process inherent to diffusion models attenuates pixel-level perturbations, making generator architecture a critical factor in defense evaluation. This variability highlights that evaluating defenses on a limited set of generators poses a significant risk of misrepresenting defense capabilities, underscoring the necessity of our comprehensive benchmark.
+
+\paragraph{Improving robustness inevitably degrades disruption.}
+As illustrated in Figure~\ref{fig:robustness_radar}, PGD exhibits the strongest disruption in ideal settings but suffers sharp degradation under post-processing.  In contrast, DF-RAP and Disrupting maintain stability against transformations by explicitly incorporating robustness constraints. However, this robustness comes at a cost: these methods exhibit lower visual disruption compared to PGD, confirming that improving robustness often compromises white-box performance.
+
+\paragraph{Severe performance drops emerge under unseen generators.}
+Analyzing transferability based on Figure~\ref{fig:blackbox_heatmap_main} and Table~\ref{tab:ensemble}, we observe that perturbations optimized for a single source generator exhibit limited transferability to unseen generators. In most cases, defenses that achieve strong disruption on the source generator suffer a sharp decline in effectiveness when transferred to different target generators. This indicates that high white-box scores often result from overfitting rather than genuine protection. In contrast, ensemble-based strategies (CMUA~\cite{huang2022cmua}, LEAT~\cite{shim2025leat}) effectively mitigate this drop. Although they exhibit a slight degradation in white-box performance compared to PGD and Latent Attack, they demonstrate improved generalization across diverse architectures. Consequently, the marginal performance drop in ensemble methods is not a limitation but an inevitable trade-off required to ensure cross-model transferability.
+
+\begin{table}[t!]
+\centering
+\scriptsize
+\caption{Comparative evaluation of ensemble-based defenses against single-source baselines under white-box and black-box settings. $\Delta$ denotes the difference between the evaluation scores of ensemble-based defenses and their corresponding single-source baselines.}
+\label{tab:ensemble}
+
+\begin{subtable}[t]{\columnwidth}
+\centering
+\caption{CMUA vs. Single-source PGD}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\multirow{2}{*}{\textbf{Model}} 
+& \multicolumn{2}{c}{\textbf{CMUA}} 
+& \multicolumn{2}{c}{$\Delta_{\text{PGD}}^{\text{DiffAE}}$} 
+& \multicolumn{2}{c}{$\Delta_{\text{PGD}}^{\text{SimSwap}}$} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+& MSE & CIDR & MSE & CIDR & MSE & CIDR \\
+\midrule
+\multicolumn{7}{l}{\textbf{White-box}} \\
+DiffAE & 0.0211 & 0.0399 & \textcolor{red}{-0.0975} & \textcolor{red}{-0.0784} & - & - \\
+SimSwap & 0.0115 & 0.3363 & - & - & \textcolor{red}{-0.0325} & \textcolor{red}{-0.1044} \\
+\midrule
+\multicolumn{7}{l}{\textbf{Black-box}} \\
+StarGAN & 0.0562 & 0.1117 & \textcolor{blue}{+0.0066} & \textcolor{blue}{+0.0011} & \textcolor{blue}{+0.0047} & \textcolor{blue}{+0.0071} \\
+StyleCLIP & 0.0122 & 0.0798 & \textcolor{blue}{+0.0085} & \textcolor{blue}{+0.0513} & \textcolor{blue}{+0.0061} & \textcolor{blue}{+0.0387} \\
+pSp-mix & 0.0062 & 0.0166 & \textcolor{blue}{+0.0043} & \textcolor{blue}{+0.0009} & \textcolor{blue}{+0.0027} & \textcolor{blue}{+0.0032} \\
+BlendFace & 0.0002 & 0.0073 & \textcolor{blue}{+0.0001} & \textcolor{blue}{+0.0022} & \textcolor{blue}{+0.0001} & \textcolor{blue}{+0.0025} \\
+\bottomrule
+\end{tabular}
+}
+\end{subtable}
+
+\vspace{0.5em}
+
+\begin{subtable}[t]{\columnwidth}
+\centering
+\caption{LEAT vs. Single-source Latent Attack}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\multirow{2}{*}{\textbf{Model}} 
+& \multicolumn{2}{c}{\textbf{LEAT}} 
+& \multicolumn{2}{c}{$\Delta_{\text{Lat}}^{\text{DiffAE}}$} 
+& \multicolumn{2}{c}{$\Delta_{\text{Lat}}^{\text{SimSwap}}$} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+& MSE & CIDR & MSE & CIDR & MSE & CIDR \\
+\midrule
+\multicolumn{7}{l}{\textbf{White-box}} \\
+DiffAE & 0.0605 & 0.0145 & \textcolor{red}{-0.0014} & \textcolor{blue}{+0.0028} & - & - \\
+SimSwap & 0.0114 & 0.5846 & - & - & \textcolor{red}{-0.0009} & \textcolor{red}{-0.0293} \\
+\midrule
+\multicolumn{7}{l}{\textbf{Black-box}} \\
+StarGAN & 0.0562 & 0.1117 & \textcolor{blue}{+0.0009} & \textcolor{blue}{+0.0080} & \textcolor{red}{-0.0110} & \textcolor{red}{-0.0050} \\
+StyleCLIP & 0.0122 & 0.0798 & \textcolor{blue}{+0.0003} & \textcolor{blue}{+0.0231} & \textcolor{blue}{+0.0036} & \textcolor{blue}{+0.0143} \\
+pSp-mix & 0.0062 & 0.0166 & \textcolor{blue}{+0.0002} & \textcolor{blue}{+0.0105} & \textcolor{blue}{+0.0019} & \textcolor{blue}{+0.0048} \\
+BlendFace & 0.0002 & 0.0103 & \textcolor{blue}{+0.0000} & \textcolor{blue}{+0.0015} & \textcolor{blue}{+0.0001} & \textcolor{blue}{+0.0055} \\
+\bottomrule
+\end{tabular}
+}
+\end{subtable}
+\end{table}
+
+\paragraph{Single metrics overlook independent failure modes.}
+\label{sec:metric_misalignment}
+Our empirical results demonstrate that relying on a single metric category leads to conflicting interpretations of defense performance. We observe specific instances where fidelity and identity metrics diverge significantly, confirming that they capture orthogonal dimensions of effectiveness. For instance, NullSwap on DiffAE achieves significant identity disruption (high CIDR) while maintaining near-perfect pixel fidelity (low MSE). This discrepancy highlights a critical blind spot: relying solely on fidelity metrics would falsely classify strategies with identity disruption objectives as ineffective. To validate the efficacy of unifying these diverse measurements, we examine the qualitative alignment of AvgRank. As visualized in Figure~\ref{fig:avgrank_main}, methods with lower AvgRank consistently correspond to stronger qualitative disruption in the generated outputs, confirming that AvgRank effectively summarizes balanced performance across these diverse failure modes.
+
+\paragraph{CIDR corrects identity bias from generators.}
+Our analysis shows that standard ID Loss can provide a distorted view of defense effectiveness due to generator-induced identity bias. As shown in Figure~\ref{fig:metric_misalignment}, $\mathcal{L}_{ID}(x, G(x))$ is already biased, causing relative metrics to produce misleading rankings. For example, Latent Attack obtains a high ID score primarily due to background artifacts, despite largely preserving facial identity, while SCOL induces stronger identity disruption but is ranked lower by conventional metrics. Our proposed CIDR resolves this qualitative-quantitative mismatch by calibrating evaluations to the source identity. After calibration, ineffective methods are correctly suppressed, and effective defenses are re-ranked according to their true identity disruption capability.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/id_cidr.pdf}
+    \caption{Comparison of identity metrics on DiffAE. In the ID Loss, the value for $G(x)$ denotes $L_{ID}(x, G(x))$, while values for defense methods denote $L_{ID}(G(x), G(x_{adv}))$. CIDR represents the calibrated identity ratio.}
+    \label{fig:metric_misalignment}
+    \vspace{-13pt}
+\end{figure}
+
+\paragraph{Diffusion-based architectures attenuate pixel-level perturbations.}
+\label{sec:diffusion_sampling_step}
+We further investigate why optimization-based methods (e.g., PGD, Disrupting, DF-RAP), which maximize pixel-level perturbations via $L(G(x), G(x_{adv}))$, show significantly reduced effectiveness on diffusion-based models (e.g., DiffSwap, DiffFace). To probe this, we vary the number of sampling steps in DiffAE from T $\in \{10, 20, 50, 100, 200\}$ and measure the disruption effectiveness of PGD. As shown in Table~\ref{tab:diffusion_sampling_steps}, increasing the number of sampling steps leads to a consistent degradation in disruption metrics, indicating that the iterative denoising process progressively attenuates pixel-level perturbations. This explains why methods that directly optimize $L(G(x), G(x_{adv}))$ become less effective in diffusion-based architectures. On the other hand, black-box methods such as SCOL and NullSwap maintain disruption performance on these diffusion-based models, despite having no access to the target generator. Since diffusion-based models condition their generation process on the source image, disrupting this conditioning stage effectively propagates disruption throughout the entire generation trajectory, regardless of the number of sampling steps.
+
+\begin{table}[t!]
+\centering
+\caption{Disruption effectiveness of PGD on DiffAE under varying sampling steps}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{c|ccccc}
+\toprule
+Metric & T10 & T20 & T50 & T100 & T200 \\
+\midrule
+MSE $\uparrow$     & 0.1200 & 0.0376 & 0.0224 & 0.0206 & 0.0193 \\
+LPIPS $\uparrow$   & 0.4112 & 0.3988 & 0.3228 & 0.3024 & 0.2791 \\
+CIDR $\uparrow$    & 0.1464 & 0.0630 & 0.0360 & 0.0493 & 0.0414 \\
+BRISQUE $\uparrow$ & 96.9197 & 82.1362 & 65.8337 & 61.4653 & 59.4503 \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:diffusion_sampling_steps}
+\end{table}
+
+\section{Conclusion}
+We address the critical fragmentation in proactive defense evaluation by establishing a unified benchmark that integrates disruption, robustness, and transferability. Beyond simply proposing a standardized protocol, our extensive empirical analysis offers a crucial reassessment of the current landscape: we confirm that fidelity and identity metrics operate on orthogonal axes, meaning that singular metrics inevitably yield biased conclusions regarding defense effectiveness. Furthermore, we identify a fundamental trade-off where improving robustness against transformations inherently compromises white-box disruption, suggesting that peak performance in isolated settings often signals overfitting rather than genuine protection. To preclude misleading interpretations caused by generator-induced biases, we demonstrate the necessity of the calibrated identity ratio (CIDR) as a fairer evaluation standard. We hope this unified protocol serves as a foundational guideline for future advancements in securing the digital media landscape.
+
+% In this work, we established the first comprehensive benchmark for proactive deepfake defense, addressing fundamental limitations in current evaluation practices. Our analysis demonstrated that commonly used evaluation metrics can be substantially misaligned with actual defense effectiveness, often leading to contradictory or misleading conclusions. Our findings highlight a critical need for complementary, multi-dimensional evaluation protocols, as single-metric assessments provide an incomplete picture of defense behavior. Moreover, we provide evidence that relying solely on clean, white-box settings overestimates practical effectiveness. We therefore argue that robustness to common post-processing operations and transferability to unseen generators should be treated as essential pillars of proactive defense evaluation, rather than optional extensions.
+
+% Our findings suggest several important implications for the future evaluation of proactive defenses. No single metric is sufficient to characterize defense behavior, highlighting the necessity of complementary, multi-aspect evaluation protocols. Moreover, evaluations conducted solely under clean, white-box settings consistently overestimate practical effectiveness. We therefore argue that robustness to common post-processing operations and transferability to unseen generators should be treated as essential components of proactive defense evaluation, rather than optional add-ons.
+% We expect our benchmark serves as a catalyst for future research, fostering the improvement of proactive defenses.
+
+\section*{Acknowledgements}
+This work was supported by the Institute of Information \& communications Technology Planning \& Evaluation(IITP) grant funded by the Korea government(MSIT) (No. RS-2024-00398360, Development of a user-friendly and efficiency-optimized real-time homomorphic statistical analysis processing platform, 10\%; No. RS-2020-II201336, Artificial Intelligence Graduate School Program(UNIST), 10\%), the ITRC (Information Technology Research Center) grant funded by the Korea government (MSIT)(IITP-2026-RS-2024-00436936, 20\%), the National Research Foundation of Korea(NRF) grant funded by the Korea government(MSIT)(RS-2025-00515481, 10\%; RS-2026-25484948, 30\%), and the “Advanced GPU Utilization Support Program” funded by the Government of the Republic of Korea(MSIT), (20\%).
+
+\section*{Impact Statement}
+This paper establishes a comprehensive benchmark to rigorously assess the effectiveness of proactive defenses against deepfakes. We do not believe exposing the vulnerabilities of existing defenses will cause harm; rather, it serves as a critical reality check. Many current methods provide a false sense of security, working only in restricted settings while failing against real-world transformations or unknown generators. Since deepfake generation tools are already widely accessible to malicious actors, maintaining the illusion of protection is far more dangerous than revealing their limitations. In the future, as generative models continue to evolve, static defenses may become obsolete. We believe that establishing a standardized and unbiased evaluation protocol provides an essential foundation for the community. By shifting focus from overfitted results to genuine robustness, this work helps prepare society for future threats and guides the development of protection systems that actually work in the wild.
+
+\bibliography{example_paper}
+\bibliographystyle{icml2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+\onecolumn
+% \raggedbottom
+
+\section{Detailed Evaluation Metrics}
+\label{appendix:metrics}
+We provide comprehensive descriptions of the evaluation metrics used to assess proactive defense methods against deepfake generation~\ref{tab:metric_reference}. While the main manuscript focuses on primary performance indicators, we detail a broader set of metrics for completeness. Most metrics quantify either the discrepancy or similarity between a deepfake output generated from a protected image and a reference baseline, considering two input images, $\vx_1, \vx_2 \in \mathcal{X}$. For notational simplicity, some metrics are formulated as loss functions $\gL: \gX \times \gX \rightarrow \mathbb{R}$ or similarity functions $\gS: \gX \times \gX \rightarrow \mathbb{R}$, where larger values indicate stronger or weaker disruption of deepfake generation, respectively.
+
+Rather than being evaluated on individual image pairs, some metrics provide rate-based or distribution-based measures by using either paired datasets $D = \left\{\left(\vx_1^{(k)}, \vx_2^{(k)}\right)\right\}_{k=1,\ldots,M}$ consisting of disrupted results and their corresponding reference images or two separate datasets (e.g., a set of disrupted results $D_1=\left\{\vx_1^{(k)}\right\}_{k=1,\ldots,M_1}$ and a set of reference images $D_2=\left\{\vx_2^{(k)}\right\}_{k=1,\ldots,M_2}$). Metrics that require additional information or alternative inputs are described separately below.
+
+\subsection{Pixel-wise Fidelity}
+\paragraph{Mean Absolute Error (MAE) and Mean Squared Error (MSE).} MAE and MSE distances quantify the pixel-wise discrepancy between two images. Higher values indicate larger visual distortions caused by the defense, and thus stronger defensive effectiveness.
+\begin{equation}
+\mathcal{L}_{\mathrm{MAE}}(\vx_1,\vx_2) = \frac{1}{N} \left\| \vx_1 - \vx_2 \right\|_1
+\label{eq:mae_distance}
+\end{equation}
+\begin{equation}
+\mathcal{L}_{\mathrm{MSE}}(\vx_1,\vx_2) = \frac{1}{N} \left\| \vx_1 - \vx_2 \right\|_2^2
+\label{eq:mse_distance}
+\end{equation}
+\noindent where $N$ denotes the total number of pixels across all channels.
+
+\paragraph{Peak Signal-to-Noise Ratio (PSNR).}
+PSNR measures the reconstruction quality between two images at the pixel level. Lower values correspond to more severe degradation of generation quality, indicating stronger defensive impact.
+\begin{equation}
+\gS_\mathrm{PSNR}(\vx_1,\vx_2) = 10 \cdot \log_{10} \left( \frac{\max(\vx_1)^2}{\mathcal{L}_\mathrm{MSE}(\vx_1,\vx_2)} \right),
+\label{eq:psnr}
+\end{equation}
+\noindent where $\max(\vx_1)$ denotes the maximum allowable pixel intensity of the image.
+
+\paragraph{Success Rate (SR) \normalfont{\cite{ruiz2020disrupting}}.}
+SR measures the proportion of samples for which the defense successfully disrupts the generation process. A sample is considered successful if the $\mathcal{L}_\mathrm{MSE}$ distance exceeds a predefined threshold. %It is computed as a dataset-level percentage over multiple image pairs. 
+Higher values indicate that the defense consistently causes substantial deviations in generated outputs.
+\begin{equation}
+\mathrm{SR}(D) = \frac{1}{M} \sum_{k=1}^{M} \mathbb{I} \Big[\mathcal{L}_\mathrm{MSE} \big(\vx_1^{(k)}, \vx_2^{(k)} \big) \ge \tau \Big],
+\label{eq:sr}
+\end{equation}
+\noindent $\tau = 0.05$ is used in \cite{ruiz2020disrupting}.
+
+\paragraph{Masked Success Rate ($SR_{mask}$) \normalfont{\cite{huang2022cmua}}.}
+$SR_{mask}$ evaluates defense effectiveness on localized facial regions by restricting the measurement to masked areas where attribute modifications occur. Higher values indicate that the defense consistently causes substantial deviations in generated outputs.
+% It is computed as a dataset-level percentage over multiple image pairs.
+
+Let $\vx_1, \vx_2 \in \mathbb{R}^{H \times W \times C}$ denote the original and the disrupted images, respectively. 
+We first define a binary spatial mask $\mathrm{Mask}(\vx_1, \vx_2) \in \{0, 1\}^{H \times W}$ that identifies the region of interest where pixel-wise deviations exceed a threshold $\tau_m$:
+\begin{equation}
+\mathrm{Mask}_{p}(\vx_1,\vx_2) = \mathbb{I} \left( \| \vx_1(p) - \vx_2(p) \|_2 > \tau_m \right),
+\end{equation}
+where $p\in \Omega$ denotes the pixel index and $\tau_m = 0.5$ is used in \cite{huang2022cmua}. 
+% \begin{equation}
+% \mathrm{Mask}_{i,j}(\vx_1, \vx_2) = \begin{cases} 1, & \text{if } \left\| \vx_1(i,j) - \vx_2(i,j) \right\|_2 > 0.5 \\
+% 0, & \text{otherwise} \end{cases}
+% \end{equation}
+% \noindent where $(i,j)$ denotes the spatial pixel coordinates, $\vx_1(i,j), \vx_2(i,j) \in \mathbb{R}^C$ are pixel value vectors (e.g., RGB with $C=3$) at location $(i,j)$, $\|\cdot\|_2$ denotes the $\ell_2$ norm computed over the channel dimension.
+%
+The masked MSE distance is then calculated as:
+\begin{equation} 
+\mathcal{L}_\mathrm{MSE}^{\text{mask}}(\vx_1, \vx_2) = \frac{\sum_{p \in \Omega} \mathrm{Mask}_{p}(\vx_1,\vx_2) \cdot \| \vx_1(p) - \vx_2(p) \|_2^2}{\|\mathrm{Mask}(\vx_1, \vx_2)\|_1} , \label{eq:l2_mask} 
+\end{equation}
+\noindent where $\|\mathrm{Mask}(\vx_1, \vx_2)\|_1$ denotes the number of active pixels in the mask.
+% \begin{equation}
+% \mathcal{L}_\mathrm{MSE}^{\mathrm{mask}}(\vx_1,\vx_2) = \frac{\sum_{i}\sum_{j} \mathrm{Mask}_{i,j}(\vx_1, \vx_2) \cdot \left\|\vx_1(i,j)-\vx_2(i,j)\right\|_2^2} {\|\mathrm{Mask}(\vx_1,\vx_2)\|_1}
+% \label{eq:l2_mask}
+% \end{equation}
+% \noindent where $\mathrm{Mask}(i,j)$ indicates whether pixel $(i,j)$ belongs to a modified region.
+Finally, the masked success rate is defined as
+\begin{equation} 
+\mathrm{SR}_{\mathrm{mask}}(D) = \frac{1}{M}\sum_{k=1}^{M} \mathbb{I}\left[\mathcal{L}_\mathrm{MSE}^{\mathrm{mask}}(\vx_1^{(k)}, \vx_2^{(k)}) > \tau \right] \label{eq:sr_mask} \end{equation}
+\noindent where $M$ is the total number of evaluated image pairs and $\tau = 0.05$ is a predefined success threshold.
+% \begin{equation}
+% SR_{mask} = \frac{1}{M}\sum_{i=1}^{M} \mathbb{I}\!\left[\mathcal{L}_\mathrm{MSE}^{mask\,(i)} > \tau \right] 
+% \label{eq:sr_mask}
+% \end{equation}
+% \noindent where $M$ is the number of evaluated samples, $\mathcal{L}_\mathrm{MSE}^{mask\,(i)}$ denotes the masked $\mathcal{L}_\mathrm{MSE}$ distance for the $i$-th image, and $\tau = 0.05$.
+
+\subsection{Perceptual Fidelity}
+\paragraph{Learned Perceptual Image Patch Similarity (LPIPS) \normalfont{\cite{zhang2018unreasonable}}.}
+LPIPS computes the perceptual distance between two images in the feature space of a pretrained deep network, which correlates well with human visual perception. Higher values indicate larger perceptual differences and more effective disruption by the defense.
+\begin{equation}
+\gL_\mathrm{LPIPS}(\vx_1, \vx_2) = \sum_{l} \frac{1}{H_l W_l} \sum_{h,w} \left\|  w_l \odot (\Phi_l(\vx_1) - \Phi_l(\vx_2)) \right\|_2^2
+\label{eq:lpips}
+\end{equation}
+\noindent where $\Phi^l: \mathcal{X} \rightarrow \mathbb{R}^{C_l \times H_l \times W_l}$ denotes the feature map extracted from the $l$-th layer of a pretrained network, $H_l$ and $W_l$ are the spatial height and width of the feature map at layer $l$, and $w_l \in \mathbb{R}^{C_l}$ is a learned vector that scales each channel based on its perceptual relevance. 
+
+\paragraph{Structural Similarity Index (SSIM) \normalfont{\cite{wang2004image}}.}
+SSIM evaluates the perceptual similarity between two images by jointly comparing luminance, contrast, and structural information. Lower values indicate greater structural degradation in the generated images, implying a more effective defense.
+\begin{equation}
+\gS_\mathrm{SSIM}(\vx_1, \vx_2) = \frac{ (2\mu_{\vx_1}\mu_{\vx_2}+C_1)
+(2\sigma_{\vx_1\vx_2}+C_2)}{(\mu_{\vx_1}^2+\mu_{\vx_2}^2+C_1)
+(\sigma_{\vx_1}^2+\sigma_{\vx_2}^2+C_2)},
+\label{eq:ssim}
+\end{equation}
+\noindent where $\mu_{\vx_1}$ and $\mu_{\vx_2}$ denote the local mean intensities of $\vx_1$ and $\vx_2$, respectively; $\sigma_{\vx_1}^2$ and $\sigma_{\vx_2}^2$ denote the corresponding variances; $\sigma_{\vx_1\vx_2}$ denotes their covariance; and $C_1$, $C_2$ are small constants.
+
+\paragraph{Feature Similarity Index (FSIM) \normalfont{\cite{zhang2011fsim}}.}
+FSIM evaluates image similarity by comparing perceptually important structural features between two images. Lower values indicate stronger disruption of essential structural information.
+
+\begin{equation}
+\gS_\mathrm{FSIM}(\vx_1,\vx_2) = \frac{\sum_{(i,j)\in\Omega} S_L(\vx_1,\vx_2;i,j)\cdot PC_m(\vx_1,\vx_2;i,j)}{\sum_{(i,j)\in\Omega} PC_m(\vx_1,\vx_2;i,j)}
+\label{eq:fsim}
+\end{equation}
+\noindent where $S_L(\vx_1,\vx_2;i,j)$ denotes the local structural similarity at pixel $(i,j)$ computed from phase congruency and gradient magnitude, $PC_m(\vx_1,\vx_2;i,j)$ represents the corresponding perceptual importance weight, $(i,j)$ index pixel locations, and $\Omega$ denotes the image domain.
+
+\paragraph{VGG Loss \normalfont{\cite{johnson2016perceptual}}.}
+VGG Loss computes the perceptual and semantic discrepancy between two images using feature representations extracted from a pretrained VGG-19 network. Higher VGG Loss values indicate stronger disruption of high-level semantic and structural information.
+\begin{equation}
+\mathcal{L}_{\mathrm{VGG}}(\vx_1,\vx_2) = \sum_{l} \lambda_l \left\| \Phi_l(\vx_1) - \Phi_l(\vx_2) \right\|_2^2
+\label{eq:vgg_loss}
+\end{equation}
+\noindent where $\Phi^l(\vx)$ denotes the feature map from the $l$-th layer of the VGG-19 network and $\lambda_l$ is a hyperparameter that balances the contribution of each layer.
+
+\paragraph{Fréchet Inception Distance (FID) \normalfont{\cite{heusel2017gans}}.}
+FID measures the distributional distance between two sets of images by comparing the statistics of deep features extracted from a pretrained Inception v3 network. Higher values indicate lower perceptual quality and greater deviation between the two image distributions.
+
+\begin{equation}
+\mathrm{FID}(D_1, D_2) = \left\| \mu_{1} - \mu_{2} \right\|_2^2 + \mathrm{Tr}\!\left(\Sigma_{1} + \Sigma_{2} - 2(\Sigma_{1}\Sigma_{2})^{1/2}
+\right)
+\label{eq:fid}
+\end{equation}
+\noindent
+where $D_1$ and $D_2$ denote two sets of images; $(\mu_{1}, \Sigma_{1})$ and $(\mu_{2}, \Sigma_{2})$ are the mean and covariance of Inception v3 feature embeddings computed over each set; and $\mathrm{Tr}(\cdot)$ denotes the trace operator.
+
+\paragraph{Comprehensive Defense Success Rate (CDSR) \normalfont{\cite{shim2025leat}}.}
+CDSR provides a holistic evaluation of defense effectiveness by jointly considering pixel-level distortion, perceptual degradation, and identity disruption. A sample is considered successfully defended if \emph{at least one} of the following conditions is satisfied: (i) large pixel-level deviation, (ii) significant identity inconsistency, or (iii) strong perceptual dissimilarity. It is computed as a dataset-level percentage over multiple image pairs. Higher CDSR values indicate that the defense succeeds under at least one of the three complementary criteria, reflecting robust and comprehensive defensive performance.
+
+\begin{equation}
+\mathrm{CDSR}(D) = \frac{1}{M} \sum_{k=1}^{M} \mathbb{I} \Big[ (\mathcal{L}_{\mathrm{MSE}}(\vx_1^{(k)},\vx_2^{(k)}) > \tau_1) \lor (\mathcal{L}_{\mathrm{ID}}(\vx_1^{(k)},\vx_2^{(k)}) > \tau_2) \lor (\mathcal{L}_\mathrm{LPIPS}(\vx_1^{(k)},\vx_2^{(k)}) > \tau_3) \Big]
+\label{eq:cdsr}
+\end{equation}
+\noindent where $\tau_1 = 0.05$, $\tau_2 = 0.6$, and $\tau_3 = 0.35$ are used in \cite{shim2025leat}.
+
+\subsection{Identity Disruption}
+\paragraph{Identity Loss (ID Loss) \normalfont{\cite{deng2019arcface}}.}
+ID Loss measures identity dissimilarity between two images in an embedding space of ArcFace. Higher values indicate greater identity disruption.
+\begin{equation}
+\mathcal{L}_{\mathrm{ID}}(\vx_1,\vx_2) = 1 - \frac{\Phi(\vx_1)^\top \Phi(\vx_2)}{\|\Phi(\vx_1)\|_2 \|\Phi(\vx_2)\|_2}
+\label{eq:id_loss}
+\end{equation}
+\noindent where $\Phi(\vx)$ denotes the identity embedding extracted by a pretrained face recognition model.
+
+\paragraph{Face Matching Rate (FMR) \normalfont{\cite{wang2025faceswapguard}}.}
+FMR measures the proportion of generated images $\vx_1$ that are recognized as belonging to the same identity as their corresponding source images $\vx_2$ by a face recognition model. 
+% FMR measures the proportion of generated images $\vx_1$ that are still matched to the source identity for $\vx_2$ by a face recognition model. It is computed as a dataset-level percentage over multiple image pairs. 
+Lower FMR values indicate stronger defense.
+% Higher FMR values indicate more successful identity protection.
+
+\begin{equation}
+\mathrm{FMR}(D) = \frac{1}{M} \sum_{k=1}^{M} \mathbb{I} \Big[ \| \Phi(\vx_1^{(k)}) - \Phi(\vx_2^{(k)}) \| < \tau \Big]
+\label{eq:fmr}
+\end{equation}
+\noindent where $\Phi(\cdot)$ denotes the feature extraction by face recognition models and $\tau$ is a predefined matching threshold in the face recognition embedding space.
+
+\paragraph{FaceNet Recognition Accuracy Index ($FN_{acc}$)  \normalfont{\cite{zhang2024dual}}.}
+$FN_{acc}$ measures how effectively a defense prevents FaceNet-based identity recognition systems from classifying face-swapped outputs as the source identity. Lower values indicate stronger defense, as the protected deepfakes are less frequently recognized as belonging to the intended source person. The success rate on identity recognition ($\mathrm{SR}_{IR}$) is defined as an auxiliary measure, using a classifier $c_{FN}: \mathcal{X}\mapsto \mathcal{Y}$ that predicts identity labels from facial embeddings of FaceNet for image $\vx \in \mathcal{X}$ \cite{schroff2015facenet}:
+
+\begin{equation}
+\mathrm{SR}_{IR}(D) = \frac{1}{M} \sum_{k=1}^{M} \mathbb{I} \Big[ \mathcal{C}_{FN}( \vx^{(k)}_{\mathrm{adv}})=id(\vx_{\mathrm{src}}^{(k)})\Big]
+\label{eq:facenetrate}
+\end{equation}
+
+\noindent where $D = \{(\vx_{\mathrm{adv}}^{(k)}, \vx_{\mathrm{src}}^{(k)})\}$ for the defended images $\vx_{\mathrm{adv}}^{(k)}$ and the source images $\vx_{\mathrm{src}}^{(k)}$ for faceswap models $id(\cdot)$ is the identity of the source image $\vx_2^{(k)}$. $FN_{acc}$ consists of the ratio between $\mathrm{SR}_{IR}$, measuring how often defended face-swapped images in $D$ are recognized as the source identity, compared with the baseline recognition rate for undefended face-swapped images in $D_{\mathrm{undef}} = \{(\vx_{\mathrm{undef}}^{(k)}, \vx_{\mathrm{src}}^{(k)})\}$.
+
+\begin{equation}
+FN_{acc}(D) = \frac{\mathrm{SR}_{IR}(D)}{\mathrm{SR}_{IR}(D_{\mathrm{undef}})}
+\label{eq:fn_acc}
+\end{equation}
+
+% \begin{equation}
+% FN_{acc} = \frac{\Phi(G(x), x) } {\Phi(G(x_{adv}, x)}
+% \label{eq:fn_acc}
+% \end{equation}
+% \frac{\frac{1}{M}\sum_{i=1}^{M} \mathbb{I} \Big[\mathrm{ID}_{FN}\!\big(G(x_{\mathrm{adv}}^{(i)})\big) = \mathrm{ID}_{x}^{(i)} \Big] }{\frac{1}{M}\sum_{i=1}^{M} \mathbb{I} \Big[\mathrm{ID}_{FN}\!\big(G(x^{(i)})\big) = \mathrm{ID}_{x}^{(i)} \Big]}
+
+\subsection{Visual Quality}
+\paragraph{BRISQUE \normalfont{\cite{mittal2012no}}.}
+BRISQUE is a no-reference image quality assessment metric that evaluates the naturalness and artifact level of generated images without requiring a reference. Higher scores indicate stronger visual artifacts and lower image quality, reflecting a more disruptive defense.
+
+\paragraph{Face Detection Failure Rate (FDFR) \normalfont{\cite{van2023anti}}.}
+FDFR quantifies the proportion of generated images in which no face is detected by a face detection model. Higher values indicate that the defense disrupts facial structure to the extent that generated images are no longer recognized as valid faces.
+
+\paragraph{True Face with High Confidence (TFHC) \normalfont{\cite{hyperfas2020}}.} 
+TFHC evaluates the proportion of generated faces that are classified as genuine with high confidence by a liveness detection system. Lower values indicate that fewer generated images are recognized as real faces with high confidence, implying that the defense effectively hinders their classification as authentic.
+
+\paragraph{SER-FQA \normalfont{\cite{terhorst2020ser}}.}
+SER-FQA is a face-specific image quality assessment metric designed to capture subtle degradations in facial structure and perceptual quality. Lower scores indicate significant degradation of facial quality caused by the defense.
+
+\clearpage
+
+\section{Deepfake Generation Models and Proactive Methods}
+\label{sec:appendix_deepfake}
+
+\begin{table*}[h!]
+\caption{Overview of deepfake generation models and proactive defense methods.(a) summarizes representative deepfake generation models. (b) overviews proactive defense methods in terms of access regime, methodology, imperceptibility, and publication metadata. (c) summarizes their evaluation coverage across pixel-wise fidelity, perceptual fidelity, identity disruption, visual quality, robustness, and transferability.}
+\label{tab:baselines_overview}
+\centering
+\scriptsize
+
+\begin{subtable}{\linewidth}
+\centering
+\subcaption{Deepfake generation models}
+\begin{tabular}{@{}c c c c c c@{}}
+\toprule
+\textbf{Task} & \textbf{Model} & \textbf{Backbone} & \textbf{Venue} & \textbf{Year / Citation} & \textbf{Code} \\
+\midrule
+\multirow{5}{*}{\textbf{Attribute Manipulation}}
+& StarGAN~\cite{choi2018stargan} & GAN & CVPR & 2018 / 5357 & \checkmark \\
+& AGGAN~\cite{tang2019attention} & GAN & IJCNN & 2019 / 192 & \checkmark \\
+& StyleCLIP~\cite{patashnik2021styleclip} & GAN & ICCV & 2021 / 1574 & \checkmark \\
+& DiffAE~\cite{preechakul2022diffusion} & Diffusion & CVPR & 2022 / 617 & \checkmark \\
+& DiffusionCLIP~\cite{kim2022diffusionclip} & Diffusion & CVPR & 2022 / 934 & \checkmark \\
+\midrule
+\multirow{6}{*}{\textbf{Face Swap}}
+& Faceswap-pytorch~\cite{oldpan_faceswap_pytorch} & Auto Encoder & - & - & \checkmark \\
+& SimSwap~\cite{chen2020simswap} & Auto Encoder & ACM MM & 2020 / 490 & \checkmark \\
+& pSp-mix~\cite{richardson2021encoding} & GAN & CVPR & 2021 / 1555 & \checkmark \\
+& BlendFace~\cite{shiohara2023blendface} & Auto Encoder & ICCV & 2023 / 91 & \checkmark \\
+& DiffSwap~\cite{zhao2023diffswap} & Diffusion & CVPR & 2023 / 123 & \checkmark \\
+& DiffFace~\cite{kim2025diffface} & Diffusion & PR & 2025 / 112 & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+\vspace{0.35cm}
+
+% ===== Subtable (a): method meta information =====
+\begin{subtable}{\linewidth}
+\centering
+\subcaption{Proactive defense methods: design and access assumptions}
+% \resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}l l l l l l c c@{}}
+\toprule
+\textbf{Objective}
+& \textbf{Method}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Access}\\\textbf{regime}\end{tabular}
+& \textbf{Methodology}
+& \textbf{Imperceptibility}
+& \textbf{Venue}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Year /}\\\textbf{Citation}\end{tabular}
+& \textbf{Code} \\
+\midrule
+
+\multirow{11}{*}{\textbf{Disruption}}
+& Disrupting~\cite{ruiz2020disrupting} & White-box & Optimization & $L_p$-norm & ECCV & 2020 / 187 & \checkmark \\
+& Anti-Forgery~\cite{wang2022anti} & White-box & Optimization & $L_p$-norm & IJCAI & 2022 / 89 & \checkmark \\
+& CMUA~\cite{huang2022cmua} & White-box & Optimization & $L_p$-norm & AAAI & 2022 / 142 & \checkmark \\
+& TCA-GAN~\cite{dong2023restricted} & Black-box & Model-based Learning & $L_p$-norm & IEEE TIFS & 2023 / 95 & - \\
+& ID-Guard~\cite{qu2025id} & White-box & Model-based Learning & $L_p$-norm & TPAMI & 2024 / 2 & - \\
+& SUA~\cite{qiao2024scalable} & White-box & Model-based Learning & $L_p$-norm & IEEE TIFS & 2024 / 16 & - \\
+& FOUND~\cite{tang2024feature} & White-box & Model-based Learning & $L_p$-norm & ACM TOMM & 2024 / 18 & - \\
+& Dual Defense~\cite{zhang2024dual} & White-box & Model-based Learning & $L_p$-norm, SSIM & IEEE TIFS & 2024 / 38 & \checkmark \\
+& DF-RAP~\cite{qu2024df} & White-box & Optimization & $L_p$-norm & IEEE TIFS & 2024 / 35 & \checkmark \\
+& LEAT~\cite{shim2025leat} & White-box & Optimization & $L_p$-norm & ESWA & 2025 / 4 & - \\
+& Faceshield~\cite{jeong2025faceshield} & White-box & Optimization & $L_p$-norm & ICCV & 2025 / 2 & \checkmark \\
+
+\midrule
+
+\multirow{3}{*}{\textbf{Identity}}
+& SCOL~\cite{lee2025scol} & Black-box & Model-based Learning & $L_p$-norm, LPIPS & ACM MM & 2025 / 0 & \checkmark \\
+& NullSwap~\cite{wang2025nullswap} & Black-box & Model-based Learning & $L_p$-norm, LPIPS &  ICCV & 2025 / 6 & - \\
+& FaceSwapGuard~\cite{wang2025faceswapguard} & Black-box & Optimization & $L_p$-norm & - & 2025 / 2 & - \\
+
+\bottomrule
+\end{tabular}%
+% }
+\end{subtable}
+
+\vspace{0.35cm}
+
+\begin{subtable}{\linewidth}
+\centering
+\subcaption{Evaluation coverage}
+% \resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}l c c c c c c@{}}
+\toprule
+\textbf{Method}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Pixel-wise}\\\textbf{Fidelity}\end{tabular}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Perceptual}\\\textbf{Fidelity}\end{tabular}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Visual}\\\textbf{Quality}\end{tabular}
+& \begin{tabular}[c]{@{}c@{}}\textbf{Identity}\\\textbf{Disruption}\end{tabular}
+& \textbf{Robustness}
+& \textbf{Transferability} \\
+\midrule
+
+% \multirow{11}{*}{\textbf{Disruption}}
+Disrupting~\cite{ruiz2020disrupting} & \checkmark & - & - & - & \checkmark & - \\
+Anti-Forgery~\cite{wang2022anti} & \checkmark & \checkmark & - & - & \checkmark & \checkmark \\
+CMUA~\cite{huang2022cmua} & \checkmark & - & - & - & - & \checkmark \\
+TCA-GAN~\cite{dong2023restricted} & - & \checkmark & \checkmark & - & - & \checkmark \\
+ID-Guard~\cite{qu2025id} & \checkmark & - & - & \checkmark & \checkmark & \checkmark \\
+SUA~\cite{qiao2024scalable} & \checkmark & \checkmark & - & - & - & \checkmark \\
+FOUND~\cite{tang2024feature} & \checkmark & - & - & - & - & \checkmark \\
+Dual Defense~\cite{zhang2024dual} & \checkmark & \checkmark & - & - & \checkmark \\
+DF-RAP~\cite{qu2024df} & \checkmark & \checkmark & - & - & \checkmark & \checkmark \\
+LEAT~\cite{shim2025leat} & \checkmark & \checkmark & - & \checkmark & - & \checkmark \\
+Faceshield~\cite{jeong2025faceshield} & \checkmark & - & - & \checkmark & \checkmark & \checkmark \\
+
+\midrule
+
+% \multirow{3}{*}{\textbf{Identity}}
+SCOL~\cite{lee2025scol}
+& \checkmark & \checkmark & - & \checkmark & - & \checkmark \\
+NullSwap~\cite{wang2025nullswap}
+& \checkmark & \checkmark & - & \checkmark & - & \checkmark \\
+FaceSwapGuard~\cite{wang2025faceswapguard}
+& - & \checkmark & - & \checkmark & \checkmark & \checkmark \\
+\midrule
+\textbf{Our Benchmark} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}%
+% }
+\end{subtable}
+\end{table*}
+
+\subsection{Details of Proactive Defenses}
+\label{appendix:detail_proactive}
+In this section, we provide the detailed mathematical formulations and algorithmic procedures for the proactive defense methods used in our experiment.
+% We distinguish between defenses with full transparency into the target generator's parameters (White-box) and those relying on cross-model transferability (Black-box). To simulate advanced defensive capabilities in white-box settings, we include ensemble-based optimization, where perturbations are jointly optimized over multiple surrogate generators to enhance generalization.
+
+\paragraph{Optimization-based Approaches.}
+Optimization-based defenses explicitly solve the maximization problem defined in Eq.~\ref{eq:proactive_obj} by directly optimizing an additive perturbation $\vdelta$. To encompass both standard and robustness-aware scenarios, we adopt a general formulation incorporating a transformation function $T(\cdot)$:
+\begin{equation}
+\delta^{\star} = \arg\max_{\delta} \;
+\mathcal{L}\!\left(G(\vx), G(T(\vx + \delta))\right), \quad \text{s.t.}  \|\delta\| \le \epsilon
+\end{equation}
+Here, $T(\cdot)$ represents a post-processing transformation applied to the protected image. In the standard setting (PGD), $T$ is simply the identity function.
+
+However, to enhance robustness, specific methods define $T$ as a differentiable approximation of image transformations:
+\begin{itemize}[leftmargin=*, nosep]
+    \item \textbf{Disrupting Deepfakes} utilizes operations such as Gaussian blur within $T$, ensuring the defense remains effective even after low-pass filtering.
+    \item \textbf{DF-RAP} incorporates a differentiable JPEG approximation into $T$ to learn perturbations robust to compression.
+    \item \textbf{Anti-Forgery} transforms the optimization domain from RGB to the LAB color space. It explicitly optimizes perturbations within the chromatic channels ($a$ and $b$) while preserving the luminance component ($L$).
+    \item \textbf{Latent Attack} diverges from the pixel-level objective. It replaces the generator $G$ in the formulation with the encoder $E$, maximizing discrepancy within the latent feature space instead of the final output space.
+\end{itemize}
+
+\paragraph{Model-based Learning Approaches.}
+Unlike optimization-based methods that iteratively compute perturbations for each input instance, model-based defenses train a parameterized reconstruction network $r_\theta: \gX \rightarrow \gX$ to instantaneously generate protected images $\vx_{\mathrm{adv}} = r_{\theta^{\star}}(\vx)$.
+\begin{equation}
+\theta^{\star} = \arg\min_{\theta} \; \lambda_\mathrm{recon}L_\mathrm{recon}\!\left(r_\theta(\vx), \vx\right) - \lambda_\mathrm{ID}\mathcal{L}_{\mathrm{ID}}\!\left(r_\theta(\vx), \vx\right)
+\end{equation}
+Here, $\mathcal{L}_{\mathrm{recon}}$ combines MSE and LPIPS to ensure the protected image remains visual fidelity to the original.
+
+\begin{itemize}[leftmargin=*, nosep]
+    \item \textbf{SCOL} induces manifold collapse by manipulating the generator's latent representations. Instead of relying on external recognition models, it employs an identity inversion strategy within the latent space. Consequently, the output fails to synthesize the intended source identity, effectively neutralizing the manipulation.
+    \item \textbf{NullSwap} targets the identity embedding space under a black-box assumption. It employs adaptive loss weighting to shift the source identity vector toward a null or invalid state. This prevents the generator from extracting consistent identity features, resulting in an output where the identity is unidentifiable or collapsed.
+\end{itemize}
+
+% \paragraph{Reconstruction Approaches}
+
+% To provide a fine-grained analysis of identity-level protection, we contrast two state-of-the-art methods: SCOL and NullSwap. While both aim to thwart unauthorized identity transfer, they operate through fundamentally different mechanisms.
+
+% \begin{itemize}
+%     \item \textbf{SCOL: Source-Conditional Obfuscation}: SCOL focuses on identity constancy by disrupting the fusion process where the generator attempts to map the source identity ($\vx_s$) onto the target context ($\vx_t$). By injecting specific source-conditional constraints into the protected image, the defender forces the generative manifold to collapse toward the original source. Consequently, even when a face-swapping model attempts a transfer, the resulting output remains structurally and semantically closer to a reconstruction of the original source image rather than a successful swap. In essence, the defense ensures that any attempt to "steal" the face results in an output that merely replicates the user’s original photo.
+%     \item \textbf{NullSwap: Nullifying Identity Mapping}: In contrast, NullSwap adopts a more fundamental approach by directly targeting the Identity Extractor. This method operates within the facial embedding space—the latent domain where face-swapping models parse and encode identity features. NullSwap optimizes the perturbation to shift the source image's identity vector toward a "null" or invalid state. When this protected image is ingested by a generator, the identity extractor fails to retrieve coherent facial features, leading to a failure in identity parsing. This results in an output where the identity is either completely collapsed or resembles a non-existent third-party individual, effectively rendering the subject "unidentifiable" to the model.
+% \end{itemize}
+
+% Unlike optimization-based approaches that directly optimize a perturbation $\delta$, this category of methods generates the protected image through a reconstruction process. Methods such as SCOL and NullSwap train a reconstruction model $r_\theta: \gX \rightarrow \gX$ that maps the original image $\vx$ to a protected image $\vx_{\mathrm{adv}} = r(\vx)$ that leads to identity inconsistency in the generated outputs. Rather than explicitly optimizing a perturbation $\delta$, these methods optimize the parameters of the reconstruction model.
+% \begin{equation}
+% r_{\theta^{\star}} = \arg\min_{\theta} \; L_\mathrm{MSE}\!\left(r_\theta(\vx), \vx\right) + L_\mathrm{LPIPS}\!\left(r_\theta(\vx), \vx\right) - \mathcal{L}_{\mathrm{ID}}\!\left(r_\theta(\vx), \vx\right) + \alpha
+% \end{equation}
+
+\paragraph{Datasets Used in Prior Proactive Defense Studies.}
+\label{appendix:dataset}
+Most prior proactive defense methods are evaluated on a limited set of face datasets, with CelebA-HQ being the most commonly adopted benchmark. For fair comparison with existing works, we also conduct our evaluations on CelebA-HQ.
+
+\begin{table}[h!]
+    \caption{Datasets adopted in prior proactive defense studies.}    
+    \centering
+    \scriptsize
+    \begin{tabular}{cc}
+    \toprule
+    \textbf{Dataset} & \textbf{Used} \\
+    \midrule
+    CelebA & \cite{ruiz2020disrupting}, \cite{wang2022anti}, \cite{huang2022cmua}, \cite{qiao2024scalable}, \cite{tang2024feature}, \cite{qu2024df}\\    
+    CelebA-HQ & \cite{aneja2022tafim}, \cite{van2023anti}, \cite{shim2025leat}, \cite{lee2025scol}, \cite{wang2025faceswapguard}, \cite{jeong2025faceshield}, \cite{wang2025nullswap} \\
+    CelebAMask-HQ & \cite{qu2025id}  \\
+    LFW & \cite{huang2022cmua}, \cite{qiao2024scalable}, \cite{qu2024df}, \cite{wang2025nullswap}, \cite{qu2025id} \\
+    VGGFace2 & \cite{van2023anti}, \cite{zhang2024dual} \\
+    VGGFace2-HQ & \cite{aneja2022tafim}, \cite{jeong2025faceshield}, \cite{lee2025scol} \\ 
+    CASIA-WebFace &  \cite{zhang2024dual}  \\
+    FFHQ &  \cite{aneja2022tafim}, \cite{qu2024df}, \cite{qu2025id} \\
+    Film100 & \cite{huang2022cmua}  \\
+    FaceScrub & \cite{dong2023restricted}  \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:dataset_reference}
+\end{table}
+
+\clearpage
+
+\subsection{Additional Quantitative Results of Table~\ref{tab:comprehensive_results}}
+\label{appendix:full_table}
+This section reports additional quantitative results that complement Table~\ref{tab:comprehensive_results} in the main paper.
+While Table~\ref{tab:comprehensive_results} presents a subset of representative metrics for concise comparison, this appendix provides further evaluation results across multiple generators, defenses, and commonly used metrics.
+
+\begin{table*}[h!]
+\centering
+\small
+\scriptsize
+\caption{Additional quantitative results for proactive defense methods across multiple deepfake generators and evaluation metrics.}
+\label{tab:appendix_comprehensive_results}
+
+\begin{tabular}{lllrrrrrrr}
+\toprule
+\multirow{3}{*}{Task} & \multirow{3}{*}{Generator} & \multirow{3}{*}{Metrics} & \multicolumn{7}{c}{Proactive Defenses} \\
+\cmidrule(lr){4-10}
+& & & \multicolumn{5}{c}{White-box} & \multicolumn{2}{c}{Black-box} \\
+\cmidrule(lr){4-8}\cmidrule(lr){9-10}
+& & & PGD & Disrupting & DF-RAP & Anti-Forgery & Latent Attack & SCOL & NullSwap \\
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Attribute Manipulation}}} 
+& \multirow{9}{*}{StarGAN}
+& MSE ($\uparrow$) & \underline{1.3715} & 0.3003 & 0.2694 & \textbf{1.6180} & 0.0958 & 0.0590 & 0.0054 \\
+& & PSNR ($\downarrow$) & \underline{4.7026} & 11.6732 & 12.2191 & \textbf{4.0173} & 16.5134 & 18.6093 & 29.2641 \\
+& & SSIM ($\downarrow$) & \underline{0.1283} & 0.4556 & 0.4833 & \textbf{0.1156} & 0.5125 & 0.5459 & 0.9410 \\
+& & LPIPS ($\uparrow$) & \underline{0.6878} & 0.4872 & 0.4477 & \textbf{0.6950} & 0.4368 & 0.2317 & 0.0340 \\
+& & CIDR ($\uparrow$) & \underline{0.3764} & 0.1384 & 0.1002 & \textbf{0.4102} & 0.1712 & 0.2390 & 0.2792 \\
+& & ID Loss ($\uparrow$) & \underline{0.8912} & 0.7031 & 0.6700 & \textbf{0.8923} & 0.5647 & 0.2878 & 0.2684 \\
+& & BRI ($\uparrow$) & \underline{36.4792} & 25.0217 & 33.9631 & 29.6181 & \textbf{37.0453} & 21.8716 & 18.3381 \\
+& & SR ($\uparrow$) & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \underline{0.94} & 0.60 & 0.00 \\
+& & FDFR ($\uparrow$) & \textbf{0.57} & 0.03 & 0.01 & \underline{0.55} & 0.02 & 0.00 & 0.00 \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{StyleCLIP}
+& MSE ($\uparrow$) & \textbf{5.4086} & 0.3308 & 0.3917 & \underline{0.8045} & 0.2117 & 0.0481 & 0.0108 \\
+& & PSNR ($\downarrow$) & \textbf{6.9544} & 13.2088 & 11.1592 & \underline{10.5119} & 14.7425 & 19.5295 & 25.9558 \\
+& & SSIM ($\downarrow$) & \textbf{0.3185} & 0.6071 & 0.5106 & 0.5483 & \underline{0.4450} & 0.7050 & 0.8885 \\
+& & LPIPS ($\uparrow$) & \textbf{0.7042} & 0.4069 & 0.5030 & 0.4493 & \underline{0.6439} & 0.3344 & 0.1046 \\
+& & CIDR ($\uparrow$) & 0.5344 & 0.3079 & 0.3287 & 0.2809 & \textbf{0.5852} & 0.3938 & \underline{0.5676} \\
+& & ID Loss ($\uparrow$) & \underline{0.6428} & 0.2900 & 0.3158 & 0.2787 & \textbf{0.7477} & 0.2379 & 0.5358 \\
+& & BRI ($\uparrow$) & \textbf{31.2795} & \underline{21.7907} & 13.3239 & 21.0689 & 12.2354 & 6.5536 & 12.833 \\
+& & SR ($\uparrow$) & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \textbf{1.00} & \underline{0.99} & 0.40 & 0.00 \\
+& & FDFR ($\uparrow$) & \textbf{0.09} & 0.00 & 0.00 & 0.00 & \underline{0.08} & 0.00 & 0.00 \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffAE}
+& MSE ($\uparrow$) & \textbf{0.1186} & 0.0178 & 0.0186 & 0.0020 & \underline{0.0619} & 0.0546 & 0.0053 \\
+& & PSNR ($\downarrow$) & \textbf{15.3987} & 23.9081 & 23.5901 & 36.5044 & \underline{18.2288} & 19.1150 & 29.1722 \\
+& & SSIM ($\downarrow$) & \textbf{0.0288} & 0.5364 & \underline{0.4468} & 0.9393 & 0.4993 & 0.6475 & 0.9235 \\
+& & LPIPS ($\uparrow$) & \underline{0.4070} & 0.1757 & 0.1301 & 0.0315 & \textbf{0.4598} & 0.1759 & 0.0353 \\
+& & CIDR ($\uparrow$) & 0.1183 & 0.0275 & 0.0215 & 0.0105 & 0.0117 & \underline{0.3769} & \textbf{0.5028} \\
+& & ID Loss ($\uparrow$) & 0.2842 & 0.0915 & 0.0750 & 0.0078 & \textbf{0.5059} & 0.3269 & \underline{0.4564} \\
+& & BRI ($\uparrow$) & \textbf{96.5489} & 19.5244 & 33.4323 & 12.5174 & 28.0547 & \underline{38.4324} & 28.2317 \\
+& & SR ($\uparrow$) & \textbf{0.99} & 0.02 & 0.02 & 0.00 & \underline{0.78} & 0.49 & 0.00 \\
+& & FDFR ($\uparrow$) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Face Swap}}} 
+& \multirow{9}{*}{SimSwap}
+& MSE ($\uparrow$) & \textbf{0.0440} & \underline{0.0320} & 0.0238 & 0.0190 & 0.0123 & 0.0050 & 0.0060 \\
+& & PSNR ($\downarrow$) & \textbf{19.9665} & \underline{21.4425} & 22.6389 & 23.7911 & 25.3029 & 29.2693 & 28.3813 \\
+& & SSIM ($\downarrow$) & \textbf{0.7870} & \underline{0.8168} & 0.8323 & 0.8594 & 0.8256 & 0.9158 & 0.9016 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0963} & \underline{0.0801} & 0.0695 & 0.0577 & 0.0653 & 0.0315 & 0.0358 \\
+& & CIDR ($\uparrow$) & 0.4407 & 0.3820 & 0.3708 & 0.2935 & \textbf{0.6139} & 0.3519 & \underline{0.5113} \\
+& & ID Loss ($\uparrow$) & \underline{0.5753} & 0.4897 & 0.4377 & 0.3338 & \textbf{1.0160} & 0.3487 & 0.5737 \\
+& & BRI ($\uparrow$) & \underline{1.7925} & \textbf{1.9301} & 1.4151 & 1.2399 & 0.8187 & 1.7359 & 1.0041 \\
+& & SR ($\uparrow$) & \textbf{0.33} & \underline{0.10} & 0.03 & 0.02 & 0.00 & 0.00 & 0.00 \\
+& & FDFR ($\uparrow$) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{pSp-mix}
+& MSE ($\uparrow$) & \textbf{0.5427} & 0.1270 & 0.2104 & \underline{0.2496} & 0.0830 & 0.0463 & 0.0044 \\
+& & PSNR ($\downarrow$) & \textbf{8.8960} & 16.2547 & 13.2501 & \underline{12.5052} & 17.5581 & 19.7260 & 29.7747 \\
+& & SSIM ($\downarrow$) & \textbf{0.4774} & 0.7232 & 0.6532 & 0.6500 & \underline{0.6378} & 0.7486 & 0.9411 \\
+& & LPIPS ($\uparrow$) & \textbf{0.3331} & 0.1557 & 0.1984 & 0.2038 & \underline{0.2118} & 0.1058 & 0.0254 \\
+& & CIDR ($\uparrow$) & 0.1936 & 0.1090 & 0.1172 & 0.0781 & \underline{0.2069} & 0.1678 & \textbf{0.2856} \\
+& & ID Loss ($\uparrow$) & \textbf{0.3643} & 0.1595 & 0.1786 & 0.1443 & \underline{0.3434} & 0.1574 & 0.2376 \\
+& & BRI ($\uparrow$) & \textbf{7.1814} & \underline{6.7925} & 6.1890 & 6.2846 & 5.0783 & 5.9274 & 5.6176 \\
+& & SR ($\uparrow$) & \textbf{1.00} & 0.77 & \underline{0.99} & \textbf{1.00} & 0.66 & 0.37 & 0.00 \\
+& & FDFR ($\uparrow$) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{BlendFace}
+& MSE ($\uparrow$) & \textbf{0.0591} & 0.0233 & 0.0088 & \underline{0.0383} & 0.0040 & 0.0013 & 0.0018 \\
+& & PSNR ($\downarrow$) & \textbf{19.2648} & 23.8034 & 27.4301 & \underline{21.7302} & 30.1689 & 35.0762 & 33.6978 \\
+& & SSIM ($\downarrow$) & \textbf{0.8994} & 0.9422 & 0.9647 & \underline{0.9227} & 0.9525 & 0.9816 & 0.9764 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0552} & 0.0291 & 0.0164 & \underline{0.0412} & 0.0151 & 0.0059 & 0.0080 \\
+& & CIDR ($\uparrow$) & 0.3848 & 0.2644 & 0.2077 & 0.3668 & \textbf{0.5364} & 0.2293 & \underline{0.3982} \\
+& & ID Loss ($\uparrow$) & \underline{0.6401} & 0.4343 & 0.3252 & 0.5582 & \textbf{0.8814} & 0.2779 & 0.4834 \\
+& & BRI ($\uparrow$) & 1.7485 & 2.1221 & 2.2879 & 2.1080 & 2.3089 & \underline{2.4045} & \textbf{2.4165} \\
+& & SR ($\uparrow$) & \textbf{0.54} & 0.13 & 0.00 & \underline{0.21} & 0.00 & 0.00 & 0.00 \\
+& & FDFR ($\uparrow$) & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\clearpage
+
+\subsection{Additional Quantitative Results using FFHQ}
+\label{appendix:ffhq}
+
+\begin{table*}[h!]
+\centering
+\small
+\scriptsize
+\caption{Additional results on FFHQ using the same evaluation setup as Table ~\ref{tab:comprehensive_results}.}
+\label{tab:comprehensive_results_ffhq}
+
+\begin{tabular}{lllrrrrrrr}
+\toprule
+\multirow{3}{*}{\textbf{Task}} & \multirow{3}{*}{\textbf{Generator}} & \multirow{3}{*}{\textbf{Metrics}} & \multicolumn{7}{c}{\textbf{Proactive Defenses}} \\
+\cmidrule(lr){4-10}
+& & & \multicolumn{5}{c}{White-box} & \multicolumn{2}{c}{Black-box} \\
+\cmidrule(lr){4-8}\cmidrule(lr){9-10}
+& & & PGD & Disrupting & DF-RAP & Anti-Forgery & Latent Attack & SCOL & NullSwap \\
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Attribute Manipulation}}} 
+& \multirow{9}{*}{StarGAN}
+& MSE ($\uparrow$) & \underline{1.2800} & 0.2417 & 0.2499 & \textbf{1.4402} & 0.0817 & 0.0653 & 0.0053 \\
+& & LPIPS ($\uparrow$) & \underline{0.6847} & 0.4515 & 0.4058 & \textbf{0.6915} & 0.3832 & 0.2528 & 0.0387 \\
+& & CIDR ($\uparrow$) & \underline{0.3498} & 0.1107 & 0.0766 & \textbf{0.3768} & 0.1360 & 0.2209 & 0.2328 \\
+& & BRISQUE ($\uparrow$) & \underline{34.6629} & 24.9974 & 33.3575 & 28.6003 & \textbf{35.8447} & 21.9457 & 18.7795 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \underline{2.00} & 4.50 & 4.25 & \textbf{1.75} & 4.00 & 5.50 & 6.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7070 & 0.8612 & 0.8116 & 0.6388 & 0.7406 & \underline{0.9875} & \textbf{0.9987} \\
+& & TE ($\uparrow$) & 0.3120 & \underline{0.4456} & \textbf{0.4585} & 0.3373 & 0.2929 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{StyleCLIP}
+& MSE ($\uparrow$) & \textbf{4.1773} & 0.2394 & 0.3327 & \underline{0.5960} & 0.1806 & 0.0540 & 0.0107 \\
+& & LPIPS ($\uparrow$) & \textbf{0.6647} & 0.3772 & 0.4744 & 0.4515 & \underline{0.6248} & 0.3198 & 0.1048 \\
+& & CIDR ($\uparrow$) & \underline{0.5644} & 0.3450 & 0.3470 & 0.3143 & \textbf{0.6227} & 0.4226 & 0.5611 \\
+& & BRISQUE ($\uparrow$) & \textbf{28.0250} & \underline{18.5784} & 12.0067 & 18.3265 & 12.7946 & 7.0981 & 11.3217 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.25} & 4.25 & 4.25 & 4.00 & \underline{3.00} & 5.75 & 5.50 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7691 & 0.9749 & 0.9528 & 0.7534 & 0.8542 & \textbf{0.9950} & \underline{0.9846} \\
+& & TE ($\uparrow$) & 0.3954 & \textbf{0.5563} & \underline{0.5249} & 0.4460 & 0.4100 & - & -\\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffAE}
+& MSE ($\uparrow$) & \textbf{0.1016} & 0.0134 & 0.0158 & 0.0274 & \underline{0.0597} & 0.0548 & 0.0056 \\
+& & LPIPS ($\uparrow$) & \underline{0.4120} & 0.1074 & 0.0965 & 0.2240 & \textbf{0.4261} & 0.2064 & 0.0469 \\
+& & CIDR ($\uparrow$) & 0.1795 & 0.1062 & 0.0613 & 0.0558 & 0.0538 & \underline{0.3361} & \textbf{0.4175} \\
+& & BRISQUE ($\uparrow$) & \textbf{96.9813} & 18.4010 & 31.2229 & 18.4908 & 31.8727 & \underline{42.2994} & 19.9031 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.75} & 5.50 & 5.00 & 4.75 & 3.25 & \underline{2.75} & 5.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.6331 & \textbf{0.9708} & 0.8997 & 0.8350 & 0.7938 & 0.9258 & \underline{0.9505} \\
+& & TE ($\uparrow$) & 0.3243 & \underline{0.3692} & \textbf{0.4011} & 0.3027 & 0.2843 & - & -\\
+
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Face Swap}}} 
+& \multirow{9}{*}{SimSwap}
+& MSE ($\uparrow$) & \textbf{0.0369} & \underline{0.0279} & 0.0214 & 0.0169 & 0.0131 & 0.0053 & 0.0058 \\
+& & LPIPS ($\uparrow$) & \textbf{0.1151} & \underline{0.0995} & 0.0892 & 0.0745 & 0.0885 & 0.0422 & 0.0435 \\
+& & CIDR ($\uparrow$) & 0.4160 & 0.3640 & 0.3388 & 0.2902 & \textbf{0.5810} & 0.3163 & \underline{0.4597} \\
+& & BRISQUE ($\uparrow$) & \underline{4.8177} & \textbf{5.1509} & 4.3073 & 3.4305 & 2.8553 & 1.5410 & 1.8451 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.75} & \underline{2.25} & 3.50 & 5.00 & 3.75 & 6.75 & 5.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7154 & 0.9896 & 0.9069 & 0.6596 & 0.7505 & \underline{0.9967} & \textbf{0.9993} \\
+& & TE ($\uparrow$) & 0.3565 & \textbf{0.5587} & \underline{0.5301} & 0.3728 & 0.3858 & - & -\\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{pSp-mix}
+& MSE ($\uparrow$) & \textbf{0.2789} & 0.0625 & 0.1001 & \underline{0.1186} & 0.0532 & 0.0274 & 0.0037 \\
+& & LPIPS ($\uparrow$) & \textbf{0.3107} & 0.1445 & 0.1857 & 0.1888 & \underline{0.2180} & 0.1131 & 0.0258 \\
+& & CIDR ($\uparrow$) & \underline{0.2100} & 0.1276 & 0.1301 & 0.0847 & \textbf{0.2138} & 0.1801 & 0.2818 \\
+& & BRISQUE ($\uparrow$) & \underline{5.2977} & \textbf{6.0136} & 3.7429 & 4.7629 & 3.9077 & 3.9905 & 3.3939 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.75} & 4.00 & 4.50 & 3.75 & \underline{3.50} & 5.00 & 5.50 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.9420 & \textbf{1.000} & 0.9991 & 0.9962 & 0.9757 & \underline{0.9994} & \textbf{1.000} \\
+& & TE ($\uparrow$) & 0.3916 & \textbf{0.5488} & \underline{0.5252} & 0.4215 & 0.3770 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{BlendFace}
+& MSE ($\uparrow$) & \textbf{0.0644} & 0.0282 & 0.0162 & \underline{0.0349} & 0.0059 & 0.0018 & 0.0024 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0666} & 0.0365 & 0.0245 & \underline{0.0419} & 0.0249 & 0.0090 & 0.0116 \\
+& & CIDR ($\uparrow$) & \underline{0.4044} & 0.2861 & 0.2372 & 0.3168 & \textbf{0.5614} & 0.2419 & 0.3848\\
+& & BRISQUE ($\uparrow$) & -6.8507 & -6.4102 & -6.1881 & -6.3018 & \textbf{-5.6363} & \underline{-6.1336} & -6.1690 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{2.75} & 4.00 & 4.75 & \underline{3.50} & \textbf{2.75} & 6.00 & 4.25 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.8074 & 0.9397 & 0.9543 & 0.6324 & 0.8609 & \textbf{0.9997} & \underline{0.9995} \\
+& & TE ($\uparrow$) & 0.3733 & \textbf{0.5419} & \underline{0.5339} & 0.3803 & 0.3598 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffSwap}
+& MSE ($\uparrow$) & 0.0051 & 0.0050 & 0.0052 & \underline{0.0063} & \textbf{0.0115} & 0.0057 & 0.0059 \\
+& & LPIPS ($\uparrow$) & 0.0372 & 0.0372 & 0.0378 & 0.0414 & \textbf{0.0939} & 0.0406 & \underline{0.0416} \\
+& & CIDR ($\uparrow$) & 0.0435 & 0.0331 & 0.0446 & 0.0524 & \textbf{0.2939} & 0.1322 & \underline{0.2249} \\
+& & BRISQUE ($\uparrow$) & -4.8245 & \underline{-4.7708} & \textbf{-4.6004} & -5.2541 & -5.1350 & -5.0286 & -5.0176 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & 5.38 & 5.63 & 4.00 & 4.50 & \textbf{2.25} & 3.75 & \underline{2.50} \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.9539 & \textbf{0.9894} & 0.9745 & 0.8873 & 0.8501 & 0.9762 & \underline{0.9856} \\
+& & TE ($\uparrow$) & 0.1861 & 0.2620 & \textbf{0.3926} & 0.2480 & \underline{0.3357} & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffFace}
+& MSE ($\uparrow$) & 0.0103 & 0.0106 & 0.0107 & 0.0103 & \textbf{0.0196} & 0.0134 & \underline{0.0151} \\
+& & LPIPS ($\uparrow$) & 0.0539 & 0.0547 & 0.0547 & 0.0545 & \textbf{0.0887} & 0.0664 & \underline{0.0710} \\
+& & CIDR ($\uparrow$) & 0.0394 & 0.0428 & 0.0447 & 0.0284 & \textbf{0.6259} & 0.2994 & \underline{0.4539} \\
+& & BRISQUE ($\uparrow$) & -2.4824 & -2.4362 & \underline{-2.2375} & -2.7412 & -2.2422 & -2.2695 & \textbf{-1.9022} \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & 6.38 & 5.13 & 3.88 & 6.13 & \textbf{1.50} & 3.25 & \underline{1.75} \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & \underline{0.5242} & 0.5201 & 0.4983 & \textbf{0.5493} & 0.4644 & 0.5119 & 0.4730 \\
+& & TE ($\uparrow$) & 0.1955 & 0.2626 & \textbf{0.3988} & 0.2396 & \underline{0.3566} & - & -\\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{table*}
+
+\clearpage
+
+\subsection{Additional Quantitative Results using VGGFace2-HQ}
+\label{appendix:vggface}
+\begin{table*}[h!]
+\centering
+\small
+\scriptsize
+\caption{Additional results on VGGFace2-HQ using the same evaluation setup as Table ~\ref{tab:comprehensive_results}.}
+\label{tab:comprehensive_results_vggface}
+
+\begin{tabular}{lllrrrrrrr}
+\toprule
+\multirow{3}{*}{\textbf{Task}} & \multirow{3}{*}{\textbf{Generator}} & \multirow{3}{*}{\textbf{Metrics}} & \multicolumn{7}{c}{\textbf{Proactive Defenses}} \\
+\cmidrule(lr){4-10}
+& & & \multicolumn{5}{c}{White-box} & \multicolumn{2}{c}{Black-box} \\
+\cmidrule(lr){4-8}\cmidrule(lr){9-10}
+& & & PGD & Disrupting & DF-RAP & Anti-Forgery & Latent Attack & SCOL & NullSwap \\
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Attribute Manipulation}}} 
+& \multirow{9}{*}{StarGAN}
+& MSE ($\uparrow$) & \underline{1.2887} & 0.2424 & 0.2404 & \textbf{1.4225} & 0.0737 & 0.0154 & 0.0080 \\
+& & LPIPS ($\uparrow$) & \textbf{0.6701} & 0.4395 & 0.3876 & \underline{0.6677} & 0.3691 & 0.1073 & 0.0362 \\
+& & CIDR ($\uparrow$) & \underline{0.3564} & 0.0895 & 0.0346 & \textbf{0.3900} & 0.1140 & 0.1563 & 0.2197 \\
+& & BRISQUE ($\uparrow$) & \underline{33.6946} & 23.7841 & 31.5060 & 28.4784 & \textbf{34.8548} & 18.3388 & 17.9882 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.75} & 4.25 & 4.50 & \underline{2.00} & 4.00 & 5.50 & 6.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7068 & 0.8693 & 0.8255 & 0.6329 & 0.7474 & \underline{0.9770} & \textbf{0.9986} \\
+& & TE ($\uparrow$) & 0.4821 & \textbf{0.5810} & \underline{0.5772} & 0.5481 & 0.4139 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{StyleCLIP}
+& MSE ($\uparrow$) & \textbf{2.7490} & 0.2223 & 0.2908 & \underline{0.4597} & 0.1876 & 0.0092 & 0.0108 \\
+& & LPIPS ($\uparrow$) & \textbf{0.6537} & 0.3401 & 0.4407 & 0.4166 & \underline{0.5911} & 0.1941 & 0.0951 \\
+& & CIDR ($\uparrow$) & \underline{0.3909} & 0.1854 & 0.2028 & 0.1996 & \textbf{0.4386} & 0.2193 & 0.3832 \\
+& & BRISQUE ($\uparrow$) & \textbf{24.1783} & \underline{20.5644} & 11.6138 & 18.8123 & 12.2644 & 5.7525 & 15.0691 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.25} & 4.50 & 4.25 & 3.75 & \underline{3.25} & 6.00 & 5.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7647 & 0.9670 & 0.9460 & 0.7600 & 0.8353 & \underline{0.9791} & \textbf{0.9859} \\
+& & TE ($\uparrow$) & 0.5214 & \textbf{0.6701} & \underline{0.6350} & 0.5780 & 0.4889 & - & -\\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffAE}
+& MSE ($\uparrow$) & \textbf{0.0962} & 0.0170 & 0.0207 & 0.0051 & \underline{0.0644} & 0.0107 & 0.0067 \\
+& & LPIPS ($\uparrow$) & \underline{0.3468} & 0.1686 & 0.1273 & 0.0798 & \textbf{0.4443} & 0.1396 & 0.0436 \\
+& & CIDR ($\uparrow$) & 0.0956 & 0.0973 & 0.0690 & 0.0213 & 0.0207 & \underline{0.1517} & \textbf{0.3100} \\
+& & BRISQUE ($\uparrow$) & \textbf{88.9888} & 17.2793 & 32.5011 & 11.9436 & 31.3392 & \underline{42.4998} & 18.1879 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{2.00} & 4.00 & 3.75 & 6.75 & \underline{3.50} & \underline{3.50} & 4.50 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.6439 & 0.9366 & 0.8663 & \underline{0.9376} & 0.7932 & 0.9093 & \textbf{0.9431} \\
+& & TE ($\uparrow$) & 0.4594 & \underline{0.5158} & \textbf{0.5330} & 0.4356 & 0.3979 & - & -\\
+
+\midrule
+
+\multirow{27}{*}{\rotatebox[origin=c]{90}{\textbf{Face Swap}}} 
+& \multirow{9}{*}{SimSwap}
+& MSE ($\uparrow$) & \textbf{0.0346} & \underline{0.0241} & 0.0169 & 0.0129 & 0.0100 & 0.0029 & 0.0042 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0701} & \underline{0.0542} & 0.0476 & 0.0369 & 0.0500 & 0.0163 & 0.0229 \\
+& & CIDR ($\uparrow$) & 0.4183 & 0.3499 & 0.3321 & 0.2678 & \textbf{0.5860} & 0.2491 & \underline{0.4913} \\
+& & BRISQUE ($\uparrow$) & \textbf{26.6891} & \underline{26.4644} & 25.8577 & 25.6680 & 24.7518 & 25.6100 & 25.7300 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.50} & \underline{2.50} & 3.50 & 5.00 & 4.25 & 6.75 & 4.50 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7612 & 0.9927 & 0.9196 & 0.7135 & 0.7847 & \underline{0.9973} & \textbf{0.9993} \\
+& & TE ($\uparrow$) & 0.4852 & \textbf{0.6857} & \underline{0.6362} & 0.5616 & 0.4991 & - & -\\
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{pSp-mix}
+& MSE ($\uparrow$) & \textbf{0.3753} & 0.0863 & 0.1345 & \underline{0.1591} & 0.0642 & 0.0051 & 0.0037 \\
+& & LPIPS ($\uparrow$) & \textbf{0.2871} & 0.1206 & 0.1524 & 0.1605 & \underline{0.1739} & 0.0244 & 0.0188 \\
+& & CIDR ($\uparrow$) & 0.1359 & 0.0685 & 0.0741 & 0.0597 & \underline{0.1409} & 0.0877 & \textbf{0.2004} \\
+& & BRISQUE ($\uparrow$) & \textbf{19.6125} & 18.1347 & 18.7614 & \underline{19.0509} & 16.4725 & 18.8466 & 18.3905 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{1.50} & 5.25 & 4.00 & \underline{3.50} & 4.00 & 4.75 & 5.00 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.8398 & 0.9605 & 0.9486 & 0.7850 & 0.8389 & \underline{0.9940} & \textbf{0.9999} \\
+& & TE ($\uparrow$) & 0.5127 & \textbf{0.6635} & \underline{0.6433} & 0.5838 & 0.4741 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{BlendFace}
+& MSE ($\uparrow$) & \textbf{0.0751} & 0.0337 & 0.0174 & \underline{0.0414} & 0.0070 & 0.0012 & 0.0019 \\
+& & LPIPS ($\uparrow$) & \textbf{0.0596} & 0.0319 & 0.0200 & \underline{0.0370} & 0.0227 & 0.0052 & 0.0073 \\
+& & CIDR ($\uparrow$) & \underline{0.4336} & 0.3112 & 0.2319 & 0.3524 & \textbf{0.5820} & 0.1641 & 0.3720 \\
+& & BRISQUE ($\uparrow$) & 18.9811 & 19.1206 & 19.0711 & 19.1808 & 19.3738 & \textbf{20.0599} & \underline{19.6909} \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & \textbf{2.75} & 4.25 & 5.00 & \underline{3.00} & 3.25 & 5.50 & 4.25 \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7969 & 0.9358 & 0.9512 & 0.6181 & 0.8215 & \textbf{0.9997} & \underline{0.9995} \\
+& & TE ($\uparrow$) & 0.4850 & \textbf{0.6471} & \underline{0.6269} & 0.5418 & 0.4452 & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffSwap}
+& MSE ($\uparrow$) & 0.0061 & 0.0057 & 0.0062 & 0.0060 & \textbf{0.0143} & 0.0062 & \underline{0.0066} \\
+& & LPIPS ($\uparrow$) & 0.0380 & 0.0378 & 0.0390 & 0.0379 & \textbf{0.0923} & 0.0395 & \underline{0.0414} \\
+& & CIDR ($\uparrow$) & 0.0413 & 0.0391 & 0.0337 & 0.0450 & \textbf{0.2418} & 0.0639 & \underline{0.1593} \\
+& & BRISQUE ($\uparrow$) & 15.5201 & \underline{15.6934} & 15.5980 & \textbf{15.8499} & 14.8338 & 15.5943 & 15.3361 \\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & 5.50 & 5.50 & 4.63 & 3.75 & \textbf{2.50} & 3.13 & \underline{3.00} \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & \underline{0.6744} & 0.6736 & 0.6735 & \textbf{0.6751} & 0.6209 & 0.6733 & 0.6699 \\
+& & TE ($\uparrow$) & 0.3139 & 0.3766 & \textbf{0.4952} & 0.3992 & \underline{0.4271} & - & -\\
+
+\cmidrule(lr){2-10}
+
+& \multirow{9}{*}{DiffFace}
+& MSE ($\uparrow$) & 0.0125 & 0.0127 & 0.0129 & 0.0135 & \textbf{0.0232} & 0.0152 & \underline{0.0166} \\
+& & LPIPS ($\uparrow$) & 0.0470 & 0.0477 & 0.0493 & 0.0498 & \textbf{0.0804} & 0.0564 & \underline{0.0608} \\
+& & CIDR ($\uparrow$) & 0.0397 & 0.0330 & 0.0464 & 0.0381 & \textbf{0.6275} & 0.2389 & \underline{0.4437} \\
+& & BRISQUE ($\uparrow$) & \underline{9.9247} & 9.6763 & 9.5813 & \textbf{10.2244} & 9.5931 & 9.3581 & 9.5360\\
+\cmidrule(lr){3-10}
+
+& & AvgRank ($\downarrow$) & 5.25 & 5.50 & 4.75 & 3.75 & \textbf{1.75} & 4.00 & \underline{3.00} \\
+
+\cmidrule(lr){3-10}
+
+& & ROB ($\uparrow$) & 0.7992 & \textbf{0.8029} & \underline{0.8015} & 0.7996 & 0.7304 & 0.7989 & \textbf{0.8029} \\
+& & TE ($\uparrow$) & 0.3158 & 0.3860 & \textbf{0.4999} & 0.3996 & \underline{0.4504} & - & -\\
+\bottomrule
+\end{tabular}
+\vspace{-10pt}
+\end{table*}
+
+\clearpage
+
+\subsection{Visualization of Principal Results}
+\label{appendix:qualitative}
+This section presents a comprehensive visualization of proactive defense performance across all evaluated generators and datasets. As shown in Figure~\ref{fig:radar_charts_1} and Figure~\ref{fig:radar_charts_2}, generators are organized into two categories: attribute manipulation models and face swapping models. Each row corresponds to a generator, while columns represent different datasets (CelebA-HQ, FFHQ, and VGGFace2-HQ). 
+
+Each radar plot summarizes multiple evaluation metrics, capturing complementary aspects of performance, including pixel-level fidelity (MSE), perceptual similarity (LPIPS), identity disruption (CIDR), visual quality (BRISQUE), robustness (ROB), and transferability (TE). This visualization complements the detailed analysis on SimSwap in Figure~\ref{fig:simswap_performance} by providing a holistic comparison across diverse generators and data distributions.
+
+
+
+\begin{figure*}[h!]
+    \centering
+        \begin{subfigure}[t]{0.7\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/StarGAN.pdf}
+        \caption{StarGAN}
+    \end{subfigure}
+    \vspace{4pt}
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/StyleCLIP.pdf}
+        \caption{StyleCLIP}
+    \end{subfigure}
+    \vspace{4pt}
+    
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/DiffAE.pdf}
+        \caption{DiffAE}
+    \end{subfigure}
+    \caption{Radar charts of proactive defense performance on attribute manipulation models across three datasets (CelebA-HQ, FFHQ, and VGGFace2-HQ). Rows denote generators and columns denote datasets.}
+    \label{fig:radar_charts_1}
+\end{figure*}
+
+\begin{figure*}[t]
+    \centering
+        \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/SimSwap.pdf}
+        \caption{SimSwap}
+    \end{subfigure}
+    \vspace{4pt}
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/pSp_mix.pdf}
+        \caption{pSp-mix}
+    \end{subfigure}
+    \vspace{4pt}
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/BlendFace.pdf}
+        \caption{BlendFace}
+    \end{subfigure}
+    \vspace{4pt}
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/DiffSwap.pdf}
+        \caption{DiffSwap}
+    \end{subfigure}
+    \vspace{4pt}
+    \begin{subfigure}[t]{0.7\textwidth}
+        \includegraphics[width=\linewidth]{figures/DiffFace.pdf}
+        \caption{DiffFace}
+    \end{subfigure}
+    \caption{Radar charts of proactive defense performance on face swap models across three datasets (CelebA-HQ, FFHQ, and VGGFace2-HQ). Rows denote generators and columns denote datasets.}
+    \label{fig:radar_charts_2}
+\end{figure*}
+
+\clearpage
+
+\subsection{Visualization of AvgRank Results}
+\label{appendix:avgRank_full}
+This section visualizes the AvgRank-based rankings of proactive defenses across all evaluated generators. While Figure~\ref{fig:avgrank_main} presents representative results on a subset of models, we provide complete ranking visualizations here for comprehensive comparison.
+
+\begin{figure*}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{figures/AvgRank_full_w_diff.pdf}
+    \caption{Qualitative comparison of proactive defenses sorted by AvgRank. For each generator, defense methods are arranged in ascending order of their AvgRank (from highest effectiveness on the left to lowest on the right).}
+    \label{fig:AvgRank_full}
+\end{figure*}
+
+\clearpage
+
+\subsection{Imperceptibility}
+\label{appendix:impercep}
+To examine the visual imperceptibility of proactive defenses reported in Table~\ref{tab:appendix_impercep}, we report pixel-wise and perceptual fidelity metrics, including MSE, PSNR, SSIM, and LPIPS, across representative generators and defense methods. Lower MSE and LPIPS values and higher PSNR and SSIM values correspond to higher visual fidelity. 
+
+As shown in Figure~\ref{fig:impercept}, optimization-based approaches such as DF-RAP and LEAT tend to preserve visual fidelity, as they apply constrained perturbations directly to the original images under a fixed budget. In contrast, model-based learning approaches, including NullSwap and SCOL, tend to exhibit relatively larger visual differences compared to optimization methods, as they rely on image reconstruction mechanisms. 
+
+\begin{table*}[h!]
+\centering
+\scriptsize
+\caption{The tendency of imperceptibility results for proactive defense methods on StarGAN (attribute manipulation) and SimSwap (face swap). Other generators exhibit similar trends.}
+\label{tab:appendix_impercep}
+
+\begin{tabular}{l l rrrrr rr}
+\toprule
+\multirow{2}{*}{Generator} & \multirow{2}{*}{Metric}
+& \multicolumn{5}{c}{White-box} & \multicolumn{2}{c}{Black-box} \\
+\cmidrule(lr){3-7}\cmidrule(lr){8-9}
+& & PGD & Disrupting & DF-RAP & Anti-Forgery & LEAT & SCOL & NullSwap \\
+\midrule
+
+\multirow{4}{*}{StarGAN}
+& MSE ($\downarrow$)     & 0.0013 & 0.0018 & 0.0012 & 0.0002 & 0.0024 & 0.0617 & 0.0036 \\
+& PSNR ($\uparrow$)    & 34.7939 & 33.3090 & 34.9363 & 42.4811 & 32.1176 & 18.5619 & 30.5156 \\
+& SSIM ($\uparrow$)    & 0.8705 & 0.8967 & 0.8761 & 0.9764 & 0.7930 & 0.5813 & 0.9456 \\
+& LPIPS ($\downarrow$) & 0.0225 & 0.0639 & 0.0772 & 0.0004 & 0.1086 & 0.2145 & 0.0137 \\
+\midrule
+
+\multirow{4}{*}{SimSwap}
+& MSE ($\downarrow$)     & 0.0009 & 0.0017 & 0.0012 & 0.0004 & 0.0010 & 0.0617 & 0.0036 \\
+& PSNR ($\uparrow$)    & 36.0479 & 33.6250 & 35.2073 & 39.1039 & 35.9519 & 18.5619 & 30.5156 \\
+& SSIM ($\uparrow$)    & 0.8994 & 0.8951 & 0.8917 & 0.9494 & 0.8977 & 0.5813 & 0.9456 \\
+& LPIPS ($\downarrow$) & 0.0601 & 0.0641 & 0.0828 & 0.0077 & 0.0621 & 0.2145 & 0.0137 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/appendix_B5.pdf}
+    \caption{Representative visual comparisons between original images and their protected images produced by different proactive defense methods on StarGAN and SimSwap.}
+    \label{fig:impercept}
+\end{figure}
+
+\clearpage
+
+\section{Robustness}
+\label{sec:appendix_robustness}
+\subsection{post-processing transformations for Robustness}
+\label{subsec:robustness_sum}
+To design a realistic and representative robustness evaluation protocol, we systematically review post-processing perturbations adopted in prior proactive deepfake defense studies. Table~\ref{tab:perturbation_robustness} summarizes commonly used transformations, including JPEG compression, blur, noise injection, color manipulation, and image reconstruction.
+Based on this analysis, we select a subset of widely adopted perturbations that reflect practical image degradation scenarios encountered in real-world deployment. 
+
+\begin{table}[h]
+\centering
+\small
+\scriptsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{l | l}
+\toprule
+\textbf{Perturbation Robustness Evaluation} & \textbf{Evaluated in Papers} \\
+\midrule
+JPEG Compression &
+\cite{wang2022anti}, \cite{qu2024df}, \cite{zhang2024dual}, \cite{qu2025id}, \cite{jeong2025faceshield}, \cite{wang2025faceswapguard} \\
+
+Gaussian Blur &
+\cite{ruiz2020disrupting}, \cite{wang2022anti}, \cite{zhang2024dual}, \cite{qu2025id}, \cite{wang2025faceswapguard} \\
+
+Box Blur & 
+\cite{ruiz2020disrupting} \\
+
+Image Resizing &
+\cite{zhang2024dual} \\
+
+Gaussian Noise & 
+\cite{zhang2024dual} \\
+
+Salt-and-Pepper Noise  &
+\cite{zhang2024dual} \\
+
+Image Reconstruction (MagDR) &
+\cite{wang2022anti} \\
+
+\bottomrule
+\end{tabular}
+\caption{Comparison of robustness in proactive deepfake defense methods.}
+\label{tab:perturbation_robustness}
+\end{table}
+
+\subsection{Visualizations of robustness Results}
+\label{appendix:vis_robust_appendix}
+
+This section presents comprehensive visualizations of defense robustness across all evaluated generators. While Figure~\ref{fig:robustness_radar} reports representative results on StyleCLIP and BlendFace, we extend the analysis to all generators to provide a complete view of robustness under post-processing transformations.
+
+ \begin{figure*}[h]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{figures/robustness/l2_robust_rebuttal.png}
+        \caption{MSE}
+        \label{fig:l2_robust}
+    \end{subfigure}
+    \hfill 
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{figures/robustness/cidr_robust_rebuttal.png}
+        \caption{CIDR}
+        \label{fig:id_robust}
+    \end{subfigure}
+    \caption{Robustness against post-processing across all evaluated generators. The axes represent transformation types (JPEG compression, Blur, Gaussian Noise, Salt \& Pepper) with varying intensities. Solid lines represent performance under transformations, while dashed lines indicate the reference performance without post-processing.}
+    \label{fig:robustness_radar_full}
+\end{figure*} 
+
+\clearpage
+
+\subsection{Quantitative Robustness Results}
+Following the visual analysis in Appendix~\ref{appendix:vis_robust_appendix}, we report detailed quantitative robustness results for each disrupting method in this section. While Figure~\ref{fig:robustness_radar_full} provides intuitive comparisons under post-processing transformations, the following tables summarize per-metric performance values to support rigorous quantitative evaluation.
+
+
+
+% ============ PGD ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of PGD under various post-processing transformations.}
+\label{tab:robust_pgd}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 1.3715 & 5.4086 & 0.1185 & 0.0440 & 0.5427 & 0.0591 & 0.0046 & 0.0069 \\
+\midrule
+Blur ($\sigma$=1) & 1.3715 & 5.4081 & 0.1186 & 0.0440 & 0.5427 & 0.0591 & 0.0046 &0.0065\\
+Blur ($\sigma$=3) & 0.0562 & 0.1976 & 0.0178 & 0.0007 & 0.1443 & 0.0216 & 0.0046 & 0.0069 \\
+JPEG (Q=70) & 0.0021 & 0.2187 & 0.0030 & 0.0010 & 0.1913 & 0.0048 & 0.0046 & 0.0068 \\
+JPEG (Q=90) & 0.1190 & 0.5121 & 0.0041 & 0.0123 & 0.3809 & 0.0153 & 0.0046 & 0.0066 \\
+Noise ($\sigma$=0.001) & 1.3715 & 5.3970 & 0.1184 & 0.0440 & 0.5425 & 0.0591 & 0.0046 & 0.0068 \\
+Noise ($\sigma$=0.003) & 1.3708 & 5.3416 & 0.1173 & 0.0439 & 0.5419 & 0.0590 & 0.0046 & 0.0069 \\
+S\&P (p=0.001) & 1.3144 & 3.3594 & 0.0422 & 0.0412 & 0.5037 & 0.0535 & 0.0046 & 0.0069 \\
+S\&P (p=0.003) & 1.2037 & 1.5547 & 0.0265 & 0.0353 & 0.4232 & 0.0426 & 0.0046 & 0.0068 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.6878 & 0.7042 & 0.4070 & 0.0963 & 0.3331 & 0.0552 & 0.0293 & 0.0282 \\
+\midrule
+Blur ($\sigma$=1) & 0.6878 & 0.7042 & 0.4070 & 0.0963 & 0.3331 & 0.0552 & 0.0293 & 0.0282 \\
+Blur ($\sigma$=3) & 0.2314 & 0.4352 & 0.1854 & 0.0055 & 0.1722 & 0.0261 & 0.0293 & 0.0282 \\
+JPEG (Q=70) & 0.0238 & 0.4264 & 0.0325 & 0.0069 & 0.1945 & 0.0091 & 0.0293 & 0.0282 \\
+JPEG (Q=90) & 0.2166 & 0.5628 & 0.0529 & 0.0436 & 0.2691 & 0.0199 & 0.0293 & 0.0282 \\
+Noise ($\sigma$=0.001) & 0.6877 & 0.7041 & 0.4068 & 0.0963 & 0.3330 & 0.0552 & 0.0293 & 0.0282 \\
+Noise ($\sigma$=0.003) & 0.6876 & 0.7039 & 0.4044 & 0.0963 & 0.3326 & 0.0551 & 0.0293 & 0.0282 \\
+S\&P (p=0.001) & 0.6793 & 0.6922 & 0.2008 & 0.0929 & 0.3174 & 0.0511 & 0.0293 & 0.0282 \\
+S\&P (p=0.003) & 0.6693 & 0.6694 & 0.1951 & 0.0860 & 0.2899 & 0.0431 & 0.0293 & 0.0282 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.3765 & 0.5345 & 0.1184 & 0.4407 & 0.1937 & 0.3848 & 0.0363 & 0.0362 \\
+\midrule
+Blur ($\sigma$=1) & 0.3765 & 0.5345 & 0.1184 & 0.4407 & 0.1936 & 0.3848 & 0.0477 & 0.0445\\
+Blur ($\sigma$=3) & 0.0531 & 0.2546 & 0.0378 & 0.0284 & 0.0947 & 0.2268 & 0.0527 & 0.0388\\
+JPEG (Q=70) & 0.0213 & 0.2811 & 0.0243 & 0.0394 & 0.1113 & 0.1081 & 0.0524 & 0.0407\\
+JPEG (Q=90) & 0.0105 & 0.3847 & 0.0461 & 0.2289 & 0.1490 & 0.1982 & 0.0546 & 0.0394\\
+Noise ($\sigma$=0.001) & 0.3765 & 0.5344 & 0.1183 & 0.4407 & 0.1936 & 0.3847 & 0.0547 & 0.0466\\
+Noise ($\sigma$=0.003) & 0.3763 & 0.5339 & 0.1173 & 0.4407 & 0.1934 & 0.3845 & 0.0697 & 0.0514\\
+S\&P (p=0.001) & 0.3770 & 0.5174 & 0.0750 & 0.4306 & 0.1845 & 0.3678 & 0.0483 & 0.0515\\
+S\&P (p=0.003) & 0.3678 & 0.4904 & 0.0898 & 0.4104 & 0.1656 & 0.3319 & 0.0684 & 0.0501\\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 36.4792 & 31.2795 & 96.5489 & 1.7925 & 7.1814 & 1.7485 & 4.0007 & 1.8878\\
+\midrule
+Blur ($\sigma$=1) & 36.4822 & 31.2840 & 96.5569 & 1.7925 & 7.1804 & 1.7531 & -4.8031 & 1.8878\\
+Blur ($\sigma$=3) & 21.4911 & 33.1753 & 17.8541 & 1.2955 & 7.1325 & 1.7993 & -5.1175 & 1.8878\\
+JPEG (Q=70) & 17.3788 & 13.0823 & 16.1227 & 1.3277 & 6.3278 & 2.2660 & -4.8531 & 1.8878 \\
+JPEG (Q=90) & 21.4017 & 13.9339 & 13.7555 & 1.5447 & 6.2618 & 1.8718 & -5.0995 & 1.8878\\
+Noise ($\sigma$=0.001) & 36.4790 & 31.2698 & 96.4781 & 1.8038 & 7.1659 & 1.7687 & -4.9357 & 1.8876\\
+Noise ($\sigma$=0.003) & 36.5107 & 31.0834 & 95.8322 & 1.8021 & 7.1531 & 1.7579 & -4.4992 & 1.8878\\
+S\&P (p=0.001) & 35.8280 & 26.5648 & 71.7397 & 1.6926 & 7.0919 & 1.7087 & -4.9699 & 1.8878\\
+S\&P (p=0.003) & 35.7167 & 20.1636 & 39.5108 & 1.6302 & 7.0361 & 1.7185 & -4.9134 & 1.8878\\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+\end{table}
+
+\clearpage
+
+
+% ============ Disrupting ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of Disrupting under various post-processing transformations.}
+\label{tab:robust_disrupting}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.3003 & 0.3308 & 0.0178 & 0.0320 & 0.1270 & 0.0233 & 0.0046 &0.0064\\
+\midrule
+Blur ($\sigma$=1) & 0.3003 & 0.3308 & 0.0178 & 0.0320 & 0.1270 & 0.0233 & 0.0046 & 0.0064 \\
+Blur ($\sigma$=3) & 0.3166 & 0.6951 & 0.0160 & 0.0378 & 0.2790 & 0.0354 & 0.0046 & 0.0064 \\
+JPEG (Q=70) & 0.0596 & 0.2117 & 0.0044 & 0.0312 & 0.0835 & 0.0127 & 0.0046 & 0.0064 \\
+JPEG (Q=90) & 0.0796 & 0.2879 & 0.0066 & 0.0327 & 0.1155 & 0.0228 & 0.0046 & 0.0064 \\
+Noise ($\sigma$=0.001) & 0.3003 & 0.3305 & 0.0178 & 0.0320 & 0.1269 & 0.0233 & 0.0046 & 0.0064 \\
+Noise ($\sigma$=0.003) & 0.2998 & 0.3292 & 0.0179 & 0.0320 & 0.1265 & 0.0231 & 0.0046 & 0.0064 \\
+S\&P (p=0.001) & 0.2706 & 0.2949 & 0.0133 & 0.0309 & 0.1130 & 0.0190 & 0.0046 & 0.0064 \\
+S\&P (p=0.003) & 0.2479 & 0.2433 & 0.0145 & 0.0285 & 0.0918 & 0.0135 & 0.0046 & 0.0064 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.4872 & 0.4069 & 0.1757 & 0.0801 & 0.1557 & 0.0291 & 0.0283 & 0.0269 \\
+\midrule
+Blur ($\sigma$=1) & 0.4872 & 0.4069 & 0.1757 & 0.0801 & 0.1557 & 0.0291 & 0.0283 & 0.0269 \\
+Blur ($\sigma$=3) & 0.3431 & 0.5391 & 0.1778 & 0.0886 & 0.2418 & 0.0397 & 0.0283 & 0.0269 \\
+JPEG (Q=70) & 0.1285 & 0.3555 & 0.0564 & 0.0788 & 0.1283 & 0.0186 & 0.0283 & 0.0269 \\
+JPEG (Q=90) & 0.1458 & 0.3962 & 0.0846 & 0.0811 & 0.1490 & 0.0283 & 0.0283 & 0.0269 \\
+Noise ($\sigma$=0.001) & 0.4872 & 0.4068 & 0.1756 & 0.0800 & 0.1556 & 0.0291 & 0.0283 & 0.0269 \\
+Noise ($\sigma$=0.003) & 0.4876 & 0.4066 & 0.1747 & 0.0800 & 0.1553 & 0.0289 & 0.0283 & 0.0269 \\
+S\&P (p=0.001) & 0.5072 & 0.4079 & 0.2102 & 0.0785 & 0.1510 & 0.0252 & 0.0283 & 0.0269 \\
+S\&P (p=0.003) & 0.5354 & 0.4198 & 0.2076 & 0.0757 & 0.1434 & 0.0199 & 0.0283 & 0.0269 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.1385 & 0.3080 & 0.0275 & 0.3821 & 0.1091 & 0.2645 & 0.0425 & 0.0387 \\
+\midrule
+Blur ($\sigma$=1) & 0.1385 & 0.3080 & 0.0276 & 0.3821 & 0.1090 & 0.2645 & 0.0547 & 0.0421 \\
+Blur ($\sigma$=3) & 0.1524 & 0.3721 & 0.0454 & 0.4101 & 0.1452 & 0.3336 & 0.0564 & 0.0402 \\
+JPEG (Q=70) & 0.0778 & 0.2824 & 0.0295 & 0.3803 & 0.0981 & 0.2051 & 0.0580 & 0.0372 \\
+JPEG (Q=90) & 0.0869 & 0.3033 & 0.0434 & 0.3878 & 0.1085 & 0.2658 & 0.0648 & 0.0383 \\
+Noise ($\sigma$=0.001) & 0.1382 & 0.3079 & 0.0276 & 0.3821 & 0.1090 & 0.2643 & 0.0670 & 0.0521 \\
+Noise ($\sigma$=0.003) & 0.1403 & 0.3077 & 0.0277 & 0.3821 & 0.1089 & 0.2633 & 0.0828 & 0.0578 \\
+S\&P (p=0.001) & 0.1717 & 0.3064 & 0.0568 & 0.3785 & 0.1053 & 0.2353 & 0.0580 & 0.0478 \\
+S\&P (p=0.003) & 0.1948 & 0.3066 & 0.0723 & 0.3737 & 0.1013 & 0.1964 & 0.0653 & 0.0600 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 25.0217 & 21.7907 & 19.5244 & 1.9301 & 6.7925 & 2.1221 & 3.8500 & 1.7522 \\
+\midrule
+Blur ($\sigma$=1) & 25.0177 & 21.7900 & 19.4999 & 1.9301 & 6.7891 & 2.1205 & -5.1296 & 1.7522 \\
+Blur ($\sigma$=3) & 23.8909 & 44.6598 & 14.1459 & 1.8704 & 8.0037 & 2.1624 & -4.9978 & 1.7522 \\
+JPEG (Q=70) & 19.6231 & 19.2952 & 16.3151 & 1.8700 & 6.9016 & 2.1358 & -4.8022 & 1.7522 \\
+JPEG (Q=90) & 20.0939 & 20.8985 & 15.5738 & 1.8959 & 6.7626 & 2.1550 & -4.7816 & 1.7522 \\
+Noise ($\sigma$=0.001) & 25.0113 & 21.7492 & 19.5536 & 1.9294 & 6.7982 & 2.1143 & -4.9020 & 1.7522 \\
+Noise ($\sigma$=0.003) & 25.1751 & 21.5600 & 19.4216 & 1.9392 & 6.7723 & 2.1359 & -4.9118 & 1.7522 \\
+S\&P (p=0.001) & 28.5428 & 19.7225 & 51.9769 & 1.9540 & 6.6676 & 2.1561 & -4.8912 & 1.7522 \\
+S\&P (p=0.003) & 32.8004 & 17.7209 & 56.5645 & 1.9630 & 6.6697 & 2.1447 & -4.7649 & 1.7522 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+\end{table}
+
+\clearpage
+
+
+% ============ DF-RAP ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of DF-RAP under various post-processing transformations.}
+\label{tab:robust_df_rap}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.2694 & 0.3917 & 0.0186 & 0.0238 & 0.2104 & 0.0088 & 0.0047 & 0.0068\\
+\midrule
+Blur ($\sigma$=1) & 0.2694 & 0.3917 & 0.0186 & 0.0238 & 0.2104 & 0.0088 & 0.0047 & 0.0068 \\
+Blur ($\sigma$=3) & 0.0185 & 0.2238 & 0.0129 & 0.0106 & 0.1413 & 0.0076 & 0.0047 & 0.0068 \\
+JPEG (Q=70) & 0.1142 & 0.3074 & 0.0037 & 0.0181 & 0.1803 & 0.0089 & 0.0047 & 0.0068 \\
+JPEG (Q=90) & 0.3342 & 0.3813 & 0.0043 & 0.0260 & 0.2078 & 0.0120 & 0.0047 & 0.0068 \\
+Noise ($\sigma$=0.001) & 0.2693 & 0.3915 & 0.0186 & 0.0238 & 0.2103 & 0.0088 & 0.0047 & 0.0068 \\
+Noise ($\sigma$=0.003) & 0.2695 & 0.3907 & 0.0187 & 0.0238 & 0.2101 & 0.0088 & 0.0047 & 0.0068 \\
+S\&P (p=0.001) & 0.2417 & 0.3624 & 0.0125 & 0.0227 & 0.1951 & 0.0078 & 0.0047 & 0.0068 \\
+S\&P (p=0.003) & 0.2259 & 0.3068 & 0.0139 & 0.0206 & 0.1660 & 0.0065 & 0.0047 & 0.0068 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.4477 & 0.5030 & 0.1301 & 0.0695 & 0.1984 & 0.0164 & 0.0294 & 0.0283 \\
+\midrule
+Blur ($\sigma$=1) & 0.4477 & 0.5030 & 0.1301 & 0.0695 & 0.1984 & 0.0164 & 0.0294 & 0.0283 \\
+Blur ($\sigma$=3) & 0.1050 & 0.4124 & 0.1906 & 0.0401 & 0.1583 & 0.0149 & 0.0294 & 0.0283 \\
+JPEG (Q=70) & 0.1890 & 0.4536 & 0.0439 & 0.0577 & 0.1803 & 0.0172 & 0.0294 & 0.0283 \\
+JPEG (Q=90) & 0.3483 & 0.5015 & 0.0502 & 0.0737 & 0.1976 & 0.0215 & 0.0294 & 0.0283 \\
+Noise ($\sigma$=0.001) & 0.4478 & 0.5030 & 0.1300 & 0.0695 & 0.1984 & 0.0164 & 0.0294 & 0.0283 \\
+Noise ($\sigma$=0.003) & 0.4490 & 0.5031 & 0.1298 & 0.0695 & 0.1982 & 0.0163 & 0.0294 & 0.0283 \\
+S\&P (p=0.001) & 0.4782 & 0.5056 & 0.1998 & 0.0676 & 0.1920 & 0.0149 & 0.0294 & 0.0283 \\
+S\&P (p=0.003) & 0.5178 & 0.5096 & 0.1976 & 0.0640 & 0.1788 & 0.0128 & 0.0294 & 0.0283 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.1003 & 0.3288 & 0.0215 & 0.3709 & 0.1172 & 0.2078 & 0.0459 & 0.0535 \\
+\midrule
+Blur ($\sigma$=1) & 0.1003 & 0.3288 & 0.0215 & 0.3709 & 0.1172 & 0.2078 & 0.0639 & 0.0530 \\
+Blur ($\sigma$=3) & 0.0279 & 0.2414 & 0.0344 & 0.2113 & 0.0902 & 0.1972 & 0.0573 & 0.0477 \\
+JPEG (Q=70) & 0.0084 & 0.2902 & 0.0226 & 0.3064 & 0.1060 & 0.2381 & 0.0663 & 0.0488 \\
+JPEG (Q=90) & 0.0383 & 0.3285 & 0.0318 & 0.3929 & 0.1177 & 0.2848 & 0.0606 & 0.0513 \\
+Noise ($\sigma$=0.001) & 0.1001 & 0.3287 & 0.0215 & 0.3708 & 0.1172 & 0.2078 & 0.0618 & 0.0595 \\
+Noise ($\sigma$=0.003) & 0.1017 & 0.3287 & 0.0216 & 0.3709 & 0.1171 & 0.2055 & 0.0867 & 0.0755 \\
+S\&P (p=0.001) & 0.1379 & 0.3248 & 0.0463 & 0.3623 & 0.1129 & 0.1877 & 0.0701 & 0.0663 \\
+S\&P (p=0.003) & 0.1768 & 0.3218 & 0.0637 & 0.3540 & 0.1039 & 0.1609 & 0.0745 & 0.0795 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 33.9631 & 13.3239 & 33.4323 & 1.4151 & 6.1890 & 2.2879 & 4.0877 & 1.7187 \\
+\midrule
+Blur ($\sigma$=1) & 33.9614 & 13.3217 & 33.4494 & 1.4151 & 6.2113 & 2.2824 & -4.8291 & 1.7187 \\
+Blur ($\sigma$=3) & 25.4032 & 29.2013 & 4.0871 & 1.4561 & 6.7555 & 2.2844 & -4.7393 & 1.7187 \\
+JPEG (Q=70) & 23.7501 & 13.8232 & 13.7654 & 1.4813 & 6.4292 & 2.3695 & -4.9117 & 1.7187 \\
+JPEG (Q=90) & 28.2732 & 13.5132 & 14.1164 & 1.4518 & 6.2196 & 2.2799 & -4.6799 & 1.7187 \\
+Noise ($\sigma$=0.001) & 33.9377 & 13.3278 & 33.4539 & 1.4258 & 6.1950 & 2.2775 & -4.9241 & 1.7187 \\
+Noise ($\sigma$=0.003) & 34.0946 & 13.2977 & 33.4567 & 1.4253 & 6.2000 & 2.2636 & -4.5391 & 1.7187 \\
+S\&P (p=0.001) & 35.2406 & 13.5996 & 35.1595 & 1.3816 & 6.2819 & 2.2891 & -4.6808 & 1.7187 \\
+S\&P (p=0.003) & 37.3602 & 14.1166 & 44.4481 & 1.3522 & 6.6610 & 2.2468 & -4.7007 & 1.7187 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+\end{table}
+
+\clearpage
+
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of Anti-Forgery under various post-processing transformations.}
+\label{tab:robust_anti}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 1.6180 & 0.8045 & 0.0020 & 0.0190 & 0.2496 & 0.0383 & 0.0043 & 0.0065 \\
+\midrule
+Blur ($\sigma$=1) & 1.6180 & 0.8045 & 0.0020 & 0.0190 & 0.2496 & 0.0383 & 0.0043 & 0.0065 \\
+Blur ($\sigma$=3) & 0.0130 & 0.1248 & 0.0041 & 0.0007 & 0.0955 & 0.0066 & 0.0043 & 0.0065 \\
+JPEG (Q=70) & 0.0016 & 0.0279 & 0.0022 & 0.0000 & 0.0253 & 0.0000 & 0.0043 & 0.0065 \\
+JPEG (Q=90) & 0.0012 & 0.0681 & 0.0021 & 0.0002 & 0.0591 & 0.0001 & 0.0043 & 0.0065 \\
+Noise ($\sigma$=0.001) & 1.6165 & 0.8015 & 0.0021 & 0.0190 & 0.2493 & 0.0377 & 0.0043 & 0.0065 \\
+Noise ($\sigma$=0.003) & 1.6052 & 0.7892 & 0.0032 & 0.0189 & 0.2483 & 0.0325 & 0.0043 & 0.0065 \\
+S\&P (p=0.001) & 0.7597 & 0.6411 & 0.0082 & 0.0172 & 0.2191 & 0.0114 & 0.0043 & 0.0065 \\
+S\&P (p=0.003) & 0.4791 & 0.4531 & 0.0107 & 0.0145 & 0.1701 & 0.0023 & 0.0043 & 0.0065 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.6950 & 0.4493 & 0.0315 & 0.0577 & 0.2038 & 0.0412 & 0.0309 & 0.0281 \\
+\midrule
+Blur ($\sigma$=1) & 0.6950 & 0.4493 & 0.0315 & 0.0577 & 0.2038 & 0.0412 & 0.0309 & 0.0281 \\
+Blur ($\sigma$=3) & 0.0931 & 0.3330 & 0.0931 & 0.0050 & 0.1196 & 0.0137 & 0.0309 & 0.0281 \\
+JPEG (Q=70) & 0.0159 & 0.1031 & 0.0175 & 0.0007 & 0.0548 & 0.0003 & 0.0309 & 0.0281 \\
+JPEG (Q=90) & 0.0121 & 0.1706 & 0.0206 & 0.0017 & 0.0872 & 0.0007 & 0.0309 & 0.0281 \\
+Noise ($\sigma$=0.001) & 0.6944 & 0.4491 & 0.0329 & 0.0577 & 0.2037 & 0.0407 & 0.0309 & 0.0281 \\
+Noise ($\sigma$=0.003) & 0.6891 & 0.4484 & 0.0483 & 0.0575 & 0.2031 & 0.0364 & 0.0309 & 0.0281 \\
+S\&P (p=0.001) & 0.5664 & 0.4434 & 0.1905 & 0.0541 & 0.1918 & 0.0171 & 0.0309 & 0.0281 \\
+S\&P (p=0.003) & 0.5683 & 0.4462 & 0.2044 & 0.0492 & 0.1742 & 0.0053 & 0.0309 & 0.0281 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.4103 & 0.2809 & 0.0105 & 0.2935 & 0.0781 & 0.3668 & 0.0430 & 0.0361 \\
+\midrule
+Blur ($\sigma$=1) & 0.4103 & 0.2809 & 0.0105 & 0.2935 & 0.0781 & 0.3668 & 0.0502 & 0.0381 \\
+Blur ($\sigma$=3) & 0.0402 & 0.1209 & 0.0259 & 0.0253 & 0.0346 & 0.2262 & 0.0479 & 0.0386 \\
+JPEG (Q=70) & 0.0183 & 0.0512 & 0.0124 & 0.0067 & 0.0182 & 0.0080 & 0.0600 & 0.0365 \\
+JPEG (Q=90) & 0.0094 & 0.0746 & 0.0113 & 0.0112 & 0.0249 & 0.0131 & 0.0537 & 0.0409 \\
+Noise ($\sigma$=0.001) & 0.4110 & 0.2806 & 0.0115 & 0.2934 & 0.0781 & 0.3636 & 0.0512 & 0.0404 \\
+Noise ($\sigma$=0.003) & 0.4102 & 0.2794 & 0.0181 & 0.2930 & 0.0778 & 0.3443 & 0.0819 & 0.0486 \\
+S\&P (p=0.001) & 0.3270 & 0.2689 & 0.0627 & 0.2810 & 0.0714 & 0.2325 & 0.0524 & 0.0443 \\
+S\&P (p=0.003) & 0.3124 & 0.2558 & 0.0728 & 0.2669 & 0.0631 & 0.0741 & 0.0637 & 0.0496 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 29.6181 & 21.0689 & 12.5174 & 1.2399 & 6.2846 & 2.1080 & 3.5432 & 1.7217 \\
+\midrule
+Blur ($\sigma$=1) & 29.6181 & 21.0695 & 12.5174 & 1.2399 & 6.2941 & 2.1131 & -4.9171 & 1.7217 \\
+Blur ($\sigma$=3) & 23.7931 & 40.2378 & 16.3093 & 1.2516 & 7.1598 & 2.4618 & -4.7663 & 1.7217 \\
+JPEG (Q=70) & 17.0328 & 12.7457 & 12.7115 & 1.3822 & 6.6151 & 2.5316 & -5.0345 & 1.7217 \\
+JPEG (Q=90) & 17.8007 & 13.8513 & 11.6284 & 1.3743 & 6.7212 & 2.4979 & -4.8489 & 1.7217 \\
+Noise ($\sigma$=0.001) & 29.5659 & 20.9855 & 11.6774 & 1.2426 & 6.3005 & 2.1284 & -4.6537 & 1.7217 \\
+Noise ($\sigma$=0.003) & 28.7932 & 20.6193 & 13.5594 & 1.2438 & 6.3168 & 2.1217 & -4.2948 & 1.7217 \\
+S\&P (p=0.001) & 22.8764 & 18.2544 & 47.0265 & 1.2638 & 6.5509 & 2.3390 & -4.7678 & 1.7217 \\
+S\&P (p=0.003) & 30.5374 & 15.5473 & 55.8376 & 1.2535 & 7.0424 & 2.3709 & -4.8391 & 1.7217 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\end{table}
+
+\clearpage
+
+% ============ Latent Attack ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of Latent Attack under various post-processing transformations.}
+\label{tab:robust_leat}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.0958 & 0.2117 & 0.0619 & 0.0123 & 0.0830 & 0.0040 & 0.0097 & 0.0142 \\
+\midrule
+Blur ($\sigma$=1) & 0.0958 & 0.2117 & 0.0618 & 0.0123 & 0.0830 & 0.0040 & 0.0097 & 0.0112 \\
+Blur ($\sigma$=3) & 0.0067 & 0.0403 & 0.0178 & 0.0006 & 0.0341 & 0.0025 & 0.0097 & 0.0071 \\
+JPEG (Q=70) & 0.0036 & 0.0470 & 0.0050 & 0.0007 & 0.0406 & 0.0011 & 0.0097 & 0.0073 \\
+JPEG (Q=90) & 0.0157 & 0.0884 & 0.0089 & 0.0058 & 0.0607 & 0.0018 & 0.0097 & 0.0098 \\
+Noise ($\sigma$=0.001) & 0.0958 & 0.2111 & 0.0619 & 0.0123 & 0.0830 & 0.0040 & 0.0097 & 0.0142 \\
+Noise ($\sigma$=0.003) & 0.0958 & 0.2108 & 0.0620 & 0.0123 & 0.0829 & 0.0040 & 0.0097 & 0.0126 \\
+S\&P (p=0.001) & 0.0996 & 0.1677 & 0.0453 & 0.0119 & 0.0773 & 0.0038 & 0.0097 & 0.0140 \\
+S\&P (p=0.003) & 0.1069 & 0.1206 & 0.0211 & 0.0111 & 0.0690 & 0.0034 & 0.0097 & 0.0135 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.4368 & 0.6439 & 0.4598 & 0.0653 & 0.2118 & 0.0151 & 0.0693 & 0.0528 \\
+\midrule
+Blur ($\sigma$=1) & 0.4368 & 0.6439 & 0.4598 & 0.0653 & 0.2118 & 0.0151 & 0.0693 & 0.0462 \\
+Blur ($\sigma$=3) & 0.0977 & 0.3922 & 0.2018 & 0.0055 & 0.1154 & 0.0103 & 0.0693 & 0.0317 \\
+JPEG (Q=70) & 0.0624 & 0.4322 & 0.0640 & 0.0064 & 0.1295 & 0.0051 & 0.0693 & 0.0314 \\
+JPEG (Q=90) & 0.1072 & 0.5679 & 0.1151 & 0.0374 & 0.1686 & 0.0079 & 0.0693 & 0.0420 \\
+Noise ($\sigma$=0.001) & 0.4368 & 0.6439 & 0.4597 & 0.0653 & 0.2118 & 0.0151 & 0.0693 & 0.0528 \\
+Noise ($\sigma$=0.003) & 0.4370 & 0.6438 & 0.4593 & 0.0652 & 0.2114 & 0.0151 & 0.0693 & 0.0513 \\
+S\&P (p=0.001) & 0.4540 & 0.6382 & 0.4507 & 0.0640 & 0.2017 & 0.0146 & 0.0693 & 0.0528 \\
+S\&P (p=0.003) & 0.4786 & 0.6252 & 0.3099 & 0.0615 & 0.1872 & 0.0134 & 0.0693 & 0.0528 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.1713 & 0.5852 & 0.0117 & 0.6140 & 0.2070 & 0.5364 & 0.2674 & 0.6911 \\
+\midrule
+Blur ($\sigma$=1) & 0.1713 & 0.5852 & 0.0117 & 0.6140 & 0.2070 & 0.5364 & 0.2437 & 0.5457 \\
+Blur ($\sigma$=3) & 0.0428 & 0.3360 & 0.1253 & 0.0337 & 0.1079 & 0.3825 & 0.0513 & 0.0611 \\
+JPEG (Q=70) & 0.0266 & 0.3694 & 0.0641 & 0.0471 & 0.1250 & 0.2012 & 0.1021 & 0.0878 \\
+JPEG (Q=90) & 0.0402 & 0.4821 & 0.1302 & 0.3962 & 0.1660 & 0.3213 & 0.2173 & 0.4416 \\
+Noise ($\sigma$=0.001) & 0.1708 & 0.5852 & 0.0117 & 0.6140 & 0.2069 & 0.5364 & 0.2686 & 0.6909 \\
+Noise ($\sigma$=0.003) & 0.1709 & 0.5851 & 0.0113 & 0.6138 & 0.2068 & 0.5362 & 0.2588 & 0.6379 \\
+S\&P (p=0.001) & 0.1753 & 0.5773 & 0.0174 & 0.6048 & 0.2007 & 0.5243 & 0.2617 & 0.6864 \\
+S\&P (p=0.003) & 0.1891 & 0.5583 & 0.1433 & 0.5881 & 0.1827 & 0.4908 & 0.2546 & 0.6645 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 37.0453 & 12.2354 & 28.0547 & 0.8187 & 5.0783 & 2.3089 & 3.5636 & 1.3969 \\
+\midrule
+Blur ($\sigma$=1) & 37.0473 & 12.2369 & 28.0543 & 0.8187 & 5.0929 & 2.3143 & -4.9853 & 1.3969 \\
+Blur ($\sigma$=3) & 25.8909 & 20.4972 & 19.7663 & 1.2985 & 6.5402 & 2.2945 & -4.8327 & 1.3969 \\
+JPEG (Q=70) & 18.3917 & 10.4782 & 18.4249 & 1.3436 & 5.5357 & 2.3985 & -4.8356 & 1.3969\\
+JPEG (Q=90) & 17.9137 & 11.1897 & 22.1910 & 1.2787 & 5.0502 & 2.2447 & -4.6161 & 1.3969\\
+Noise ($\sigma$=0.001) & 37.0622 & 12.2373 & 28.0319 & 0.8243 & 5.0980 & 2.3101 & -5.2181 & 1.3969\\
+Noise ($\sigma$=0.003) & 37.0252 & 12.2361 & 28.1310 & 0.8229 & 5.1026 & 2.3068 & -4.9371 & 1.3969\\
+S\&P (p=0.001) & 37.3004 & 12.0137 & 40.3490 & 0.8119 & 5.2966 & 2.3233 & -5.0029 & 1.3969\\
+S\&P (p=0.003) & 37.9511 & 12.4351 & 59.4013 & 0.9720 & 5.7272 & 2.3136 & -4.7754 & 1.3969\\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\end{table}
+
+\clearpage
+
+% ============ SCOL ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of SCOL under various post-processing transformations.}
+\label{tab:robust_scol}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.0590 & 0.0481 & 0.0546 & 0.0050 & 0.0463 & 0.0013 & 0.005 & 0.0101 \\
+\midrule
+Blur ($\sigma$=1) & 0.0590 & 0.0481 & 0.0528 & 0.0050 & 0.0463 & 0.0013 & 0.005 & 0.0095 \\
+Blur ($\sigma$=3) & 0.0562 & 0.0490 & 0.0543 & 0.0051 & 0.0470 & 0.0013 & 0.005 & 0.0096 \\
+JPEG (Q=70) & 0.0575 & 0.0476 & 0.0539 & 0.0050 & 0.0449 & 0.0013 & 0.005 & 0.0097 \\
+JPEG (Q=90) & 0.0571 & 0.0481 & 0.0538 & 0.0050 & 0.0459 & 0.0013 & 0.005 & 0.0096 \\
+Noise ($\sigma$=0.001) & 0.0591 & 0.0482 & 0.0526 & 0.0050 & 0.0463 & 0.0013 & 0.005 & 0.0097 \\
+Noise ($\sigma$=0.003) & 0.0593 & 0.0482 & 0.0519 & 0.0050 & 0.0464 & 0.0013 & 0.005 & 0.0099 \\
+S\&P (p=0.001) & 0.0892 & 0.0493 & 0.0541 & 0.0052 & 0.0470 & 0.0013 & 0.005 & 0.0098 \\
+S\&P (p=0.003) & 0.1112 & 0.0526 & 0.0563 & 0.0054 & 0.0496 & 0.0014 & 0.005 & 0.0098 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.2317 & 0.3344 & 0.1759 & 0.0315 & 0.1058 & 0.0059 & 0.0309 & 0.0395 \\
+\midrule
+Blur ($\sigma$=1) & 0.2317 & 0.3344 & 0.3506 & 0.0315 & 0.1058 & 0.0059 & 0.0309 & 0.0393 \\
+Blur ($\sigma$=3) & 0.2260 & 0.3577 & 0.4508 & 0.0320 & 0.1081 & 0.0059 & 0.0309 & 0.0395 \\
+JPEG (Q=70) & 0.2133 & 0.2695 & 0.3522 & 0.0312 & 0.1052 & 0.0062 & 0.0309 & 0.0390 \\
+JPEG (Q=90) & 0.2162 & 0.3205 & 0.3616 & 0.0313 & 0.1055 & 0.0059 & 0.0309 & 0.0387 \\
+Noise ($\sigma$=0.001) & 0.2322 & 0.3345 & 0.3467 & 0.0315 & 0.1058 & 0.0059 & 0.0309 & 0.0395 \\
+Noise ($\sigma$=0.003) & 0.2369 & 0.3357 & 0.3176 & 0.0316 & 0.1059 & 0.0060 & 0.0309 & 0.0395 \\
+S\&P (p=0.001) & 0.4084 & 0.3486 & 0.2926 & 0.0325 & 0.1129 & 0.0061 & 0.0309 & 0.0395 \\
+S\&P (p=0.003) & 0.4941 & 0.3843 & 0.2882 & 0.0333 & 0.1242 & 0.0062 & 0.0309 & 0.0395 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.2391 & 0.3939 & 0.3769 & 0.3519 & 0.1679 & 0.2293 & 0.1139 & 0.4115 \\
+\midrule
+Blur ($\sigma$=1) & 0.2391 & 0.3939 & 0.3869 & 0.3519 & 0.1679 & 0.2293 & 0.1251 & 0.4022 \\
+Blur ($\sigma$=3) & 0.2391 & 0.4076 & 0.4004 & 0.3527 & 0.1733 & 0.2345 & 0.1161 & 0.4072 \\
+JPEG (Q=70) & 0.2382 & 0.3987 & 0.4054 & 0.3519 & 0.1707 & 0.2410 & 0.1315 & 0.4022 \\
+JPEG (Q=90) & 0.2318 & 0.3957 & 0.4020 & 0.3505 & 0.1688 & 0.2318 & 0.1244 & 0.3993 \\
+Noise ($\sigma$=0.001) & 0.2399 & 0.3939 & 0.3870 & 0.3520 & 0.1679 & 0.2293 & 0.1187 & 0.4068 \\
+Noise ($\sigma$=0.003) & 0.2419 & 0.3940 & 0.3892 & 0.3521 & 0.1680 & 0.2293 & 0.1537 & 0.4104 \\
+S\&P (p=0.001) & 0.2556 & 0.3972 & 0.4201 & 0.3552 & 0.1680 & 0.2278 & 0.1325 & 0.4044 \\
+S\&P (p=0.003) & 0.2684 & 0.4081 & 0.4324 & 0.3602 & 0.1722 & 0.2326 & 0.1406 & 0.3944 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 21.8716 & 6.5536 & 38.4324 & 1.7359 & 5.9274 & 2.4045 & 3.8448 & 2.0021 \\
+\midrule
+Blur ($\sigma$=1) & 21.8667 & 6.5527 & 63.4258 & 1.7359 & 5.9304 & 2.4065 & -4.8641 & 2.0021 \\
+Blur ($\sigma$=3) & 27.6213 & 34.1819 & 4.2680 & 1.6475 & 6.4855 & 2.4577 & -5.0424 & 2.0021 \\
+JPEG (Q=70) & 22.9816 & 12.0078 & 18.6510 & 1.7836 & 6.5595 & 2.5256 & -4.8158 & 2.0021 \\
+JPEG (Q=90) & 20.5043 & 6.5675 & 13.8583 & 1.7642 & 5.9662 & 2.4475 & -4.9022 & 2.0021 \\
+Noise ($\sigma$=0.001) & 21.8907 & 6.5516 & 62.7166 & 1.7200 & 5.9241 & 2.4163 & -4.8007 & 1.9668 \\
+Noise ($\sigma$=0.003) & 22.1237 & 6.5594 & 58.1992 & 1.7190 & 5.8789 & 2.4151 & -4.5728 & 1.8562 \\
+S\&P (p=0.001) & 26.5708 & 6.9881 & 34.9108 & 1.6219 & 6.3522 & 2.4385 & -4.6815 & 2.0021 \\
+S\&P (p=0.003) & 32.1346 & 8.6657 & 67.2802 & 1.6968 & 6.8238 & 2.4335 & -4.5129 & 1.9756 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\end{table}
+
+
+\clearpage
+
+% ============ NullSwap ============
+\begin{table}[h!]
+\caption{Quantitative robustness evaluation of NullSwap under various post-processing transformations.}
+\label{tab:robust_nullswap}
+\centering
+\small
+
+% MSE
+\begin{subtable}{\textwidth}
+\caption{MSE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.0054 & 0.0108 & 0.0053 & 0.0060 & 0.0044 & 0.0018 & 0.0053 & 0.0103 \\
+\midrule
+Blur ($\sigma$=1) & 0.0054 & 0.0108 & 0.0154 & 0.0060 & 0.0044 & 0.0018 & 0.0053 & 0.0100 \\
+Blur ($\sigma$=3) & 0.0060 & 0.0156 & 0.0165 & 0.0061 & 0.0071 & 0.0018 & 0.0053 & 0.0103 \\
+JPEG (Q=70) & 0.0046 & 0.0114 & 0.0165 & 0.0060 & 0.0046 & 0.0018 & 0.0053 & 0.0103 \\
+JPEG (Q=90) & 0.0042 & 0.0108 & 0.0163 & 0.0060 & 0.0044 & 0.0018 & 0.0053 & 0.0103 \\
+Noise ($\sigma$=0.001) & 0.0055 & 0.0108 & 0.0154 & 0.0060 & 0.0044 & 0.0017 & 0.0053 & 0.0103 \\
+Noise ($\sigma$=0.003) & 0.0062 & 0.0108 & 0.0153 & 0.0060 & 0.0044 & 0.0017 & 0.0053 & 0.0103 \\
+S\&P (p=0.001) & 0.0526 & 0.0124 & 0.0175 & 0.0061 & 0.0069 & 0.0017 & 0.0053 & 0.0103 \\
+S\&P (p=0.003) & 0.0816 & 0.0161 & 0.0202 & 0.0061 & 0.0101 & 0.0018 & 0.0053 & 0.0103 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% LPIPS
+\begin{subtable}{\textwidth}
+\caption{LPIPS}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.0340 & 0.1046 & 0.0353 & 0.0358 & 0.0254 & 0.0080 & 0.0316 & 0.0410 \\
+\midrule
+Blur ($\sigma$=1) & 0.0340 & 0.1046 & 0.2684 & 0.0358 & 0.0254 & 0.0080 & 0.0316 & 0.0403 \\
+Blur ($\sigma$=3) & 0.0647 & 0.2558 & 0.2753 & 0.0364 & 0.0352 & 0.0083 & 0.0316 & 0.0410 \\
+JPEG (Q=70) & 0.0314 & 0.1144 & 0.2388 & 0.0358 & 0.0261 & 0.0080 & 0.0316 & 0.0410 \\
+JPEG (Q=90) & 0.0284 & 0.1049 & 0.2511 & 0.0358 & 0.0255 & 0.0080 & 0.0316 & 0.0410 \\
+Noise ($\sigma$=0.001) & 0.0347 & 0.1047 & 0.2690 & 0.0358 & 0.0254 & 0.0080 & 0.0316 & 0.0410 \\
+Noise ($\sigma$=0.003) & 0.0424 & 0.1051 & 0.2686 & 0.0358 & 0.0254 & 0.0077 & 0.0316 & 0.0410 \\
+S\&P (p=0.001) & 0.2871 & 0.1286 & 0.2133 & 0.0361 & 0.0410 & 0.0078 & 0.0316 & 0.0410 \\
+S\&P (p=0.003) & 0.3953 & 0.2088 & 0.1904 & 0.0366 & 0.0575 & 0.0079 & 0.0316 & 0.0410 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+%CIDR
+\begin{subtable}{\textwidth}
+\caption{CIDR}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 0.2792 & 0.5677 & 0.5028 & 0.5114 & 0.2856 & 0.3983 & 0.2131 & 0.5627 \\
+\midrule
+Blur ($\sigma$=1) & 0.2792 & 0.5677 & 0.4739 & 0.5114 & 0.2856 & 0.3983 & 0.2076 & 0.5659 \\
+Blur ($\sigma$=3) & 0.2811 & 0.5726 & 0.4748 & 0.5120 & 0.2909 & 0.3976 & 0.2065 & 0.5671 \\
+JPEG (Q=70) & 0.2807 & 0.5684 & 0.4755 & 0.5116 & 0.2864 & 0.3990 & 0.2079 & 0.5661 \\
+JPEG (Q=90) & 0.2764 & 0.5678 & 0.4746 & 0.5112 & 0.2857 & 0.3986 & 0.2128 & 0.5610 \\
+Noise ($\sigma$=0.001) & 0.2796 & 0.5676 & 0.4741 & 0.5114 & 0.2856 & 0.3989 & 0.2049 & 0.5666 \\
+Noise ($\sigma$=0.003) & 0.2811 & 0.5675 & 0.4739 & 0.5115 & 0.2856 & 0.3989 & 0.2264 & 0.5659 \\
+S\&P (p=0.001) & 0.2910 & 0.5680 & 0.4865 & 0.5122 & 0.2856 & 0.3987 & 0.2119 & 0.5660 \\
+S\&P (p=0.003) & 0.2951 & 0.5696 & 0.4937 & 0.5100 & 0.2871 & 0.4015 & 0.1965 & 0.5703 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+% BRISQUE
+\begin{subtable}{\textwidth}
+\caption{BRISQUE}
+\centering
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Post-processing} & StarGAN & StyleCLIP & DiffAE & SimSwap & pSp-mix & BlendFace & DiffSwap & DiffFace \\
+\midrule
+No Post-processing & 18.3381 & 12.8330 & 28.2317 & 1.0041 & 5.6176 & 2.4165 & 3.7283 & 1.8001 \\
+\midrule
+Blur ($\sigma$=1) & 18.3371 & 12.8382 & 23.4864 & 1.0041 & 5.6122 & 2.4151 & -4.6729 & 1.8001 \\
+Blur ($\sigma$=3) & 25.8780 & 39.9484 & 14.1503 & 1.0441 & 5.7040 & 2.4535 & -5.1286 & 1.7832 \\
+JPEG (Q=70) & 17.1786 & 10.0821 & 12.9199 & 0.9735 & 5.5468 & 2.4049 & -4.7219 & 1.8001 \\
+JPEG (Q=90) & 18.4471 & 12.9163 & 10.1845 & 1.0331 & 5.6290 & 2.4007 & -5.0886 & 1.6849 \\
+Noise ($\sigma$=0.001) & 18.4011 & 12.7664 & 24.1845 & 0.9946 & 5.6112 & 2.4029 & -4.9700 & 1.6655 \\
+Noise ($\sigma$=0.003) & 18.7338 & 12.3520 & 28.1653 & 0.9987 & 5.6128 & 2.3489 & -4.4995 & 1.7538 \\
+S\&P (p=0.001) & 23.5852 & 10.2667 & 44.5269 & 0.9955 & 6.0849 & 2.3170 & -5.0703 & 1.8001 \\
+S\&P (p=0.003) & 30.7863 & 8.8471 & 57.5830 & 1.0936 & 6.4697 & 2.2831 & -4.9616 & 1.8001 \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+
+\end{table}
+
+\clearpage
+
+\section{Transferability}
+\label{appendix:transferability}
+This appendix provides comprehensive transferability results across all evaluated generators and defense methods. While Figure~\ref{fig:blackbox_heatmap_main} visualizes heatmaps based on MSE and CIDR, we additionally report results for other evaluation metrics to enable a more complete and transparent analysis.
+
+Source Generators denote the generator used to generate perturbations, and Target Generators denote the generator used for evaluation. In this section, we consider a black-box transfer setting, where the source and target generators are different. Specifically, perturbations generated on a given source generator are applied to different target generators, and their effects are evaluated by measuring discrepancies between the generated outputs $G(x_{\mathrm{adv}})$ and the corresponding clean outputs $G(x)$. All transferability experiments are conducted without access to the architecture or parameters of the target generator.
+
+\begin{figure*}[h!]
+    \centering
+        \begin{subfigure}[b]{0.95\textwidth}
+        \includegraphics[width=.9\textwidth]{figures/MSE_heatmap_down.png}
+        \caption{MSE}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.95\textwidth}
+        \includegraphics[width=.9\textwidth]{figures/LPIPS_heatmap_down.png}
+        \caption{LPIPS}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.95\textwidth}
+        \includegraphics[width=.9\textwidth]{figures/CIDR_heatmap_down.png}
+        \caption{CIDR}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.95\textwidth}
+        \includegraphics[width=.9\textwidth]{figures/BRISQUE_heatmap_down.png}
+        \caption{BRISQUE}
+    \end{subfigure}
+    \caption{Transferability of proactive defenses across deepfake generators.}
+    \label{fig:blackbox_heatmap}
+\end{figure*}
+
+\clearpage
+
+\section{Correlation between Evaluation Metrics}
+\label{sec:correlation}
+We analyze the pairwise Spearman correlations among representative metrics across various generators and defenses, as summarized in Figure~\ref{fig:correlation_heatmap}. First, we observe strong redundancy between pixel-level metrics (MSE and PSNR). However, the relationship between pixel-level and perceptual fidelity varies by generator architecture. Face swap models exhibit consistent degradation patterns across all fidelity metrics, whereas attribute manipulation models show high variance, indicating that defenses can degrade pixel-level fidelity and perceptual quality independently.
+
+Second, identity-based metrics generally demonstrate weaker correlations with synthesis fidelity than the inter-correlation among fidelity metrics themselves. This observation necessitates the simultaneous use of both metric types for a holistic evaluation. Notably, CIDR exhibits a stronger correlation with ID Loss than with synthesis metrics, maintaining a low correlation with synthesis metrics. This independence suggests that CIDR successfully isolates defense-induced identity disruption by mitigating the generator-specific biases inherent in ID Loss. Finally, BRISQUE shows minimal correlation with all other metrics, capturing an orthogonal dimension of image degradation.
+
+
+\begin{figure*}[h!]
+    \centering
+        \begin{subfigure}[b]{0.4\linewidth} 
+        \centering
+        \includegraphics[width=\linewidth]{figures/correlation/correlation_attm_abs.png}
+        \caption{Attribute Manipulation}
+        \label{fig:corr_am}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/correlation/correlation_fs_abs.png}
+        \caption{Face Swap}
+        \label{fig:corr_fs}
+    \end{subfigure}
+    
+    \caption{Pairwise correlation patterns of evaluation metrics across proactive defenses. Rows and columns denote evaluation metrics, with cell values representing the average absolute Spearman correlation ($\pm$ standard deviation) across all defense methods. Diagonal elements are 1.0 (self-correlation). (a) shows attribute manipulation models, and (b) shows face swap models. Darker colors indicate stronger correlations.}
+    \label{fig:correlation_heatmap}
+\end{figure*}
+
+\end{document}

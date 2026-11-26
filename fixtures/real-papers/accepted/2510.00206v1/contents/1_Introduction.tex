@@ -1,0 +1,90 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Pre-trained Large Language Models (LLMs), such as GPT~\cite{achiam2023gpt} and LLaMa~\cite{llama}, have demonstrated strong capabilities across diverse tasks, including text generation~\cite{brown2020gpt3,zhao2023survey}, question answering~\cite{lewis2020retrieval, guu2020retrieval}, and code generation~\cite{chen2021evaluating-code,nijkamp2022codegen}. 
+To adapt these models to personalized or domain-specific tasks, \textit{fine-tuning} on pre-trained LLMs is typically performed.
+Such adaptation is essential for scenarios like biomedical analysis~\cite{zhang2024generalist, tian2024opportunities}, personalized chatbot interactions~\cite{wang2022self-instruct}, or specialized customer support~\cite{yun2023fine-tuning-dialogue-summarization}. 
+However, traditional full-model fine-tuning, where all model parameters are learned, requires substantial hardware resources such as multiple nodes, each node equipped with multiple flagship GPUs (e.g., NVIDIA B200 GPUs~\cite{B200}) and interconnected by high-speed links (e.g., NVLink~\cite{nvlink} and InfiniBand~\cite{infiniband}).  
+For instance, full-model fine-tuning of LLaMa-3.1-70B~\cite{llama3.1} requires approximately 1120GB of GPU memory for model states alone (parameters, gradients, optimizer states), making this approach prohibitively expensive for practical applications~\cite{llama3.1-training-cost}.
+
+\begin{sloppypar}
+To mitigate the substantial hardware requirements, Parameter-Efficient Fine-Tuning (PEFT) methods~\cite{hu2022lora,li2021prefix-tuning,lester2021prompt-tuning,kopiczko2023vera,liu2024dora,dettmers2023qlora,li2023loftq,ding2023sparse-low-rank-adaptation,houlsby2019peft-learning-nlp,lin2020exploring,ruckle2020adapterdrop,zhao2024apt,zhang2025memory-efficient-lora} have emerged. These approaches significantly reduce resource usage by keeping pre-trained LLM parameters \textit{frozen} (not updated during fine-tuning) and selectively updating only a small set of injected trainable parameters, known as \textit{adapters}.
+Among these methods, Low-Rank Adaptation (LoRA)~\cite{hu2022lora} and its variants~\cite{liu2024dora,dettmers2023qlora,li2023loftq,ding2023sparse-low-rank-adaptation} are particularly popular due to their simplicity and effectiveness. 
+%
+% LoRA freezes the model's pre-trained weights and introduces two small, low-rank linear layers as residual adapters, fine-tuning only these adapters.
+% Typically, LoRA adapters contain fewer than 1\% of the original model parameters, substantially lowering memory requirements for storing gradients and optimizer states. 
+LoRA freezes the model's pre-trained weights and adds a residual branch composed of two trainable low-rank linear layers: a down-projection from the input dimension $k$ to a smaller rank $r$, followed by an up-projection back to the output dimension $n$, where $r \ll min(n, k)$. 
+This low-rank branch is added to the output of the original frozen layer, enabling task-specific adaptation without modifying the base model (see Figure~\ref{fig:background-lora-illustration} and Section~\ref{subsec:background-llm-lora-finetuning}).
+%
+For example, fine-tuning LLaMa-3.1-70B~\cite{llama3.1} using LoRA adapters with a low-rank dimension of 16 introduces only 0.29\% additional parameters, reducing GPU memory usage to 142GB while preserving strong model quality~\cite{dettmers2023qlora,zhang2025memory-efficient-lora}.
+\end{sloppypar}
+
+Due to these substantial resource savings, LoRA fine-tuning has become widely adopted on both cloud platforms~\cite{openai-fine-tuning,together-ai-fine-tuning,runpod-fine-tuning,fireworks-fine-tuning} and local environments~\cite{zheng2024llamafactory,llama-cookbook}.
+To realistically apply LoRA in practice and fine-tune high-quality adapters, users often run multiple jobs in parallel. These jobs may explore different hyperparameter settings~\cite{tribes2023hyperparameter-instruction-tuning} or continuously adapt models to evolving datasets and user needs~\cite{jindal2024balancing,ibrahim2024simple-continual-pre-training}.
+As a result, fine-tuning throughput, measured as the number of training samples processed per second, has become a key metric for reducing both cost and overall training time.
+
+However, despite significant algorithmic advances in LoRA-based approaches~\cite{dettmers2023qlora,kopiczko2023vera,liu2024dora} and explorations in serving scenarios~\cite{zhou2022pets,chen2024punica,sheng2023s-lora,wu2024dlora}, existing LoRA fine-tuning systems for LLMs largely reuse optimizations designed for full-model fine-tuning.
+Specifically, systems like PEFT Library~\cite{peft}, LLaMA-Factory~\cite{zheng2024llamafactory}, and llama-cookbook~\cite{llama-cookbook} typically rely on a subset of parallelization methods such as Fully Sharded Data Parallelism (FSDP)~\cite{pytorch-fsdp,zero}, Tensor Parallelism (TP)~\cite{megatron-1,flexflow}, or Pipeline Parallelism (PP)~\cite{gpipe,pipedream,terapipe} to fit the training into GPU memory and achieve efficiency with multiple GPUs.
+While such techniques are still useful, our analysis reveals they do not sufficiently address the unique characteristics of LoRA fine-tuning, causing significant inefficiencies.
+
+The first limitation is the high runtime overhead introduced by LoRA adapters. 
+LoRA adapters add less than 1\% parameters compared to the full model and are thus expected to incur minimal computation and memory overhead. 
+However, our profiling shows that applying LoRA reduces training throughput by approximately 40\% compared to the original frozen model. 
+This overhead comes from increased memory traffic: the small LoRA projection layers are memory-bandwidth-bound due to their low-rank dimensions, and the operations in the adapter repeatedly load and store large activation tensors. 
+These factors together increase global memory access by up to $2.64\times$, as detailed in Section~\ref{sec:motivation-lora-overhead}.
+
+The second limitation is the lack of efficient support for joint fine-tuning across multiple LoRA adapters. 
+Typically, each adapter is fine-tuned independently, even if they share the same base model. 
+Since LoRA adapters are lightweight and add minimal memory footprint pressure, multiple jobs can be combined and run jointly on the same GPUs. 
+We refer to this strategy as \textit{multi-LoRA fine-tuning}~\cite{ye2023mlora}, which is highly practical for hyperparameter tuning~\cite{tribes2023hyperparameter-instruction-tuning} and multi-tenant cloud services~\cite{fireworks-fine-tuning,together-ai-fine-tuning}.
+Although multi-LoRA optimization~\cite{chen2024punica,sheng2023s-lora,wu2024dlora} has been widely used in LLM serving, the motivation in our setting is entirely different. 
+Serving systems batch requests to increase arithmetic intensity during autoregressive single-token decoding~\cite{chen2024punica,sheng2023s-lora}, whereas fine-tuning already processes full sequences with sufficient arithmetic intensity.
+Instead, the primary benefit of multi-LoRA fine-tuning comes from mitigating the overhead of distributed parallelism~\cite{ye2023mlora}.
+
+\begin{sloppypar}
+While existing multi-LoRA fine-tuning systems like mLoRA~\cite{ye2023mlora} can reduce pipeline bubbles by filling them with independent groups of samples from different adapters, we observe that this approach is incomplete and still suffers from significant inefficiencies.
+First, it still relies on generic LoRA kernels that are bottlenecked by redundant memory accesses to large activation tensors as discussed previously, and batching more samples does not help.
+Second, it fails to address the load imbalance across GPUs.
+Realistic fine-tuning workloads often contain samples with variable sequence lengths, leading to imbalanced work across GPUs.
+This imbalance creates idle time in data-parallel replicas and increases pipeline bubbles from poorly aligned microbatches.
+As we analyze in Section~\ref{sec:motivation-multi-lora-oversight}, strategically grouping and scheduling samples across multiple jobs is critical to mitigate this imbalance and unlock further efficiency gains.
+\end{sloppypar}
+
+Based on these insights, we argue that an efficient LoRA fine-tuning system must both reduce the runtime overhead of LoRA adapters and leverage multi-LoRA optimization opportunities to reduce distributed training overhead.
+To meet these requirements, we propose \textit{\Name}, an efficient multi-level fusion system tailored specifically for LoRA fine-tuning of LLMs.
+%
+At the kernel level, our key insight is that most of LoRA's overhead comes from memory-bandwidth-bound operations on large activation tensors.
+We address this by splitting the computation graph at the point where the tensor size shrinks to the low-rank dimension $r$.
+This allows us to fuse memory-bandwidth-bound operations without recomputation or synchronization, while preserving the optimal performance of compute-bound matrix multiplications. 
+This design leads to our \texttt{FusedLoRA} and \texttt{FusedMultiLoRA} kernels.
+%
+At the scheduling level, \Name enables concurrent fine-tuning of multiple LoRA adapters that share the same base model by batching samples across jobs.
+Compared to the existing multi-LoRA systems, this further improves system throughput by reducing pipeline bubbles and balancing GPU workloads.
+The challenge is that such batching must preserve execution dependencies between global batches, especially under pipeline parallelism.
+To address this, we first group adapters in a way that creates natural gaps between their batches, then solve a bin-packing problem within each group to construct balanced, dependency-safe microbatches using a combination of Mixed Integer Linear Programming (MILP) and greedy heuristics.
+
+We implement \Name on top of Megatron-LM~\cite{megatron-1}, a state-of-the-art distributed training framework, to support efficient parallelism and scalability.
+We then extensively evaluate \Name on a wide range of LLMs, including LLaMa-3.1-8B, Qwen-2.5-32B, and LLaMa-3.1-70B, across NVIDIA H100 and L40S GPUs with various realistic datasets. 
+Results show that \Name achieves up to $1.96\times$ ($1.47\times$ on average) end-to-end speedup compared to Megatron-LM with FSDP and PP, and up to $1.46\times$ ($1.29\times$ on average) improvement over mLoRA~\cite{ye2023mlora}, the state-of-the-art multi-LoRA fine-tuning system.
+Additionally, our fused kernel alone achieves up to $1.39\times$ ($1.27\times$ on average) speedup compared to the default LoRA implementation on NVIDIA H100 GPUs, and can directly serve as a plug-in replacement in existing systems, offering immediate benefits to the broader community.
+
+Overall, this paper makes the following contributions:
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figures/background-fig-1-lora.pdf}
+    \hspace{0.01\linewidth} (a) Full Fine-tuning
+    \hspace{0.125\linewidth} (b) LoRA Fine-tuning
+    \hspace{0.125\linewidth}
+    \caption{Comparison between traditional full model fine-tuning and LoRA fine-tuning.}
+    \Description{Comparison between traditional full model fine-tuning and LoRA fine-tuning. Traditional fine-tuning updates all model parameters, while LoRA fine-tuning only updates lightweight adapter matrices.}
+    \label{fig:background-lora-illustration}
+\end{figure}
+
+\begin{sloppypar}
+\begin{itemize}
+    \item We identify two key limitations in existing LoRA fine-tuning systems: high runtime overhead from redundant memory access, and missed opportunities for optimizing multi-job training. To address both, we propose \Name, a multi-level fusion system for accelerating LLM fine-tuning on modern GPU clusters.
+    \item We propose a horizontal fusion strategy that reduces redundant memory access without disrupting compute-bound performance. We also design a scheduling algorithm that groups adapters across fine-tuning jobs and batches their samples to improve GPU load balance and reduce pipeline overhead.
+    \item We evaluate \Name across diverse LLMs, datasets, and GPU platforms, showing significant improvements over existing LoRA fine-tuning systems. Our fused kernel also provides strong standalone gains and can be directly integrated into more general LoRA systems.
+\end{itemize}
+\end{sloppypar}

@@ -1,0 +1,96 @@
+\section{Near-Real-Time Index Construction}
+\label{sec:offline}
+
+
+
+\subsection{Event Knowledge Graph}
+\label{subsec:event_knowledge_graph}
+
+
+
+An Event Knowledge Graph (EKG) is a structured representation of events and their interconnections, linking entities, timestamps, locations, and other contextual information to offer a holistic understanding of events and their dependencies. By employing an EKG, the content of a video can be organized into a sequence of events, associating groups of entities with specific events and capturing their intricate relationships.
+
+
+
+Although existing works, such as GraphRAG~\cite{edge2024graphrag} and LightRAG~\cite{guo2024lightrag}, utilize knowledge graphs (KGs) to construct retrieval indices, we argue that EKGs are more suitable for video data. The rationale lies in the fundamental difference between the two: KGs focus on static entities (\eg people, locations, concepts) and their attribute-based relationships, whereas EKGs prioritize modeling dynamic events and their spatiotemporal evolution. 
+
+Fig.~\ref{fig:evg_kg} illustrates an example video alongside its corresponding KG and EKG. As depicted, the EKG effectively captures key events and their transitions, while representing entities with finer granularity within specific events. This enables EKG-based retrieval to support more sophisticated queries, such as event summaries, multi-hop temporal reasoning, and other complex analyses. In contrast, KGs, which only encapsulate entities across the entire video, lack the capability to fundamentally support such advanced queries.
+
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.85\linewidth]{Figures/ekg_vs_kg-crop.pdf}
+    \caption{An example of a constructed event knowledge graph and a knowledge graph from wildlife monitoring scenarios for video analytics.}
+    \label{fig:evg_kg}
+\end{figure}
+
+Formally, we define our EKG $\mathcal{G}$ as follows: 
+\begin{equation}
+    \mathcal{G} = (\mathcal{E}, \mathcal{U}, \mathcal{R}),
+\end{equation}
+where $\mathcal{E} = \{e_i\}_{i=1}^{|\mathcal{E}|}$ represents the temporally ordered set of events, $\mathcal{U} = \{u_j\}_{j=1}^{|\mathcal{U}|}$ denotes the entities extracted from the video within each event, and $\mathcal{R} = \mathcal{R}_{ee} \cup \mathcal{R}_{uu} \cup \mathcal{R}_{ue}$ encompasses three types of relationships: 1) temporal event-event relations $\mathcal{R}_{ee}$, such as \emph{before} and \emph{after}, which encode temporal logic constraints; 2) semantic entity-entity relations $\mathcal{R}_{uu}$, akin to the relationships found in conventional KGs; and 3) participation relations $\mathcal{R}_{ue}$, which associate entities with their contextual roles within specific events.
+
+
+
+
+\subsection{Semantic Chunking}
+\label{subsec: sematic_chunking}
+
+
+
+
+
+
+    
+    
+
+
+
+
+To construct the EKG as an index, it is essential to extract events and their corresponding descriptions from videos. Although current VLMs demonstrate remarkable capabilities in event detection and transcription, their application in video analytics scenarios remains challenging.
+
+On one hand, large VLMs, such as Qwen2.5-VL-72B, can achieve high accuracy in event detection and transcription, but their substantial computational overhead makes it difficult to process video streams in near-real-time, particularly on resource-constrained edge servers~\cite{10.1145/3719664}. On the other hand, small VLMs, such as Qwen2.5-VL-7B, offer reduced latency but suffer from performance degradation as the length of the video increases. Furthermore, both large and small VLMs are limited by their constrained context windows. To handle long video content, a common approach is to partition the content uniformly, a process known as chunking. However, events in videos naturally occur at varying and diverse temporal scales. Inaccurate chunking can disrupt the coherence of individual events, thereby increasing the difficulty for VLMs to accurately detect and transcribe them.
+
+
+To address this, we propose a semantic chunking approach. The core idea involves processing a video stream in the following steps: First, we perform uniform buffering, \eg dividing the video into fixed-length chunks of 3 seconds each. Next, a small VLM, \eg Qwen2.5-VL-7B, is employed to extract representative event descriptions from these chunks with proper prompts. Based on the generated event descriptions, we utilize a text embedding model, such as BERT~\cite{devlin2019bert}, to measure the similarity between neighboring events. Adjacent events with high similarity are then merged into a single event. Ultimately, this process enables \sysname to partition the entire video into semantically meaningful chunks while simultaneously extracting their corresponding descriptions.
+
+
+Particularly, an input video $V$ is initially divided into uniform chunks $c_i$, and a small VLM is employed to generate textual descriptions $d_i$ for each chunk $c_i$. Subsequently, the semantic similarity between any two uniform chunks is measured by computing the pairwise BERTScore~\cite{zhangbertscore} for $(d_i, d_j)$. Higher similarity scores suggest that the same event may occur across these chunks, making them candidates for semantic merging. Specifically, we adopt two criteria to determine whether certain uniform chunks can be merged into a single semantic chunk: 1) Within a semantic chunk, the similarity between any two uniform chunks must exceed a predefined threshold (\eg 0.65 in our implementation); 2) After merging, the similarity between the boundaries of adjacent semantic chunks must fall below a sufficiently low threshold. Fig.~\ref{fig:semantic_chunking} illustrates the semantic chunking process, where a video initially divided into 18 uniform chunks is successfully merged into 9 semantic chunks. Once merged, the small VLM is further utilized to summarize each semantic chunk.
+
+It is important to highlight, although pairwise BERTScore computations are performed multiple times, \sysname efficiently schedules these computations in parallel, leveraging the hardware parallelism (\S\ref{sec:implementation}). Consequently, the semantic chunking process does not become a bottleneck in the near-real-time index construction phase, as detailed in \S\ref{sec:evaluation}.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Figures/bert_matrix-crop.pdf}
+    \caption{Merging uniform chunks into semantic chunks guided by the pairwise BERTScore distribution.}
+    \label{fig:semantic_chunking}
+\end{figure}
+
+
+
+\subsection{Entity Extraction and Linking}
+\label{subsec:entity_extraction}
+
+
+
+
+In addition to extracting event information from videos, \sysname also identifies entities and their relationships, as illustrated in Fig.~\ref{fig:overview}. Similar to the approach in~\cite{edge2024graphrag}, we utilize a small VLM to extract entities and their relationships from videos using carefully designed prompts for each event.
+
+The identified entities, however, tend to be highly redundant across events within the EKG. Such redundancy not only increases storage requirements but also hampers retrieval efficiency. Thus, it is necessary to de-duplicate and link these entities. Existing works~\cite{edge2024graphrag, guo2024lightrag, fan2025minirag}, which primarily focus on text-only RAG problems, typically rely on exact string matching strategies for entity de-duplication. However, in the context of video analytics and EKG, entities are independently extracted from each event by the VLM, leading to potential inconsistencies in entity descriptions for the same concept across different events, \eg, "raccoon" and "procyon lotor".
+
+To address this, \sysname employs a text embedding model \eg JinaCLIP~\cite{koukounas2024jinaclip}, to encode all extracted entities into vector representations. Using embedding similarities as a metric, we apply a standard K-means clustering algorithm to group entities. This approach ensures that semantically similar entities are de-duplicated and linked by forming unified clusters. 
+\revised{To represent each cluster, we compute the centroid of the embedding vectors of all entities within that cluster, which serves as the representative feature of the merged entity.}
+
+Ultimately, the constructed EKG is stored in a database comprising five tables: events, entities, event-to-event relationships, entity-to-entity relationships, and entity-to-event relationships. Additionally, the raw video frames are vectorized using JinaCLIP~\cite{koukounas2024jinaclip} and linked to their corresponding events, enabling comprehensive retrieval in the following phase.
+
+
+
+
+
+
+
+
+
+
+
+

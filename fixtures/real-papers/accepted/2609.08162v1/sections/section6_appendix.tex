@@ -1,0 +1,373 @@
+This appendix provides comprehensive supplementary materials for our WorldAgen framework. We present detailed implementation specifications including benchmark descriptions, model architecture components, and trajectory processing methods for variable-length chunks. Additionally, we report extensive experimental results examining the effects of different chunk configurations on baseline performance, and comprehensive TTT analyses comparing LoRA \citep{hu2022lora} versus full fine-tuning approaches across various parameter settings and data sizes.
+
+
+\section{Implementation Details}
+\subsection{Benchmark}
+
+\textbf{LIBERO Benchmark} ~\citep{liu2023libero} is a comprehensive benchmark for lifelong learning in robot manipulation that consists of four distinct task suites designed to evaluate different aspects of knowledge transfer. The benchmark includes LIBERO-Spatial (10 tasks focusing on spatial relationship transfer), LIBERO-Object (10 tasks emphasizing object-centric knowledge transfer), LIBERO-Goal (10 tasks targeting procedural knowledge generalization), and LIBERO-100 (100 tasks with highly entangled knowledge requirements). Each task suite is accompanied by high-quality human teleoperation demonstrations to support sample-efficient learning.
+
+We use LIBERO-100, which is the most challenging and comprehensive subset, containing 100 diverse manipulation tasks that require the transfer of mixed declarative and procedural knowledge. This suite is further divided into LIBERO-90, consisting of 90 short-horizon tasks used for pretraining policies, and LIBERO-10 (also referred to as LIBERO-Long), which contains 10 long-horizon tasks specifically selected for evaluating downstream lifelong learning performance.
+
+\textbf{CALVIN Benchmark} ~\citep{mees2022calvin} is an open-source simulated benchmark designed for learning long-horizon language-conditioned robot manipulation tasks. The dataset contains 34 manipulation tasks that are more complex than existing vision-and-language datasets in terms of sequence length, action space, and language complexity. The environment features a Franka Emika Panda robot with a parallel-jaw gripper operating in a desktop workspace containing various interactive objects, including a sliding door, drawer, colored blocks, LED, and light bulb that can be manipulated according to unconstrained natural language instructions.
+
+CALVIN provides four different environments (A, B, C, D) that vary in desk colors and object configurations, enabling evaluation across different visual contexts and supporting flexible specification of sensor suites. The benchmark's evaluation protocol requires agents to solve sequences of up to five consecutive tasks by understanding and executing a series of language instructions, such as \textit{open the drawer, pick up the blue block, rotate the block, push the block into the drawer, open the sliding door.} This sequential task completion paradigm makes CALVIN particularly challenging for assessing the generalization capabilities and long-horizon reasoning of language-conditioned manipulation policies.
+
+
+
+
+\subsection{Model Architecture}
+
+Leveraging the flexible architecture of Transformers, we achieve unified processing of image, language, action, and robot state modalities, supporting variable-length image chunks and action chunks for both input and output.
+
+\textbf{Encoder} In the encoder component, we employ a MAE-pretrained ViT-B \citep{he2022masked} as the visual encoder, utilizing dual-view RGB inputs from static and wrist cameras. Similar to Seer \citep{tian2024predictiveinversedynamicsmodels}, we incorporate a Perceiver Resampler \citep{jaegle2021perceiver}  to reduce the number of image tokens, thereby decreasing computational load and improving efficiency. The Perceiver Resampler is an attention-based feature compression module that uses a set of learnable query tokens to extract the most important information from a large number of image features. Through this approach, it compresses the originally large number of image tokens into a fixed number of compact representations, preserving essential visual information while significantly reducing the computational complexity of subsequent network layers.
+
+For language processing, we utilize the text encoder from CLIP ViT-B/32. For robot state and action, we employ MLPs to project them into the same embedding space. Both robot state and action are represented as 7-dimensional vectors, where the first 6 dimensions encode the arm state representing the end effector's position and orientation, and the last dimension represents the gripper state indicating the open/close status. We use separate MLP layers to process arm state and gripper state independently, then concatenate the results.
+
+We initialize predicted tokens as zero-filled tensors with the same dimensions as the target actions and images to be predicted, and insert them after the input data at each time step.
+
+\textbf{Decoder} In the decoder, we index the predicted tokens based on the input and slice out the image and action tokens. For image tokens, we employ the Vision Transformer encoder architecture \citep{he2022masked} for decoding, followed by a linear layer to predict pixel patches. For the action decoder, similarly, we use an MLP to reduce the action-corresponding vectors to 7 dimensions. For the arm state and gripper state components, we employ different linear layers for decoding. For the gripper state, we apply binary thresholding at 0.5 to represent the gripper's open/close status (0 for closed, 1 for open).
+
+\textbf{Backbone} Qwen3 \citep{yang2025qwen3technicalreport} represents the latest advancement in the Qwen large language model family, comprising both dense and Mixture-of-Experts (MoE) architectures with parameter scales ranging from 0.6 to 235 billion. Utilizing Qwen3 as a backbone architecture offers significant advantages for large language model applications, primarily through its innovative parameter efficiency where Qwen3 dense base models achieve performance comparable to much larger Qwen2.5 models while using  fewer parameters, with Qwen3-4B matching the performance of Qwen2.5-72B-Instruct. The MoE variants provide exceptional computational efficiency, as Qwen3-MoE base models deliver similar performance to Qwen2.5 dense base models while utilizing only 10\% of the active parameters, resulting in significant savings in both training and inference costs.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{figures/number_of_chunks.pdf}
+    \caption{This figure shows the performance of the WorldAgen model on CALVIN as the number of chunks changes.}
+    \label{fig:number_of_chunks}
+\end{figure}
+
+\section{Baseline Results}
+
+In this section, we present more results of our baseline on CALVIN benchmark, including pretraining, different length and number of chunks and different backbone.
+
+\subsection{Pretraining}
+Given the powerful modeling capability and flexibility of Qwen3~\cite{yang2025qwen3technicalreport}, we adopt it as the network backbone for WorldAgen. Following the configuration established in~\citep{tian2024predictiveinversedynamicsmodels}, we configure the transformer architecture with 12 transformer heads and 24 transformer layers, resulting in a total network size of 370M parameters with 120M trainable parameters. 
+ Model pretraining is performed on a 4$\times$H100 GPU server, taking approximately 60 hours for CALVIN and 5 hours for LIBERO. 
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/before_ttt.pdf}
+    \includegraphics[width=0.7\textwidth]{figures/after_ttt.pdf}
+    \caption{
+        In the comparison between the trajectories before and after TTT, the red regions indicate failures within the trajectory, while the green regions represent successful portions.
+    }
+    \label{fig:demos}
+\end{figure*}
+
+\subsection{Image and Action Chunk Lengths}
+WorldAgen offers flexible input-output interfaces, accommodating image and action chunks of variable lengths. We evaluate the effect of different image and action chunk lengths on model performance. The results are shown in Table~\ref{tab:chunk_ablation}.
+
+Therefore, on CALVIN benchmark, we employ an image chunk length of 1, action chunk length of 5, and trajectory length of 16. For LIBERO, we use an image chunk length of 1, action chunk length of 3, and trajectory length of 7.
+
+
+\begin{algorithm}[t]
+\caption{Trajectory splitting with variable-length action, observation, and robot state units.}
+\label{alg:traj-splitting}
+\begin{algorithmic}[1]
+\REQUIRE Rollout $\tau = \{(o_t, s_t, a_t)\}_{t=0}^{T-1}$, observation chunk length $n$, action chunk length $m$
+\STATE $\mathcal{U} \leftarrow \emptyset$
+\FOR{$i = 0$ \TO $I-1$}
+  \IF{$i = 0$}
+    \STATE $\mathcal{I}^{\text{obs}} \leftarrow \{0,1,\ldots,n-1\}$
+    \STATE $O^{n}_{0 \rightarrow n-1} \leftarrow \{\,o_t \mid t \in \mathcal{I}^{\text{obs}}\,\}$
+    \STATE $S^{n}_{0 \rightarrow n-1} \leftarrow \{\,s_t \mid t \in \mathcal{I}^{\text{obs}}\,\}$
+    \STATE $A_{0 \rightarrow n-1} \leftarrow \{\,a_t \mid t \in \mathcal{I}^{\text{obs}}\,\}$
+    \STATE $O_i \leftarrow O^{n}_{0 \rightarrow n-1}$
+    \STATE $S_i \leftarrow S^{n}_{0 \rightarrow n-1}$
+    \STATE $A_i \leftarrow A_{0 \rightarrow n-1}$
+    \STATE $A^p_i \leftarrow \mathbf{0}^{n}$ \hfill // action placeholder (length $n$)
+    \STATE $O^p_i \leftarrow \mathbf{0}^{n}$ \hfill // observation placeholder (length $n$)
+  \ELSE
+    \STATE $a \leftarrow n + (i-1)m$
+    \STATE $b \leftarrow n + im - 1$
+    \STATE $\mathcal{I}^{\text{obs}} \leftarrow \textsc{UniformSubsample}(a,\, b,\, n)$
+    \STATE $O^{n}_{n+(i-1)m \rightarrow n+im-1} \leftarrow \{\,o_t \mid t \in \mathcal{I}^{\text{obs}}\,\}$
+    \STATE $S^{n}_{n+(i-1)m \rightarrow n+im-1} \leftarrow \{\,s_t \mid t \in \mathcal{I}^{\text{obs}}\,\}$
+    \STATE $A_{n+(i-1)m \rightarrow n+im-1} \leftarrow \{\,a_t \mid n+(i-1)m \le t \le n+im-1\,\}$
+    \STATE $O_i \leftarrow O^{n}_{n+(i-1)m \rightarrow n+im-1}$
+    \STATE $S_i \leftarrow S^{n}_{n+(i-1)m \rightarrow n+im-1}$
+    \STATE $A_i \leftarrow A_{n+(i-1)m \rightarrow n+im-1}$
+    \STATE $A^p_i \leftarrow \mathbf{0}^{m}$ \hfill // action placeholder (length $m$)
+    \STATE $O^p_i \leftarrow \mathbf{0}^{n}$ \hfill // observation placeholder (length $n$)
+  \ENDIF
+  \STATE $U_i \leftarrow \bigl(G, O_i, S_i, A_i, A^p_i, O^p_i\bigr)$
+  \STATE $\mathcal{U} \leftarrow \mathcal{U} \cup \{U_i\}$
+\ENDFOR
+\STATE \textbf{return} $\mathcal{U}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Dataset & I. Chunk & A. Chunk & Avg. Success $\uparrow$ \\
+\midrule
+\multirow{6}{*}{CALVIN} & 1 & 3 & 3.82 \\
+& \textbf{1} & \textbf{5} & \textbf{3.87} \\
+& 1 & 7 & 3.43 \\
+& 1 & 9 & 3.16 \\
+& 3 & 5 & 3.30 \\
+& 5 & 5 & 1.78 \\
+\midrule
+\multirow{3}{*}{LIBERO} & \textbf{1} & \textbf{3} & \textbf{78.0\%} \\
+& 1 & 5 & 74.5\% \\
+& 1 & 7 & 47.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on image and action chunk lengths across CALVIN and LIBERO benchmarks. I. Chunk and A. Chunk represent image chunk length and action chunk length, respectively}
+\label{tab:chunk_ablation}
+\end{table}
+
+We first fix the image chunk length to 1, as adjacent image frames contain redundant information and predicting more images increases computational overhead, thereby reducing model efficiency. By varying the action chunk length, we observe that
+\textbf{\textit{longer action sequences lead to degraded performance}}. We attribute this to error accumulation in action predictions, where mistakes in early actions compound over longer sequences. However, excessively short action chunk lengths also result in performance degradation, as the network learns less information from the dataset. 
+
+On LIBERO, we obtain consistent results, with performance deteriorating as action chunk length increases. Based on these findings, we adopt action chunk lengths of 5 for CALVIN and 3 for LIBERO in our main experiments.
+
+\subsection{Number of Chunks} 
+
+To investigate the effect of the number of chunks, we fix the image chunk length to 1 and the action chunk length to 3, conducting comprehensive experiments with the number of chunks varying from 2 to 6. As illustrated in Figure~\ref{fig:number_of_chunks}, we observe the \textbf{same pattern} as in our experiments with image chunk lengths and action chunk lengths.
+
+\textbf{\textit{A larger number of chunks require the model to predict more action steps, which leads to accumulation of prediction errors. And the decreasing rate becomes larger when the number of chunks increases. However, an excessively small number of chunks limits the model's ability to learn the relationship between world modeling and actions during training.}} 
+
+According to our results, setting the number of chunks to 3 achieves the best performance.
+
+We apply this finding to the configuration with image chunk length and action chunk length equal to 1 and 5, thereby achieving state-of-the-art results. This demonstrates
+
+\textbf{\textit{Both the scalability and robustness of our baseline approach, validating that the optimal chunk configuration principles discovered through systematic experimentation can be effectively transferred to different parameter settings to achieve superior performance.}}
+
+\section{Test-Time Training Ablation Study}
+
+\subsection{TTT Details}
+\label{app:ttt_details}
+
+For CALVIN, since the test scenarios are relatively uniform within each environment, we do not need to perform TTT for every individual sample. Instead, we conduct adaptation by sampling only on the first sample's scenario. We select 34 text instructions that have appeared in the training set as guidance and perform random exploration for 60 frames. We then uniformly sample 6 times within these 60 frames for each task, which leads to $34\times6=204$ trajectories in total. Each trajectories have the same length as the pretraining dataset. Following~\cite{kojima2025loratttlowranktesttimetraining}, we use single-epoch single-step optimization with LoRA rank set to 128, employing the AdamW optimizer with a learning rate of 0.005 and weight decay of 0.01.
+
+For LIBERO, the evaluation involves 10 different test scenarios in the LIBERO-10 dataset, necessitating a different TTT strategy. We perform scene-level TTT sampling in each individual test scenario to adapt to the specific environmental conditions. Similar to CALVIN,  we uniformly sample for 6 times with 6 different random seed for 60 frames exploration, which generates $6 \times 6$ samples per scenario. Also we set LoRA rank to 64 and  employ single-epoch single-step optimization using the AdamW optimizer with a learning rate of 0.005 and weight decay of 0.01.
+
+
+\subsection{LoRA vs. Full Fine-tuning} 
+
+We conducted a comparative study between LoRA and Full Fine-Tuning (FFT) on the CALVIN dataset. In our experiments, we set the LoRA rank to 128. Both LoRA fine-tuning and FFT used identical hyperparameters: learning rate $lr = 0.0005$, Adam optimizer, and weight decay of $0.01$.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\hline
+Method & Avg. Len. \\
+\hline
+WorldAgen & 3.87 \\
+WorldAgen $+$ LoRA & \textbf{3.93} \\
+WorldAgen $+$ FFT & 3.85 \\
+\hline
+\end{tabular}
+\caption{Comparison of test-time training with LoRA and FFT on CALVIN dataset. Avg. Len. represents the average sequence length.}
+\label{tab:lora_vs_fft}
+\end{table}
+
+As shown in Table \ref{tab:lora_vs_fft}, our results reveal that FFT does not improve model performance and actually leads to a decline in performance. We attribute this phenomenon to the fact that
+
+\textbf{\textit{FFT causes the network to overfit to the test scenarios, whereas LoRA enables the model to acquire scenario-specific features while preserving the original scene perception capabilities. Therefore, LoRA demonstrates superior performance by striking a better balance between adaptation to new scenarios and retention of pretrained knowledge.}}
+
+\subsection{Scalability and Robustness} To investigate the scalability and robustness of our method, we select three parameters crucial to TTT: number of chunks ($N$), image chunk length ($n$), and action chunk length ($m$). We conducted TTT experiments across different combinations of $N$, $n$, and $m$ values.
+
+We choose three representative settings with different configurations to demonstrate the generalizability of our approach across various parameter combinations.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc|c}
+\hline
+$N$ & $n$ & $m$ & LoRA Rank & Data Size & \begin{tabular}{c} Before TTT \\ After TTT \end{tabular} \\
+\hline
+3 & 1 & 3 & 64 & 170 & \begin{tabular}{c} 3.89 \\ \textbf{3.90} \end{tabular} \\
+\hline
+5 & 1 & 3 & 256 & 204 & \begin{tabular}{c} 3.50 \\ \textbf{3.67} \end{tabular} \\
+\hline
+3 & 1 & 5 & 128 & 204 & \begin{tabular}{c} 3.87 \\ \textbf{3.93} \end{tabular} \\
+\hline
+\end{tabular}
+\caption{TTT experiments under different number of chunks ($N$), image chunk length ($n$), and action chunk length ($m$) configurations.}
+\label{tab:ttt_scalability}
+\end{table}
+As demonstrated in the Table \ref{tab:ttt_scalability}, TTT consistently improves performance across different settings using only around 200 samples. This validates 
+
+\textbf{\textit{The scalability and robustness of our TTT approach and it can effectively adapt to various architectural configurations while maintaining consistent improvement patterns.}}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/ttt_data_size.pdf}
+\caption{This figure shows that as the amount of data increases, the TTT effect gradually increases.}
+\label{fig:ttt_data_size}
+\end{figure}
+
+\subsection{Test-Time Training Data Size}
+Furthermore, during the grid search process for the experimental configuration with $n=1$, $m=3$, $N=5$, as illustrated in the Figure \ref{fig:ttt_data_size}, we discovered that TTT exhibits linear performance improvement with small amounts of data. However, when the data volume becomes excessive, we observe a phenomenon where TTT performance degrades. These experiments were conducted with LoRA rank = 256 and learning rate = 0.0005.
+
+We attribute this phenomenon to the fact that excessive training samples cause LoRA to overfit on the world modeling component, making the model more biased towards predicting world observations rather than executing correct actions. This finding highlights
+
+\textbf{\textit{The importance of carefully balancing the amount of test-time training data to achieve optimal performance without compromising the model's action execution capabilities.}}
+
+
+
+\subsection{Comparison Between Backbones}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Backbone & CALVIN & LIBERO-10 \\
+\midrule
+GPT2   & 3.32 & 75.0 \\
+Qwen3  & 3.87 & 75.5 \\
+\bottomrule
+\end{tabular} 
+\caption{Performance comparison on different backbones.}
+\label{tab:backbone_comparison}
+\end{table}
+
+We incorporate the GPT-2 \cite{radford2019language} backbone to examine the performance gap across different language backbones. Compared with GPT-2, Qwen3 demonstrates stronger representation capacity and better alignment with multimodal instructions, leading to consistently higher performance, as shown in Table~\ref{tab:backbone_comparison}.
+
+
+\subsection{LIBERO Subsets}
+
+\begin{table}[h]
+\centering
+
+\begin{tabular}{cccc}
+\toprule
+Spatial & Object & Goal & LIBERO-10 \\
+\midrule
+93.0 & 79.5 & 91.0  & 79.0 \\
+\bottomrule
+\end{tabular} 
+\caption{Performance across different subsets in LIBERO.}
+\label{tab:libero_subsets}
+\end{table}
+
+We further include additional subsets of the LIBERO benchmark to comprehensively evaluate the performance of WorldAgen. The results demonstrate that our method maintains stable and consistent performance across various subsets, indicating strong generalization ability and robustness to task diversity, as shown in Table~\ref{tab:libero_subsets}.
+
+\subsection{Comparison Visualization}
+
+We visualize the comparison before and after applying TTT. As shown in the figure \ref{fig:demos}, the red regions represent the failed portions of the trajectory, while the green regions denote the successful units. The selected task sequence is \textit{rotate\_blue\_block\_right}, \textit{move\_slider\_right}, \textit{lift\_red\_block\_slider}, and \textit{place\_in\_slider}. It can be observed that before applying TTT, the robot only completed the \textit{rotate\_blue\_block\_right} task and then entered a halted state. \textbf{\textit{After incorporating TTT, however, the model demonstrates a significantly enhanced ability to model the environment, thereby successfully accomplishing a series of tasks.}}
+
+
+\begin{table*}[t]
+\centering
+\caption{Summary of important notations used in the WorldAgen framework.}
+\label{tab:notation}
+\begin{tabularx}{\textwidth}{llX}
+\hline
+Notation & Symbol & Description \\
+\hline
+
+Action & $a_t$ &
+Robot action at time step $t$ in the raw rollout. \\[4pt]
+
+Observation & $o_t$ &
+Environmental observation at time step $t$ in the raw rollout. \\[4pt]
+
+Robot State & $s_t$ &
+Robot proprioceptive state at time step $t$ in the raw rollout. \\[4pt]
+
+Rollout Trajectory & $\tau$ &
+A trajectory with $T$ time steps:
+$\tau = \{(o_t, s_t, a_t)\}_{t=0}^{T-1}$. \\[4pt]
+
+Task Instruction & $G_i$ &
+Language instruction specifying the task in unit $i$. \\[6pt]
+
+\hline
+
+Action Chunk Length & $m$ &
+Number of actions in each action chunk $A_i$. \\[4pt]
+
+Observation / Robot State Chunk Length & $n$ &
+Number of observations and robot proprioceptive states in each chunk $O_i$ and $S_i$. \\[6pt]
+
+\hline
+
+Trajectory Unit & $U_i$ &
+The $i$-th trajectory unit:
+$U_i = (G_i, O_i, S_i, A_i, A_p, O_p)$. \\[10pt]
+
+Action Chunk & $A_i$ &
+Action chunk in unit $i$:
+\[
+\begin{aligned}
+A_i &= A_{\,n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+       a_{\,n+(i-1)m},\,
+       a_{\,n+(i-1)m+1},\,
+       \ldots,\,
+       a_{\,n+im-1}
+       \big].
+\end{aligned}
+\] \\[12pt]
+
+Observation Chunk & $O_i$ &
+Observation chunk in unit $i$:
+\[
+\begin{aligned}
+O_i &= O^{n}_{\,n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+       o_{\,n+(i-1)m},\,
+       o_{\,n+(i-1)m + \lfloor \tfrac{1}{n} m \rfloor},\,
+       \ldots,\,
+       o_{\,n+(i-1)m + \lfloor \tfrac{n-1}{n} m \rfloor}
+       \big].
+\end{aligned}
+\] \\[12pt]
+
+Robot State Chunk & $S_i$ &
+Robot state chunk in unit $i$:
+\[
+\begin{aligned}
+S_i &= S^{n}_{\,n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+       s_{\,n+(i-1)m},\,
+       s_{\,n+(i-1)m + \lfloor \tfrac{1}{n} m \rfloor},\,
+       \ldots,\,
+       s_{\,n+(i-1)m + \lfloor \tfrac{n-1}{n} m \rfloor}
+       \big].
+\end{aligned}
+\] \\[12pt]
+
+\hline
+
+Action Placeholder & $A_p$ &
+Placeholder action tokens. \\[4pt]
+
+Observation Placeholder & $O_p$ &
+Placeholder observation tokens. \\[6pt]
+
+Predicted Action Chunk & $\hat{A}_i$ &
+Predicted action chunk:
+\[
+\begin{aligned}
+\hat{A}_i &= 
+\big[
+\hat{a}_{\,n+(i-1)m},\,
+\hat{a}_{\,n+(i-1)m+1},\,
+\ldots,\,
+\hat{a}_{\,n+im-1}
+\big].
+\end{aligned}
+\] \\[12pt]
+
+Predicted Observation Chunk & $\hat{O}_i$ &
+Predicted next observation chunk:
+\[
+\begin{aligned}
+\hat{O}_i &= \hat{O}^{n}_{\,n+im \rightarrow n+(i+1)m-1} \\
+          &= \big[
+             \hat{o}_{\,n+im},\,
+             \hat{o}_{\,n+im + \lfloor \tfrac{1}{n} m \rfloor},\,
+             \ldots,\,
+             \hat{o}_{\,n+im + \lfloor \tfrac{n-1}{n} m \rfloor}
+             \big].
+\end{aligned}
+\] \\[12pt]
+
+\hline
+\end{tabularx}
+\end{table*}

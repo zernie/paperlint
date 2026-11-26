@@ -1,0 +1,344 @@
+\begin{thebibliography}{72}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[7zi()]{7zip}
+{7zip Homepage.}
+\newblock \url{https://www.7-zip.org/}.
+
+\bibitem[Fal()]{Falco}
+{Falco: cloud native runtime security tool for Linux operating systems}.
+\newblock \url{https://github.com/falcosecurity/falco}.
+
+\bibitem[Sys()]{Sysdig}
+{Aaron Kili. Sysdig – a powerful system monitoring and troubleshooting tool for linux.}
+\newblock \url{https://www.tecmint.com/sysdig-systemmonitoring-and-troubleshooting-tool-for-linux/}.
+
+\bibitem[Tet()]{Tetragon}
+{Cilium. Cilium/tetragon: eBPF-based security observability and runtime enforcement}.
+\newblock \url{https://github.com/cilium/tetragon}.
+
+\bibitem[abb()]{abbench}
+{The Apache Software Foundation, “ab - Apache HTTP server benchmark tool,”}.
+\newblock \url{https://httpd.apache.org/docs/2.4/programs/ab.html}.
+
+\bibitem[dar({\natexlab{a}})]{darpaoptc}
+{DARPA OPTC}.
+\newblock \url{https://github.com/FiveDirections/OpTC-data}, {\natexlab{a}}.
+
+\bibitem[dar({\natexlab{b}})]{darpatc}
+{DARPA TC}.
+\newblock \url{https://github.com/darpa-i2o/Transparent-Computing}, {\natexlab{b}}.
+
+\bibitem[ebp()]{ebpf_overview}
+{What is eBPF?}
+\newblock \url{https://ebpf.io/what-is-ebpf/}.
+
+\bibitem[fir()]{firefox}
+{Firefox}.
+\newblock \url{https://www.mozilla.org/en-US/firefox/}.
+
+\bibitem[lin()]{linuxaudit}
+The {Linux} audit daemon.
+\newblock \url{https://linux.die.net/man/8/auditd}.
+
+\bibitem[ngi()]{nginx}
+{Advanced Load Balancer, Web Server, Reverse Proxy - NGINX.}
+\newblock \url{https://www.nginx.com/}.
+
+\bibitem[ope()]{openssl}
+{OpenSSL: Cryptography and SSL/TLS Toolkit.}
+\newblock \url{https://www.openssl.org/}.
+
+\bibitem[pho()]{phoronix}
+{Phoronix test suite.}
+\newblock \url{https://www.phoronix-test-suite.com/}.
+
+\bibitem[red()]{redisbench}
+{Redis Ltd., “Redis benchmark”.}
+\newblock \url{https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/}.
+
+\bibitem[rin()]{ring}
+{BPF ring buffer}.
+\newblock \url{https://www.kernel.org/doc/html/next/bpf/ringbuf.html}.
+
+\bibitem[tra()]{tracee2}
+{Aqua Security. Tracee: Runtime security and forensics using eBPF.}
+\newblock \url{https://github.com/aquasecurity/tracee}.
+
+\bibitem[cve(2017)]{cve_16995}
+Cve-2017-16995.
+\newblock \url{https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-16995}, 2017.
+
+\bibitem[ebp(2017)]{ebpf-faster3}
+{BSidesSF 2017: Security Monitoring with eBPF}.
+\newblock \url{https://www.brendangregg.com/Slides/BSidesSF2017_BPF_security_monitoring/}, 2017.
+
+\bibitem[ebp(2021)]{ebpf-faster2}
+{Falco vs. AuditD from the HIDS perspective}.
+\newblock \url{https://sysdig.com/blog/falco-vs-auditd-hids/}, 2021.
+
+\bibitem[fir(2023)]{firebench}
+{Speedometer 2.0}.
+\newblock \url{ https://browserbench.org/Speedometer2.0/}, 2023.
+
+\bibitem[red(2023)]{redis}
+{Redis in-memory data structure store}.
+\newblock \url{https://redis.io/}, 2023.
+
+\bibitem[Dar(2024)]{Darpa_E3}
+Transparent computing engagement 3 data.
+\newblock \url{https://github.com/darpa-i2o/Transparent-Computing/blob/master/README-E3.md}, 2024.
+
+\bibitem[aes(2024)]{aesni}
+{Intel® Advanced Encryption Standard Instructions (AES-NI)}.
+\newblock \url{https://www.intel.com/content/www/us/en/developer/articles/technical/advanced-encryption-standard-instructions-aes-ni.html}, 2024.
+
+\bibitem[ebp(2024{\natexlab{a}})]{ebpf-bcc}
+{BPF Compiler Collection (BCC)}.
+\newblock \url{https://github.com/iovisor/bcc}, 2024{\natexlab{a}}.
+
+\bibitem[ebp(2024{\natexlab{b}})]{ebpf-bcc-doc}
+{BPF Compiler Collection (BCC) Reference Guide}.
+\newblock \url{https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md}, 2024{\natexlab{b}}.
+
+\bibitem[mic(2024)]{microsoft2024ebpf}
+ebpf for windows.
+\newblock \url{https://github.com/microsoft/ebpf-for-windows}, 2024.
+
+\bibitem[Int(2025)]{Intel_MPK}
+Intel® 64 and ia-32 architectures software developer manuals.
+\newblock \url{https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html}, 2025.
+
+\bibitem[ebp(2025{\natexlab{a}})]{ebpf_windows_ETW}
+Towards debuggability and secure deployments of ebpf programs on windows.
+\newblock \url{https://opensource.microsoft.com/blog/2022/10/25/towards-debuggability-and-secure-deployments-of-ebpf-programs-on-windows/}, 2025{\natexlab{a}}.
+
+\bibitem[ebp(2025{\natexlab{b}})]{ebpf_windows_file_reference}
+ebpf for windows file reference.
+\newblock \url{https://microsoft.github.io/ebpf-for-windows/ebpf__structs_8h.html}, 2025{\natexlab{b}}.
+
+\bibitem[ebp(2025{\natexlab{c}})]{ebpf_windows_official_intro}
+Getting linux based ebpf programs to run with ebpf for windows.
+\newblock \url{https://opensource.microsoft.com/blog/2022/02/22/getting-linux-based-ebpf-programs-to-run-with-ebpf-for-windows/}, 2025{\natexlab{c}}.
+
+\bibitem[ebp(2025{\natexlab{d}})]{ebpf_windows_tutorial}
+Tutorial of ebpf for windows.
+\newblock \url{https://github.com/microsoft/ebpf-for-windows/blob/main/docs/tutorial.md}, 2025{\natexlab{d}}.
+
+\bibitem[lin(2025)]{linux_bpf}
+Linux bpf documentation.
+\newblock \url{https://docs.kernel.org/bpf/}, 2025.
+
+\bibitem[Ahmad et~al.(2022)Ahmad, Lee, and Peinado]{hardlog}
+A.~Ahmad, S.~Lee, and M.~Peinado.
+\newblock Hardlog: Practical tamper-proof system auditing using a novel audit device.
+\newblock In \emph{2022 IEEE Symposium on Security and Privacy (SP)}, 2022.
+
+\bibitem[Alsaheel et~al.(2021)Alsaheel, Nan, Ma, Yu, Walkup, Celik, Zhang, and Xu]{atlas}
+A.~Alsaheel, Y.~Nan, S.~Ma, L.~Yu, G.~Walkup, Z.~B. Celik, X.~Zhang, and D.~Xu.
+\newblock Atlas: A sequence-based learning approach for attack investigation.
+\newblock In \emph{USENIX Security Symposium}, 2021.
+
+\bibitem[Aumasson and Bernstein(2012)]{SipHash}
+J.-P. Aumasson and D.~J. Bernstein.
+\newblock {SipHash: a fast short-input PRF}.
+\newblock In \emph{INDOCRYPT}, 2012.
+
+\bibitem[Bates et~al.(2015)Bates, Tian, Butler, and Moyer]{lpm2015}
+A.~Bates, D.~J. Tian, K.~R. Butler, and T.~Moyer.
+\newblock Trustworthy whole-system provenance for the linux kernel.
+\newblock In \emph{USENIX Security Symposium}, 2015.
+
+\bibitem[Bellare and Rogaway(2006)]{EC:BelRog06}
+M.~Bellare and P.~Rogaway.
+\newblock The security oftriple encryption and a framework for code-based gameplaying proofs.
+\newblock In \emph{EUROCRYPT 2006}, pages 409--426, 2006.
+
+\bibitem[Ding et~al.(2021)Ding, Yan, Zhai, and Ma]{elise}
+H.~Ding, S.~Yan, J.~Zhai, and S.~Ma.
+\newblock Elise: A storage efficient logging system powered by redundancy reduction and representation learning.
+\newblock In \emph{30th USENIX Security Symposium (USENIX Security 21)}, 2021.
+
+\bibitem[Ding et~al.(2023)Ding, Zhai, Deng, and Ma]{ding2023case}
+H.~Ding, J.~Zhai, D.~Deng, and S.~Ma.
+\newblock The case for learned provenance graph storage systems.
+\newblock In \emph{32nd USENIX Security Symposium (USENIX Security 23)}, pages 3277--3294, 2023.
+
+\bibitem[Fieller(1954)]{Fielle}
+E.~C. Fieller.
+\newblock Some problems in interval estimation.
+\newblock \emph{Journal of the Royal Statistical Society. Series B (Methodological)}, 16\penalty0 (2):\penalty0 175--185, 1954.
+\newblock ISSN 00359246.
+\newblock URL \url{http://www.jstor.org/stable/2984043}.
+
+\bibitem[Gandhi et~al.(2023)Gandhi, Banerjee, Agrawal, Ahmad, Lee, and Peinado]{omini}
+V.~Gandhi, S.~Banerjee, A.~Agrawal, A.~Ahmad, S.~Lee, and M.~Peinado.
+\newblock Rethinking system audit architectures for high event coverage and synchronous log availability.
+\newblock In \emph{Proceedings of the 32nd USENIX Conference on Security Symposium}, 2023.
+
+\bibitem[Gehani and Tariq(2012)]{spade}
+A.~Gehani and D.~Tariq.
+\newblock {SPADE}: Support for provenance auditing in distributed environments.
+\newblock In \emph{{ACM/IFIP/USENIX} International Conference on Distributed Systems Platforms and Open Distributed Processing}. Springer, 2012.
+
+\bibitem[Hassan et~al.(2020{\natexlab{a}})Hassan, Li, Jee, Yu, Zou, Wang, Chen, Li, Rhee, Gui, et~al.]{swift2020}
+W.~U. Hassan, D.~Li, K.~Jee, X.~Yu, K.~Zou, D.~Wang, Z.~Chen, Z.~Li, J.~Rhee, J.~Gui, et~al.
+\newblock This is why we can't cache nice things: Lightning-fast threat hunting using suspicion-based hierarchical storage.
+\newblock In \emph{Annual Computer Security Applications Conference (ACSAC)}, 2020{\natexlab{a}}.
+
+\bibitem[Hassan et~al.(2020{\natexlab{b}})Hassan, Noureddine, Datta, and Bates]{omegalog2020}
+W.~U. Hassan, M.~A. Noureddine, P.~Datta, and A.~Bates.
+\newblock {OmegaLog}: High-fidelity attack investigation via transparent multi-layer log analysis.
+\newblock In \emph{Network and Distributed System Security (NDSS)}, 2020{\natexlab{b}}.
+
+\bibitem[Hoang et~al.(2022)Hoang, Wu, and Yuan]{281386}
+V.~T. Hoang, C.~Wu, and X.~Yuan.
+\newblock Faster yet safer: Logging system via {Fixed-Key} blockcipher.
+\newblock In \emph{USENIX Security}, 2022.
+
+\bibitem[Hossain et~al.(2017)Hossain, Milajerdi, Wang, Eshete, Gjomemo, Sekar, Stoller, and Venkatakrishnan]{hossain2017sleuth}
+M.~N. Hossain, S.~M. Milajerdi, J.~Wang, B.~Eshete, R.~Gjomemo, R.~Sekar, S.~D. Stoller, and V.~Venkatakrishnan.
+\newblock {SLEUTH}: Real-time attack scenario reconstruction from {COTS} audit data.
+\newblock In \emph{USENIX Security Symposium}, 2017.
+
+\bibitem[Hossain et~al.(2018)Hossain, Wang, Sekar, and Stoller]{hossain+depend}
+M.~N. Hossain, J.~Wang, R.~Sekar, and S.~D. Stoller.
+\newblock Dependence-preserving data compaction for scalable forensic analysis.
+\newblock In \emph{USENIX Security Symposium}, 2018.
+
+\bibitem[Inam et~al.(2022)Inam, Goyal, Liu, Mink, Michael, Gaur, Bates, and Hassan]{inam2022faust}
+M.~A. Inam, A.~Goyal, J.~Liu, J.~Mink, N.~Michael, S.~Gaur, A.~Bates, and W.~U. Hassan.
+\newblock Faust: Striking a bargain between forensic auditing’s security and throughput.
+\newblock In \emph{Proceedings of the 38th Annual Computer Security Applications Conference}, pages 813--826, 2022.
+
+\bibitem[Inam et~al.(2023)Inam, Chen, Goyal, Liu, Mink, Michael, Gaur, Bates, and Hassan]{inam2022sok}
+M.~A. Inam, Y.~Chen, A.~Goyal, J.~Liu, J.~Mink, N.~Michael, S.~Gaur, A.~Bates, and W.~U. Hassan.
+\newblock Sok: History is a vast early warning system: Auditing the provenance of system intrusions.
+\newblock In \emph{IEEE Symposium on Security and Privacy (S\&P)}, 2023.
+
+\bibitem[Jain(1991)]{Book:Analysis}
+R.~Jain.
+\newblock \emph{The art of computer systems performance analysis}.
+\newblock John Wiley \& Sons, 1991.
+
+\bibitem[Jiang et~al.(2023)Jiang, Huang, Li, Guo, Chen, Luan, Ren, and Hu]{nodrop}
+P.~Jiang, R.~Huang, D.~Li, Y.~Guo, X.~Chen, J.~Luan, Y.~Ren, and X.~Hu.
+\newblock Auditing frameworks need resource isolation: A systematic study on the super producer threat to system auditing and its mitigation.
+\newblock In \emph{USENIX Security Symposium}, 2023.
+
+\bibitem[Karande et~al.(2017)Karande, Bauman, Lin, and Khan]{kbl+2017}
+V.~Karande, E.~Bauman, Z.~Lin, and L.~Khan.
+\newblock {SGX-Log: Securing System Logs With SGX}.
+\newblock In \emph{{Asia CCS}}, 2017.
+
+\bibitem[Katcher(1997)]{postmark}
+J.~Katcher.
+\newblock Postmark: A new file system benchmark.
+\newblock 1997.
+\newblock URL \url{https://api.semanticscholar.org/CorpusID:59816446}.
+
+\bibitem[Katz and Lindell(2008)]{XOR}
+J.~Katz and Y.~Lindell.
+\newblock Aggregate message authentication codes.
+\newblock pages 155--169, 01 2008.
+\newblock ISBN 978-3-540-79262-8.
+\newblock \doi{10.1007/978-3-540-79263-5_10}.
+
+\bibitem[King and Chen(2003)]{king2003}
+S.~T. King and P.~M. Chen.
+\newblock Backtracking intrusions.
+\newblock In \emph{ACM Symposium on Operating Systems Principles (SOSP)}. ACM, 2003.
+
+\bibitem[Lee et~al.(2013)Lee, Zhang, and Xu]{loggc}
+K.~H. Lee, X.~Zhang, and D.~Xu.
+\newblock Loggc: garbage collecting audit log.
+\newblock In \emph{CCS}, 2013.
+
+\bibitem[Liu et~al.(2018)Liu, Zhang, Li, Jee, Li, Wu, Rhee, and Mittal]{priotracker2018}
+Y.~Liu, M.~Zhang, D.~Li, K.~Jee, Z.~Li, Z.~Wu, J.~Rhee, and P.~Mittal.
+\newblock Towards a timely causality analysis for enterprise security.
+\newblock In \emph{Network and Distributed System Security (NDSS)}, 2018.
+
+\bibitem[Ma et~al.(2016)Ma, Zhang, and Xu]{protracer}
+S.~Ma, X.~Zhang, and D.~Xu.
+\newblock {ProTracer}: Towards practical provenance tracing by alternating between logging and tainting.
+\newblock In \emph{Network and Distributed System Security (NDSS)}, 2016.
+
+\bibitem[Ma et~al.(2018)Ma, Zhai, Kwon, Lee, Zhang, Ciocarlie, Gehani, Yegneswaran, Xu, and Jha]{kcal}
+S.~Ma, J.~Zhai, Y.~Kwon, K.~H. Lee, X.~Zhang, G.~Ciocarlie, A.~Gehani, V.~Yegneswaran, D.~Xu, and S.~Jha.
+\newblock Kernel-supported cost-effective audit logging for causality tracking.
+\newblock In \emph{USENIX Annual Technical Conference (ATC)}, 2018.
+
+\bibitem[McVoy and Staelin(1996)]{lmbench}
+L.~McVoy and C.~Staelin.
+\newblock lmbench: Portable tools for performance analysis.
+\newblock In \emph{USENIX Annual Technical Conference (ATC)}, 1996.
+
+\bibitem[Mouha et~al.(2014)Mouha, Mennink, Van~Herrewege, Watanabe, Preneel, and Verbauwhede]{Chaskey}
+N.~Mouha, B.~Mennink, A.~Van~Herrewege, D.~Watanabe, B.~Preneel, and I.~Verbauwhede.
+\newblock Chaskey: An efficient mac algorithm for 32-bit microcontrollers.
+\newblock In \emph{Selected Areas in Cryptography -- SAC 2014}, pages 306--323, Cham, 2014. Springer International Publishing.
+
+\bibitem[Paccagnella et~al.(2020{\natexlab{a}})Paccagnella, Datta, Hassan, Bates, Fletcher, Miller, and Tian]{custos}
+R.~Paccagnella, P.~Datta, W.~U. Hassan, A.~Bates, C.~W. Fletcher, A.~Miller, and D.~Tian.
+\newblock {Custos: Practical Tamper-Evident Auditing of Operating Systems Using Trusted Execution}.
+\newblock In \emph{NDSS}, 2020{\natexlab{a}}.
+
+\bibitem[Paccagnella et~al.(2020{\natexlab{b}})Paccagnella, Liao, Tian, and Bates]{kennylog}
+R.~Paccagnella, K.~Liao, D.~Tian, and A.~Bates.
+\newblock Logging to the danger zone: Race condition attacks and defenses on system audit frameworks.
+\newblock In \emph{ACM SIGSAC Conference on Computer and Communications Security}, 2020{\natexlab{b}}.
+
+\bibitem[Pasquier et~al.(2015)Pasquier, Singh, Eyers, and Bacon]{pasquier2015:camflow-tcc}
+T.~Pasquier, J.~Singh, D.~Eyers, and J.~Bacon.
+\newblock Camflow: Managed data-sharing for cloud services.
+\newblock In \emph{TCC}, 2015.
+
+\bibitem[Pasquier et~al.(2017)Pasquier, Han, Goldstein, Moyer, Eyers, Seltzer, and Bacon]{camflow}
+T.~Pasquier, X.~Han, M.~Goldstein, T.~Moyer, D.~Eyers, M.~Seltzer, and J.~Bacon.
+\newblock Practical whole-system provenance capture.
+\newblock In \emph{Symposium on Cloud Computing}, 2017.
+
+\bibitem[Rice(2023)]{rice2023learning}
+L.~Rice.
+\newblock \emph{Learning eBPF: Programming the Linux Kernel for Enhanced Observability, Networking, and Security}.
+\newblock O'Reilly Media, 2023.
+\newblock ISBN 9781098135089.
+\newblock URL \url{https://books.google.com/books?id=OqCyEAAAQBAJ}.
+
+\bibitem[Sekar et~al.(2024)Sekar, Kimm, and Aich]{Sekar2023eAA}
+R.~Sekar, H.~Kimm, and R.~Aich.
+\newblock e{A}udit: A fast, scalable and deployable audit data collection system.
+\newblock In \emph{IEEE Symposium on Security and Privacy (SP)}, 2024.
+
+\bibitem[Sun et~al.(2024)Sun, Wang, Wang, Jiang, Han, and Yang]{auditrim}
+H.~Sun, S.~Wang, Z.~Wang, Z.~Jiang, D.~Han, and J.~Yang.
+\newblock Auditrim: A real-time, general, efficient, and low-overhead data compaction system for intrusion detection.
+\newblock In \emph{Proceedings of the 27th International Symposium on Research in Attacks, Intrusions and Defenses}. ACM, 2024.
+\newblock ISBN 9798400709593.
+
+\bibitem[Tang et~al.(2018)Tang, Li, Li, Zhang, Jee, Xiao, Wu, Rhee, Xu, and Li]{tang2018nodemerge}
+Y.~Tang, D.~Li, Z.~Li, M.~Zhang, K.~Jee, X.~Xiao, Z.~Wu, J.~Rhee, F.~Xu, and Q.~Li.
+\newblock Nodemerge: Template based efficient data reduction for big-data causality analysis.
+\newblock In \emph{ACM Conference on Computer and Communications Security (CCS)}, 2018.
+
+\bibitem[Xu et~al.(2016)Xu, Wu, Li, Jee, Rhee, Xiao, Xu, Wang, and Jiang]{Xu:2016}
+Z.~Xu, Z.~Wu, Z.~Li, K.~Jee, J.~Rhee, X.~Xiao, F.~Xu, H.~Wang, and G.~Jiang.
+\newblock High fidelity data reduction for big data security dependency analyses.
+\newblock In \emph{ACM Conference on Computer and Communications Security (CCS)}, 2016.
+
+\bibitem[Zhang et~al.(2024)Zhang, Zeng, Zhang, Ahmad, Zhang, Jin, and Liang]{hitchhiker}
+C.~Zhang, J.~Zeng, Y.~Zhang, A.~Ahmad, F.~Zhang, H.~Jin, and Z.~Liang.
+\newblock The hitchhiker's guide to high-assurance system observability protection with efficient permission switches.
+\newblock In \emph{Proceedings of the 2024 on ACM SIGSAC Conference on Computer and Communications Security}. ACM, 2024.
+
+\bibitem[Zhong et~al.(2025)Zhong, Liu, Arpaci-Dusseau, and Arpaci-Dusseau]{zhong2025revealing}
+S.~W. Zhong, J.~Liu, A.~Arpaci-Dusseau, and R.~Arpaci-Dusseau.
+\newblock Revealing the unstable foundations of ebpf-based kernel extensions.
+\newblock In \emph{Proceedings of the Twentieth European Conference on Computer Systems}, pages 21--41, 2025.
+
+\end{thebibliography}

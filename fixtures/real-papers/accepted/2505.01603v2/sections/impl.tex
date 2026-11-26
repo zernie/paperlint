@@ -1,0 +1,57 @@
+\section{Implementation}\label{sec:impl}
+
+We implement \dandelion in $\sim$12K lines of Rust.
+We describe how the dispatcher orchestrates execution (\S\ref{sec:dispatcher-impl}), how compute engines provide isolation with support for four different memory isolation mechanisms (\S\ref{impl:compute-engine}), and how we implement communication engines (\S\ref{sec:comm-engines}). 
+
+\subsection{Dispatcher and Engine Coordination}\label{sec:dispatcher-impl}
+
+The dispatcher orchestrates composition invocations using separate green threads~\cite{rust:green-threads}. It queues functions as their inputs become available and coordinates data movement.
+To avoid bottlenecks, the dispatcher offloads tasks that are not part of the control flow, such as loading code into contexts, transferring data between contexts, and executing functions.
+
+\textbf{Data passing.} 
+To move data between contexts, \dandelion currently copies data. However, this is not fundamental to the programming model.
+Different backends could avoid the copy by remapping memory or using copy-on-write when code or data is needed by multiple functions, if the security model allows for it. This is future work.
+
+\subsection{Compute Engines}\label{impl:compute-engine}
+
+Compute engines execute compute functions with one of four memory isolation options. We implement different isolation backends to demonstrate that \dandelion's design is not tied to a particular mechanism. 
+Cloud providers can select a mechanism based on its performance and security tradeoffs, which we evaluate in \S\ref{sec:eval} and \S\ref{sec:security}.
+
+\fakepara{KVM-based isolation.}The KVM backend leverages hardware support for virtualization (e.g. Intel VT-x) to isolate compute functions.
+Each compute function runs as a lightweight VM without a guest kernel, as we don't need to support syscalls.
+To minimize overheads we use an identity mapping between guest virtual and guest physical addresses.
+The engine is a minimal hypervisor, which is only responsible for VM launch and exit using Linux's Kernel-based Virtual Machine (KVM) module~\cite{kvm}.
+KVM relies on hardware nested paging (e.g. EPT in VT-x) for memory safety.
+The memory context is an anonymous memory mapping in the \dandelion process, that is used to back the guest physical address space.
+Inspired by Virtines~\cite{virtines}, we circumvent VM setup cost by reusing KVM structures. For this, we reset virtual CPU state and replace the memory backing the guest physical address space, effectively switching the context.
+
+\fakepara{Process-based isolation.}The process-based isolation backend executes each function as a separate process.
+\dandelion uses a shared memory region as context.
+When a function is ready to execute, the engine that picks up the task spawns a new process.
+The process first runs a small amount of trusted code
+to map the shared memory into the process.
+The new process sends a ready signal to the engine, which uses \texttt{ptrace} to catch and prevent any system calls the compute function may attempt to make. If a syscall is caught, \dandelion will terminate the function and notify the user.
+If the function process exits regularly, the engine parses the data left behind in the shared memory to extract the output of the function. 
+
+\fakepara{CHERI-based isolation.} \dandelion can also leverage new CPU hardware security extensions, like CHERI~\cite{cheri}.
+With CHERI, load/store instructions take capabilities as inputs rather than integer addresses. 
+Instructions succeed if the capability passes permission and bounds checks performed by the CPU hardware, otherwise it faults.
+ 
+\dandelion's CHERI backend can run compute functions as threads within the \dandelion process, since CHERI capabilities enforce isolation within a virtual address space.
+We use CHERI's hybrid capability mode~\cite{cheri} to avoid requiring capability compatibility from all user code.
+CHERI contexts are contiguous memory regions, pointed to by a code and a data capabilities.
+An engine sets these capabilities as default capabilities and ensures it no longer has any other capabilities before jumping into user code.
+Special sealed capabilities are used to return from user code, which are guaranteed by hardware to not have been manipulated. 
+
+\fakepara{rWasm-based isolation.} 
+\dandelion can also use isolation mechanisms that do not require hardware support.
+We show this by implementing a backend using rWasm~\cite{rwasm}, a Wasm-to-safe-Rust compiler.
+Developers register compute functions in Wasm code.
+\dandelion transpiles the user-defined Wasm code to safe Rust code, then wraps and compiles it to a native shared library.
+To execute functions, \dandelion only needs to load the library and call into it using the symbols defined in the wrapper.
+Memory isolation is provided by the memory safety guarantees for \texttt{safe} code by the Rust compiler, which is already part of the trusted computing base as \dandelion is implemented in Rust. Since memory isolation is enforced at compile time, this approach does \textit{not} rely on a runtime like Wasmtime for isolation.
+
+\subsection{Communication Engines}\label{sec:comm-engines}
+
+Each communication engine runs a separate kernel thread pinned on a dedicated core, which executes its own asynchronous runtime, using green threads to run multiple requests in parallel. Communication engines have the same interface to the dispatcher as compute engines and similarly poll task queues. Since the communication engines are trusted, they do not need to execute functions in sandboxes, but they do need to sanitize input data, as this is untrusted.
+For our HTTP function, we only rely on the first line defined by the protocol to contain the HTTP method and protocol version. \dandelion can check these fields against a fixed set of options and the first part of the URI, which identifies the host to connect to with either a valid IP or a domain name.

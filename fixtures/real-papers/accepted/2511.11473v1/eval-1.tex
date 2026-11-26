@@ -1,0 +1,395 @@
+\section{Evaluation}
+
+
+%We first describe the evaluation metrics \xref{sec:metrics}, and  testsets \xref{sec:testsets}, followed by detailed results   \xref{sec:results} and ablation studies \xref{sec:ablation}.
+
+\subsection{Metrics}\label{sec:metrics}
+%To Evaluate the performance of our dual-model to extract the speech involving in the conversation. 
+
+Since the beamformer already outputs self-speech and the proactive assistant aims to help the wearer hear conversational partners, we compute four metrics for the {\it partners' speech} segments output by the models (see~\xref{sec:beamformerdetails}  for self-speech results).
+
+
+\squishlist
+\item {\it SISDRi:} Scale-Invariant Signal-to-Distortion Ratio improvement (SISDRi) quantifies how much the target speech is enhanced relative to the noisy input. Higher values indicate better separation and preservation of the target speech.
+
+\item {\it $\Delta$PESQ: } Perceptual Evaluation of Speech Quality (PESQ) estimates speech quality based on human auditory perception. $\Delta$PESQ measures the perceptual improvement over the input mixture.
+%Perceptual Evaluation of Speech Quality (PESQ) is an ITU-T standard metric (P.862) that estimates speech quality by modeling human auditory perception. $\Delta$ PESQ quantifies perceptual quality gain compared with the input mixture.
+
+\item {\it Accuracy (Acc):} Measures how often we correctly select the conversational partner at each conversation turn. A correct selection occurs when: (1) the conversational partner's  SISDRi > 0, and (2) it exceeds all interfering speakers' SISDRi.
+
+
+%Accuracy (Acc) quantifies how often the model correctly selects the target speaker to enhance at the turn level. For each turn in conversation, it is considered to pick the target speaker correctly if: (1) the SISDRi of the target speaker is greater than 0, and (2) the SISDRi of the target speaker exceeds that of all interfering speakers.
+
+\item {\it Confusion Rate (CR):}  How often we select an interfering speaker over the target. This occurs when: (1) the interfering speaker's SISDRi > 0, and (2) it exceeds the conversational partner's SISDRi.
+
+\squishend
+
+% Please explain these..Emphasize sisdri, pesq is for other spekaer andnot self-speaker
+
+
+
+\begin{table*}[t!]
+%\vskip -0.07in
+\caption{Evaluation on English (Libri, Candor, SpokenWoZ) and Mandarin (RAMC) testsets.}
+\vskip -0.1in
+\centering
+  \setlength{\tabcolsep}{5.3pt}
+{\footnotesize
+\begin{tabular}{lcccccccc}
+\toprule
+& \multicolumn{4}{c}{Non-spatialized} & \multicolumn{4}{c}{Spatialized} \\
+\cmidrule(r){2-5} \cmidrule(l){6-9}
+\textbf{Metrics} & SISDRi($\uparrow$) & Acc ($\uparrow$) & CR ($\downarrow$) & $\Delta$PESQ($\uparrow$) & SISDRi($\uparrow$) & Acc($\uparrow$) & CR($\downarrow$)  & $\Delta$PESQ($\uparrow$) \\
+\midrule
+\textbf{Baseline Model (SE)} &&&&&&&&\\
+\midrule
+Synthetic Libri & -1.95 (1.94) & 26.8\% & 26.3\% & -0.16 (0.14) & -3.31 (2.23) & 10.5\% & 27.7\% & -0.13 (0.13)\\
+Candor  & -5.16 (3.19) & 13.5\% & 24.4\% & -0.29 (0.22) & -3.05 (2.84) & 18.8\% & 21.7\% & -0.16 (0.17)\\
+SpokenWoz (OOD) & -5.05 (4.04) & 14.7\% & 14.7\% & -0.48 (0.33) & -3.45 (3.78) & 16.8\% & 9.2\% & -0.16 (0.21)\\
+RAMC  & -4.28 (6.01) & 13.6\% & 27.9\% & -0.32 (0.28) & -4.30 (3.37) & 6.8\% & 19.9\% & -0.17 (0.17)\\
+\midrule
+\textbf{Our Dual Models} &&&&&&\\
+\midrule
+Synthetic Libri & 11.70 (4.56) & 96.3\% & 1.4\% & 1.11 (0.30) & 14.62 (6.05) & 96.8\% & 0.8\% & 0.63 (0.23) \\
+Candor  &  6.75 (4.29) & 87.0\% & 2.7\% & 0.64 (0.31) & 9.82 (3.77) & 93.9\% & 1.1\% & 0.56 (0.20)\\
+SpokenWoz (OOD)  & 7.27 (6.11) & 84.5\% & 4.3\% & 0.58 (0.44) &11.95 (6.22) & 92.1\% & 1.5\% & 0.52 (0.25) \\
+RAMC  & 6.50 (7.45) & 85.5\% & 5.6\% & 0.63 (0.41) & 8.05 (9.29) & 78.0\% & 9.4\% & 0.26 (0.40) \\
+\midrule
+Libri (2spk) & 12.48 (4.28) & 98.4\% & 0.6\% & 1.14 (0.24) & 15.68 (5.46) & 99.2\% & 0.2\% &  0.65 (0.22) \\
+Libri (3spk)  & 12.03 (4.00) & 96.6\% & 1.2\% & 1.16 (0.25) & 14.29 (6.08) & 96.1\% & 0.6\% & 0.63 (0.21) \\
+Libri (leaving) & 10.58 (5.10) & 94.1\% & 2.5\% & 1.03 (0.36) & 13.89 (6.42) & 95.7\% & 1.5\% & 0.60 (0.24)\\
+\bottomrule
+\end{tabular}
+}
+\label{tab:big_results}
+\vskip -0.15in
+\end{table*}
+
+% Japanese (OOD) & 7.92 (5.19) & -- & -- & -- & 10.26 (5.24) & -- & -- & -- \\  % Added row
+% Libri (4spk) & 11.94 (4.46) & -- & -- & -- & 11.82 (6.26) & -- & -- & -- \\   % Added row
+% Libri (5spk) & 11.85 (4.58) & -- & -- & -- & 10.87 (6.5) & -- & -- & -- \\   % Added row
+
+
+\subsection{Testsets}\label{sec:testsets}
+We evaluate our models on several test sets: synthetic 2-speaker conversations (Libri 2spk), 3-speaker conversations (Libri 3spk), speaker-switching conversations (Libri leaving), and the Candor test set. There is no speaker {or turn-taking timestamp} overlap between the training, validation, and test sets, ensuring that the models have not seen the test conversations or speakers during training.
+
+% \textcolor{red}{Additionally, we created synthetic 4- and 5-speaker conversations respectively (Libri 4spk and Libri 5spk) to serve only as test set. The two datasets are generated following the same process as Libri 2- and 3-speaker (see \xref{sec:datasetgen}). } 
+
+We also assess generalization by testing the English-trained models on both the RAMC Mandarin test set, which contains no turn-taking timestamp data from training, {and the Japanese Duplex Conversation Dataset \cite{JapaneseDuplex2025}. We also tested the model on Libri (4 spk) and Libri (5 spk), where the model was not trained on such a large number of speakers.} Finally, we evaluate on the out-of-distribution SpokenWOZ~\cite{si2023spokenwoz} 2-speaker conversation dataset. Since SpokenWOZ contains relatively short utterances, we do not enforce the condition that the wearer speaks for at least 5 consecutive seconds at the beginning. Instead, we randomly select two recordings with disjoint speakers and designate the first speaker in the target conversation as the wearer. 
+
+
+
+\subsection{Results}\label{sec:results}
+Table~\ref{tab:big_results} shows evaluation results on several open-source conversational datasets. We use DeepFilterNet2~\cite{schroter2022deepfilternet2}, a widely adopted speech enhancement model, as our baseline. In the non-spatialized setting, our dual-model consistently outperforms the baseline across all four metrics. On the synthetic Libri conversational dataset, the model achieves significant improvements in both SISDR and PESQ under various conditions, including 2-, 3-speaker and speaker-leaving scenarios. Additionally, our model achieves a high accuracy to pick the conversational partners and  a very low confusion rate to pick the interfering speakers.  In contrast, the baseline model enhances  speech uniformly without distinguishing between target and interfering speakers. As it is not conversation-aware or capable of speech separation, it fails to deliver SISDR improvements.
+
+
+
+Fig.~\ref{fig:leaving_scatter} shows a scatterplot from the Libri (leaving) test set, where a speaker transitions from the target conversation to the interfering one. The plot depicts the SISDRi achieved by our dual-model for this speaker, both before and after leaving the target conversation. While part of the target conversation, the speaker receives a positive SISDRi, indicating successful enhancement. After switching to the interfering conversation, the SISDRi becomes negative, showing that the model correctly suppresses the speaker once they are no longer part of the conversational flow. This shows  the model’s ability to adapt to dynamic, multi-party interactions.
+
+\begin{table}[t!]
+\caption{SISDRi results for generalization.}
+\vskip -0.1in
+\centering
+  \setlength{\tabcolsep}{5pt} % adjust column spacing
+{\footnotesize
+\begin{tabular}{lc}
+\toprule
+\textbf{Dataset} & SISDRi ($\uparrow$) \\
+\midrule
+Libri (2spk)        & 12.48 (4.28) \\
+Libri (3spk)        & 12.03 (4.00) \\
+Libri (4spk)        & 11.94 (4.46) \\
+Libri (5spk)        & 11.85 (4.58) \\
+\midrule
+% SpokenWoz (OOD)     & 6.70 (6.11)  \\
+RAMC                & 6.50 (7.45)  \\
+Japanese (OOD)      & 7.92 (5.19)  \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:sisdr_datasets}
+\vskip -0.15in
+\end{table}
+
+
+{To evaluate the model’s ability to generalize to conversations involving more than three speakers, we constructed Libri 4- and 5-speaker datasets, which were only used as test sets. As shown in Table \ref{tab:sisdr_datasets}, although the model was not trained on conversations with such a number of speakers, it achieved performance comparable to that observed on the Libri 2- and 3-speaker datasets. This suggests the model generalizes well to conversations with previously unseen numbers of target speakers.}
+
+
+\begin{figure}[t]
+    \centering
+    \vskip -0.1in
+    \includegraphics[width=0.6\linewidth]{leaving_scatter.png}
+    \vskip -0.1in
+    \caption{Model enhances then suppresses speaker following  shift from target to interfering conversation.}
+    \vskip -0.15in
+    \label{fig:leaving_scatter}
+\end{figure}
+
+%. Our dual-model achieves 7.27 dB SISDRi, a 0.63 PESQ improvement, 84.5\% speaker selection accuracy, and only a 4.3\% confusion rate
+
+In Table~\ref{tab:big_results}, we further evaluate the model on SpokenWOZ, an out-of-distribution (OOD) English dataset, highlighting the generalization ability of both the model and training approach.  {In addition, to assess the model’s ability to generalize across languages, we evaluate it on the Mandarin RAMC dataset and the Japanese Duplex Conversation Dataset \cite{JapaneseDuplex2025}. As shown in Table \ref{tab:sisdr_datasets}, our model reaches a 6.5 dB and a 7.92 dB SISDRi, respectively. This shows that even though our model is trained solely on English speakers, it can generalize  to conversations in other languages, because it is primarily learning the turn-taking patterns. 
+
+We also evaluate our model on the noisy Libri (2-spk) test set, where WHAM! noise from its test split is added. The model achieves an SISDRi of 10.37 dB, demonstrating its ability to generalize to noisy conditions despite not being trained on such data. Further fine-tuning on noisy data for 35 epochs using the WHAM! training split yields an improved SISDRi of 11.84 dB.
+
+
+
+Finally, we  evaluate all models on spatialized test sets that emulate egocentric  conditions, as shown in Table~\ref{tab:big_results}. In egocentric scenarios, speech from other speakers tends to have lower amplitude than the wearer’s self-speech due to physical distance. As a result, after spatializing the synthetic Libri conversational dataset, the average input SISDR for the conversation partners drops from 1 dB to –10 dB, and the average input PESQ decreases from 2.52 to 2.04.
+Given this challenging setting, our model achieves a 14.62 dB improvement in SISDR and a 0.63 increase in PESQ, while maintaining high speaker selection accuracy (96.8\%) and a low confusion rate (0.8\%). We also observe similarly strong performance across other  datasets including spatialized Candor and on the out-of-distribution spatialized SpokenWOZ testset. %These results show the effectiveness of our models in spatialized egocentric setups.
+
+% \begin{table}[t!]
+% \caption{User evaluation results (5-point scale).}
+% \vskip -0.1in
+% \centering
+%   \setlength{\tabcolsep}{3.8pt} % tighten column spacing
+% {\footnotesize
+% \begin{tabular}{lcccc}
+% \toprule
+% \textbf{Question} & \multicolumn{2}{c}{\textbf{Model Output}} & \multicolumn{2}{c}{\textbf{Mixture}} \\
+% \cmidrule(r){2-3} \cmidrule(l){4-5}
+% & Avg. & SD & Avg. & SD \\
+% \midrule
+% Noise Suppression          & 4.29 & 1.19 & 1.67 & 1.04 \\
+% Conversation Comprehension & 4.35 & 1.02 & 1.97 & 0.93 \\
+% Effort                     & 4.45 & 0.95 & 1.97 & 0.96 \\
+% Overall MOS                & 4.30 & 1.14 & 1.88 & 1.02 \\
+% \bottomrule
+% \end{tabular}
+% }
+% \label{tab:user_study_table}
+% \vskip -0.15in
+% \end{table}
+
+\begin{table}[t!]
+\caption{Subjective evaluation results (5-point scale).}
+\vskip -0.1in
+\centering
+  \setlength{\tabcolsep}{6pt} % adjust spacing as needed
+{\footnotesize
+\begin{tabular}{lcc}
+\toprule
+\textbf{Question} & \textbf{Model Output} & \textbf{Mixture} \\
+\midrule
+Noise suppression          & 4.29 (1.19) & 1.67 (1.04) \\
+Comprehension & 4.35 (1.02) & 1.97 (0.93) \\
+Effort                     & 4.45 (0.95) & 1.97 (0.96) \\
+Overall MOS                & 4.30 (1.14) & 1.88 (1.02) \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:user_study_table}
+\vskip -0.15in
+\end{table}
+
+\subsection{Subjective human evaluation}
+
+{To evaluate the model from a user-centric perspective, we conducted a user study with 11 participants (8 males, 3 females, 1 non-binary) with an age range of 21-65. Each listened to six random conversations from the Candor dataset, experiencing both the original mixture and the model output in a random order. Following \cite{10.1145/3613904.3642057}, we asked participants four 5-point scale questions about their experience in focusing on the target conversation (see \xref{sec:user_study}). As shown in Table \ref{tab:user_study_table}, the proposed system improves user-perceived quality across all four aspects, raising the overall mean opinion score from 1.88 to 4.30.}
+
+%We also evaluate these models on our spatalized testsets that emulate egocentric acoustic conditions in Table~\ref{tab:big_results}. In egocentric settings, due to physical distance, the speech from other speakers tends to have lower amplitude than self-speech. This means that after spatializing the synthetic Libri conversational dataset, the average input SISDR for the other speakers drops from 1 dB to –10 dB, and the average input PESQ decreases from 2.52 to 2.04, because the amplitude of other speakers in conversation is lower than the self-speech.   Despite this, our model achieves a 14.62 dB improvement in SISDR and a 0.63 increase in PESQ, while maintaining high speaker selection accuracy (96.8\%) and a low confusion rate (0.8\%).
+
+%We observe similar performance on other spatialized datasets showing that our dual-model remains effective in spatialized, egocentric setups.
+
+%On the spatialized CANDOR dataset, the model achieves a SISDRi of 9.82 dB and a $\Delta$PESQ of 0.56. For the out-of-distribution spatialized SpokenWOZ dataset, the model achieves 11.95 dB SISDRi and a 0.52 PESQ improvement.
+
+\subsection{Ablation studies}\label{sec:ablation}
+%We conducted various ablation studies to validate our design choice for the models.
+
+\noindent\textit{Dual-model versus single model.} We compare our dual-model approach with a single fast streaming model that uses the self-speech and mixture audio as input. The single model achieves an SISDR improvement of only 1.45 dB for the conversation partners, much lower than the dual model's 12.48 dB. This shows that without the support of the slower conversation embedding model, the fast model alone, struggles to capture conversational dynamics effectively. 
+
+%These configurations achieve Si-SDRi scores of XX, XXX, and XX~dB, respectively. As expected, the slow model achieves the highest performance due to its longer algorithmic latency (1 second), allowing it to leverage more context before producing output. However, this latency is unsuitable for real-time hearing assistance, which requires low-latency streaming. The remaining models operate on 12.5~ms chunks. The dual model achieves the best performance given our  streaming constraints.
+
+\vskip 0.02in\noindent{\it Update rate for conversational  embeddings.} Since the fast streaming model relies on conversation embeddings generated by the slow model, we compare two embedding update intervals: 1 second and 4 seconds. We train the dual models on the {Libri 2-speaker  training set for ten epochs each and evaluate them on the corresponding test set. Increasing the update interval from 1s to 4s leads to a drop of 1.22~dB in SISDRi. %, indicating that less frequent updates degrade performance.
+
+%from 4.14 dB to 2.92dB
+
+
+\begin{table}[t!]
+%\vskip -0.07in
+\caption{Evaluation on real egocentric conversations.}
+\vskip -0.1in
+\centering
+  \setlength{\tabcolsep}{5.3pt}
+{\footnotesize
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metrics} & SISDRi($\uparrow$) & Acc ($\uparrow$) & CR ($\downarrow$)  \\
+\midrule
+\textbf{Number of speakers} & & &\\
+\midrule
+    2 speakers & 7.84 (6.79) & 85.0\% & 1.1\% \\
+    3 speakers & 6.00 (7.14) & 73.4\% & 3.7\% \\
+\midrule 
+\textbf{Augmentation} &  &  & \\
+\midrule 
+  \ding{55} & 5.49 (5.30) & 77.9\% & 1.2\% \\
+  \ding{51} & 7.22 (6.96) & 80.0\% & 2.2\% \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:hardware_result}
+\vskip -0.15in
+\end{table}
+
+
+
+\vskip 0.02in\noindent{\it Speaker embedding versus self-speech.} Instead of anchoring conversation extraction on self-speech, we also explore using the wearer's speaker embedding~\cite{variani2014deep}. Following~\cite{tce}, we compute 256-dimensional d-vectors from clean wearer speech, and provide these as embeddings to the slow model. Using speaker embeddings reduces the  SISDRi by 2.65~dB  compared to self-speech, likely due to temporal variability in speech characteristics  and lossy representation,   which reduce  embedding reliability.
+
+%from 13.6 dB to 10.95 dB
+
+\vskip 0.02in\noindent{\it Beamforming versus self-speech}. 
+To study the impact of using the beamformer's self-speech output versus the ground truth self-speech from the conversation mixture, we use the model trained on spatialized data from stage 2 and evaluate it on Libri (2-spk)  test set. The difference in SISDRi between the two modes was less than 0.38~dB.}
+
+\begin{table}[t!]
+\caption{Impact of perturbing the turn-taking in human conversations.  (SD=standard deviation)}
+\vskip -0.1in
+\centering
+  \setlength{\tabcolsep}{6pt} % adjust column spacing
+{\footnotesize
+\begin{tabular}{lc}
+\toprule
+\textbf{Perturbation SD} & \textbf{SISDRi (dB)} \\ %& \textbf{Overlap ratio (\%)} \\
+\midrule
+No perturbation & 6.75 \\ %& 13.32 \\
+0.5s            & 6.25 \\%& 14.67 \\
+1s              & 5.68 \\%& 15.55 \\
+1.5s            & 5.25 \\%& 16.14 \\
+2s              & 4.79 \\%& 16.56 \\
+2.5s            & 4.50 \\%& 16.94 \\
+3s              & 4.16 \\%& 17.30 \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:perturbation}
+\vskip -0.15in
+\end{table}
+
+
+\vskip 0.02in\noindent{\it Impact of turn-taking disruption.} {We performed an ablation on the Candor test set to assess the impact of turn-taking pattern disruption. By perturbing inter-utterance silence durations with shifts sampled from a normal distribution with mean 0 and varying standard deviation (SD), we increasingly disrupted the natural turn-taking structure. Table.  \ref{tab:perturbation} shows that as SD and overlap ratio increases, performance gradually degrades, as this breaks the turn-taking structure that the model leverages to separate the targets.} % the target conversation.}
+
+\vskip 0.02in\noindent{\it Context length.} {We trained models with different context lengths (full context, 10s, 5s, 1s) by masking the slow model’s self-attention to limit each token's access to past tokens on Libri 2spk training set. We then evaluated on the Libri 2spk testset. Compared to the model with full context access, SISDRi dropped by 2.12 dB, 4.06 dB, and 5.74 dB for context lengths of 10s, 5s, and 1s, respectively. This demonstrates that access to long-term context is a key factor for the system's performance.}
+
+
+
+\section{Real-World Egocentric Recordings}
+
+
+
+%\subsection{Dataset collection}
+We recruited 11 participants (2 female, 9 male) with an  age range of 21--39. The dataset comprises a total of  6.8 hours of binaural egocentric audio recordings, including seven two-speaker and five three-speaker conversations, each lasting approximately 10 minutes. The participants engaged in open-ended discussions in English, on topics such as food, hobbies, recent activities, research, workouts, and travel plans, with no constraints on subject matter. All recordings took place in an environment with typical background noise, including HVAC and ambient sounds. A summary of the conversation statistics is provided in Table~\ref{tab:realworldstats}.
+
+All sessions took place in the same  acoustic environment so they can be mixed for creating mixtures. During recording, each speaker wore   a pair of binaural microphones (Sonic Presence SP15C) and connected it to a smartphone to  capture egocentric audio of the conversation. Further, in each conversation, a silent participant served as a listener by wearing the microphones and standing in the vicinity of the speakers.   These passive recordings, which lack dominant self-speech, serve as representative samples of interfering conversations.
+
+
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.65\linewidth]{figs/Histogram.png}
+    \vskip -0.1in
+    \caption{SISDRi histogram on egocentric recordings.}
+    \vskip -0.15in
+    \label{fig:hist}
+\end{figure}
+
+
+\subsection{Data pre-processing}
+
+Since each conversation participant  recorded their own egocentric audio, their self-speech appears with the highest amplitude in their recordings. Using these recordings alongside our beamformer network, we estimated the speech activity timestamps for each speaker. The authors manually verified these timestamps to ensure their quality.
+
+Conversation mixtures were created by combining audio from a target speaker with that of a listener in a separate interfering conversation. To avoid amplifying noise, denoising (Sainburg et al., 2020; Sainburg, 2019) was applied only to the target audio, while interfering audio remained unprocessed to preserve realistic ambient noise. Speakers were not shared across the two conversations. Interfering conversations always involved two speakers, while target conversations had two or three. Each sample was constructed to begin with at least 3 seconds of self-speech, and none from a conversation partner. Input SNRs for the target conversation  were uniformly sampled between –10 and 10 dB. We generated 200 conversation mixtures to serve as out-of-distribution test set for our model.
+
+
+
+\begin{table}[t!]
+%\vskip -0.07in
+\caption{When the conversation partners start speaking, how quickly does the model pick them up?}
+\vskip -0.1in
+  \setlength{\tabcolsep}{3.8pt}
+\centering
+{\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Chunk} & 0-2s & 2-4s & 4-6s  & 6-8s & 8-10s  \\
+\midrule
+SISDRi (dB) & 4.77 & 8.04 &  8.17 & 8.69 & 9.16 \\
+% \midrule
+% \textbf{Time (s)} & 10-12 & 12-14 & 14-16  & 16-18 & 18-20  \\
+% SISDRi (dB) & 8.50 & 8.60 & 8.84 & 9.10 & 8.95 \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:pickup}
+\vskip -0.05in
+\end{table}
+
+\begin{table}[t!]
+%\vskip -0.07in
+\caption{Effects of turn-change gap between target conversation and interfering conversation.}
+\vskip -0.1in
+  \setlength{\tabcolsep}{3.8pt}
+\centering
+{\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Turn-change} & 0-1s & 1-2s & 2-4s & 4-6s & > 6s  \\
+\textbf{Gap} &  & & & &  \\
+\midrule
+Proportion & 11.3\% & 12.2\%  & 20.7\% & 15.5\%  & 40.3\% \\
+SISDRi (dB) & 4.98 & 8.03  & 7.80 & 8.22  & 8.46 \\
+% SISDRi & 4.98 (9.28) & 8.03 (6.29) & 7.80 (6.07) & 8.22 (7.05) & 8.46 (6.98) \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:collision}
+\vskip -0.15in
+\end{table}
+
+
+\subsection{Real-world Results}
+
+
+Table~\ref{tab:hardware_result} shows performance on real-world egocentric recordings with 2- and 3-speaker conversation mixtures.  The performance drop with 3-speaker target conversations is because the three speakers turn-taking dynamic in our training data is all synthesized. Fine-tuning on real 3-speaker conversation datasets may further improve results. 
+
+These results show  real-world generalization from simulated training data. Around 80\% of conversations have a positive SISDRi (Fig.~\ref{fig:hist}).  These results also show the benefit of augmentation described  in~\xref{sec:trainingdetails}, which improves performance by 1.73 dB by creating a more diverse distribution of overlaps and silence in the training set. 
+
+%better modeling the frequent overlaps typical in real-world conversations, unlike the more turn-based, remote interactions in the Candor training set. 
+
+
+
+
+
+
+
+{\it How quickly is a conversation partner picked up?} We investigate how fast the model enhances a conversation partner after they begin talking. Using a 2-second sliding window over each non-wearer turn in the real-world egocentric dataset, Table~\ref{tab:pickup} shows the average SISDRi,  averaged over all turns and samples in the real-world egocentric dataset. In the first 0–2 seconds, SISDRi is 4.77 dB, indicating initial adaptation. After 2 seconds, it exceeds 8 dB, showing the model quickly adapts to  conversational partners within a turn.
+
+
+
+
+
+%Since our model is running in a streaming manner with very low latency, we investigate the following research question: "When other speaker in the target conversation begins talking, how quickly does the model identify and enhance the correct speaker?"  To quantify it, we analyze each conversational turn of the non-wearer speaker by applying a 2-second sliding window (with a 2-second step size) to segment the entire turn into chunks.  Table~\ref{tab:pickup} reports the average SISDRi across different chunks, aggregated over all turns and samples in the real-world egocentric dataset. In the first 0–2 seconds of a new turn, the SISDRi is relatively low (4.77 dB), indicating the model is still adapting. However, after 2 seconds, the SISDRi rises above 8 dB. This indicates that our model can quickly adapt to conversational dynamics and begin effectively enhancing the correct speaker after approximately 2 seconds. 
+
+
+
+
+
+
+
+{\it How does turn-change collision impact performance?}  We examine how overlapping turn transitions in target and interfering conversations affect performance. For each self-to-other turn change in the target conversation, we compute the time gap to the nearest turn change in the interference. A small gap indicates simultaneous speaker transitions. Table~\ref{tab:pickup} shows that 11.3\% of turns have gaps under 1 second, where SISDRi drops to 4.98 dB. This suggests that closely timed turn-changes can confuse the model. Future work could address this by incorporating conversation content. 
+
+
+{\it What happens with extended periods of wearer silence?} 
+ Fig.~\ref{fig:self_speech_absent} shows a real-world example where the wearer did not speak for over 2 minutes. The purple curve indicates the SISDRi of the conversational partner in 30-second windows; grey areas show when the wearer was speaking. SISDRi stayed above 5~dB during intermittent speech but dropped below zero during prolonged silence, indicating the model failed. Performance recovered once the wearer resumed speaking, highlighting the model’s reliance on self-speech as an anchor.
+
+
+%\textcolor{red}{We examined model performance during extended periods when the wearer remains silent. Fig \ref{fig:self_speech_absent} shows an example in our real-world egocentric recording when the wearer did not speak for over 2 minutes. The purple curve represents the SI-SDRi of the other target speaker, computed over consecutive 30-second intervals. The grey area represents sections where the wearer was speaking. When the wearer spoke intermittently at the beginning, the SI-SDRi remained above 5 dB. However, once the wearer stopped speaking for over one minute, the SI-SDRi drops to negative as the model did not pick up any speaker in the conversation. Performance was gradually recovered when the wearer resumed speaking starting from approximately 315 seconds into the recording. This shows our model anchors on the wearer's self-speech to identify the other target speaker.}
+
+
+%Since our model relies on turn-taking dynamics to track the target conversation, we also examine what happens when a turn-change in the target conversation occurs close in time to a turn-change in an interfering conversation Specifically, for each turn transition from the self speaker to the other speaker in the target conversation, we identify the nearest turn-change event in the interfering conversation and compute the time gap between them — referred to as the turn-change gap. A smaller gap indicates that turn-taking events in both conversations occur close together in time. Table~\ref{tab:pickup} shows the distribution of turn-change gaps and the corresponding SISDRi for each target turn. We find that 11.3\% of turns have a turn-change gap of less than 1 second, and in these cases, the average SISDRi drops to 4.98 dB. This suggests that when turn-taking events in the target and interfering conversations occur too closely, the model may become confused to recognize the correct speaker, leading to degraded separation performance. In the future, this turn-change collision issue could potentially be mitigated by incorporating the textual information from the target conversation.
+
+
+
+
+
+%For these reasons, we run the fast streaming model on an embedded device, an Orange Pi 5B, and the slow  model on an Apple M2 silicon. Both networks satisfy the real-time constraints on their respective hardware platforms, with the fast model taking 8.9~ms on average to run inference on a 12.5~ms audio chunk, and the slow model taking 41.3~ms on average for a 1 second chunk (Appendix~\ref{sup:runtime}).
+
+
+

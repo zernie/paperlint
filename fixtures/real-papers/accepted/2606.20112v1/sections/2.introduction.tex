@@ -1,0 +1,65 @@
+\section{Introduction}
+% \red{1. Add the information about why we choose such high-resolution design idea, instead of directly train in high resolution. : The 3D medical dataset suffer the 8 times more cost. }
+
+% \red{2. More experiments:}
+% \begin{enumerate}
+% \item Experiments for high-resolution idea
+%     \red{
+%     \begin{itemize}
+%         \item train the baseline model in 64x64x64: GPU141
+%         \item train the 128x128x128 high resolution models.
+%         \item compare the performance than directly train with 128 model.
+%     \end{itemize}
+%     }
+% \item Research for high-resolution experiments
+%     \red{
+%     \begin{itemize}
+%         \item Inference: Initialize the starting point as $t=500$, $t=250$, $t=100$.
+%         \item Training: gen\_noise() with high noise adding, from $s=0.0150, 0.0053$ to $s=0.4, 0.1414$.
+%     \end{itemize}
+%     }
+% \item After Tom's idea, make the modifications: 10-Sep/LIDC/256/4-mod
+%     \red{
+%     \begin{itemize}
+%         \item Change the gen\_noise() function, with $\epsilon^{256}\in\mathcal{N}(0, s^2\times8)$, $\epsilon^{128}\in\mathcal{N}(0,0.5^2-S^2)$, construct noise be $\tilde{\epsilon}^{256}=UP^{NN}(\epsilon^{128})+\epsilon^{256}$.
+%         \item $s=0.05$ as first guess value, to make the estimated high-frequency noise level bigger, easily for local denoiser learning.
+%         \item $UP(\hat{x_0^{128}})=Nearest$, $UP(\hat{\epsilon^{128}})=Nearest$, don't add fresh noise.
+%         \item The input local denoiser model as $x_t^{256}, \{x_t^{256}-\hat{x_t}^{256}\}$.
+%     \end{itemize}
+%     }
+% \end{enumerate}
+
+Synthesizing high-resolution 3D medical images, such as CT volumes, is crucial for supporting various clinical applications, including diagnosis, segmentation, and anomaly detection. However, existing generative models struggle to balance the fidelity of local details with global structural coherence, and often suffer from computational inefficiency or insufficient representation of high-frequency features. 
+Such prior works are mainly categorized into GAN-based and Diffusion-based methods. GAN-based approaches, such as HA-GAN~\citep{sun2022hierarchical}, MM-GAN~\citep{sun2020mm} and 3D-StyleGAN~\citep{hong20213d}, can effectively generate realistic local details. 
+However, they often suffer from mode collapse and training instability, and their substantial memory requirements pose a significant challenge, particularly when processing high-resolution 3D volumes.
+
+As a compelling alternative, diffusion-based models have recently demonstrated more stable training dynamics and higher image fidelity. Representative diffusion-based methods include the 3D-DDPM~\citep{dorjsembe2022three}, latent diffusion models (LDM)~\citep{khader2023medical,pinaya2022brain,rombach2022high}, wavelet diffusion models (WDM-3D)~\citep{friedrich2024wdm} and triplane diffusion models~\citep{zhang2025tcam}. Nevertheless, current diffusion models often rely on convolutional architectures like U-Net~\citep{ronneberger2015u}, which inherently limit their capability to capture global context and long-range dependencies that are crucial for accurately synthesizing coherent structures. 
+
+In the context of 3D medical imaging, these architectural limitations become even more pronounced. Because the volume of a voxel feature map grows cubically with resolution, deploying a deep U‑Net directly on high‑resolution 3D volumes not only incurs extremely high memory and compute costs, but also typically requires compromise strategies such as patch‑based processing, downsampling, or latent-space compression using VAE~\citep{kingma2013auto} or VQ-VAE~\citep{van2017neural} methods. However, patch-based methods and downsampling inherently restrict the effective receptive field, compromising the model’s ability to capture global anatomical coherence and long-range dependencies critical for clinical utility. 
+In addition, methods relying on latent-space compression often struggle to learn robust and representative features in the context of 3D~medical imaging. The limited availability of training samples makes it difficult to adequately optimize the latent encoders, leading to poor reconstruction quality and the loss of critical anatomical details.
+
+To address these limitations, we propose the \emph{Pixel-Level Residual Diffusion Transformer} (PRDiT), a scalable diffusion transformer framework specifically designed for high-resolution 3D medical volume synthesis. PRDiT directly operates at the voxel level, bypassing the need for an autoencoder bottleneck, thus preserving essential details without compromising computational efficiency. The core idea is a two-stage residual learning strategy: a lightweight MLP-based Local Denoiser estimates coarse structures from overlapping 3D patches, and a Global Residual Diffusion Transformer with memory-efficient attention refines the remaining high-frequency residuals across the entire volume. 
+To overcome the challenge that naively scaling Transformers to higher resolutions would increase the token count by 
+$8\times$ and the attention cost by roughly 
+$64\times$ when doubling the resolution, %making end-to-end training infeasible, 
+we further introduce a scaling strategy that reuses the pretrained low-resolution backbone. Focusing on only learning the missing high-frequency refinement at the higher resolution enables our model to perform high-resolution synthesis with minimal additional computational overhead.
+% However, scaling from $128^3$ to $256^3$ increases the token count by $8\times$ and the attention cost by roughly $64\times$, make high-resolution training infeasible. Therefore, we reuse a $128^3$ pretrained model and learn only missing high-frequency residual at $256^3$.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=1.0\textwidth]{images/methodology/main5.pdf}
+\caption{Overview of our \emph{Pixel-Level
+Residual Diffusion Transformer} (PRDiT) model, composed of a \textbf{Local Denoiser} and a \textbf{Global Residual DiT}. The given input volume $\mathbf{X}$ is first divided into~$N$ 3D patches. Each patch is flattened and passed through the `local' multilayer perceptron (MLP) denoiser composed of Adaptive SwiGLU and Linear layers to provide \emph{local} predictions $\hat{\mathbf{x}}_i$ and $\hat{\boldsymbol{\epsilon}}_i$. Complementing these `local' predictions, the $L$ layer \emph{Global} Residual Diffusion Transformer (DiT) module refines the overall prediction via residuals based on the global context. 
+`PE' indicates the positional encodings, which are only seen by the global residual DiT module.}
+\label{fig1}
+\end{figure*}
+
+The main contributions of this paper can be summarized as follows:
+\begin{itemize}[topsep=0pt]
+\item We propose a two-stage diffusion transformer framework that directly synthesizes high-resolution 3D medical volumes at voxel-level, eliminating the need for an autoencoder bottleneck and thereby effectively preserving critical anatomical details.
+\item We demonstrate that using `\emph{hot}' diffusion sampling to introduce controlled stochasticity during generation helps to improve sample diversity and reconstruction fidelity by balancing deterministic guidance with adaptive noise injection.
+\item We show that PRDiT scales efficiently to higher resolutions by reusing pretrained low-resolution components, substantially reducing training cost compared to coventional training on higher resolution datasets.
+\item We demonstrate the scalability and effectiveness of our PRDiT model through extensive experiments on the LIDC-IDRI~\citep{armato2011lung} and Rad-ChestCT~\citep{draelos2020rad} datasets, achieving substantial improvements over state-of-the-art baselines 
+%(HA-GAN~\cite{sun2022hierarchical}, 3D LDM~\cite{khader2023medical}, and WDM-3D~\cite{friedrich2024wdm}) 
+across multiple quantitative metrics including 3D FID, MMD, and Wasserstein distances.
+\end{itemize}

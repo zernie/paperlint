@@ -1,0 +1,23 @@
+
+\section{Experimental Setup}
+
+\paragraph{Datasets.} We employed four question-answering (QA) benchmark datasets for evaluation. HotpotQA~\cite{yang2018hotpotqa} and SQuAD (v1.1 and v2.0)~\cite{rajpurkar2016squad,rajpurkar2018know} serve as general domain QA benchmarks, while MedQA~\cite{jin2021disease} and PubMedQA~\cite{jin2019pubmedqa} represent specific domain datasets from the medical field.
+
+To evaluate the effectiveness of the attack, we randomly sampled 200 instances from each dataset. Each instance was formatted as a triplet consisting of a question, a ground-truth answer, and a context containing that answer. 
+% 
+We employed an LLM to generate a specific incorrect answer for each question. These questions can be classified into three categories, with distinct strategies applied to generate the incorrect answers: \textbf{(1) Binary Questions} (e.g., Yes/No or A/B): We generated the logical opposite of the ground-truth answer. \textbf{(2) Multiple-Choice Questions:} We randomly selected one of the incorrect options. \textbf{(3) Open-Ended Questions:} We generated an incorrect answer that shares the same part-of-speech or semantic category as the ground truth. For example, given the question and ground-truth answer ``What is the capital of France? Paris'', we prompted the LLM to generate an incorrect entity such as ``Hawaii.'' 
+% 
+The specific prompts used for this process are shown in Appendix~\ref{sec:llm_prompts}.
+
+\paragraph{Models.} 
+We use a diverse set of state-of-the-art open-source LLM families, including Qwen~\cite{yang2025qwen3}, LLaMA~\cite{grattafiori2024llama}, and Mistral~\cite{mistral3_2025}, for evaluation. These models cover a wide spectrum of parameter sizes, ranging from 1B to 70B. 
+% 
+We designed a specific system prompt to instruct the LLMs to prioritize answer extraction from the provided context and to ensure the generated responses are concise. The prompt used for this process are detailed in Appendix~\ref{sec:llm_prompts}.
+
+\paragraph{KV Cache System.} 
+
+We formalize a comprehensive KV cache system defined by the following four key components: \textbf{(1) Recomputation Method ($\mathcal{R}$):} We implement two recomputation strategies based on \textit{Cacheblend}~\cite{yao2025cacheblend} and \textit{EPIC}~\cite{hu2025epic}. Additionally, we introduce a \textit{Random} method, which randomly selects tokens for recomputation. We designate the baseline without any recomputation as \textit{Vanilla} and the baseline with full recomputation as \textit{Full}. \textbf{(2) Chunk Size ($L_\mathrm{chunk}$):} This is the length of the minimal unit segment required to trigger a cache hit. \textbf{(3) Cache Ratio ($\delta$):} This denotes the proportion of chunks within the user's context that are replaced by matched cache entries. It can be calculated as $\delta = (b - a + 1)/L$. \textbf{(4) Recomputation Ratio ($\rho$):} This indicates the proportion of matched cached tokens that undergo recomputation.
+
+\paragraph{Metrics.} Let $r$ denote the ground-truth answer and $\tilde{r}$ denote the target malicious answer. Let $x$ represent the model's response in the benign setting, and $y$ represent the response under the proposed attack. We employ the following three metrics to evaluate the effectiveness of the attack and the preservation of model utility: \textbf{(1) Accuracy (Acc):} Defined as the condition where $x = r$. This metric evaluates the model's baseline capability on the QA task and assesses the impact of different KV cache system settings on benign performance. \textbf{(2) Untargeted Attack Success Rate (U-ASR):} Defined as the condition where $y \neq x$. This metric measures the effectiveness of the attack in successfully altering the model's output, indicating a deviation from the original generation. \textbf{(3) Targeted Attack Success Rate (T-ASR):} Defined as the condition where $y = \tilde{r}$ and $y \neq x$. This serves as a stricter metric, quantifying the attack's success in manipulating the model to generate the specific malicious answer from the attacker.
+
+\paragraph{Environment.} All experiments are conducted on a server equipped with an AMD EPYC 9334 32-Core Processor running Ubuntu 22.04.5 LTS, with four NVIDIA RTX PRO 6000 Blackwell Workstation Edition GPUs.

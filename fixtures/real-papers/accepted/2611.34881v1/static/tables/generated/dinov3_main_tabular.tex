@@ -1,0 +1,26 @@
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{COCO}} & \multicolumn{4}{c}{\textbf{STRANGE-Bench}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Augmentation & $\text{F1}^{\text{val}}$ $\uparrow$ & $\text{F1}^{\text{T}}$ $\uparrow$ & $\text{F1}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $T_{1\text{-}5}^{\text{T}}$ $\uparrow$ & $T_{1\text{-}5}^{\text{A}}$ $\uparrow$ & $\Delta_{1\text{-}5}$ $\downarrow$ & $T_{\text{never}}$ $\uparrow$ \\
+\midrule
+Std.\ \emph{(linear probe)} & 74.6 & 71.8 & 63.2 & 8.6 & 63.5 & 39.6 & 23.9 & 38.9 \\
+\midrule
+No aug & 78.9 & 77.8 & 70.1 & 7.7 & 85.5 & 66.3 & 19.2 & 61.5 \\
+\midrule
+\multicolumn{9}{l}{\emph{Non-generative}} \\
+Std. & 81.9 & 79.8 & 74.3 & 5.5 & 89.7 & 67.5 & 22.2 & 62.6 \\
+Color jitter & 81.8 & 79.7 & 75.1 & 4.6 & 89.2 & 66.7 & 22.5 & 62.7 \\
+MixUp & \underline{82.2} & 79.6 & 75.4 & 4.2 & 89.9 & 72.4 & 17.5 & 69.9 \\
+Mosaic & 69.6 & 71.0 & 67.0 & 4.0 & 74.7 & 68.0 & 6.7 & 70.6 \\
+YOLOX & 70.0 & 71.2 & 67.4 & \textbf{3.7} & 75.1 & 69.1 & 6.0 & 70.7 \\
+SCP & 81.6 & 78.8 & 75.1 & \textbf{3.7} & 91.4 & 87.1 & 4.3 & 86.5 \\
+\midrule
+\multicolumn{9}{l}{\emph{Generative}} \\
+InstAug & 81.9 & 79.5 & 74.4 & 5.2 & 89.5 & 67.7 & 21.8 & 63.3 \\
+XPaste & 82.1 & \underline{80.2} & \underline{76.1} & 4.1 & \underline{93.8} & \underline{94.4} & \underline{$-0.7$} & \underline{95.0} \\
+\midrule
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 81.7 & 79.0 & 75.0 & 4.0 & 92.5 & 91.2 & 1.2 & 89.5 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{82.5} & \textbf{80.6} & \textbf{76.8} & \underline{3.9} & \textbf{94.6} & \textbf{95.5} & \textbf{\boldmath $-0.8$} & \textbf{96.1} \\
+\bottomrule
+\end{tabular}

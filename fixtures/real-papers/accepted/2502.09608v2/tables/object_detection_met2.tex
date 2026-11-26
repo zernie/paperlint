@@ -1,0 +1,33 @@
+% \multirow{2}{*}{\diagbox[height=5\line]{\raisebox{2ex}{Spalte}}{ & & \\Zeile}}
+\begin{table*}
+\small
+\setlength{\tabcolsep}{2pt}
+% \addtolength{\belowcaptionskip}{-5pt}
+\centering
+\caption{\textbf{Quantitative comparisons for object detection. }We report IoU, AR, and AP metrics across eight datasets, along with the mean and standard deviation for each method.  IoU measures the overlap between predicted and ground-truth bounding boxes, AR evaluates the ability to detect all relevant objects, and AP combines precision and recall across varying IoU thresholds from 50\% to 95\%. AP@50 and AP@75 indicate Average Precision at IoU thresholds of 50\% and 75\%, respectively, reflecting stricter requirements for bounding box overlap.  Our method demonstrates consistent improvements across nearly all datasets and metrics, significantly outperforming baselines, especially in detecting sketch objects with precision. } 
+\vspace{-3mm} 
+\label{tb:bbox_instance}
+
+\begin{tabular}{l | c c c | c c c | c c c | c c c | c c c} 
+    \toprule
+    \multirow{2}{*}{\diagbox{Dataset}{Metric}} 
+    &
+    \multicolumn{3}{c|}{IoU $\uparrow$} & \multicolumn{3}{c|}{AR $\uparrow$} & \multicolumn{3}{c|}{AP $\uparrow$} & \multicolumn{3}{c|}{AP@50 $\uparrow$} & \multicolumn{3}{c}{AP@75 $\uparrow$} \\
+    &  SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} \\
+    \midrule
+    SketchyScene & $0.55$ & $ 0.27 $ & $\mathbf{0.72}$ & $0.42$ & $0.27$ & $\mathbf{0.86}$ & $0.36$ & $0.24$ & $\mathbf{0.83}$ & $0.79$ & $0.31$ & $\mathbf{0.93}$ & $0.17$ & $0.27$ & $\mathbf{0.88}$ \\
+    \rev{Zhang \etal} & $0.33$ & $0.53$ & $\mathbf{0.64}$ & $0.18$ & $0.48$ & $\mathbf{0.69}$ & $0.14$ & $0.38$ & $\mathbf{0.62}$ & $0.31$ & $0.57$ & $\mathbf{0.62}$ & $0.06$ & $0.41$ & $\mathbf{0.72}$ \\
+    SketchAgent & $0.27$ & $0.16$ & $\mathbf{0.73}$ & $0.19$ & $0.16$ & $\mathbf{0.79}$ & $0.15$ & $0.12$ & $\mathbf{0.75}$  & $0.39$ & $0.18$ & $\mathbf{0.87}$ & $0.05$ & $0.13$ & $\mathbf{0.78}$ \\
+    C-Base & $0.48$ & $0.31$ & $\mathbf{0.80}$ & $0.35$ & $0.30$ & $\mathbf{0.85}$ & $0.29$ & $0.26$ & $\mathbf{0.83}$ & $0.70$ & $0.37$ & $\mathbf{0.93}$ & $0.11$ & $0.30$ & $\mathbf{0.87}$\\
+    C-Calligraphic & $0.48$ & $0.28$ & $\mathbf{0.72}$ & $0.35$ & $0.28$ & $\mathbf{0.84}$ & $0.29$ & $0.24$ & $\mathbf{0.81}$ & $0.71$ & $0.34$ & $\mathbf{0.93}$ & $0.11$ & $0.27$ & $\mathbf{0.86}$ \\
+    C-Charcoal & $0.40$ & $0.27$ & $\mathbf{0.76}$ & $0.29$ & $0.27$ & $\mathbf{0.84}$ & $0.24$ & $0.24$ & $\mathbf{0.79}$ & $0.59$ & $0.33$ & $\mathbf{0.94}$ & $0.08$ & $0.27$ & $\mathbf{0.88}$ \\
+    C-BrushPen & $0.41$ & $0.27$ & $\mathbf{0.75}$ & $0.30$ & $0.27$ & $\mathbf{0.82}$ & $0.25$ & $0.23$ & $\mathbf{0.79}$ & $0.60$ & $0.33$ & $\mathbf{0.90}$ & $0.10$ & $0.26$ & $\mathbf{0.82}$ \\
+    InstantStyle & $ 0.20 $ & $\mathbf{0.49} $ & $0.45$ & $0.17 $ & $0.48 $ & $\mathbf{0.61} $ & $0.12 $ & $0.37 $ & $\mathbf{0.51} $ & $0.29$ & $0.53$ & $\mathbf{0.69}$ & $0.08$ & $0.40$ & $\mathbf{0.52}$ \\
+    \midrule
+     All & $	0.40 $ & $0.32 $ & $\mathbf{0.70}$ & $0.28 $ & $0.31 $ & $\mathbf{0.79}$ & $0.23 $ & $0.26 $ & $\mathbf{0.74}$ & $0.55$ & $0.37$ & $\mathbf{0.85}$ & $0.11$ & $0.29$ & $\mathbf{0.79}$ \\
+    % $\text{std}^1$ 
+    & \footnotesize{$\pm 0.10 $} & \footnotesize{$\pm 0.12$} & \footnotesize{$\pm 0.11$} & \footnotesize{$\pm 0.09$} & \footnotesize{$\pm 0.10$} & \footnotesize{$\pm 0.09$} & \footnotesize{$\pm 0.09$} & \footnotesize{$\pm 0.08$} & \footnotesize{$\pm 0.12$} & \footnotesize{$\pm 0.19$} &  \footnotesize{$\pm 0.13$} & \footnotesize{$\pm 0.12$}& \footnotesize{$\pm 0.04$} & \footnotesize{$\pm 0.09$} &  \footnotesize{$\pm 0.12$} \\
+    \bottomrule
+\end{tabular}
+\vspace{-3mm}
+\end{table*}

@@ -1,0 +1,37 @@
+\subsubsection{RQ4: How well does our approach generalize to unseen data and different LLMs?}
+
+To assess the generalization ability of our framework, we evaluate two complementary dimensions:Performance on unseen (post cut-off) bugs and Performance across different LLM backbones. These experiments test whether our system overfits to training-era bug reports, and whether the gains from our concurrency-aware design persist across model architectures.
+
+\input{tables/results/results_post}
+
+\noindent
+\textbf{Generalization to Unseen Bugs.}
+We evaluate our method on a post–cutoff dataset consisting of real-world concurrent bugs introduced after the LLM training cutoff, ensuring that none of the underlying models have prior exposure to these cases. As shown in Table~\ref{tab:postcutoff}, our framework maintains strong performance, achieving MRR = 0.615 and MAP = 0.598, substantially outperforming the LLM-based baseline FlexFL (MRR = 0.490, MAP = 0.477) as well as all IR-based methods, which fail to generalize in this setting. Notably, ConFL achieves 20 Top-1 hits out of 31, compared to FlexFL’s 14, demonstrating that our hierarchical retrieval and concurrency-aware reasoning remain effective even when applied to previously unseen systems and bug patterns. These results confirm that our approach generalizes well beyond the training-era distribution and remains robust under realistic post–cutoff conditions.
+
+\noindent
+\textbf{Generalization across different LLMs.}
+We further evaluate the robustness of our framework using multiple LLM backbones, including GPT-4o, GPT-4o-mini, GPT-5.2 from OpenAI, and Claude~4.5 from Anthropic. Figure~\ref{fig:llm-generalization} shows that ConFL achieves its best performance with GPT-4o, while GPT-4o-mini delivers comparable results with only modest degradation. GPT-5.2 and Claude~4.5 exhibit slightly lower performance in some cases. Across all evaluated models, the MRR ranges from 0.41 to 0.503, corresponding to an absolute variation of 0.093, indicating relatively stable behavior across different LLM backbones.
+
+\begin{wrapfigure}{r}{0.35\textwidth}
+    \centering
+    \includegraphics[width=0.35\textwidth]{figs/llms.pdf}
+    \caption{Performance across LLMs} \label{fig:llm-generalization}
+    \vspace{-8pt}
+\end{wrapfigure}
+
+
+Interestingly, newer or larger models do not consistently improve localization performance. We hypothesize that this behavior is related to differences in reasoning style and adherence to the hierarchy-guided retrieval process. Models such as GPT-4o and GPT-4o-mini appear to follow the structured interaction-level context more consistently, leading to more stable localization results.
+
+Overall, these results suggest that ConFL benefits primarily from structured concurrency interaction modeling and hierarchy-guided reasoning rather than relying on a specific LLM architecture or unconstrained reasoning capability. The consistent improvements across different LLM backbones further demonstrate that the effectiveness of our framework stems from its structured reasoning process, making it robust and broadly applicable to a variety of foundation models.
+
+\vspace{-0.5em}
+\vspace*{3pt}
+\begin{tcolorbox}
+\stepcounter{findingsCounter}
+{\bf RQ\thefindingsCounter{} summary:} {
+The results show that ConFL generalizes well to both unseen concurrent bugs and different LLM backbones.
+It consistently outperforms state-of-the-art baselines on post–cutoff bugs, indicating that its effectiveness does not rely on memorization.
+Across LLMs, ConFL remains robust, with GPT-4o and GPT-4o-mini achieving the most stable performance.
+Overall, these findings suggest that ConFL’s gains mainly come from hierarchy-guided retrieval and concurrency-aware interaction modeling, rather than from any specific LLM architecture.
+}
+\end{tcolorbox}

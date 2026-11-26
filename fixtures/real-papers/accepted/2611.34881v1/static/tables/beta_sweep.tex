@@ -1,0 +1,37 @@
+\subsection{Selecting the AAS Atypicality Temperature \texorpdfstring{$\beta$}{β}}
+\label{app:beta_sweep}
+
+We select the AAS atypicality temperature $\beta$ once via a small ablation and hold the selected value fixed across all model families and full-COCO runs. Tab.~\ref{tab:beta_sweep} reports the sweep on Co-DINO \mbox{R-50} (AP), trained on the $25\%$ subset of COCO \texttt{train2017} (mini-COCO, $29{,}571$ images), and on DINOv3 ViT-B/16 fine-tuned on full COCO (mAP). 
+$\beta = 3.5$ achieves the best or second-best score on every metric for both models, simultaneously balancing overall accuracy, in-domain typicality gap, and STRANGE-Bench coverage, and we adopt it for all main-paper experiments. 
+
+\noindent\textbf{Tradeoff intuition.}
+The sampling distribution $P(j \mid a) \propto \pi(j) \exp\big(\beta A(a, j)\big)$ of Sec.~\ref{sec:aas} has two endpoints. At $\beta = 0$, AAS samples paste classes uniformly and independently of the anchor, i.e.\ the XPaste baseline, and provides no debiasing signal; as $\beta \to \infty$, AAS concentrates almost all paste mass on the most atypical partners, which over-distorts the training-time joint and starts to hurt typical-pair coverage and overall accuracy. The sweep traces this tradeoff: $\beta = 2$ leaves residual gap ($\Delta^{\text{T-A}} = 8.1$ for Co-DINO, $9.5$ for DINOv3 FT, both worse than $\beta = 3.5$); $\beta = 5$ matches or beats $\beta = 3.5$ on a few metrics (Co-DINO typical AP, DINOv3 $\Delta_{1\text{-}5}$ on STRANGE-Bench) but drops on others (Co-DINO val AP, DINOv3 val mAP and gap), reflecting the over-tilting regime. $\beta = 3.5$ sits near the sweet spot for both families.
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{AAS atypicality temperature $\beta$ sweep.} Co-DINO R-50 trained on mini-COCO, reported in AP; DINOv3 ViT-B/16 fine-tuned on full COCO, reported in mAP. $\beta = 3.5$ \emph{(ours,
+blue)} attains the best or second-best score on every metric for
+both models, and is the only setting that ranks highly on overall
+accuracy, in-domain typicality gap, and STRANGE-Bench coverage
+simultaneously.}
+\label{tab:beta_sweep}
+\begin{tabular}{l c cccc cc}
+\toprule
+& & \multicolumn{4}{c}{\textbf{COCO (quintile)}} & \multicolumn{2}{c}{\textbf{STRANGE-Bench}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-8}
+Model & $\beta$ & val $\uparrow$ & T $\uparrow$ & A $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $T_{\text{never}}$ $\uparrow$ & $\Delta_{1\text{-}5}$ $\downarrow$ \\
+\midrule
+\multicolumn{8}{l}{\emph{Co-DINO ResNet-50 (AP)}} \\
+Co-DINO R-50         & $2$   & \textbf{43.8}    & \underline{44.3} & \underline{36.2} & \underline{8.1} & \underline{82.5} & \underline{1.6} \\
+\rowcolor{oursrow} \textbf{Co-DINO R-50} & $\boldsymbol{3.5}$ & \textbf{43.8}    & \underline{44.3} & \textbf{36.4}    & \textbf{7.9}    & \textbf{83.1}    & \textbf{1.2} \\
+Co-DINO R-50         & $5$   & \underline{43.7} & \textbf{44.8}    & 35.9             & 8.9             & 82.0             & 1.9 \\
+\midrule
+\multicolumn{8}{l}{\emph{DINOv3 ViT-B/16 fine-tuned (mAP)}} \\
+DINOv3 ViT-B FT      & $2$   & \underline{85.8} & 84.2             & \underline{74.7} & \underline{9.5} & \underline{95.5} & \underline{0.6} \\
+\rowcolor{oursrow} \textbf{DINOv3 ViT-B FT} & $\boldsymbol{3.5}$ & \textbf{86.4}    & \textbf{85.0}    & \textbf{75.8}    & \textbf{9.2}    & \textbf{96.1}    & \underline{0.5} \\
+DINOv3 ViT-B FT      & $5$   & 85.7             & \underline{84.5} & 74.3             & 10.2            & 95.3             & \textbf{0.3} \\
+\bottomrule
+\end{tabular}
+\end{table*}

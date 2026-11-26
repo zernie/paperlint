@@ -1,0 +1,82 @@
+\section{\tool Overview}\label{sec:overview}
+To address implementation fragmentation, metric-specific execution workflows, and the lack of public code for some representative metrics, we design \tool, a unified framework for assessing the adequacy of DL test datasets.
+
+Figure~\ref{fig:framework} presents the overall architecture of \tool, which integrates representative adequacy metrics under a common workflow while preserving their metric-specific processing requirements.
+
+The framework consists of four main components: (1) a template-based metric interface that provides access to representative adequacy metrics and enables new metrics to be integrated through well-defined extension points, (2) metric-specific processing modules that perform the preprocessing required by each adequacy technique and generate the corresponding intermediate artifacts, (3) a cache management component that stores and retrieves reusable intermediate artifacts across repeated evaluations, and (4) an adequacy scoring component that computes the final adequacy score for a given test dataset and generates a final report containing the score and execution metadata.
+% To avoid redundant computation, \tool also maintains reusable cached artifacts, such as neuron profiles, activation traces, and generated mutants, which can be reused across repeated evaluations.
+% \ali{This last sentence is something that you could perhaps explain and brag about in the Introduction section.}
+% \ali{Please also clarify here whether Unified Metric Interface is extendable, \ie, if researchers can add new metrics to it with relative ease. This should be explained in Section~\ref{sec:overview:interface} as well.}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.75\linewidth]{figure/ADEPT.pdf}
+\caption{Overview of \tool. Inputs marked with an asterisk (*) are optional and are required only by specific metrics.}
+\label{fig:framework}
+\end{figure*}
+
+
+\subsection{Unified Metric Interface}\label{sec:overview:interface}% and Supported Metrics
+The metric interface provides a unified entry point for executing different DL test dataset adequacy metrics.
+Each metric is implemented as a plug-in module that follows the same framework-level abstraction while preserving its own processing and scoring logic.
+This design allows \tool to support different adequacy techniques without requiring users to coordinate their different execution requirements manually.
+New metrics can also be incorporated by implementing a metric module that follows the same template-based interface.
+% \ali{And make the framework extendable?}
+
+\tool integrates several representative DL test adequacy techniques that have been proposed in prior works. 
+Currently, the framework supports neuron coverage and its variations (NC-series), two flavors of surprise adequacy (LSA and DSA), input distribution coverage (IDC), deep boundary coverage (DBC), and source- and model-level mutation score (SLMS and MLMS).
+% \ali{Be consistent with these newly introduced abbreviations in Figure~\ref{fig:framework} and throughout the paper.}
+
+NC-series metrics measure adequacy based on neuron activation behavior observed during model execution.
+NC and Top-k Neuron Coverage (TKNC) assess whether individual neurons are activated above a threshold or ranked among the top-k most active neurons for a given input. 
+% \ali{(have you explained what TKNC stand for? If so, you're good, if not it must be defined.)}
+$k$-multisection Neuron Coverage (KMNC), Neuron Boundary Coverage (NBC), and Strong Neuron Activation Coverage (SNAC) characterize coverage relative to the activation ranges observed on the training set.
+
+% \ali{Once introduced an abbreviation, please go with that abbreviation instead of repeating the full name every time.}
+LSA and DSA assess test adequacy by measuring how surprising test inputs are relative to the training data based on their activation traces.
+
+IDC measures adequacy in a learned latent feature space.
+It employs a variational autoencoder ~\cite{bib:kingma2014autoencoding,bib:higgins2017betavae} (VAE) to construct a compact representation of the input distribution and applies combinatorial interaction testing to assess feature diversity within a test dataset.
+
+DBC measures test adequacy from a decision-space perspective, focusing on how test inputs cover the model’s decision boundaries.
+
+SLMS and MLMS evaluate test datasets based on their ability to distinguish mutant models from the original model.
+The underlying intuition is that more effective test datasets should be capable of exposing behavioral differences introduced by injected faults.
+\tool supports both MLMS, which applies mutation operators directly to trained DL models, and SLMS, which introduces faults before the training process to generate mutants.
+
+Each adequacy metric is accessible through a consistent execution interface. Users specify the test dataset, target model, training dataset if needed, and adequacy metric, while \tool automatically invokes the corresponding processing pipeline. This reduces the effort required to use different adequacy techniques.
+
+\subsection{Metric-Specific Processing}
+Different adequacy metrics require different forms of preprocessing before adequacy scores can be computed.
+To support metric-specific requirements and improve extensibility, \tool implements each metric's preprocessing workflow as a dedicated processing module.
+
+For NC-based metrics that rely on training-set activation statistics, \ie, KMNC, NBC, and SNAC, \tool performs neuron profiling on the training dataset.
+For LSA and DSA, activation traces are extracted and used for surprise estimation.
+IDC relies on pre-trained VAE models to construct latent feature representations, while DBC performs decision-boundary extraction to characterize model behavior near classification boundaries.
+\tool carries out MLMS \ala DeepMutation++~\cite{bib:hu2019deepmutation++} and SLMS \ala DeepCrime~\cite{bib:humbatova2021deepcrime}.
+% For Mutation Score, \tool supports both model-level and source-level mutation workflows using configurable mutation operators. In the model-level workflow, \tool computes mutation scores during mutant generation by reusing execution results immediately, avoiding the need to perform mutation testing as a separate post-processing step after all mutants have been generated.
+
+Although these preprocessing procedures differ substantially across adequacy metrics, \tool automatically invokes the corresponding processing module and generates the intermediate artifacts needed for score computation.
+This design separates metric-specific implementation details from the external execution workflow and reduces the effort required to reproduce and compare different adequacy techniques.
+% \vspace{-0.2cm}
+
+\subsection{Cache Management}
+% \ali{This is a major selling point that must be highlighted in the introduction, demo video, and if possible even in the abstract.}
+Many adequacy metrics require intermediate artifacts that are costly to generate but can be reused across repeated evaluations.
+To avoid redundant computation, \tool provides a cache management component that stores and retrieves these reusable artifacts generated during metric-specific processing.
+
+Examples of cached artifacts include neuron profiles for some NC-series metrics, activation traces for LSA/DSA, decision-boundary models for DBC, and generated mutant models for SLMS and MLMS.
+Cached artifacts are associated with the target model, dataset, metric, and creation time.
+When compatible cached artifacts are available, \tool allows users to choose either to reuse the existing artifacts and proceed directly to scoring, or to regenerate them by invoking the corresponding metric-specific processing module.
+This mechanism reduces the cost of repeated execution while preserving reproducibility and experimental traceability.
+
+% \vspace{-0.2cm}
+\subsection{Adequacy Scoring and Reporting}
+The adequacy scoring component uses the artifacts produced by the processing stage to compute the final score according to the selected metric.
+Coverage-based metrics report the proportion of covered adequacy elements, LSA/DSA derives scores from activation trace distributions, IDC measures latent feature interaction coverage, DBC quantifies decision-boundary coverage, and SLMS/MLMS reports the classic mutation score~\cite{bib:hu2019deepmutation++}, computed as the proportion of killed mutants over all generated mutants, i.e., $\text{MS} = \frac{|\text{killed mutants}|}{|\text{all mutants}|}$. 
+% \ali{either statistically like DeepCrime, using DeepMutation formula, or as classic proportion of killed mutants.}
+
+For each run, \tool produces the metric adequacy score together with lightweight execution metadata.
+These metadata include preprocessing time, scoring time, and cache utilization information.
+The resulting report allows users to inspect the adequacy score, understand the computational cost of each metric, and compare multiple adequacy techniques under a consistent evaluation setting.
+
+Together, these components provide a unified workflow for running, inspecting, comparing, and extending diverse DL test adequacy metrics.

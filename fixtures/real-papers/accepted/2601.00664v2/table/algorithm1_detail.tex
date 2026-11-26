@@ -1,0 +1,36 @@
+\begin{figure}[t]
+\vspace{-0.15in}
+\centering
+\begin{minipage}{1.0\linewidth}
+\begin{algorithm}[H]
+\small 
+\caption{\label{algo:sampling_detail} Motion inference with KV caching (Detailed)} 
+\begin{algorithmic}[1]
+\Require ODE timesteps $\{t_n\}^T_{n=0}$, motion generator $v_{\theta}$, video length $N$, block size $B$, lookahead size $l$, max cache size $M$, user inputs $(\mathbf{a}_{u},\mathbf{m}_{u})$, avatar audio $\mathbf{a}^i$, latent-to-frame decoder $\texttt{Dec}$, offset $\mathbf{O}$, and id latent $z_S$. 
+\State \textbf{Divide} the frames into $L = \lceil N / B \rceil$ blocks
+\State \textbf{Initialize} $\mathbf{KV}, \mathbf{cKV}$ $\leftarrow [~], [~]$ \hfill $\rhd$ Frame \& condition caches
+\For{$i = 1$ to $L$}
+    \State \textbf{Sample} Noise block $\mathbf{m}_{t_{0}}^{i} \sim \mathcal{N}(0, \mathbf{I})$, \hfill $\rhd$ 
+    $\mathbf{m}_{t_{0}}^{i}\in\real^{B \times d}$
+    \State \textbf{Acquire} \highlightline{User inputs 
+    ($\mathbf{a}^i_{u}$, $\mathbf{m}_{u}^i$)
+    and avatar audio $\mathbf{a}^i$}.
+    \State \textbf{Set} $\mathbf{c}^i$ $\leftarrow$ $(\mathbf{a}^i_{u}, \mathbf{m}_{u}^i, \mathbf{a}^i)$ \hfill $\rhd$ Condition triplet
+    \State \textbf{Merge offset}  \highlightlinetwo{~$\mathbf{m}^i_{t_0}$, $\mathbf{c}^i$ $\leftarrow$ \texttt{Concat}($\mathbf{m}^i_{t_0}$, $\mathbf{c}^i$; $\mathbf{O}^i$)}
+
+    \For{$j = 0$ to $T$}
+        \State \textbf{Solve ODE:} $\mathbf{m}_{t_{j+1}}^{i} \leftarrow v_{\theta}(\mathbf{m}_{t_j}^{i}, t_j; \mathbf{c}^i, \mathbf{KV}, \mathbf{cKV})$
+    \EndFor
+    \State \textbf{Decode} \& \textbf{Return}~~ \highlightline{$\mathbf{x}_1^i$ $\leftarrow$ $\texttt{Dec}(z_S, \mathbf{m}_1^i)$~$\in$~$\real^{B \times 3 \times H \times W}$}
+    \State \textbf{Update caches}~~ $\mathbf{kv}_i$, $\mathbf{ckv}_i$ $\leftarrow$ $v_{\theta}(z_{1}^{i}, 1; \mathbf{c}^i, \mathbf{KV}, \mathbf{cKV})$    
+    \If{$|\mathbf{KV}|$~$=$~$|\mathbf{cKV}|$~$=$~$M$}
+    \State $\mathbf{KV}{\texttt{.pop(0)}}$~and~  $\mathbf{cKV}{\texttt{.pop(0)}}$
+    \EndIf
+    \State $\mathbf{KV}${\texttt{.append($\mathbf{kv}_i$)}}~and~ $\mathbf{cKV}${\texttt{.append($\mathbf{ckv}_i$)}}
+    \State \textbf{Update offset} \highlightlinetwo{$\mathbf{O}^{i+1}$ $\leftarrow$ $(\mathbf{m}_1^i[-l:], \mathbf{c}^{i}[-l:])$}
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}
+\vspace{-0.15in}
+\end{figure}

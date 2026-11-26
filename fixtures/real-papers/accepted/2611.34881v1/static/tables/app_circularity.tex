@@ -1,0 +1,64 @@
+\subsection{Circularity Checks}
+\label{app:circularity}
+
+\noindent COCO \texttt{train2017} NPMI defines the paired splits, the STRANGE-Bench tiers and the AAS tilt, and the AAS late stage trains on scenes from the generator of the benchmark. We test each of these links against a source the benchmark was not built from.
+
+\noindent\textbf{Tiers under a second co-occurrence source.} Tab.~\ref{tab:app_circ_tiers} scores every anchor-partner pair of STRANGE-Bench with the NPMI of Objects365 \texttt{train} ($1.70$M images mapped to the COCO classes), which played no part in building the benchmark. Objects365 ranks the typical above the atypical pairs at every level (AUC $0.97$ to $0.99$, against $0.99$ to $1.00$ for COCO). If classes co-occurred independently, $85\%$ of the pairs that never co-occur in COCO \texttt{train2017} would be expected there at least $10$ times, where observing none has probability below $5{\times}10^{-5}$, so their absence is not a sampling accident. The pairs of $T_{\text{never}}$ are rare in Objects365 as well: $36.4\%$ of them never co-occur there, and their median Objects365 NPMI is $-0.22$.
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\caption{\textbf{STRANGE-Bench tiers under Objects365 NPMI.} Objects365, which played no part in building the benchmark, ranks the typical above the atypical pairs at every level (AUC $0.97$ to $0.99$), and $36.4\%$ of the $T_{\text{never}}$ pairs never co-occur there either. Anchor-partner pairs of every scene scored with COCO \texttt{train2017} NPMI, which defines the tiers, and with Objects365 \texttt{train} NPMI; a pair that never co-occurs in a source is scored $-1$. NPMI: median over the typical / atypical arm of a level; $N_{ij}{=}0$: share of atypical pairs that never co-occur in the source; AUC: probability that a typical pair outranks an atypical pair of the same level.}
+\label{tab:app_circ_tiers}
+\input{static/tables/generated/app_circ_tiers_tabular}
+\end{table*}
+
+\noindent\textbf{Paired splits defined by Objects365 NPMI.} Re-slicing COCO \texttt{val} with Objects365 NPMI (same construction and image pool, different images) leaves a typicality gap in every row we re-sliced, the baseline, paste and AAS rows of Tabs.~\ref{tab:codino_main} to~\ref{tab:dinov3_main} (Tab.~\ref{tab:app_circ_reslice}). The gap is smaller than under COCO NPMI, by $0.5$ to $3.9$~p.p.\@, so part of the gap of the COCO splits reflects the signal that defines them, but in no row does it disappear.
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\caption{\textbf{COCO \texttt{val} paired splits defined by COCO or by Objects365 NPMI.} Every row keeps a gap on the Objects365-NPMI split, $0.5$ to $3.9$~p.p.\@ smaller than on the COCO-NPMI split. Baseline, paste and AAS rows of Tabs.~\ref{tab:codino_main} to~\ref{tab:dinov3_main} (same checkpoints). Both splits use the same construction and image pool (App.~\ref{app:splits-impl}) but select different images. Detectors: full-annotation AP; DINOv3: F1$_{\text{micro}}$.}
+\label{tab:app_circ_reslice}
+\input{static/tables/generated/app_circ_reslice_tabular}
+\end{table*}
+
+\noindent\textbf{AAS driven by Objects365 NPMI.} We re-ran the XPaste + AAS recipe with Objects365 NPMI wherever NPMI enters training: the generated training scenes, their typical-partner filter and the AAS tilt; the benchmark stays on COCO NPMI. The two sources admit largely the same training pairs ($542$ shared of $603$ COCO and $562$ Objects365 pairs), so this check asks whether the result survives the change of source, not whether it transfers to a disjoint set of pairs. In both families the two AAS rows differ by at most $0.3$~p.p.\@ on any column, about the spread over training draws, and both stay ahead of XPaste on STRANGE-Bench and on its held-out classes (Tab.~\ref{tab:app_circ_o365_aas}).
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\caption{\textbf{XPaste + AAS driven by COCO or by Objects365 NPMI.} The two AAS rows differ by at most $0.3$~p.p.\@ on any column, and both stay ahead of XPaste on STRANGE-Bench and on its held-out classes. Objects365 NPMI replaces COCO NPMI in the generated training scenes, their filter and the AAS tilt; the benchmark stays on COCO NPMI. Means over $n$ training draws; Co-DINO rows are late-stage models trained on mini-COCO (App.~\ref{app:beta_sweep}). Held-out classes: the subset of STRANGE-Bench whose classes never appear in the generated training scenes.}
+\label{tab:app_circ_o365_aas}
+\input{static/tables/generated/app_circ_o365_aas_tabular}
+\end{table*}
+
+\noindent\textbf{Held-out classes.} The generated training scenes of the AAS late stage use only part of the classes; the scenes of STRANGE-Bench whose classes all come from the other part form a held-out subset ($3{,}234$ images). On it (Tab.~\ref{tab:app_circ_heldout}), XPaste\,+\,AAS keeps the highest atypical score and $T_{\text{never}}$ in every family, and each AAS row scores higher on both than the row it starts from, with a gap no larger (DINOv3 XPaste and XPaste\,+\,AAS tie at $-1.1$). The gains of the AAS rows therefore do not come from classes seen in generated training scenes.
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\caption{\textbf{STRANGE-Bench and its held-out-class subset.} On the held-out classes, XPaste\,+\,AAS keeps the highest atypical score and $T_{\text{never}}$ in every family, and each AAS row improves both over the row it starts from. Baseline, paste and AAS rows of Tabs.~\ref{tab:codino_main} to~\ref{tab:dinov3_main}; the held-out subset contains only classes that never appear in the generated training scenes of the AAS rows. Means over $T_1$ to $T_5$; detectors: AP; DINOv3: F1$_{\text{micro}}$.}
+\label{tab:app_circ_heldout}
+\input{static/tables/generated/app_circ_heldout_tabular}
+\end{table*}
+
+\noindent\textbf{A second generator.} We re-rendered $999$ held-out-class scenes with SD 3.5 Medium from the captions of the benchmark and passed them through the same audit and filter; enough complete scenes survive for $T_4$ ($67$ per arm) and $T_{\text{never}}$ ($136$). The atypical arm of $T_4$ scores lower on these renders for every model, but every AAS row keeps a smaller $T_4$ gap and a higher $T_{\text{never}}$ than its control (Tab.~\ref{tab:app_circ_xgen}), so the gain of AAS is not tied to the generator of its training scenes. These paste rows are late-stage models of our development runs, trained on mini-COCO (App.~\ref{app:beta_sweep}; recipes in App.~\ref{app:exp-recipes}).
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\caption{\textbf{Held-out-class scenes rendered by the generator of the benchmark (SD 3.5 Large) and by SD 3.5 Medium.} On the SD 3.5 Medium renders the atypical arm of $T_4$ scores lower for every model, yet every AAS row keeps a smaller $T_4$ gap and a higher $T_{\text{never}}$ than its control. Both generators render from the same captions, at $k = 3$ ($T_4$) and for $T_{\text{never}}$. Paste rows: mini-COCO late-stage models, means over training draws.}
+\label{tab:app_circ_xgen}
+\input{static/tables/generated/app_circ_xgen_tabular}
+\end{table*}

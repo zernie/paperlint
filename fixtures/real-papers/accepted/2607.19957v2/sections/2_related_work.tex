@@ -1,0 +1,46 @@
+\section{Related Work}
+
+\subsection{Efficiency Optimization for KV Cache}
+\paragraph{KV Cache Reuse and Sharing.}
+To address the low hit rate of prefix KV reuse~\cite{pope2023efficiently} and reduce the computational cost across multiple requests, recent systems have explored cache reuse and sharing strategies for multi-tenant LLM serving. 
+
+\emph{For reuse,} CacheBlend~\cite{yao2025cacheblend} addresses KV reuse in RAG, which enables chunk-level reuse of precomputed KV caches regardless of their positions and selectively recomputes KV values for a small subset of tokens to mitigate utility loss. 
+% 
+EPIC~\cite{hu2025epic} and MEPIC~\cite{wang2025mepic} formalize Position-Independent KV Cache by introducing the LegoLink algorithm to mitigate attention sink effects, and add memory-efficient optimizations such as chunk-level paging and RoPE fusion. 
+% 
+KVShare~\cite{yang2025kvshare} designs a dual-stage high deviation algorithm that selectively recomputes KV cache during prefill and decode phases via a cache-aware scheduler. 
+\emph{For sharing,} PagedAttention~\cite{kwon2023efficient} enables multi-tenant KV cache sharing via zero-copy mapping of logical prompts to the shared physical KV blocks. SGLang~\cite{zheng2024sglang} stores the KV cache in GPU memory with a Radix Tree to maximize sharing across requests.
+
+While these systems improve service efficiency, their security implications remain largely unexplored. \emph{Our work reveals that these efficiency-driven optimizations open a hidden channel for KV cache hijacking.}
+
+\paragraph{KV Cache Compression.}
+Compression aims to reduce the storage overhead of the KV cache. The first line of work focuses on quantization~\cite{hooper2024kvquant,liu2024kivi}, which demonstrates that quantization to low-bit representations (e.g., 4-bit or even 2-bit) maintains generation quality while significantly reducing memory consumption. 
+% 
+The second approach targets the selective pruning of less important KV states. Early strategies keep only the most recent tokens or preserve initial tokens alongside recent context~\cite{xiao2023efficient}. More advanced methods leverage attention score statistics to identify and evict tokens with minimal impact on subsequent generations~\cite{zhang2023h2o,liu2023scissorhands}. Several KV-level defenses~\cite{jiang2024robustkv, wang2025cacheprune} also adopt pruning to limit misuse. \textit{However, simply applying KV cache compression does not prevent KV cache hijacking as shown in Section~\ref{sec:discussion}.}
+
+\subsection{Adversarial Attacks}
+
+
+\paragraph{KV Cache Privacy Leakage Attack.}
+Sharing the KV cache across multi-tenant LLM serving introduces privacy vulnerabilities, allowing adversaries to reconstruct sensitive user inputs via multiple attack vectors.
+% 
+Wu \etal~\cite{wu2025know} present the first systematic investigation of security risks in multi-tenant LLM serving with KV cache sharing in frameworks like SGLang~\cite{zheng2024sglang} and vLLM~\cite{kwon2023efficient}. 
+% 
+Luo \etal~\cite{luo2025shadow} study KV cache privacy leakage under three attack paradigms and identify the KV cache as a privacy-critical component.
+% 
+Song \etal~\cite{song2025early} discover timing side channels in LLM serving systems arising from shared caches and GPU memory allocations, which can be exploited to infer both confidential system prompts and sensitive requests issued by other users.
+
+While prior works have primarily focused on the privacy issues associated with KV caches, \textit{our work investigates how to exploit the KV cache to hijack model outputs.}
+
+\paragraph{KV Cache Modification Attack.}
+Beyond passive privacy leakage, recent work explores active attacks that modify the KV cache to change model behavior. 
+% 
+CacheTrap~\cite{nahian2025cachetrap} introduce a trojan attack that corrupts value vectors in the KV cache through bit-flip operations, achieving targeted misclassification without modifying model inputs or weights. 
+% 
+HistorySwap~\cite{ganesh2025whose} propose a block-level attack that overwrites contiguous segments of the active KV cache with precomputed caches from different topics. 
+% 
+MTI~\cite{hossain2025can} formalize the malicious token injection, which perturbs cached key vectors through additive noise, zeroing, or orthogonal rotations. 
+
+However, these attacks require system-level access to modify the cache directly and do not consider broader KV cache matching and reuse mechanisms. \emph{In contrast, our work is the first to enable adversaries to hijack model outputs without requiring system-level privileges.}
+\paragraph{Input-Based LLM Attacks.} Prompt injection attacks~\cite{perez2022ignore, greshake2023not, shi2024optimization, pasquini2024neural, liu2024formalizing, hui2024pleak, shao2025enhancing, wang2025webinject, labunets2025fun} exploit prompt composition, where system/user instructions are combined with untrusted external data (e.g., emails, webpages, API responses). Adversaries manipulate the data portion to override instructions and trigger unauthorized model behavior. Jailbreak attacks~\cite{zou2023universal, wei2023jailbroken, liu2024autodan, yang2024sneakyprompt, yang2024mma, chao2025jailbreaking} similarly rely on adversarial text patterns that steer the model away from its intended safety policies. Both attack types require malicious text to appear in the user's input, either directly in the user's query or indirectly through retrieved content. \textit{In contrast, our work enables attacker-controlled model outputs even when the user's input is without any malicious text.}
+

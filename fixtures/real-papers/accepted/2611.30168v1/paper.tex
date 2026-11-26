@@ -1,0 +1,1720 @@
+%%%%%%%% ICML 2026 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2026} with \usepackage[nohyperref]{icml2026} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+% \usepackage{icml2026}
+
+% For preprint, use
+% \usepackage[preprint]{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+
+%Self-added packages
+\usepackage{arydshln}
+\usepackage{pifont}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[most]{tcolorbox}
+\usepackage{nicematrix,tikz}
+\usepackage{multirow}
+\usepackage{wrapfig,lipsum,booktabs}
+\usepackage{xcolor} % if not already loaded
+% \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+% self-defined commands
+
+\newcommand{\enzh}{\textsc{en→zh} }
+\newcommand{\ruzh}{\textsc{ru→zh} }
+\newcommand{\enzhx}{\textsc{en→zh}}
+\newcommand{\ruzhx}{\textsc{ru→zh}}
+\newcommand{\jazh}{\textsc{ja→zh} }
+\newcommand{\heen}{\textsc{he→en} }
+\newcommand{\engde}{\textsc{en→de} }
+
+\newcommand{\deenx}{\textsc{de→en}}
+\newcommand{\engdex}{\textsc{en→de}}
+\newcommand{\dezhx}{\textsc{de→zh}}
+\newcommand{\zhdex}{\textsc{zh→de}}
+\newcommand{\jazhx}{\textsc{ja→zh}}
+\newcommand{\zhjax}{\textsc{zh→ja}}
+\newcommand{\jaenx}{\textsc{ja→en}}
+\newcommand{\enjax}{\textsc{en→ja}}
+\newcommand{\heenx}{\textsc{he→en}}
+\newcommand{\enhex}{\textsc{en→he}}
+
+
+\newcommand{\tc}{\textcolor{red}{(\textit{cite})}} % to mark tocite
+\newcommand{\rankerx}{\texttt{MT-Ranker}}
+\newcommand{\ranker}{\texttt{MT-Ranker }}
+\newcommand{\oursx}{FiRE}
+\newcommand{\ours}{FiRE }
+% \newcommand{\upd}[1]{\textcolor{black}{#1}}
+\newcommand{\na}{\textcolor{gray}{--}}
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{FiRE: Fine-grained Ranking Evaluation for Machine Translation}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{\includegraphics[height=0.9em]{figures/fire.png} FiRE: Fine-grained Ranking Evaluation for Machine Translation}
+
+  % It is OKAY to include author information, even for blind submissions: the
+  % style file will automatically remove it for you unless you've provided
+  % the [accepted] option to the icml2026 package.
+
+  % List of affiliations: The first argument should be a (short) identifier you
+  % will use later to specify author affiliations Academic affiliations
+  % should list Department, University, City, Region, Country Industry
+  % affiliations should list Company, City, Region, Country
+
+  % You can specify symbols, otherwise they are numbered in order. Ideally, you
+  % should not use this facility. Affiliations will be numbered in order of
+  % appearance and this is the preferred way.
+  \icmlsetsymbol{equal}{*}
+
+  \begin{icmlauthorlist}
+    \icmlauthor{Wenyang Gao}{equal,zju,wsetlakeu}
+    \icmlauthor{Yinghao Yang}{equal,wsetlakeu}
+    \icmlauthor{Xi Jin}{zju}
+    \icmlauthor{Jing Li}{lanbridge}
+    \icmlauthor{Yue Zhang}{wsetlakeu}
+  \end{icmlauthorlist}
+
+  \icmlaffiliation{zju}{Zhejiang University}
+  \icmlaffiliation{wsetlakeu}{School of Engineering, Westlake University}
+  \icmlaffiliation{lanbridge}{Sichuan Lan-bridge Information Technology Co., Ltd.}
+
+  \icmlcorrespondingauthor{Yue Zhang}{yue.zhang@wias.org.cn}
+
+  % You may provide any keywords that you find helpful for describing your
+  % paper; these are used to populate the "keywords" metadata in the PDF but
+  % will not be shown in the document
+  \icmlkeywords{Machine Translation, LLM-as-a-judge, Evaluation}
+
+  \vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column listing the
+% affiliations and the copyright notice. The command takes one argument, which
+% is text to display at the start of the footnote. The \icmlEqualContribution
+% command is standard text for equal contribution. Remove it (just {}) if you
+% do not need this facility.
+
+% Use ONE of the following lines. DO NOT remove the command.
+% If you have no special notice, KEEP empty braces:
+\printAffiliationsAndNotice{\icmlEqualContribution}  % no special notice (required even if empty)
+% Or, if applicable, use the standard equal contribution text:
+% \printAffiliationsAndNotice{\icmlEqualContribution}
+
+\begin{abstract}
+Developing reliable machine translation (MT) systems hinges on our ability to distinguish superior translations from inferior ones. However, existing evaluation paradigms, whether limited to coarse overall rankings or misaligned with human preferences, fail to deliver interpretable, fine‑grained feedback in reference‑free settings. We present a \textbf{Fi}ne-Grained \textbf{R}anking \textbf{E}valuation method (\textbf{FiRE}) that leverages off‑the‑shelf large language models to perform criterion‑driven pairwise comparison across three complementary dimensions: faithfulness, fluency, and consistency of style, instead of producing a single holistic judgment. To enable rigorous meta‑evaluation of evaluation paradigms in the absence of any suitable testbed, we construct the first human‑annotated, reference‑free benchmark for fine-grained ranking evaluation, achieving substantial inter‑annotator agreement. Through meta‑evaluation on this benchmark and existing Multidimensional Quality Metrics (MQM) datasets, FiRE demonstrably outperforms regression‑based and error‑analysis metrics in aligning with human comparative judgments, while providing more informative insights into translation quality. Finally, our examination of LLM evaluator biases (position and self-enhancement) and their handling of tied cases offers guidance for more nuanced MT evaluation. Code and benchmark resources are available at \url{https://github.com/wygao8/FiRE-MT}.
+\end{abstract}
+\section{Introduction}
+\label{sec:introduction}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/intro-0925.pdf}
+    \caption{Illustrative case of regression-based, error-based, ranking-based evaluation, and our proposed fine-grained ranking evaluation (FiRE).}
+    \label{fig:intro}
+\end{figure*}
+
+The goal of machine translation (MT) is to produce high-quality translations that align with human preferences, so progress hinges on reliably distinguishing better outputs from worse ones. Large language models (LLMs) exhibit strong multilingual and generation capabilities, and their translations often satisfy the classical desiderata of accuracy and fluency. In this high-quality regime, traditional overlap-based metric BLEU~\citep{Papineni2002BleuAM} and regression-based metrics such as BERTScore~\citep{Zhang2019BERTScoreET} are frequently insufficiently discriminative~\citep{freitag2022results}. 
+% Ranking-based evaluation, introduced in other generation tasks~\citep{wang2023pandalm,ChatbotArena} and recently adapted to MT~\citep{MT-RANKER}, improves separability over regression-based metrics but still lacks interpretability.
+Ranking-based evaluation has become a common interface for evaluating open-ended generation and preference alignment~\citep{wang2023pandalm,ChatbotArena,DBLP:conf/iclr/LiSYF0024,DBLP:conf/iclr/ZhuWW25,DBLP:conf/iclr/YeLLA0SYL25}, and has also been adapted to MT~\citep{MT-RANKER,Song2025EnhancingHE} through reference-free ranking. While such ranking-based approaches improve separability over scalar regression metrics, a single holistic preference still provides limited diagnostic feedback about which quality dimensions drive the decision.
+
+Consider the illustrative case in Figure~\ref{fig:intro}: two translations (T1, T2) are comparable in overall quality. T1 is more formal and closer to the source’s style, while T2 reads more fluently. A vanilla ranking method that outputs only a better or worse decision may label one as superior, yet it provides no rationale for the trade-off across criteria.
+In contrast, error-based evaluation provides rich diagnostic information by identifying and categorizing errors. 
+Motivated by this, we introduce \textbf{\oursx}, a \textbf{Fi}ne-grained \textbf{R}anking \textbf{E}valuation framework for reference-free MT. Building on the pairwise comparison setting, FiRE makes the comparison criterion-conditioned: instead of eliciting only a single holistic preference, it explicitly compares two translations along faithfulness, fluency, and consistency of style, and then synthesizes these criterion-level judgments into an overall decision. In this way, \ours preserves the sensitivity of pairwise ranking to subtle quality differences while adding diagnostic information about why one translation is preferred under different quality dimensions. 
+
+% A significant hurdle in developing and validating such fine-grained evaluation methods has been the lack of suitable benchmarks. While existing benchmarks, as detailed in Section~\ref{sec:benchmark}, have utilized relative rankings, inferred preferences from scalar scores, or employed contrastive perturbations, a critical gap remains for a benchmark offering direct human pairwise ranking across multiple explicit criteria in a reference-free setting for modern MT. To overcome this, we introduce the first human-annotated benchmark specifically designed for reference-free, fine-grained pairwise ranking evaluation. Our benchmark comprises two translation directions, English-to-Chinese and Russian-to-Chinese, each containing $1,600$ data points. Each data point consists of one source sentence, two translation candidates, and four human annotations across four criteria (faithfulness, fluency, consistency of style, and overall quality), without access to reference translations, yielding a total of 12,800 annotations. 
+
+A significant hurdle in developing and validating such fine-grained pairwise evaluation frameworks has been the lack of suitable benchmarks. While existing benchmarks, as detailed in Section~\ref{sec:benchmark}, have utilized relative rankings, inferred preferences from scalar scores, or contrastive perturbations, they do not directly annotate reference-free pairwise preferences under explicit quality criteria for modern MT outputs. To fill this gap, we construct, to our knowledge, the first human-annotated benchmark tailored to criterion-conditioned, reference-free pairwise MT evaluation. Our benchmark comprises two translation directions, English-to-Chinese and Russian-to-Chinese, each containing $1,600$ data points. Each data point consists of one source sentence, two translation candidates, and human annotations for three fine-grained criteria (faithfulness, fluency, and consistency of style) and one holistic overall quality label, without access to reference translations, yielding a total of $12,800$ annotations.
+
+
+We conduct extensive experiments using \ours with seven LLMs—four open-source (DeepSeek-R1, QwQ-32B, Mistral-Large-Instruct, Qwen2.5-72B-Instruct) and three closed-source (GPT-4o, Claude-3.5-Sonnet, Gemini-2.0-Flash)—and compare it against established evaluation paradigms.
+FiRE delivers clear advantages over regression- and error-based evaluation by enabling side-by-side comparison of two translations, which simplifies evaluation, surfaces nuanced differences, and improves decision accuracy. Synthesizing the fine-grained judgments into a single overall decision yields additional gains, indicating that criterion-aware aggregation leverages complementary evidence across faithfulness, fluency, and consistency of style, reduces noise on near-tie cases, and better reflects how humans trade off these factors in overall judgments. At the criterion level, \ours surpasses error-based evaluation, achieving higher agreement on faithfulness, fluency, and consistency of style, which in turn yields stronger overall rankings. We further evaluate \ours on the existing MQM datasets in \heenx, \jazhx, and \engde directions.
+
+Based on the backbone ablation, we use DeepSeek-R1 as the main \ours evaluator to evaluate six MT systems and compare the results with other metrics. Consistent with other reference-free evaluations, \ours identifies GPT-4o as the top-performing model, further revealing its superior performance across nearly all evaluation criteria. In a notable departure, while ALMA-13B-R~\citep{DBLP:conf/icml/XuSCTSDM024} achieves a top ranking on metrics like COMET-Kiwi~\citep{Rei2023ScalingUC}, \ours exposes a critical weakness: the faithfulness score of ALMA-13B-R is the second-lowest among all tested models, which suggests a potential tendency for hallucination. Furthermore, unlike holistic scores that can mask performance variations, \ours can discern model strengths across different translation directions, identifying that DeepL excels in \enzh while LanMT performs better in \ruzhx. We show that \ours supports actionable system-level diagnosis by revealing where models gain or lose across faithfulness, fluency, and stylistic consistency, clarifying directional strengths that holistic scores obscure. We further demonstrate the extensibility of FiRE through FiREplus, which incorporates locale convention as an additional task-specific criterion while retaining the same criterion-level comparison and aggregation pipeline. Overall, our contribution is not to propose pairwise ranking as a new evaluation paradigm, but to formulate and validate a criterion-conditioned, reference-free pairwise evaluation framework for MT, supported by a directly annotated benchmark and an aggregation mechanism that turns fine-grained judgments into a robust overall decision.
+
+
+\textbf{Conflict of Interest Disclosure. }Jing Li is employed by Sichuan Lan-bridge Information Technology Co., Ltd., the developer of LanMT. Since LanMT is included as one of the MT systems evaluated in Section~\ref{sec:intere-system}, we disclose this as a financial conflict of interest. All machine translation systems are evaluated under the same experimental protocol. No other financial conflicts of interest are declared.
+
+
+\section{Related Work}
+
+\subsection{Paradigms of MT Evaluation}
+MT evaluation methodologies can be broadly classified into regression-based, error-based, and ranking-based approaches. 
+
+\noindent
+\textbf{Regression-Based Evaluation.}
+This paradigm assesses translation quality by assigning a scalar score. BLEU~\citep{Papineni2002BleuAM} is the dominant overlap-based metric that measures quality by computing n-gram precision between machine-generated translations and reference translations. Due to its lack of ability to capture semantic features, researchers introduce regression-based metrics, including BERTScore~\citep{Zhang2019BERTScoreET}, COMET~\citep{Rei2020COMETAN}, BLEURT~\citep{Sellam2020BLEURTLR}, and MetricX-24-XXL~\citep{juraska-etal-2024-metricx}, which use pre-trained language models to predict scores for the quality of translation, focusing on semantic similarity. This paradigm offers simple scalar scores but remains coarse-grained.
+
+\noindent
+\textbf{Error-Based Evaluation.}
+The Multidimensional Quality Metrics (MQM) framework~\citep{Lommel2013MultidimensionalQM} is a widely used method for assessing translation quality by identifying and categorizing various errors. MQM-based metrics enable a more nuanced and interpretable evaluation of MT systems, aligning closely with human judgment by pinpointing specific translation errors and their severity. 
+Recent advancements have sought to automate or semi-automate this process using pre-trained language models (PLMs), leading to metrics like xCOMET~\citep{Guerreiro2023xcometTM}, which incorporates error span detection, and LLM-driven systems such as GEMBA-ESA~\citep{kocmi-federmann-2023-large}, GEMBA-MQM~\citep{GEMBA}, EAPrompt~\citep{ErrorAna}, and M-MAD~\citep{M-MAD}. Though their primary focus is error diagnosis, they can also produce a numeric score by aggregating error types and numbers. This paradigm provides interpretable error diagnostics, but its aggregated scores are not tailored for direct pairwise ranking.
+% XCOMET enhances sentence-level evaluation with error span detection, achieving state-of-the-art performance across various evaluation tasks. Recent advancements integrate LLMs to improve accuracy and interoperability, leading to the development of GEMBA-MQM, EAPrompt, and M-MAD. These errors are able to be converted to quality scores based on their types and numbers.
+
+\noindent
+\textbf{Ranking-Based Evaluation.}
+This paradigm directly compares two or more translation candidates for a given source segment and determines their relative order of quality. 
+\citet{ye2007sentence} formulate MT evaluation as this ranking problem, typically in a reference-based setting.  Subsequent research explores various features and learning algorithms to improve ranking accuracy, sometimes aiming to reduce reliance on full reference translation~\citep{Duh2008RankingVR,Guzmn2014LearningTD,Guzmn2015PairwiseNM,Song2011RegressionAR,Zhang2020TranslationQE}.
+Recognizing that human-labeled references are scarce or unavailable in practical scenarios, reference-free ranking methods have gained traction. For instance, \rankerx~\citep{MT-RANKER} employs a multi-stage training regime to develop a specialized model for reference-free ranking. This paradigm aligns naturally with choosing the better translation but existing methods remains coarse-grained, producing only a holistic overall ranking.
+% However, in real-world scenarios, human-labeled references are usually unavailable. MT-Ranker employs a three-stage training on massive multilingual data to equip the models with the ability to perform ranking-based evaluation in a reference-free scenario. \todo{our method?}
+
+\subsection{Pairwise Ranking Evaluation Benchmarks in MT}\label{sec:benchmark}
+
+Since MT evaluation was first formalized as ranking problem~\citep{ye2007sentence}, a variety of datasets have been employed to conduct meta-evaluations of pairwise ranking methods. Early research relied on the relative ranking datasets from WMT shared tasks between 2008 and 2016 (RR08–16), in which five translation candidates for each source sentence are ranked from best to worst by human annotators with reference to a gold-standard translation~\citep{CallisonBurch2008FurtherMO}. However, these datasets have become temporally outdated and are less reflective of modern MT systems.
+
+Recent studies relied on synthetic pairwise datasets, which fall into two main categories: those derived from human-assigned scores and those generated through contrastive perturbations. The first category includes Direct Assessment (DA17–22)~\citep{Mathur2020ResultsOT} and Multidimensional Quality Metrics (MQM20–23)~\citep{Pal2023FindingsOT} datasets. DA datasets contain translations from multiple MT systems, each annotated with a quality score ranging from 0 to 100. In contrast, MQM datasets employ expert annotators to identify error spans with fine-grained error types and severity levels, yielding weighted error scores that reflect translation quality. The second category is exemplified by the ACES dataset~\citep{Amrhein2022ACESTA}, a contrastive synthetic benchmark constructed through adversarial perturbations. For each predefined error type, annotators or automated scripts introduce targeted errors into otherwise correct translations, resulting in contrastive translation pairs. These pairs are designed to test the sensitivity and robustness of evaluation metrics to specific types of translation errors.
+Despite these advances, a benchmark for direct human pairwise ranking on multiple explicit criteria (e.g., faithfulness, fluency, style) in a reference-free setting, especially for modern MT outputs, has been lacking.
+
+% However, such datasets do not reflect direct human judgements. To mitigate this limitation, we introduce the first human-annotated benchmark specifically designed for pairwise ranking evaluation. Our benchmark is annotated in the reference-free scenario by directly select the superior translation from a pair of candidates based on specific criteria, including faithfulness, fluency, consistency of style as well as overall quality. This annotation approach not only aligns naturally with the pairwise evaluation task itself, but also captures the multidimensional nature of translation quality, thereby enabling a more fine-grained assessment of evaluation methods and better reflecting human preferences. Detailed differences between our benchmark and existing datasets are shown in Table~\ref{tab:dataset_comparison} in the Appendix.
+
+% The development and meta-evaluation of ranking-based MT metrics necessitate appropriate benchmarks. Early research often utilized relative ranking datasets (RR08-16) from WMT shared tasks\tc. 
+
+% \section{Criterion-based Pairwise Evaluation}
+% \subsection{Preliminary: Paradigms of Machine Translation Evaluation}
+\section{Fine-Grained Ranking Evaluation}
+
+
+\subsection{Problem Definition}
+% In real-world scenarios, users may have diverse and multidimensional requirements for comparing translations. To simulate these preferences and provide fine-grained information accordingly, we investigate existing evaluation frameworks~\citep{CallisonBurch2007MetaEO,Mirkin2015PersonalizedMT,Sun2023PrincipleDrivenSO,Lommel2013MultidimensionalQM} and select three widely used criteria: \textit{faithfulness}, \textit{fluency}, and \textit{consistency of style}. \textbf{Faithfulness} refers to the accuracy of the translation in conveying the original meaning of the source sentence, reflecting the extent of hallucination by the translation model. \textbf{Fluency} refers to the naturalness and readability of the translation, indicating the model's ability to generate coherent and grammatically correct text in the target language. \textbf{Consistency of style} refers to the uniformity and coherence of the translation in terms of tone and style, reflecting the model’s ability to maintain a consistent stylistic output across different languages. These criteria are crucial for evaluating translation quality across various dimensions and meeting diverse user needs~\citep{Kirchhoff2012EvaluatingUP,Lommel2013MultidimensionalQM,Sun2024PMMTPA}. In addition, we also incorporate an \textbf{overall} quality criterion to provide a holistic view and align with the traditional ranking problem.
+
+In real-world scenarios, users may have diverse and multidimensional requirements for comparing translations. We instantiate \ours with three broad and complementary criteria: \textit{faithfulness}, \textit{fluency}, and \textit{consistency of style}. Rather than forming an exhaustive taxonomy of translation quality or an arbitrary subset of MQM tags, these criteria provide a compact interface for reference-free pairwise ranking, covering semantic fidelity, target-language well-formedness, and preference-relevant stylistic preservation.~\citep{Kirchhoff2012EvaluatingUP,Lommel2013MultidimensionalQM,Sun2024PMMTPA}. \textbf{Faithfulness} measures whether a translation preserves the source meaning without omissions, distortions, or hallucinated content. \textbf{Fluency} measures target-side naturalness, readability, and grammaticality. \textbf{Consistency of style} measures whether source-side tone, register, and stylistic properties are appropriately preserved across languages. This compact criterion set keeps pairwise annotation tractable while leaving the framework extensible to additional criteria. Separately, our benchmark includes an \textbf{overall} quality label as a holistic human judgment for meta-evaluation.
+
+Given a source sentence $x$ and two translation candidates $y_1$ and $y_2$, the goal of fine-grained ranking evaluation is to determine which translation is superior according to the specific criterion $c$, which is provided by the user based on their practical needs. We denote the fine-grained ranking evaluation as $\mathcal{M}(c, x, y_1, y_2) \rightarrow p$, where $\mathcal{M}$ is the evaluator and $p \in \left\{y_1\succ y_2 (A), y_2\succ y_1 (B), y_1\sim  y_2(E)\right\} $ is the evaluation outcome, indicating whether translation $y_1$ is superior to $y_2$, $y_2$ is superior to $y_1$, or both translations are considered equally preferred according to the criterion $c$.
+
+\subsection{Data Collection}
+\label{sec:data collection}
+% In real-world scenarios, users may have diverse and multidimensional requirements for translation quality. To simulate these preferences and provide fine-grained information accordingly, we investigate existing evaluation frameworks~\citep{CallisonBurch2007MetaEO,Mirkin2015PersonalizedMT,Sun2023PrincipleDrivenSO,Lommel2013MultidimensionalQM} and select three widely used criteria: faithfulness, fluency, and consistency of style. 
+% \textbf{Faithfulness} refers to the accuracy of the translation in conveying the original meaning of the source sentence, reflecting the extent of hallucination by the translation model. \textbf{Fluency} refers to the naturalness and readability of the translation, indicating the model's ability to generate coherent and grammatically correct text in the target language. \textbf{Consistency of style} refers to the uniformity and coherence of the translation in terms of tone and style, reflecting the model’s ability to maintain a consistent stylistic output across different languages. These criteria are crucial for evaluating translation quality across various dimensions and meeting diverse user needs~\citep{Kirchhoff2012EvaluatingUP,Lommel2013MultidimensionalQM,Sun2024PMMTPA}. In addition, we also incorporate \textbf{overall} quality as a specified criterion to provide a holistic view and align with the traditional pairwise ranking problem.
+
+\begin{figure}
+    \begin{center}
+    \includegraphics[width=\linewidth]{figures/statistics_tiny.pdf}
+            \caption{Number of pairwise comparison data for each combination of MT systems, shown for \textsc{en→zh} (left) and \textsc{ru→zh} (right).}
+            \label{fig:pairwise_data}
+    \end{center}
+\end{figure}
+
+To construct the fine-grained ranking benchmark, we adopt six MT systems, including three open-source systems (NLLB-200-1.3B~\citep{nllb-24}, ALMA-13B-R~\citep{DBLP:conf/icml/XuSCTSDM024}, Qwen2-72B-Instruct~\citep{Yang2024Qwen2TR}) and three closed-source systems (GPT-4o, DeepL, LanMT), to generate translation candidates for each source sentence. Details of MT systems are displayed in Appendix~\ref{appx:mt_systems}.
+Our study focuses on two high-resource language directions: English-to-Chinese (\enzhx) and Russian-to-Chinese (\ruzhx). We collect source sentences from the WMT23 test set~\citep{Blain2023FindingsOT} for the English-to-Chinese and Russian-to-English translation tasks, respectively. For each source sentence, we generate Chinese translation candidates using the six MT systems and construct 15 pairwise data points by enumerating all possible compositions of translation candidates. We filter out data points with identical translation candidates and sample uniformly across the pairwise data to ensure broader coverage of source sentences and a more balanced distribution of translation compositions. Since the performance of NLLB-200-1.3B is lower than that of the other MT systems, we downsample its compositions to balance annotation quality and the spectrum of benchmark (explained in Appendix~\ref{appx:nllb and downsampling}). The statistics of the fine-grained ranking data are displayed in Figure~\ref{fig:pairwise_data}.
+
+ Before full-scale annotation, we conducted several pilot rounds to calibrate annotators and refine the guidelines. For each language direction, three annotators evaluate the pairwise comparisons, selecting the superior translation according to the specified criterion. Ties are allowed. Table~\ref{tab:human_annotation} presents the annotation statistics.  While a 2-annotator 2-class annotation achieves substantial agreement with $\kappa>0.61$ \citep{Landis1977TheMO}, our 3-annotator 3-class setting (which typically yields lower $\kappa$ values) shows comparably substantial inter-annotator reliability ($\kappa=0.57-0.81$). We believe this strong agreement arises because pairwise ranking with explicit criteria is cognitively simpler and less ambiguous than assigning absolute scores. A small number of items where three annotators select different labels for a given criterion are discarded after computing $\kappa$, since such cases do not yield a reliable consensus. As a result, the number of retained pairs differs slightly across criteria.
+Language proficiency of annotators is detailed in Appendix~\ref{appx:proficiency}.
+
+We employ majority voting on the human-annotated pairwise data to assign final labels. The resulting data is categorized into two groups: ranked data, which includes cases where $y_1 \succ y_2$ or $y_2 \succ y_1$, and tied data, where $y_1 \sim y_2$. Statistics are detailed in Table~\ref{tab:data_stat_full} in the Appendix. This classification into ranked and tied sets is instrumental for conducting a more nuanced meta-evaluation of different methods across the various criteria.
+Notably, the overall ranking exhibits the highest ranked rate. This suggests that annotators are more inclined to make a definitive better-worse judgment when assessing overall quality, potentially because this holistic evaluation integriates various aspects of translation, facilitating clearer distinctions.
+
+% \todo{Comparing tied rates across criteria, we can find that overall has the least tied rate. This is because overall quality is the integration of multiple criteria and it is easier for annotator to make better-worse judgment.} \todo{This classification facilitates a more nuanced meta-evaluation of different evaluation methods across various criteria.} 
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=0.48\textwidth]{figures/statistics_tiny.pdf}
+%     \caption{Number of pairwise comparison data points for each combination of MT systems, shown for \textsc{en→zh} (left) and \textsc{ru→zh} (right) translation directions.}
+%     \label{fig:pairwise_data}
+% \end{figure}
+
+
+
+\begin{table}[t]
+    \centering
+    \caption{Statistics of human annotations for each criterion. $\kappa$ denotes the value of Fleiss' kappa.}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lcccc}
+        \toprule
+         &  \multicolumn{2}{c}{\textbf{\textsc{en→zh}}}&  \multicolumn{2}{c}{\textbf{\textsc{ru→zh}}}\\
+         \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+         &  \textbf{\# of pairs}&  \textbf{$\kappa$}&  \textbf{\# of pairs}&  \textbf{$\kappa $}\\
+         \midrule
+         Faithfulness& 1574 & 0.66& 1591 & 0.81\\
+         Fluency& 1574 & 0.66& 1592 & 0.76\\
+         Consistency of Style& 1568 & 0.57& 1594 & 0.62\\
+         Overall & 1574 & 0.66 & 1588 & 0.75\\
+         \bottomrule
+    \end{tabular}
+    }
+    \label{tab:human_annotation}
+\end{table}
+
+\section{Experiments}
+\label{sec:experiments}
+We investigate the efficacy of several state-of-the-art LLMs as evaluators in criterion-based pairwise MT evaluation—covering faithfulness, fluency, and stylistic consistency—and overall translation quality in the \textsc{en→zh} and \textsc{ru→zh} directions. We benchmark representative baseline methods from different evaluation paradigms and analyze their respective strengths and limitations.
+
+\subsection{Baselines}\label{sec:baselines}
+\noindent
+\textbf{Regression-Based Evaluators.} We employ four reference-free evaluation models that produce a quality score, including two versions of xCOMET~\citep{Guerreiro2023xcometTM} and two versions of COMET-Kiwi~\citep{Rei2023ScalingUC}. We compare the score of each translation candidate and obtain the overall pairwise judgment. 
+
+\noindent
+\textbf{Error-Based Evaluators.}
+We adopt two LLM-as-judge approaches, M-MAD~\citep{M-MAD} and GEMBA-MQM~\citep{GEMBA}, following their original implementations. Specifically, GEMBA-MQM uses \texttt{gpt-3.5-turbo}, while M-MAD uses \texttt{gpt-4o-mini}. To examine whether the comparison is sensitive to the choice of LLM backbone, we report additional backbone sensitivity results for these error-based baselines in Appendix~\ref{appx:controlled_backbone}. Error types in each method are mapped to our three evaluation criteria (see Table~\ref{tab:mapping} for details). For each translation candidate, we aggregate the number and severity of errors under each criterion to compute an error-based score, which yields a pairwise better-worse judgment. To derive the overall pairwise judgment, we further aggregate these three criterion-level scores by simple summation to obtain a single composite error-based score.
+
+
+% In addition, we incorporate two versions of xCOMET, an explainable reference-free evaluator trained to detect error spans along with their severities and to assign both a final quality score and an error-based numeric score. Because xCOMET does not categorize errors by type, we directly compare their error-based numeric scores for the two candidates to derive pairwise judgments of overall quality.
+
+\noindent
+\textbf{Ranking-Based Evaluators.} 
+We incorporate two versions of the state-of-the-art reference-free ranking-based evaluator \ranker~\citep{MT-RANKER} that function as a binary classifier.
+
+
+
+% \section{Experiments}
+% We evaluate the performance of several leading LLMs as evaluators for criterion-based pairwise MT evaluation across three criteria (faithfulness, fluency, and consistency of style) and overall quality in \textsc{en→zh} and \textsc{ru→zh} translation directions. We compare the baseline methods of different paradigms and discuss their potentials and shortcomings.
+
+% \subsection{Baselines}
+% \paragraph{Error-Based Evaluators.}
+% We employ two LLM-as-a-judge approaches, i.e., M-MAD and GEMBA-MQM, as they initially implemented. We map the error types used in these two methods to the three criteria respectively; the specific mappings are shown in \todo{Table X} in the Appendix. Based on the severity and number of errors for each translation candidate under each criterion, we compute an error-based score, which is then used to determine the better-worse judgment.
+% We adopt two versions of xCOMET that is an explainable reference-free evaluation model trained to identify error spans and corresponding severity in the sentence along with a final quality score and a error-based numeric score. Since it cannot output the error type, we compare the error-based numeric scores of two translation candidates and obtain the better-worse judgment for overall quality evaluation as well as three criteria. 
+
+\subsection{LLM Evaluators}
+\label{sec:llm_evaluators}
+
+We use several state-of-the-art LLMs as \ours evaluators. The set of LLM evaluators includes four open-source models: Deepseek-R1~\citep{deepseekai2025deepseekr1incentivizingreasoningcapability}, QwQ-32B~\citep{qwq32b}, Mistral-Large-Instruct, and Qwen2.5-72B-Instruct~\citep{qwen2.5}, as well as three closed-source models: GPT-4o, Claude-3.5-Sonnet, and Gemini-2.0-Flash. 
+The LLM evaluators are prompted with the source sentence and the two translation candidates, along with the specified criterion. Because the LLM evaluators occasionally return malformed or non-conforming outputs, we re-query the model until a valid judgment is obtained. In the main experiments, we report \ours with DeepSeek-R1 because it provides the strongest and most stable agreement with human annotations in our backbone ablation across criteria and language directions. For the external MQM experiments in Section~\ref{sec:mqm_datasets}, we report \ours with QwQ following the additional MQM analyses. This choice is empirical rather than architectural: \ours is backbone-agnostic, and Appendix~\ref{appx:ablation} reports results with various backbones. Appendix~\ref{appx:llminfo} lists the exact model versions, open-source status, and parameter sizes of the adopted LLMs, while Appendix~\ref{appx:prompts} provides the \ours evaluator instructions.
+
+\subsection{Metrics}
+\label{sec:metrics}
+In our experiments, percentage agreement between various evaluators and human annotators is employed to showcase their performance on the proposed criterion-based pairwise evaluation. Position consistency and fairness are used to assess the position bias of LLM evaluators.
+
+\textbf{Percentage agreement} measures the percentage of cases where the LLM evaluator's judgment aligns with the majority vote of human annotators. A higher percentage agreement indicates better alignment between LLM 
+and human annotators, reflecting the model's ability to capture human preferences and evaluate the translation quality with specified criteria.
+
+% \begin{table}[t]
+% \centering
+% \begin{minipage}{0.4\textwidth}
+%     \centering
+%     \caption{Percentage agreement between model evaluators and human annotations on ranked overall pairwise data in \enzh and \ruzhx. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction.}
+%     \resizebox{0.6\textwidth}{!}{
+%     \begin{tabular}{lcc}
+%     \toprule
+%      & \textbf{\enzhx} & \textbf{\ruzhx} \\
+%      \midrule
+%     \multicolumn{3}{c}{\textit{Regression-Based}} \\
+%     \cdashline{1-3}[4pt/4pt] \addlinespace[0.15em]
+%     KIWI-XL & 60.4 & 58.2 \\
+%     KIWI-XXL & 61.4 & 61.2 \\
+%     XCOMET-XL & 56.5 & 57.4 \\
+%     XCOMET-XXL & 55.7 & 58.0 \\
+%     \multicolumn{3}{c}{\textit{Ranking-Based}} \\
+%     \cdashline{1-3}[4pt/4pt] \addlinespace[0.15em]
+%     \rankerx-Base & 60.2 & 54.7 \\
+%     \rankerx-Large & 61.0 & 60.9 \\
+%     Claude-3.5-Sonnet & \textbf{65.5} & 64.2 \\
+%     DeepSeek-R1 & 61.7 & \textbf{66.7} \\
+%     QwQ-32B & 63.8 & 66.4 \\
+%     \bottomrule
+%     \end{tabular}
+%     }
+%     \label{tab:overall_reg_vs_rank}
+% \end{minipage}
+% \hfill
+% \begin{minipage}{0.58\textwidth}
+%     \centering
+%     \caption{The correlation between human-annotated labels in overall quality and three different criteria. Values are calculated via Fleiss' kappa.}
+%     \resizebox{0.95\textwidth}{!}{
+%     \begin{tabular}{lcc}
+%     \toprule
+%     & \textbf{\enzhx} & \textbf{\ruzhx} \\
+%     \midrule
+%     Faithfulness & 0.47 & 0.48 \\
+%     Fluency & 0.44 & 0.40 \\
+%     Consistency of Style & 0.06 & 0.00 \\
+%     \bottomrule
+%     \end{tabular}}
+%     \label{tab:human_overall}
+% \end{minipage}
+% \end{table}
+
+
+
+\textbf{Position consistency} is employed to evaluate the presence of position bias in our LLM evaluators. This metric measures how often the LLM evaluator makes the same judgment to a translation pair when their order is swapped. In simpler terms, imagine showing the LLM two translations, $y_1$ and $y_2$, and then showing the same translations again, but this time with $y_2$ first and $y_1$ second. Position consistency checks if the LLM gives the same judgment both times. It is calculated as follows:
+
+\begin{equation}
+    \frac{1}{N} \sum \mathbb{I}(\mathcal{M}(p,x,y_1,y_2) = \mathcal{M}(p,x,y_2,y_1))
+    \label{placeholder_label}
+\end{equation}
+
+\textbf{Position fairness} assesses the potential positional preferences of LLM evaluators. Specifically, after combining the data before and after swapping the translation order, it calculates the distribution of choices for each LLM evaluator. A higher value for a particular choice indicates a stronger preference by the model for that option.
+
+% \begin{table*}[ht]
+%     \centering
+%     \caption{Percentage agreement between model evaluators and human annotations on ranked pairwise data across different criteria. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction.}
+%     \vspace{0.5em}
+%     \resizebox{\linewidth}{!}{
+%     \begin{tabular}{lcccccccc}
+%         \toprule
+%          &  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Overall}&  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Overall}\\
+%          \midrule
+%          &  \multicolumn{4}{c}{\enzhx} \multicolumn{5}{c}{\ruzhx}\\
+%          \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+%          % & \multicolumn{8}{c}{\textit{Regression-Based}}\\
+%          % % \dashedline
+%          % \cdashline{1-9}[4pt/4pt] \addlinespace[0.15em]
+%          % KIWI-XXL & - & - & - & 61.4 & - & - & - & 61.2 \\
+%          % XCOMET-XXL & - & - & - & 55.7 & - & - & - & 58.0 \\
+%          % MetricX-24-XXL & - & - & - & 61.6 & - & - & - & 67.1 \\
+%          & \multicolumn{8}{c}{\textit{Error-Based}}\\
+%          % \dashedline
+%          \cdashline{1-9}[4pt/4pt] \addlinespace[0.15em]
+%           M-MAD&  45.9&  25.2&  19.3& 43.6&  55.4&  24.9&  17.5& 51.9\\
+%           GEMBA-MQM & 37.9 & 32.9 & 3.0 & 41.5 & 39.8 & 29.9 & 5.4 & 37.6\\
+%          & \multicolumn{8}{c}{\textit{Ranking-Based}}\\
+%          % \dashedline
+%          \cdashline{1-9}[4pt/4pt] \addlinespace[0.15em]
+%          DeepSeek-R1-FiRE & \textbf{64.8}& \textbf{68.7}& \textbf{61.4}& \textbf{65.3} & \textbf{72.5}& \textbf{77.9}& \textbf{66.3}&\textbf{70.1}\\
+%          \bottomrule
+%     \end{tabular}}
+%     \label{tab:criterion_err_vs_rank}
+% \end{table*}
+
+\begin{table*}[ht]
+    \centering
+    \caption{Percentage agreement between model evaluators and human annotations on ranked pairwise data across different criteria. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction.}
+    \resizebox{0.85\linewidth}{!}{
+    \begin{tabular}{lcccccc}
+        \toprule
+         &  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}&   \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}\\
+         \midrule
+         &  \multicolumn{3}{c}{\enzhx} & \multicolumn{3}{c}{\ruzhx}\\
+         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+         & \multicolumn{6}{c}{\textit{Error-Based}}\\
+         % \dashedline
+         \cdashline{1-7}[4pt/4pt] \addlinespace[0.15em]
+          M-MAD&  45.9&  25.2&  19.3&  55.4&  24.9&  17.5\\
+          GEMBA-MQM & 37.9 & 32.9 & 3.0 & 39.8 & 29.9 & 5.4 \\
+         & \multicolumn{6}{c}{\textit{Ranking-Based}}\\
+         % \dashedline
+         \cdashline{1-7}[4pt/4pt] \addlinespace[0.15em]
+         DeepSeek-R1-FiRE & \textbf{64.8}& \textbf{68.7}& \textbf{61.4} & \textbf{72.5}& \textbf{77.9}& \textbf{66.3}\\
+         \bottomrule
+    \end{tabular}}
+    \label{tab:criterion_err_vs_rank}
+\end{table*}
+
+\subsection{Results in Fine-Grained Ranking Evaluation}\label{sec:criterion_pairwise}
+
+We compare the performance of different evaluation paradigms when assessing translations based on specific quality criteria: faithfulness, fluency, and consistency of style.
+According to Table~\ref{tab:criterion_err_vs_rank}, a key finding is the consistent and substantial outperformance of our proposed fine-grained ranking evaluation over error-based methods across all criteria. Concretely, error-based metrics such as M-MAD and GEMBA-MQM reach only moderate agreement with human judgments on faithfulness and overall quality (around 38–55\%), and their agreement drops on fluency and especially consistency of style (down to single-digit or low levels), while \ours attains 64.8–72.5\% agreement on faithfulness, 68.7–77.9\% on fluency, and 61.4–66.3\% on consistency of style, yielding the strongest overall agreements (65.3\% for \enzhx, 70.1\% for \ruzhx).
+
+This performance gap stems from fundamental differences in their evaluation mechanisms. Error-based evaluators, relying on predefined error taxonomies and aggregation, excel at error diagnosis but fail to capture the nuanced differences between two translations.
+Fluency, for instance, transcends mere grammatical correctness to include naturalness and readability, while consistency of style involves subtleties of tone and register not easily captured by discrete error counts. In contrast, FiRE makes direct, criterion-guided comparative judgments, which allows it to leverage its extensive linguistic knowledge for a more nuanced assessment, evaluating how well each translation embodies the desired quality in its entirety.
+
+\begin{table}[t]
+    \centering
+    \caption{Percentage agreement between model evaluators and human annotations on ranked overall pairwise data in \enzh and \ruzhx. Values are percentages (\%); \textbf{Bold} indicates the best performance per language direction.}\label{tab:overall_reg_vs_rank}
+    \resizebox{0.8\linewidth}{!}{
+    \begin{tabular}{lcc}
+    \toprule
+     & \textbf{\enzhx} & \textbf{\ruzhx} \\
+     \midrule
+    \multicolumn{3}{c}{\textit{Regression-Based}} \\
+    \cdashline{1-3}[4pt/4pt] 
+    \addlinespace[0.15em]
+    KIWI-XL & 60.4 & 58.2 \\
+    KIWI-XXL & 61.4 & 61.2 \\
+    XCOMET-XL & 56.5 & 57.4 \\
+    XCOMET-XXL & 55.7 & 58.0 \\
+    MetricX-24-XXL & 61.6 & 67.1 \\
+    \cdashline{1-3}[4pt/4pt]
+    \addlinespace[0.15em]
+    \multicolumn{3}{c}{\textit{Error-Based}} \\
+    M-MAD & 43.6 & 51.9 \\
+    GEMBA-MQM & 41.5 & 37.6 \\
+    \multicolumn{3}{c}{\textit{Ranking-Based}} \\
+    \cdashline{1-3}[4pt/4pt] 
+    \addlinespace[0.15em]
+    \rankerx-Base & 60.2 & 54.7 \\
+    \rankerx-Large & 61.0 & 60.9 \\
+    \rankerx-XXL & 60.7 & 61.6\\
+    DeepSeek-R1-Direct-Rank & 64.3 & 66.7\\
+    % \quad w/ Claude-3.5-Sonnet & \textbf{65.5} & 64.2 \\
+    % \quad w/ DeepSeek-R1 & 64.3 & 66.7 \\
+    % \quad w/ QwQ-32B & 63.8 & 66.4 \\
+    DeepSeek-R1-\ours & \textbf{65.3} & \textbf{70.1}\\
+    % \quad w/ Claude-3.5-Sonnet & 65.1 & 68.4 \\
+    % \quad w/ DeepSeek-R1 & 65.3 & 70.1 \\
+    % \quad w/ QwQ-32B & 65.3 & \textbf{70.5} \\
+    % \oursx & \textbf{67.1} & \textbf{69.0} \\
+    \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+
+
+\subsection{Results in Overall Pairwise Evaluation}\label{sec:overall_pairwise}
+
+% Table~\ref{tab:overall_reg_vs_rank} displays the performance of the regression-based evaluators and the ranking-based evaluators in the traditional overall pairwise evaluation task. \todo{Results demonstrate that our LLM evaluators achieve the state-of-the-art performance.}
+
+
+% This section presents the performance of various MT evaluation methods in the context of a traditional overall pairwise evaluation task. The objective here is to ascertain which of the two translation candidates is globally superior, with performance measured by percentage agreement with human annotations on ranked pairwise data. The detailed results for both \enzh and \ruzh translation directions are displayed in Table~\ref{tab:overall_reg_vs_rank}.
+% Compared with established regression-based evaluators, which derive pairwise judgments by comparing individual translation scores, the LLM evaluators exhibit superior alignment with human preferences. For instance, KIWI-XXL, a strong regression baseline, achieved 61.4\% for \enzh and 61.2\% for \ruzhx, which are indicative of a reasonable correlation with human judgment. While leading LLM evaluators achieve substantially higher scores.
+
+
+We evaluate competing MT evaluation methods in the standard overall pairwise ranking setting, where the goal is to decide which of two translations is better. Performance is measured as the percentage agreement between an evaluator's decision and human annotations on our ranked pairwise benchmark. Results are reported in Table~\ref{tab:overall_reg_vs_rank}.
+
+To derive the overall pairwise judgment of error-based methods, we aggregate per-criterion scores by simple summation to obtain a single composite error-based score. For LLM evaluators, we report two variants: DeepSeek-R1-Direct-Rank, which elicits a single overall judgment by prompting; and DeepSeek-R1-\oursx, which synthesizes the fine-grained judgments on faithfulness, fluency, and consistency of style into an overall decision. \ours does not use the direct overall prompt; therefore, the direct holistic judgment and the synthesized FiRE decision may disagree and are reported separately. For each instance, the fine-grained judgments are encoded as a triple $\{c_1, c_2, c_3\}$, where $c_1, c_2, c_3 \in \{A, B, E\}$ denote the preferred translation (A or B) or a tie (E) for faithfulness, fluency, and consistency of style, respectively. We first compare how many of the three criteria favor translation A versus translation B; if A is favored more often than B, the FiRE outcome is A, and vice versa. In case of a tie, we break ties lexicographically by the criteria order—faithfulness, then fluency, then consistency of style—by selecting the first judgment that is not E as the FiRE outcome. If three criteria are ties, \ours produces E as overall.
+
+% LLM evaluators, particularly FiRE, align with human preferences substantially better than established regression-based and existing ranking-based methods.
+DeepSeek-R1-Direct-Rank attains the agreement on \enzh at 64.3\%, and DeepSeek-R1-\ours attains the best agreement (65.3\% \enzhx, 70.1\% \ruzhx). These results exceed strong regression baselines such as MetricX-24-XXL (61.6\% \enzhx, 67.1\% \ruzhx) and KIWI-XXL (61.4\% \enzhx, 61.2\% \ruzhx), as well as a dedicated ranking-based evaluator, \rankerx-XXL (60.7\% \enzhx, 61.6\% \ruzhx), indicating LLMs outperform trained metrics in ranking evaluation.
+% Moreover, synthesizing the fine-grained judgments improves agreement in nearly all cases, with average gains of 0.7 percentage points for \enzh and 3.9 percentage points for \ruzhx. 
+% Moreover, \ours aggregates the fine-grained judgments into a single decision, yielding further gains by combining complementary evidence across faithfulness, fluency, and consistency of style, reducing near-tie noise, and better matching human trade-offs. Therefore, \ours outperforms strong baselines and LLM evaluators with direct prompting. 
+Moreover, \ours aggregates the fine-grained, criterion-specific judgments into a single overall decision. This aggregation enables it to exploit complementary evidence across faithfulness, fluency, and consistency of style, to smooth out near-tie noise, and to better reflect human trade-offs among these criteria. As a result, \ours outperforms both strong metric baselines and LLM evaluators used with direct overall-ranking prompts.
+
+
+\begin{figure}[t]
+    \begin{center}
+        \includegraphics[width=\linewidth]{figures/inter_system_0516.pdf}
+        \caption{Fine-grained ranking of six MT systems based on all pairwise data in \enzh (left) and \ruzh (right).}
+    \label{fig:inter_system}
+    \end{center}
+\end{figure}
+
+\subsection{Inter-system Comparison}\label{sec:intere-system}
+
+Building upon its demonstrated high alignment with human preferences in both fine-grained (Section~\ref{sec:criterion_pairwise}) and overall (Section~\ref{sec:overall_pairwise}) ranking evaluations, FiRE can be effectively applied to conduct system-level analyses. An advantage of FiRE is its ability to move beyond a single overall ranking score by providing a fine-grained breakdown of MT system performance across multiple quality dimensions. This multi-faceted evaluation offers deeper diagnostic insights into the specific strengths and weaknesses of each system. Details for inter-system evaluation are provided in Appendix \ref{appx:inter-system evaluation}.
+
+Figure~\ref{fig:inter_system} visually represents this fine-grained ranking for the six MT systems evaluated, using all pairwise data. These radar charts clearly illustrate how systems may vary in their performance across faithfulness, fluency, and consistency of style. For example, FiRE's analysis reveals that translations from ALMA-R, while exhibiting relatively high fluency, tend to score lower on faithfulness. Conversely, Qwen2 shows notably strong stylistic consistency. Such nuanced distinctions are critical to understanding system behavior. 
+% Furthermore, the comparison across translation directions highlights differing system strengths. For instance, DeepL shows stronger performance in \enzhx, whereas Qwen2 excels in \ruzhx.
+
+This fine-grained information is a crucial complement to traditional overall system rankings (detailed overall rankings are presented in Table~\ref{tab:model_full_ranking} in Appendix). The criterion-specific rankings provided by FiRE help explain why a system achieves a certain overall rank, offering actionable insights for system developers. Importantly, the overall system rankings derived from FiRE generally correspond to an aggregation of these fine-grained assessments, which further validates the internal consistency and effectiveness of our proposed method. Thus, FiRE not only determines which system is better but also elucidates how and in what aspects it excels or falls short, paving the way for more advanced MT system development and a more complete understanding of translation quality.
+
+\begin{table}[t]
+    \centering
+    \caption{Percentage agreement between LLM evaluators and human annotations on ranked pairwise data in \enzhx. Values are percentages (\%).}
+    \resizebox{\linewidth}{!}{
+        \begin{tabular}{lcccccc}
+        \toprule
+         & \multicolumn{2}{c}{\textbf{Faithfulness}} & \multicolumn{2}{c}{\textbf{Fluency}} & \multicolumn{2}{c}{\textbf{Cons. of Style}} \\
+         \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+         & \textbf{Easy} & \textbf{Hard} & \textbf{Easy} & \textbf{Hard} & \textbf{Easy} & \textbf{Hard} \\
+         \midrule
+         % & \multicolumn{6}{c}{\enzhx} \\
+         % \cmidrule{2-7}
+        % GLM-4 &  32.0&  23.1&  40.2&  37.5&  35.3&  36.5\\
+        Qwen2.5-72B-Instruct &  43.3&  26.6&  67.1&  53.5&  62.0&  55.0\\
+        Mistral-Large-Instruct &  60.6&  47.3&  65.9&  56.1&  60.8&  55.0\\
+        % DeepSeek &  41.8&  23.1&  66.1&  52.2&  62.4& 52.1\\
+        GPT-4o &  63.4&  49.1&  70.2&  58.5&  62.7&  56.4\\
+        Claude-3.5-Sonnet &  58.2&  44.1&  69.0&  57.1&  66.3&  58.8\\
+        Gemini-2.0-Flash &  39.8&  24.9&  63.4&  54.2&  63.1&  56.4\\
+        % R1-32B & 52.5& 38.2& 62.9& 52.8& 58.0& 56.9\\
+        DeepSeek-R1 & 68.6& 57.1& 73.2& 58.5& 64.3& 57.8\\
+        QwQ-32B & 69.6 & 54.7 & 68.8 & 58.5 & 67.8 & 61.6 \\
+        % \midrule
+        % Average 
+        \midrule
+        Average& 57.6& 43.4& 68.2& 56.6& 63.8&57.3\\
+        \bottomrule
+        \end{tabular}
+    }
+    \label{tab:data_difficulty}
+    \end{table}
+
+
+\section{Analysis}
+\subsection{Impact of Data Difficulty}
+To investigate the robustness of LLM evaluators, we analyzed their performance on subsets of our benchmark stratified by difficulty. Easy cases are defined as those where all three human annotators reached a consensus, while hard cases represent instances with agreement from only two out of three annotators, indicating more subtle distinctions.
+As shown in Table~\ref{tab:data_difficulty}, LLM evaluator performance on \enzh ranked data stratified by difficulty (Easy vs. Hard) reveals a consistent decline in agreement with human annotations on harder examples across all criteria. For instance, the average performance drop from easy to hard on \enzh ranked data is 14.2\% for faithfulness, 11.6\% for fluency, and 6.5\% for consistency of style. The comprehensive results in \enzh and \ruzh, showcasing consistent trending, are displayed in Table~\ref{tab:data_difficulty_full} in the Appendix.  
+% This degradation indicates the challenges LLMs face when evaluating translations with equivalent quality.
+% This degradation highlights that LLM evaluators struggle more when tasked with discerning finer quality differences that human annotators find less straightforward.
+
+It's important to note that even large models like GPT-4o do not exhibit complete immunity to the challenges posed by increased data difficulty, despite their enhanced contextual understanding abilities and multilingual capabilities. This observation suggests that factors beyond sheer model scale contribute to robust evaluation performance, indicating the need for a multifaceted and sophisticated approach to improve LLM-based MT evaluators for criterion-based pairwise evaluation.
+
+
+
+\subsection{Bias of LLM Evaluators}
+\label{sec:evaluator bias}
+Apart from the performance of LLM evaluators, we investigate their bias in terms of position and self-enhancement. \textbf{Position bias} is the propensity of LLM evaluators to favor responses in certain positions within the prompt~\citep{Park2024OffsetBiasLD}. \textbf{Self-enhancement bias} refers to the tendency of LLM evaluators to exhibit a preference for responses generated by themselves~\citep{Ye2024JusticeOP}. 
+
+
+% \textbf{Position Bias.}
+% As described in Section~\ref{sec:metrics}, we assess the position bias in LLM evaluators from two key aspects: position consistency and position fairness. We take \enzh pairwise data as an instance and present the position consistency and fairness of evaluators in Table~\ref{tab:pos_bias}. 
+% The average position consistency across all LLM evaluators is 65.6\% for faithfulness, 67.4\% for fluency, and 65.6\% for consistency of style, suggesting that more than 30\% of LLM judgments are altered after simply swapping the order of two translation candidates. 
+% The degree of position bias varies across LLMs and criteria. For example, GPT-4o is relatively robust on fluency but less stable on faithfulness and consistency of style, whereas Gemini-2.0-Flash attains stronger position consistency on faithfulness but exhibits noticeably weaker robustness on the other two criteria. Notably, models recognized for strong reasoning capabilities, such as DeepSeek-R1 and QwQ-32B, demonstrate higher position consistency. This robustness may be attributed to their training for complex reasoning, fostering meticulous instruction adherence, a deeper focus on intrinsic semantic and logical properties over superficial cues like order, or a more systematic, order-agnostic comparison process. 
+
+\textbf{Position Bias. }As described in Section~\ref{sec:metrics}, we assess position bias using position consistency and position fairness. Taking \enzh as an example, the average position consistency across all LLM evaluators is 65.6\% for faithfulness, 67.4\% for fluency, and 65.6\% for consistency of style, indicating that more than 30\% of criterion-level judgments change after swapping the order of the two candidates. The degree of position bias varies across evaluators and criteria, with reasoning-oriented models such as DeepSeek-R1 and QwQ-32B generally showing stronger consistency. Detailed results are provided in Appendix~\ref{appx:position_bias}.
+
+To examine whether this order sensitivity mainly arises from examples with lower human agreement, we stratify position consistency by the easy/hard split and report the results in Table~\ref{tab:pos_easyhard}. The results do not show a systematic decrease from easy to hard cases: for several evaluators and criteria, hard examples exhibit comparable or even higher position consistency than easy examples. This suggests that the lower agreement with human annotations on hard cases is not solely attributable to candidate-order sensitivity; rather, data difficulty and position bias are partly orthogonal challenges for LLM-based pairwise evaluation.
+
+To further examine whether this order sensitivity is specific to FiRE or reflects a broader challenge in pairwise MT evaluation, we compare FiRE with \ranker under candidate-order swapping. As shown in Table~\ref{tab:robustness}, dedicated ranking models are also sensitive to candidate order. \rankerx-Large and \rankerx-XXL obtain 68.5\% and 62.7\% overall position consistency, respectively, while QwQ-FiRE and DeepSeek-R1-FiRE both reach 76.5\%. Although \ranker-Base achieves higher overall position consistency, position consistency alone does not fully determine practical utility, since an evaluator can be position-consistent but still poorly aligned with human judgments. These results suggest that position bias is a general issue for ranking-based MT evaluators rather than a limitation unique to FiRE.
+
+We therefore further measure percentage agreement with human annotations under both the original and swapped candidate orders. As shown in Table~\ref{tab:swap_exp}, \rankerx-Large drops from 60.9\% to 44.6\% after swapping, and \rankerx-XXL drops from 61.6\% to 41.9\%. In contrast, DeepSeek-R1-FiRE changes from 65.3\% to 65.9\%, and QwQ-FiRE changes from 65.3\% to 64.6\%. Although the criterion-level agreements of FiRE decrease under the swapped order, the synthesized overall decision remains stable. This indicates that criterion-aware aggregation can absorb part of the order-induced noise at the final decision level, supporting FiRE's practical use despite non-negligible position bias.
+
+We further study aggregation-based mitigation strategies in Appendix~\ref{appx:various_aggregation}, showing that reconciling judgments at the criterion level before aggregation remains close to the original FiRE result, whereas collapsing each order into an overall decision before consensus performs substantially worse.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/self-enhancement.pdf}
+    \caption{Self-enhancement bias of GPT-4o and Qwen2.5 in \enzh (left) and \ruzh (right). Lines extending further outwards indicate stronger favoritism. Bolded line shows the preference of the respective evaluator for translations from its own model series. Human favoritism is depicted in red.} 
+    \label{fig:self_bias}
+\end{figure*}
+
+\begin{table*}[h!t!]
+    \centering
+    \caption{Percentage agreement between model evaluators and human annotations on ranked pairwise data across different criteria. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction. \na indicates the model cannot produce criterion-based ranking.}
+    \resizebox{\linewidth}{!}{
+    \begin{tabular}{lcccccccccccc}
+        \toprule
+        & \multicolumn{4}{c}{\heenx} 
+        & \multicolumn{4}{c}{\jazhx} 
+        & \multicolumn{4}{c}{\engdex} \\
+        \cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13}
+        & \textbf{Faithfulness} & \textbf{Fluency} & \textbf{Cons. of Style} & \textbf{Overall}
+        & \textbf{Faithfulness} & \textbf{Fluency} & \textbf{Cons. of Style} & \textbf{Overall}
+        & \textbf{Faithfulness} & \textbf{Fluency} & \textbf{Cons. of Style} & \textbf{Overall} \\
+        \midrule
+        & \multicolumn{12}{c}{\textit{Regression-Based}}\\
+        \cdashline{1-13}[4pt/4pt] \addlinespace[0.15em]
+        KIWI-XL 
+        & \na & \na & \na & 67.1 
+        & \na & \na & \na & 65.3 
+        & \na & \na & \na & 65.3 \\
+        KIWI-XXL 
+        & \na & \na & \na & 69.0 
+        & \na & \na & \na & 66.7 
+        & \na & \na & \na & 66.7 \\
+        XCOMET-XL 
+        & \na & \na & \na & 62.5 
+        & \na & \na & \na & 60.7 
+        & \na & \na & \na & 64.6 \\
+        XCOMET-XXL 
+        & \na & \na & \na & 64.8 
+        & \na & \na & \na & 61.5 
+        & \na & \na & \na & \textbf{67.9} \\
+        MetricX-24-XXL 
+        & \na & \na & \na & 68.2 
+        & \na & \na & \na & 68.2 
+        & \na & \na & \na & 67.4 \\
+        & \multicolumn{12}{c}{\textit{Error-Based}}\\
+        \cdashline{1-13}[4pt/4pt] \addlinespace[0.15em]
+        M-MAD 
+        & 55.4 & 24.9 & 17.5 & 51.9 
+        & 55.6 & 35.9 & 30.9 & 56.3 
+        & 62.6 & 52.5 & 49.5 & 59.7 \\
+        GEMBA-MQM 
+        & 39.8 & 29.9 & 5.4 & 37.6 
+        & 44.3 & 34.7 & 11.0 & 44.8 
+        & 65.3 & 55.5 & 53.4 & 63.5 \\
+        & \multicolumn{12}{c}{\textit{Ranking-Based}}\\
+        \cdashline{1-13}[4pt/4pt] \addlinespace[0.15em]
+        \rankerx-Base 
+        & \na & \na & \na & 60.8 
+        & \na & \na & \na & 60.8 
+        & \na & \na & \na & 62.0 \\
+        \rankerx-Large 
+        & \na & \na & \na & 65.0 
+        & \na & \na & \na & 65.4 
+        & \na & \na & \na & 63.9 \\
+        \rankerx-XXL 
+        & \na & \na & \na & 67.3 
+        & \na & \na & \na & 67.3 
+        & \na & \na & \na & 64.5 \\
+        QwQ-FiRE 
+        & \textbf{70.8} & \textbf{52.5} & \textbf{48.6} & \textbf{69.6} 
+        & \textbf{71.0} & \textbf{60.1} & \textbf{51.5} & \textbf{72.4} 
+        & \textbf{67.0} & \textbf{59.4} & \textbf{53.7} & 66.3 \\
+        \bottomrule
+    \end{tabular}}
+    \label{tab:mqm}
+\end{table*}
+
+\textbf{Self-Enhancement Bias. }To investigate this, we analyze scenarios where translations generated by specific model versions (gpt-4o-2024-08-06 and Qwen2-72B-Instruct) were among the candidates, and these are then evaluated by slightly later versions from the same model series (gpt-4o-2024-11-20 and Qwen2.5-72B-Instruct, respectively). This setup allows us to examine if evaluators favor outputs from their own lineage. We compare the ratio of the evaluator favored its own series' output against the preferences shown by other LLM evaluators and annotators for same outputs. As illustrated in Figure~\ref{fig:self_bias}, both Qwen2.5-72B-Instruct and GPT-4o exhibit a strong tendency for their self-generated translations and deviate from human favoritism across all specified preferences in \enzh and \ruzhx. These LLM evaluators may have been extensively exposed to their own generated text during the post-training stage, particularly reinforcement learning, leading to an inherent preference for their own outputs~\citep{ChatbotArena}. This training mechanism makes the models more familiar with their own generation patterns, causing them to favor translations that align with their intrinsic probabilities instead of specified preferences during pairwise evaluation.
+We further discuss limitations and practical uses in Appendix~\ref{appx:limitations}.
+
+
+% \subsection{MQM Datasets and Low-resource Language}
+% To connect our study with existing benchmarks and to assess performance on low-resource language pairs, we conduct experiments on MQM23 Hebrew-to-English (\heenx) and MQM24 Japanese-to-Chinese (\jazhx)~\citep{freitag2021experts}. As described in Section~\ref{sec:baselines}, we map MQM error tags to three criteria (faithfulness, fluency, consistency of style) following the grouping outlined in Table~\ref{tab:mapping}, and construct the corresponding synthesized pairwise dataset. The results in Table~\ref{tab:mqm} show that \ours achieves robust performance on the MQM datasets, including low-resource language setting.
+
+
+\subsection{Generalization to MQM Datasets}\label{sec:mqm_datasets}
+
+To connect \ours with existing MQM-based benchmarks and examine whether the proposed framework generalizes beyond the two language directions in our benchmark, we further evaluate on external MQM datasets, including MQM23 Hebrew-to-English (\heenx) and MQM24 English-to-German (\engdex) and Japanese-to-Chinese (\jazhx)~\citep{freitag2021experts}. For each source sentence, we enumerate all pairwise combinations of candidate translations from the corresponding MQM annotations. We map MQM error tags to our three criteria, namely faithfulness, fluency, and consistency of style, following the grouping in Table~\ref{tab:mapping}. For each criterion, we aggregate the number and severity of the mapped MQM errors to obtain a criterion-specific error score. The translation with the lower error score is treated as the preferred output for that criterion, and the overall preference is derived from the aggregated MQM score. We remove pairs with identical translations and retain only comparisons that exhibit a clear non-tied preference for the evaluated label. This produces ranked pairwise data that can be evaluated with the same percentage-agreement metric used in our main experiments.
+
+Table~\ref{tab:mqm} shows that FiRE generalizes well to external MQM datasets. Across \heenx, \jazhx, and \engdex, QwQ-FiRE consistently outperforms error-based baselines on criterion-level judgments, especially on fluency and consistency of style, where error-count aggregation is less aligned with human preferences. On \heen and \jazhx, QwQ-FiRE also achieves the best overall agreement. On \engdex, QwQ-FiRE obtains the strongest agreement among methods that provide criterion-level judgments and remains competitive with the best scalar metric in overall ranking, while additionally providing fine-grained diagnostic feedback. These results suggest that FiRE is not restricted to the language directions used in our human-annotated benchmark and can be applied to both high-resource and lower-resource settings.
+
+
+% \subsection{Extensibility to Additional Criteria}
+% FiRE is not restricted to the three criteria used in our main experiments. To test extensibility, we add \textit{locale convention} as a fourth criterion, yielding FiREplus, while keeping the same criterion-level comparison and aggregation pipeline. Results in Appendix~\ref{appx:fireplus} suggest that FiRE can incorporate additional task-specific criteria without redesigning the framework.
+
+\subsection{Extensibility to Additional Criteria}
+FiRE is not restricted to the three criteria used in our main experiments. To examine extensibility, we introduce \textit{locale convention} as a fourth criterion, yielding FiREplus, while keeping the same criterion-level comparison and aggregation pipeline. This criterion captures whether a translation follows target-locale conventions, such as punctuation, quotation style, date and number formatting, units, and other conventionalized expressions. As detailed in Appendix~\ref{appx:fireplus}, FiREplus improves overall agreement on newly annotated 250 \enzh pairs for both DeepSeek-R1 and QwQ, and remains comparable to FiRE while outperforming Direct-Rank on the full \enzh and \ruzh benchmark. These results suggest that FiRE can incorporate additional task-specific criteria without redesigning the framework.
+
+
+
+
+
+\section{Conclusion}
+% This paper introduced FiRE, a novel fine-grained ranking framework for criterion-based pairwise MT evaluation, addressing the need for more interpretable and human-aligned reference-free methods. We also presented the first human-annotated benchmark for this task, confirming the reliability of fine-grained human judgments. FiRE outperforms existing methods in aligning with human preferences on this benchmark and existing MQM datasets, offering richer insights across three criteria-faithfulness, fluency, and consistency of style. Our analysis of LLM evaluator biases and their handling of tied cases provides crucial guidance for developing more nuanced and reliable MT evaluation.
+
+This paper introduced FiRE, a fine-grained framework for criterion-conditioned, reference-free pairwise MT evaluation. We presented a human-annotated benchmark for this setting, with substantial inter-annotator agreement across faithfulness, fluency, consistency of style, and overall quality. Across our benchmark and MQM datasets, FiRE achieves strong alignment with human preferences while providing criterion-level diagnostic feedback that holistic scores or rankings do not expose. The FiREplus analysis shows that the framework can incorporate task-specific criteria such as locale convention without changing the basic pipeline. Our analyses of position bias, and self-enhancement bias highlight both the practical value and the limitations of LLM-based evaluators, providing guidance for more reliable MT evaluation.
+
+
+\newpage
+
+\section*{Acknowledgments}
+This work has been financially supported by the National Key R\&D Program of China (Grant No. 2022YFE0204900), and by the National Natural Science Foundation of China (Grant No. 62336006).
+
+\section*{Impact Statement}
+This work aims to advance the field of machine learning by improving the evaluation of machine translation systems through a fine-grained, reference-free ranking framework. By decomposing translation quality into explicit criteria such as faithfulness, fluency, and consistency of style, the proposed method provides more interpretable and human-aligned feedback than existing evaluation paradigms. This can facilitate more reliable benchmarking of translation systems, support targeted model improvements, and ultimately contribute to the development of MT systems that better reflect human preferences across diverse use cases.
+
+More broadly, improved MT evaluation has positive downstream implications for multilingual communication, access to information, and cross-lingual knowledge transfer. By enabling clearer diagnosis of model strengths and weaknesses, especially with respect to hallucination and stylistic inconsistency, this work may help reduce the deployment of translation systems that produce fluent but unfaithful outputs in high-stakes settings such as education, public communication, and international collaboration.
+
+At the same time, our analysis in Section~\ref{sec:evaluator bias} highlights important limitations and risks of using large language models as evaluators, including position bias and self-enhancement bias. By explicitly studying and reporting these behaviors, this work promotes more responsible use of LLM-based evaluators and cautions against uncritical reliance on them as objective judges. We view this transparency as a positive contribution toward the ethical and informed application of machine learning models in evaluation pipelines.
+
+Overall, we do not foresee direct negative societal impacts arising from this work. Instead, we expect it to support more trustworthy evaluation practices and encourage the development of MT systems that are both high-performing and better aligned with human judgment.
+% \section*{Ethics statement}
+% We adhered to the ICLR Code of Ethics. Human annotators were recruited and fairly compensated, with fairness and respect ensured throughout the process. The annotators’ proficiency is presented in Table \ref{tab:annotation_background}. We built a labeled dataset based on source texts from WMT23, WMT24pp, with translations generated by language models and all sources properly cited.
+
+% \section*{Reproducibility statement}
+% We provided the details for the data collection in Section \ref{sec:data collection} and the experiment setup in Section \ref{sec:experiments} and Appendix \ref{appx:computation source}. We will release our data after the review process is completed.
+
+\bibliography{icml2026_conference}
+\bibliographystyle{icml2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+
+
+% \begin{table}[]
+% \centering
+% \caption{Differences between existing datasets and our benchmark.}
+% \resizebox{0.7\textwidth}{!}{
+% \begin{tabular}{lcccc}
+% \toprule 
+% & \multirow{2}{*}{\textbf{Multi-Criteria}} & \multicolumn{3}{c}{\textbf{Annotation Scenario}} \\
+% \cmidrule{3-5}
+% & &\multicolumn{1}{l}{\textbf{Manually}}&\multicolumn{1}{l}{\textbf{Pairwise}}&\multicolumn{1}{l}{\textbf{Reference-free}}\\
+% \midrule
+% RR08-16 & \ding{56} & \ding{52} & \ding{52} & \ding{56} \\
+% DA17-22 & \ding{56} & \ding{52} & \ding{56} & \ding{56} \\
+% MQM20-23 & \ding{52} & \ding{52} & \ding{56} & \ding{56} \\
+% ACES & \ding{56} & \ding{56} & \ding{56} & \ding{56} \\
+% Ours & \ding{52} & \ding{52} & \ding{52} & \ding{52}\\
+% \bottomrule
+% \end{tabular}}
+% \label{tab:dataset_comparison}
+% \end{table}
+
+
+
+
+% \begin{table}[]
+% \centering
+% \caption{Annotator's qualification based on CEFR\footnotemark\ proficiency levels.}
+% \resizebox{0.95\textwidth}{!}{
+% \begin{tabular}{lcccccccc}
+% \toprule 
+% \textbf{Annotator}&  \textbf{\enzh 1}&   \textbf{\enzh 2}&\textbf{\enzh 3} & \textbf{\ruzh 1}&   \textbf{\ruzh 2}&\textbf{\ruzh 3} &\textbf{\jazh 1} &\textbf{\jazh 2}\\
+% \midrule
+% English & C1 & C1 & C1 & - & - & -& - & - \\
+% Russian & - & - & - & B2 & B1 & B2 & - & - \\
+% Japanese & - & - & - & - & - & - & C1 & C1 \\ 
+% Chinese & C2 & C2 & C2 & C2 & C2 & C2 & C2 & C2\\
+% \bottomrule
+% \end{tabular}}
+% \label{tab:annotation_background}
+% \end{table}
+
+
+\newpage
+\appendix
+\onecolumn
+
+\section{Ablation Study on Using Different LLMs}\label{appx:ablation}
+Figure~\ref{fig:ablation} summarizes FiRE’s performance across LLM backbones. Most evaluators achieve comparable accuracy on fluency, consistency of style, and overall ranking; the main divergence appears on faithfulness, where Qwen2.5-72B-Instruct and Gemini-2.0-Flash lag behind. Across directions, \ruzh is slightly stronger than \enzhx. Reasoning-oriented judges (QwQ-32B and DeepSeek-R1) are more robust across criteria, suggesting that explicit reasoning is an important driver of accurate, stable judgments.
+\begin{figure*}[h]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ablation.pdf}
+    \caption{Percentage agreement of our proposed FiRE with various LLMs.}
+    \label{fig:ablation}
+\end{figure*}
+
+
+\section{Details of Adopted LLMs}\label{appx:llminfo}
+Table~\ref{tab:llm_eval} displays the adopted model versions, whether it is open-sourced or not, and the parameter sizes.
+\begin{table}[h]
+    \centering
+    \caption{Details regarding LLM evaluators in our experiments.}
+    \resizebox{0.95\textwidth}{!}{
+    \begin{tabular}{lccc}
+        \toprule
+         \textbf{Model}&  \textbf{Version}&   \textbf{Open-source}&\textbf{Parameters}\\
+         \midrule
+        %  \textbf{GLM-4-9B-Chat} &  glm-4-9b-chat&   \ding{52}&9B\\
+        \textbf{QwQ-32B} &  QwQ-32B&   \ding{52}&32B\\
+        \textbf{Qwen2.5-72B-Instruct} &  Qwen2.5-72B-Instruct&   \ding{52}&72B\\
+         \textbf{Mistral-Large-Instruct} &  Mistral-Large-Instruct-2411&   \ding{52}&123B\\
+        %  \textbf{DeepSeek-V3} &  DeepSeek-V3&   \ding{52}&671B\\
+        \textbf{DeepSeek-R1} &  DeepSeek-R1&   \ding{52}&671B\\
+        % \textbf{DeepSeek-R1-32B} &  DeepSeek-R1-Distill-Qwen-32B&   \ding{52}&32B\\
+
+         \textbf{GPT-4o} &  gpt-4o-2024-11-20&   \ding{56}&N/A\\
+         \textbf{Claude-3.5-Sonnet} &  claude-3-5-sonnet-20241022&   \ding{56}&N/A\\
+         \textbf{Gemini-2.0-Flash}&  gemini-2.0-flash&   \ding{56}&N/A\\
+         \bottomrule
+    \end{tabular}}
+    \label{tab:llm_eval}
+\end{table}
+
+\section{Prompts\label{appx:prompts}}
+\subsection{Faithfulness}
+\begin{tcolorbox}[colback=gray!10, colframe=gray!80, width=\textwidth,title=Prompt: Faithfulness, breakable]
+You are a translation evaluator. Given a triple ([source], [A], [B]), where [A] and [B] are two translation candidates. Please compare two translation candidates based on the source language text under the Given Preference with Note and making a relative evaluation of their quality. Please answer based on the analysis and write the analysis and result in the format {"analysis": {"Accuracy of Information":..., "Accuracy of Named Entities":...}, "result":...}.
+
+The marked options are divided into three categories, with the following specific meanings:
+
+\quad  - A: The quality of [A] is higher than the quality of [B]
+
+\quad  - B: The quality of [B] is higher than the quality of [A]
+
+\quad  - E: The quality of [A] is equivalent to the quality of [B], and it is impossible to distinguish the superiority or inferiority
+
+If both translations contain errors, please determine which translation has more significant errors (choose A or B), or if both have errors of similar severity (choose E).
+
+\text{}
+
+\#\#\# Preference \#\#\#
+
+Faithfulness in terms of the following aspects:
+
+\quad  1. Accuracy of Information: faithful to the original text, with no missing, incorrect, or added information.
+
+\quad  2. Accuracy of Named Entities: names of people, places, organizations, and specialized terms, as well as times, quantities, currency, ratios, and other specifics that are accurately translated.
+
+\text{}
+
+\#\#\# Translation Evaluation \#\#\#
+
+Source: \textit{$<$source text$>$}
+
+Translation A: \textit{$<$translation A$>$}
+
+Translation B: \textit{$<$translation B$>$}
+
+% Preference: Faithfulness - Combined with [source] and description of Faithfulness to compare [A] and [B] under Faithfulness only.
+
+Make pairwise evaluation with the specified preference according to previous instructions.
+\end{tcolorbox}
+
+\subsection{Fluency}
+\begin{tcolorbox}[colback=gray!10, colframe=gray!80, width=\textwidth,title=Prompt: Fluency, breakable]
+You are a translation evaluator. Given a triple ([source], [A], [B]), where [A] and [B] are two translation candidates. Please compare two translation candidates based on the source language text under the Given Preference with Note and making a relative evaluation of their quality. Please answer based on the analysis and write the analysis and result in the format {"analysis": {"Lexical Quality":..., "Syntactic Quality":..., "Punctuation":..., "Untranslated":...}, "result":...}.
+
+The marked options are divided into three categories, with the following specific meanings:
+
+\quad  - A: The quality of [A] is higher than the quality of [B]
+
+\quad  - B: The quality of [B] is higher than the quality of [A]
+
+\quad  - E: The quality of [A] is equivalent to the quality of [B], and it is impossible to distinguish the superiority or inferiority
+
+If both translations contain errors, please determine which translation has more significant errors (choose A or B), or if both have errors of similar severity (choose E).
+
+\text{}
+
+\#\#\# Preference \#\#\#
+
+Fluency in terms of the following aspects:
+
+\quad  1. Lexical Quality: Proper word choice, parts of speech, spelling, and capitalization.
+
+\quad  2. Syntactic Quality: Correct sentence structure, word order.
+
+\quad 3. Punctuation: Punctuation incorrect according to target language conventions. Missing mark from a set of paired punctuation marks, such as a missing parenthesis or quote mark.
+
+\quad 4. Untranslated: untranslated names of people or places.
+
+\text{}
+
+\#\#\# Translation Evaluation \#\#\#
+
+Source: \textit{$<$source text$>$}
+
+Translation A: \textit{$<$translation A$>$}
+
+Translation B: \textit{$<$translation B$>$}
+
+% Preference: Faithfulness - Combined with [source] and description of Faithfulness to compare [A] and [B] under Faithfulness only.
+
+Make pairwise evaluation with the specified preference according to previous instructions.
+\end{tcolorbox}
+
+\subsection{Consistency of Style}
+\begin{tcolorbox}[colback=gray!10, colframe=gray!80, width=\textwidth,title=Prompt: Consistency of Style, breakable]
+You are a translation evaluator. Given a triple ([source], [A], [B]), where [A] and [B] are two translation candidates. Please compare two translation candidates based on the source language text under the Given Preference with Note and making a relative evaluation of their quality. Please answer based on the analysis and write the analysis and result in the format \{"analysis": \{"Tone Matching":..., "Emotional Preservation":..., "Writing Style":...\}, "result":...\}.
+
+The marked options are divided into three categories, with the following specific meanings:
+
+\quad  - A: The quality of [A] is higher than the quality of [B]
+
+\quad  - B: The quality of [B] is higher than the quality of [A]
+
+\quad  - E: The quality of [A] is equivalent to the quality of [B], and it is impossible to distinguish the superiority or inferiority
+
+If both translations contain errors, please determine which translation has more significant errors (choose A or B), or if both have errors of similar severity (choose E).
+
+\text{}
+
+\#\#\# Preference \#\#\#
+
+Consistency of Style in terms of the following aspects:
+
+\quad  1. Tone Matching: The translated text’s tone should match the source, whether academic, technical, or conversational.
+
+\quad  2. Emotional Preservation: The translation should convey the original text's emotional tone or mood, whether positive, negative or neutral. The translation should maintain the original mood, whether polite, assertive, or anger…
+
+\quad 3. Writing Style: The translation should reflect the original style, whether concise and direct or detailed and thorough.
+
+\text{}
+
+\#\#\# Translation Evaluation \#\#\#
+
+Source: \textit{$<$source text$>$}
+
+Translation A: \textit{$<$translation A$>$}
+
+Translation B: \textit{$<$translation B$>$}
+
+% Preference: Faithfulness - Combined with [source] and description of Faithfulness to compare [A] and [B] under Faithfulness only.
+
+Make pairwise evaluation with the specified preference according to previous instructions.
+\end{tcolorbox}
+\subsection{Overall}
+\begin{tcolorbox}[colback=gray!10, colframe=gray!80, width=\textwidth,title=Prompt: Overall, breakable]
+You are a translation evaluator. Given a triple ([source], [A], [B]), where [A] and [B] are two translation candidates. Please compare two translation candidates based on the source language text and making a relative evaluation of their quality. Please answer based on analysis and write the analysis and result in the format \{"analysis": ..., "result":...\}.
+
+The marked options are divided into three categories, with the following specific meanings:
+
+\quad - A: The quality of [A] is higher than the quality of [B]
+
+\quad - B: The quality of [B] is higher than the quality of [A]
+
+\quad - E: The quality of [A] is equivalent to the quality of [B], and it is impossible to distinguish the superiority or inferiority
+
+If both translations contain errors, please determine which translation has more significant errors (choose A or B), or if both have errors of similar severity (choose E).
+
+\text{}
+
+\#\#\# Translation Evaluation \#\#\#
+
+Source: \textit{$<$source text$>$}
+
+Translation A: \textit{$<$translation A$>$}
+
+Translation B: \textit{$<$translation B$>$}
+
+Make pairwise evaluation with the specified preference according to previous instructions.
+\end{tcolorbox}
+
+\section{Backbone Sensitivity of Error-Based Baselines}\label{appx:controlled_backbone}
+In the main experiments, we follow the original implementations of GEMBA-MQM and M-MAD, where GEMBA-MQM uses \texttt{gpt-3.5-turbo} and M-MAD uses \texttt{gpt-4o-mini}. To examine whether the comparison is mainly driven by the choice of LLM backbone, we additionally rerun these error-based baselines with alternative backbones, including \texttt{gpt-4o-2024-11-20}, \texttt{QwQ-32B}, and \texttt{DeepSeek-R1}.
+
+Table~\ref{tab:controlled_backbone} shows that changing the backbone does not consistently improve the error-based baselines. For GEMBA-MQM, QwQ improves the overall agreement on both \enzh and \ruzh, but this improvement is accompanied by substantially lower faithfulness and fluency agreement. GPT-4o improves the consistency-of-style agreement of GEMBA-MQM, but does not improve its overall agreement. DeepSeek-R1 leads to particularly low fluency agreement. For M-MAD, replacing the original backbone with GPT-4o decreases agreement across all criteria and overall ranking on both language directions. These results indicate that stronger or reasoning-oriented LLM backbones do not automatically yield stronger error-based evaluators under the original GEMBA-MQM and M-MAD pipelines.
+
+This sensitivity is consistent with the design of these baselines: GEMBA-MQM and M-MAD are prompt-and-pipeline coupled methods whose behavior depends not only on the underlying LLM, but also on fixed prompting templates, error extraction and parsing procedures, debate or aggregation mechanisms, and severity-based score calibration. The results therefore suggest that the gap between FiRE and error-based baselines is unlikely to be solely an artifact of the LLM backbone choice.
+
+\begin{table*}[h]
+\centering
+\caption{Backbone sensitivity analysis for error-based baselines on ranked pairwise data. Values are percentage agreement (\%). Original denotes the backbone used in the original implementation of each baseline: \texttt{gpt-3.5-turbo} for GEMBA-MQM and \texttt{gpt-4o-mini} for M-MAD.}
+\label{tab:controlled_backbone}
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llcccccccc}
+\toprule
+Method & Backbone
+& \multicolumn{4}{c}{EN$\rightarrow$ZH}
+& \multicolumn{4}{c}{RU$\rightarrow$ZH} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10}
+& & Faithfulness & Fluency & Cons. of Style & Overall
+& Faithfulness & Fluency & Cons. of Style & Overall \\
+\midrule
+GEMBA-MQM & \texttt{gpt-4o-2024-11-20} & 28.2 & 29.6 & 24.5 & 27.8 & 38.2 & 25.4 & 20.5 & 34.3 \\
+GEMBA-MQM & \texttt{QwQ-32B} & 26.9 & 15.5 & 18.9 & 46.9 & 24.9 & 15.2 & 11.4 & 51.3 \\
+GEMBA-MQM & \texttt{DeepSeek-R1} & 30.8 & 8.0 & 7.5 & 29.8 & 31.1 & 8.5 & 6.4 & 32.8 \\
+GEMBA-MQM & Original & 37.9 & 32.9 & 3.0 & 41.5 & 39.8 & 29.9 & 5.4 & 37.6 \\
+\midrule
+M-MAD & \texttt{gpt-4o-2024-11-20} & 32.2 & 13.9 & 17.8 & 36.8 & 44.6 & 11.8 & 12.5 & 42.8 \\
+M-MAD & Original & 45.9 & 25.2 & 19.3 & 43.6 & 55.4 & 24.9 & 17.5 & 51.9 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+
+\section{Details of Annotation Guidelines}\label{appx:annotation guideline}
+The annotation guidelines consist of two main components. 
+The first provides an overview of the annotation task, including the input format and the overall objective. 
+The second specifies the operational definitions of the three evaluation criteria, accompanied by illustrative examples.
+
+\section{System-Level Evaluation Method}\label{appx:inter-system evaluation}
+We estimate system-level performance using a normalized Copeland scoring rule. For each system $i$, we collect all pairwise comparisons involving $i$. In a comparison between systems $i$ and $j$, system $i$ receives $+1$ point if its translation is preferred, $+0.5$ points if the two translations are judged tied, and $0$ otherwise. 
+Formally, let $\text{Wins}_{ij}$ denote the number of times system $i$ is preferred over system $j$, $\text{Ties}_{ij}$ the number of ties between $i$ and $j$, and $\text{Matches}_{ij}$ the total number of pairwise comparisons between $i$ and $j$. The score for system $i$ is
+\begin{equation}
+\text{Score}{i} = \frac{\sum_{j \ne i} \bigl(\text{Wins}_{ij} + 0.5\text{Ties}_{ij}\bigr)}{\sum_{j \ne i} \text{Matches}_{ij}}
+\end{equation}
+The final score for system $i$ is the average of these points across all comparisons involving $i$, and systems are ranked by sorting these scores in descending order. This normalization accommodates unbalanced designs where different pairs $(i,j)$ may have different numbers of comparisons.
+
+
+\section{Proficiency of Annotators}\label{appx:proficiency}
+We followed the Common European Framework of Reference for Languages (CEFR)~\citep{coe_cefr_levels}, a guideline used to describe the achievements of learners of foreign languages across Europe and in other countries, and listed the proficiency of annotators in Table~\ref{tab:annotation_background}. Six levels in the CEFR are described as follows:
+\begin{itemize}
+    \item \textbf{A1 (Breakthrough)}: Can understand and use familiar everyday expressions and very basic phrases aimed at the satisfaction of needs of a concrete type. Can introduce him/herself and others and can ask and answer questions about personal details such as where he/she lives, people he/she knows and things he/she has. Can interact in a simple way provided the other person talks slowly and clearly and is prepared to help.
+    \item \textbf{A2 (Waystage)}: Can understand sentences and frequently used expressions related to areas of most immediate relevance (e.g. very basic personal and family information, shopping, local geography, employment). Can communicate in simple and routine tasks requiring a simple and direct exchange of information on familiar and routine matters.  Can describe in simple terms aspects of his/her background, immediate environment and matters in areas of immediate need.
+    \item \textbf{B1 (Threshold)}: Can understand the main points of clear standard input on familiar matters regularly encountered in work, school, leisure, etc. Can deal with most situations likely to arise whilst travelling in an area where the language is spoken.  Can produce simple connected text on topics which are familiar or of personal interest. Can describe experiences and events, dreams, hopes \& ambitions and briefly give reasons and explanations for opinions and plans.
+    \item \textbf{B2 (Vantage)}: Can understand the main ideas of complex text on both concrete and abstract topics, including technical discussions in his/her field of specialisation. Can interact with a degree of fluency and spontaneity that makes regular interaction with native speakers quite possible without strain for either party. Can produce clear, detailed text on a wide range of subjects and explain a viewpoint on a topical issue giving the advantages and disadvantages of various options.
+    \item \textbf{C1 (Advanced)}: Can understand a wide range of demanding, longer texts, and recognise implicit meaning. Can express him/herself fluently and spontaneously without much obvious searching for expressions. Can use language flexibly and effectively for social, academic and professional purposes. Can produce clear, well-structured, detailed text on complex subjects, showing controlled use of organisational patterns, connectors and cohesive devices.
+    \item \textbf{C2 (Mastery)}: Can understand with ease virtually everything heard or read. Can summarise information from different spoken and written sources, reconstructing arguments and accounts in a coherent presentation. Can express him/herself spontaneously, very fluently and precisely, differentiating finer shades of meaning even in more complex situations.
+\end{itemize}
+\begin{table}[h]
+\centering
+\caption{Annotator's qualification based on CEFR\footnotemark\ proficiency levels.}
+\resizebox{0.95\textwidth}{!}{
+\begin{tabular}{lcccccccc}
+\toprule 
+\textbf{Annotator}&  \textbf{\enzh 1}&   \textbf{\enzh 2}&\textbf{\enzh 3} & \textbf{\ruzh 1}&   \textbf{\ruzh 2}&\textbf{\ruzh 3} \\
+\midrule
+English & C1 & C1 & C1 & - & - & - \\
+Russian & - & - & - & B2 & B1 & B2 \\
+Chinese & C2 & C2 & C2 & C2 & C2 & C2 \\
+\bottomrule
+\end{tabular}}
+\label{tab:annotation_background}
+\end{table}
+
+\section{Results of Postion Bias}\label{appx:position_bias}
+The following tables display results on positions bias experiments.
+
+\begin{table*}[h!]
+\centering
+\caption{Position bias of LLM evaluators indicated by position consistency and position fairness. Values are percentages (\%). The results of fairness are percentage choices for A/B/E.}
+\label{tab:pos_bias}
+\resizebox{\linewidth}{!}{
+    \begin{tabular}{lcccccc}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{Faithfulness}}& \multicolumn{2}{c}{\textbf{Fluency}}& \multicolumn{2}{c}{\textbf{Consistency of Style}} \\ \cmidrule{2-7}
+    & Consistency & Fairness & Consistency & Fairness & Consistency & Fairness\\
+     \midrule
+    % GLM-4-9B-Chat &  &  &  &  \\
+    % Qwen2.5-72B-Instruct &  &  &  &  \\
+    % Mistral-Large-Instruct &  &  &  &  \\
+    % DeepSeek-V3 &  &  &  &  \\
+    % GPT-4o &  &  &  &  \\
+    % Claude-3.5-Sonnet &  &  &  &  \\
+    % GLM-4 &  35.0&  19.0&  54.2&  26.8\\
+    Qwen2.5-72B-Instruct & 65.5 & 20.0 / 27.5 / 52.5 & 61.5&  32.2 / 62.0 / 5.8 & 59.5 & 32.8 / 63.8 / 3.5\\
+    Mistral-Large-Instruct & 61.0 & 39.8 / 30.5 / 29.8 & 65.0&  45.8 / 42.7 / 11.5 & 71.0 & 49.3 / 49.5 / 1.3\\
+    % DeepSeek &  55.0&  36.0&  44.5&  19.5\\
+    GPT-4o & 58.5 & 55.0 / 28.8 / 16.3 & 71.5 &  57.5 / 41.5 / 1.0 & 51.5 & 70.0 / 29.5 / 1.0\\
+    Claude-3.5-Sonnet & 63.5 & 33.3 / 32.7 / 34.0 & 67.5 & 39.5 / 52.2 / 8.3 & 70.5 & 57.5 / 41.5 / 1.0\\
+    Gemini-2.0-Flash & 72.0 & 17.3 / 18.0 / 64.8 & 55.0 & 32.8 / 55.0 / 12.2 & 59.0 & 42.8 / 52.3 / 5.0\\
+    % DeepSeek-R1-32B & 58.0 & 34.0 & 56.0 & 10.0\\
+    DeepSeek-R1 & \textbf{73.5} & 44.3 / 40.3 / 15.5 & \textbf{81.0} & 47.8 / 49.2 / 3.0 & 71.0 & 42.8 / 53.0 / 4.3\\
+    QwQ-32B & 65.5 & 49.3 / 37.0 / 13.8 & 70.0 & 39.8 / 58.3 / 2.0 & \textbf{76.5} & 50.8 / 49.2 / 0.0\\
+    % \midrule
+    % Human & N/A & 35.5 / 27.0 / 37.5 & N/A & 25.5 / 27.7 / 46.8 & N/A & 16.5 / 8.0 / 74.5\\
+    \bottomrule
+    \end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+    \centering
+    \caption{Position consistency (\%) of LLM evaluators on easy and hard subsets. Higher values indicate stronger robustness to candidate-order swapping.}
+    \label{tab:pos_easyhard}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{lcccccccccccc}
+        \toprule
+        \multirow{3}{*}{\textbf{Model}} 
+        & \multicolumn{6}{c}{\textbf{\enzhx}} 
+        & \multicolumn{6}{c}{\textbf{\ruzhx}} \\
+        \cmidrule(lr){2-7} \cmidrule(lr){8-13}
+        & \multicolumn{2}{c}{\textbf{Faithfulness}} 
+        & \multicolumn{2}{c}{\textbf{Fluency}} 
+        & \multicolumn{2}{c}{\textbf{Cons. of Style}} 
+        & \multicolumn{2}{c}{\textbf{Faithfulness}} 
+        & \multicolumn{2}{c}{\textbf{Fluency}} 
+        & \multicolumn{2}{c}{\textbf{Cons. of Style}} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+        \cmidrule(lr){8-9} \cmidrule(lr){10-11} \cmidrule(lr){12-13}
+        & \textbf{Easy} & \textbf{Hard} 
+        & \textbf{Easy} & \textbf{Hard} 
+        & \textbf{Easy} & \textbf{Hard}
+        & \textbf{Easy} & \textbf{Hard} 
+        & \textbf{Easy} & \textbf{Hard} 
+        & \textbf{Easy} & \textbf{Hard} \\
+        \midrule
+        Qwen2.5-72B-Instruct & 61.7 & 74.6 & 65.1 & 51.1 & 61.3 & 50.0 & 68.7 & 54.1 & 54.6 & 62.2 & 50.6 & 50.0 \\
+        Mistral-Large-Instruct & 59.6 & 64.4 & 67.1 & 59.6 & 74.4 & 57.9 & 57.1 & 62.2 & 60.7 & 75.7 & 71.7 & 65.6 \\
+        GPT-4o & 56.7 & 62.7 & 78.3 & 51.1 & 48.7 & 63.2 & 69.9 & 73.0 & 79.1 & 83.8 & 63.9 & 56.2 \\
+        Claude-3.5-Sonnet & 63.1 & 64.4 & 69.1 & 61.7 & 71.3 & 65.8 & 58.9 & 48.6 & 69.3 & 59.5 & 66.9 & 68.8 \\
+        Gemini-2.0-Flash & 75.2 & 64.4 & 56.6 & 48.9 & 58.1 & 63.2 & 77.3 & 73.0 & 58.9 & 73.0 & 61.4 & 65.6 \\
+        DeepSeek-R1 & 74.5 & 71.2 & 81.6 & 80.9 & 71.9 & 65.8 & 74.8 & 75.7 & 77.3 & 73.0 & 72.3 & 78.1 \\
+        QwQ-32B & 60.3 & 78.0 & 73.0 & 61.7 & 80.0 & 63.2 & 73.6 & 75.7 & 76.1 & 89.2 & 74.7 & 81.2 \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table*}
+
+\begin{table*}[h!]
+    \centering
+    \caption{Position consistency (\%) of different evaluators on \enzh ranked data. Higher values indicate greater robustness to position bias, i.e., the evaluator is more likely to make the same judgment when the order of the two translation candidates is swapped. \text{\na} indicates that the model does not produce criterion-level judgments and therefore cannot be evaluated on Faithfulness, Fluency, or Consistency of Style.}
+    \resizebox{0.7\linewidth}{!}{
+    \begin{tabular}{lcccc}
+        \toprule
+         &  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Overall}\\
+         \midrule
+          {\rankerx}-Base &  \na &  \na &  \na &  79.1\\
+          {\rankerx}-Large &  \na &  \na &  \na & 68.5\\
+          {\rankerx}-XXL &  \na &  \na &  \na &  62.7\\
+          QwQ-FiRE & 72.4 & 72.5 & 72.6 & 76.5\\   
+         DeepSeek-R1-FiRE & 68.6 & 74.4 & 68.2 & 76.5\\ 
+         \bottomrule
+    \end{tabular}}
+    \label{tab:robustness}
+\end{table*}
+
+
+\begin{table*}[h!]
+    \centering
+    \caption{Percentage agreement (\%) with human annotations on \enzh ranked data under the original and swapped candidate orders, used to assess robustness to position bias. Higher values indicate better alignment with human judgments. In the swapped setting, we keep the source sentence, evaluator, and prompt structure unchanged, and only exchange the positions of the two translation candidates, i.e., from (Source, A, B) to (Source, B, A).  \text{\na} indicates that the model does not produce criterion-level judgments and therefore cannot be evaluated on Faithfulness, Fluency, or Consistency of Style.}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{lcccccccc}
+        \toprule
+         &  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Overall}&  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Overall}\\
+         \midrule
+         &  \multicolumn{4}{c}{Original Order (Source, A, B)} & \multicolumn{4}{c}{Swapped Order (Source, B, A)}\\
+         \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+         \rankerx-Base & \na &   \na &  \na &  54.7 &  \na&  \na&  \na& 49.7\\
+         \rankerx-Large & \na &   \na &  \na &  60.9 &  \na&  \na&  \na& 44.6\\
+         \rankerx-XXL & \na &   \na &  \na &  61.6 &  \na&  \na&  \na& 41.9\\
+         QwQ-FiRE & 64.7 & 65.6 & 65.0 & 65.3 & 59.5 & 55.0 & 52.3 & 64.6\\
+         DeepSeek-R1-FiRE & 64.8 & 68.7 & 61.4 & 65.3 & 59.2 & 59.0 & 49.8 & 65.9 \\
+         \bottomrule
+    \end{tabular}
+    }
+    \label{tab:swap_exp}
+\end{table*}
+
+\section{Aggregation Strategies for Mitigating Position Bias}\label{appx:various_aggregation}
+
+ 
+
+\begin{table*}[h!]
+\centering
+\caption{Percentage agreement (\%) with human annotations on \enzh ranked data under different strategies for aggregating FiRE predictions from the original and swapped candidate orders. Higher values indicate better alignment with human judgments. The table compares three families of aggregation strategies for mitigating position bias: (A) directly aggregating all six criterion-level judgments from both orders; (B) first reconciling the two orders at the criterion level, then aggregating to an overall decision; and (C) first producing one overall decision per order, then taking consensus between the two overall decisions. ``Original Aggregation of 3 Criteria'' denotes the aggregation method used in the main paper based on a single evaluation order. $^{*}$ uses criterion weights $(2/1.5/1/2/1.5/1)$ across the six judgments, and $^{\dagger}$ uses $(2/2/1/2/2/1)$.}
+    \resizebox{0.75\textwidth}{!}{
+    \begin{tabular}{lcc}
+         \toprule
+         & \textbf{DeepSeek-R1-FiRE} & \textbf{QwQ-FiRE} \\
+         \midrule
+         Original Aggregation of 3 Criteria & 65.3 & 65.3 \\
+         \cdashline{1-3}[4pt/4pt] \addlinespace[0.15em]
+         A1. Weighted Voting of 6 Criteria$^{*}$ & 65.1 & 64.6 \\
+         A2. Weighted Voting of 6 Criteria$^{\dagger}$ & 64.1 & 61.7 \\
+         B. Criterion Consensus $\rightarrow$ Aggregation & 65.9 & 64.6 \\
+         C. Aggregation $\rightarrow$ Overall Consensus & 54.1	& 53.8 \\
+         \bottomrule
+    \end{tabular}}
+    \label{tab:aggregation_strategy}
+\end{table*}
+
+\section{Extensibility Analysis with FiREplus}
+\label{appx:fireplus}
+
+To further examine whether FiRE can be extended beyond the three criteria used in the main experiments, we introduce FiREplus by adding a fourth criterion, \textit{locale convention}. This criterion evaluates whether a translation follows target-locale conventions in surface form and presentation, including punctuation and quotation styles, date and number formatting, units, and other conventionalized target-language expressions. The purpose of this analysis is not to propose a new fixed set of criteria, but to test whether the FiRE framework can incorporate additional practically motivated dimensions without changing its basic evaluation paradigm.
+
+FiREplus follows the same criterion-level pairwise evaluation procedure as FiRE. The evaluator is prompted with the source sentence, two translation candidates, and the specified criterion. The resulting criterion-level judgments are then incorporated into the same aggregation procedure used for FiRE to derive an overall decision. In this analysis, locale convention is added as an additional criterion while the original three criteria remain unchanged. We newly annotate 250 \enzh pairs with three professional annotators for the locale convention criterion. The annotation achieves Fleiss' $\kappa=0.553$, indicating substantial agreement on this new dimension.
+
+Table~\ref{tab:fireplus_250} reports results on the newly annotated 250 \enzh pairs. DeepSeek-R1-FiREplus achieves 77.6\% agreement on locale convention, while QwQ-FiREplus achieves 60.0\%. Incorporating this criterion improves the aggregated overall agreement for both evaluated backbones: DeepSeek-R1 improves from 63.2\% to 64.8\%, and QwQ improves from 65.2\% to 67.6\%. Table~\ref{tab:fireplus_full} further reports overall ranking agreement on the full ranked \enzh and \ruzh benchmark. Since the full benchmark does not contain human annotations for locale convention, we evaluate only the synthesized overall decisions against the existing human overall labels. FiREplus remains competitive with FiRE and consistently outperforms Direct-Rank, suggesting that adding a new criterion does not require redesigning the overall evaluation pipeline.
+
+\begin{table}[ht]
+    \centering
+    \caption{Percentage agreement (\%) between evaluators and human annotators on the newly annotated 250 \enzh pairs. Higher values indicate better agreement with human judgments. \text{\na} indicates that the evaluator does not produce judgments for the corresponding criterion.}
+    \resizebox{0.8\textwidth}{!}{
+    \begin{tabular}{lccccc}
+        \toprule
+         &  \textbf{Faithfulness}&  \textbf{Fluency}&  \textbf{Cons. of Style}& \textbf{Locale Convention}& \textbf{Overall}\\
+         \midrule
+          DeepSeek-R1-Direct-Rank &  \na &  \na &  \na & \na & 61.2\\
+          DeepSeek-R1-FiRE & 65.6 & 68.9 & 61.2 & \na & 63.2\\
+          DeepSeek-R1-FiREplus & 65.6 & 68.9 & 61.2 & 77.6 & 64.8\\
+          \cdashline{1-6}[4pt/4pt] \addlinespace[0.15em]
+          QwQ-Direct-Rank &  \na &  \na &  \na & \na & 61.6\\
+          QwQ-FiRE &61.8 & 68.9 & 68.2 & \na & 65.2\\
+          QwQ-FiREplus &61.8 & 68.9 & 68.2 & 60.0 & 67.6\\ 
+         \bottomrule
+    \end{tabular}}
+    \label{tab:fireplus_250}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Percentage agreement (\%) between evaluators and human annotators on overall ranking for the full ranked \enzh and \ruzh benchmark. Higher values indicate better agreement with human judgments.}
+    \resizebox{0.45\textwidth}{!}{
+    \begin{tabular}{lcc}
+        \toprule
+         &  \textbf{\enzhx}&  \textbf{\ruzhx}\\
+         \midrule
+          DeepSeek-R1-Direct-Rank &  64.3 &  66.7\\
+          DeepSeek-R1-FiRE &  65.3 &  70.1\\
+          DeepSeek-R1-FiREplus &  65.4 &  69.3\\
+          \cdashline{1-3}[4pt/4pt] \addlinespace[0.15em]
+          QwQ-Direct-Rank &  63.8 &  66.4\\
+          QwQ-FiRE &  65.3 &  70.5\\
+          QwQ-FiREplus &  65.3 &  69.7\\
+         \bottomrule
+    \end{tabular}}
+    \label{tab:fireplus_full}
+\end{table}
+
+\section{Ranked v.s. Tied}
+The results of ranked data versus tied data, shown in Table~\ref{tab:results_percentage_agreement}, reveal a critical challenge for LLMs in recognizing and evaluating translation pairs deemed equivalent by human annotators. This difficulty is particularly pronounced for fluency and consistency of style, as demonstrated by GPT-4o's extremely low 2.2\% agreement on \enzh fluency-tied data. This suggests that LLMs struggle to discern subtle differences in translation quality when the options are very close, often resorting to making distinctions even when human annotators perceive parity. This tendency to over-discriminate could stem from the LLMs' training on large datasets where they are primarily tasked with identifying the best option, potentially hindering their ability to recognize and accept equally valid translations. 
+
+Future work should explore methods to better calibrate LLMs for recognizing equivalence, potentially through targeted training on tied pairs or by developing prompting strategies that explicitly encourage consideration of similarity. Our benchmark, by including distinct labels for ranked and tied comparisons, provides an essential resource for studying this phenomenon and driving progress in developing more nuanced evaluators.
+
+\begin{table*}[h!]
+    \centering
+    \caption{Percentage agreement between LLM evaluators and human annotations across different criteria in \enzh and \ruzhx. \textbf{Ranked} data points represent pairwise comparisons where one translation candidate is preferred ($y_1 \succ y_2$ or $y_2 \succ y_1$). \textbf{Tied} data points indicate equivalent candidates ($y_1 \sim y_2$). Values are percentages (\%); \textbf{bold} indicates the best performance per criterion and language direction.}
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{lcccccccccccc}
+            \toprule
+            & \multicolumn{6}{c}{\enzhx} & \multicolumn{6}{c}{\ruzhx} \\
+            \cmidrule(lr){2-7} \cmidrule(lr){8-13}
+            & \multicolumn{2}{c}{\textbf{Faithfulness}} & \multicolumn{2}{c}{\textbf{Fluency}} & \multicolumn{2}{c}{\textbf{Consistency of Style}} & \multicolumn{2}{c}{\textbf{Faithfulness}} & \multicolumn{2}{c}{\textbf{Fluency}} & \multicolumn{2}{c}{\textbf{Consistency of Style}} \\
+            \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11} \cmidrule(lr){12-13}
+            & \textbf{Ranked} & \textbf{Tied} & \textbf{Ranked} & \textbf{Tied} & \textbf{Ranked} & \textbf{Tied} & \textbf{Ranked} & \textbf{Tied} & \textbf{Ranked} & \textbf{Tied} & \textbf{Ranked} & \textbf{Tied} \\
+            \midrule
+            Qwen2.5-72B-Instruct & 38.1 & 66.4 & 62.9 & 12.5 & 58.8 & 5.1 & 58.0 & 50.5 & 72.5 & 10.0 & 58.6 & 2.2 \\
+            Mistral-Large-Instruct & 56.3 & 42.8 & 62.3 & 12.6 & 58.2 & 3.1 & 64.4 & 33.2 & 72.4 & 7.1 & 58.9 & 1.5 \\
+            % DeepSeek-V3 & 35.7 & \textbf{77.2} & 61.8 & 30.6 & 57.7 & 17.0 & 54.3 & 65.0 & 74.2 & 26.2 & 60.9 & 13.6 \\
+            GPT-4o & 58.7 & 36.5 & 66.6 & 2.2 & 59.9 & 2.8 & 69.5 & 22.1 & 75.1 & 2.0 & 59.6 & 1.4 \\
+            Claude-3.5-Sonnet & 53.5 & 45.5 & 65.4 & 11.5 & 62.9 & 2.5 & 64.5 & 41.9 & 73.8 & 10.0 & 64.0 & 2.5 \\
+            Gemini-2.0-Flash & 34.9 & 74.5 & 60.5 & 18.3 & 60.1 & 7.1 & 56.9 & 63.9 & 71.8 & 12.5 & 61.6 & 4.1 \\
+            DeepSeek-R1 & \textbf{64.8} & 22.0 & \textbf{68.7} & 6.3 & 61.4 & 2.9 & \textbf{72.5} & 10.3 & \textbf{77.9} & 2.6 & \textbf{66.3} & 1.6 \\
+            QwQ-32B & 64.7 & 21.8 & 65.6 & 4.0 & \textbf{65.0} & 1.0 & 71.0 & 12.7 & 72.7 & 1.8 & \textbf{66.3} & 0.6 \\
+            \bottomrule
+        \end{tabular}
+    }
+    \label{tab:results_percentage_agreement}
+\end{table*}
+
+\section{Details of Translation Systems}\label{appx:mt_systems}
+The details of the adopted MT systems during data collection are displayed in Table~\ref{tab:mt_systems}.
+
+\begin{table}[h]
+    \centering
+    \caption{Details of MT Systems. N/A indicates disclosed information.}
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{lcccc}
+    \toprule
+    \textbf{MT System} & {Version/Date} & \textbf{Open-source}  & \textbf{Parameters} & \textbf{Architecture}\\
+    \midrule
+    NLLB-200-1.3B & HuggingFace & \ding{52} & 1.3B & Encoder-Decoder \\
+    ALMA-13B-R & HuggingFace & \ding{52} & 13B & Decoder-only \\
+    Qwen2-72B-Instruct & HuggingFace & \ding{52} & 72B & Decoder-only\\
+    GPT-4o & gpt-4o-2024-08-06 &\ding{56} & N/A & Decoder-only \\
+    DeepL & 2024-11-14 & \ding{56} & N/A & N/A \\
+    LanMT & 2024-11-20 & \ding{56} & N/A & N/A \\
+    \bottomrule
+    \end{tabular}}
+    \label{tab:mt_systems}
+\end{table}
+
+\section{Computation Source}
+\label{appx:computation source}
+
+All the experiments were done on NVIDIA A100 GPUs with 80G memory and CUDA 11.2, with driver 460.106.00. 
+For \rankerx, we used a single GPU for the deployment of \rankerx-Base, a single GPU for \rankerx-Large respectively, and two GPUs for \rankerx-XXL. 
+For LLM evaluators, we call the API of GPT-4o, Claude-3.5-Sonnet, Gemini-2.0-Flash, Mistral-Large-Instruct, and DeepSeek-R1. We use GPUs for the development of Qwen2.5-72B-Instruct, and QwQ-32B.
+
+\section{The use of NLLB-200-1.3B and Downsampling}\label{appx:nllb and downsampling}
+Our goal in constructing the dataset was to cover a broad spectrum of translation quality, from relatively weak to very strong systems. We therefore deliberately included models of different scales and types, ranging from NLLB-200-1.3B through 13B and 72B LLMs to strong commercial systems. During pilot annotation, however, we observed that NLLB-200-1.3B produced substantially worse translations than the other systems, making many pairs involving this model extremely easy to judge (annotators almost always deemed it clearly inferior). Such trivial comparisons offer limited value for analyzing fine-grained human preferences and for differentiating strong evaluators. Consequently, we downsampled pairs involving NLLB-200-1.3B to prevent these easy cases from dominating the benchmark. This choice was not driven by hardware limitations—we could have used larger NLLB variants—but by annotation quality and dataset balance considerations. Our main findings are instead supported by comparisons among modern, strong systems (Qwen2-72B, GPT-4o, DeepL, LanMT, ALMA-13B-R), and are robust to the presence of weaker models.
+
+\section{Limitations and Practical Use.}\label{appx:limitations}
+FiRE relies on LLM-based pairwise evaluation and is therefore more costly than scalar metrics such as COMET-Kiwi or XCOMET. It is thus better suited for high-fidelity meta-evaluation and system diagnosis than for real-time or massive-scale low-cost scoring. FiRE also inherits evaluator-side biases, including position bias and self-enhancement bias. These risks can be mitigated by using evaluators with stronger position consistency, evaluating both candidate orders when higher reliability is required, and avoiding same-family evaluators when assessing a model's own outputs. For system-level ranking, exhaustive all-pairs comparison scales quadratically, but it is not required by FiRE: the normalized Copeland aggregation supports unbalanced comparison graphs, allowing subsampled, anchor-based, or tournament-style schedules for larger-scale evaluation.
+
+\section{Future Directions}
+\subsection{Sentence-level v.s. Paragraph-/Document-level} Following most prior MT meta-evaluation benchmarks, we operate at the segment (sentence) level, where each data point consists of one source sentence and two translation candidates. While this design facilitates controlled comparison with existing metrics, recent studies have shown that paragraph- and document-level evaluation are important for machine translation~\citep{deutsch2023training,Sun2024FineGrainedAM}. The proposed framework, FiRE, itself is agnostic to segment length and can, in principle, be applied to paragraphs or documents. Therefore, extending \ours to paragraph- and document-level evaluation and curating more fine-grained ranking evaluation benchmark at the paragraph-level or document-level are important directions for future work. 
+\subsection{Position Bias of Human Annotators}
+Our analysis of position bias focuses on LLM evaluators because, unlike humans, they do not have long-term memory of previously seen samples, making position bias a more intrinsic modeling issue. In contrast, human annotators may implicitly remember sentences or earlier judgments during the annotation process, which could introduce confounding effects (e.g., recall or learning bias) when re-presenting the same pairs in reversed order. To avoid such potential contamination and ensure fair experimental conditions, we therefore did not conduct a detailed position consistency study on human annotators in this work. However, it could provide valuable information for the community if researchers can solve this dilemma and study the position bias of human annotators.
+
+
+
+\section{Annotated Japanese-to-Chinese Dataset from WMT24++}
+We additionally evaluate \ours and other baselines on a JA→ZH test set from WMT24++, using the same annotation protocol described in Section~\ref{sec:data collection}. Results are displayed in Table~\ref{tab:jazh_full}. On this dataset, we again observe: 1) high inter-annotator agreement across the three criteria. 2) consistent results that FiRE outperforms strong baselines and remains robust across criteria.
+
+
+\begin{table}[ht]
+    \centering
+    \caption{Percentage agreement between model evaluators and human annotations on ranked pairwise data across different criteria in \jazhx. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction. $\dagger$ indicates Synthesized FiRE.}
+    \resizebox{0.8\textwidth}{!}{
+    \begin{tabular}{lcccc}
+        \toprule
+         &  Faithfulness&  Fluency&  Cons. of Style& Overall\\
+         \midrule
+         
+         &  \multicolumn{4}{c}{\jazhx}\\
+         \cmidrule{2-5}
+        % \multicolumn{5}{c}{\enzhx}\\
+        % \cmidrule{1-5}
+         \multicolumn{5}{c}{\textit{Error-Based}}\\
+         % \dashedline
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          M-MAD& 61.9  & 39.6  & 28.3  & 60.2 \\
+          GEMBA-MQM & 46.7 & 41.6 & 10.5 & 46.9 \\
+          XCOMET-XL (MQM)&  --&  --&  --& 28.6 \\
+          XCOMET-XXL (MQM)&  --&  --&  --& 32.8 \\
+          \multicolumn{5}{c}{\textit{Regression-Based}}\\
+         % \dashedline
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          KIWI-XL&  --&  --&  --& 66.9 \\
+          KIWI-XXL&  --&  --&  --& 74.3 \\
+          XCOMET-XL&  --&  --&  --&  65.3\\
+          XCOMET-XXL&  --&  --&  --&  65.9\\
+          MetricX-24-XXL & --& --& --&  76.1\\
+          \multicolumn{5}{c}{\textit{Ranking-Based}}\\
+         % \dashedline
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          {\rankerx}-Base &  --&  --&  --&  65.0\\
+          {\rankerx}-Large &  --&  --&  --& 70.3\\
+          {\rankerx}-XXL &  --&  --&  --&  75.7\\
+         % GLM-4-9B-Chat &  29.1&  39.4&  35.8& 49.2\\
+         Qwen2.5-72B-Instruct & 73.3 & 76.6 & 80.0  & 79.4 / 78.6$^{\dagger}$\\
+         Mistral-Large-Instruct & 81.0 & 80.3 & 84.9 & 84.0 / \textbf{84.7}$^{\dagger}$\\
+         GPT-4o & 80.6 & 80.8 & 80.2 & \textbf{85.1} / 80.5$^{\dagger}$\\
+         Claude-3.5-Sonnet & \textbf{81.6} & \textbf{82.5} & \textbf{85.3} &  83.7 / 83.7$^{\dagger}$\\
+         Gemini-2.0-Flash & 60.1 & 74.8 & 74.4 & 75.1 / 77.7$^{\dagger}$\\
+         % DeepSeek-R1-32B&  47.8&  59.8&  57.5& 56.9\\
+         DeepSeek-R1 & 78.9 & 81.0 & 78.1 & 81.2 / 82.5$^{\dagger}$\\
+         QwQ-32B & 78.9 & 80.1 & 77.3 & 80.9 / 81.9$^{\dagger}$\\         % Human-Overall & 65.0 & 62.9 & 38.8 & 100\\ 这一行的结果包含了ranked和tied，纯粹的ranked能达到80至90
+         \bottomrule
+    \end{tabular}}
+    \label{tab:jazh_full}
+\end{table}
+
+
+\section{Majority Vote v.s. Per-annotator Comparison}
+We follow the common practice in MT studies of using the majority vote as the gold label for meta-evaluation. Individual annotations might be noisy, and using the majority vote reduces variance and provides a more stable target, especially in our 3-annotator, 3-class setting. This is also consistent with how we compute Fleiss’ kappa in Table~\ref{tab:human_annotation}, where the aggregated labels summarize substantial inter-annotator agreement. Table~\ref{tab:per-annotator} displays the percentage agreement between LLM evaluators and each human annotator, indicating similar results and a consistent trend of majority vote.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figures/annotation_page.pdf}
+    \caption{An example of annotation interface.} 
+    \label{fig:annotation_interface}
+\end{figure}
+
+
+\begin{table}[h]
+\centering
+\caption{Statistics of human-annotated dataset.}
+\resizebox{0.7\textwidth}{!}{
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{4}{c}{\textbf{\enzhx}} & \multicolumn{4}{c}{\textbf{\ruzhx}} \\
+ \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+ & \multicolumn{2}{c}{\textbf{Label}} & \multicolumn{2}{c}{\textbf{Difficulty}} & \multicolumn{2}{c}{\textbf{Label}} & \multicolumn{2}{c}{\textbf{Difficulty}} \\
+ \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+ & \textbf{Ranked} & \textbf{Tied} & \textbf{Easy} & \textbf{Hard} & \textbf{Ranked} & \textbf{Tied} & \textbf{Easy} & \textbf{Hard} \\
+ \midrule
+Faithfulness &  1029&  545&  1073&  501&  727&  864&  1324&  267\\
+Fluency &  973&  601&  1069&  505&  710&  882&  1259&  333\\
+Consistency of Style &  466&  1102&  1102&  466&  297&  1297&  1308&  286\\
+Overall &  1317&  257&  1102&  472&  1239&  349&  1216& 372\\
+\bottomrule
+\end{tabular}
+}
+\label{tab:data_stat_full}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Mapping between error types and three criteria.}
+\resizebox{0.7\textwidth}{!}{
+\begin{tabular}{lcc}
+\toprule
+                     & \textbf{M-MAD}                 & \textbf{GEMBA-MQM}                              \\
+                     \midrule
+Faithfulness         & Accuracy, Terminology & Accuracy, Terminology, Non-translation \\
+Fluency              & Fluency               & Fluency                                \\
+Consistency of Style & Style                 & Style  \\
+\bottomrule
+\end{tabular}}
+\label{tab:mapping}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \caption{Percentage agreement between model evaluators and three human annotations (Annotator1 / Annotator2 / Annotator3) on ranked pairwise data across different criteria in \enzh and \ruzhx. Values are percentages (\%).}
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{lcccc}
+        \toprule
+         &  Faithfulness&  Fluency&  Cons. of Style& Overall\\
+         \midrule
+         &  \multicolumn{4}{c}{\enzhx}\\
+         \cmidrule{2-5}
+         \multicolumn{5}{c}{\textit{Error-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          M-MAD& 45.6 / 44.8 / 46.4 & 23.8 / 24.5 / 26.0 & 19.3 / 19.7 / 19.4 & 43.6 / 42.0 / 44.9 \\
+          GEMBA-MQM & 38.7 / 39.5 / 37.5 & 31.2 / 30.5 / 33.7 & 2.5 / 3.3 / 2.7 & 41.9 / 41.3 / 41.3 \\
+          XCOMET-XL (MQM)&  --&  --&  --&  57.6 / 55.6 / 57.5 \\
+          XCOMET-XXL (MQM)&  --&  --&  --& 57.1 / 54.7 / 55.0 \\
+          \multicolumn{5}{c}{\textit{Regression-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          KIWI-XL&  --&  --&  --& 61.3 / 60.0 / 61.3 \\
+          KIWI-XXL&  --&  --&  --& 61.6 / 60.3 / 61.0 \\
+          XCOMET-XL&  --&  --&  --& 57.6 / 55.6 / 57.5 \\
+          XCOMET-XXL&  --&  --&  --& 57.1 / 54.7 / 55.0 \\
+          MetricX-24-XXL & --& --& --& 62.2 / 61.6 / 60.3 \\
+          \multicolumn{5}{c}{\textit{Ranking-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          {\rankerx}-Base &  --&  --&  --& 60.1 / 58.8 / 59.0 \\
+          {\rankerx}-Large &  --&  --&  --& 59.8 / 60.5 / 60.5 \\
+          {\rankerx}-XXL &  --&  --&  --& 61.2 / 59.4 / 59.4 \\
+         Qwen2.5-72B-Instruct & 38.0 / 37.7 / 38.4 & 62.1 / 61.7 / 62.7 & 58.7 / 60.2 / 57.0 & 63.6 / 63.2 / 63.3 \\
+         Mistral-Large-Instruct & 53.9 / 55.1 / 55.4 & 60.5 / 59.8 / 63.9 & 57.1 / 55.6 / 59.9 & 63.0 / 62.2 / 63.6 \\
+         GPT-4o & 57.6 / 58.8 / 57.6 & 65.2 / 63.1 / 67.8 & 56.1 / 62.9 / 58.7 & 63.3 / 63.6 / 63.6 \\
+         Claude-3.5-Sonnet & 52.4 / 51.1 / 53.5 & 64.2 / 62.5 / 64.6 & 59.1 / 60.6 / 63.6 & 64.3 / 63.1 / 64.1 \\
+         Gemini-2.0-Flash & 33.4 / 34.1 / 35.0 & 58.6 / 56.9 / 62.3 & 55.9 / 59.7 / 60.1 & 61.1 / 60.0 / 61.9 \\
+         DeepSeek-R1& 63.5 / 61.9 / 65.9 & 67.1 / 65.6 / 71.1 & 59.4 / 59.5 / 63.0 & 64.4 / 63.2 / 66.2 \\
+         QwQ-32B& 63.3 / 63.6 / 64.4 & 64.1 / 63.7 / 67.6 & 62.2 / 63.5 / 65.1 & 64.4 / 64.5 / 65.3 \\
+         \midrule
+         &  \multicolumn{4}{c}{\enzhx}\\
+         \cmidrule{2-5}
+         \multicolumn{5}{c}{\textit{Error-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          M-MAD& 56.4 / 54.5 / 54.1 & 24.3 / 23.6 / 26.0 & 16.3 / 17.6 / 16.2 & 52.1 / 51.3 / 51.2 \\
+          GEMBA-MQM & 45.4 / 45.3 / 43.4 & 30.0 / 29.5 / 29.9 & 4.9 / 5.9 / 5.5 & 42.1 / 43.0 / 42.0 \\
+          XCOMET-XL (MQM)&  --&  --&  --& 57.3 / 57.0 / 58.7 \\
+          XCOMET-XXL (MQM)&  --&  --&  --& 56.5 / 58.2 / 57.5 \\
+          \multicolumn{5}{c}{\textit{Regression-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          KIWI-XL&  --&  --&  --& 57.7 / 58.2 / 57.8 \\
+          KIWI-XXL&  --&  --&  --& 60.5 / 61.2 / 61.3 \\
+          XCOMET-XL&  --&  --&  --& 57.3 / 57.0 / 58.7 \\
+          XCOMET-XXL&  --&  --&  --& 56.5 / 58.2 / 57.5 \\
+          MetricX-24-XXL & --& --& --& 66.2 / 67.9 / 67.0 \\
+          \multicolumn{5}{c}{\textit{Ranking-Based}}\\
+         \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+          {\rankerx}-Base &  --&  --&  --& 54.3 / 54.4 / 55.8 \\
+          {\rankerx}-Large &  --&  --&  --& 60.5 / 59.7 / 60.3 \\
+          {\rankerx}-XXL &  --&  --&  --& 60.9 / 61.9 / 61.6 \\
+         Qwen2.5-72B-Instruct & 56.1 / 58.6 / 57.1 & 71.3 / 72.6 / 71.8 &  57.6 / 61.6 / 61.2 & 64.4 / 65.3 / 64.9 \\
+         Mistral-Large-Instruct & 64.6 / 64.0 / 63.9 & 71.3 / 72.2 / 72.6 & 59.0 / 58.4 / 61.2 & 67.2 / 68.0 / 68.4 \\
+         GPT-4o & 67.8 / 70.0 / 68.0 & 72.5 / 74.5 / 75.5 & 57.6 / 59.5 / 61.9 & 67.2 / 70.1 / 68.4 \\
+         Claude-3.5-Sonnet & 64.2 / 64.0 / 63.7 & 73.4 / 73.2 / 73.9 & 64.0 / 61.9 / 63.6 & 67.7 / 67.6 / 68.4 \\
+         Gemini-2.0-Flash & 55.3 / 55.2 / 55.9 & 72.5 / 72.0 / 71.0 & 60.4 / 65.4 / 62.9 & 66.7 / 66.6 / 67.7 \\
+         DeepSeek-R1& 71.0 / 72.9 / 71.4 & 76.5 / 78.1 / 77.1 & 66.8 / 64.5 / 65.6 & 69.5 / 70.1 / 69.3 \\
+         QwQ-32B& 69.5 / 71.0 / 70.3 & 72.9 / 72.3 / 73.1 & 65.7 / 64.2 / 69.1 & 68.9 / 70.3 / 70.5 \\
+         \bottomrule
+    \end{tabular}}
+    \label{tab:per-annotator}
+\end{table}
+
+
+
+
+% \begin{table}
+%     \centering
+%     \caption{Percentage agreement between model evaluators and human annotations on ranked pairwise data across different criteria in \enzh and \ruzhx. Values are percentages (\%); \textbf{Bold} indicates the best performance per criterion and language direction. $\dagger$ indicates Synthesized FiRE.}
+%     \resizebox{0.7\textwidth}{!}{
+%     \begin{tabular}{lcccc}
+%         \toprule
+%          &  Faithfulness&  Fluency&  Cons. of Style& Overall\\
+%          \midrule
+%          &  \multicolumn{4}{c}{\enzhx}\\
+%          \cmidrule{2-5}
+%         % \multicolumn{5}{c}{\enzhx}\\
+%         % \cmidrule{1-5}
+%          \multicolumn{5}{c}{\textit{Error-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%           M-MAD&  45.9&  25.2&  19.3& 43.6\\
+%           GEMBA-MQM & 37.9 & 32.9 & 3.0 & 41.5\\
+%           XCOMET-XL (MQM)&  --&  --&  --& 38.7\\
+%           XCOMET-XXL (MQM)&  --&  --&  --& 42.0\\
+%           \multicolumn{5}{c}{\textit{Regression-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%           KIWI-XL&  --&  --&  --&  60.4\\
+%           KIWI-XXL&  --&  --&  --&  61.4\\
+%           XCOMET-XL&  --&  --&  --&  56.5\\
+%           XCOMET-XXL&  --&  --&  --&  55.7\\
+%           MetricX-24-XXL & --& --& --& 61.6\\
+%           \multicolumn{5}{c}{\textit{Ranking-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%           {\rankerx}-Base &  --&  --&  --&  60.2\\
+%           {\rankerx}-Large &  --&  --&  --&  61.0\\
+%           {\rankerx}-XXL &  --&  --&  --&  60.7\\
+%          % GLM-4-9B-Chat &  29.1&  39.4&  35.8& 49.2\\
+%          Qwen2.5-72B-Instruct &  38.1&  62.9&  58.8& 63.2 / 64.1^{\dagger}\\
+%          Mistral-Large-Instruct &  56.3&  62.9&  58.2& 62.6 / 63.7^{\dagger}\\
+%          % DeepSeek-V3 &  35.7&  61.8&  57.7& 61.0\\
+%          GPT-4o &  58.7&  66.6&  59.9& \textbf{64.3} / 64.4^{\dagger}\\
+%          Claude-3.5-Sonnet &  53.5&  65.4&  62.9& 65.5 / 65.1^{\dagger}\\
+%          Gemini-2.0-Flash &  34.9&  60.5&  60.1& 62.2 / 62.1^{\dagger}\\
+%          % DeepSeek-R1-32B&  47.8&  59.8&  57.5& 56.9\\
+%          DeepSeek-R1& \textbf{64.8}& \textbf{68.7}& 61.4&\textbf{64.3} / 65.3^{\dagger}\\
+%          QwQ-32B& 64.7& 65.6& \textbf{65.0}&63.8 / 65.3^{\dagger}\\
+%          % Human-Overall & 65.0 & 62.9 & 38.8 & 100\\ 这一行的结果包含了ranked和tied，纯粹的ranked能达到80至90
+%          \midrule
+%          & \multicolumn{4}{c}{\ruzhx}\\
+%          \cmidrule{2-5}
+%         % \multicolumn{5}{c}{\ruzhx}\\
+%         % \cmidrule{1-5}
+%          \multicolumn{5}{c}{\textit{Error-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%          M-MAD&   55.4&  24.9&  17.5& 51.9\\
+%          GEMBA-MQM & 39.8 & 29.9 & 5.4 & 37.6\\
+%          XCOMET-XL (MQM)& --&  --&  --&38.6\\
+%          XCOMET-XXL (MQM)& --&  --&  --&40.0\\
+         
+%          \multicolumn{5}{c}{\textit{Regression-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%           KIWI-XL&  --&  --&  --& 58.2\\
+%           KIWI-XXL&  --&  --&  --& 61.2\\
+%           XCOMET-XL&  --&  --&  --& 57.4\\
+%           XCOMET-XXL&  --&  --&  --& 58.0\\
+%           MetricX-24-XXL & --& --& --& \textbf{67.1}\\
+%           \multicolumn{5}{c}{\textit{Ranking-Based}}\\
+%          % \dashedline
+%          \cdashline{1-5}[4pt/4pt] \addlinespace[0.15em]
+%           {\rankerx}-Base &  --&  --&  --& 54.7\\
+%           {\rankerx}-Large &  --&  --&  --& 60.9\\
+%           {\rankerx}-XXL &  --&  --&  --& 61.6\\
+%          % GLM-4-9B-Chat & 33.8& 43.8& 30.0&43.3\\
+%          Qwen2.5-72B-Instruct & 58.0& 72.5& 58.6&67.0 / 65.3^{\dagger}\\
+%          Mistral-Large-Instruct & 64.4& 72.4& 58.9&66.2 / 68.7^{\dagger}\\
+%          % DeepSeek-V3 & 54.3& 74.2& 60.9&63.3\\
+%          GPT-4o & 69.5& 75.1& 59.6&64.6 / 69.6^{\dagger}\\
+%          Claude-3.5-Sonnet & 64.5& 73.8& 64.0&64.2 / 68.4^{\dagger}\\
+%          Gemini-2.0-Flash & 56.9& 71.8& 61.6&64.0 / 67.2^{\dagger}\\
+%          % DeepSeek-R1-32B& 58.9& 72.5& 60.3&63.1\\
+%          DeepSeek-R1& \textbf{72.5}& \textbf{77.9}& \textbf{66.3}&66.7 / 70.1^{\dagger}\\
+%          QwQ-32B& 71.0& 72.7& \textbf{66.3}&66.4 / 70.5^{\dagger}\\
+%          % % Human-Overall &  65.2 & 60.2 & 38.4 & 100\\ 这一行的结果包含了ranked和tied，纯粹的ranked能达到80至90
+
+%          % Human-Overall & 65.0 & 62.9 & 38.8 & 100\\ 这一行的结果包含了ranked和tied，纯粹的ranked能达到80至90
+%          \bottomrule
+%     \end{tabular}}
+%     \label{tab:full_label}
+% \end{table}
+
+
+
+
+
+
+%% Full table with ranked and tied
+\begin{table*}[h]
+\centering
+\caption{Percentage agreement between LLM evaluators and human annotations across different criteria on ranked and tied pairwise data.}
+\resizebox{0.98\textwidth}{!}{
+    \begin{tabular}{lcccccccccccc}
+    \toprule
+    & \multicolumn{6}{c}{\textbf{Ranked}} & \multicolumn{6}{c}{\textbf{Tied}} \\
+    \cmidrule(lr){2-7} \cmidrule(lr){8-13}
+     & \multicolumn{2}{c}{\textbf{Faithfulness}} & \multicolumn{2}{c}{\textbf{Fluency}} & \multicolumn{2}{c}{\textbf{Cons. of Style}} & \multicolumn{2}{c}{\textbf{Faithfulness}} & \multicolumn{2}{c}{\textbf{Fluency}} & \multicolumn{2}{c}{\textbf{Cons. of Style}} \\
+     \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11} \cmidrule(lr){12-13}
+     & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} & \multicolumn{1}{c}{\textbf{Easy}} & \multicolumn{1}{c}{\textbf{Hard}} \\
+     \midrule
+     & \multicolumn{12}{c}{\enzhx} \\
+     \cmidrule{2-13}
+    % GLM-4 &  32.0&  23.1&  40.2&  37.5&  35.3&  36.5&  73.8&  65.6&  36.5&  33.8&  47.0&  50.2\\
+    Qwen2.5-72B-Instruct &  43.3&  26.6&  67.1&  53.5&  62.0&  55.0&  70.2&  57.7&  13.4&  10.8&  5.4&  3.9\\
+    Mistral-Large-Instruct &  60.6&  47.3&  65.9&  56.1&  60.8&  55.0&  46.6&  33.7&  12.1&  13.7&  3.2&  2.7\\
+    % DeepSeek &  41.8&  23.1&  66.1&  52.2&  62.4&  52.1&  79.3&  72.4&  31.7&  28.4&  18.2&  12.9\\
+    GPT-4o &  63.4&  49.1&  70.2&  58.5&  62.7&  56.4&  41.1&  25.8&  2.8&  1.0&  3.3&  1.2\\
+    Claude-3.5-Sonnet &  58.2&  44.1&  69.0&  57.1&  66.3&  58.8&  49.5&  36.2&  12.1&  10.3&  2.8&  1.2\\
+    Gemini-2.0-Flash &  39.8&  24.9&  63.4&  54.2&  63.1&  56.4&  77.7&  66.9&  18.9&  17.2&  7.4&  5.9\\
+    % DeepSeek-R1-32B & 52.5& 38.2& 62.9& 52.8& 58.0& 56.9& 57.1& 42.9& 15.4& 11.8& 4.6& 3.1\\
+    DeepSeek-R1 & 68.6& 57.1& 73.2& 58.5& 64.3& 57.8& 25.4& 14.1& 7.6& 3.9& 3.5& 1.0\\
+    QwQ-32B & 69.6 & 54.7 & 68.8 & 58.5 & 67.8 & 61.6 & 23.3 & 18.4 & 4.3 & 3.4 & 0.9 & 0.8\\
+    \midrule
+    & \multicolumn{12}{c}{\ruzhx} \\
+    \cmidrule{2-13}
+    % GLM-4 &  37.2&  19.9&  47.0&  35.2&  37.5&  22.1&  67.8&  63.5&  45.0&  35.0&  49.3&  51.8\\
+    Qwen2.5-72B-Instruct &  60.6&  46.8&  75.6&  64.2&  65.8&  51.0&  52.7&  37.3&  10.8&  5.8
+&  2.3&  1.0\\
+    Mistral-Large-Instruct &  67.1&  53.2&  75.2&  64.8&  64.5&  53.1&  35.0&  23.0&  7.7&  4.3
+&  1.2&  3.5\\
+    % DeepSeek &  57.7&  40.4&  76.6&  67.9&  66.4&  55.2&  67.9&  47.6&  28.0&  16.4
+% &  13.3&  15.6\\
+    GPT-4o &  72.0&  58.9&  76.8&  70.5&  65.1&  53.8&  23.4&  14.3&  2.3&  0.7
+&  1.4&  1.4\\
+    Claude-3.5-Sonnet &  66.7&  55.3&  76.8&  65.8&  69.1&  58.6&  45.1&  23.0&  11.3&  2.9
+&  2.7&  1.4\\
+    Gemini-2.0-Flash &  59.2&  47.5&  75.8&  61.1&  69.1&  53.8&  66.8&  46.8&  13.6&  6.4&  4.2&  3.5\\
+    % DeepSeek-R1-32B &  61.4&  48.3&  75.6& 64.2& 69.7& 50.3& 48.4& 29.4& 10.0& 5.7& 4.4& 2.8 \\
+    DeepSeek-R1& 74.4& 64.5& 80.1& 72.0& 69.7& 62.8& 11.5& 3.2& 3.0& 7.1& 1.6& 2.1\\
+    QwQ-32B & 72.5 & 64.5 & 76.2 & 63.2 & 74.3 & 57.9 & 13.8 & 6.3 & 2.2 & 0.0 & 0.6 & 0.7\\
+    \bottomrule
+    \end{tabular}
+}
+\label{tab:data_difficulty_full}
+\end{table*}
+
+
+\begin{table}[ht]
+    \caption{Scores and Ranking of six MT systems calculated by FiRE.}
+    \centering
+    \resizebox{0.7\textwidth}{!}{
+    \begin{tabular}{ccccc}
+    \toprule
+    \multicolumn{1}{l}{} & \multicolumn{1}{l}{Faithfulness} & \multicolumn{1}{l}{Fluency} & \multicolumn{1}{l}{Consistency of Style} & \multicolumn{1}{l}{Overall} \\
+    \midrule
+    & \multicolumn{4}{c}{\enzhx}\\
+    \cmidrule{2-5}
+    % \multicolumn{5}{c}{\enzhx}\\
+    % \cmidrule{1-5}
+    GPT-4o & 0.81 (1) & 0.70 (1) & 0.64 (1) & 0.72 (1) \\
+    DeepL & 0.61 (2) & 0.54 (2) & 0.54 (3) & 0.54 (2) \\
+    LanMT & 0.44 (4) & 0.44 (4) & 0.41 (5) & 0.39 (5) \\
+    Qwen2 & 0.49 (3) & 0.42 (5) & 0.55 (2) & 0.50 (3) \\
+    ALMA-R & 0.29 (5) & 0.52 (3) & 0.43 (4) & 0.44 (4) \\
+    NLLB & 0.15 (6) & 0.01 (6) & 0.04 (6) & 0.08 (6) \\
+    \midrule
+    & \multicolumn{4}{c}{\ruzhx}\\
+    \cmidrule{2-5}
+    % \multicolumn{5}{c}{\ruzhx}\\
+    % \cmidrule{1-5}
+    GPT-4o & 0.81 (1) & 0.69 (1) & 0.61 (2) & 0.62 (1) \\
+    DeepL & 0.45 (4) & 0.42 (4) & 0.42 (4) & 0.47 (4) \\
+    LanMT & 0.49 (3) & 0.40 (5) & 0.53 (3) & 0.48 (3) \\
+    Qwen2 & 0.56 (2) & 0.61 (2) & 0.69 (1) & 0.61 (2) \\
+    ALMA-R & 0.33 (5) & 0.53 (3) & 0.38 (5) & 0.40 (5) \\
+    NLLB & 0.12 (6) & 0.06 (6) & 0.00 (6) & 0.09 (6) \\
+    \bottomrule
+    \end{tabular}}
+\label{tab:model_full_ranking}
+\end{table}
+
+
+
+% \begin{table}[ht]
+%     \caption{Ranking of six MT systems calculated by QwQ-32B. The source data comes from WMT24pp \citep{deutsch2025wmt24expandinglanguagecoverage}, with 997 source texts per language. ALMA-R does not support \textsc{ja→zh} and \textsc{zh→ja}. }
+%     \centering
+%     \resizebox{\textwidth}{!}{
+%     \begin{tabular}{ccccccccc}
+%     \toprule
+%     \multicolumn{1}{l}{} & \multicolumn{1}{l}{Faithfulness} & \multicolumn{1}{l}{Fluency} & \multicolumn{1}{l}{Consistency of Style} & \multicolumn{1}{l}{Overall} & \multicolumn{1}{l}{Faithfulness} & \multicolumn{1}{l}{Fluency} & \multicolumn{1}{l}{Consistency of Style} & \multicolumn{1}{l}{Overall}\\
+%     \midrule
+%     & \multicolumn{4}{c}{\deenx} & \multicolumn{4}{c}{\engdex}\\
+%     \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+%     GPT-4o & 0.74 (1) & 0.59 (2) & 0.69 (1) & 0.66 (1) & 0.79 (1) & 0.64 (2) & 0.74 (1) & 0.71 (1) \\
+%     DeepL & 0.55 (3) & 0.60 (1) & 0.62 (2) & 0.58 (3) & 0.61 (2) & 0.65 (1) & 0.66 (2) & 0.64 (2) \\
+%     LanMT & 0.40 (5) & 0.36 (5) & 0.37 (5) & 0.38 (5) & 0.41 (5) & 0.35 (5) & 0.39 (5) & 0.38 (5) \\
+%     Qwen2 & 0.58 (2) & 0.59 (3) & 0.55 (3) & 0.61 (2) & 0.50 (3) & 0.48 (4) & 0.49 (3) & 0.49 (4) \\
+%     ALMA-R & 0.54 (4) & 0.55 (4) & 0.55 (4) & 0.53 (4) & 0.46 (4) & 0.56 (3) & 0.47 (4) & 0.52 (3) \\
+%     NLLB & 0.19 (6) & 0.31 (6) & 0.22 (6) & 0.23 (6) & 0.23 (6) & 0.32 (6) & 0.25 (6) & 0.25 (6) \\
+%     \midrule
+%     & \multicolumn{4}{c}{\dezhx} & \multicolumn{4}{c}{\zhdex}\\
+%     \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+%     GPT-4o & 0.82 (1) & 0.65 (2) & 0. 78 (1) & 0.73 (1) & 0.86 (1) & 0.75 (1) & 0.81 (1) & 0.81 (1) \\
+%     DeepL & 0.59 (3) & 0.64 (3) & 0.63 (3) & 0.62 (3) & 0.57 (2) & 0.60 (2) & 0.60 (2) & 0.60 (2) \\
+%     LanMT & 0.37 (5) & 0.37 (5) & 0.37 (5) & 0.36 (5) & 0.40 (5) & 0.43 (5) & 0.40 (5) & 0.42 (5) \\
+%     Qwen2 & 0.67 (2) & 0.67 (1) & 0.65 (2) & 0.70 (2) & 0.56 (3) & 0.60 (3) & 0.58 (3) & 0.59 (3) \\
+%     ALMA-R & 0.40 (4) & 0.55 (4) & 0.43 (4) & 0.47 (4) & 0.49 (4) & 0.43 (4) & 0.46 (4) & 0.44 (4) \\
+%     NLLB & 0.15 (6) & 0.12 (6) & 0.12 (6) & 0.13 (6) & 0.12 (6) & 0.19 (6) & 0.14 (6) & 0.15 (6) \\
+%     \midrule
+%     & \multicolumn{4}{c}{\jaenx} & \multicolumn{4}{c}{\enjax}\\
+%     \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+%     GPT-4o & 0.84 (1) & 0.73 (1) & 0.80 (1) & 0.79 (1) & 0.83 (1) & 0.74 (1) & 0.72 (1) & 0.80 (1) \\
+%     DeepL & 0.56 (3) & 0.57 (3) & 0.62 (3) & 0.58 (3) & 0.55 (3) & 0.64 (2) & 0.72 (2) & 0.58 (3) \\
+%     LanMT & 0.37 (5) & 0.31 (5) & 0.33 (5) & 0.34 (5) & 0.50 (4) & 0.45 (4) & 0.41 (4) & 0.48 (4) \\
+%     Qwen2 & 0.65 (2) & 0.69 (2) & 0.64 (2) & 0.69 (2) & 0.63 (2) & 0.63 (3) & 0.59 (3) & 0.65 (2) \\
+%     ALMA-R & 0.41 (4) & 0.43 (4) & 0.43 (4) & 0.41 (4) & 0.33 (5) & 0.36 (5) & 0.28 (5) & 0.33 (5) \\
+%     NLLB & 0.16 (6) & 0.27 (6) & 0.19 (6) & 0.20 (6) & 0.17 (6) & 0.19 (6) & 0.27 (6) & 0.17 (6) \\
+%     \midrule
+%     & \multicolumn{4}{c}{\jazhx} & \multicolumn{4}{c}{\zhjax}\\
+%     \cmidrule(lr){2-5} \cmidrule(lr){6-9}
+%     GPT-4o & 0.83 (1) & 0.69 (2) & 0.77 (1) & 0.74 (2) & 0.84 (1) & 0.74 (1) & 0.73 (1) & 0.79 (1) \\
+%     DeepL & 0.52 (3) & 0.57 (3) & 0.56 (3) & 0.54 (3) & 0.47 (3) & 0.55 (3) & 0.61 (2) & 0.49 (3) \\
+%     LanMT & 0.36 (4) & 0.41 (4) & 0.40 (4) & 0.39 (4) & 0.44 (4) & 0.48 (4) & 0.46 (4) & 0.47 (4) \\
+%     Qwen2 & 0.71 (2) & 0.73 (1) & 0.70 (2) & 0.75 (1) & 0.66 (2) & 0.64 (2) & 0.59 (3) & 0.67 (2) \\
+%     ALMA-R & - & - & - & - & - & - & - & - \\
+%     NLLB & 0.08 (5) & 0.10 (5) & 0.08 (5) & 0.08 (5) & 0.08 (5) & 0.09 (5) & 0.10 (5) & 0.09 (5) \\
+%     \bottomrule
+%     \end{tabular}}
+% \label{tab:model_full_ranking}
+% \end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018, and modified by Alexandre Bouchard in
+% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
+% Modified again in 2023 and 2024 by Sivan Sabato and Jonathan Scarlett.
+% Previous contributors include Dan Roy, Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.

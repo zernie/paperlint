@@ -1,0 +1,114 @@
+\mysection{Production Trace Analysis}
+\label{sec:motivation}
+
+\begin{table}[t]\centering
+\scriptsize
+\begin{tabular}{p{20mm}p{23mm}p{12mm}p{15mm}}\toprule
+\textbf{Trace name} &\textbf{Service provider} &\textbf{\# models} &\textbf{Time span} \\\cmidrule{1-4}
+Hyperbolic &Hyperbolic~\cite{hyperbolic} &24 &4 months \\\midrule
+Novita &Novita AI~\cite{novita-ai} &16 &1 month \\\midrule
+Arena-Battle &Chatbot Arena~\cite{chatbotarena@arxiv24} &129 &16 months \\\cmidrule{1-4}
+Arena-Chat &Chatbot Arena~\cite{chatbotarena@arxiv24} &84 &11 days \\
+\bottomrule
+\end{tabular}
+\vspace{-2mm}
+\caption{Production trace summary.}\label{tab:trace_summary}
+\vspace{-1.5mm}
+\end{table}
+
+Prior studies have primarily profiled single-model LLM services~\cite{burstgpt, kvcachecache}, but the cross-model dynamics that arise in multi-LLM serving remain largely under-examined. As a result, evaluations in recent multi-LLM serving work often rely on synthetic or simplified workloads, such as Poisson/Gamma arrivals~\cite{muxserve, qlm, aegaeon}, temporally rescaled traces from non-LLM domains~\cite{weaver-atc25, fu2024serverlessllm}, or dataset-driven replays~\cite{sharegpt}. 
+
+To address these gaps, we conduct a detailed characterization of production workloads from major inference providers (\ie, Hyperbolic and Novita AI) as well as independent evaluation platforms (\ie, Chatbot Arena), explicitly capturing the fine-grained, time-varying dynamics of multi-LLM traffic. The four traces span 24–129 deployed models over
+weeks to months of traffic, summarized in Table~\ref{tab:trace_summary}. 
+In this section, we utilize the traces from Novita AI as a representati4ve example to illustrate our observations and report cross-trace statistics. 
+We include a detailed CDF analysis in Appendix~\ref{ap:trace}.
+
+\textbf{\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figs/nested_update.pdf}
+   \vspace{-4mm}
+    \caption{Combined view of model-request dynamics; the x-axes denote time. (a) Variation of concurrently active model groups over a six-hour window (8am–4pm): the y-axis lists all models from the Novita trace; each cell represents a three-minute interval, with dark/light shading indicating whether the model is active. (b) Zoomed-in view of volatile request patterns from 11am–1pm, showing per-model normalized request rates, where darker colors indicate higher rates.  (c) A further zoom-in over a 5-minute window from (b), comparing two models on a shared normalization.}
+    \label{fig:working-set}
+  \vspace{-1.5mm}
+\end{figure}}
+
+\mysubsection{Model Level: Shifting Bursty Groups}
+\label{sec:motivation:model}
+We begin by examining the dynamics of concurrently active models (\ie, those processing at least one request) from the Novita trace over a six-hour span in Figure~\ref{fig:working-set}(a), where a horizontal slice of a model represents its active/idle activities over time, and a vertical slice at a point of time reveals which subset of the models is active at the point. 
+Our analysis reveals two properties that are common for production workloads:  \emph{bursty groups} and \emph{heterogeneous access patterns}.
+
+\noindent \textbf{Vertical behavior: bursty groups.}
+Vertically, deployed models demonstrate a \textit{bursty-group} behavior: models receive requests in short, irregular bursts separated by long and variable idle intervals. Because these bursts occur asynchronously across models, only a small subset is active at any moment, and this subset changes rapidly over time. We refer to this transient set as the \textit{bursty group}, analogous to how an application's \emph{working set} changes during its execution\textemdash there are common models that appear in almost every group but most models experience sporadic requests and hence appear only in a small number of groups. 
+Across the four traces, 23\%--50\% of models are active concurrently on average, and the active set changes 54--766 times per hour.
+Although the total number of deployed LLMs can be large, only the bursty group drives actual demand. Efficient GPU utilization thus requires adapting resources to this shifting model group, rather than allocating resources statically to all models.
+
+\noindent \textbf{Horizontal behavior: Heterogeneous activation patterns.}
+Horizontally, the workload exhibits significant heterogeneity across models in activation patterns.
+Some models, such as \code{Llama-3.3-70B}, sustain long stretches of continuous activity, while others (like \code{Distilled-Deepseek-R1-Qwen-14B(DS-R1-Q-14B)}) activate only in sparse, short-lived instances with only a small group of applications/users using it.
+This heterogeneity is largely driven by the diverse roles that models play in modern compound AI systems and agentic pipelines. Large general-purpose models (\eg, \code{Llama-3.3-70B}) often act as central reasoning or planning components and remain active throughout user interactions, leading to sustained request streams. In contrast, smaller distilled models (\eg, \code{DS-R1-Q-14B}) are typically invoked as auxiliary components—such as for tool use or verification—and are triggered only at specific pipeline stages, resulting in intermittent, bursty activations.
+
+Aggregating requests across many applications and users yields a mixed access pattern in which some models remain persistently active, others appear only sporadically, and even the same model may exhibit different behaviors over time. These differences have direct implications for resource management: long-running models benefit from sustained colocation, whereas short and scattered bursts favor opportunistic execution. Consequently, multi-LLM serving systems must adapt to the heterogeneous activation behavior of each model, rather than assuming uniform access patterns.
+
+\noindent \textbf{Implication: Inefficiency of static partitioning.} The existence of shifting \textit{bursty groups} fundamentally challenges any static strategies. Since only a small, changing subset of models drives demand at any given moment, statically partitioning GPU memory across all models (to ensure availability) results in severe resource fragmentation. In the Novita AI trace, for example, models are idle for over 70\% of the time on average. Under a static memory-partitioning regime, the memory reserved for these idle models is wasted, preventing active models in the current bursty group from utilizing that capacity to scale up and meet their SLOs.
+
+\mysubsection{Request Level: Dynamic and Volatile}
+\label{sec:motivation:request}
+
+We next zoom in to a shorter period of time to examine the fine-grained dynamics of individual models.
+Figure~\ref{fig:working-set}(b) depicts the request rates for the models over a two-hour window, normalized within each model so that low-volume bursts remain visible alongside high-volume ones.
+
+\noindent \textbf{Extreme volatility and pattern shifts.}
+As shown in Figure~\ref{fig:working-set}(b), request streams shift patterns frequently.
+Even models that appear continuously active in coarser views actually exhibit rapid oscillations between low-demand periods and short, intense bursts (\eg, \code{Qwen2-7B}).
+Similarly, models that are only sporadically invoked display burst sizes and inter-arrival times that vary significantly over time (\eg, \code{Llama-3.1-8B}).
+
+\noindent \textbf{Abrupt pattern transitions.} 
+Furthermore, these workload patterns often undergo rapid, unforeseen transitions. Figure~\ref{fig:working-set}(c) provides a granular, 5-minute zoom-in view of request arrivals for two representative models. This window reveals a stark shift in interaction dynamics: a phase of moderate, interleaved activity\textemdash where both models contend for resources simultaneously\textemdash abruptly gives way to a concentrated burst from a single model. Such sudden pattern shifts occur without discernible triggers, implying that the system cannot rely on historical stability or long-term pattern recognition; instead, it must possess the agility to react to instantaneous changes. 
+Such transitions are pervasive: across our traces, many models exhibit a request rate coefficient of variation above 1 and 40–100 idle intervals per hour.
+
+\noindent \textbf{Implication: Instability of pure time sharing.} The extreme \textit{volatility} and rapid pattern transitions undermine pure time-sharing strategies. As seen in Figure~\ref{fig:working-set}(c), request streams frequently transition into phases of interleaved activity where multiple models are active simultaneously. In these scenarios, a time-sharing system relying on swapping must constantly evict and reload weights to serve alternating requests. This leads to model thrashing, where the latency overhead of loading weights dominates execution time, causing immediate SLO violations. This volatility necessitates the stability of space sharing, where working sets remain resident to handle interleaved demand without swapping penalties.
+
+\mysubsection{Applying Existing Approaches}
+\label{sec:motivation:sota}
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{figs/time_share.pdf}
+    \caption{Pure time sharing.}
+    \label{fig:motivation-time}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{figs/space_share.pdf}
+    \caption{Pure space sharing.}
+    \label{fig:motivation-space}
+  \end{subfigure}
+  \caption{Performance of pure time- (a) and space-sharing (b) for the trace in Figure~\ref{fig:working-set}(c). Pure time sharing in (a) causes model switching when both models have requests, while pure space sharing in (b) causes queuing delay during requests spike.}
+  \label{fig:motivation-exp}
+\end{figure}
+
+To understand the implications of these abrupt pattern transitions, we ran two representative state-of-the-art strategies, \textit{time sharing} (QLM~\cite{qlm}) and \textit{space sharing} (static partition~\cite{nvidiaMIG, fractionalGPUs}), on the trace segment shown in Figure~\ref{fig:working-set}(c).
+Figure~\ref{fig:motivation-exp} illustrates the resulting memory usage and cumulative SLO violations for each approach.
+
+\MyPara{Failure of time sharing.}
+Time sharing manages resources by swapping models in and out of GPU memory.
+This approach struggles during the initial phase of \textit{interleaved activity}.
+As both models receive frequent, overlapping requests, the system is forced to repeatedly evict and reload weights to serve alternating inputs.
+As shown in Figure~\ref{fig:motivation-time}, this leads to severe \textit{model thrashing}: the GPU spends more time on PCIe transfers and engine re-initialization than on computation.
+As such, request queues grow rapidly, resulting in a spike of SLO violations even before the workload intensity peaks.
+
+\MyPara{Failure of space sharing.}
+Space sharing avoids swapping by partitioning GPU memory between models.
+While this provides stability during the interleaved phase, it fails catastrophically when the workload transitions to the burst phase, as shown in Figure~\ref{fig:motivation-space}.
+Although one model becomes idle, its model weights remain locked, preventing the active model which is now experiencing a demand surge from utilizing the full GPU capacity.
+This rigid isolation creates artificial resource scarcity: the active model is starved of KV cache memory while adjacent memory sits idle.
+The result is a throughput cap that causes significant queuing delays and SLO violations during the burst.
+
+\mysubsection{Takeaway: A Hybrid Approach} \label{sec:motivation:takeaway}
+
+Our analysis demonstrates that production multi-LLM workloads exhibit conflicting requirements that no single existing strategy can satisfy: 
+\begin{itemize}[leftmargin=1em,nosep]
+\item \textbf{Bursty groups benefit from time-sharing capabilities:} At the model level, the active set shifts over time. Pure space sharing fails here because it rigidly locks memory for idle models, causing fragmentation and preventing active models from scaling. The system must be able to evict idle resources to maximize utilization. 
+\item \textbf{Volatile requests benefit from space-sharing capabilities:} At the request level, demand fluctuates rapidly and often interleaves across models. Pure time sharing fails here because swapping causes severe thrashing during these volatile periods. The system must be able to keep active models colocated in memory to provide low-latency access. \end{itemize}
+
+\noindent \textbf{Motivation for \tool.}  These two patterns capture the workload at coarse- and fine-grained levels, respectively. Because they reflect different facets of the same underlying behavior, they cannot be addressed in isolation, necessitating a hybrid approach: the system must fluidly shift between the strategies at runtime. It needs the \textit{elasticity} to act like a time-sharing system when reclaiming memory from the idle models, while simultaneously acting like a space-sharing system to co-serve the models in an active bursty group without causing SLO violations. This calls for a design that manages GPU memory as a dynamic, shared resource rather than static partitions.

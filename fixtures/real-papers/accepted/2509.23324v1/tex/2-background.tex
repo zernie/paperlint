@@ -1,0 +1,69 @@
+\section{Background}
+
+\subsection{Scaling LLM Computation at Test-Time}
+% \ting{The purpose for you to write this paragraph is to emphasize test-time scaling is very popular and effective method to improve model accuracy, so you focus on it. You should state it at first.}
+
+Parallel test-time scaling emerges as a popular and effective new paradigm to improve model accuracy without modifying model parameters; instead, it devotes more computation at test-time. The simplest test-time scaling methods are majority-voting and self-consistency~\cite{cot-sc,brown2024large}, which are used to select the most consistent answer from multiple sets of generated samples. For math or programming problems with verifiable outcomes and domains with reward models (i.e., Outcome Reward Models), the highest scoring option can be chosen from completed sample sets, a strategy termed Best-of-N~\cite{snell2024scaling}. Through lookahead rollouts, methods similar to Monte Carlo Tree Search (MCTS) can select optimal paths from partially generated sequences, leading to the derivation of Process Reward Models (PRMs)~\cite{math-shepherd,processbench,Skywork-o1,dwivedi2023making} that directly score intermediate results. With PRM assistance, lookahead-free step-level Beam Search~\cite{snell2024scaling,wu2024inference} dynamically discards low-quality generation paths to balance exploration and exploitation. Figure~\ref{fig:tts-methods} illustrates the algorithm of two popular test-time scaling methods.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/tts-methods.pdf}
+    \caption{Two typical test-time scaling methods: Best-of-N and Beam Search.}
+    \label{fig:tts-methods}
+\end{figure}
+
+% 1. These methods can enhance LLM's reasoning abilities without modifying model parameters.
+
+% 2. Many current computation scaling methods (such as MCTS, fully parallel best-of-N) are impractical under resource-constrained scenarios. \hzx{at least no one explored this yet}
+
+% \subsection{LLM RL post-training and Reward Models}
+% \ting{what is the purpose for this section? }
+% Recent advances in LLM reasoning leverage MCTS-like methods to synthesize high-quality reasoning paths with fine-grained step rewards. These generated data can be used to fine-tune models, or used to train Process-Reward Models, which are utilized in post-training RL pipelines to further enhance LLMs' reasoning abilities. 
+
+% In our use case, we leverage PRMs as verifiers/scorers to dynamically enhance model performance during test-time via selecting high-quality reasoning paths.
+
+% \subsection{SLMs for on-device deployment}
+
+% \ting{you can consider to cite our paper "Empowering Agentic Video Analytics Systems with
+%  Video Language Models" which uses tree searching for enhancing video analytics capability. It is a good example I think. }
+% 1. Reasoning and planning abilities are crucial for agent applications on devices.
+
+% 2. Due to resource constraints on the device, we have to deploy smaller language models on mobile devices. SLMs have limited abilities in reasoning tasks.
+
+% 3. The current approach of using larger models and lower bit quantization may not continue to work well. (cite recent works) Some researchers have found that recent models with larger knowledge density are harder to quantize, showing significant performance degradation after aggressive low-bit quantization. 
+
+% \sout{Another perspective: The target model verification process in Speculative Decoding is also an important use case in on-device deployment. Fortunately, this process can be accelerated by NPU in our framework.}
+
+\subsection{Neural Processing Units}
+
+With the growth of AI workloads, modern SoCs are increasingly integrating NPUs to accelerate neural network inference~\cite{hexagon,amd-xdna,intel-npu}. NPUs feature specialized acceleration of low-precision, computationally intensive core neural network operations (e.g., GEMM), delivering extremely high computational throughput while maintaining good power efficiency.
+
+A widely adopted NPU architecture employs a "vector + matrix" combination, where the matrix unit accelerates operations like matrix multiplication and convolution, and the vector unit handles general-purpose computations such as normalization and complex activation functions. Well-known examples including Qualcomm’s Hexagon NPU~\cite{hexagon}, Huawei’s Ascend NPU~\cite{huawei-ascend}, AMD's XDNA NPU~\cite{amd-xdna}, Intel NPU~\cite{intel-npu}, and Intel’s Gaudi HPU~\cite{intel-gaudi3} all utilize this type of architecture. Such NPUs differ significantly from common GPUs in their hardware execution model. As shown in Figure~\ref{fig:hw-execution-model}, in the GPU’s SIMT model, different threads can independently perform branching, memory access, and computation, whereas in the NPU’s SIMD-based execution model, a single thread operates on large vector or matrix data blocks. At the hardware level, NPUs typically employ fewer hardware threads and use VLIW architectures to reduce control logic overhead. Compared to GPUs, NPUs sacrifice programming flexibility and ease-of-use in exchange for higher execution efficiency and energy efficiency.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/hw-execution-model.pdf}
+    \caption{Comparison of (a) GPU's SIMT execution model and (b) NPU's SIMD execution model.}
+    \label{fig:hw-execution-model}
+\end{figure}
+
+% \ting{again state your purpose first}
+% Many commodity mobile SoCs are already equipped with NPUs, with Qualcomm's Hexagon NPU in Snapdragon SoCs being the most renowned. However, NPUs vary significantly between vendors~\cite{huawei-ascend,hexagon,amd-xdna}, and due to commercial considerations, public software documentation remains scarce, leading to limited research on the deployment of LLMs on commercial mobile NPUs (current work includes~\cite{mllm-npu,powerinfer2,bluelm}). Compared to other NPUs, Hexagon NPU offers a relatively complete public SDK and toolchain, though many critical technical details are undocumented. These characteristics make Hexagon a unique yet challenging platform for LLM optimization, which we elaborate on in Section~\ref{sec:hexagon-npu}. To our knowledge, among mobile NPUs, Hexagon is most comparable to Huawei's Ascend NPU~\cite{huawei-ascend} in terms of architectural design.
+
+% \hzx{Move detailed explanation to motivation section.}
+
+% 1. Many commodity mobile SoCs are already equipped with NPUs. (e.g., Qualcomm Snapdragon)
+
+% 2. NPUs are usually designed for quantized (low-bit integer operations) matrix multiplication. Recent Qualcomm Hexagon NPUs have about 45 INT8 TOPS (claimed) and 12 FP16 TFLOPS for matrix multiplication.
+
+% 3. NPUs are underutilized in LLM inference tasks due to the memory-bound nature of auto-regressive generation.
+
+% Comparison with server GPUs: Taking NVIDIA A100 as an example, we have Tensor Core FLOPS > CUDA core FLOPS > HBM bandwidth >> CPU FLOPS and main memory bandwidth. Qualcomm's Hexagon NPUs also have HMX units that can achieve extremely fast matrix multiplication compared to the rest parts of the NPU.
+
+% (A table here to show mobile NPU and GPU performance profiles)
+
+% \sout{Since Hexagon NPUs excluding HMX units have relatively comparable performance to CPUs, careful CPU-NPU scheduling policies have to be made to fully utilize the computational power of heterogeneous SoCs.}
+
+% \subsection{Possible Solution}
+
+% \sout{We propose a comprehensive solution to leverage on-device NPUs to (enhance LLM reasoning performance)/(accelerate LLM test-time scaling workloads).}

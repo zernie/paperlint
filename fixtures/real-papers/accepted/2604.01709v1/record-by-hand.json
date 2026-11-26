@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "fancyhdr.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "iclr2025_conference.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "55c7cef665768c0bd2ac5aafad322c549f7a61d50b33cb2dc49a4626afb0cb0e",
+    "fancyhdr.sty": "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
+    "iclr2025_conference.sty": "9e280a9ff99be84ad190f5cafe047a1a32c2eeb9ca14232ddceae42d8489c697",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "edec5f9eed255a3dbfe66b1b5a33c7ee42a14d16fbc254523ae5bef4da60f292"
+  }
+}

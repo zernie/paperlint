@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "icra-2026",
+      "venue": {
+        "kind": "named",
+        "name": "ICRA 2026",
+        "url": "https://arxiv.org/abs/2601.04356v2"
+      },
+      "opened": "2026-02-02",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-02-02",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

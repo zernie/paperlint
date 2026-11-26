@@ -1,0 +1,60 @@
+\begin{table*}[t]
+\setlength\tabcolsep{3pt}
+\centering
+\begin{footnotesize}
+
+\resizebox{1\textwidth}{!}{
+\begin{tabular}{lcccccccccc}
+\toprule
+& \multicolumn{2}{c}{\texttt{AUL}} & \multicolumn{2}{c}{\texttt{BIT}} & \multicolumn{2}{c}{\texttt{MSPG}} & \multicolumn{2}{c}{\texttt{PTF}} & \multicolumn{2}{c}{\texttt{LEU}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+\textbf{Model} & RMSE & MAE & RMSE & MAE & RMSE & MAE & RMSE & MAE & RMSE & MAE \\
+\midrule
+
+\multicolumn{11}{c}{\textbf{\textit{Time Series Forecasting Model}}} \\
+\midrule
+DLinear & 0.5955 & 0.4977 & 1.5160 & 1.4051 & 0.4287 & 0.2901 & 0.4632 & 0.3268 & 0.6422 & 0.5355 \\
+Autoformer & 0.8336 & 0.6828 & 1.4385 & 1.2953 & 0.4501 & 0.2998 & 0.3706 & 0.2288 & 0.6805 & 0.5937 \\
+TimesNet & 0.5431 & 0.4595 & 1.2870 & 1.1874 & 0.3821 & 0.2792 & 0.3437 & 0.2238 & 0.3895 & 0.3303 \\
+PatchTST & 0.4885 & 0.4086 & 1.2723 & 1.1684 & 0.4551 & 0.3098 & 0.3755 & 0.2492 & 0.4536 & 0.3634 \\
+iTransformer & 0.6054 & 0.4948 & 1.3875 & 1.2675 & 0.3970 & 0.2711 & 0.3363 & 0.2234 & 0.6049 & 0.4948 \\
+N-BEATS & 0.7158 & 0.5874 & 1.3603 & 1.1843 & 0.4305 & 0.2891 & 0.3713 & 0.2306 & 0.7480 & 0.5851 \\
+\midrule
+
+\multicolumn{11}{c}{\textbf{\textit{Time Series Foundation Model}}} \\
+\midrule
+TimeLLM & 0.7660 & 0.6012 & 1.3127 & 1.1538 & 0.4378 & 0.3267 & 0.5744 & 0.4730 & 0.4925 & 0.3701 \\
+Chronos & 0.5970 & 0.4892 & 1.3348 & 1.1355 & 0.4103 & 0.2393 & 0.3606 & 0.2828 & 0.4184 & 0.2441 \\
+Moirai & 0.5806 & 0.4854 & 1.3924 & 0.9823 & 0.3760 & 0.2368 & 0.2141 & 0.1681 & 0.3271 & 0.2267 \\
+ChatTime-Chat & \underline{0.3639} & 0.3050 & \underline{0.8357} & \underline{0.7421} & 0.3123 & \textbf{0.1917} & \textbf{0.1610} & \underline{0.1276} & \textbf{0.1557} & \underline{0.1253} \\
+\midrule
+
+\multicolumn{11}{c}{\textbf{\textit{Fourier Embedding + LLM}}} \\
+\midrule
+FoNE-Qwen2.5-1.5b-instruct & 0.3649 & \underline{0.3045} & 1.7141 & 1.5202 & \underline{0.3006} & 0.2660 & 0.2915 & 0.2495 & 0.2065 & 0.1378 \\
+\midrule
+
+\multicolumn{11}{c}{\textbf{\textit{TempoWAVE Embedding + LLM}}} \\
+\midrule
+MWNE-Qwen2.5-1.5b-instruct & \textbf{0.3391} & \textbf{0.2739} & \textbf{0.7979} & \textbf{0.6978} & \textbf{0.2950} & \underline{0.1956} & \underline{0.1706} & \textbf{0.1212} & \underline{0.1681} & \textbf{0.1095} \\
+\midrule
+
+\multicolumn{11}{l}{\textbf{Relative $\downarrow$ Improvement over Previous Best (\%)}} \\
+\midrule
+\textbf{TempoWAVE vs Previous SOTA} & \textbf{7.3}\% & \textbf{11.2}\% & \textbf{4.7}\% & \textbf{6.3}\% & \textbf{1.9}\% & -2.0\% & -5.9\% & \textbf{5.3}\% & -7.9\% & \textbf{14.4}\% \\
+\bottomrule
+\end{tabular}
+}
+\caption{
+\textbf{Forecasting performance (RMSE/MAE) across five context-enriched datasets.}
+TempoWAVE achieves new SOTA on 7/10 metrics and ranks second on the remaining three.
+Best values are \textbf{bolded}, second-best are \underline{underlined}.
+The last row reports the relative $\downarrow$ improvement of MWNE over the previous best method for each metric.
+}
+\label{tab:ForecastPerformanceNew}
+\end{footnotesize}
+\vskip -0.15in
+\end{table*}
+
+%\ref{tab:ForecastPerformanceNew}
+

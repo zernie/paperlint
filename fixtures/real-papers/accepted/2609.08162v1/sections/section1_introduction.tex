@@ -1,0 +1,42 @@
+\section{Introduction}
+
+\begin{figure*}[!htbp]
+  \centering
+
+\includegraphics[width=\textwidth]{figures/teaser.pdf}
+  
+  \caption{
+    Overview of WorldAgen.
+    (a) WorldAgen Architecture. WorldAgen unifies an agent policy head for task-conditioned action prediction and a world modeling head for task-agnostic state prediction within a single Transformer backbone. At trajectory unit $i$, the agent receives the task instruction $G_i$, the observation chunk $O_i$, and the robot state chunk $S_i$, the action placeholder $A_p$ and observation placeholder $O_p$. Then it predicts the action chunk $\hat{A}_i$. After that, the world model predicts the future observation chunk $\hat{O}_i$ to refine the shared representation of environment dynamics.
+    (b) Two-stage TTT pipeline. Stage 1 performs random exploration in the new environment to collect unlabeled trajectories. Stage 2 adapts the world model using LoRA-based fine-tuning on the observation loss $\mathcal{L}_o$, improving environment modeling without modifying the agent policy. 
+    (c) TTT Performance. We tested WorldAgen with TTT strategy on CALVIN and LIBERO benchmark, which show great performance gain. 
+    }
+    \label{fig:worldagen_overview}
+\end{figure*}
+Vision-language-action (VLA) models have emerged as a powerful and popular paradigm for robotic manipulation \citep{ma2025surveyvisionlanguageactionmodelsembodied, din2025visionlanguageactionmodels}, enabling agents to follow natural language instructions and act directly from raw visual observations.
+Recent work has explored joint state-action prediction techniques \citep{tian2024predictiveinversedynamicsmodels,guo2024prediction,liu2025rdt1bdiffusionfoundationmodel,xian2023chaineddiffuser,wolf2025diffusionmodelsroboticmanipulation}, allowing models not only to predict the next actions but also to anticipate how their actions will transform the environment.
+This joint formulation has improved data efficiency and scene understanding, leading to stronger performance across manipulation benchmarks.
+
+However, we argue that current methods remain fundamentally limited by training on static datasets \citep{kim2025finetuningvisionlanguageactionmodelsoptimizing,li2025controlvlafewshotobjectcentricadaptation,kim2024openvlaopensourcevisionlanguageactionmodel}.
+Once pretrained, these models lack mechanisms to adapt their internal representations of world dynamics when deployed in novel environments.
+In realistic settings, distribution shifts such as new object layouts, lighting conditions, or physical properties are inevitable, and static world modeling fails to capture these variations \citep{wu2023daydreamer,lanier2025adaptingworldmodelslatentstate}.
+This leads to a key question:
+\textbf{How can we enable VLA models to actively adapt their understanding of the environment during test time?}
+
+As shown in Figure \ref{fig:worldagen_overview}, we address this question with WorldAgen, a unified framework that combines joint state-action prediction with a novel TTT strategy:
+
+\begin{itemize}
+    \item \textbf{Joint State-Action Modeling.} WorldAgen uses a shared Transformer backbone with two heads. The world model head predicts future states from historical state-action trajectories, while the policy head predicts actions conditioned on task instructions. By training these tasks jointly, WorldAgen aligns scene understanding with action prediction.
+    \item \textbf{Test-Time Training for Scene Adaptation.} During test time, WorldAgen executes exploratory actions to collect ground-truth state transitions. It then performs lightweight, LoRA-based TTT updates to refine its world model. These updates improve the internal representation of the environment, indirectly boosting the agent's ability to generate effective actions in novel scenarios, as depicted in Figure~\ref{fig:worldagen_overview}(b).
+\end{itemize}
+Our work reframes world modeling from a passive pretraining objective into an active test time adaptation mechanism, bridging the gap between offline training and real-world generalization.
+
+
+In sum, we make the following contributions:
+\begin{itemize}
+    \item \textbf{Unified joint state-action prediction architecture.} We present a unified Transformer-based structure that integrates world modeling and action prediction, enabling shared representations and work separately via a Mixed Unidirectional Attention Mask.
+    \item \textbf{Active test-time adaptation for VLA models.} We introduce a TTT paradigm that transforms world modeling from a static pretraining into an active, test time adaptation mechanism, allowing VLA models to refine their scene understanding on the fly.
+   \item \textbf{Empirical validation across challenging benchmarks.} Our baseline achieves performance comparable to, or even better than, state-of-the-art methods. Furthermore, by fine-tuning the world modeling component with only a small number of samples at test time, our method attains state-of-the-art results on both the CALVIN and LIBERO benchmarks.
+
+\end{itemize}
+We believe these results demonstrate that continuous adaptation during test time, rather than merely scaling model size or pretraining data, is a key ingredient for robust and generalizable robotic manipulation.

@@ -1,0 +1,40 @@
+\begin{table}[h]
+\centering
+\caption{Function calls for hierarchical retrieval}
+\vspace{-8pt}
+\label{tab:function_calls}
+\scriptsize
+\begin{tabular}{l|l|p{7.5cm}}
+\hline
+\textbf{Name} & \textbf{Arguments} & \textbf{Description} \\
+\hline
+list\_components & None &
+Return all components with brief descriptions. \\
+\hline
+list\_packages\_under\_component & component\_name &
+Return all packages under the specified component. \\
+\hline
+list\_entries\_under\_package & package\_name &
+Return all thread entry points defined in the package. \\
+\hline
+list\_method\_under\_class & class\_name &
+Return all methods under the specified class. \\
+\hline
+get\_entry\_summary & entry\_name &
+Return concurrency summary of the thread entry and its interacting entries. \\
+\hline
+get\_method\_summary & method\_name &
+Return concurrency-related information of the method. \\
+\hline
+get\_interaction\_dsl & entry\_pair &
+Return interaction DSL for the given pair of thread entries. \\
+\hline
+get\_code\_snippet & method\_name &
+Return code snippet of the specified method. \\
+\hline
+exit & None &
+Terminate the retrieval process. \\
+\hline
+\end{tabular}
+\end{table}
+\vspace{-8pt}

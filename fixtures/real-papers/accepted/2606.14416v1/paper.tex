@@ -1,0 +1,1180 @@
+%%%%%%%% ICML 2025 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs} % for professional tables
+\usepackage{float} 
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2025} with \usepackage[nohyperref]{icml2025} above.
+\usepackage{hyperref}
+\usepackage{multirow}    % for \multirow{} commands
+\usepackage{arydshln}    % for \cdashline commands
+%\usepackage{subcaption}
+%%\usepackage{subcaption, floatrow}
+\usepackage{subfig}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+%\usepackage{icml2025}
+
+% If accepted, instead use the following line for the camera-ready submission:
+\usepackage[accepted]{icml2025}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Federated Learning for Feature Generalization with Convex Constraints}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Federated Learning for Feature Generalization with Convex Constraints}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2025
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Dongwon Kim}{skku}
+\icmlauthor{Donghee Kim}{skku}
+\icmlauthor{Sung Kuk Shyn}{kaist}
+\icmlauthor{Kwangsu Kim}{skku}
+\end{icmlauthorlist}
+
+%\icmlaffiliation{yyy}{Department of XXX, University of YYY, Location, Country}
+\icmlaffiliation{skku}{Department of Computer Science and Engineering, University of Sungkyunkwan, Suwon, Korea}
+\icmlaffiliation{kaist}{Kim Jaechul Graduate School of AI, Korea Advanced Institute of Science and Technology (KAIST), Daejeon, Korea}
+%\icmlaffiliation{comp}{Company Name, Location, Country}
+
+%\icmlcorrespondingauthor{Firstname1 Lastname1}{first1.last1@xxx.edu}
+%\icmlcorrespondingauthor{Firstname2 Lastname2}{first2.last2@www.uk}
+
+\icmlcorrespondingauthor{Dongwon Kim}{kdwaha@skku.edu}
+\icmlcorrespondingauthor{Kwangsu Kim}{kim.kwangsu@skku.edu}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+%\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+%Federated learning (FL) often struggles to generalize across heterogeneous client data. Local models risk overfitting their own distributions and even transferable features may be distorted during aggregation. To address these challenges, we propose FedCONST, which adaptively modulates update magnitudes based on the global model’s parameter strength. This avoids overemphasis on already well-learned parameters while reinforcing underdeveloped features. In particular, our method employs linear convex constraints, ensuring stability and preserving locally cultivated generalization capabilities during aggregation. A Gradient Signal-to-Noise Ratio (GSNR)-based analysis further confirms the effectiveness of FedCONST in improving feature transferability and robustness. Consequently, FedCONST aligns local and global objectives, mitigating overfitting and fostering stronger generalization across diverse FL environments, achieving state-of-the-art performance.
+Federated learning (FL) often struggles with generalization due to heterogeneous client data. Local models are prone to overfitting their local data distributions, and even transferable features can be distorted during aggregation. To address these challenges, we propose FedCONST, an approach that adaptively modulates update magnitudes based on the global model’s parameter strength. This prevents over-emphasizing well-learned parameters while reinforcing underdeveloped ones. Specifically, FedCONST employs linear convex constraints to ensure training stability and preserve locally learned generalization capabilities during aggregation. A Gradient Signal to Noise Ratio (GSNR) analysis further validates FedCONST's effectiveness in enhancing feature transferability and robustness. As a result, FedCONST effectively aligns local and global objectives, mitigating overfitting and promoting stronger generalization across diverse FL environments, achieving state-of-the-art performance.
+\end{abstract}
+
+%\begin{figure}[ht]
+%\vskip 0.2in
+%\begin{center}
+%\centerline{\includegraphics[width=\columnwidth]{image.png}}
+%\caption{(sample)}
+%\label{fig:fig1}
+%\end{center}
+%\vskip -0.2in
+%\end{figure}
+
+\begin{figure}
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{concept.png}}
+\caption{Illustration of the parameter space in FL. (1) Vanilla FL drives the optimization process away from the generalization area. (2) Optimization with non-convex constraints stabilizes the training process within the generalization area but may cause a loss of generalization during aggregation. (3) Our convex constraints stabilize the training process and align the aggregation with the generalization area, ensuring improved global generalization.}%For generalization, we assert training process to reside on generalizable area with a constraint. Constraint should be convex to preserve generalization abillity of the global model after aggregation.}%Test loss for client 6, using the same random seed across different Federated Learning algorithms. An increasing trend in test losses suggests overfitting.}
+\label{fig:testloss}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+\section{Introduction}
+\label{submission}
+
+Federated Learning (FL)\cite{fedfed} has emerged as a promising paradigm that enables multiple clients to collaboratively learn a shared model while keeping their data localized. A pivotal challenge in FL arises from the sparse and heterogeneous data distribution across clients, which leads to significant problems on the performance of a global model. (1) Local models often overfit their own distributions, limiting their capacity to generalize across the entire data distribution\cite{fedsam,fedalign}. (2) Even when some clients learn features that could generalize, these can become distorted during aggregation, misaligning them with global objectives and undermining performance\cite{fedsamr}.
+
+Previous approaches, including regularization\cite{fedmrur, moon, fedprox}, normalization \cite{fedbn, silobn, fedtan} and correction \cite{feddyn, scaffold, adabest} aim to mitigate these issues by aligning local model updates with the global model. However, by focusing solely on preserving global model information, these methods have neglected to ensure generalization, inevitably resulting in overfitting under limited data conditions. 
+
+Recently, some studies  have turned their attention to generalization of local learning. FedAlign\cite{fedalign} and FedSAM\cite{fedsam} focused on the generalization of local learning employing generalization term on loss. However, by failing to preserve coherent optimization objectives across clients during aggregation, these methods allow the model’s generalization capabilities to become distorted, ultimately degrading its overall performance.
+
+
+%Inspired by approaches in Domain Generalization (DG), we propose focusing on the strength of features during local training. DG methods, such as those leveraging Gradient Signal-to-Noise Ratio (GSNR), have demonstrated the importance of feature strength for maintaining generalization across diverse domains. However, directly collecting gradient statistics in FL is often infeasible due to communication and computation constraints. To overcome this limitation, we instead use weight magnitudes as effective proxies for feature strength, supported by theoretical evidence that GSNR is positively correlated with parameter magnitudes. By modulating update magnitudes based on global model parameter strengths, our approach prevents overemphasis on well-learned parameters and reinforces underdeveloped features.
+
+%To further ensure the preservation of generalizable features during aggregation, we introduce a novel design of linear convex constraints. These constraints maintain the integrity of generalizable features irrespective of the aggregation process, ensuring that the locally enhanced generalization capabilities are consistently reflected in the global model.
+%Therefore, we seek to answer an important research question :\textit{What kind of constraint, when enhancing the generalization capability of features during local training, remains unaffected by the aggregation process with aligned manner?} 
+In light of these issues, we ask: \textit{What kind of constraint enhances feature generalization during local training while remaining unaffected by the aggregation process?} 
+
+To answer this question, We propose FedCONST (Federated Learning with Convex Constraints for Global Model Generalization). FedCONST applies client-consistent convex constraints derived from the global model’s weight magnitudes, which serve as proxies for feature importance across the entire data distribution. Concretely, well-learned (stable) features in the global model are constrained to remain close during local updates, while under-learned (unstable) features are emphasized for further training. Because the constraints are convex and shared among all clients, they preserve the intended generalization effect after aggregation as desribed in \cref{fig:testloss}.%, addressing both local overfitting and post-aggregation distortion.
+
+Our method is inspired by insights from a Domain Generalization (DG) method\cite{adg}, where strong features (often measured by gradient statistics such as Gradient Signal-to-Noise Ratio, GSNR) are crucial to robust performance across diverse domains. Directly tracking GSNR is typically infeasible in FL due to communication and computational bottlenecks. Instead, we show that global weight magnitudes are reliable proxy for feature strength, aligning well with the GSNR perspective. This design choice makes FedCONST simple, communication-efficient, and broadly applicable.
+
+%As a result, we propose FedCONST (Federated Learning with Convex Constraints for Global Model Generalization), a method that introduces linear convex constraints identical across all clients. These constraints ensure stable and effective optimization, both locally and globally, by focusing updates on underlearned parameters while preventing overemphasis on well-learned ones. This approach enhances the generalization capabilities of the global model without introducing significant computational overhead.
+
+%In this paper, we clarify our motivation and theoretically justify our method. We demonstrate higher stability in local training through reduced gradient variance and improved convexity of the global model loss landscape. Empirically, our experiments show that FedCONST significantly outperforms existing FL methods in various models, datasets, and levels of heterogeneity in both cross-device and cross-silo settings, while maintaining high computational and communication efficiency.
+
+In this paper, we provide the motivation behind our work and a theoretical foundation for our method. We demonstrate higher stability in local training through reduced gradient variance and improved convexity of the global model loss landscape. Consequently, our experiments show that FedCONST significantly outperforms existing FL methods in various models, datasets, and levels of heterogeneity in both cross-device and cross-silo settings, while maintaining high computational and communication efficiency.
+%To address this, we propose focusing on the strength of features during local training and ensuring these strengths are preserved during aggregation. Specifically, we recognize that the magnitude of model parameters (weight sizes) can serve as an indicator of feature generalizability. By modulating update magnitudes based on the global model parameter strengths, our approach prevents overemphasis on well-learned parameters and reinforces underdeveloped features. In addition, to prevent the distortion of generalizable features during aggregation, we design linear convex constraints. These constraints are formulated to maintain the integrity of generalizable features regardless of the aggregation process, ensuring that the locally enhanced generalization capabilities are preserved in the global model. 
+
+%Our constraints is validated by Gradient Signal-to-Noise Ratio (GSNR)-based Generalization analysis. [36] proved that higher GSNR values yield higher One-Step Generalization Ratio (OSGR) values, resulting in better generalization performance. [37] utilized the feature strength indicated by the GSNR values to maintain generalizable features in Domain Generalization tasks. Rather than relying on explicit GSNR values, we use the global model weight magnitudes as effective proxies to identify generalizability of features on entire data. Supported by the analysis that GSNR is positively correlated with parameter magnitude, this approach is particularly beneficial in the FL environment, where communication and computation resources are constrained. 
+ 
+ %As a result, we introduce FedCONST (Federated Learning with Convex Constraints for Global Model Generalization). FedCONST introduces a pair of linear convex constraints identical across all clients, ensuring that these constraints remain stable and effective postaggregation. By focusing updates on underlearned parameters and preventing overemphasis on well-learned ones, FedCONST preserves and enhances the generalization capabilities learned at the client level.
+
+%In this paper, we clarify our motivation and theoretically justify our method. We also observed higher stability in local training with reduced gradient variance. Additionally, our experimental results suggest that client models are well-aligned with the global objective, contributing to the construction of a global model characterized by high convexity. These findings demonstrate that our proposed method outperforms existing FL methods in various models, data sets, and degrees of heterogeneity in both cross-device and cross-silo settings, while maintaining high computational and communication efficiency.
+In summary, our contributions are as follows.
+\begin{itemize}
+\item We propose a simple, yet effective approach that retains well-learned features while focusing on under-learned ones. This framework introduces new insights into how generalization can be enhanced in FL.%We propose a simple method to alleviate overfitting in the global model by retaining well-learned features and focusing on under-learned ones. This introduce novel insight for generalization methods.%Drawing from GSNR analysis, we utilize global weight norms as effective indicators of common generalizable features
+%We introduce novel common convex constraints—centering and orthogonal—that effectively achieve the aforementioned purpose.
+\item Our theoretical and empirical analyses guarantee that our method boosts generalization by imposing more updates with larger probabilities to under-learned features.
+\item We validate the effectiveness of FedCONST with a wide range of dataset and model architectures and show that it significantly outperforms existing FL methods with SOTA performance.
+\end{itemize}
+\vfill
+
+\section{Related work}
+\subsection{Federated Learning on Non-IID Data}
+ The challenge of non-IID data across clients leads to unstable local learning diverge the global model from consistent optima. To mitigate these issues, regularization methods have been prominently adopted. Techniques like FedProx \cite{fedprox}, FedMRUR\cite{fedmrur}, and MOON\cite{moon} incorporate explicit regularization mechanisms to align local updates with global objectives more effectively. These approaches ensure that the local models have common features for global objectives.  However, common features are often spurious as well, making global model suffer from the overfitting problem.
+
+To directly address the challenges posed by heterogeneous gradients, correction methods like FedDyn\cite{feddyn}, AdaBest\cite{adabest}, and SCAFFOLD\cite{scaffold} introduce correction terms that aim to align client updates with the global model. These strategies utilize stateful operations to align client updates on FL environment with limited local data. Aside from the risk on alignment of overfitting problem, this stateful operations require extra communications.
+
+On the other hand, methods such as FedSAM\cite{fedsam} and FedAlign\cite{fedalign} focus on enhancing generalization across clients without imposing restrictions for alignment with global objectives. These techniques prioritize a generalization of local training on limited data but unaligned approach to handle the heterogeneity inherent in FL.
+%Domain Generalization (DG) aims to develop models trained on one or more source domains that generalize effectively to unseen target domains [ref]. For example, a model trained on a cartoon domain should generalize robustly to a photo domain. Existing DG approaches address domain shift from two perspectives. The first focuses on feature alignment, encompassing techniques such as domain-invariant feature learning [CORAL], data augmentation [ref], data generation [ref], and feature disentanglement [SagNet, MatchDG]. The second emphasizes gradient alignment and includes methods such as IGA [ref] minimizes gradient differences, Fish [ref] increases gradient inner products, AND-mask and SAND-mask [ref], which updates weights only when gradient directions align, and Fishr [ref] aligns inter-domain gradient variance. Additionally, other approaches, such as predictor alignment [IRM], meta-learning [ref], and ensemble methods [ref], have also been explored. 
+
+%Recently, sharpness-aware minima (SAM) have been recognized for their positive impact on the generalization of in-distribution data, which has inspired the development of optimizers tailored for out-of-distribution (OOD) tasks [ref], demonstrating strong performance in DG tasks [ref]. However, despite the significant impact of optimizers on the performance of deep learning models, research exploring their effect in DG remains limited. [ref] In practice, most DG algorithms adopt Adam—the default optimizer in the widely used DomainBed benchmark [ref]—without deliberate consideration of optimizer design. To address this gap, this paper investigates the relationship between optimizers and generalization. It also introduces EVE, a novel optimizer-based method that fills a critical void in existing research.
+
+\subsection{Generalization of Neural Networks}
+%\subsubsection{Constraints for Generalization}
+%Numerous studies have highlighted the significance of parameter constraint techniques in enhancing model generalization. Approaches focusing on weight decay [17], model complexity reduction [15], and scale-invariant networks [30] have been shown to contribute to generalization of trained models by enforcing constraints. Research such as Omnigrok [16], and studies on constrained weight optimization [18] underscore the importance of parameter constraints generalization. Centered weight normalization [31] and weight normalization [32] also stabilize the training process by imposing some parameter constraints related to parameter norm. In FL, FedWon [11] and tried to stabilize local learning through reparameterization and FedLAW [12] tried to adjust global model’s parameter norm. But there is room for improvement on these approaches since they don’t consider heterogeneous optimization objectives of local models.
+
+%\subsubsection{Feature Generalizability and GSNR}
+%In research on neural network generalization abilities, a study [36] based on Gradient Signal to Noise Ratio (GSNR) has focused on the generalization capability of individual features. GSNR serves as a measure of the alignment of parameter gradients for each data point during training, with higher GSNR values indicating features that have a greater impact on One Step Generalization Ratio (OSGR) performance. Building on this property, recent Domain Generalization (DG) research has proposed a method that adjusts the dropout rate according to GSNR values [37]. In this DG study, a high dropout rate is applied to features with high generalizability, preserving already generalizable features while increasing the generalizability of lower-performing features through additional training. However, as calculation of GSNR in FL requires the collection of client-specific gradients, an effective approach to identify common generalizable features is necessary
+To analyze generalization performance during the training process, a study proposed the concept of One Step Generalization Ratio (OSGR)\cite{understanding}. OSGR is defined as the ratio between the decrease in loss on test data and on training data:
+\begin{equation}
+R_{Z, n} = \frac{\mathbb{E}_{D, D^\prime \sim Z^n}[\Delta \mathcal{L}_{D^\prime}]}{\mathbb{E}_{D \sim Z^n}[\Delta \mathcal{L}_D]},
+\end{equation}
+where $\Delta \mathcal{L}_{D^\prime} $ and $\Delta \mathcal{L}_D$  denote the decrease in loss on training data $D$ and test data $D^\prime$ within a single optimization step.
+
+To facilitate the prediction of OSGR during training, the authors further propose the following theorem.
+
+%\textbf{Theorem 1.}  
+\begin{proposition}[From Paper~\cite{understanding}]\label{thm:th2}
+The generalization of gradient updates can be expressed using the following OSGR value:
+
+\begin{equation}
+R_{Z, n} = 1 - \frac{1}{n} \sum_j W_j\frac{1}{ \frac{g_j^2}{\rho_j^2} + \frac{1}{n}},
+\end{equation}
+where $n$ is the number of samples, $g_j^2$ is the squared gradient magnitude for feature $j$ and $\rho_j^2$ is the corresponding noise variance, and The weight $W_j$ (satisfying $\sum_j W_j = 1$) is a weighting term.
+\end{proposition}
+
+~\cref{thm:th2} indicates that features with higher Gradient Signal-to-Noise Ratios(GSNR), defined by:
+\begin{equation}
+r_j = \frac{g_j^2}{\rho_j^2}
+\label{eq:gsnr}
+\end{equation}
+yield larger values of OSGR, thereby contributing more significantly to generalization performance.
+
+Based on these insights, a Paper \cite{adg} proposed a GSNR-based dropout method for DG tasks, aiming to enhance robustness by preserving parameters with higher GSNR values while promoting updates in those with lower GSNR. However, the distributed nature of FL complicates gradient collection and aggregation across clients.
+
+\section{Our Approach}
+
+%\begin{equation}
+%    W\ =\ w^L\ \circ \ w^{L-1}\ \circ \ \cdot \ \cdot %\ \cdot \ \circ \ w^1
+%    \label{eq:network}
+%\end{equation}
+To begin with, we define standard learning process is to train a deep neural network $f \left( x; W \right)$, where $f\ :\ X\ \rightarrow Y\ \ $ is a neural network with $L\ $ neural layers :
+\begin{equation}
+W = \{w^1, w^2, \ldots, w^L\}
+    \label{eq:network}
+\end{equation}
+Especially, We are interested in training each weight  $w^l = \{ w_{c,1}^{l}, \ldots, w_{c,s}^{l} \}$ with respect to the corresponding feature/channel $i$ on input layer $l$.
+
+\subsection{Federated Learning}
+We consider the standard FL that trains a model collaboratively from decentralized client devices. For every client, denoted as ${m}$ in the set $M$, there are $N_m$ training samples given by pairs $\left(x_i,\ y_i\right)$ for $i$ = 1 to $N_m$. Here, $x_i$ represents the image from a set $X$ and $y_i$ is the corresponding label from set $Y$. These pairs are independently and identically distributed, drawn from a distribution specific to the device, symbolized as $D_m\left(x,y\right)$ when $D=\bigcup_{m\in M}D_m$. With this setting, we follow the framework of FedAvg follows:
+
+ \begin{equation}
+\begin{aligned}
+\mathcal{L}(W) &= \sum_{m \in M} \frac{|D_m|}{|D|} \mathcal{L}_m(W) \\
+\text{where} \quad 
+\mathcal{L}_m(W) &= \mathbb{E}_{(x_i, y_i) \sim D_m} \left[ \mathcal{L}(x_i, y_i; W) \right]
+\end{aligned}
+\end{equation}
+
+ %LW=m∈MDmDLmW, where LmW=Exi,yi∼DmLxi,yi;W#1
+
+The global objective, denoted as $\mathcal{L}$, can be broken down into individual empirical loss $\mathcal{L}_{m}$ specific to each client data. Because of the separation of clients' data, $\mathcal{L}$ can not be optimized directly. FedAvg addresses this challenge by alternating between local training on each client’s dataset and a global aggregation step. 
+%FedAvg is a standard algorithm that treat this issue. FedAvg process can be sperated into tow phases: Glient Training and Aggregation phase.%The process initiates parallel training across all clients, independently optimizing their specific $\mathcal{L}_{m}$ objective. Upon completing this local training, FedAvg aggregates the models from all clients to update the global model. But client models conflict with each other w.r.t their heterogeneous optimization purposes, stressing the requirement for aligning toward global objectives with generalizability. Our method focus on adjusting feature learning process for the generalization purpose.
+
+\textbf{Client Training} Pivoting to the FedAvg blueprint, the local training trajectory is captured as:
+\begin{equation}
+w_m^k\ =\ w^k-\eta\sum_{t\in T}^{\ }g_{m,\ t}^k\ =\ w^k\ +\ \Delta w_m^k
+\end{equation}
+Here, $w^k$ typifies the global model during global round $k$,$\ g_{m,\ t}^k$ is the gradient corresponding to client m at timestep t of the $k^{th}$ global round, and $\eta$  denotes the learning rate. 
+
+\textbf{Aggregation} Transitioning to the global aggregation phase, the mechanics unfold as:
+
+\begin{equation}
+\begin{aligned}
+W^{k+1} &= \frac{1}{M} \sum_{m \in M} w_m^k = W^k + \frac{1}{M} \sum_{m \in M} \Delta w_m^k \\
+        &= W^k + \Delta w^k
+\end{aligned}
+\end{equation}
+In this matrix, $\Delta w^k$ epitomizes the average model updates accumulated from all clients during the $k_{th}$ global round.
+\begin{figure*}[h!]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\textwidth]{Fedconst_framework.PNG}}
+\caption{Schematic representation of FedCONST: Local learning on clients with weight constrained optimization to preserve robust paramter of the global model. Aggregation phase where convex constraints guide diverse client models toward a common, optimal representation, facilitating better alignment and performance of the global model.}
+\label{fig:rieframe}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+\subsection{FedCONST:Federated Learning for Feature Generalization with Convex Constraints}
+%In this section, we first focus on GSNR as a metric for feature generalizability on Neural Network in detail. And then, we show that the weight sizes of global model are sound alternatives for GSNR values to identify feature strength correlated with generalization.
+For promoting generalization in FL, we begin by proposing a conjecture and two principles to design our constraints. Next, we demonstrate that our method adheres to these principles. Finally, we present evidence to support the validity of the conjecture.
+\subsubsection{Constrained Optimization for Client Training}
+We propose a Constrained Weight Optimization framework that transfers the key insight of Feature Strength—initially introduced in DG methods—to a FL scenario. Our approach is motivated by Conjecture 1, which states that the magnitude of a weight can serve as a proxy for how well a feature is learned.
+
+\textbf{Conjecture 1} \textit{Large weights indicate well-learned (strong) features. Small weights signify weaker features requiring additional training.}
+
+%In DG, feature strength is often inferred from GSNR; however, directly utilizing gradients in FL is challenging due to distributed data and privacy constraints. Instead, we hypothesize that a weight’s magnitude reflects its feature’s maturity. 
+By leveraging this conjecture, we can selectively preserve strong features while reinforcing weaker ones, preserving the core principle of DG methods without direct access to each client’s detailed gradients.
+% \left|\left|w_i^l\right|\right|_2^2\ =\ c_i^l\
+To operationalize Conjecture 1 within federated learning, we introduce a constrained optimization framework:
+
+\begin{equation}
+\begin{aligned}
+\min_W\ &\mathcal{L}_{m}(W) \\
+\text{s.t. } & {G_c^l}^\top (w_c^l - G_c^l) = 0,\quad \mathbf{1}^\top w_c^l = 0,\quad \forall c, l
+\end{aligned}
+\label{eq:oriconst}
+\end{equation}
+Here, $w_i^l$ represents the weight vector for the $i$-th output feature in the $l$-th layer of a client model, and $G_c^l$ denotes the corresponding weight vector of global model. $1$ is an all-one vector.  %The centralization constraint $\ 1^\top w_i^l\ =\ 0\ $ is used to stabilize mean as $E[w_i^l] = 0$. THe orthogonal constraint 
+
+
+
+%The constrained optimization we propose imposes a convex constraint that remains intact throughout the aggregation process. Furthermore, a centering constraint limits excessive drift of each client's parameters during updates, while the orthogonal update mechanism reduces learning in the same direction as the existing weight vector—thus preserving well-learned features and focusing improvements on those that require further training.
+
+
+%Recent studies have analyzed the generalization ability of features in neural networks. These analyzes introduced metrics such as the \textit{Gradient Signal-to-Noise Ratio (GSNR)} and the \textit{One-Step Generalization Ratio (OSGR)} to quantify generalization performance. For a model $\hat{y} = f(x, \theta)$ with a loss function $L$, let the empirical training dataset be $D = \{(x_1, y_1), \ldots, (x_n, y_n)\} \sim \mathcal{Z}^n$ and the empirical testing dataset be $D^\prime = \{(x_1^\prime, y_1^\prime), \ldots, (x_{n^\prime}^\prime, y_{n^\prime}^\prime)\} \sim \mathcal{Z}^{n^\prime}$, where $n = n^\prime$. The training and testing losses are defined as follows:
+
+%\begin{equation}
+%L_D = \frac{1}{n} \sum_{i=1}^n L(f(x_i, \theta), y_i), \quad L_{D^\prime} = \frac{1}{n} \sum_{i=1}^n L(f(x_i^\prime, \theta), y_i^\prime).
+%\end{equation}
+
+%The OSGR value can then be defined as:
+
+%\begin{equation}
+%R_{Z, n} = \frac{\mathbb{E}_{D, D^\prime \sim Z^n}[\Delta L_{D^\prime}]}{\mathbb{E}_{D \sim Z^n}[\Delta L_D]},
+%\end{equation}
+
+%where $\Delta L[D]$ and $\Delta L[D^\prime]$ represent loss changes due to gradient updates. Previous work [ref] demonstrated that the OSGR value can be computed using gradient statistics from the training data. For each sample $(x, y)$ drawn from the data distribution $Z = X \times Y$, the gradient $g_i(\theta) = \frac{\partial \mathcal{L}(f(x_i, \theta), y_i)}{\partial \theta}$ exhibits the following statistics:
+
+%\begin{equation}
+%\begin{aligned}
+%g_Z(\theta) = \mathbb{E}_{x, y \sim Z}[g(\theta)],
+%\quad \rho_Z^2(\theta) = \mathrm{Var}_{x, y \sim Z}[g(\theta)],
+%\\ \quad \sigma^2(\theta) = \mathrm{Var}_{D \sim Z^n}\left[\frac{1}{n} \sum_{i=1}^n g_i(\theta)\right] = \frac{1}{n} \rho_Z^2(\theta).
+%\end{aligned}
+%\end{equation}
+
+%Assuming that the training and testing data follow the same distribution and that the model parameter $\theta$ is initialized independently of the data, the gradient distributions of the training and testing datasets are expected to align during the early stages of training. Building on this intuition, both Paper [36] and our work adopt the following assumption:
+
+%\textbf{Assumption 1. (Non-overfitting limit approximation)}  
+%The average gradients $\widetilde{g_Z}(\theta)$ and $\widetilde{g_{Z^\prime}}(\theta)$ over the training dataset $Z$ and test dataset $Z^\prime$, respectively, follow the same distribution.
+
+%Under this assumption, Paper [36] introduced the following theorem:
+
+%\textbf{Theorem 1.}  
+%Under Assumption 1, the generalization of gradient updates can be expressed using the following OSGR value:
+
+%\begin{equation}
+%R_{Z, n} = 1 - \frac{1}{n} \sum_j \frac{W_j}{1 + \frac{g_j^2}{\rho_j^2} + \frac{1}{n}},
+%\end{equation}
+
+%where the weight $W_j = \frac{\mathbb{E}_{D \sim \mathcal{Z}^n}[\Delta L_j[D^\prime]]}{\mathbb{E}_{D \sim \mathcal{Z}^n}[\Delta L[D]]}$ satisfies $\sum_j W_j = 1$. This result indicates that higher GSNR values contribute to higher generalization performance, as reflected by larger OSGR values.
+
+%Furthermore, Paper [37] suggested that GSNR-based dropout methods are promising for domain generalization (DG) tasks, leveraging the training process to improve robustness. However, how this insight can be effectively utilized in FL remains an open question.
+%hlsafdsafdasdfaf
+%\subsection{Convex Constraints for Aligned Aggregation.}
+
+This design is originated form the insight that constraints should adjust feature learning while maintaining generalization ability after the aggregation phase. This can be summarized as the following condition:
+
+\textbf{Condition 1. (Feature Adjustment)} \textit{The constraints boost weak features and preserve already strong features for generalization.}\\  
+\textbf{Condition 2. (Convex Constraints)} \textit{The constraints should be conserved after aggregation to preserve generalization ability.}
+
+Our design consists of two constraints, the centralization constraint and the orthogonal constraint. The centralization constraint($1^\top w_c^l\ =\ 0$ on ~\cref{eq:oriconst}) ensures that the total update impact on a feature is equalized, while the orthogonal constraint(${G_c^l}^\top (w_c^l - G_c^l)=0$ on ~\cref{eq:oriconst}) mitigates redundant updates to already strong signals. Together, these constraints satisfy Condition 1 by promoting generalization during local training and Condition 2 by being linear and convex.
+
+\subsubsection{Feature Adjustment}
+In this section, we justify our constraints prevent redundant training on strong features. We assume that weight changes due to gradient updates on parameters $W_{c}^{l}=\{ W_{c,1}^{l}, \ldots, W_{c,s}^{l} \}$ with respect to the corresponding feature/channel $i$ follow a spherical Gaussian distribution:
+\begin{equation}
+\Delta \bm{W}_{c,q} \sim \mathcal{N}\left(0, \sigma^2 \bm{I}\right), \text{where } q=1,2,\ldots s
+\end{equation}
+\begin{equation}
+\sigma^2 = \frac{\sum_q \left(\Delta\bm{W}_{c,q}^{l}\right)^2}{n-1}.
+\end{equation}
+%\quad \mathbb{E}\left[\Delta \bm{W}_{c,\bullet}^{(l)}\right] = 0, 
+%By projecting onto the hyperplane orthogonal to the weight vector $W_{c}^{l}$ of the global model $G_c^l$ correspond to a weight vector of a client model, defined as:
+We project the weight changes onto the hyperplane orthogonal to the initial client weight vector \( W_c^l \), which is initialized to match the global parameter of \( G_c^l \), and define the projection as follows:
+\begin{equation}
+\bm{P} = \bm{I} - \bm{u}\bm{u}^\top, \quad \bm{u} = \frac{\bm{W_c^l}}{\|\bm{W_c^l}\|_2},
+\end{equation}
+the projected weight update is:
+\begin{equation}
+\begin{aligned}
+\Delta \bm{w}_\perp &= \bm{P} \Delta \bm{w}, \\
+\text{Cov}(\Delta \bm{w}_\perp) &= \bm{P} \cdot \text{Cov}(\Delta \bm{w}) \cdot \bm{P}^\top = \sigma^2 \bm{P}
+\end{aligned}
+\end{equation}
+
+
+The resulting variance aligns with:
+\begin{equation}
+\text{Var}(\Delta \bm{W}^{l}_{c,q \perp}) = \sigma^2 \left( 1 - \frac{(W_{c,q}^{l})^2}{\|\bm{W_c}^{l}\|_2^2} \right).
+\end{equation}
+
+So these discussion can be summarized as the following proposition:
+
+\begin{theorem}[Feature-Preserving Updates under Centering and Orthogonality]%\textbf{Proposition 1.}
+ \textit{If we impose centering and orthogonality constraints, and if $W^{l}_{c,i} \leq W^{l}_{c,j}$, then
+\[
+\text{Var}(\Delta W^{l}_{c,i}) \geq \text{Var}(\Delta W^{l}_{c,j}),
+\]
+which means that updates are inversely correlated with the weight size, i.e.,
+\[
+\Pr(|\Delta W^{l}_{c,i}| \geq |\Delta W^{l}_{c,j}|) \geq \Pr(|\Delta W^{l}_{c,i}| \leq |\Delta W^{l}_{c,j}|).
+\]}
+\end{theorem}
+
+Therefore, our constraints ensure that updates have an inverse correlation with weight size, promoting stability and avoiding overfitting to features with larger weights.
+
+\subsubsection{Convex Constraints}
+%The distributed characteristic of FL presents challenges. In this paradigm, each client's model is independently optimized using its own data before undergoing aggregation to form the global model. We have refined our constraints to be convex, ensuring that they align with the condition for generalization during local training and after aggregation. In the following paragraphs, we demonstrate the FL process on our convex constraints.
+Each client optimizes its local model independently on private data, and these models are then aggregated to form a global model without alignment. To address this misalignment, we refine our constraints to be convex, ensuring they satisfy the conditions for generalization both during local training and after aggregation. Although these constraints are applied per weight vector for channel/feature $c$ of layer $l$, we omit $c$ and $l$ in the notation  for brevity and to focus on the convex characteristic.  \\%operate in the FL setting.\\
+\textbf{Centralization Constraint($1^\top w_c^l\ =\ 0$ on ~\cref{eq:oriconst})}\\ 
+The Centralization Constraint is specifically applied to the gradient of each client's local model to stabilize the local training process by maintaining the mean to be zero. If each gradient of every client is centralized as:
+\begin{equation}
+\bm{1}^\top \bm{g}_{m,t}^{k} = 0 
+\end{equation}
+then it results in
+\begin{gather}
+ -\eta \sum_{t \in T} 1^\top g_{m,t}^k = 1^\top (-\eta \sum_{t \in T} g_{m,t}^k) = 1^\top \Delta w_{m}^k = 0
+\label{eq:cenresult}
+\end{gather}
+Consequently, the total change of a client model during local training becomes zero, ensuring unbiased weight on client models. 
+
+By ~\cref{eq:cenresult}, the global update adhering to the Centralization Constraint is represented as:
+\begin{equation}
+\frac{1}{M}\sum _{m\in M}^{\ }1^\top \Delta w_m^k\ =  1^\top \Delta w^k\ = 0
+\end{equation}
+In Algorithm~\ref{alg:algo}, to apply the centralization constraint \( \bm{1}^\top w_i^l = 0 \) in practice, we define the following centering function:
+\begin{equation}
+C(w) = w - \frac{1}{n} \bm{1}^\top w
+\label{eq:center}
+\end{equation}
+where \( n \) denotes the number of parameters in \( w \). This function is directly used in our algorithm to enforce the centralization constraint during local updates.
+
+\textbf{Orthogonal Constraint(${G_c^l}^\top (w_c^l - G_c^l)=0$ on ~\cref{eq:oriconst})}\\ 
+The orthogonal constraint align the parameters of local and global models onto the same hyperplane orthogonal to the initial global model at each round, mitigating the grow in the strong features. This adjustment translates the constraint such that the local gradient is orthogonal to the initial global model:
+\begin{gather}
+(w^k)^\top g_{m,\ t}^k = 0 \label{eq:const2}
+\end{gather}
+then it results in
+\begin{gather}
+\begin{split}
+-\eta \sum_{t \in T} (w^k)^\top g_{m,t}^k &= (w^k)^\top (-\eta \sum_{t \in T} g_{m,t}^k) \\ &= (w^k)^\top \Delta w_{m}^k = 0 \label{eq:orthresult}
+\end{split}
+\end{gather}
+During aggregation, ~\Cref{eq:orthresult} aligns the global update as:
+\begin{equation}
+\frac{1}{M}\sum _{m\in M}^{\ }(w^k)^\top \Delta w_m^k\ =  (w^k)^\top \Delta w^k\ = 0
+\label{eq:centg}
+\end{equation}
+
+In Algorithm~\ref{alg:algo}, we apply the projection operator \( P_{w^k} \) to each update direction to ensure that local updates remain orthogonal to the initial global parameter \( p = w^k / \| w^k \| \).
+\begin{equation}
+    P_{w^k}(w) = (I - pp^\top)w,
+    \label{eq:projection}
+\end{equation}
+where \( I \) is the identity matrix, and \( pp^\top \) is the outer product of \( p \) with itself. This projection operator is used in our algorithm to enforce the orthogonality constraint by projecting updates onto the tangent space of the global model direction.
+
+%By applying the orthogonalization constraint, we align the parameters of local and global models onto the same hyperplane orthogonal to the initial global model at each round, ensuring alignment of client models and stable local learning.
+
+\subsection{Weight Size as a Feature Strength}
+In this section, we discuss about validity of conjecture 1. Fortunately, the paper \cite{understanding} also provided a detailed analysis of the relationship between GSNR and weight size, indicating a positive correlation. They considered a fully connected network with parameters 
+\begin{equation}
+\theta = \{ \bm{W}^{1}, \ldots, \bm{W}^{l_{\mathrm{max}}} \}
+\end{equation}
+
+where $\bm{W}^{l}, \bm{b}^{l}$ are the weight matrix and bias of the first layer, respectively, and so on. The activations of the $l$-th layer are denoted by 
+\begin{equation}
+\bm{a}^{l} = \{ a_s^{l}(\theta^{l-1}) \}
+\end{equation}
+where $s$ is the index for nodes/channels, and 
+\begin{equation}
+\theta^{l-1} = \{ \bm{W}^{1}, \ldots, \bm{W}^{l-1} \}
+\end{equation}
+is the collection of parameters in the layers before $l$. The forward pass on data sample $i$, where $\{ a_s^{l}(\theta^{l-1}) \}$ is multiplied by the weight matrix $\bm{W}^{l}$, is defined as:
+\begin{equation}
+o_{i,c}^{l} = \sum_s W_{c,s}^{l} a_{i,s}^{l}(\theta^{l-1})
+\end{equation}
+where $\bm{o}^{l} = \{ o_{i,c}^{l} \}$ is the output for the $i$-th data sample on the $l$-th layer, and $c$ is the index for nodes/channels. We use $g^{l}$ to denote the average gradient of weights of the $l$-th layer $\bm{W}^{l}$, i.e.,
+\begin{equation}
+g^{l} = \frac{1}{n} \sum_{i=1}^{n} \frac{\partial \mathcal{L}_i}{\partial \bm{W}^{(l)}}
+\end{equation}
+where $\mathcal{L}_i$ is the loss of the $i$-th sample.
+
+In this setting, the authors showed the following correlation between gradient change and gradient norm size:
+\begin{equation}
+\begin{aligned}
+\Delta g_{s,c}^{l} = 
+& -\frac{\lambda}{n^2} \sum_{\theta_j \in \theta^{l-1}} W_{s,c}^{l} 
+\left( \frac{1}{n} \sum_{i=1}^n \frac{\partial \mathcal{L}_i}{\partial o_{i,c}^{l}} \frac{\partial o_{i,c}^{l}}{\partial \theta_j} \right)^2 \\
+& + \text{other terms}
+\end{aligned}
+\end{equation}
+
+where $\lambda$ is the learning rate, assumed to be small enough.
+
+This expression implies that if the gradient change $\Delta g_{s,c}^{l}$ and the corresponding weight $W_{s,c}^{l}$ have different signs, they contribute to a more stable state by constructing positive feedback during training, which increases the size of both values. Conversely, if they have the same signs, a negative feedback loop during training decreases the size of both values until one of them changes its sign, resulting in a stable state.
+
+Therefore, considering only stable states, the size of the weight $W_{s,c}^{l}$ is directly correlated with the gradient change $\Delta g_{s,c}^{l}$, positively affecting the GSNR value of $r_j = \frac{g_j^2}{\rho_j^2}$ on ~\cref{eq:gsnr}. Here, we decided to use the size of $W_{s,c}^{l}$ of the global model instead of collecting $g_{s,c}^{l}$ statistics to calculate GSNR values for the entire dataset. As a result, rather than utilizing GSNR as an indicator of feature strength, which requires collecting gradients from each client, we adopt the weight magnitude of the global model as a proxy for feature strength.
+
+
+\subsection{Training Process}
+As shown in ~\cref{alg:algo}, FedCONST merely changes the local learning process to constrained optimization on convex linear constraints for Global Model Generalization. This approach has two main advantages: (1) Using convex constraints based on common global model, we align local training across client models without additional communication cost in stateless manner. (2) By employing the weight size to estimate the generalizability of the features, we ensure the generalizability of the FL process. Moreover, this insight is well motivated by GSNR based analysis. 
+
+
+\begin{algorithm}[h]
+\caption{Training procedure of FedCONST}
+\label{alg:algo}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Batch size $B$, communication rounds $K$, number of clients $M$, local steps $T$, dataset $D = \bigcup_{m\in[M]}D_m$
+\STATE \textbf{Output:} Global model parameters $w^K$
+\STATE \textbf{Server executes:}
+\STATE Initialize $w^0$ with He initialization
+\FOR{$k = 0, \ldots, K-1$}
+    \FOR{$m = 1, \ldots, M$ \textbf{in parallel}}
+        \STATE Send $w^k$ to client $m$
+        \STATE $w^{k+1}_m \leftarrow \textsc{FedCONSTClient}(m, w^k)$
+    \ENDFOR
+    \STATE $w^{k+1} \gets \sum_{m \in [M]} \frac{|D_m|}{|D|} w^{k+1}_m$
+\ENDFOR
+\STATE \textbf{return} $w^K$
+\STATE \textbf{FedCONSTClient}$(m, w^k)$:
+\STATE Assign global model to the local model $w_m^k \leftarrow w^k$
+\FOR{each local epoch $t = 1, \ldots, T$}
+    \FOR{each batch $(x_{m,1:B}, y_{m,1:B}) \in D_m$}
+        \STATE Center gradient: $g_{m,t}^k \gets \mathrm{C}(g_{m,t}^k)$
+        \STATE Project gradient: $g_{m,t}^k \gets P_{w^k}(g_{m,t}^k)$
+        \STATE Apply update: $w_m^k \gets w_m^k - \eta g_{m,t}^k$
+    \ENDFOR
+\ENDFOR
+\STATE \textbf{return} $w^{k+1}_m$ to server
+\end{algorithmic}
+\end{algorithm}
+
+
+%In the following section, we utilize Hypothesis 1 to design constraints for adjusting gradient updates based on parameters $\{ W_{c,1}^{(l)}, \ldots, W_{c,s}^{(l)} \}$ with respect to the corresponding feature/channel $c$.
+%aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+\section{Experiments}
+% \begin{table*}[!h]
+% \caption{Top-1 test accuracy (\%) comparison of LeNet-5 and ResNet-18 models under Cross-Device and Cross-Silo settings. The numbers inside the parentheses represent the accuracy differences when Constraint was applied to the training of client models.}
+% \renewcommand{\arraystretch}{1.1} % Increase row height (1.2 = 120% of default)
+% \setlength{\tabcolsep}{7pt}      % Increase column separation (default is 6pt)
+% \centering
+% \footnotesize
+% \begin{tabular}{|l|l|l|lll|}
+% \hline
+%       &           & Cross-Device & \multicolumn{3}{c|}{Cross-Silo}                                             \\ \cline{3-6} 
+%       &           & CIFAR-10     & \multicolumn{1}{c|}{CIFAR-10}  & \multicolumn{1}{c|}{CIFAR-10}  & CIFAR-100 \\
+% Model & Algorithm & \multicolumn{1}{c|}{$\alpha$ = 0.5}    & \multicolumn{1}{c|}{$\alpha$ = 0.2} & \multicolumn{1}{c|}{$\alpha$ = 0.5} & \multicolumn{1}{c|}{$\alpha$ = 0.5} \\ \hline
+% \multirow{8}{*}{LeNet-5} 
+% & FedAvg~\cite{fedfed} & 46.12 & \multicolumn{1}{l|}{46.42} & \multicolumn{1}{l|}{53.12} & 17.46 \\
+%  \multirow{8}{*}{~\cite{lenet}}
+%  & FedAvg + CONST & \textbf{54.28} \tiny{(+8.16)} & \multicolumn{1}{l|}{54.79 \tiny{(+8.37)}} & \multicolumn{1}{l|}{59.66 \tiny{(+6.54)}} & \textbf{26.86} \tiny{(+9.40)} \\
+%  \cdashline{2-6}[2pt/2pt]
+%  & FedProx~\cite{fedprox} & 45.58 & \multicolumn{1}{l|}{45.27} & \multicolumn{1}{l|}{55.15} & 18.42 \\
+%  & FedProx + CONST & 53.09 \tiny{(+7.51)} & \multicolumn{1}{l|}{56.18 \tiny{(+10.91)}} & \multicolumn{1}{l|}{60.70 \tiny{(+5.55)}} & 26.78 \tiny{(+8.36)} \\
+%  \cdashline{2-6}[2pt/2pt]
+%  & MOON~\cite{moon} & 43.89 & \multicolumn{1}{l|}{46.66} & \multicolumn{1}{l|}{55.79} & 18.72 \\
+%  & MOON + CONST & 48.66 \tiny{(+4.77)} & \multicolumn{1}{l|}{52.88 \tiny{(+6.22)}} & \multicolumn{1}{l|}{59.86 \tiny{(+4.07)}} & 26.76 \tiny{(+8.04)} \\
+%  \cdashline{2-6}[2pt/2pt]
+%  & SCAFFOLD~\cite{scaffold} & 45.66 & \multicolumn{1}{l|}{45.67} & \multicolumn{1}{l|}{52.74} & 17.66 \\
+%  & SCAFFOLD + CONST & 53.82 \tiny{(+8.16)} & \multicolumn{1}{l|}{\textbf{56.62} \tiny{(+10.95)}} & \multicolumn{1}{l|}{\textbf{63.03} \tiny{(+10.29)}} & 26.74 \tiny{(+9.08)} \\
+%  \cdashline{2-6}[2pt/2pt]
+%  & FedDyn~\cite{feddyn} & 44.93 & \multicolumn{1}{l|}{48.05} & \multicolumn{1}{l|}{51.05} & 16.79 \\
+%  & FedDyn + CONST & 54.07 \tiny{(+9.14)} & \multicolumn{1}{l|}{55.67 \tiny{(+7.62)}} & \multicolumn{1}{l|}{59.76 \tiny{(+8.71)}} & 27.14 \tiny{(+10.35)} \\
+
+% \hline
+% \multirow{8}{*}{ResNet-18}& FedAvg~\cite{fedfed} & 54.07 & \multicolumn{1}{l|}{57.04} & \multicolumn{1}{l|}{64.25} & 33.51 \\
+% \multirow{8}{*}{~\cite{resnet}}& FedAvg + CONST & 66.51 \tiny{(+12.44)} & \multicolumn{1}{l|}{68.41 \tiny{(+11.37)}} & \multicolumn{1}{l|}{72.44 \tiny{(+8.19)}} & 36.82 \tiny{(+3.31)} \\
+%   \cdashline{2-6}[2pt/2pt]
+%  & FedProx~\cite{fedprox} & 56.79 & \multicolumn{1}{l|}{53.92} & \multicolumn{1}{l|}{64.51} & 34.11 \\
+%  & FedProx + CONST & 63.51 \tiny{(+6.72)} & \multicolumn{1}{l|}{68.07 \tiny{(+14.15)}} & \multicolumn{1}{l|}{71.96 \tiny{(+7.45)}} & 36.56 \tiny{(+2.45)} \\
+%   \cdashline{2-6}[2pt/2pt]
+%  & MOON~\cite{moon} & 57.84 & \multicolumn{1}{l|}{51.51} & \multicolumn{1}{l|}{68.45} & 35.19 \\
+%  & MOON + CONST & \textbf{66.94} \tiny{(+9.10)} & \multicolumn{1}{l|}{62.52 \tiny{(+11.01)}} & \multicolumn{1}{l|}{71.84 \tiny{(+3.39)}} & 36.80 \tiny{(+1.61)} \\
+%   \cdashline{2-6}[2pt/2pt]
+%  & SCAFFOLD~\cite{scaffold} & 56.47 & \multicolumn{1}{l|}{59.30} & \multicolumn{1}{l|}{64.50} & 37.18 \\
+%  & SCAFFOLD + CONST & 63.49 \tiny{(+7.02)} & \multicolumn{1}{l|}{68.63 \tiny{(+9.33)}} & \multicolumn{1}{l|}{\textbf{75.09} \tiny{(+10.59)}} & 38.93 \tiny{(+1.75)} \\
+%   \cdashline{2-6}[2pt/2pt]
+%  & FedDyn~\cite{feddyn} & 52.64 & \multicolumn{1}{l|}{55.09} & \multicolumn{1}{l|}{65.50} & 35.07 \\
+%  & FedDyn + CONST & 64.29 \tiny{(+11.65)} & \multicolumn{1}{l|}{66.00 \tiny{(+10.91)}} & \multicolumn{1}{l|}{71.76 \tiny{(+6.26)}} & 37.22 \tiny{(+2.15)} \\
+%   \cdashline{2-6}[2pt/2pt]
+%  & FedSAM~\cite{fedsam} & 62.52 & \multicolumn{1}{l|}{61.35} & \multicolumn{1}{l|}{69.45} & 38.43 \\
+%  & FedSAM + CONST & 63.45 \tiny{(+0.93)} & \multicolumn{1}{l|}{\textbf{68.87} \tiny{(+7.52)}} & \multicolumn{1}{l|}{72.64 \tiny{(+3.19)}} & \textbf{39.61} \tiny{(+1.18)} \\
+% \hline
+% \end{tabular}
+% \label{tab:combined}
+% \end{table*}
+
+\begin{table*}[!h]
+\caption{Top-1 test accuracy (\%) comparison of LeNet-5 and ResNet-18 models under Cross-Device and Cross-Silo settings. The numbers inside the parentheses represent the accuracy differences when Constraint was applied to the training of client models.}
+\renewcommand{\arraystretch}{1.1} % Increase row height (1.2 = 120% of default)
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{|l|l|l|lll|}
+\hline
+      &           & Cross-Device & \multicolumn{3}{c|}{Cross-Silo}                                             \\ \cline{3-6} 
+      &           & CIFAR-10     & \multicolumn{1}{c|}{CIFAR-10}  & \multicolumn{1}{c|}{CIFAR-10}  & CIFAR-100 \\
+Model & Algorithm & \multicolumn{1}{c|}{$\alpha$ = 0.5}    & \multicolumn{1}{c|}{$\alpha$ = 0.2} & \multicolumn{1}{c|}{$\alpha$ = 0.5} & \multicolumn{1}{c|}{$\alpha$ = 0.5} \\ \hline
+\multirow{8}{*}{LeNet-5} & FedAvg & 46.12 & \multicolumn{1}{l|}{46.42} & \multicolumn{1}{l|}{53.12} & 17.46 \\
+ & FedAvg + CONST & \textbf{54.28} \tiny{(+8.16)} & \multicolumn{1}{l|}{54.79 \tiny{(+8.37)}} & \multicolumn{1}{l|}{59.66 \tiny{(+6.54)}} & 26.86 \tiny{(+9.40)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & FedProx & 45.58 & \multicolumn{1}{l|}{45.27} & \multicolumn{1}{l|}{55.15} & 18.42 \\
+ & FedProx + CONST & 53.09 \tiny{(+7.51)} & \multicolumn{1}{l|}{56.18 \tiny{(+10.91)}} & \multicolumn{1}{l|}{60.70 \tiny{(+5.55)}} & 26.78 \tiny{(+8.36)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & MOON & 43.89 & \multicolumn{1}{l|}{46.66} & \multicolumn{1}{l|}{55.79} & 18.72 \\
+ & MOON + CONST & 48.66 \tiny{(+4.77)} & \multicolumn{1}{l|}{52.88 \tiny{(+6.22)}} & \multicolumn{1}{l|}{59.86 \tiny{(+4.07)}} & 26.76 \tiny{(+8.04)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & SCAFFOLD & 45.66 & \multicolumn{1}{l|}{45.67} & \multicolumn{1}{l|}{52.74} & 17.66 \\
+ & SCAFFOLD + CONST & 53.82 \tiny{(+8.16)} & \multicolumn{1}{l|}{\textbf{56.62} \tiny{(+10.95)}} & \multicolumn{1}{l|}{\textbf{63.03} \tiny{(+10.29)}} & 26.74 \tiny{(+9.08)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & FedDyn & 44.93 & \multicolumn{1}{l|}{48.05} & \multicolumn{1}{l|}{51.05} & 16.79 \\
+ & FedDyn + CONST & 54.07 \tiny{(+9.14)} & \multicolumn{1}{l|}{55.67 \tiny{(+7.62)}} & \multicolumn{1}{l|}{59.76 \tiny{(+8.71)}} & \textbf{27.14} \tiny{(+10.35)} \\
+\hline
+\multirow{8}{*}{ResNet-18} & FedAvg & 54.07 & \multicolumn{1}{l|}{57.04} & \multicolumn{1}{l|}{64.25} & 33.51 \\
+ & FedAvg + CONST & 66.51 \tiny{(+12.44)} & \multicolumn{1}{l|}{68.41 \tiny{(+11.37)}} & \multicolumn{1}{l|}{72.44 \tiny{(+8.19)}} & 36.82 \tiny{(+3.31)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & FedProx & 56.79 & \multicolumn{1}{l|}{53.92} & \multicolumn{1}{l|}{64.51} & 34.11 \\
+ & FedProx + CONST & 63.51 \tiny{(+6.72)} & \multicolumn{1}{l|}{68.07 \tiny{(+14.15)}} & \multicolumn{1}{l|}{71.96 \tiny{(+7.45)}} & 36.56 \tiny{(+2.45)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & MOON & 57.84 & \multicolumn{1}{l|}{51.51} & \multicolumn{1}{l|}{68.45} & 35.19 \\
+ & MOON + CONST & \textbf{66.94} \tiny{(+9.10)} & \multicolumn{1}{l|}{62.52 \tiny{(+11.01)}} & \multicolumn{1}{l|}{71.84 \tiny{(+3.39)}} & 36.80 \tiny{(+1.61)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & SCAFFOLD & 56.47 & \multicolumn{1}{l|}{59.30} & \multicolumn{1}{l|}{64.50} & 37.18 \\
+ & SCAFFOLD + CONST & 63.49 \tiny{(+7.02)} & \multicolumn{1}{l|}{68.63 \tiny{(+9.33)}} & \multicolumn{1}{l|}{\textbf{75.09} \tiny{(+10.59)}} & 38.93 \tiny{(+1.75)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & FedDyn & 52.64 & \multicolumn{1}{l|}{55.09} & \multicolumn{1}{l|}{65.50} & 35.07 \\
+ & FedDyn + CONST & 64.29 \tiny{(+11.65)} & \multicolumn{1}{l|}{66.00 \tiny{(+10.91)}} & \multicolumn{1}{l|}{71.76 \tiny{(+6.26)}} & 37.22 \tiny{(+2.15)} \\
+ \cdashline{2-6}[2pt/2pt]
+ & FedSAM & 62.52 & \multicolumn{1}{l|}{61.35} & \multicolumn{1}{l|}{69.45} & 38.43 \\
+ & FedSAM + CONST & 63.45 \tiny{(+0.93)} & \multicolumn{1}{l|}{\textbf{68.87} \tiny{(+7.52)}} & \multicolumn{1}{l|}{72.64 \tiny{(+3.19)}} & \textbf{39.61} \tiny{(+1.18)} \\
+\hline
+\end{tabular}
+\label{tab:combined}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table*}
+
+\subsection{Experimental Setup}
+We conducted experiments using the CIFAR-10 and CIFAR-100 datasets \cite{cifar}. Our experiments spanned both cross-silo and cross-device settings. For the cross-silo setup, we involved a total of 10 clients, while in the cross-device setting, 10\% of clients were randomly selected from a pool of 50 or 100 participants. The data distribution among clients was governed by a Dirichlet distribution, with the $\alpha$ value determining the degree of heterogeneity; a lower $\alpha$ value corresponds to a more heterogeneous distribution. For an extremely heterogeneous environment, we used a Dirichlet $\alpha$ of 0.2 with 10 local training epochs, while a more typical environment utilized an alpha of 0.5 with 5 local training epochs. Our tests were conducted on both the LeNet-5 and ResNet-18 architectures.% For the training parameters, we set the local learning momentum to 0.9, applied a weight decay of 1e-5, and used a batch size of 50. The learning rate was set to 0.01 for local training and 1.0 for global updates. All experimental evaluations were executed utilizing two Nvidia 3090 GPUs. 
+More detailed settings of experiments are in the supplementary materials. 
+
+\subsection{Performance Comparison}
+As detailed in \cref{tab:combined}, the LeNet-5 model consistently outperformed the existing algorithms across all settings. As shown in \cref{tab:combined}, our approach surpassed the performance of existing algorithms in all settings on CIFAR-10 and demonstrated commendable performance on CIFAR-100. \cref{tab:combined} further reveals that in a cross-device setting, our algorithm consistently exceeded the performance of the other algorithms.  Moreover, performance enhancement was observed when constraints were applied to algorithms representative of either alignment or local learning generalization methods.  This indicates that our method fills the gaps and enhances areas where existing methods fall short, leading to a more robust and efficient FL process.
+
+\subsection{Experiment Analysis}
+\subsubsection{Stability on Local Training}
+
+%\begin{figure*}[!h]
+%    \centering
+%    \includegraphics[width=\textwidth]{dri.png}
+    %\vspace{-3mm}
+%    \caption{Gradient variation and Drift diversity. Our method reduces the gradient variance, thereby stabilizing the local training of client models. Simultaneously, it enhances drift diversity defined as $\frac{\sum_{m\in M}\frac{|D_m|}{|D|} \left\|\boldsymbol{\Delta w}_m^k\right\|_2^2}{\left\|\boldsymbol{\Delta w}^{k+1}\right\|_2^2}$, ensuring that each client learns effectively and can fully reflect its own unique data characteristics even with constraints.}
+%    \label{fig:falign}
+    %\vspace{mm}
+%\end{figure*}
+\begin{figure*}[!h]
+\vskip 0.2in
+\begin{center}
+\subfloat[Gradient Variance]{\label{fig:sa}
+    \includegraphics[scale=0.4]{gradvar.png}}
+\subfloat[Drift Diversity]{\label{fig:sb}
+    \includegraphics[scale=0.4]{drift_diversity_all.png}}
+\caption{\textbf{Gradient variance and Drift diversity. } Our method reduces the gradient variance, thereby stabilizing the local training of client models. Simultaneously, it enhances drift diversity, ensuring that each client learns effectively even with constraints.}
+\label{fig:falign}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+%\cref{fig:sa} demonstrates that our method reduces gradient variance compared to FedAvg, thereby stabilizing local updates in environments with sparse data. Moreover, \cref{fig:sb}  shows that our method results in larger client updates after local training compared to FedAvg. This indicates that the consistent direction of local updates with reduced variance enables effective training of client models, despite sparse data or parameter constraints. Overall, these results demonstrate that our approach effectively mitigates instability in local training, ensuring sufficient updates within the imposed constraints.
+\cref{fig:sa} demonstrates that our method reduces gradient variance compared to FedAvg, thereby stabilizing local updates in environments with sparse data. Moreover, \cref{fig:sb} illustrates that our method enhances drift diversity, defined as $\frac{\sum_{m\in M}\frac{|D_m|}{|D|} \left\|\boldsymbol{\Delta w}_m^k\right\|_2^2}{\left\|\boldsymbol{\Delta w}^{k+1}\right\|_2^2}$\cite{diversity} ensuring that each client learns effectively and can fully reflect its own unique data characteristics even with constraints. The increase in drift diversity compared to FedAvg indicates that our method results in larger client updates after local training, enabling effective model updates despite sparse data or parameter constraints. Overall, these results demonstrate that our approach effectively mitigates instability in local training, ensuring sufficient updates within the imposed constraints.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{figure}[!t]
+%  \centering  \includegraphics[width=0.5\textwidth]{tloss.png}
+%  \caption{Test loss for client 6, using the same random seed across different FL algorithms. An increasing trend in test losses suggests overfitting.}
+%  \label{fig:testloss}
+%\end{figure}
+\subsubsection{Model Alignment across Client}
+In our analysis of loss landscape, we shifted our analytical focus from sharpness-based metrics to convexity-based metrics. Previous research primarily utilized the maximum eigenvalue $\lambda_{\mathrm{max}}$ of the model's Hessian matrix to measure sharpness, which correlates with generalization performance \cite{fedalign}. However, our analysis suggests that observing the ratio of the absolute maximum eigenvalue to the minimum eigenvalue $\left|\lambda_{\mathrm{max}}/\lambda_{\mathrm{min}}\right|$  — a measure of convexity\cite{saddle} — more effectively captures the essence of model alignment. 
+
+\begin{table}[h]
+\caption{\textbf{Loss Landscape Convexness. }The metric $C_{convex}$ represents the $|\lambda_{max} / \lambda_{min} |$ values of ResNet-18 model in Cross-Device settings. The term $H_{trace}$ denotes Hessian trace value.}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+& \multicolumn{2}{c|}{w/o Constraints} & \multicolumn{2}{c|}{Constraints} \\
+\cline{2-5}
+Algorithm & $C_{convex}$ & $H_{trace}$ & $C_{convex}$ & $H_{trace}$ \\
+\hline
+FedAvg & 2.466 & -4951 & 31.7 & 10102 \\
+FedProx & 2.739 & -3873 & 23.09 & 12294 \\
+MOON & 3.015 & -3416 & 16.09 & 9640 \\
+SCAFFOLD & 2.914 & -3245 & 21.81 & 9145 \\
+FedDyn & 2.16 & -4590 & 12.82 & 9121 \\
+FedCONST & \textbf{31.7} & \textbf{10102} & - & - \\
+\hline
+\end{tabular}
+\label{tab:convexness}
+\end{sc}
+\end{small}
+\end{center}
+\vskip 0.2in
+\end{table}
+
+~\cref{tab:convexness} shows how the application of constraints secures proper alignment, thereby sculpting a more convex and advantageous loss landscape for the global model. Furthermore, a negative trace value of the Hessian suggests convergence to a saddle point—a non-ideal scenario. Hence, ~\cref{tab:convexness} also demonstrates that the implementation of constraints contributes to a more convex loss landscape, steering the model away from saddle points towards optimal convergence.
+
+
+Additionally, we introduce client consistency as another key metric, which quantifies the consistency of local models across clients. This consistency is defined as $\sum_{m\in M}\frac{\left|D_m\right|}{\left|D\right|}\left\|\Delta \boldsymbol{w}_{m}^{k}\right\|_2^2$, where lower values indicate that client updates remain proportionally aligned, preventing excessive deviations in heterogeneous data environments.
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=0.8\columnwidth]{consist_all.png}}
+\caption{\textbf{Consistency. } Our method enhances the consistency among clients, by ensuring a more aligned learning experience across all clients.}
+\label{fig:consist}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+The experimental results in \cref{fig:consist} confirm that our method significantly enhances client consistency compared to FedAvg, ensuring a more aligned learning experience across all clients. This increased consistency contributes to a structured and predictable optimization trajectory, reinforcing the benefits of convexity-based alignment.
+
+
+
+%sddfggfdsgdsfgdsf
+
+\subsubsection{Generalization on Features of Global Model}
+%\begin{figure}[h]
+%  \centering  \includegraphics[width=0.5\textwidth]{fGSNR.png}
+%  \caption{The GSNR value on the last local epoch of the proposed method is lower, indicating that client-specific feature learning is effectively mitigated.}
+%  \label{fig:gsnrl}
+%\end{figure}
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=0.8\columnwidth]{abgsnr.png}}
+\caption{\textbf{Weight sizes and GSNR values.} Weight magnitudes and GSNR values sampled from the top 10\% and bottom 10\% of gradient update magnitudes across clients. Both metrics show correlation with gradient updates, suggesting their relevance to GSNR in the federated learning setting.}
+\label{fig:abg}
+\end{center}
+\vskip -0.2in
+\end{figure}
+%Weight sizes and GSNR values. }Weight sizes and GSNR values sampled according to top-10\% and bottom 10\% of gradient update size on clients. Both values are correlated with gradient update, suggesting correlation with GSNR on FL domain.
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=0.8\columnwidth]{gsnrinit.png}}
+\caption{\textbf{The sum of GSNR values on a Client. }The sum of GSNR values on the initial local epoch of the proposed method is higher, indicating that features aligned with the global model are properly enhanced.}
+\label{fig:gsnri}
+\end{center}
+\vskip -0.4in
+\end{figure}
+Our conjecture is that if already generalizable global feature is changed during local training of client, it harms generalization ability of FL process. To prove our hypothesis, we sampled top-10\% and bottom 10\% of gradient update size on changes. and we observe the GSNR value and weights size on corresponding feature to validate our hypothesis. And finally, we compared the GSNR value of vanilla FedAvg and our method indicating improved generalization performance. 
+
+First, Weight sizes corresponding to top 10\% of Gradient update sizes have larger value than bottom 10\%. Observation on ~\cref{fig:abg} indicates gradient update on client is associated with global generalizable feature, which harms generalization ability of global model. On GSNR values, top 10\% also has larger values showing more direct impact of client training on generalization of global model.
+
+After we impose our constraints that conserve common generalizable features, ~\cref{fig:gsnri} shows increase of GSNR values overall weight with constraints proving our method work as our intention. %When drifted from the global model, there are less generalizable common features. Fig ~\ref{fig:gsnrl} shows a decrease in GSNR value with constraints indicating less overfitting to client data.
+
+\section{Conclusion}
+In this research, we have introduced FedCONST, a novel FL algorithm that leverages convex constraints during optimization of client model for increasing generalization. This algorithm fosters stable local training on convex constraints, leading to a more generalizable global model through learning common features based on corresponding weight size of the global model. Our comprehensive experiments have shown that FedCONST not only stabilizes the learning process at the client level but also ensures consistent alignment to generalizable features. In various experimental settings, especially in the presence of highly heterogeneous data, FedCONST consistently outperformed existing algorithms.
+\section*{Acknowledgements}
+This work was supported by Korea Internet \&\ Security Agency(KISA) grant funded by the Korea government(PIPC) (No.RS-2023-00231200, Development of personal video information privacy protection technology capable of AI learning in an autonomous driving environment)
+\section*{Impact Statement}
+Many studies on deep neural networks are conducted under the centralized learning paradigm with well-preprocessed datasets. However, real-world industrial data is often distributed, imbalanced, and noisy, making it challenging to apply academic research directly to practical settings despite the enormous potential of distributed data. Federated Learning (FL) is a promising technology to address this limitation, yet further improvements are needed for real-world deployment. This paper proposes a method to enhance FL performance by introducing a novel generalization perspective that mitigates its inherent limitations.
+
+%Interestingly, our observations provide a novel insight: client drift is not inherently detrimental; rather, the stability of the local training process is a more critical determinant of FL performance. 
+% In the unusual situation where you want a paper to appear in the
+% references without citing it in the main text, use \nocite
+
+\bibliography{example_paper}
+\bibliographystyle{icml2025}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+\onecolumn
+%\section{You \emph{can} have an appendix here.}
+%
+\section{Generalization Area and Implementation on Constraints}
+
+Figure~\ref{fig:testloss} conceptually illustrates how aligning the aggregation step with the generalization area improves global generalization in FL. This motivates our use of convex constraints that stabilize both local training and aggregation. For our method to be effective, the constraint region must be contained within the generalization area. We argue that this condition is satisfied in practice, as the generalization area is sufficiently large under typical training regimes.
+
+We provide an intuitive argument to suggest that the generalization area can be sufficiently large, based on the behavior of a $l$-th layer representation of a neural network:
+\begin{equation}
+    \mathbf{e}_c^{(l)} = \phi \left( (\mathbf{e}^{(l-1)})^{\top} \mathbf{W}_c^{(l)} \right),
+\end{equation}
+where $\phi$ is an activation function (e.g., \texttt{tanh}), and $\mathbf{e}_c^{(l)}$ denotes a representation within the generalization regime.
+
+We consider whether the perturbed form
+\begin{equation}
+    \phi \left( {\mathbf{e}^{(l-1)}}^{\top} (\mathbf{W}_c^{(l)} + \Delta \mathbf{W}_c^{(l)})   \right) \approx \mathbf{e}_c^{(l)}
+\end{equation}
+still holds under certain conditions.
+
+\paragraph{Case 1: Large $\|\mathbf{W}^{(l)}_c\|$ (Saturation Regime).}
+When $\|\mathbf{W}^{(l)}_c\|$ is large, the activation function saturates, and the output becomes relatively insensitive to $\Delta \mathbf{W}^{(l)}_c$. Thus, a wide range of perturbations can yield generalizable representations.
+
+\paragraph{Case 2: Small $\|\mathbf{W}^{(l)}_c\|$ (Linear Regime).}
+When $\mathbf{W}^{(l)}_c$ is small, the activation function behaves almost linearly:
+\begin{equation}
+     {\mathbf{e}_c^{(l)}}  \approx {\mathbf{e}^{(l-1)}}^{\top}\mathbf{W}_c^{(l)} .
+\end{equation}
+We apply Chebyshev's inequality:
+\begin{equation}
+    P\left( \left| \mathbf{e}_c^{(l)} - \mathbf{e}_{c,\text{goal}}^{(l)} \right| \geq \varepsilon \right) \leq \frac{\text{Var}(\mathbf{e}_c^{(l)})}{\varepsilon^2}.
+\end{equation}
+Thus, when the variance is small, the representation stays close to the generalization target with high probability.
+
+We note that gradient space alignment—especially orthogonal to $\mathbf{W}^{(l)}_c$—is helpful under our convexity assumptions, and that using OSGR-based preconditioning encourages high-GSNR updates that remain within the generalization zone.
+
+Furthermore, generalization often means consistent loss across training and test—even if predictions are wrong—so the region itself is inherently wide.
+
+\section{Implementation Details}
+
+%%%%%%%% lambda
+
+
+
+\label{sec:rationale}
+%To split the supplementary pages from the main paper, you can use \href{https://support.apple.com/en-ca/guide/preview/prvw11793/mac#:~:text=Delete%20a%20page%20from%20a,or%20choose%20Edit%20%3E%20Delete).}{Preview (on macOS)}, \href{https://www.adobe.com/acrobat/how-to/delete-pages-from-pdf.html#:~:text=Choose%20%E2%80%9CTools%E2%80%9D%20%3E%20%E2%80%9COrganize,or%20pages%20from%20the%20file.}{Adobe Acrobat} (on all OSs), as well as \href{https://superuser.com/questions/517986/is-it-possible-to-delete-some-pages-of-a-pdf-document}{command line tools}.
+\subsection{Training settings}
+\paragraph{Hyperparameters.}
+In our experiments, we configured various algorithms with specific hyperparameters:
+\begin{itemize}
+    \item MOON: $\mu = 0.01$, Temperature = 1
+    \item FedProx: $\mu = 0.01$
+    \item FedDyn: $\alpha = 1$
+    \item FedSAM: $\rho  = 1.0$
+\end{itemize}
+\paragraph{Model Configuration.} We employed both the ResNet-18 and LenNet-5 architectures for our experiments. When applying our constraints, we removed the batch normalization layer to leverage the weight normalization (WN) effect. Additionally, biases were omitted from the models in our experiments, as they had only a minor effect on the overall model performance.
+\paragraph{Other Experimental Settings.}
+%Other settings, including learning rate and training batch size, were consistent with those described in the main experiment section (see ~\cref{sec:expsetup} for details).
+For the training parameters, we set the local learning momentum to 0.9, applied a weight decay of 1e-5, and used a batch size of 50. The learning rate was set to 0.01 for local training and 1.0 for global updates. All experimental evaluations were executed utilizing two Nvidia 3090 GPUs. 
+
+\subsection{Data Partitioning}
+\paragraph{Datasets.}
+Our experiments were conducted using two well-known datasets: CIFAR-10 and CIFAR-100.
+
+\paragraph{Data Distribution Across Clients.}
+To simulate varying degrees of data heterogeneity across clients, we used Dirichlet distributions with different Alpha values: 0.5, 0.2, and 0.05. The distribution of data across clients, under these settings, is illustrated in ~\cref{fig:data}.
+
+\paragraph{Local Test Data.}
+For the evaluation of test loss on client data, we partitioned the data such that 10\% of each client's data was reserved as local test data. This approach ensures that the test loss reflects the performance of the model under the specific data distribution of each client.
+
+
+\section{Additional Experiments}
+
+\subsection{Ablation Study}
+
+\paragraph{Impact of Constraints on Learning.}
+To understand the influence of each constraint on the learning process, we conducted an ablation study, examining accuracy graph and Hessian values.
+
+\paragraph{Accuracy Improvements.}
+
+As indicated in ~\cref{tab:ablation} (Accuracy), applying centralization and sphere constraints independently resulted in performance enhancements. The highest improvement was observed when both constraints were applied together. 
+
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{c|c|c|c}
+\hline
+Orthogonal & Center & Performance (\%) & $C_{convex}$ \\
+\hline
+  &  & 53.12 & 34.83 \\
+o &  & 56.77 & 65.90 \\
+  & o & 51.99 & 32.27 \\
+o & o & 59.66 & 84.58 \\
+\hline
+\end{tabular}
+\caption{Ablation study on the FedAvg algorithm assessing the impact of Sphere and Center optimization and their combined application on performance. The experiments were conducted using the LeNet-5 model on the CIFAR-10 dataset, with a Dirichlet distribution of 0.5. Performance is measured in terms of Top-1 accuracy (\%) and $C_{convex}$ is defined as $|\lambda_{max} / \lambda_{min}|$.}
+\label{tab:ablation}
+\end{table}
+
+
+
+\paragraph{Learning Curves and Overfitting.}
+Observations from ~\cref{fig:ablf} (Learning Curves) reveal that the application of sphere constraint helps prevent overfitting, contributing to more generalized local learning.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.5\textwidth]{ablationf.png}
+    \caption{This figure represents the Top-1 accuracy per global epoch for the FedAvg algorithm under different constraint applications using the LeNet-5 model on CIFAR-10. }
+    \label{fig:ablf}
+\end{figure}
+
+
+\paragraph{Hessian Value Analysis.}
+Upon examining the Hessian values (~\cref{tab:ablation}), we found that orthogonalization constraints tend to make the model more convex, implying better alignment among client models. centralization constraint, on the other hand, increases the speed of training of the model.
+
+\paragraph{}
+Our analysis indicates that both othogonalization and centralization significantly impact performance. Specifically, orthogonalization constraint align client models effectively, while centralization constraint boosts local learning, enhancing local learning capabilities.
+
+\subsection{Hessian Values and Loss Landscape}
+
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{l|cc|cc}
+\hline
+& \multicolumn{2}{c|}{w/o constraints} & \multicolumn{2}{c}{constraints} \\
+Algorithm & $\lambda_{1}/ \lambda_{5}$ & $\lambda_{1}$ & $\lambda_{1}/ \lambda_{5}$ & $\lambda_{1}$ \\
+\hline
+FedAvg & 1.217 & 10.53 & 1.751 & 252.8 \\
+FedProx & 1.268 & 10.45 & 1.698 & 265.2 \\
+MOON & 1.252 & 9.51 & 1.718 & 258.5 \\
+SCAFFOLD & 1.278 & 10.05 & 1.594 & 177.6 \\
+FedDyn & 1.326 & 10.71 & 2.167 & 280.8 \\
+\hline
+\end{tabular}
+\caption{In this analysis, we utilized the ratios $|\lambda_{1} / \lambda_{5}|$ and the maximum eigenvalue $\lambda_{1}$ of the Hessian matrix to assess the sharpness of the loss landscape. A lower value in these metrics typically indicates a flatter loss landscape, which is commonly associated with better generalization performance. Here, $\lambda_{1}$ represents the largest eigenvalue, while $\lambda_{5}$ denotes the fifth largest eigenvalue of the Hessian matrix. The table above demonstrates how the application of constraints leads to a sharper loss landscape, as indicated by these metrics.}
+\label{tab:hes}
+\end{table}
+
+\paragraph{Analysis of Hessian Values.}
+Our observations, as detailed in ~\cref{tab:hes}, indicate an increase in the maximum eigenvalue despite the application of constraints. This challenges the conventional interpretation correlating the decrease in maximum eigenvalue with improved generalization, particularly in FL contexts. However, we noted a consistent increase in convexity with the application of constraints, suggesting that convexity might be a more reliable indicator in FL environments.
+
+\paragraph{Convexity and Model Alignment.}
+The relationship between constraints and a more convex loss landscape is evident in ~\cref{fig:Training_lands_d} (Loss Landscape). This convexity, indicative of effective model alignment, is further supported by ~\cref{fig:Training_lamb_d} (Eigen Spectral Density), which implies that constraints align the model towards more convex points.
+
+
+\paragraph{}
+These findings demonstrate the importance of considering convexity in the analysis of Hessian matrices in a FL setting. Unlike traditional settings where the focus is often on the maximum eigenvalue as a generalization indicator, our results highlight the significance of convexity in understanding model alignment and performance in FL. Therefore, observing convexity in the loss landscape and Hessian matrices could offer a more effective approach for analyzing and enhancing model performance in federated environments.
+
+\subsection{More analysis on Learning Dynamics}
+\paragraph{Cosine Similarity and Local Learning.}
+The Cosine Similarity (~\cref{fig:Training_csn_d}) analysis reveals that the application of constraints does not hinder the variability of cosine similarity. In fact, we observe an increased change on cosine similarity, suggesting that local learning is not restricted but appropriately regulated by the constraints. This indicates a balanced approach, where constraints guide the learning process without stifling the model's ability of local learning.
+
+\paragraph{GSNR and Model Generalization}
+The GSNR analysis highlights the impact of constraints on model alignment and generalization. \cref{fig:subg1} presents the sum of GSNR values on a client at the initial local training step of each round. A higher GSNR at this stage suggests that FedCONST effectively leverages alignment with the global model to extract more generalizable features than FedAvg. Conversely, \cref{fig:subg2} shows the sum of GSNR values at the final local training step of each round, where client models tend to drift from the global model. The observed decrease in GSNR values in FedCONST indicates that the constraints mitigate overfitting to client-specific data. This suggests that FedCONST maintains a more stable generalization process by preventing excessive reliance on localized information while preserving the overall adaptability of the model.
+
+\paragraph{Conjecture on Weight Magnitude and Generalization}
+
+In Conjecture~1, we proposed that the magnitude of model parameters may reflect feature generality, and that preserving high magnitude weights could promote better generalization. To support this, we present a simple empirical analysis using t-SNE visualizations of global feature representations.
+
+Specifically, we compare two variants of the global model: one where the bottom 20\% of weights (by magnitude) are zeroed out, and another where the top 20\% are removed.
+
+We observe that excluding the bottom 20\% of weights results in more clearly clustered and semantically aligned feature representations. In contrast, removing the top 20\% of weights yields less structured outputs. This supports our conjecture that small-magnitude weights contribute more noise than signal, and that weight magnitude encodes meaningful signals about feature generality.
+
+\begin{figure*}[!h]
+\vskip 0.2in
+\begin{center}
+\subfloat[Excluding bottom 20\% of weights]{\label{fig:tsne_bottom}
+    \includegraphics[scale=0.1]{top.png}}
+\hspace{1cm}
+\subfloat[Excluding top 20\% of weights]{\label{fig:tsne_top}
+    \includegraphics[scale=0.1]{bottom.png}}
+\caption{t-SNE visualization of feature representations from the global model. 
+Removing small-magnitude weights (left) results in more clearly clustered and semantically aligned features, 
+while removing large-magnitude weights (right) does not significantly improve semantic structure. 
+This supports our conjecture that weight magnitude correlates with feature generality.}
+\label{fig:tsne_masked}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+
+\begin{figure*}[!h]
+\vskip 0.2in
+\begin{center}
+\subfloat[10 clients, CIFAR-100, $\alpha = 0.2$]{\label{fig:app1-sub1}
+    \includegraphics[scale=0.1]{cifar1000_5_1.png}}
+\subfloat[10 clients, CIFAR-100, $\alpha = 0.05$]{\label{fig:app2-sub2}
+    \includegraphics[scale=0.1]{cifar100_005_1.png}}
+\subfloat[10 clients, CIFAR-10, $\alpha = 0.5$]{\label{fig:app3-sub3}
+    \includegraphics[scale=0.1]{cifar10_05_1.png}} \\
+\subfloat[10 clients, CIFAR-10, $\alpha = 0.2$]{\label{fig:app4-sub4}
+    \includegraphics[scale=0.1]{cifar10_02_1.png}}
+\subfloat[50 clients, CIFAR-10, $\alpha = 0.5$]{\label{fig:app5-sub5}
+    \includegraphics[scale=0.1]{aa.png}}
+\subfloat[100 clients, CIFAR-10, $\alpha = 0.5$]{\label{fig:app6-sub6}
+    \includegraphics[scale=0.1]{c100ni.png}}
+\caption{Example of data distribution according to (Client Number, Dataset, Dirichlet alpha). Each subfigure represents the data distribution under different client settings and Dirichlet $\alpha$ values.}
+\label{fig:data}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure*}[!h]
+\vskip 0.2in
+\begin{center}
+\subfloat[FedAvg]{\label{fig:app7-sub1}
+    \includegraphics[width=0.19\linewidth]{landavg.png}}
+\hfill
+\subfloat[FedAvg with constraints]{\label{fig:app8-sub2}
+    \includegraphics[width=0.19\linewidth]{landavgc.png}}
+\hfill
+\subfloat[FedProx]{\label{fig:app9-sub3}
+    \includegraphics[width=0.19\linewidth]{landprox.png}}
+\hfill
+\subfloat[FedProx with constraints]{\label{fig:app10-sub4}
+    \includegraphics[width=0.19\linewidth]{landproxc.png}}
+\hfill
+\subfloat[SCAFFOLD]{\label{fig:app11-sub5}
+    \includegraphics[width=0.19\linewidth]{landsca.png}}
+
+\vskip 0.2in
+
+\subfloat[SCAFFOLD with constraints]{\label{fig:app12-sub6}
+    \includegraphics[width=0.19\linewidth]{landscac.png}}
+\hfill
+\subfloat[FedDyn]{\label{fig:app13-sub7}
+    \includegraphics[width=0.19\linewidth]{landdyn.png}}
+\hfill
+\subfloat[FedDyn with constraints]{\label{fig:app14-sub8}
+    \includegraphics[width=0.19\linewidth]{landdync.png}}
+\hfill
+\subfloat[MOON]{\label{fig:app15-sub9}
+    \includegraphics[width=0.19\linewidth]{landmoon.png}}
+\hfill
+\subfloat[MOON with constraints]{\label{fig:app16-sub10}
+    \includegraphics[width=0.19\linewidth]{landmoonc.png}}
+
+\caption{This figure presents the experimental results of the loss landscape for the ResNet-18 model in a cross-device setting. Noise was introduced to the weight $\|W\|$ in the form of a random vector $\epsilon$, scaled such that the ratio $\|\epsilon\| / \|W\|$ ranged from 0 to 1. The results demonstrate that applying constraints leads to a more convex loss landscape, indicating an enhanced generalization capability under these conditions.}
+\label{fig:Training_lands_d}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure*}[!h]
+\vskip 0.2in
+\begin{center}
+\subfloat[FedAvg]{\label{fig:app17-sub1}
+    \includegraphics[width=0.19\linewidth]{lamdavg.png}}
+\hfill
+\subfloat[FedAvg with constraints]{\label{fig:app18-sub2}
+    \includegraphics[width=0.19\linewidth]{lamdavgc.png}}
+\hfill
+\subfloat[FedProx]{\label{fig:app19-sub3}
+    \includegraphics[width=0.19\linewidth]{lamdprox.png}}
+\hfill
+\subfloat[FedProx with constraints]{\label{fig:app20-sub4}
+    \includegraphics[width=0.19\linewidth]{lamdproxc.png}}
+\hfill
+\subfloat[SCAFFOLD]{\label{fig:app21-sub5}
+    \includegraphics[width=0.19\linewidth]{lamdsca.png}}
+
+\vskip 0.2in
+
+\subfloat[SCAFFOLD with constraints]{\label{fig:app22-sub6}
+    \includegraphics[width=0.19\linewidth]{lamdscac.png}}
+\hfill
+\subfloat[FedDyn]{\label{fig:app23-sub7}
+    \includegraphics[width=0.19\linewidth]{lamddyn.png}}
+\hfill
+\subfloat[FedDyn with constraints]{\label{fig:app24-sub8}
+    \includegraphics[width=0.19\linewidth]{lamddync.png}}
+\hfill
+\subfloat[MOON]{\label{fig:app25-sub9}
+    \includegraphics[width=0.19\linewidth]{lamdmoon.png}}
+\hfill
+\subfloat[MOON with constraints]{\label{fig:app26-sub10}
+    \includegraphics[width=0.19\linewidth]{lamdmoonc.png}}
+
+\caption{This figure illustrates the experimental results of the Eigen Spectral Density of the Hessian Matrix for the ResNet-18 model in a cross-device setting. Prior to the application of constraints, the density of negative eigenvalues is more significant, indicating the presence of saddle points in the loss landscape.}
+\label{fig:Training_lamb_d}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+
+%%%%%%%% lambda
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure*}[ht]
+\vskip 0.1in
+\begin{center}
+\subfloat[CIFAR-10, $\alpha = 0.2$, local epochs = 10, LeNet-5]{\label{fig:app27-sub1}
+    \includegraphics[width=0.42\linewidth]{CNNSILOH.png}}
+\hfill
+\subfloat[CIFAR-10, $\alpha = 0.5$, local epochs = 5, LeNet-5]{\label{fig:app28-sub2}
+    \includegraphics[width=0.42\linewidth]{CNNH.png}}
+\vskip 0.1in
+\subfloat[CIFAR-10, $\alpha = 0.2$, local epochs = 10, ResNet-18]{\label{fig:app29-sub3}
+    \includegraphics[width=0.42\linewidth]{resh.png}}
+\hfill
+\subfloat[CIFAR-10, $\alpha = 0.5$, local epochs = 5, ResNet-18]{\label{fig:app30-sub4}
+    \includegraphics[width=0.42\linewidth]{rese.png}}
+\vskip 0.1in
+\subfloat[CIFAR-100, $\alpha = 0.5$, local epochs = 5, LeNet-5]{\label{fig:app31-sub5}
+    \includegraphics[width=0.42\linewidth]{cnn100.png}}
+\hfill
+\subfloat[CIFAR-100, $\alpha = 0.5$, local epochs = 5, ResNet-18]{\label{fig:app32-sub6}
+    \includegraphics[width=0.42\linewidth]{res100.png}}
+\vskip 0.1in
+\subfloat[CIFAR-100, $\alpha = 0.05$, local epochs = 5, ResNet-18]{\label{fig:app33-sub7}
+    \includegraphics[width=0.42\linewidth]{res100niid.png}}
+
+\caption{Top-1 accuracy per global epoch for various algorithms conducted under cross-silo settings, with specific conditions (Dataset, Dirichlet alpha, local epoch, Model). This comparison highlights the performance variations across algorithms and the impact of different environments.}
+\label{fig:Training_acc}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+\begin{figure*}[ht]
+\vskip 0.2in
+\begin{center}
+\subfloat[LeNet-5 with 100 clients]{\label{fig:subq1}
+    \includegraphics[width=0.45\linewidth]{pcnn.png}}
+\hfill
+\subfloat[ResNet-18 with 50 clients]{\label{fig:subq2}
+    \includegraphics[width=0.45\linewidth]{pres.png}}
+
+\caption{Top-1 accuracy per global epoch for various algorithms on CIFAR-10 under a cross-device setting, with a Dirichlet alpha of 0.5 and 10\% client participation per round. \Cref{fig:subq1} shows results for LeNet-5 with 100 clients, and \cref{fig:subq2} for ResNet-18 with 50 clients.}
+\label{fig:Training_acc_d}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+\begin{figure*}[ht]
+\vskip 0.2in
+\begin{center}
+\subfloat[GSNR value on Initial Local Epoch]{\label{fig:subg1}
+    \includegraphics[width=0.45\linewidth]{gsnrinit.png}}
+\hfill
+\subfloat[GSNR value on Final Local Epoch]{\label{fig:subg2}
+    \includegraphics[width=0.45\linewidth]{gsnrfinal.png}}
+
+\caption{\cref{fig:subg1} shows the sum of GSNR values on a client at initial local training step of each round. When client model is aligned with global model, FedCONST harvests more generalizable features than FedAvg. \cref{fig:subg2} shows the sum of GSNR values on a client at final local training step of each round. When client model is drifted from global model, there are less generalizable common features. Decrease in GSNR values on FedCONST indicates less overfitting to client data.}
+\label{fig:Training_gsnr_d}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+
+\begin{figure*}[ht]
+\vskip 0.2in
+\begin{center}
+\subfloat[CIFAR-10, $\alpha = 0.5$, local epochs = 5, LeNet-5]{\label{fig:app34-sub1}
+    \includegraphics[width=0.45\linewidth]{cnneasyco.png}}
+\hfill
+\subfloat[CIFAR-10, $\alpha = 0.5$, local epochs = 5, LeNet-5]{\label{fig:app35-sub2}
+    \includegraphics[width=0.45\linewidth]{cnneasyn.png}}
+\vskip 0.2in
+\subfloat[CIFAR-10, $\alpha = 0.2$, local epochs = 10, LeNet-5]{\label{fig:app36-sub3}
+    \includegraphics[width=0.45\linewidth]{cnnhardc.png}}
+\hfill
+\subfloat[CIFAR-10, $\alpha = 0.2$, local epochs = 10, LeNet-5]{\label{fig:app37-sub4}
+    \includegraphics[width=0.45\linewidth]{cnnhardn.png}}
+\vskip 0.2in
+\subfloat[CIFAR-100, $\alpha = 0.05$, local epochs = 5, ResNet-18]{\label{fig:app38-sub5}
+    \includegraphics[width=0.45\linewidth]{res100c.png}}
+\hfill
+\subfloat[CIFAR-100, $\alpha = 0.05$, local epochs = 5, ResNet-18]{\label{fig:app39-sub6}
+    \includegraphics[width=0.45\linewidth]{res100n.png}}
+
+\caption{This figure displays the L2 norm of a client model and the cosine similarity between a client and the global model at each local epoch, for various algorithms implemented under cross-silo settings. The experiments were conducted with specific conditions (Dataset, Dirichlet alpha, local epoch, Model). The application of constraints consistently maintains the weight's L2 norm throughout training. In the case of ResNet-18, which includes batch normalization layers, the weight norm is naturally consistent. Notably, a large change in cosine similarity during training with constraints suggests that local learning is dynamically evolving and not overly restricted.}
+\label{fig:Training_csn_d}
+\end{center}
+\vskip -0.2in
+\end{figure*}
+
+\end{document}
+
+
+% This document was modified from the file originally made available by
+% Pat Langley and Andrea Danyluk for ICML-2K. This version was created
+% by Iain Murray in 2018, and modified by Alexandre Bouchard in
+% 2019 and 2021 and by Csaba Szepesvari, Gang Niu and Sivan Sabato in 2022.
+% Modified again in 2023 and 2024 by Sivan Sabato and Jonathan Scarlett.
+% Previous contributors include Dan Roy, Lise Getoor and Tobias
+% Scheffer, which was slightly modified from the 2010 version by
+% Thorsten Joachims & Johannes Fuernkranz, slightly modified from the
+% 2009 version by Kiri Wagstaff and Sam Roweis's 2008 version, which is
+% slightly modified from Prasad Tadepalli's 2007 version which is a
+% lightly changed version of the previous year's version by Andrew
+% Moore, which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.
+
+

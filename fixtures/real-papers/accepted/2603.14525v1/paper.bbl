@@ -1,0 +1,271 @@
+\begin{thebibliography}{53}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Ahmed et~al.(2017)Ahmed, Traore, and Saad}]{ahmed2017detection}
+Hadeer Ahmed, Issa Traore, and Sherif Saad. 2017.
+\newblock Detection of online fake news using n-gram analysis and machine learning techniques.
+\newblock In \emph{Intelligent, Secure, and Dependable Systems in Distributed and Cloud Environments: First International Conference, ISDDC 2017, Vancouver, BC, Canada, October 26-28, 2017, Proceedings 1}, pages 127--138. Springer.
+
+\bibitem[{Ahmed et~al.(2018)Ahmed, Traore, and Saad}]{ahmed2018detecting}
+Hadeer Ahmed, Issa Traore, and Sherif Saad. 2018.
+\newblock Detecting opinion spams and fake news using text classification.
+\newblock \emph{Security and Privacy}, 1(1):e9.
+
+\bibitem[{Appelman et~al.(2022)Appelman, Dreyer, Bidare, and Potthast}]{appelman2022truth}
+Naomi Appelman, Stephan Dreyer, Pranav~Manjesh Bidare, and Keno~C Potthast. 2022.
+\newblock Truth, intention and harm: Conceptual challenges for disinformation-targeted governance.
+\newblock \emph{Internet Policy Review}.
+
+\bibitem[{Bang et~al.(2023)Bang, Cahyawijaya, Lee, Dai, Su, Wilie, Lovenia, Ji, Yu, Chung et~al.}]{bang2023multitask}
+Yejin Bang, Samuel Cahyawijaya, Nayeon Lee, Wenliang Dai, Dan Su, Bryan Wilie, Holy Lovenia, Ziwei Ji, Tiezheng Yu, Willy Chung, et~al. 2023.
+\newblock A multitask, multilingual, multimodal evaluation of chatgpt on reasoning, hallucination, and interactivity.
+\newblock In \emph{Proceedings of the 13th International Joint Conference on Natural Language Processing and the 3rd Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics (Volume 1: Long Papers)}, pages 675--718.
+
+\bibitem[{Bansal et~al.(2021)Bansal, Paka, Nidhi, Sengupta, and Chakraborty}]{bansal2021combining}
+Rachit Bansal, William~Scott Paka, Nidhi, Shubhashis Sengupta, and Tanmoy Chakraborty. 2021.
+\newblock Combining exogenous and endogenous signals with a semi-supervised co-attention network for early detection of covid-19 fake tweets.
+\newblock In \emph{Pacific-Asia conference on knowledge discovery and data mining}, pages 188--200. Springer.
+
+\bibitem[{Blitzer et~al.(2006)Blitzer, McDonald, and Pereira}]{blitzer2006domain}
+John Blitzer, Ryan McDonald, and Fernando Pereira. 2006.
+\newblock Domain adaptation with structural correspondence learning.
+\newblock In \emph{Proceedings of the 2006 conference on empirical methods in natural language processing}, pages 120--128.
+
+\bibitem[{Card et~al.(2020)Card, Henderson, Khandelwal, Jia, Mahowald, and Jurafsky}]{card2020little}
+Dallas Card, Peter Henderson, Urvashi Khandelwal, Robin Jia, Kyle Mahowald, and Dan Jurafsky. 2020.
+\newblock With little power comes great responsibility.
+\newblock In \emph{Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)}, pages 9263--9274.
+
+\bibitem[{Conner and Norman(2022)}]{Conner2022-CONUTI-2}
+Mark Conner and Paul Norman. 2022.
+\newblock \href {https://doi.org/10.3389/fpsyg.2022.923464} {Understanding the intention-behavior gap: The role of intention strength}.
+\newblock \emph{Frontiers in Psychology}, 13.
+
+\bibitem[{Cui and Lee(2020)}]{cui2020coaid}
+Limeng Cui and Dongwon Lee. 2020.
+\newblock Coaid: Covid-19 healthcare misinformation dataset.
+\newblock \emph{arXiv preprint arXiv:2006.00885}.
+
+\bibitem[{de~Cock~Buning(2018)}]{de2018multi}
+Madeleine de~Cock~Buning. 2018.
+\newblock \emph{A multi-dimensional approach to disinformation: Report of the independent high level group on fake news and online disinformation}.
+\newblock Publications Office of the European Union.
+
+\bibitem[{Devlin et~al.(2018)Devlin, Chang, Lee, and Toutanova}]{DBLP:journals/corr/abs-1810-04805}
+Jacob Devlin, Ming{-}Wei Chang, Kenton Lee, and Kristina Toutanova. 2018.
+\newblock \href {https://arxiv.org/abs/1810.04805} {{BERT:} pre-training of deep bidirectional transformers for language understanding}.
+\newblock \emph{CoRR}, abs/1810.04805.
+
+\bibitem[{Dietterich(1998)}]{dietterich1998approximate}
+Thomas~G Dietterich. 1998.
+\newblock Approximate statistical tests for comparing supervised classification learning algorithms.
+\newblock \emph{Neural computation}, 10(7):1895--1923.
+
+\bibitem[{Dror et~al.(2018)Dror, Baumer, Shlomov, and Reichart}]{dror2018hitchhiker}
+Rotem Dror, Gili Baumer, Segev Shlomov, and Roi Reichart. 2018.
+\newblock The hitchhiker’s guide to testing statistical significance in natural language processing.
+\newblock In \emph{Proceedings of the 56th annual meeting of the association for computational linguistics (volume 1: Long papers)}, pages 1383--1392.
+
+\bibitem[{{European Commission}(2022{\natexlab{a}})}]{eu2020communication}
+{European Commission}. 2022{\natexlab{a}}.
+\newblock Communication from the commission to the european parliament, the council, the european economic and social committee and the committee of the regions on the european democracy action plan.
+\newblock \emph{Publications Office of the European Union}.
+\newblock Available at: \url{https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52020DC0790}.
+
+\bibitem[{{European Commission}(2022{\natexlab{b}})}]{eu2022strengthdiscode}
+{European Commission}. 2022{\natexlab{b}}.
+\newblock The strengthened code of practice on disinformation 2022.
+\newblock \emph{Publications Office of the European Union}.
+\newblock Available at: https://digital-strategy.ec.europa.eu/en/library/2022-strengthened-code-practice-disinformation.
+
+\bibitem[{Gupta et~al.(2021)Gupta, Varun, Das, Muttineni, Srivastava, Zafar, Chakraborty, and Nath}]{gupta2021truthbotautomatedconversationaltool}
+Ankur Gupta, Yash Varun, Prarthana Das, Nithya Muttineni, Parth Srivastava, Hamim Zafar, Tanmoy Chakraborty, and Swaprava Nath. 2021.
+\newblock \href {https://arxiv.org/abs/2102.00509} {Truthbot: An automated conversational tool for intent learning, curated information presenting, and fake news alerting}.
+\newblock \emph{Preprint}, arXiv:2102.00509.
+
+\bibitem[{Hameleers(2022)}]{10.1093/ct/qtac021}
+Michael Hameleers. 2022.
+\newblock \href {https://doi.org/10.1093/ct/qtac021} {Disinformation as a context-bound phenomenon: toward a conceptual clarification integrating actors, intentions and techniques of creation and dissemination}.
+\newblock \emph{Communication Theory}, 33(1):1--10.
+
+\bibitem[{Hameleers(2023)}]{hameleers2023disinformation}
+Michael Hameleers. 2023.
+\newblock Disinformation as a context-bound phenomenon: Toward a conceptual clarification integrating actors, intentions and techniques of creation and dissemination.
+\newblock \emph{Communication Theory}, 33(1):1--10.
+
+\bibitem[{He et~al.(2021{\natexlab{a}})He, Gao, and Chen}]{he2021debertav3}
+Pengcheng He, Jianfeng Gao, and Weizhu Chen. 2021{\natexlab{a}}.
+\newblock \href {https://arxiv.org/abs/2111.09543} {Debertav3: Improving deberta using electra-style pre-training with gradient-disentangled embedding sharing}.
+\newblock \emph{Preprint}, arXiv:2111.09543.
+
+\bibitem[{He et~al.(2021{\natexlab{b}})He, Liu, Gao, and Chen}]{he2021deberta}
+Pengcheng He, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021{\natexlab{b}}.
+\newblock \href {https://openreview.net/forum?id=XPZIaotutsD} {Deberta: Decoding-enhanced bert with disentangled attention}.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Khan et~al.(2021)Khan, Khondaker, Afroz, Uddin, and Iqbal}]{khan2021benchmark}
+Junaed~Younus Khan, Md~Tawkat~Islam Khondaker, Sadia Afroz, Gias Uddin, and Anindya Iqbal. 2021.
+\newblock A benchmark study of machine learning models for online fake news detection.
+\newblock \emph{Machine Learning with Applications}, 4:100032.
+
+\bibitem[{Kojima et~al.(2022)Kojima, Gu, Reid, Matsuo, and Iwasawa}]{kojima2022large}
+Takeshi Kojima, Shixiang~Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. 2022.
+\newblock Large language models are zero-shot reasoners.
+\newblock \emph{Advances in neural information processing systems}, 35:22199--22213.
+
+\bibitem[{Kruk et~al.(2019)Kruk, Lubin, Sikka, Lin, Jurafsky, and Divakaran}]{kruk-etal-2019-integrating}
+Julia Kruk, Jonah Lubin, Karan Sikka, Xiao Lin, Dan Jurafsky, and Ajay Divakaran. 2019.
+\newblock \href {https://doi.org/10.18653/v1/D19-1469} {Integrating text and image: Determining multimodal document intent in {I}nstagram posts}.
+\newblock In \emph{Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)}, pages 4622--4632, Hong Kong, China. Association for Computational Linguistics.
+
+\bibitem[{Leite et~al.(2024)Leite, Razuvayevskaya, Bontcheva, and Scarton}]{leite2024euvsdisinfo}
+Jo{\~a}o~A Leite, Olesya Razuvayevskaya, Kalina Bontcheva, and Carolina Scarton. 2024.
+\newblock Euvsdisinfo: a dataset for multilingual detection of pro-kremlin disinformation in news articles.
+\newblock In \emph{Proceedings of the 33rd ACM International Conference on Information and Knowledge Management}, pages 5380--5384.
+
+\bibitem[{Lewandowsky et~al.(2017)Lewandowsky, Ecker, and Cook}]{lewandowsky2017beyond}
+Stephan Lewandowsky, Ullrich~KH Ecker, and John Cook. 2017.
+\newblock Beyond misinformation: Understanding and coping with the “post-truth” era.
+\newblock \emph{Journal of applied research in memory and cognition}, 6(4):353--369.
+
+\bibitem[{Liu et~al.(2019)Liu, Ott, Goyal, Du, Joshi, Chen, Levy, Lewis, Zettlemoyer, and Stoyanov}]{DBLP:journals/corr/abs-1907-11692}
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019.
+\newblock \href {https://arxiv.org/abs/1907.11692} {Roberta: {A} robustly optimized {BERT} pretraining approach}.
+\newblock \emph{CoRR}, abs/1907.11692.
+
+\bibitem[{Lucas et~al.(2023)Lucas, Uchendu, Yamashita, Lee, Rohatgi, and Lee}]{lucas2023fighting}
+Jason Lucas, Adaku Uchendu, Michiharu Yamashita, Jooyoung Lee, Shaurya Rohatgi, and Dongwon Lee. 2023.
+\newblock Fighting fire with fire: The dual role of llms in crafting and detecting elusive disinformation.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}, pages 14279--14305.
+
+\bibitem[{Maharana et~al.(2022)Maharana, Tran, Dernoncourt, Yoon, Bui, Chang, and Bansal}]{maharana-etal-2022-multimodal}
+Adyasha Maharana, Quan Tran, Franck Dernoncourt, Seunghyun Yoon, Trung Bui, Walter Chang, and Mohit Bansal. 2022.
+\newblock \href {https://doi.org/10.18653/v1/2022.findings-naacl.36} {Multimodal intent discovery from livestream videos}.
+\newblock In \emph{Findings of the Association for Computational Linguistics: NAACL 2022}, pages 476--489, Seattle, United States. Association for Computational Linguistics.
+
+\bibitem[{McGuire(1964)}]{mcguire1964inducing}
+William~J McGuire. 1964.
+\newblock Inducing resistance to persuasion. some contemporary approaches.
+\newblock \emph{CC Haaland and WO Kaelber (Eds.), Self and Society. An Anthology of Readings, Lexington, Mass.(Ginn Custom Publishing) 1981, pp. 192-230.}
+
+\bibitem[{Modzelewski et~al.(2024)Modzelewski, Da~San~Martino, Savov, Wilczy{\'n}ska, and Wierzbicki}]{modzelewski2024mipd}
+Arkadiusz Modzelewski, Giovanni Da~San~Martino, Pavel Savov, Magdalena Wilczy{\'n}ska, and Adam Wierzbicki. 2024.
+\newblock Mipd: Exploring manipulation and intention in a novel corpus of polish disinformation.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing}, pages 19769--19785.
+
+\bibitem[{Modzelewski et~al.(2025)Modzelewski, Sosnowski, Labruna, Wierzbicki, and Martino}]{modzelewski2025pcot}
+Arkadiusz Modzelewski, Witold Sosnowski, Tiziano Labruna, Adam Wierzbicki, and Giovanni Da~San Martino. 2025.
+\newblock Pcot: Persuasion-augmented chain of thought for detecting fake news and social media disinformation.
+\newblock \emph{arXiv preprint arXiv:2506.06842}.
+
+\bibitem[{Murphy(2018)}]{murphy2018machine}
+Kevin~P Murphy. 2018.
+\newblock Machine learning: A probabilistic perspective (adaptive computation and machine learning series).
+\newblock \emph{The MIT Press: London, UK}.
+
+\bibitem[{Nakov et~al.(2024)Nakov, An, Kwak, Manzoor, Mujahid, and Sencar}]{nakov2024survey}
+Preslav Nakov, Jisun An, Haewoon Kwak, Muhammad~Arslan Manzoor, Zain~Muhammad Mujahid, and Husrev~T Sencar. 2024.
+\newblock A survey on predicting the factuality and the bias of news media.
+\newblock In \emph{ACL (Findings)}.
+
+\bibitem[{Nguyen et~al.(2023)Nguyen, Pham, Le, Nguyen, Vuong, and Nguyen}]{nguyen2023rmdm}
+Hai-Long Nguyen, Thi-Kieu-Trang Pham, Thai-Son Le, Tan-Minh Nguyen, Thi-Hai-Yen Vuong, and Ha-Thanh Nguyen. 2023.
+\newblock Rmdm: A multilabel fakenews dataset for vietnamese evidence verification.
+\newblock \emph{arXiv preprint arXiv:2309.09071}.
+
+\bibitem[{Pamment and Kimber(2021)}]{pamment2021fact}
+James Pamment and Anneli~Lindvall Kimber. 2021.
+\newblock \emph{Fact-checking and debunking: a best practice guide to dealing with disinformation}.
+\newblock NATO Strategic Communication Centre of Excellence.
+
+\bibitem[{Pan et~al.(2024)Pan, Chen, Huang, and Chen}]{pan2024enhancing}
+Tsung-Hsuan Pan, Chung-Chi Chen, Hen-Hsen Huang, and Hsin-Hsi Chen. 2024.
+\newblock Enhancing society-undermining disinformation detection through fine-grained sentiment analysis pre-finetuning.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EACL 2024}, pages 1371--1377.
+
+\bibitem[{Pelrine et~al.(2023)Pelrine, Imouza, Thibault, Reksoprodjo, Gupta, Christoph, Godbout, and Rabbany}]{pelrine2023towards}
+Kellin Pelrine, Anne Imouza, Camille Thibault, Meilina Reksoprodjo, Caleb Gupta, Joel Christoph, Jean-Fran{\c{c}}ois Godbout, and Reihaneh Rabbany. 2023.
+\newblock Towards reliable misinformation mitigation: Generalization, uncertainty, and gpt-4.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}, pages 6399--6429.
+
+\bibitem[{Pfau et~al.(2005)Pfau, Ivanov, Houston, Haigh, Sims, Gilchrist, Russell, Wigley, Eckstein, and Richert}]{pfau2005inoculation}
+Michael Pfau, Bobi Ivanov, Brian Houston, Michel Haigh, Jeanetta Sims, Eileen Gilchrist, Jason Russell, Shelley Wigley, Jackie Eckstein, and Natalie Richert. 2005.
+\newblock Inoculation and mental processing: The instrumental role of associative networks in the process of resistance to counterattitudinal influence.
+\newblock \emph{Communication Monographs}, 72(4):414--441.
+
+\bibitem[{Piskorski et~al.(2023)Piskorski, Stefanovitch, Nikolaidis, Da~San~Martino, and Nakov}]{piskorski2023multilingual}
+Jakub Piskorski, Nicolas Stefanovitch, Nikolaos Nikolaidis, Giovanni Da~San~Martino, and Preslav Nakov. 2023.
+\newblock Multilingual multifaceted understanding of online news in terms of genre, framing, and persuasion techniques.
+\newblock In \emph{Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}, pages 3001--3022.
+
+\bibitem[{Roozenbeek et~al.(2020)Roozenbeek, van~der Linden, and Nygren}]{roozenbeek2020prebunking}
+Jon Roozenbeek, Sander van~der Linden, and Thomas Nygren. 2020.
+\newblock Prebunking interventions based on “inoculation” theory can reduce susceptibility to misinformation across cultures.
+\newblock \emph{The Harvard Kennedy School (HKS) Misinformation Review}.
+
+\bibitem[{Sanh et~al.(2019)Sanh, Debut, Chaumond, and Wolf}]{Sanh2019DistilBERTAD}
+Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf. 2019.
+\newblock Distilbert, a distilled version of bert: smaller, faster, cheaper and lighter.
+\newblock \emph{ArXiv}, abs/1910.01108.
+
+\bibitem[{Sessa(2023)}]{sessa2023connecting}
+MG~Sessa. 2023.
+\newblock Connecting the disinformation dots: Insights, lessons, and guidance from 20 eu member states.
+\newblock \emph{EU Disinfolab, Friedrich Naumann Foundation for Freedom}.
+
+\bibitem[{Shu et~al.(2020{\natexlab{a}})Shu, Bhattacharjee, Alatawi, Nazer, Ding, Karami, and Liu}]{shu2020combating}
+Kai Shu, Amrita Bhattacharjee, Faisal Alatawi, Tahora~H Nazer, Kaize Ding, Mansooreh Karami, and Huan Liu. 2020{\natexlab{a}}.
+\newblock Combating disinformation in a social media age.
+\newblock \emph{Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery}, 10(6):e1385.
+
+\bibitem[{Shu et~al.(2020{\natexlab{b}})Shu, Mahudeswaran, Wang, Lee, and Liu}]{shu2020fakenewsnet}
+Kai Shu, Deepak Mahudeswaran, Suhang Wang, Dongwon Lee, and Huan Liu. 2020{\natexlab{b}}.
+\newblock Fakenewsnet: A data repository with news content, social context, and spatiotemporal information for studying fake news on social media.
+\newblock \emph{Big data}, 8(3):171--188.
+
+\bibitem[{Shu et~al.(2017)Shu, Sliva, Wang, Tang, and Liu}]{shu2017fake}
+Kai Shu, Amy Sliva, Suhang Wang, Jiliang Tang, and Huan Liu. 2017.
+\newblock Fake news detection on social media: A data mining perspective.
+\newblock \emph{ACM SIGKDD explorations newsletter}, 19(1):22--36.
+
+\bibitem[{Sosnowski et~al.(2024)Sosnowski, Modzelewski, Skorupska, Otterbacher, and Wierzbicki}]{sosnowski2024eu}
+Witold Sosnowski, Arkadiusz Modzelewski, Kinga Skorupska, Jahna Otterbacher, and Adam Wierzbicki. 2024.
+\newblock Eu disinfotest: a benchmark for evaluating language models’ ability to detect disinformation narratives.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2024}, pages 14702--14723.
+
+\bibitem[{Traberg et~al.(2022)Traberg, Roozenbeek, and van~der Linden}]{traberg2022psychological}
+Cecilie~S Traberg, Jon Roozenbeek, and Sander van~der Linden. 2022.
+\newblock Psychological inoculation against misinformation: Current evidence and future directions.
+\newblock \emph{The ANNALS of the American Academy of Political and Social Science}, 700(1):136--151.
+
+\bibitem[{von Suchodoletz and Achtziger(2011)}]{suchodoletz2011}
+Antje von Suchodoletz and Anja Achtziger. 2011.
+\newblock \href {https://doi.org/10.1027/1864-9335/a000046} {Intentions and their limits}.
+\newblock \emph{Social Psychology}, 42:85--92.
+
+\bibitem[{Wang et~al.(2024{\natexlab{a}})Wang, Li, Li, Fu, Pei, and Wang}]{wang2024misinformation}
+Bing Wang, Ximing Li, Changchun Li, Bo~Fu, Songwen Pei, and Shengsheng Wang. 2024{\natexlab{a}}.
+\newblock Why misinformation is created? detecting them by integrating intent features.
+\newblock In \emph{Proceedings of the 33rd ACM International Conference on Information and Knowledge Management}, pages 2304--2314.
+
+\bibitem[{Wang et~al.(2024{\natexlab{b}})Wang, Li, Li, Fu, Pei, and Wang}]{10.1145/3627673.3679799}
+Bing Wang, Ximing Li, Changchun Li, Bo~Fu, Songwen Pei, and Shengsheng Wang. 2024{\natexlab{b}}.
+\newblock \href {https://doi.org/10.1145/3627673.3679799} {Why misinformation is created? detecting them by integrating intent features}.
+\newblock In \emph{Proceedings of the 33rd ACM International Conference on Information and Knowledge Management}, CIKM '24, page 2304–2314, New York, NY, USA. Association for Computing Machinery.
+
+\bibitem[{Wang(2017)}]{wang2017liar}
+William~Yang Wang. 2017.
+\newblock “liar, liar pants on fire”: A new benchmark dataset for fake news detection.
+\newblock In \emph{Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)}, pages 422--426.
+
+\bibitem[{Xu et~al.(2023)Xu, Zhang, and Lin}]{Xu2023}
+Hua Xu, Hanlei Zhang, and Ting-En Lin. 2023.
+\newblock \href {https://doi.org/10.1007/978-981-99-3885-8_2} {\emph{Intent Recognition}}, pages 7--29.
+\newblock Springer Nature Singapore, Singapore.
+
+\bibitem[{Zhou et~al.(2022)Zhou, Shu, Phoha, Liu, and Zafarani}]{Zhou_2022}
+Xinyi Zhou, Kai Shu, Vir~V. Phoha, Huan Liu, and Reza Zafarani. 2022.
+\newblock \href {https://doi.org/10.1145/3485447.3512264} {“this is fake! shared it by mistake”:assessing the intent of fake news spreaders}.
+\newblock In \emph{Proceedings of the ACM Web Conference 2022}, WWW ’22, page 3685–3694. ACM.
+
+\end{thebibliography}

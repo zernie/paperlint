@@ -1,0 +1,97 @@
+\documentclass[sigconf,nonacm]{acmart}
+\settopmatter{printacmref=true,printfolios=true}
+%\citestyle{acmauthoryear}
+
+% Packages
+\usepackage[nameinlink,capitalise]{cleveref}
+\usepackage{xcolor}
+%\usepackage{booktabs}
+\usepackage{fancyvrb} % TAPS-compatible replacement for listings
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{float}
+%\usepackage{needspace}
+%\usepackage{placeins}
+\usepackage{microtype} % Improved typography (reduces orphans/widows)
+\usepackage{makecell}
+
+% Prevent widows and orphans (single words/lines at paragraph ends)
+\widowpenalty=10000
+\clubpenalty=10000
+
+% Cleveref names for listings (now using figure environment)
+%\crefname{lstlisting}{Listing}{Listings}
+%\Crefname{lstlisting}{Listing}{Listings}
+
+% TikZ libraries
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.misc,fit,calc}
+
+% Custom column type for tables
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+
+% Custom commands
+\newcommand{\RQ}{\textbf{RQ}}
+
+\begin{document}
+
+% Document metadata
+\title[Motivations, Characteristics, and Influence Mechanisms of Crypto Key Opinion Leaders]{Credibility Matters: Motivations, Characteristics, and Influence Mechanisms of Crypto Key Opinion Leaders}
+\author{Alexander Kropiunig}
+\affiliation{\institution{Complexity Science Hub}\city{Vienna}\country{ Austria}}
+\email{kropiunig@csh.ac.at}
+\author[]{Svetlana Kremer}
+\affiliation{\institution{Austrian Institute of Technology}\city{Vienna}\country{ Austria}}
+\affiliation{\institution{Complexity Science Hub}\city{Vienna}\country{ Austria}}
+\email{abramova@csh.ac.at}
+\author[]{Bernhard Haslhofer}
+\affiliation{\institution{Complexity Science Hub}\city{Vienna}\country{Austria}}
+\email{haslhofer@csh.ac.at}
+
+% Ensure anonymized PDF metadata in review build
+\hypersetup{
+  pdfauthor={Alexander Kropiunig, Svetlana Kremer, Bernhard Haslhofer},
+  pdftitle={Credibility Matters: Motivations, Characteristics, and Influence Mechanisms of Crypto Key Opinion Leaders},
+  pdfsubject={Preprint},
+  pdfcreator={},
+  pdfproducer={},
+  pdfkeywords={blockchain, credibility, crypto influencer, cryptocurrency, finfluencer, opinion leader, social media}
+}
+
+\begin{abstract}
+
+Crypto Key Opinion Leaders (KOLs) shape Web3 narratives and retail investment behaviour. In volatile, high-risk markets, their credibility becomes a key determinant of their influence on followers. Yet prior research has focused on lifestyle influencers or generic financial commentary, leaving crypto KOLs' understandings of motivation, credibility, and responsibility underexplored. Drawing on interviews with 13 KOLs and self-determination theory (SDT), we examine how psychological needs are negotiated alongside monetisation and community expectations. Whereas prior work treats finfluencer credibility as a set of static credentials, our findings reveal it to be a \emph{self-determined, ethically enacted practice}. We identify four community-recognised markers of credibility: self-regulation, bounded epistemic competence, accountability, and reflexive self-correction. This reframes credibility as socio-technical performance, extending SDT into high-risk crypto ecosystems. Methodologically, we employ a hybrid human--LLM thematic analysis. The study surfaces implications for designing credibility signals that prioritise transparency over hype.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10003120.10003121.10011748</concept_id>
+       <concept_desc>Human-centered computing~Empirical studies in HCI</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Human-centered computing~Empirical studies in HCI}
+
+\keywords{blockchain, credibility, crypto influencer, cryptocurrency, finfluencer, opinion leader, social media}
+
+\maketitle
+
+% Include section files
+\input{sections/introduction}
+\input{sections/background}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+\begin{acks}
+    This research was funded by the FFG project Finfluencer (grant agreement number 924721). This paper was accepted at CHI 2026.
+\end{acks}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\input{sections/appendix}
+\end{document}

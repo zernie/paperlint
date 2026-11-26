@@ -1,0 +1,24 @@
+
+
+
+
+\input{tables/rq1_main}
+\subsection{RQ1: Effectiveness}\label{sec:rq1}
+
+\paragraph{Setup.}
+RQ1 investigate the effectiveness of the \sys across different models, datasets, and recomputation methods.
+% 
+Experiments are conducted on four QA benchmarks: HotpotQA~\cite{yang2018hotpotqa}, SQuAD (v1.1 and v2.0)~\cite{rajpurkar2016squad,rajpurkar2018know}, MedQA~\cite{jin2021disease}, and PubMedQA~\cite{jin2019pubmedqa}. 
+% 
+Regarding hyperparameters, we set the cache ratio $\delta = 0.3$, the recomputation ratio $\rho = 0.1$, and the chunk size $L_{\mathrm{chunk}} = 32$ as the default settings~\cite{yao2025cacheblend, hu2025epic}. We evaluate the effectiveness of \sys without using KV cache (\textit{Full}), with full KV cache reuse (\textit{Vanilla}), and with three recomputation methods (\textit{Random}, \textit{EPIC}, and \textit{CacheBlend}).
+% 
+We use white-box setting and report Acc for model performance, and U-ASR and T-ASR for the effectiveness of \sys.
+
+
+\paragraph{Results.} 
+Table~\ref{tab:rq1_main} shows that \sys demonstrates strong attack performance across all evaluated scenarios.
+% 
+Specifically, on the Llama-3.1-8B model, \sys achieves an average T-ASR of 89\% across the four datasets, even when countering the four distinct recomputation methods. While advanced recomputation strategies like EPIC and CacheBlend result in a slight reduction in ASR compared to the Vanilla setting, \sys still maintains  effectiveness. This trend is further supported by the results on Qwen3-8B, where the attack frequently achieves near-perfect success rates (e.g., 100\% T-ASR on PubMedQA), proving that \sys remains robust despite the slight drop introduced by partial recomputation.
+
+\paragraph{Conclusion.}
+In conclusion, \sys is a highly effective, model-agnostic attack that hijacks LLM generation across diverse domains. Our findings indicate that standard partial recomputation mechanisms, at current ratios, are insufficient to mitigate the adversarial cache optimized by \sys.

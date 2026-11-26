@@ -1,0 +1,409 @@
+\section{Experiments}
+\label{sec:eval}
+
+
+\subsection{Experiment Settings}
+
+\noindent {\bf Datasets:} We use four node classification datasets (Cora-ML~\cite{mccallum2000automating}, Citeseer~\cite{sen2008collective},  PubMed~\cite{sen2008collective}, Amazon-C~\cite{yang2021extract}) and four graph classification datasets (AIDS~\cite{riesen2008iam}, MUTAG~\cite{debnath1991structure}, PROTEINS~\cite{Borgwardt2005}, and DD~\cite{Dobson2003}) for evaluation. In each dataset, we take $30\%$ nodes (for node classification) or 50\% graphs (for graph classification) as the training set, $10\%$ and 20\% as the validation set, and the remaining nodes/graphs as the test set. 
+Table~\ref{tab:datasets} shows the basic statistics of them. 
+Our experiments are tested on a machine with NVIDIA RTX-4090 24G GPU, AMD EPYC 7352 CPU, and 60G RAM. 
+
+
+
+\vspace{+0.05in}
+\noindent {\bf GNN classifiers and {\name} training:} 
+We adopt the three well-known GNNs as the base node/graph classifiers: GCN~\cite{kipf2017semi}, GSAGE~\cite{hamilton2017inductive} and GAT~\cite{velivckovic2018graph}, and use their official source  code\footnote{https://github.com/tkipf/gcn; https://github.com/williamleif/GraphSAGE; https://github.com/PetarV-/GAT}.   
+To enhance the robustness performance, existing certified defense~\cite{xia2024gnncert,lai2023nodeawarebismoothingcertifiedrobustness} augment the training set with generated subgraphs~\cite{xia2024gnncert} or noisy graphs~\cite{lai2023nodeawarebismoothingcertifiedrobustness} to train the GNN classifier.
+Similarly, {\name} trains the GNN classifier using both the training nodes/graphs and their generated subgraphs, whose labels are same as the training nodes/graphs'. 
+We denote the two versions of {\name} under edge-centric graph division and node-centric graph division as {\nameE} and {\nameN}, respectively. 
+By default, we use GCN as the node/graph classifier in our experiments.
+
+\vspace{+0.05in}
+\noindent {\bf Evaluation metric:} 
+Following existing works~\cite{xia2024gnncert,lai2023nodeawarebismoothingcertifiedrobustness,wang2021certified}, we use the certified node/graph  accuracy at perturbation size as the evaluation metric. 
+For arbitrary perturbation, the perturbation size is 
+the total number of manipulated nodes, edges, and nodes whose features can be arbitrarily perturbed. 
+Given a perturbation size $m$ and test nodes/graphs,  
+certified node/graph accuracy at $m$ is the fraction of test nodes/graphs that are accurately classified by the voting node/graph classifier and its certified perturbation size is no smaller than $m$. 
+Note that the standard node/graph accuracy is under $m=0$. 
+
+
+
+
+\begin{figure*}[t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-E.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-E.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-E.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-E.png}}\\
+%\vspace{-2mm}
+\caption{Certified node accuracy of our {\nameE} w.r.t. the number of subgraphs $T$. 
+}
+\label{fig:node-EC-T}
+\vspace{-3mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-N.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-N.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-N.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-N.png}}\\
+%\vspace{-2mm}
+\caption{Certified node accuracy of our {\nameN} w.r.t. the number of subgraphs $T$.
+}
+\label{fig:node-NC-T}
+\vspace{-3mm}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-E.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-E.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-E.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-E.png}}\\
+%\vspace{-2mm}
+\caption{Certified graph accuracy of our {\nameE} w.r.t. the number of subgraphs $T$.
+}
+\label{fig:graph-EC-T}
+\vspace{-3mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-N.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-N.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-N.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-N.png}}\\
+%\vspace{-2mm}
+\caption{Certified graph accuracy of our {\nameN} w.r.t. the number of subgraphs $T$.}
+\label{fig:graph-NC-T}
+\vspace{-2mm}
+\end{figure*}
+
+
+\begin{table}[!t]
+\vspace{+2mm}
+    \footnotesize
+    \centering 
+    \addtolength{\tabcolsep}{-2pt}
+    \renewcommand\arraystretch{0.9}
+    \begin{tabular}{c|c|c|c|c}
+     \toprule
+          {\bf Node Classification}&{\bf Ave degree}&{$|\mathcal{V}|$}&$|\mathcal{E}|$&$|\mathcal{C}|$ \\
+         \Xhline{0.9pt}
+       Cora-ML&5.6&2, 995&8,416&7\\
+         \cline{1-5} 
+         Citeseer&2.8&3,327&4,732&6\\
+         \cline{1-5} 
+         Pubmed&4.5&19,717&44,338&3\\
+         \cline{1-5} 
+         Amazon-C&71.5&13,752&491,722&10\\
+         \cline{1-5} 
+        {Amazon2M}&50.5&2,449,029&61,859,140&47 \\
+         \Xhline{1.2pt} 
+       {\bf Graph Classification}&$|\mathcal{G}|$&$|\mathcal{V}|_{avg}$&$|\mathcal{E}|_{avg}$&$|\mathcal{C}|$ \\
+         \Xhline{0.9pt}
+         {AIDS}&2,000&15.7&16.2&2\\
+         \cline{1-5} 
+        MUTAG&4,337&30.3&30.8&2\\
+         \cline{1-5} 
+         PROTEINS&1,113&39.1&72.8&2\\
+         \cline{1-5} 
+        DD&1,178&284.3&715.7&2\\
+         \cline{1-5} 
+        {Big-Vul} &18,103 &35.5&117.3&2 \\
+       \bottomrule
+    \end{tabular}
+    \caption{Datasets and their statistics.}
+    \label{tab:datasets}
+    \vspace{-2mm}
+\end{table}
+
+
+\vspace{+0.05in}
+\noindent {\bf Compared baselines:} 
+As  {\name} encompasses existing defenses as special cases, we can compare {\name} with them against less types of perturbation. 
+Here, we choose the state-of-the-art Bi-RS~\cite{lai2023nodeawarebismoothingcertifiedrobustness} 
+and GNNCert~\cite{xia2024gnncert} for comparison. 
+
+
+\begin{itemize}[leftmargin=*]
+
+\vspace{-2mm}
+\item {\bf Bi-RS:} It certifies 
+GNN for \emph{node classification} against node inject attacks with a probabilistic guarantee. 
+During training, 
+Bi-RS augments the graph with 
+$N_1$ noisy graphs from a smoothing distribution (defined in its Eqn.3) and trains the node classifier with both clean graphs and their noisy ones. 
+During certification, Bi-RS utilizes Monte-Carlo sampling to compute the certified perturbation size. Given 
+a graph and the trained node classifier, Bi-RS first generates $N_2$ noisy graphs for the given graph and then derives the robustness guarantee for each target node on the noisy graphs that is correct with a probability $1-\alpha$. 
+Note that ensuring a smaller $\alpha$ needs more samples.
+Bi-RS sets $N_2=50,000$ and $\alpha=0.01$. In our experiment, 
+we also set $N_1=T$.  
+
+
+\vspace{-2mm}
+\item {\bf GNNCert:} It is the state-of-the-art certified defense (with a deterministic guarantee) of GNN for \emph{graph classification} against edge manipulation, and both edge  and node feature manipulation (more details see Section~\ref{sec:GNNCert}). 
+We denote the two variants as GNNCert-E and GNNCert-EN, respectively. 
+During training,  GNNCert-E and  GNNCert-EN use the extra $T_e$ and $T_e \cdot T_n$ subgraphs for training the base graph classifier. During certification, GNNCert-E and  GNNCert-EN also use the same number of subgraphs.  
+\emph{We highlight that, for edge manipulation, GNNCert-E has the same bound as our {\nameE} under edge-centric graph division. This is because the generated subgraphs of both defenses are exactly the same, and so does the voting graph classifier when using the same base GNN classifier.}  
+
+\end{itemize}
+
+\vspace{+0.05in}
+\noindent {\bf Parameter setting:} {\name} has two hyperparameters: the hash function $h$ and the number of subgraphs $T$. By default, we use MD5 as the hash function and set $T=30,300$ respectively for node and graph classification, considering their different graph sizes. 
+ We also study the impact of them. 
+
+
+
+
+\subsection{Experiment Results}
+
+\subsubsection{{\name} against Arbitrary Perturbation}
+
+\noindent {\bf Main results:} Figures~\ref{fig:node-EC-T}-\ref{fig:node-NC-T} show the certified node accuracy and Figures~\ref{fig:graph-EC-T}-\ref{fig:graph-NC-T} show the certified graph accuracy at perturbation size $m$ w.r.t. $T$ under the two graph division strategies, respectively.
+We have the following observations. 
+
+\begin{itemize}[leftmargin=*]
+\vspace{-2mm}
+\item Both {\nameE} and {\nameN} can tolerate the perturbation size up to 200 and 25, on the node classification and graph classification datasets, respectively. This means {\nameE} can defend against a total of 200 (25) arbitrary edges, while {\nameN}  against a total of 200 (25) arbitrary edges and nodes caused by the arbitrary perturbation,  on the node (graph) classification datasets, respectively. 
+Note that node classification datasets have several orders of more nodes/edges than graph classification datasets, hence {\name} can tolerate more perturbations on them.
+
+
+
+\vspace{-2mm}
+\item $T$ acts as the robustness-accuracy tradeoff. That is, a larger (smaller) $T$ yields a higher (lower) certified perturbation size, but a smaller (higher) normal accuracy ($m=0$). 
+
+\vspace{-2mm}
+\item In {\nameN}, the guaranteed perturbed nodes can 
+have an infinite number of edges. This thus implies  {\nameN} produces better   robustness than {\nameE} against the perturbed  edges by node/node feature manipulation. 
+\end{itemize}
+
+\vspace{+0.05in}
+\noindent {\bf Impact of hash function:} 
+Figure~\ref{fig:node-EC-hash}-Figure~\ref{fig:graph-NC-hash} in Appendix 
+show the certified node/edge accuracy of {\nameE} and  {\nameN} with different hash functions. We observe that our certified accuracy and certified perturbation size are almost the same in all cases. This reveals  {\name} is insensitive to hash functions, and \cite{xia2024gnncert} draws a similar conclusion. 
+
+\vspace{+0.05in}
+\noindent {\bf Impact of base GNN classifiers:} Figures~\ref{fig:node-EC-T-GSAGE}-\ref{fig:graph-NC-T-GSAGE} and 
+Figures~\ref{fig:node-EC-T-GAT}-\ref{fig:graph-NC-T-GAT} in Appendix show the certified accuracy at perturbation size using GSAGE and GAT as the base classifier, respectively. We have similar observations as those results with GCN. For instance, $T$ trade offs robustness and accuracy. 
+
+
+
+
+
+\begin{table}[!t]%\renewcommand\arraystretch{1.3}
+\centering
+\footnotesize
+\addtolength{\tabcolsep}{-3.5pt}
+\caption{Node/graph accuracy of normally trained GNN and of {\name} with GNN trained on the subgraphs.}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\bf Dataset} & \multirow{2}{*}{\bf GCN} & \multicolumn{2}{c|}{\name} & \multirow{2}{*}{\bf GSAGE} & \multicolumn{2}{c|}{\name} & \multirow{2}{*}{\bf GAT} & \multicolumn{2}{c|}{\name} \\ \cline{3-4}\cline{6-7}\cline{9-10}
+&&-E&-N&&-E&-N&&-E&-N
+\\ \hline
+{\bf Cora-ML} &0.73&0.70&0.68&0.67& 0.67 & 0.68 &0.74&  0.68&0.69 \\ \hline
+{\bf Citeseer} &0.66&0.65&0.67&0.64& 0.63 & 0.64 &0.66& 0.65&0.66 
+  \\ \hline
+{\bf Pubmed} &0.86&0.81&0.82&0.84&  0.84&0.84&0.85& 0.84& 0.84 \\ \hline
+{\bf Amazon-C}&0.81&0.76&0.76&0.80&0.77  &0.75 &0.78& 0.74& 0.74 \\ \hline \hline
+{\bf AIDS}&0.99&0.98&0.96&0.97& 0.96 &0.97 &0.96&0.98& 0.98  \\ \hline
+{\bf MUTAG}&0.71&0.66&0.65&0.70& 0.66 &0.67 &0.71& 0.67&0.66 \\ \hline
+{\bf Proteins}&0.75&0.75&0.75&0.80& 0.79 &  0.77&0.82
+&0.77 & 0.77\\ \hline
+{\bf DD}&0.80 &0.79
+&0.81&0.81& 0.80 & 0.81&0.81& 0.77& 0.80\\ \hline
+\end{tabular}
+\label{tbl:normalacc}
+\end{table}
+
+
+\vspace{+0.05in}
+\noindent {\bf Impact of subgraphs on the certified accuracy:} 
+We test the certified accuracy of (not) using subgraphs to train the GNN classifier.  
+Figures~\ref{fig:node-EC-w-wo}-\ref{fig:graph-EC-w-wo} in Appendix show the comparison results under the default $T$ for node and graph classification.    
+The results show training with subgraphs can enhance the certified robustness of {\name}, especially on large datasets. This is because training and certification both involve raw graphs and the subgraphs, making their distributions similar.
+
+
+\vspace{+0.05in}
+\noindent {\bf Impact of subgraphs on the normal accuracy:} 
+We test the normal accuracy of (not) using subgraphs to train the GNN classifier.  
+Table~\ref{tbl:normalacc} shows the comparison results of the test node/graph accuracy of the normally trained GNN without sbugraphs and  {\name} with GNN trained on the subgraphs. %($T=30$).
+We observe that the accuracy of {\name} is 5\% smaller than that of normally trained GNN in almost all cases, and in some cases even larger. This implies the augmented subgraphs for training marginally affects the normal test accuracy. 
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-In.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-In.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-In.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-In.png}}\\
+%\vspace{-2mm}
+\caption{Certified node accuracy of {\name} and Bi-RS against node inject attacks. 
+}
+\label{fig:ours-E-vs-biRS}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-NE.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-NE.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-NE.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-NE.png}}\\
+%\vspace{-2mm}
+\caption{Certified graph accuracy of {\nameN} and GNNCert-E against edge manipulation.}
+\label{fig:ours-vs-gnncert-edge}
+\vspace{-4mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-EN.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-EN.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-EN.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-EN.png}}\\
+%\vspace{-2mm}
+\caption{Certified graph accuracy of {\name} and GNNCert-EN against edge and node feature manipulation.}
+\label{fig:ours-vs-gnncert-edgenode}
+\vspace{-2mm}
+\end{figure*}
+
+
+\subsubsection{Comparing {\name} with Bi-RS and GNNCert}
+
+\noindent {\bf Comparing {\name} with Bi-RS for node classification against node injection attacks:} 
+We first add some details of Bi-RS.
+Bi-RS assumes the number of injected nodes is $\rho$ and each node can connect at most $\tau$ edges, so the total perturbed edges is $\rho \cdot \tau$. It also involves two hyperparameters $p_e$ and $p_n$, which means the probability of deleting an edge and deleting a node (and all its connected edges), respectively. These parameters are used to derive the certified perturbation size (see its Eqn 5). 
+In the experiment, we follow Bi-RS by setting $\tau=5$ and pick its best result from 9 combinations with $p_e=\{0.7,0.8,0.9\}$ and $p_n=\{0.7,0.8,0.9\}$. 
+Figure~\ref{fig:ours-E-vs-biRS} shows the comparison results.
+
+
+\begin{itemize}[leftmargin=*]
+\vspace{-2mm}
+\item {\bf {\nameE} vs Bi-RS:} 
+We first mention the number of injected nodes in {\nameE} is calculated by dividing the bounded number of edges in Equation~\ref{eqn:cpz_edge} by $\tau$. We can see the two methods have comparable certified node accuracy w.r.t. the number of injected nodes, which indicates {\nameE} is already as effective as Bi-RS.  
+Further, we highlight our {\nameE}'s theoretical result is \emph{deterministic} and \emph{far more general}---it bounds the total number of perturbed edges induced by the node inject attack, where the combination of the number of injected nodes and the number of incident edges for each injected node is arbitrary.  
+
+\vspace{-2mm}
+\item {\bf {\nameN} vs Bi-RS:} We can see {\nameN} has much better certified node accuracy than Bi-RS w.r.t. the number of injected nodes (under $\tau=5$). Furthermore, we highlight that each bounded node in {\nameN} can inject as many (even infinite) edges as possible. Hence, the total number of bounded edges in {\nameN} could be infinite, which is infinitely higher than Bi-RS's bound when using the total perturbed edges as the evaluation metric.  
+
+\vspace{-2mm}
+\end{itemize}
+
+
+
+
+
+
+
+\vspace{+0.05in}
+\noindent {\bf Comparing {\name} with GNNCert for graph classification against edge manipulation:} 
+Recall that, when using the same hash function and same number of subgraphs in both defenses, {\nameE} and GNNCert-E produce the same subgraphs and same voting graph classifier. Hence, their certified graph accuracy/perturbation size are same.  
+Here, we compare {\nameN} with GNNCert-E, and results are in Figure~\ref{fig:ours-vs-gnncert-edge}.    
+{We observe both methods have close certified accuracy/perturbation size, implying they have comparable robustness guarantee  
+against edge manipulation}.  
+
+
+
+
+
+
+
+\begin{table}[!t]
+\centering
+\caption{Big-O complexity comparison for defense training and certification. {We also include the base GNN for completeness.} We do not include other complexity factors in  training and certification, as they are similar in all defenses. In practice, $N_2$ can be as large as $100,000$; $N_1, T_e, T_n$ and $T$ have values $\le 100$. Hence $N_2 \gg N_1 \simeq T_e \simeq T_n \simeq T$.} 
+\begin{tabular}{lcc}
+\toprule
+{\bf Defenses} & {\bf Training} & {\bf Certification} \\
+\midrule
+{\bf GNN} &  O($1$) & O($1$)\\
+{\bf Bi-RS} &  O($N_1$) & O($N_2$)\\
+{\bf GNNCert-E} &  $O(T_e)$ & $O(T_e)$\\
+{\bf GNNCert-EN} &  $O(T_e \cdot T_n)$ & $O(T_e \cdot T_n)$\\
+{\bf {\nameE}} & $O(T)$ & $O(T)$\\
+{\bf {\nameN}} &  $O(T)$ & $O(T)$\\
+\bottomrule
+\label{computation-cost-training-testing}
+\end{tabular}
+\vspace{-8mm}
+\end{table}
+
+\vspace{+0.05in}
+\noindent {\bf Comparing {\name} with GNNCert against edge AND node feature manipulation:} 
+As analyzed in Section~\ref{sec:GNNCert}, the initial  guarantee of GNNCert is for edge manipulation \emph{or} node feature manipulation. To defend against both manipulations, it requires $T_e=T_n$. Figure~\ref{fig:ours-vs-gnncert-edgenode} shows the comparison results under $T_e=T_n=T$. 
+We can see our  {\name} performs better than GNNCert-EN. For instance, on PROTEINS,  
+{\nameE} can certify a total of 15 perturbed edges by both manipulations, and {\nameN} certifies a total of 15 edges and nodes whose features can be arbitrarily perturbed.
+Instead, GNNCert-EN can only tolerate up to 7 edges and nodes.  
+This may because, compared to {\name}, GNNCert-EN generates far more subgraphs ($T^2$) with each subgraph having less edges and many nodes in subgraphs do not have features (0 values), thus using much less information in the raw graph.  
+
+
+
+
+\begin{table*}[!t]\renewcommand\arraystretch{1}
+\centering
+\small
+\addtolength{\tabcolsep}{-3.5pt}
+\caption{Training and test time of provable defenses and undefended GNN on the evaluated datasets.}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{\bf Datasets} & {\bf Cora-ML}&{\bf Citeseer}&{\bf Pubmed} &{\bf Amazon-C}
+&{\bf Datasets}& {\bf AIDS} &{\bf MUTAG}& {\bf PROT.} &{\bf DD} \\ \hline
+& {\bf GCN}&0.03s &0.03s &0.12s &0.31s&GCN&6.66s&14.82s &3.87s &6.45s 
+\\
+{Training Time}& {\bf Bi-RS}& 16.73s&22.21s &117.57s &98.10s & {\bf GNNCert-E} &114.90s &388.01s &107.72s & 171.34s
+\\
+{(per epoch)}& {\nameE}& 17.46s&21.44s &110.58s &102.31s &{\nameE}&100.55s & 389.08s&95.70s &163.27s \\
+& {\nameN}& 18.59s&22.47s &102.26s &96.55s &{\nameN}&101.94s & 400.97s&98.61s &151.18s 
+\\\hline
+\multirow{4}{*}{Test/Certification Time}& {\bf GCN} &0.01s &0.01s &0.02s & 0.08s&GCN&1.46s &2.66s &0.70s &1.02s 
+\\
+& {\bf Bi-RS} &1658s & 1943s&60589s &15792s &{\bf GNNCert-E} &22.15s &82.21s &26.38s &32.85s 
+\\
+& {\nameE}&7.35s &8.36s &44.91s & 35.29s&{\nameE}&24.34s &82.68s &23.05s &33.14s 
+\\
+& {\nameN}&7.45s &8.40s &42.69s & 36.41s&{\nameN}&22.57s &86.15s &25.45s &32.85s 
+\\\hline
+\end{tabular}
+\label{tbl:exp_time}
+\vspace{-2mm}
+\end{table*}
+
+
+\begin{figure*}[!t]
+\centering
+%\vspace{-4mm}
+\subfloat[Amazon2M: {\nameN}]{\includegraphics[width=0.25\textwidth]{figs/AmazonCo-N.png}}%\hfill
+\subfloat[Amazon2M: {\nameE}]{\includegraphics[width=0.25\textwidth]{figs/AmazonCo-E.png}}%\hfill
+\subfloat[Big-Vul: {\nameN}]{\includegraphics[width=0.25\textwidth]{figs/Code-N.png}}\hfill
+\subfloat[Big-Vul: {\nameE}]{\includegraphics[width=0.25\textwidth]{figs/Code-E.png}}\\
+%\vspace{-2mm}
+\caption{Certified node/graph accuracy of {\name} w.r.t. the number of subgraphs $T$ on Amazon2M and Big-Vul.
+}
+\label{fig:realworld}
+\vspace{-2mm}
+\end{figure*}
+
+
+%\vspace{+0.05in}
+\noindent {\bf Comparing the computational complexity {\bf and runtime} of the defenses:} 
+Table~\ref{computation-cost-training-testing} shows the Big-O complexity of the compared defenses and the base GNN for training and certification/testing. We only show the factor on the augmented graphs as other factors are similar in all methods.   
+We observe that: 1) {As $N_1 \simeq T_e \simeq T_n \simeq T$,  all defenses have close Big-O complexity for training (except GNNCert-EN)}. 
+2) GNNCert-E has a similar training and certification complexity as ours, but it can only defend against the edge manipulation. 3) Bi-RS is the least efficient for certification due to needing vast samples to ensure high confidence guarantees. 
+{4) All defenses are $T$ slower than the base GNN in training and certification.}
+{We also record the runtime in Table~\ref{tbl:exp_time} and these defenses' runtime matches the observations from the Big-O analysis.} 
+
+
+
+
+
+
+
+

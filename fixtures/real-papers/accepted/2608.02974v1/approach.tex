@@ -1,0 +1,25 @@
+\section{Approach}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.7\textwidth]{figs/overall.jpeg}
+\vspace{-10pt}
+\caption{The overview of \Name{}.} \label{frame}
+\vspace*{-10pt}
+\end{figure}
+
+As shown in Figure~\ref{frame}, we propose \textbf{ConFL}, 
+a hierarchy-guided framework for concurrent fault localization based on structured concurrency knowledge.
+Given a bug report as the sole input, ConFL first extracts concurrency-relevant information from source code and organizes it into a Concurrent Knowledge Base (CKB). 
+The CKB captures concurrency semantics at multiple abstraction levels, including components, packages, thread entry points, methods, and interaction-level behaviors.
+
+Fault localization is then carried out as a progressive refinement process.
+Starting from the bug report, an LLM incrementally queries the CKB to narrow the search space from coarse-grained components to fine-grained concurrency interactions, while keeping the exposed context bounded.
+Finally, the LLM reasons over interaction-level DSL representations to rank suspicious methods and generate concurrency-aware explanations.
+
+
+
+\input{approach/concurrent_features}
+\input{approach/knowlege_base}
+\input{approach/fault_localization}
+

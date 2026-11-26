@@ -1,0 +1,188 @@
+\begin{table}[!t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l|ccccc|c}
+\toprule
+Method & T1 & T2 & T3 & T4 & T5 & Avg. Len. $\uparrow$ \\
+\midrule
+RoboFlamingo      & 82.4 & 61.9 & 46.6 & 33.1 & 23.5 & 2.47 \\
+SuSIE             & 87.0 & 69.0 & 49.0 & 38.0 & 26.0 & 2.69 \\
+GR-1              & 85.4 & 71.2 & 59.6 & 49.7 & 40.1 & 3.06 \\
+3D Diffuser Actor & 92.2 & 78.7 & 63.9 & 51.2 & 41.2 & 3.27 \\
+CLOVER            & 96.0 & 83.5 & 70.8 & 57.5 & 45.4 & 3.53 \\
+Seer              & 93.0 & 82.4 & 72.3 & 62.6 & 53.3 & 3.64 \\
+Seer-Large        & 92.7 & 84.6 & 76.1 & 68.9 & 60.3 & 3.83 \\
+\midrule
+\textbf{WorldAgen}        & 96.3 & 87.7 & 76.8 & 67.3 & 59.1 & 3.87 \\
+\textbf{WorldAgen-TTT}    & \textbf{96.6} & \textbf{88.5} & \textbf{78.5} & \textbf{68.7} & \textbf{60.5} & \textbf{3.93} \\
+\bottomrule
+\end{tabular}
+\caption{Performance comparison on the CALVIN benchmark.
+We report the success rate (\%) for completing 5 consecutive tasks 
+and the average sequence length (ASL).}
+\label{tab:calvin_results}
+\end{table}
+
+
+\section{Experiments}
+
+\subsection{Datasets}
+\paragraph{CALVIN.} CALVIN \citep{mees2022calvin} is an open-source simulated benchmark designed for learning long-horizon language-conditioned robot manipulation tasks. The benchmark requires agents to solve complex manipulation tasks by understanding a series of unconstrained language instructions in sequence.
+
+\paragraph{LIBERO.} LIBERO \citep{liu2023libero} is a comprehensive benchmark for lifelong learning in robot manipulation that emphasizes knowledge transfer across diverse tasks.
+
+\subsection{Implementation Details}
+
+\paragraph{Test-Time Training} TTT represents a crucial component of WorldAgen that enables adaptive performance improvements during inference. In the TTT phase, we apply LoRA fine-tuning to the backbone of Qwen3. Specifically, we apply LoRA to the attention projection layers (q\_proj, k\_proj, v\_proj, o\_proj) and the MLP projection layers (gate\_proj, up\_proj, down\_proj) of Qwen3.
+
+The test-time training procedure, including sampling and LoRA adaptation, can be executed on an RTX 4090 GPU and requires approximately 8 minutes per task for CALVIN and 2 minutes per scene for LIBERO. More details can be found in Appendix.
+
+\subsection{Results}
+\label{sec:main_results}
+
+\begin{table*}[t]
+\centering
+
+
+
+\begin{tabular}{>{\centering\arraybackslash}m{3.2cm}>{\centering\arraybackslash}m{2.0cm}>{\centering\arraybackslash}m{2.0cm}>{\centering\arraybackslash}m{2.0cm}>{\centering\arraybackslash}m{2.0cm}>{\centering\arraybackslash}m{2.2cm}}
+\toprule
+Method & 
+\begin{tabular}{c} Avg. \\ Success $\uparrow$ \end{tabular} & 
+\begin{tabular}{c} Put soup \\ and box \\ in basket \end{tabular} & 
+\begin{tabular}{c} Put box \\ and butter \\ in basket \end{tabular} & 
+\begin{tabular}{c} Turn on \\ stove and \\ put pot \end{tabular} & 
+\begin{tabular}{c} Put bowl in \\ drawer and \\ close it \end{tabular} \\
+\midrule
+MT-ACT & 41.0 & 30.0 & 50.0 & 75.0 & 85.0 \\
+MVP & 68.2 & 83.3 & \textbf{90.0} & 80.0 & 88.3 \\
+MPI & 77.3 & 66.6 & 86.6 & 96.6 & 95.0 \\
+OpenVLA & 54.0 & 35.0 & 95.0 & 65.0 & 45.0 \\
+Seer & 78.7 & 80.0 & \textbf{90.0} & 91.7 & 81.7 \\
+\midrule
+WorldAgen & 75.5 & 70.0 & 75.0 & 95.0 & 100 \\
+\textbf{WorldAgen-TTT} & \textbf{79.0} & \textbf{85.0} & 75.0 & \textbf{95.0} & \textbf{100} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.2cm}
+
+\begin{tabular}{>{\centering\arraybackslash}m{2.5cm}>{\centering\arraybackslash}m{2.2cm}>{\centering\arraybackslash}m{2.2cm}>{\centering\arraybackslash}m{2.2cm}>{\centering\arraybackslash}m{2.2cm}>{\centering\arraybackslash}m{2.4cm}}
+\toprule
+\begin{tabular}{c} Put mugs on \\ left and \\ right plates \end{tabular} & 
+\begin{tabular}{c} Pick book \\ and place it \\ in back \end{tabular} & 
+\begin{tabular}{c} Put mug on \\ plate and put \\ pudding to right \end{tabular} & 
+\begin{tabular}{c} Put soup \\ and sauce \\ in basket \end{tabular} & 
+\begin{tabular}{c} Put both pots \\ on stove \end{tabular} & 
+\begin{tabular}{c} Put mug in \\ microwave and \\ close it \end{tabular} \\
+\midrule
+20.0 & 75.0 & 0.0 & 0.0 & 10.0 & 65.0 \\
+46.7 & 63.3 & 45.0 & 78.3 & \textbf{60.0} & 46.7 \\
+83.3 & 83.3 & 56.6 & 86.6 & 40.0 & 78.3 \\
+40.0 & 80.0 & 60.0 & 45.0 & 20.0 & 55.0 \\
+85.0 & 65.0 & \textbf{86.7} & 88.3 & 51.7 & \textbf{66.7} \\
+\midrule
+85.0 & 90.0 & 60.0 & 100 & 45.0 & 35.0 \\
+\textbf{90.0} & \textbf{90.0} & 50.0 & \textbf{100} & 45.0 & \textbf{60.0} \\
+\bottomrule
+\end{tabular}
+\caption{Performance comparison on LIBERO benchmark. We report the success rate (\%) across different manipulation tasks. }
+\label{tab:libero_results}
+\end{table*}
+
+Our experimental results demonstrate the effectiveness of WorldAgen across both CALVIN and LIBERO benchmarks. 
+
+\noindent \textbf{CALVIN} As shown in Table~\ref{tab:calvin_results}, we compare WorldAgen with recent VLA baselines, including RoboFlamingo~\cite{li2023vision}, SuSIE~\cite{black2023zero}, GR-1~\cite{wu2023unleashing}, 3D Diffuser Actor~\cite{ke20243d}, and CLOVER~\cite{bu2024closed}.  WorldAgen follows a GR-1-style GPT video architecture, but introduces the Mixed Unidirectional Attention Mask to separate task instruction from world modeling and employs a lightweight TTT strategy to enhance world-modeling capability. Our method achieves consistent performance improvements across five consecutive tasks, indicating that \textbf{\textit{strengthening world modeling via TTT improves environment understanding and boosts long-horizon manipulation performance.}}
+
+\noindent \textbf{LIBERO} As shown in Table~\ref{tab:libero_results}, we further evaluate WorldAgen on the LIBERO benchmark against multi-task VLA baselines such as MT-ACT~\cite{bharadhwaj2024roboagent}, MVP~\cite{xiao2022masked}, MPI~\cite{zeng2024learning}, OpenVLA~\cite{kim2024openvlaopensourcevisionlanguageactionmodel} and Seer~\cite{tian2024predictiveinversedynamicsmodels}. WorldAgen attains the best or on-par performance across most LIBERO subsets, further supporting that test-time adaptation of the world model leads to stronger environment understanding and improved robustness to distribution shifts.
+
+We observe improvements or maintained performance across almost every task compared to the baseline. These consistent gains across diverse manipulation scenarios mirror our findings on CALVIN, demonstrating \textbf{\textit{robustness and generalization ability}} of our TTT approach across different benchmarks and scenario dynamics.
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+To better understand the key components contributing to performance, we conduct ablation studies on (1) the contribution of world modeling to policy learning, (2) the effect of LoRA parameterization during TTT, (3) the impact of the amount of randomly sampled data used for TTT, and (4) transfer from simulator to the real robot. We further analyze the impact of trajectory splitting and preprocessing, image and action chunk lengths, and different Transformer backbones, and compare LoRA-based TTT with full fine-tuning while visualizing performance before and after TTT. All ablation and additional experimental results are provided in the Appendix.
+
+
+\subsubsection{World Modeling Ability}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Dataset & World Modeling & Avg. Success $\uparrow$ \\
+\midrule
+\multirow{2}{*}{CALVIN} & \text{\texttimes} & 2.96 \\ & \checkmark & \textbf{3.87} \\
+\midrule
+\multirow{2}{*}{LIBERO} & \text{\texttimes} & 46.5\% \\ & \checkmark & \textbf{75.5\%} \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on world modeling. We compare models with and without image prediction to evaluate the contribution of world modeling to agent policy learning.}
+\label{tab:world_model_ablation}
+\end{table}
+
+To validate the contribution of world modeling to policy learning, we compare models with and without image prediction capability by including or removing image-prediction tokens in the input as shown in Table~\ref{tab:world_model_ablation}. World modeling consistently improves performance: on CALVIN, the average success length increases from 2.96 to 3.87 (+30.7\%), and on LIBERO, the success rate rises from 46.5\% to 78.0\% (+67.7\%). These results indicate that \textbf{\textit{world modeling yields richer representations of environment dynamics, leading to more effective action prediction and policy learning.}}
+
+\subsubsection{LoRA Configuration}
+\begin{table}[h]
+\centering
+\begin{tabular}{cc}
+\toprule
+LoRA Rank & Avg. Len. $\uparrow$ \\
+\midrule
+16 & 3.928 \\
+32 & 3.918 \\
+64 & 3.918 \\
+\textbf{128} & \textbf{3.930} \\
+256 & 3.923 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on LoRA rank during TTT in CALVIN dataset. All other parameters are kept constant.}
+\label{tab:lora_ablation}
+\end{table}
+
+We study the effect of LoRA rank on TTT performance while fixing the learning rate and training data size as shown in Table~\ref{tab:lora_ablation}. Performance only varies within 0.02 across ranks, indicating that \textbf{\textit{under fixed hyperparameters, TTT performance is largely insensitive to the LoRA rank.}} We therefore use a LoRA rank of 128 in our main experiments, which slightly outperforms other settings while remaining computationally efficient.
+
+
+\subsubsection{TTT Data Sampling Volume}
+\begin{table}[h]
+\centering
+\begin{tabular}{cc}
+\toprule
+Test Time Training Data & Avg. Lens. $\uparrow$ \\
+\midrule
+6 & 3.871 \\
+90 & 3.922 \\
+\textbf{204} & \textbf{3.928} \\
+340 & 3.917 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on TTT data sampling volume. We vary the amount of test-time training data, defined as the product of number of samples and repeat times.}
+\label{tab:data_volume_ablation}
+\end{table}
+
+We study how the amount of test-time training data affects performance as shown in Table~\ref{tab:data_volume_ablation}. As the number of TTT samples increases from 6 to 204, the average success score improves from 3.871 to 3.928, indicating that more diverse exploration data benefits world-model adaptation. However, further increasing the data to 340 slightly reduces performance to 3.917, suggesting diminishing returns and mild overfitting to image generation rather than action prediction. These results indicate that \textbf{\textit{moderately increasing TTT data improves performance, but excessive data can be counterproductive, highlighting the need for an appropriate TTT data budget.}}
+
+
+\subsubsection{Simulator to Real World}
+
+\begin{table}[h]
+\centering
+
+
+\begin{tabular}{lccc}
+\toprule
+\textbf{} & w/o TTT & w/o Noise & w/ Noise \\
+\midrule
+CALVIN & 3.87 & 3.93 & 3.90 \\
+LIBERO & 75.5 & 79.0 & 78.0 \\
+\bottomrule
+\end{tabular} 
+\caption{Performance comparison under Gaussian noise perturbation.}
+\label{tab:gaussian_noise}
+\end{table}
+
+We add Gaussian noise (std = 0.1) to the observations to simulate real-world conditions, such as camera distortion and sensor noise, as shown in Table~\ref{tab:gaussian_noise}. 
+
+This experiment indicates that \textbf{\textit{even under noisy conditions, our method consistently outperforms the baselines, demonstrating its robustness and strong adaptability to real-world uncertainty.}}

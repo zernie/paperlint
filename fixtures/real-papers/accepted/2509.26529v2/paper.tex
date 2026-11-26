@@ -1,0 +1,111 @@
+% \documentclass[sigplan,10pt]{acmart}
+\documentclass[sigplan, screen, authorversion, 10pt]{acmart}
+\settopmatter{printfolios=true} 
+\acmYear{2026}\copyrightyear{2026}
+\setcopyright{cc}
+\setcctype[4.0]{by}
+\acmConference[EUROSYS '26]{European Conference on Computer Systems}{April 27--30, 2026}{Edinburgh, Scotland, UK}
+\acmBooktitle{European Conference on Computer Systems (EUROSYS '26), April 27--30, 2026, Edinburgh, Scotland, UK}
+\acmDOI{10.1145/3767295.3769373}
+\acmISBN{979-8-4007-2212-7/26/04}
+\keywords{Distributed System, Cascading Failure, Bug Detection, Fault Injection, Cloud Computing}
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010520.10010521.10010537.10003100</concept_id>
+       <concept_desc>Computer systems organization~Cloud computing</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011102.10011103</concept_id>
+       <concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+\ccsdesc[500]{Computer systems organization~Cloud computing}
+\ccsdesc[500]{Software and its engineering~Software testing and debugging}
+
+% \displaywidowpenalty=5000
+% \interlinepenalty=500
+% \linepenalty=200
+
+\usepackage[normalem]{ulem}
+
+\usepackage{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\crefname{algocf}{alg.}{algs.}
+\Crefname{algocf}{Algorithm}{Algorithms}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{stmaryrd}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+% \usepackage[cache=false]{minted} 
+% \usepackage[cachedir=minted-cache]{minted} % arXiv: Step 1
+% arxiv Step 2: Download the minted-cache folder from output, upload it 
+\usepackage[frozencache,cachedir=minted-cache]{minted} % arxiv: Step 3
+\usepackage{siunitx}
+
+\usepackage[linesnumbered,ruled,noend]{algorithm2e}
+\usepackage{subcaption}
+\usepackage{graphicx} 
+\usepackage{stfloats}
+\usepackage{xurl}
+\usepackage{circledsteps}
+\usepackage{colortbl}
+\usepackage{pifont}
+\usepackage{balance}
+\usepackage{microtype}
+
+\begin{document}
+
+\input{macro.tex}
+
+
+\title[Detecting Self-Sustaining Cascading Failure via Causal Stitching]{\tool: 
+Detecting 
+Self-Sustaining 
+Cascading Failure 
+via Causal Stitching of Fault Propagations
+}
+
+\input{sections/f.01.authors}
+\input{sections/00.abstract}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{sections/01.intro.tex}
+\input{sections/01.1.definitions}
+\input{sections/02.overview}
+\input{sections/03.static}
+\input{sections/04.test-alloc}
+\input{sections/05.chaining}
+\input{sections/06.guided_search}
+\input{sections/07.implementation_details}
+\input{sections/08.eval}
+\input{sections/09.discussion}
+\input{sections/10.related}
+\input{sections/11.conclusion}
+
+\input{sections/f.02.ack}
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{ACM-Reference-Format.bst}
+\bibliography{paper}
+
+\clearpage
+
+\input{sections/a.01.appendix}
+
+\end{document}

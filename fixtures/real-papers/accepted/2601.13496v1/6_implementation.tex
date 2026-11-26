@@ -1,0 +1,64 @@
+\section{Implementation}
+
+We implemented \sysname{} as a new component for Home Assistant (HA)~\cite{HAcore}, a widely used open-source smart-home platform. The prototype comprises \(\sim\)8.5K Python LOC. 
+\akt{Deploying \sysname{} requires no changes to the HA core, existing integrations, or devices and their APIs. The user only needs to install \sysname{} and 
+supply lightweight per-device-class progress mappings that bind each action's key execution milestones (i.e., start, completion) to observable fields the class already exposes (state attributes). This lets \sysname{} infer action progress and schedule polls without modifying devices.}
+We also built a 500-LOC event-driven HA simulator and adapted the \texttt{hass-virtual} third-party component~\cite{hassvirtual} for device simulation and Raspberry Pi-based emulation.
+
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{\linewidth}
+% \begin{minted}
+% [
+%   fontsize=\scriptsize,
+%   linenos,
+%   breaklines,
+%   frame=lines,
+%   numbersep=4pt,    % distance between numbers and code
+%   xleftmargin=9pt   % keeps numbers snug against the left frame
+% ]{yaml}
+\begin{lstlisting}[style=codeblock,language=yaml]
+- id: "1715802493830"
+  alias: Heat when window starts closing and door is closed
+  action:
+    - parallel:
+        - service: cover.close_cover
+          target: { entity_id: cover.living_room_window }
+        - service: cover.close_cover
+          target: { entity_id: cover.balcony }
+    - service: climate.set_temperature
+      data: { temperature: 72 }
+      depend_on: [start, complete]
+      target: { entity_id: climate.main_thermostat }
+\end{lstlisting}
+% \end{minted}
+\vspace{-0.5cm}
+\caption{\bf \small Example RASC routine with \texttt{depend\_on} specification. 
+{\it \texttt{desc}, \texttt{trigger},  \texttt{condition} omitted for brevity. The main thermostat is requested to heat to 72\textdegree F after the living room window has started closing \& the balcony door has closed.
+}}
+\vspace{-0.5cm}
+\label{lst:script-example}
+\end{minipage}
+\end{figure}
+
+\noindent \textbf{\abs{} API.}
+We extend HA’s action YAML with a single optional field, \texttt{depend\_on}. 
+This field is an \emph{ordered list} of required progress events---one per parent, in the parents’ order (e.g., \texttt{ack}, \texttt{start}, \texttt{complete})---enabling fine-grained sequencing.
+An example routine with mixed dependencies appears in \Figure~\ref{lst:script-example}.
+If \texttt{depend\_on} is omitted, we default to \texttt{complete}, preserving backward compatibility with HA’s sequential semantics.
+At runtime, the YAML is compiled into a dependency DAG; \scheduler{} monitors this DAG and triggers actions as soon as prerequisites are satisfied.
+
+\noindent \textbf{Action length PDF.} 
+We obtain each action's probability distribution function by storing historical durations for (ack→start) and (start→complete).
+Actions are keyed by \(\langle\textit{device},\,\textit{action},\,\textit{transition}\rangle\). 
+Consequently, \dynpoller{} requires a brief training phase (several trials) before it can return accurate results.
+{
+\noindent \textbf{Asynchronous poll placement computation.}
+Algorithm~\ref{algo:adaptive-polling-algorithm}'s compute time increases with the upper bound, which can be large for long actions. 
+To avoid polling delays
+in \sysname, we decouple computation from execution and make it asynchronous: upon an action's completion, poll placement is computed anew and stored for its next initiation. 
+}
+
+\noindent \textbf{Action status change notification.}
+On each status change, \sysname{} publishes an \texttt{\abs\_RESPONSE} event on HA’s event bus; applications subscribed to this topic receive the update.

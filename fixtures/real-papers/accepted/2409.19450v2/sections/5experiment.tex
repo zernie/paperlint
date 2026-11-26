@@ -1,0 +1,175 @@
+\section{Study 2 Experiment: Methodology}
+\label{sec:experiment}
+
+To test the hypotheses about factors that influence individual users' intention of secret use of LLMs, we conducted a randomized between-subjects online experiment ($N=300$), using Prolific for recruitment.
+\revision{The sample size was determined before the formal study based on the power analysis results ($\alpha=0.05$, power > 0.8, the effect size $f^2=0.03$).
+The effect size \(f^2\) was estimated using pilot study data ($N=76$), indicating a small to medium impact according to Cohen's criteria~\cite{cohen2013statistical}.}
+The questionnaire was hosted on Qualtrics\footnote{\href{https://www.qualtrics.com/}{Qualtrics} is a website for building online survey study.}.
+The experiment was conducted in December 2023 and January 2024.
+Our study has been reviewed and approved by our institution’s IRB.
+% 
+
+
+\subsection{Experiment Design}
+Our experiment followed a between-subjects design, in which participants were randomly assigned into six conditions, including a baseline condition ``General information search'', as well as five experimental conditions based on the five task themes identified from our first study (\autoref{sec: survey-context-results}).
+The selection criteria for the baseline condition include that 1) it is a common LLM use case~\cite{zhang2024s}; 2) it was not mentioned as a secret use case by Study 1 participants.
+Each condition presents different hypothetical scenarios where users have used LLMs for different tasks.
+The task description shown to the participants can be found in \autoref{sec: appendix-scenario-description}.
+These manipulations allow us to test the effects of task types on individual users' intentions to conceal their use of LLMs (H1). 
+Then we gathered data on participants' self-reported perceptions (internal and external judgements) of LLMs based on the hypothetical scenario.
+This approach allows us to explore the mediation effects of users' certain perceptions about LLM usage (H3.1 - H3.2).
+Participants were finally asked to fill out validated scales and provide demographic information to facilitate testing of H2.
+
+
+
+\subsection{Experiment Procedure}
+\label{sec:experiment-procedure}
+Our experiment consisted of three steps.
+
+\textbf{Step 1.} Task description and intention questions: 
+Participants first received a hypothetical scenario describing the use of LLMs for tasks, randomly selected from the six conditions (one baseline, five experimental).
+They were then asked to report their intentions to conceal this usage within the task context.
+We clarified that the concealment intentions referred specifically to the fact of using LLMs, not the data transmitted during the interactions.
+After reporting the intentions, they were asked to elaborate on their rationales, which helps us understand their selections.
+
+\textbf{Step 2.} Questions about the LLM usage: 
+Participants were re-presented with the same hypothetical scenario and responded to two sets of questions about their internal and external judgements of LLM usage in that context.
+To minimize order bias, question order was randomized at both the group level and within each group.
+We inserted an attention check question after all other questions (``Please select [Strongly agree] to show you are paying attention to this survey.''). 
+If they selected other answers, their responses would be excluded from our final dataset.
+In the second page, participants were asked whether they have similar experiences. 
+For those who had similar experiences, an open-ended question would be provided at the next page that allowed participants to freely share their similar experience, choice on the concealment, and the reasons. 
+To prevent users' responses from being influenced by later questions, turning back to the previous pages was not allowed at any stage of the whole questionnaire.
+
+
+\textbf{Step 3.} Questions about individual differences: 
+In this final step, participants completed validated scales measuring self-esteem~\cite{rosenberg1965rosenberg}, self-efficacy~\cite{schwarzer1995generalized}, prosocialness~\cite{caprara2005new}, and general privacy concerns~\cite{malhotra2004internet}, presented in a randomized order across different pages. 
+This was followed by demographic questions (age, gender, and education background).
+
+
+
+\subsection{Operationalization}
+
+\subsubsection{Dependent Variables}
+\label{sec:experiemnt-operationalization-dep-var}
+We asked participants to report their intentions on two forms of concealment on the use of LLMs on a 7-point likert scale (1 = strongly disagree, 7 = strongly agree) in Step 1 (\autoref{sec:experiment-procedure}).
+After introducing the hypothetical scenario, we asked participants to rate to what extent they agreed or disagreed with the following statements:
+\textbf{Passive non-disclosure: }``I would not mention that I used an AI chatbot for this task/purpose on my own''.
+\textbf{Active concealment: }``Even when others ask me, I prefer to hide the use of an AI chatbot for this task/purpose''.
+
+\subsubsection{Independent Variables}
+We introduce the operationalization of the two categories of independent variables, task types, and individual differences.
+
+
+\textbf{Task type:} 
+The task type is a categorical variable with six levels, as six task types were selected to create hypothetical use scenarios of LLMs.
+We chose the ``General information search'' task type, which is a common use case of LLMs~\cite{zhang2024s} and not mentioned by our survey participants, as the reference level. 
+The other five levels of the variable are ``creative writing'', ``academic writing'', ``school work'', ``work tasks'' and ``social connection'', corresponding to the types of tasks identified from our qualitative analysis of the survey results (\autoref{sec: survey-context-results}).
+
+\textbf{Self-esteem:}
+Participants’ self-esteem was measured using the 10-item Rosenberg Self-Esteem Scale with ten questions that are on a 4-point likert scale~\cite{rosenberg1965rosenberg}. 
+Higher scores in questions 1, 3, 4, 7, 10 contribute higher self-esteem while other questions contribute inversely~\cite{rosenberg1965rosenberg}. 
+To score individuals' self-esteem levels, we first reversed the scores of questions 2, 5, 6, 8, and 9 and then averaged the scores of all questions.
+The internal consistency (Cronbach’s alpha) of all 10 questions was 0.93 in our sample, which showed high reliability.
+
+\textbf{Self-efficacy:}
+Self-efficacy was measured using a 10-item scale~\cite{schwarzer1995generalized}.
+The ten questions are on a 4-point likert scale, and a higher score means higher self-efficacy. 
+We define the self-efficacy value for each individual as the average rating of the ten questions.
+The internal consistency (Cronbach’s alpha) of all ten questions was 0.91 in our sample, which showed high reliability.
+
+\textbf{Prosocialness:}
+We used the 16-item scale to measure participants’ prosocialness~\cite{caprara2005new}. 
+The sixteen questions are on a 5-point likert scale, and a higher score means higher prosocialness. 
+We define the prosocialness value as the average rating of the 16 questions~\cite{caprara2005new}. 
+The internal consistency (Cronbach’s alpha) of all 16 questions was 0.93 in our sample, which showed high reliability.
+
+\textbf{General privacy concerns:}
+We used the 10-item Internet Users’ Information Privacy Concerns (IUIPC) scale to measure participants’ general privacy concerns~\cite{malhotra2004internet}. 
+The ten questions are on a 7-point likert scale, and higher score means higher privacy concerns. 
+We define the general privacy concern value for each individual as the average rating of the 10 questions. 
+The internal consistency (Cronbach’s alpha) of all 10 questions was 0.85 in our sample, which showed high reliability.
+
+\textbf{Gender:}
+We provided four options for participants to select: ``Male'', ``Female'', ``Non-binary / third gender'', and ``Prefer not to say''.
+
+\textbf{Age:} 
+We provided a text input box to allow participants to enter their age.
+
+\textbf{Education:}
+We provided 7 options for participants to select: ``Some school, no degree'', ``High school graduate'', ``Some college, no degree'', ``Bachelor's degree'', ``Master's degree'', ``Professional degree'', and ``Doctorate degree''.
+We converted the 7 options to integers 1 to 7, with 1 corresponding to ``Some school, no degree'' and 7 to ``Doctorate degree''.
+
+\textbf{Use frequency of LLMs:} \label{sec: using-frequency-question}
+We provided eight options for participants to select: ``I've never used any AI chatbots,'' ``I've used it before, but not regularly,'' ``Less than once a month,'' ``Monthly (1-3 times a month),'' ``Weekly (once a week),'' ``Multiple times a week (but not daily),'' ``Daily (almost once every day)'' and ``Multiple times daily (several times throughout each day).''
+The option ``I've never used any AI chatbots'' was to exclude participants without experience in using LLMs.
+The remaining seven frequency categories were converted into ordinal values, from 1 (I've used it before, but not regularly'') to 7 (``Multiple times daily''), reflecting an ascending order of usage frequency.
+
+
+
+\subsubsection{Mediator Variables}
+The mediator variables in our experiment are users' internal judgements and perceived external judgements on the use of LLMs.
+\revision{We operationalized them as two latent variables, each explained by three statements about the internal judgements or three statements about the perceived external judgements, respectively.
+The statements are derived from the reasons for concealing the use of LLMs identified in our first study (\autoref{sec: survey-cause-results}). 
+Using latent variables allows for evaluation of item contributions, accounts for measurement error, and provides a more accurate depiction of the relationships between constructs, particularly when the relationships between observed variables and underlying constructs are unknown or complex~\cite{sawatzky2010self, zhang2016privacy}.}
+We asked participants to rate their agreement or disagreement with the six statements using a 7-point Likert scale (1=strongly disagree, 7=strongly agree) in Step 2 (\autoref{sec:experiment-procedure}).
+
+
+\revision{Factor Analysis provides support for our construct validity, showing that two groups of variables have high loadings on their respective factors~\cite{brown2012confirmatory}.
+The Cronbach's alpha also indicates high reliability of statements within each group in our sample~\cite{zumbo2007ordinal}.}
+The two groups of statements are listed as follows.
+
+\textbf{Internal judgements on the use of LLMs} (Cronbach's alpha = 0.79):
+``I feel less competent when I need an AI chatbot to assist me with this task'' \revision{(Factor loading = 0.77)}; ``I have doubts about the effectiveness of using AI chatbots for this task/purpose'' \revision{(Factor loading = 0.68)}; ``I think using the AI chatbot for this task/purpose is immoral or unethical'' \revision{(Factor loading = 0.81)}.
+
+\textbf{Perceived external judgements on the use of LLMs} (Cronbach's alpha = 0.90): 
+``Other people will critique my capacities if they know I used the AI chatbot for this task/purpose'' \revision{(Factor loading = 0.88)}; ``Other people will judge my personality or attitudes if they know I used the AI chatbot for this task/purpose'' \revision{(Factor loading = 0.90)}; ``Other people will see using the AI chatbot for this task/purpose as inappropriate or unethical'' \revision{(Factor loading = 0.82)}.
+
+
+
+
+\subsection{Participants}
+We recruited participants based in the U.S. through Prolific and compensated \$1.4 each. 
+The recruitment process involved several steps to obtain a sample of $N=300$ LLM users, evenly distributed across six conditions (50 participants per group).
+First, we included a question about LLM usage frequency (\autoref{sec: using-frequency-question}) to ensure that only LLM users proceeded to the main study.
+And then we manually reviewed the responses from the main study to filter out those failing the attention check or providing contradictory responses (e.g., disagreeing with intentions to conceal usage but explaining they would have concealed it in the hypothetical context).
+We also verified that the quality of all the open-ended responses in the final sample is high.
+As exclusions occurred, we adjusted the randomizer settings to maintain an even distribution across the six conditions.
+The recruitment process continued to roll until \experimentvalidsamplesize{} valid responses were reached (50 in each condition).
+Meanwhile, we employed the balanced sample distribution mode in Prolific for a balanced gender distribution.
+Ultimately, we received \experimentrawdatapoint{} responses, of which 18 were excluded, resulting in a final valid sample of \experimentvalidsamplesize{} participants.
+The summary of the demographics of our experiment sample ($N = \experimentvalidsamplesize{}$) is shown in the \autoref{sec: appendix-experiment-sample}.
+
+\subsection{Methodological Limitations}
+
+Our use of hypothetical scenarios as the background context may introduce some limitations.
+Some participants might not have real-life experience with the specific tasks scenario. 
+For example, a junior college student might not have worked in professional work context. 
+And some participants might not use LLMs in the same scenario in real life.
+To mitigate those problems raised from hypothetical scenario, we selected tasks that are generally common or easy to imagine.
+Additionally, the participant's perceptions about the hypothetical scenarios may be sensitive to the wording of the description.
+To mitigate the confounding impact on the judgement of different conditions, we have ensured that the descriptions are at similar length and levels of detail.
+\revision{We also want to note that the hypothetical scenarios may not represent the way the task in the corresponding group is performed in real life, particularly for users who might choose not to use LLMs in the given scenarios.
+We tried to mitigate the potential bias by comparing results across different groups all using the hypothetical scenarios.
+However, the impact on the secret use rate of each scenario remains unknown.
+Future studies could consider including users' willingness to use LLMs as a potential factor in their decision-making regarding secret use, and examine how users commonly perform these tasks in real life.}
+Lastly, cognitive dissonance regarding LLM usage in the scenarios could also influence responses.
+For example, if a participant's internal beliefs about the morality of using LLMs clash with their real-life behaviors, they might experience dissonance~\cite{festinger1962cognitive}.
+To reduce dissonance, they might change their internal beliefs and claims or future actions~\cite{festinger1962cognitive}.
+However, cognitive dissonance is a delicate psychological process and is not directly measurable.
+We tried to mitigate its potential biases in our findings by focusing on cross-group comparisons.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

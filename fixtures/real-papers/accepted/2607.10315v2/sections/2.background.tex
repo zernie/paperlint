@@ -1,0 +1,68 @@
+\section{Background}
+\label{sec: background}
+
+\vspace{1mm}
+\subsection{Cellular Network Overview}
+
+A cellular network consists of user equipment (UE), a radio access network (RAN), and a core network (CN) that implements control-plane and user-plane functions. The RAN is composed of eNodeBs (eNBs) in 4G networks~\cite{3gpp23002} and gNodeBs (gNBs) in 5G networks~\cite{3gpp23501}. Cellular control-plane procedures are typically initiated by the UE and transmitted through the RAN before entering the core network as protocol messages. In 4G systems, this signaling traverses the S1 interface, while in 5G systems it traverses the N2 interface~\cite{3gpp23501,3gpp38413}. These access-facing interfaces form the primary boundary between the external RAN and the internal CN. Although this boundary is often treated as trusted in operational deployments, the signaling originates from UE interactions and directly influences CN state. As a result, the RAN-CN boundary has been a recurring focus in security analyses of cellular systems \cite{hussain2018lteinspector, bennett2024ransacked, khandker2024astra}.
+
+As shown in Figure~\ref{fig:cn_arch}, the architecture of the core network has evolved significantly from 4G to 5G, with important implications for trust and attack surface. In the 4G Evolved Packet Core, control-plane logic is largely centralized in the Mobility Management Entity (MME)~\cite{3gpp29274}, while the Serving Gateway (SGW) and Packet Data Network Gateway (PGW) anchor user-plane traffic and connectivity to the Internet. Although control and user planes are conceptually separated, their protocol logic and session state are closely coupled across a small set of components. The 5G Core further decomposes these roles into the Access and Mobility Management Function (AMF), the Session Management Function (SMF), and the User Plane Function (UPF), with AMF handling access and mobility control, SMF managing session state, and UPF performing packet forwarding~\cite{3gpp23501}. These functions interact through a larger set of internal interfaces, including N2, N4, and N9. While this decomposition improves flexibility and scalability, it also relies more heavily on implicit trust between internal network functions~\cite{akon2023formal}. In practice, internal interfaces are often deployed without strong cryptographic protection to prioritize performance~\cite{3gpp33210,donegan2011ipsec}, which increases the impact of protocol misuse and configuration errors inside the core network as the architectural gap between the cellular core and the Internet continues to close~\cite{zhang2025invade,akon2023formal}.
+
+
+\subsection{Core Network Protocol}
+
+Core network behavior is governed by a small set of protocols that manage session establishment, state propagation, and packet forwarding. Among these, Packet Forwarding Control Protocol (PFCP) and GPRS Tunnelling Protocol (GTP) are central to how control-plane decisions are translated into user-plane behavior~\cite{3gpp29274,etsi129244}. PFCP governs control-plane interaction between the SMF and the UPF, while GTP supports both control signaling through GTP-C and user-plane tunnelling through GTP-U across 4G and 5G cores~\cite{3gpp29281,3gpp29274}. These protocols do not operate as isolated message exchanges; instead, they establish long-lived session contexts shared across multiple network functions. System behavior therefore depends on protocol execution paths that span multiple messages and handlers rather than on individual packets~\cite{zhang2025invade,akon2023formal}.
+
+PFCP operates on the N4 interface and is responsible for installing forwarding rules in the user plane. A PFCP association is first established to exchange node identifiers, after which session-specific state is created through PFCP session establishment procedures~\cite{etsi129244}. Each session is identified by a Session Endpoint Identifier (SEID) that is referenced in subsequent operations such as modification and deletion. Because PFCP directly links control-plane signaling to concrete forwarding resources, message-level validity alone does not guarantee safe system behavior. Errors in session state or control logic can immediately lead to traffic hijacking or denial-of-service~\cite{amponis2022threatening,zhang2025invade}. GTP underpins user-plane communication and separates control signaling from data forwarding through GTP-C and GTP-U~\cite{3gpp29060,3gpp29281}. GTP-U remains the primary mechanism for tunnelling user traffic across the core network~\cite{3gpp29281,zhang2025invade}. GTP relies on Tunnel Endpoint Identifiers (TEIDs) to associate packets with tunnels, with each tunnel being unidirectional and identified by a receiver-assigned identifier. Bidirectional communication therefore requires coordinated tunnel setup through a sequence of control-plane messages~\cite{3gpp29274,3gpp29281}. GTP messages also carry many Information Elements (IEs), such as access point settings and quality-of-service (QoS) parameters, which must be parsed and validated consistently across different handlers. 
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/crop_core_network-arch_small.pdf}
+  \caption{Cellular network architectures from 4G to 5G.}
+  \label{fig:cn_arch}
+\end{figure}
+
+\subsection{Agents and LLMs}
+The complexity of cellular core networks has motivated the use of automated analysis techniques such as fuzzing and static analysis. More recently, large language models have been explored as an additional tool for software analysis~\cite{sheng2025llms}. However, these approaches face fundamental limitations when applied to core network software due to a mismatch between their analysis models and the stateful, procedural nature of cellular protocols. Coverage-guided fuzzers are effective at exploring input-handling logic but struggle to reach protocol states that require multiple rounds of valid message exchanges and coordinated state updates across components~\cite{klees2018evaluating, pham2020aflnet, natella2022stateafl}. Static analysis tools face similar challenges, as control logic is often distributed across asynchronous handlers and shared session contexts, which makes precise tracking of execution paths difficult and leads to false positives or missed flows \cite{hussain2018lteinspector,kim2019touching}.
+
+These limitations motivate the use of agent-based workflows as an orchestration mechanism rather than as a replacement for existing tools. In this setting, an agent coordinates protocol-aware reasoning, staged analysis, and runtime feedback to align analysis steps with protocol procedures and session evolution. By incorporating feedback from concrete executions and analyzing logs to classify triggered impacts~\cite{deng2024pentestgpt,ullah2025cve}, agent-based workflows can bridge abstraction gaps that limit traditional techniques. This approach, leveraging Chain-of-Thought reasoning~\cite{wei2022chain} and specification-grounded cross-checking~\cite{3gpp23501,etsi129244}, is particularly relevant for cellular core networks, where security-relevant behavior emerges from the interaction between complex protocol logic and operational trust assumptions~\cite{deng2024pentestgpt,yao2022react}.
+
+\subsection{Threat Model}
+\label{sec: threat model}
+
+We assume an adversary can obtain the IP address of core-network components. Such information may be derived from public documentation, passive enumeration, or active scanning~\cite{zhang2025invade}. As shown in Figure~\ref{fig:threat model}, we consider two classes of attackers, distinguished by their network vantage point and capabilities. The two attackers aim to disrupt cellular network services, which can result in DoS and session hijacking.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/crop_core_network-threat_model_small.drawio.pdf}
+  \caption{Threat model. Attackers are assumed to have access to internal core network interfaces and can send protocol messages that violate implicit trust assumptions, without compromising cryptographic protections.}
+  \label{fig:threat model}
+\end{figure}
+
+\vspace{2pt}\noindent$\bullet$ \textit{Internet attacker}. 
+The attacker is located outside the cellular core network (e.g., on the public Internet) and does not control any core-network component. However, the attacker can craft and send arbitrary PFCP or GTP-C messages. In cloud-native deployments, misconfigurations may inadvertently expose internal interfaces to external networks. In this case, an attacker can send malformed PFCP or GTP-C messages directly to core components. The presence of such risks in real-world cloud environments has also been reported by prior research~\cite{zhang2025invade}.
+
+\vspace{2pt}\noindent$\bullet$ \textit{Malicious UE}. 
+The attacker acts as a malicious UE using a commercial smartphone with a valid Universal Subscriber Identity Module (USIM). After completing the standard registration procedure, the UE obtains a legitimate IP address from the network. The attacker then injects carefully crafted payloads into the uplink data stream. The gNB encapsulates this traffic into GTP-U and forwards it through the UPF. These payloads may carry PFCP or GTP-C messages. 
+By exploiting protocol tunnelling and network boundary bridging, the attacker smuggles crafted PFCP or GTP-C messages inside GTP-U messages so that, absent strict boundary enforcement, they cross the boundary and are delivered to and parsed by core-network components~\cite{shaik2025uncovering, mitre_fight_fgt1599_505}.
+We further confirmed that both protocol tunnelling and network boundary bridging are feasible against five of the seven evaluated open-source CN implementations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "acknowledgements.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "f5c38d0bc1a4b487bed22cd88e253908cda46dd9292c872cb30a64924a85f169",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757",
+    "acknowledgements.tex": "ba49cb93db503385fc3958ac93a0cdad26bd5541c0b1dee738a82447edab00dd"
+  }
+}

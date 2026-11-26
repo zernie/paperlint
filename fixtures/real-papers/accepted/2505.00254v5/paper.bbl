@@ -1,0 +1,278 @@
+\begin{thebibliography}{10}
+
+\bibitem{4KWorldWandering}
+4KWorldWandering.
+\newblock 4kworldwandering youtube channel.
+\newblock \url{https://www.youtube.com/@4KWorldWandering}, 2025.
+
+\bibitem{abdin2024phi3}
+Marah Abdin, Jyoti Aneja, Hany Awadalla, Ahmed Awadallah, Ammar~Ahmad Awan, Nguyen Bach, Amit Bahree, Arash Bakhtiari, Jianmin Bao, Harkirat Behl, et~al.
+\newblock Phi-3 technical report: A highly capable language model locally on your phone.
+\newblock {\em arXiv preprint arXiv:2404.14219}, 2024.
+
+\bibitem{abdin2024phi4}
+Marah Abdin, Jyoti Aneja, Harkirat Behl, S{\'e}bastien Bubeck, Ronen Eldan, Suriya Gunasekar, Michael Harrison, Russell~J Hewett, Mojan Javaheripi, Piero Kauffmann, et~al.
+\newblock Phi-4 technical report.
+\newblock {\em arXiv preprint arXiv:2412.08905}, 2024.
+
+\bibitem{abouelenin2025phi4mini}
+Abdelrahman Abouelenin, Atabak Ashfaq, Adam Atkinson, Hany Awadalla, Nguyen Bach, Jianmin Bao, Alon Benhaim, Martin Cai, Vishrav Chaudhary, Congcong Chen, et~al.
+\newblock Phi-4-mini technical report: Compact yet powerful multimodal language models via mixture-of-loras.
+\newblock {\em arXiv preprint arXiv:2503.01743}, 2025.
+
+\bibitem{achiam2023gpt}
+Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia~Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et~al.
+\newblock Gpt-4 technical report.
+\newblock {\em arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem{bai2025qwen2_5}
+Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et~al.
+\newblock Qwen2.5-vl technical report.
+\newblock {\em arXiv preprint arXiv:2502.13923}, 2025.
+
+\bibitem{bhardwaj2022ekya}
+Romil Bhardwaj, Zhengxu Xia, Ganesh Ananthanarayanan, Junchen Jiang, Yuanchao Shu, Nikolaos Karianakis, Kevin Hsieh, Paramvir Bahl, and Ion Stoica.
+\newblock Ekya: Continuous learning of video analytics models on edge compute servers.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2022.
+
+\bibitem{ArkansasCritterCam}
+Arkansas~Critter Cam.
+\newblock Arkansas critter cam youtube channel.
+\newblock \url{https://www.youtube.com/@arkansascrittercam611}, 2025.
+
+\bibitem{chen2024internvl}
+Zhe Chen, Weiyun Wang, Yue Cao, Yangzhou Liu, Zhangwei Gao, Erfei Cui, Jinguo Zhu, Shenglong Ye, Hao Tian, Zhaoyang Liu, et~al.
+\newblock Expanding performance boundaries of open-source multimodal models with model, data, and test-time scaling.
+\newblock {\em arXiv preprint arXiv:2412.05271}, 2024.
+
+\bibitem{2023lmdeploy}
+LMDeploy Contributors.
+\newblock Lmdeploy: A toolkit for compressing, deploying, and serving llm.
+\newblock \url{https://github.com/InternLM/lmdeploy}, 2023.
+
+\bibitem{devlin2019bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock Bert: Pre-training of deep bidirectional transformers for language understanding.
+\newblock In {\em Proceedings of conference of the North American chapter of the association for computational linguistics (NAACL)}, 2019.
+
+\bibitem{edge2024graphrag}
+Darren Edge, Ha~Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, Dasha Metropolitansky, Robert~Osazuwa Ness, and Jonathan Larson.
+\newblock From local to global: A graph rag approach to query-focused summarization.
+\newblock {\em arXiv preprint arXiv:2404.16130}, 2024.
+
+\bibitem{fan2025minirag}
+Tianyu Fan, Jingyuan Wang, Xubin Ren, and Chao Huang.
+\newblock Minirag: Towards extremely simple retrieval-augmented generation.
+\newblock {\em arXiv preprint arXiv:2501.06713}, 2025.
+
+\bibitem{fu2024videomme}
+Chaoyou Fu, Yuhan Dai, Yongdong Luo, Lei Li, Shuhuai Ren, Renrui Zhang, Zihan Wang, Chenyu Zhou, Yunhang Shen, Mengdan Zhang, et~al.
+\newblock Video-mme: The first-ever comprehensive evaluation benchmark of multi-modal llms in video analysis.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem{grauman2022ego4d}
+Kristen Grauman, Andrew Westbury, Eugene Byrne, Zachary Chavis, Antonino Furnari, Rohit Girdhar, Jackson Hamburger, Hao Jiang, Miao Liu, Xingyu Liu, et~al.
+\newblock Ego4d: Around the world in 3,000 hours of egocentric video.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2022.
+
+\bibitem{guo2024lightrag}
+Zirui Guo, Lianghao Xia, Yanhua Yu, Tu~Ao, and Chao Huang.
+\newblock Lightrag: Simple and fast retrieval-augmented generation.
+\newblock In {\em Conference on Empirical Methods in Natural Language Processing (EMNLP)}, 2024.
+
+\bibitem{he2016resnet}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2016.
+
+\bibitem{he2020deberta}
+Pengcheng He, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen.
+\newblock Deberta: Decoding-enhanced bert with disentangled attention.
+\newblock {\em arXiv preprint arXiv:2006.03654}, 2020.
+
+\bibitem{jain20sec}
+Samvit Jain, Xun Zhang, Yuhao Zhou, Ganesh Ananthanarayanan, Junchen Jiang, Yuanchao Shu, Paramvir Bahl, and Joseph Gonzalez.
+\newblock {Spatula: Efficient Cross-camera Video Analytics on Large Camera Networks}.
+\newblock In {\em ACM/IEEE Symposium on Edge Computing (SEC)}, 2020.
+
+\bibitem{remix_mobicom_21}
+Shiqi Jiang, Zhiqi Lin, Yuanchun Li, Yuanchao Shu, and Yunxin Liu.
+\newblock Flexible high-resolution object detection on edge devices with tunable latency.
+\newblock In {\em ACM International Conference on Mobile Computing and Networking (Mobicom)}, 2021.
+
+\bibitem{khani2023recl}
+Mehrdad Khani, Ganesh Ananthanarayanan, Kevin Hsieh, Junchen Jiang, Ravi Netravali, Yuanchao Shu, Mohammad Alizadeh, and Victor Bahl.
+\newblock Recl: Responsive resource-efficient continuous learning for video analytics.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2023.
+
+\bibitem{koukounas2024jinaclip}
+Andreas Koukounas, Georgios Mastrapas, Michael G{\"u}nther, Bo~Wang, Scott Martens, Isabelle Mohr, Saba Sturua, Mohammad~Kalim Akram, Joan~Fontanals Mart{\'\i}nez, Saahil Ognawala, et~al.
+\newblock Jina clip: Your clip model is also your text retriever.
+\newblock {\em arXiv preprint arXiv:2405.20204}, 2024.
+
+\bibitem{lei2021less}
+Jie Lei, Linjie Li, Luowei Zhou, Zhe Gan, Tamara~L Berg, Mohit Bansal, and Jingjing Liu.
+\newblock Less is more: Clipbert for video-and-language learning via sparse sampling.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2021.
+
+\bibitem{lin2024awq}
+Ji~Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-Ming Chen, Wei-Chen Wang, Guangxuan Xiao, Xingyu Dang, Chuang Gan, and Song Han.
+\newblock Awq: Activation-aware weight quantization for on-device llm compression and acceleration.
+\newblock In {\em International Conference on Machine Learning Systems (MLSys)}, 2024.
+
+\bibitem{liu2024nvila}
+Zhijian Liu, Ligeng Zhu, Baifeng Shi, Zhuoyang Zhang, Yuming Lou, Shang Yang, Haocheng Xi, Shiyi Cao, Yuxian Gu, Dacheng Li, et~al.
+\newblock Nvila: Efficient frontier visual language models.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem{NatureLive}
+Nature Live.
+\newblock Nature live youtube channel.
+\newblock \url{https://www.youtube.com/@nature-live}, 2025.
+
+\bibitem{lu2022turbo}
+Yan Lu, Shiqi Jiang, Ting Cao, and Yuanchao Shu.
+\newblock Turbo: Opportunistic enhancement for edge video analytics.
+\newblock In {\em Proceedings of ACM Conference on Embedded Networked Sensor Systems (Sensys)}, 2022.
+
+\bibitem{luo2024video-rag}
+Yongdong Luo, Xiawu Zheng, Xiao Yang, Guilin Li, Haojia Lin, Jinfa Huang, Jiayi Ji, Fei Chao, Jiebo Luo, and Rongrong Ji.
+\newblock Video-rag: Visually-aligned retrieval-augmented long video comprehension.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2025.
+
+\bibitem{ma2024drvideo}
+Ziyu Ma, Chenhui Gou, Hengcan Shi, Bin Sun, Shutao Li, Hamid Rezatofighi, and Jianfei Cai.
+\newblock Drvideo: Document retrieval based long video understanding.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem{10.1145/3624478}
+Ya~Nan, Shiqi Jiang, and Mo~Li.
+\newblock Large-scale video analytics with cloud–edge collaborative continuous learning.
+\newblock {\em ACM Trans. Sen. Netw.}, 2023.
+
+\bibitem{padmanabhan2023gemel}
+Arthi Padmanabhan, Neil Agarwal, Anand Iyer, Ganesh Ananthanarayanan, Yuanchao Shu, Nikolaos Karianakis, Guoqing~Harry Xu, and Ravi Netravali.
+\newblock Gemel: Model merging for memory-efficient,real-time video analytics at the edge.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2023.
+
+\bibitem{qian2024streaming}
+Rui Qian, Xiaoyi Dong, Pan Zhang, Yuhang Zang, Shuangrui Ding, Dahua Lin, and Jiaqi Wang.
+\newblock Streaming long video understanding with large language models.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, 2024.
+
+\bibitem{radford2021CLIP}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et~al.
+\newblock Learning transferable visual models from natural language supervision.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2021.
+
+\bibitem{lazygraphrag2024}
+Microsoft Research.
+\newblock Lazygraphrag: Setting a new standard for quality and cost.
+\newblock \href{https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/}{lazygraphrag-setting-a-new-standard-for-quality-and-cost}, 2024.
+
+\bibitem{shen2024longvu}
+Xiaoqian Shen, Yunyang Xiong, Changsheng Zhao, Lemeng Wu, Jun Chen, Chenchen Zhu, Zechun Liu, Fanyi Xiao, Balakrishnan Varadarajan, Florian Bordes, et~al.
+\newblock Longvu: Spatiotemporal adaptive compression for long video-language understanding.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2025.
+
+\bibitem{shen2025longvita}
+Yunhang Shen, Chaoyou Fu, Shaoqi Dong, Xiong Wang, Peixian Chen, Mengdan Zhang, Haoyu Cao, Ke~Li, Xiawu Zheng, Yan Zhang, et~al.
+\newblock Long-vita: Scaling large multi-modal models to 1 million tokens with leading short-context accuray.
+\newblock {\em arXiv preprint arXiv:2502.05177}, 2025.
+
+\bibitem{sivaraman2024gemino}
+Vibhaalakshmi Sivaraman, Pantea Karimi, Vedantha Venkatapathy, Mehrdad Khani, Sadjad Fouladi, Mohammad Alizadeh, Fr{\'e}do Durand, and Vivienne Sze.
+\newblock Gemino: Practical and robust neural compression for video conferencing.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2024.
+
+\bibitem{tan2020efficientdet}
+Mingxing Tan, Ruoming Pang, and Quoc~V Le.
+\newblock Efficientdet: Scalable and efficient object detection.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2020.
+
+\bibitem{team2023gemini}
+Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew~M Dai, Anja Hauth, Katie Millican, et~al.
+\newblock Gemini: a family of highly capable multimodal models.
+\newblock {\em arXiv preprint arXiv:2312.11805}, 2023.
+
+\bibitem{team2024gemini}
+Gemini Team, Petko Georgiev, Ving~Ian Lei, Ryan Burnell, Libin Bai, Anmol Gulati, Garrett Tanzer, Damien Vincent, Zhufeng Pan, Shibo Wang, et~al.
+\newblock Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context.
+\newblock {\em arXiv preprint arXiv:2403.05530}, 2024.
+
+\bibitem{tran2015c3d}
+Du~Tran, Lubomir Bourdev, Rob Fergus, Lorenzo Torresani, and Manohar Paluri.
+\newblock Learning spatiotemporal features with 3d convolutional networks.
+\newblock In {\em International Conference on Computer Vision (ICCV)}, 2015.
+
+\bibitem{wang2024qwen2}
+Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et~al.
+\newblock Qwen2-vl: Enhancing vision-language model's perception of the world at any resolution.
+\newblock {\em arXiv preprint arXiv:2409.12191}, 2024.
+
+\bibitem{wang2024lvbench}
+Weihan Wang, Zehai He, Wenyi Hong, Yean Cheng, Xiaohan Zhang, Ji~Qi, Xiaotao Gu, Shiyu Huang, Bin Xu, Yuxiao Dong, et~al.
+\newblock Lvbench: An extreme long video understanding benchmark.
+\newblock In {\em International Conference on Computer Vision (ICCV)}, 2025.
+
+\bibitem{wang2025adaretake}
+Xiao Wang, Qingyi Si, Jianlong Wu, Shiyu Zhu, Li~Cao, and Liqiang Nie.
+\newblock Adaretake: Adaptive redundancy reduction to perceive longer for video-language understanding.
+\newblock {\em arXiv preprint arXiv:2503.12559}, 2025.
+
+\bibitem{wang2024videoagent}
+Xiaohan Wang, Yuhui Zhang, Orr Zohar, and Serena Yeung-Levy.
+\newblock Videoagent: Long-form video understanding with large language model as agent.
+\newblock In {\em European Conference on Computer Vision (ECCV)}, 2024.
+
+\bibitem{wang2023self}
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc~V Le, Ed~H Chi, Sharan Narang, Aakanksha Chowdhery, and Denny Zhou.
+\newblock Self-consistency improves chain of thought reasoning in language models.
+\newblock In {\em International Conference on Learning Representations (ICLR)}, 2023.
+
+\bibitem{wang2024videotree}
+Ziyang Wang, Shoubin Yu, Elias Stengel-Eskin, Jaehong Yoon, Feng Cheng, Gedas Bertasius, and Mohit Bansal.
+\newblock Videotree: Adaptive tree-based video representation for llm reasoning on long videos.
+\newblock In {\em Conference on Computer Vision and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem{yang2024vca}
+Zeyuan Yang, Delin Chen, Xueyang Yu, Maohao Shen, and Chuang Gan.
+\newblock Vca: Video curious agent for long video understanding.
+\newblock In {\em International Conference on Computer Vision (ICCV)}, 2025.
+
+\bibitem{zhang2022actionformer}
+Chen-Lin Zhang, Jianxin Wu, and Yin Li.
+\newblock Actionformer: Localizing moments of actions with transformers.
+\newblock In {\em European Conference on Computer Vision (ECCV)}, 2022.
+
+\bibitem{zhangbertscore}
+Tianyi Zhang, Varsha Kishore, Felix Wu, Kilian~Q Weinberger, and Yoav Artzi.
+\newblock Bertscore: Evaluating text generation with bert.
+\newblock In {\em International Conference on Learning Representations (ICLR)}, 2020.
+
+\bibitem{zhang2021sensei}
+Xu~Zhang, Yiyang Ou, Siddhartha Sen, and Junchen Jiang.
+\newblock Sensei: Aligning video streaming quality with dynamic user sensitivity.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2021.
+
+\bibitem{zhang2024vulcan}
+Yiwen Zhang, Xumiao Zhang, Ganesh Ananthanarayanan, Anand Iyer, Yuanchao Shu, Victor Bahl, Z~Morley Mao, and Mosharaf Chowdhury.
+\newblock Vulcan: Automatic query planning for live ml analytics.
+\newblock In {\em USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, 2024.
+
+\bibitem{zhang2024llavavideo}
+Yuanhan Zhang, Jinming Wu, Wei Li, Bo~Li, Zejun Ma, Ziwei Liu, and Chunyuan Li.
+\newblock Video instruction tuning with synthetic data.
+\newblock {\em arXiv preprint arXiv:2410.02713}, 2024.
+
+\bibitem{zhao2024retrieval}
+Siyun Zhao, Yuqing Yang, Zilong Wang, Zhiyuan He, Luna~K Qiu, and Lili Qiu.
+\newblock Retrieval augmented generation (rag) and beyond: A comprehensive survey on how to make your llms use external data more wisely.
+\newblock {\em arXiv preprint arXiv:2409.14924}, 2024.
+
+\bibitem{10.1145/3719664}
+Yue Zheng, Yuhao Chen, Bin Qian, Xiufang Shi, Yuanchao Shu, and Jiming Chen.
+\newblock A review on edge large language models: Design, execution, and applications.
+\newblock {\em ACM Comput. Surv.}, 2025.
+
+\end{thebibliography}

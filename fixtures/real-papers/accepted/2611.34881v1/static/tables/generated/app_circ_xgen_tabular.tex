@@ -1,0 +1,21 @@
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{SD 3.5 Large (benchmark generator)} & \multicolumn{4}{c}{SD 3.5 Medium} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Augmentation & $T_4^{\text{T}}\uparrow$ & $T_4^{\text{A}}\uparrow$ & $\Delta_4\downarrow$ & $T_{\text{never}}\uparrow$ & $T_4^{\text{T}}\uparrow$ & $T_4^{\text{A}}\uparrow$ & $\Delta_4\downarrow$ & $T_{\text{never}}\uparrow$ \\
+\midrule
+\multicolumn{9}{l}{\emph{Co-DINO R-50 (AP; paste rows: mini-COCO late-stage protocol)}} \\
+Std. & \underline{87.3} & 79.7 & 7.6 & 84.1 & \textbf{84.9} & 74.3 & 10.6 & 80.7 \\
+XPaste & 86.2 & \underline{86.9} & \underline{$-0.7$} & 87.6 & 83.1 & 80.4 & \underline{2.8} & \underline{88.0} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{87.4} & \textbf{89.1} & \textbf{\boldmath $-1.8$} & \textbf{89.4} & 84.1 & \textbf{82.3} & \textbf{1.8} & \textbf{89.2} \\
+SCP & 85.5 & 82.2 & 3.3 & 84.9 & 83.6 & 79.6 & 4.1 & 83.6 \\
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 86.9 & 84.9 & 2.0 & \underline{87.9} & \underline{84.4} & \underline{81.1} & 3.3 & 86.9 \\
+\midrule
+\multicolumn{9}{l}{\emph{Grounding DINO Swin-B (AP; paste rows: mini-COCO late-stage protocol)}} \\
+Zero Shot & 94.1 & 90.5 & 3.6 & 93.0 & 90.3 & 88.5 & \underline{1.8} & 91.8 \\
+XPaste & \underline{94.8} & \underline{92.6} & \underline{2.3} & 94.8 & \textbf{92.1} & 89.9 & 2.2 & \underline{93.8} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{95.3} & \textbf{93.8} & \textbf{1.5} & \textbf{95.8} & \underline{92.0} & \textbf{91.1} & \textbf{0.9} & \textbf{95.0} \\
+SCP & 93.8 & 90.7 & 3.1 & 93.8 & 90.5 & 87.6 & 2.9 & 91.7 \\
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 94.6 & 92.2 & 2.4 & \underline{95.0} & \textbf{92.1} & \underline{90.3} & \underline{1.8} & 93.4 \\
+\bottomrule
+\end{tabular}

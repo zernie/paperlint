@@ -1,0 +1,166 @@
+\documentclass[sigconf]{acmart}
+\let\Bbbk\relax
+
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+% \documentclass[manuscript]{acmart}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+\usepackage{tcolorbox}
+\usepackage{lipsum}
+\usepackage{multirow}
+\usepackage{arydshln}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{subcaption}
+% \usepackage{subfigure}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tikz}
+% \usepackage[margin=2cm]{geometry}
+\usepackage{balance}
+\usepackage[table]{xcolor}
+\usepackage{tcolorbox}  % 引入tcolorbox包
+\definecolor{Mycolor1}{HTML}{A01D14}
+\definecolor{Mycolor2}{HTML}{DBB15B}
+\definecolor{Mycolor3}{HTML}{253D8C}
+\definecolor{Mycolor4}{HTML}{256b48}
+
+\newtcolorbox{mybox}{%
+  breakable,enhanced,colback=white,colframe=black,left=0.5em,right=0.5em,boxrule=1.0pt}
+
+\newtcolorbox{mybox3}[1]{
+% /tcb/breakable,/tcb/enhanced,
+colbacktitle=white,coltitle=black,colback=white,colframe=black,fonttitle=\bfseries,title=#1,leftupper=0.5em,rightupper=0.5em,boxrule=0.6pt
+}
+
+\begin{document}
+
+
+\title{ExDR: Explanation-driven Dynamic Retrieval Enhancement for Multimodal Fake News Detection}
+
+\author{Guoxuan Ding}
+\authornote{Equal Contribution. \{dingguoxuan,liyuqing\}@iie.ac.cn}
+\affiliation{%
+  \institution{Institute of Information Engineering, Chinese Academy of Sciences}%
+  \country{China}%
+}
+% \email{dingguoxuan@iie.ac.cn}
+
+\author{Yuqing Li}
+\authornotemark[1]
+\affiliation{%
+  \institution{Institute of Information Engineering, Chinese Academy of Sciences}%
+  \country{China}%
+}
+% \email{liyuqing@iie.ac.cn}
+
+\author{Ziyan Zhou}
+\affiliation{%
+  \institution{Institute of Information Engineering, Chinese Academy of Sciences}%
+  \country{China}%
+}
+% \email{zhouziyan@iie.ac.cn}
+
+\author{Zheng Lin}
+\authornote{Zheng Lin is the corresponding author.}
+\affiliation{%
+  \institution{Institute of Information Engineering, Chinese Academy of Sciences}%
+  \country{China}%
+}
+% \email{linzheng@iie.ac.cn}
+
+\author{Daren Zha}
+\affiliation{%
+  \institution{Institute of Information Engineering, Chinese Academy of Sciences}%
+  \country{China}%
+}
+% \email{zhadaren@iie.ac.cn}
+
+\author{Jiangnan Li}
+\affiliation{%
+  \institution{WeChat AI, Tencent}%
+  \country{China}%
+}
+
+
+\renewcommand{\shortauthors}{Li et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+\input{sections/0-abstract}
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002951.10003227.10003251</concept_id>
+       <concept_desc>Information systems~Multimedia information systems</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10002951.10003317.10003347.10003353</concept_id>
+       <concept_desc>Information systems~Sentiment analysis</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010178.10010179.10010182</concept_id>
+       <concept_desc>Computing methodologies~Natural language generation</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[300]{Information systems~Multimedia information systems}
+\ccsdesc[500]{Computing methodologies~Natural language generation}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{Fake News Detection, Multimodel Analysis, Dynamic Retrival Method}
+
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+
+\input{sections/1-intro-v3}
+\input{sections/2-related-work}
+\input{sections/3-method-v2}
+\input{sections/4-Exp}
+\input{sections/5-Conclusion}
+% \begin{acks}
+% This work was supported by the National Natural Science Foundation of China (No. 62472419, 62472420)
+% \end{acks}
+\input{sections/7-appendix}
+%%
+%% The acknowledgments section is defined using the "acks" environment
+%% (and NOT an unnumbered section). This ensures the proper
+%% identification of the section in the article metadata, and the
+%% consistent spelling of the heading.
+
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{ACM-Reference-Format}
+\balance
+\bibliography{sample-base}
+
+
+%%
+%% If your work has an appendix, this is the place to put it.
+
+
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-sigconf.tex'.

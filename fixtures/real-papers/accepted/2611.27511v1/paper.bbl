@@ -1,0 +1,367 @@
+\begin{thebibliography}{47}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abeysinghe et~al.(2023)Abeysinghe, Tohmuang, Davy, and Fard]{paper2}
+Abeysinghe, A., Tohmuang, S., Davy, J.~L., and Fard, M.
+\newblock Data augmentation on convolutional neural networks to classify
+  mechanical noise.
+\newblock \emph{Applied Acoustics}, 203:\penalty0 109209, 2023.
+
+\bibitem[Akiba et~al.(2019)Akiba, Sano, Yanase, Ohta, and
+  Koyama]{akiba2019optuna}
+Akiba, T., Sano, S., Yanase, T., Ohta, T., and Koyama, M.
+\newblock Optuna: A next-generation hyperparameter optimization framework.
+\newblock In \emph{KDD (arXiv)}, 2019.
+
+\bibitem[Alaa et~al.(2022)Alaa, Van~Breugel, Saveliev, and van~der
+  Schaar]{avaliarsinteticos}
+Alaa, A., Van~Breugel, B., Saveliev, E.~S., and van~der Schaar, M.
+\newblock How faithful is your synthetic data? sample-level metrics for
+  evaluating and auditing generative models.
+\newblock In \emph{International Conference on Machine Learning}, pp.\
+  290--306. PMLR, 2022.
+
+\bibitem[Bailly et~al.(2022)Bailly, Blanc, Élie Francis, Guillotin, Jamal,
+  Wakim, and Roy]{BAILLY2022106504}
+Bailly, A., Blanc, C., Élie Francis, Guillotin, T., Jamal, F., Wakim, B., and
+  Roy, P.
+\newblock Effects of dataset size and interactions on the prediction
+  performance of logistic regression and deep learning models.
+\newblock \emph{Computer Methods and Programs in Biomedicine}, 213:\penalty0
+  106504, 2022.
+\newblock ISSN 0169-2607.
+\newblock \doi{https://doi.org/10.1016/j.cmpb.2021.106504}.
+\newblock URL
+  \url{https://www.sciencedirect.com/science/article/pii/S0169260721005782}.
+
+\bibitem[Bandara et~al.(2021)Bandara, Hewamalage, Liu, Kang, and
+  Bergmeir]{improving}
+Bandara, K., Hewamalage, H., Liu, Y.-H., Kang, Y., and Bergmeir, C.
+\newblock Improving the accuracy of global forecasting models using time series
+  data augmentation.
+\newblock \emph{Pattern Recognition}, 120:\penalty0 108148, 2021.
+\newblock ISSN 0031-3203.
+\newblock \doi{https://doi.org/10.1016/j.patcog.2021.108148}.
+
+\bibitem[Borisov et~al.(2023)Borisov, Seßler, Leemann, Pawelczyk, and
+  Kasneci]{borisov2023languagemodelsrealistictabular}
+Borisov, V., Seßler, K., Leemann, T., Pawelczyk, M., and Kasneci, G.
+\newblock Language models are realistic tabular data generators, 2023.
+\newblock URL \url{https://arxiv.org/abs/2210.06280}.
+
+\bibitem[Cateni et~al.(2023)Cateni, Colla, and Vannucci]{cateni2023improving}
+Cateni, S., Colla, V., and Vannucci, M.
+\newblock Improving the stability of the variable selection with small datasets
+  in classification and regression tasks.
+\newblock \emph{Neural Processing Letters}, 55\penalty0 (5):\penalty0
+  5331--5356, 2023.
+
+\bibitem[Czerniak(2015)]{openml_1455}
+Czerniak, J.
+\newblock Acute inflammations data set.
+\newblock OpenML, ID: 1455, 2015.
+\newblock URL \url{https://www.openml.org/d/1455}.
+\newblock Accessed: 2024-05-31.
+
+\bibitem[Czerniak \& Zarzycki(2003)Czerniak and
+  Zarzycki]{czerniak2003application}
+Czerniak, J. and Zarzycki, H.
+\newblock Application of rough sets in the presumptive diagnosis of urinary
+  system diseases.
+\newblock In \emph{Artificial Intelligence and Security in Computing Systems,
+  ACS'2002 9th International Conference Proceedings}, pp.\  41--51. Kluwer
+  Academic Publishers, 2003.
+
+\bibitem[{de Souza} et~al.(2023){de Souza}, Junior, Quintino, Santos, {da
+  Silva}, and Zanchettin]{tlcgan}
+{de Souza}, M.~D., Junior, C. R.~S., Quintino, J., Santos, A.~L., {da Silva},
+  F. Q.~B., and Zanchettin, C.
+\newblock Exploring the impact of synthetic data on human activity recognition
+  tasks.
+\newblock \emph{Procedia Computer Science}, 222:\penalty0 656--665, 2023.
+\newblock ISSN 1877-0509.
+\newblock \doi{https://doi.org/10.1016/j.procs.2023.08.203}.
+\newblock URL
+  \url{https://www.sciencedirect.com/science/article/pii/S1877050923009687}.
+\newblock International Neural Network Society Workshop on Deep Learning
+  Innovations and Applications (INNS DLIA 2023).
+
+\bibitem[Detrano et~al.(1989)Detrano, Janosi, Steinbrunn, Pfisterer, Schmid,
+  Sandhu, Guppy, Lee, and Froelicher]{Detrano1989}
+Detrano, R., Janosi, A., Steinbrunn, W., Pfisterer, M., Schmid, J., Sandhu, S.,
+  Guppy, K., Lee, S., and Froelicher, V.
+\newblock International application of a new probability algorithm for the
+  diagnosis of coronary artery disease.
+\newblock \emph{American Journal of Cardiology}, 64:\penalty0 304--310, 1989.
+\newblock International Probability Analysis. Address: Robert Detrano, M.D.
+  Cardiology 111-C V.A. Medical Center 5901 E. 7th Street Long Beach, CA 90028.
+  Results in percent accuracy (for 0.5 probability threshold): Data Name: CDF
+  CADENZA. Hungarian: 77, 74; Long beach: 79, 77; Swiss: 81, 81. Approximately
+  a 77\% correct classification accuracy with a logistic-regression-derived
+  discriminant function.
+
+\bibitem[Dupont et~al.(2022)Dupont, Teh, and
+  Doucet]{dupont2022generativemodelsdistributionsfunctions}
+Dupont, E., Teh, Y.~W., and Doucet, A.
+\newblock Generative models as distributions of functions, 2022.
+\newblock URL \url{https://arxiv.org/abs/2102.04776}.
+
+\bibitem[Erickson et~al.(2020)Erickson, Mueller, Shirkov, Zhang, Larroy, Li,
+  and Smola]{erickson2020autogluontabular}
+Erickson, N., Mueller, J., Shirkov, A., Zhang, H., Larroy, P., Li, M., and
+  Smola, A.
+\newblock Autogluon-tabular: Robust and accurate automl for structured data,
+  2020.
+
+\bibitem[Fekri et~al.(2019)Fekri, Ghosh, and Grolinger]{evaluate}
+Fekri, M., Ghosh, A.~M., and Grolinger, K.
+\newblock Generating energy data for machine learning with recurrent generative
+  adversarial networks.
+\newblock \emph{Energies}, 13, 12 2019.
+\newblock \doi{10.3390/en13010130}.
+
+\bibitem[Gong et~al.(2019)Gong, Zhong, and Hu]{Gong_2019}
+Gong, Z., Zhong, P., and Hu, W.
+\newblock Diversity in machine learning.
+\newblock \emph{IEEE Access}, 7:\penalty0 64323–64350, 2019.
+\newblock ISSN 2169-3536.
+\newblock \doi{10.1109/access.2019.2917620}.
+\newblock URL \url{http://dx.doi.org/10.1109/ACCESS.2019.2917620}.
+
+\bibitem[Goodfellow(2016)]{goodfellow2016deep}
+Goodfellow, I.
+\newblock \emph{Deep Learning}.
+\newblock MIT Press, 2016.
+
+\bibitem[Hansen et~al.(2023)Hansen, Seedat, van~der Schaar, and
+  Petrovic]{hansen2023reimagining}
+Hansen, L., Seedat, N., van~der Schaar, M., and Petrovic, A.
+\newblock Reimagining synthetic tabular data generation through data-centric
+  {AI}: A comprehensive benchmark.
+\newblock In \emph{Thirty-seventh Conference on Neural Information Processing
+  Systems Datasets and Benchmarks Track}, 2023.
+\newblock URL \url{https://openreview.net/forum?id=dK1Rs1o0Ij}.
+
+\bibitem[Hao et~al.(2024)Hao, Han, Jiang, Li, Wu, Zhong, Zhou, and
+  Tang]{hao2024syntheticdataaichallenges}
+Hao, S., Han, W., Jiang, T., Li, Y., Wu, H., Zhong, C., Zhou, Z., and Tang, H.
+\newblock Synthetic data in ai: Challenges, applications, and ethical
+  implications, 2024.
+\newblock URL \url{https://arxiv.org/abs/2401.01629}.
+
+\bibitem[Heckerman(2022)]{heckerman2022tutoriallearningbayesiannetworks}
+Heckerman, D.
+\newblock A tutorial on learning with bayesian networks, 2022.
+\newblock URL \url{https://arxiv.org/abs/2002.00269}.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and
+  Abbeel]{ho2020denoisingdiffusionprobabilisticmodels}
+Ho, J., Jain, A., and Abbeel, P.
+\newblock Denoising diffusion probabilistic models, 2020.
+\newblock URL \url{https://arxiv.org/abs/2006.11239}.
+
+\bibitem[Iglesias et~al.(2023)Iglesias, Talavera, Gonz{\'a}lez-Prieto, Mozo,
+  and G{\'o}mez-Canaval]{survey}
+Iglesias, G., Talavera, E., Gonz{\'a}lez-Prieto, {\'A}., Mozo, A., and
+  G{\'o}mez-Canaval, S.
+\newblock Data augmentation techniques in time series domain: a survey and
+  taxonomy.
+\newblock \emph{Neural Computing and Applications}, pp.\  1--23, 2023.
+
+\bibitem[James et~al.(2013)James, Witten, Hastie, Tibshirani,
+  et~al.]{james2013introduction}
+James, G., Witten, D., Hastie, T., Tibshirani, R., et~al.
+\newblock \emph{An introduction to statistical learning}, volume 112.
+\newblock Springer, 2013.
+
+\bibitem[Kobyzev et~al.(2021)Kobyzev, Prince, and Brubaker]{Kobyzev2021}
+Kobyzev, I., Prince, S.~J., and Brubaker, M.~A.
+\newblock Normalizing flows: An introduction and review of current methods.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 43\penalty0 (11):\penalty0 3964–3979, November 2021.
+\newblock ISSN 1939-3539.
+\newblock \doi{10.1109/tpami.2020.2992934}.
+\newblock URL \url{http://dx.doi.org/10.1109/TPAMI.2020.2992934}.
+
+\bibitem[Maharana et~al.(2022)Maharana, Mondal, and Nemade]{MAHARANA202291}
+Maharana, K., Mondal, S., and Nemade, B.
+\newblock A review: Data pre-processing and data augmentation techniques.
+\newblock \emph{Global Transitions Proceedings}, 3\penalty0 (1):\penalty0
+  91--99, 2022.
+\newblock ISSN 2666-285X.
+\newblock \doi{https://doi.org/10.1016/j.gltp.2022.04.020}.
+\newblock URL
+  \url{https://www.sciencedirect.com/science/article/pii/S2666285X22000565}.
+\newblock International Conference on Intelligent Engineering
+  Approach(ICIEA-2022).
+
+\bibitem[Nierenberg et~al.(1989)Nierenberg, Stukel, Baron, Dain, and
+  Greenberg]{Nierenberg1989}
+Nierenberg, D., Stukel, T., Baron, J., Dain, B., and Greenberg, E.
+\newblock Determinants of plasma levels of beta-carotene and retinol.
+\newblock \emph{American Journal of Epidemiology}, 130:\penalty0 511--521,
+  1989.
+
+\bibitem[Northcutt et~al.(2021)Northcutt, Jiang, and Chuang]{article}
+Northcutt, C., Jiang, L., and Chuang, I.
+\newblock Confident learning: Estimating uncertainty in dataset labels.
+\newblock \emph{Journal of Artificial Intelligence Research}, 70:\penalty0
+  1373--1411, 04 2021.
+\newblock \doi{10.1613/jair.1.12125}.
+
+\bibitem[OpenML(2024{\natexlab{a}})]{OpenML212}
+OpenML.
+\newblock Heart disease dataset, 2024{\natexlab{a}}.
+\newblock URL \url{https://www.openml.org/d/212}.
+\newblock Accessed: 2024-06-28.
+
+\bibitem[OpenML(2024{\natexlab{b}})]{OpenML511}
+OpenML.
+\newblock Heart disease dataset, 2024{\natexlab{b}}.
+\newblock URL \url{https://www.openml.org/d/511}.
+\newblock Accessed: 2024-06-28.
+
+\bibitem[OpenML(2024{\natexlab{c}})]{OpenML560}
+OpenML.
+\newblock Heart disease dataset, 2024{\natexlab{c}}.
+\newblock URL \url{https://www.openml.org/d/560}.
+\newblock Accessed: 2024-06-28.
+
+\bibitem[OpenML(2024{\natexlab{d}})]{OpenMLheart}
+OpenML.
+\newblock Heart disease dataset (id: 204), 2024{\natexlab{d}}.
+\newblock URL \url{https://openml.org/d/204}.
+\newblock Accessed: 2024-06-28.
+
+\bibitem[Padhi et~al.(2021)Padhi, Schiff, Melnyk, Rigotti, Mroueh, Dognin,
+  Ross, Nair, and Altman]{padhi2021tabulartransformersmodelingmultivariate}
+Padhi, I., Schiff, Y., Melnyk, I., Rigotti, M., Mroueh, Y., Dognin, P., Ross,
+  J., Nair, R., and Altman, E.
+\newblock Tabular transformers for modeling multivariate time series, 2021.
+\newblock URL \url{https://arxiv.org/abs/2011.01843}.
+
+\bibitem[Panaretos \& Zemel(2019{\natexlab{a}})Panaretos and
+  Zemel]{Panaretos_2019}
+Panaretos, V.~M. and Zemel, Y.
+\newblock Statistical aspects of wasserstein distances.
+\newblock \emph{Annual Review of Statistics and Its Application}, 6\penalty0
+  (1):\penalty0 405–431, March 2019{\natexlab{a}}.
+\newblock ISSN 2326-831X.
+\newblock \doi{10.1146/annurev-statistics-030718-104938}.
+\newblock URL \url{http://dx.doi.org/10.1146/annurev-statistics-030718-104938}.
+
+\bibitem[Panaretos \& Zemel(2019{\natexlab{b}})Panaretos and
+  Zemel]{panaretos2019statistical}
+Panaretos, V.~M. and Zemel, Y.
+\newblock Statistical aspects of wasserstein distances.
+\newblock \emph{Annual review of statistics and its application}, 6\penalty0
+  (1):\penalty0 405--431, 2019{\natexlab{b}}.
+
+\bibitem[Pleiss et~al.(2020)Pleiss, Zhang, Elenberg, and
+  Weinberger]{NEURIPS2020_c6102b37}
+Pleiss, G., Zhang, T., Elenberg, E., and Weinberger, K.~Q.
+\newblock Identifying mislabeled data using the area under the margin ranking.
+\newblock In Larochelle, H., Ranzato, M., Hadsell, R., Balcan, M., and Lin, H.
+  (eds.), \emph{Advances in Neural Information Processing Systems}, volume~33,
+  pp.\  17044--17056. Curran Associates, Inc., 2020.
+\newblock URL
+  \url{https://proceedings.neurips.cc/paper_files/paper/2020/file/c6102b3727b2a7d8b1bb6981147081ef-Paper.pdf}.
+
+\bibitem[PyTorch(2024{\natexlab{a}})]{pytorchMSELoss}
+PyTorch.
+\newblock \emph{torch.nn.MSELoss}, 2024{\natexlab{a}}.
+\newblock URL
+  \url{https://pytorch.org/docs/stable/generated/torch.nn.MSELoss.html}.
+\newblock Accessed: 2024-07-01.
+
+\bibitem[PyTorch(2024{\natexlab{b}})]{pytorchNLLLoss}
+PyTorch.
+\newblock \emph{torch.nn.NLLLoss}, 2024{\natexlab{b}}.
+\newblock URL
+  \url{https://pytorch.org/docs/stable/generated/torch.nn.NLLLoss.html}.
+\newblock Accessed: 2024-07-01.
+
+\bibitem[Ramanujan et~al.(2023)Ramanujan, Nguyen, Oh, Schmidt, and
+  Farhadi]{ramanujan2023connectionpretrainingdatadiversity}
+Ramanujan, V., Nguyen, T., Oh, S., Schmidt, L., and Farhadi, A.
+\newblock On the connection between pre-training data diversity and fine-tuning
+  robustness, 2023.
+\newblock URL \url{https://arxiv.org/abs/2307.12532}.
+
+\bibitem[Seedat et~al.(2022)Seedat, Crabbé, Bica, and Schaar]{unknown}
+Seedat, N., Crabbé, J., Bica, I., and Schaar, M.
+\newblock Data-iq: Characterizing subgroups with heterogeneous outcomes in
+  tabular data, 10 2022.
+
+\bibitem[Semenoglou et~al.(2023)Semenoglou, Spiliotis, and
+  Assimakopoulos]{paper1}
+Semenoglou, A.-A., Spiliotis, E., and Assimakopoulos, V.
+\newblock Data augmentation for univariate time series forecasting with neural
+  networks.
+\newblock \emph{Pat. Rec.}, 134:\penalty0 109--132, 2023.
+
+\bibitem[Shumailov et~al.(2024)Shumailov, Shumaylov, Zhao, et~al.]{nature}
+Shumailov, I., Shumaylov, Z., Zhao, Y., et~al.
+\newblock Ai models collapse when trained on recursively generated data.
+\newblock \emph{Nature}, 631:\penalty0 755--759, 2024.
+\newblock \doi{10.1038/s41586-024-07566-}.
+\newblock URL \url{https://doi.org/10.1038/s41586-024-07566-}.
+
+\bibitem[Tacq(2010)]{TACQ2010467}
+Tacq, J.
+\newblock The normal distribution and its applications.
+\newblock In Peterson, P., Baker, E., and McGaw, B. (eds.), \emph{International
+  Encyclopedia of Education (Third Edition)}, pp.\  467--473. Elsevier, Oxford,
+  third edition edition, 2010.
+\newblock ISBN 978-0-08-044894-7.
+\newblock \doi{https://doi.org/10.1016/B978-0-08-044894-7.01563-3}.
+\newblock URL
+  \url{https://www.sciencedirect.com/science/article/pii/B9780080448947015633}.
+
+\bibitem[Torgo(2024)]{Torgo}
+Torgo, L.
+\newblock Regression datasets, 2024.
+\newblock URL \url{http://www.ncc.up.pt/~ltorgo/Regression/DataSets.html}.
+\newblock Original source: Book Generalized Additive Models (p.304) by Hastie
+  \& Tibshirani, Chapman \& Hall. Contact: ltorgo@ncc.up.pt.
+
+\bibitem[Tsanas \& Little(2016)Tsanas and Little]{openml_4531}
+Tsanas, A. and Little, M.
+\newblock Parkinson's telemonitoring dataset.
+\newblock OpenML, ID: 4531, 2016.
+\newblock URL \url{https://www.openml.org/d/4531}.
+\newblock Accessed: 2024-05-31.
+
+\bibitem[Tsanas et~al.(2009)Tsanas, Little, McSharry, and
+  Ramig]{tsanas2009accurate}
+Tsanas, A., Little, M.~A., McSharry, P.~E., and Ramig, L.~O.
+\newblock Accurate telemonitoring of parkinson’s disease progression by
+  non-invasive speech tests.
+\newblock \emph{IEEE Transactions on Biomedical Engineering}, 2009.
+\newblock to appear.
+
+\bibitem[Xu et~al.(2019{\natexlab{a}})Xu, Skoularidou, Cuesta-Infante, and
+  Veeramachaneni]{ctgan}
+Xu, L., Skoularidou, M., Cuesta-Infante, A., and Veeramachaneni, K.
+\newblock Modeling tabular data using conditional gan.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  2019{\natexlab{a}}.
+
+\bibitem[Xu et~al.(2019{\natexlab{b}})Xu, Skoularidou, Cuesta-Infante, and
+  Veeramachaneni]{xu2019modeling}
+Xu, L., Skoularidou, M., Cuesta-Infante, A., and Veeramachaneni, K.
+\newblock Modeling tabular data using conditional gan.
+\newblock \emph{Advances in neural information processing systems}, 32,
+  2019{\natexlab{b}}.
+
+\bibitem[Young et~al.(2009)Young, Graham, and Penny]{young2009using}
+Young, J., Graham, P., and Penny, R.
+\newblock Using bayesian networks to create synthetic data.
+\newblock \emph{Journal of Official Statistics}, 25\penalty0 (4):\penalty0 549,
+  2009.
+
+\end{thebibliography}

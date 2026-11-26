@@ -1,0 +1,21 @@
+\begin{table}[tb]
+\footnotesize
+\centering
+
+\caption{Number of injection points, monitor points, and integration tests in each system.}
+% \vspace{-3mm}
+
+\begin{tabular}{l|ccccc}
+\toprule
+\textbf{System} & \textbf{Loop} & \textbf{Exception} & \textbf{Negation} & \textbf{Branch} & \textbf{Test} \\
+\midrule
+HDFS 2 & 2067 & 2316 & \phantom{0}770 & 26941 & 2674 \\
+HDFS 3 & 2736 & 2707 & \phantom{0}974 & 36745 & 4426 \\
+HBase & 3227 & 2369 &            1002 & 38192 & 4436 \\
+Flink & 2860 & 2619 & \phantom{0}447 & 27947 & 2036 \\
+OZone & 1361 & 1395 & \phantom{0}395 & 18212 & 1219 \\
+\bottomrule
+\end{tabular}
+% \vspace{-2mm}
+\label{tab:static-result}
+\end{table}

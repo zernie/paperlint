@@ -1,0 +1,382 @@
+\begin{thebibliography}{10}
+
+\bibitem{quarot}
+Saleh Ashkboos, Amirkeivan Mohtashami, Maximilian Croci, Bo~Li, Pashmina Cameron, Martin Jaggi, Dan Alistarh, Torsten Hoefler, and James Hensman.
+\newblock Quarot: Outlier-free 4-bit inference in rotated llms.
+\newblock {\em Advances in Neural Information Processing Systems}, 37:100213--100240, 2024.
+
+\bibitem{powerserve}
+PowerServe Authors.
+\newblock Powerserve.
+\newblock \url{https://github.com/powerserve-project/PowerServe/tree/main}, 2025.
+
+\bibitem{brown2024large}
+Bradley Brown, Jordan Juravsky, Ryan Ehrlich, Ronald Clark, Quoc~V Le, Christopher R{\'e}, and Azalia Mirhoseini.
+\newblock Large language monkeys: Scaling inference compute with repeated sampling.
+\newblock {\em arXiv preprint arXiv:2407.21787}, 2024.
+
+\bibitem{quip}
+Jerry Chee, Yaohui Cai, Volodymyr Kuleshov, and Christopher De~Sa.
+\newblock {QuIP}: 2-bit quantization of large language models with guarantees.
+\newblock In Alice~H. Oh, Tobias Scheffer, Stephen Bach, Finale Doshi-Velez, David Garrido, Matt~J. Kusner, Peter Richtarik, and Isabel Valera, editors, {\em Advances in Neural Information Processing Systems}, volume~36, pages 63563--63584. Curran Associates, Inc., 2023.
+
+\bibitem{chen2025sets}
+Jiefeng Chen, Jie Ren, Xinyun Chen, Cheng~Run Yang, Ruoxi Sun, and Sercan~O. Arik.
+\newblock Sets: Leveraging self-verification and self-correction for improved test-time scaling.
+\newblock {\em arXiv preprint arXiv:2501.19306}, 2025.
+
+\bibitem{edgeinfinite}
+Jiyu Chen, Poh~Seng Lim, Shuang Peng, Daxiong Luo, JungHau Foo, Yap Deep, Timothy Lee~Jun Jie, Kelvin Teh~Kae Wen, Fan Yang, Danyu Feng, et~al.
+\newblock Edgeinfinite-instruct: Bridging sft-based optimization and npu-level efficiency for edge devices.
+\newblock {\em arXiv preprint arXiv:2508.00370}, 2025.
+
+\bibitem{heterollm}
+Le~Chen, Dahu Feng, Erhu Feng, Rong Zhao, Yingrui Wang, Yubin Xia, Haibo Chen, and Pinjie Xu.
+\newblock Heterollm: Accelerating large language model inference on mobile socs platform with heterogeneous ai accelerators.
+\newblock {\em arXiv preprint arXiv:2501.14794}, 2025.
+
+\bibitem{parallel-scaling-law}
+Mouxiang Chen, Binyuan Hui, Zeyu Cui, Jiaxi Yang, Dayiheng Liu, Jianling Sun, Junyang Lin, and Zhongxin Liu.
+\newblock Parallel scaling law for language models.
+\newblock {\em arXiv preprint arXiv:2505.10475}, 2025.
+
+\bibitem{gsm8k}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman.
+\newblock Training verifiers to solve math word problems.
+\newblock {\em arXiv preprint arXiv:2110.14168}, 2021.
+
+\bibitem{intel-npu}
+Intel Corporation.
+\newblock Intel npu acceleration library.
+\newblock \url{https://intel.github.io/intel-npu-acceleration-library/npu.html}, 2024.
+\newblock Accessed: [Insert date here].
+
+\bibitem{intel-gaudi3}
+Intel Corporation.
+\newblock Intel gaudi 3 ai accelerator white paper.
+\newblock \url{https://www.intel.com/content/www/us/en/content-details/817486/intel-gaudi-3-ai-accelerator-white-paper.html}, 2025.
+\newblock Accessed: 2025.
+
+\bibitem{flash-attention2}
+Tri Dao.
+\newblock {{FlashAttention-2}}: {{Faster Attention}} with {{Better Parallelism}} and {{Work Partitioning}}, July 2023.
+
+\bibitem{qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer.
+\newblock Qlora: Efficient finetuning of quantized llms.
+\newblock {\em arXiv preprint arXiv:2305.14314}, 2023.
+
+\bibitem{dwivedi2023making}
+Yash Dwivedi, Aman Madaan, Uri Alon, Graham Neubig, Kyle Richardson, Wen-tau Yih, Sourav Roy, and Arman Cohan.
+\newblock Making language models better reasoners with step-aware verifier.
+\newblock {\em arXiv preprint arXiv:2306.04509}, 2023.
+
+\bibitem{gptq}
+Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and Dan Alistarh.
+\newblock Gptq: Accurate post-training quantization for generative pre-trained transformers.
+\newblock {\em arXiv preprint arXiv:2210.17323}, 2022.
+
+\bibitem{llama.cpp}
+Georgi Gerganov.
+\newblock llama.cpp: Inference of meta's llama model (and others) in pure c/c++.
+\newblock \url{https://github.com/ggml-org/llama.cpp}, 2025.
+
+\bibitem{hafner2024reasoning}
+Danijar Hafner, Pranav Deka, Shixiang~Shane Gu, Timothy Lillicrap, and Mohammad Norouzi.
+\newblock Reasoning as planning: {LLMs} as building blocks of a rational agent.
+\newblock In {\em The Twelfth International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{fastrpc-issue-137}
+Zixu Hao.
+\newblock fastrpc\_munmap/remote\_mem\_unmap does not seem to remove dsp-side mapping immediately \#137, 2025.
+
+\bibitem{hao2024hybrid}
+Zixu Hao, Huiqiang Jiang, Shiqi Jiang, Ju~Ren, and Ting Cao.
+\newblock Hybrid slm and llm for edge-cloud collaborative inference.
+\newblock In {\em Proceedings of the Workshop on Edge and Mobile Foundation Models}, pages 36--41, 2024.
+
+\bibitem{mmlu}
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring massive multitask language understanding.
+\newblock {\em arXiv preprint arXiv:2009.03300}, 2020.
+
+\bibitem{math}
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring mathematical problem solving with the math dataset.
+\newblock {\em arXiv preprint arXiv:2103.03874}, 2021.
+
+\bibitem{hong2023metagpt}
+Sirui Hong, Xiawu Zheng, Jonathan Chen, Yuheng Cheng, Ceyao Lin, Wen-Yi Liu, Bill Yin, David Jiang, Deheng Fu, Zhiyuan Lin, et~al.
+\newblock Metagpt: Meta programming for multi-agent collaborative framework.
+\newblock {\em arXiv preprint arXiv:2308.00352}, 2023.
+
+\bibitem{minicpm}
+Shengding Hu, Yuge Tu, Xu~Han, Chaoqun He, Ganqu Cui, Xiang Long, Zhi Zheng, Yewei Fang, Yuxiang Huang, Weilin Zhao, et~al.
+\newblock Minicpm: Unveiling the potential of small language models with scalable training strategies.
+\newblock {\em arXiv preprint arXiv:2404.06395}, 2024.
+
+\bibitem{huggingface2025testtime}
+HuggingFaceH4.
+\newblock Scaling test-time compute - a hugging face space.
+\newblock \url{https://huggingface.co/spaces/HuggingFaceH4/blogpost-scaling-test-time-compute}, 2025.
+
+\bibitem{amd_processors_specs}
+AMD Inc.
+\newblock Amd processors specifications.
+\newblock \url{https://www.amd.com/en/products/specifications/processors.html}, 2025.
+\newblock Accessed: 2025.
+
+\bibitem{qualcomm_on_device_ai}
+Qualcomm Incorporated.
+\newblock Unlocking on-device generative ai with an npu and heterogeneous computing.
+\newblock \url{https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Unlocking-on-device-generative-AI-with-an-NPU-and-heterogeneous-computing.pdf}, 2024.
+\newblock Accessed: 2025.
+
+\bibitem{kovaleva2024systematic}
+Oleksandra Kovaleva, Tim Dettmers, Mikel Artetxe, Luke Zettlemoyer, Mike Lewis, Gautier Izacard, and Edouard Grave.
+\newblock Systematic outliers in large language models.
+\newblock {\em arXiv preprint arXiv:2402.01353}, 2024.
+
+\bibitem{kumar2024scaling}
+Tanishq Kumar, Zachary Ankner, Benjamin~F Spector, Blake Bordelon, Niklas Muennighoff, Mansheej Paul, Cengiz Pehlevan, Christopher R{\'e}, and Aditi Raghunathan.
+\newblock Scaling laws for precision.
+\newblock {\em arXiv preprint arXiv:2411.04330}, 2024.
+
+\bibitem{spec-decode}
+Yaniv Leviathan, Matan Kalman, and Yossi Matias.
+\newblock Fast inference from transformers via speculative decoding.
+\newblock In {\em International Conference on Machine Learning}, pages 19274--19286. PMLR, 2023.
+
+\bibitem{quantization-meets-reasoning}
+Zhen Li, Yupeng Su, Runming Yang, Congkai Xie, Zheng Wang, Zhongwei Xie, Ngai Wong, and Hongxia Yang.
+\newblock Quantization meets reasoning: Exploring llm low-bit quantization degradation for mathematical reasoning.
+\newblock {\em arXiv preprint arXiv:2501.03035}, 2025.
+
+\bibitem{reward-guided-sd}
+Bao~Hao Liao, Yuhui Xu, Hanze Dong, Junnan Li, Christof Monz, Silvio Savarese, Doyen Sahoo, and Caiming Xiong.
+\newblock Reward-guided speculative decoding for efficient llm reasoning.
+\newblock {\em arXiv preprint arXiv:2501.19324}, 2025.
+
+\bibitem{huawei-ascend}
+Heng Liao, Jiajin Tu, Jing Xia, Hu~Liu, Xiping Zhou, Honghui Yuan, and Yuxing Hu.
+\newblock Ascend: a scalable and unified architecture for ubiquitous deep neural network computing: Industry track paper.
+\newblock In {\em 2021 IEEE International Symposium on High-Performance Computer Architecture (HPCA)}, pages 789--801. IEEE, 2021.
+
+\bibitem{duquant}
+Haokun Lin, Haobo Xu, Yichen Wu, Jingzhi Cui, Yingtao Zhang, Linzhan Mou, Linqi Song, Zhenan Sun, and Ying Wei.
+\newblock Duquant: Distributing outliers via dual transformation makes stronger quantized llms.
+\newblock {\em Advances in Neural Information Processing Systems}, 37:87766--87800, 2024.
+
+\bibitem{awq}
+Ji~Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-Ming Chen, Wei-Chen Wang, Guangxuan Xiao, Xingyu Dang, Chuang Gan, and Song Han.
+\newblock Awq: Activation-aware weight quantization for on-device llm compression and acceleration.
+\newblock {\em Proceedings of Machine Learning and Systems}, 6:87--100, 2024.
+
+\bibitem{lin2023emergent}
+Yu-Shan Lin, Cheng-En Wu, Hsin-Hsuan Chen, Chi-Jen Lee, and Da-Cheng Juan.
+\newblock Do emergent abilities exist in quantized large language models: An empirical study.
+\newblock In {\em Findings of the Association for Computational Linguistics: ACL 2023}, pages 14076--14087. Association for Computational Linguistics, 2023.
+
+\bibitem{quantization-hurts-reasoning}
+Ruikang Liu, Yuxuan Sun, Manyi Zhang, Haoli Bai, Xianzhi Yu, Tiezheng Yu, Chun Yuan, and Lu~Hou.
+\newblock Quantization hurts reasoning? an empirical study on quantized reasoning models.
+\newblock {\em arXiv preprint arXiv:2504.04823}, 2025.
+
+\bibitem{liu2025can1bsurpass405b}
+Runze Liu, Junqi Gao, Jian Zhao, Kaiyan Zhang, Xiu Li, Biqing Qi, Wanli Ouyang, and Bowen Zhou.
+\newblock Can 1b llm surpass 405b llm? rethinking compute-optimal test-time scaling.
+\newblock {\em arXiv preprint arXiv:2502.06703}, 2025.
+
+\bibitem{spinquant}
+Zechun Liu, Changsheng Zhao, Igor Fedorov, Bilge Soran, Dhruv Choudhary, Raghuraman Krishnamoorthi, Vikas Chandra, Yuandong Tian, and Tijmen Blankevoort.
+\newblock Spinquant: Llm quantization with learned rotations.
+\newblock {\em arXiv preprint arXiv:2405.16406}, 2024.
+
+\bibitem{zengyixiao-sd}
+Xiaofan Lu, Yixiao Zeng, Feiyang Ma, Zixu Yu, and Marco Levorato.
+\newblock Improving multi-candidate speculative decoding.
+\newblock {\em arXiv preprint arXiv:2409.10644}, 2024.
+
+\bibitem{bluelm}
+Xudong Lu, Yinghao Chen, Cheng Chen, Hui Tan, Boheng Chen, Yina Xie, Rui Hu, Guanxin Tan, Renshou Wu, Yan Hu, et~al.
+\newblock Bluelm-v-3b: Algorithm and system co-design for multimodal large language models on mobile devices.
+\newblock {\em arXiv preprint arXiv:2411.10640}, 2024.
+
+\bibitem{hexagon}
+Eric Mahurin.
+\newblock Qualocmm® hexagon™ npu.
+\newblock In {\em 2023 IEEE Hot Chips 35 Symposium (HCS)}, pages 1--19, 2023.
+
+\bibitem{llama32}
+Meta.
+\newblock Llama 3.2: Vision and edge-optimized models for multimodal and mobile ai.
+\newblock Meta AI Blog, 2024.
+
+\bibitem{specinfer}
+Xupeng Miao, Gabriele Oliaro, Zhihao Zhang, Xinhao Cheng, Zeyu Wang, Zhengxin Zhang, Rae Ying~Yee Wong, Alan Zhu, Lijie Yang, Xiaoxiang Shi, et~al.
+\newblock Specinfer: Accelerating large language model serving with tree-based speculative inference and verification.
+\newblock In {\em Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 3}, pages 932--949, 2024.
+
+\bibitem{online-softmax}
+Maxim Milakov and Natalia Gimelshein.
+\newblock Online normalizer calculation for softmax.
+\newblock {\em arXiv preprint arXiv:1805.02867}, 2018.
+
+\bibitem{Skywork-o1}
+{o1 Team Skywork}.
+\newblock Skywork-o1 open series.
+\newblock \url{https://huggingface.co/Skywork}, 2024.
+
+\bibitem{openai_o1}
+OpenAI.
+\newblock Openai o1 system card.
+\newblock {\em arXiv preprint arXiv:2412.16720}, 2024.
+
+\bibitem{openai_o3}
+OpenAI.
+\newblock Competitive programming with large reasoning models.
+\newblock {\em arXiv preprint arXiv:2502.05530}, 2025.
+
+\bibitem{torchao}
+Andrew Or, Apurva Jain, Daniel Vega-Myhre, Jesse Cai, Charles~David Hernandez, Zhenrui Zheng, Driss Guessous, Vasiliy Kuznetsov, Christian Puhrsch, Mark Saroufim, et~al.
+\newblock Torchao: Pytorch-native training-to-serving model optimization.
+\newblock {\em arXiv preprint arXiv:2507.16099}, 2025.
+
+\bibitem{paranjape2023boosting}
+Bhavana Paranjape, Amit Budhiraja, Amir Stdehghani, Gholamreza Haffari, and Sameer Sawhney.
+\newblock Boosting llm reasoning: A crossover of tree of thoughts and retrieve-augmented generation.
+\newblock {\em arXiv preprint arXiv:2310.00844}, 2023.
+
+\bibitem{fastrpc}
+{Qualcomm Innovation Center, Inc.}
+\newblock fastrpc: Fastrpc library for linux userspace.
+\newblock \url{https://github.com/quic/fastrpc}, 2025.
+
+\bibitem{qualcomm-qnn}
+Inc. Qualcomm~Technologies.
+\newblock Qualcomm® ai engine direct sdk.
+\newblock \url{https://developer.qualcomm.com/software/qualcomm-ai-engine-direct-sdk}, 2025.
+\newblock Unified API for AI development on Qualcomm accelerators (Hexagon DSP, Kryo CPU, Adreno GPU). Supports direct offloading for TensorFlow Lite/ONNX Runtime, with HTP (Hexagon Tensor Accelerator) and CDSP (Hexagon Compute DSP) backend optimizations. Accessed: 2025-05-16.
+
+\bibitem{amd-xdna}
+Alejandro Rico, Satyaprakash Pareek, Javier Cabezas, David Clarke, Baris Ozgul, Francisco Barat, Yao Fu, Stephan M{\"u}nz, Dylan Stuart, Patrick Schlangen, et~al.
+\newblock Amd xdna™ npu in ryzen™ ai processors.
+\newblock {\em IEEE Micro}, 2024.
+
+\bibitem{winogrande}
+Keisuke Sakaguchi, Ronan~Le Bras, Chandra Bhagavatula, and Yejin Choi.
+\newblock Winogrande: An adversarial winograd schema challenge at scale.
+\newblock {\em arXiv preprint arXiv:1907.10641}, 2019.
+
+\bibitem{snell2024scaling}
+Charlie Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar.
+\newblock Scaling llm test-time compute optimally can be more effective than scaling model parameters.
+\newblock {\em arXiv preprint arXiv:2408.03314}, 2024.
+
+\bibitem{deepseek_r1}
+DeepSeek Team.
+\newblock Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2501.12948}, 2025.
+
+\bibitem{gemma3}
+Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, Tatiana Matejovicova, Alexandre Ram{\'e}, Morgane Rivi{\`e}re, et~al.
+\newblock Gemma 3 technical report.
+\newblock {\em arXiv preprint arXiv:2503.19786}, 2025.
+
+\bibitem{gemma1}
+Gemma Team, Thomas Mesnard, Cassidy Hardin, Robert Dadashi, Surya Bhupatiraju, Shreya Pathak, Laurent Sifre, Morgane Rivi{\`e}re, Mihir~Sanjay Kale, Juliette Love, et~al.
+\newblock Gemma: Open models based on gemini research and technology.
+\newblock {\em arXiv preprint arXiv:2403.08295}, 2024.
+
+\bibitem{executorch}
+PyTorch Team.
+\newblock Executorch: A pytorch platform for on-device deployment.
+\newblock \url{https://github.com/pytorch/executorch}, 2025.
+\newblock Accessed: 2025.
+
+\bibitem{quipsharp}
+Albert Tseng, Jerry Chee, Yaohui Cai, Volodymyr Kuleshov, and Christopher~De Sa.
+\newblock {QuIP\#}: Even better {LLM} quantization with hadamard incoherence and lattice codebooks.
+\newblock In {\em The Twelfth International Conference on Learning Representations}, 2024.
+
+\bibitem{math-shepherd}
+Peiyi Wang, Lei Li, Zhihong Shao, RX~Xu, Damai Dai, Yifei Li, Deli Chen, Yu~Wu, and Zhifang Sui.
+\newblock Math-shepherd: Verify and reinforce llms step-by-step without human annotations.
+\newblock {\em arXiv preprint arXiv:2312.08935}, 2023.
+
+\bibitem{cot-sc}
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed~Chi, and Denny Zhou.
+\newblock Self-consistency improves chain of thought reasoning in language models.
+\newblock {\em arXiv preprint arXiv:2303.11366}, 2023.
+
+\bibitem{tmac}
+Jianyu Wei, Shijie Cao, Ting Cao, Lingxiao Ma, Lei Wang, Yanyong Zhang, and Mao Yang.
+\newblock T-mac: Cpu renaissance via table lookup for low-bit llm deployment on edge.
+\newblock In {\em Proceedings of the Twentieth European Conference on Computer Systems}, pages 278--292, 2025.
+
+\bibitem{wu2024inference}
+Yangzhen Wu, Zhiqing Sun, Shanda Li, Sean Welleck, and Yiming Yang.
+\newblock Inference scaling laws: An empirical analysis of compute-optimal inference for problem-solving with language models.
+\newblock {\em arXiv preprint arXiv:2408.00724}, 2024.
+
+\bibitem{densing-law}
+Chaojun Xiao, Jie Cai, Weilin Zhao, Guoyang Zeng, Biyuan Lin, Jie Zhou, Zhi Zheng, Xu~Han, Zhiyuan Liu, and Maosong Sun.
+\newblock Densing law of llms.
+\newblock {\em arXiv preprint arXiv:2412.04315}, 2024.
+
+\bibitem{smoothquant}
+Guangxuan Xiao, Ji~Lin, Mickael Seznec, Hao Wu, Julien Demouth, and Song Han.
+\newblock Smoothquant: Accurate and efficient post-training quantization for large language models.
+\newblock In {\em International Conference on Machine Learning}, pages 38087--38099. PMLR, 2023.
+
+\bibitem{mllm-npu}
+Daliang Xu, Hao Zhang, Liming Yang, Ruiqi Liu, Gang Huang, Mengwei Xu, and Xuanzhe Liu.
+\newblock Fast on-device llm inference with npus.
+\newblock In {\em Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1}, pages 445--462, 2025.
+
+\bibitem{tts-survey}
+Fengli Xu, Qianyue Hao, Zefang Zong, Jingwei Wang, Yunke Zhang, Jingyi Wang, Xiaochong Lan, Jiahui Gong, Tianjian Ouyang, Fan Jinmeng, et~al.
+\newblock Towards large reasoning models: A survey on scaling llm reasoning capabilities.
+\newblock {\em arXiv preprint arXiv:2501.09686}, 2025.
+
+\bibitem{powerinfer2}
+Zhenliang Xue, Yixin Song, Zeyu Mi, Xinrui Zheng, Yubin Xia, and Haibo Chen.
+\newblock Powerinfer-2: Fast large language model inference on a smartphone.
+\newblock {\em arXiv preprint arXiv:2406.06282}, 2024.
+
+\bibitem{yan2025empowering}
+Yuxuan Yan, Shiqi Jiang, Ting Cao, Yifan Yang, Qianqian Yang, Yuanchao Shu, Yuqing Yang, and Lili Qiu.
+\newblock Empowering agentic video analytics systems with video language models.
+\newblock {\em arXiv preprint arXiv:2505.00254}, 2025.
+
+\bibitem{qwen25}
+An~Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo~Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, et~al.
+\newblock Qwen2.5 technical report.
+\newblock {\em arXiv preprint arXiv:2412.15115}, 2024.
+
+\bibitem{tot}
+Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Tom Griffiths, Yuan Cao, and Karthik Narasimhan.
+\newblock Tree of thoughts: Deliberate problem solving with large language models.
+\newblock {\em Advances in neural information processing systems}, 36:11809--11822, 2023.
+
+\bibitem{minicpm-v}
+Yuan Yao, Tianyu Yu, Ao~Zhang, Chongyi Wang, Junbo Cui, Hongji Zhu, Tianchi Cai, Haoyu Li, Weilin Zhao, Zhihui He, et~al.
+\newblock Minicpm-v: A gpt-4v level mllm on your phone.
+\newblock {\em arXiv preprint arXiv:2408.01800}, 2024.
+
+\bibitem{shadowattn}
+Wangsong Yin, Daliang Xu, Mengwei Xu, Gang Huang, and Xuanzhe Liu.
+\newblock Dynamic sparse attention on mobile socs.
+\newblock {\em arXiv preprint arXiv:2508.16703}, 2025.
+
+\bibitem{processbench}
+Chujie Zheng, Zhenru Zhang, Beichen Zhang, Runji Lin, Keming Lu, Bowen Yu, Dayiheng Liu, Jingren Zhou, and Junyang Lin.
+\newblock Processbench: Identifying process errors in mathematical reasoning.
+\newblock {\em arXiv preprint arXiv:2412.06559}, 2024.
+
+\bibitem{empirical-qwen3-quant}
+Xingyu Zheng, Yuye Li, Haoran Chu, Yue Feng, Xudong Ma, Jie Luo, Jinyang Guo, Haotong Qin, Michele Magno, and Xianglong Liu.
+\newblock An empirical study of qwen3 quantization.
+\newblock {\em arXiv preprint arXiv:2505.02214}, 2025.
+
+\end{thebibliography}

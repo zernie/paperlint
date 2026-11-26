@@ -1,0 +1,194 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Artifact Appendix Template for EuroSys'26 AE
+%
+% this document has a maximum length of 2 pages.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+\section{Artifact Appendix} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Abstract}
+
+We provide the source code of \Name and scripts to reproduce the major experimental results from the  paper.
+The artifact enables reproduction of key evaluation figures including data distribution analysis (Figure~\ref{fig:evaluation-fig-0-data-statistics}), end-to-end performance comparisons (Figure~\ref{fig:evaluation-fig-1-end-to-end}), kernel-level performance analysis (Figure~\ref{fig:evaluation-fig-5-kernel-perf-fwd_bwd}), layer-wise performance evaluation (Figure~\ref{fig:evaluation-fig-6-layer-perf-normalized}), and memory traffic analysis (Figure~\ref{fig:evaluation-fig-7-kernel-ncu-profile}).
+The artifact includes detailed installation procedures and automated evaluation workflows.
+Full reproduction requires a Linux system with 192 GB RAM, 256 GB disk space, and 4 NVIDIA H100 GPUs with NVLink interconnects.
+Kernel and layer-level benchmarks can be executed on systems with a single GPU.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Description \& Requirements}
+
+% \textit{[Mandatory] This section should list all the information necessary to recreate the same experimental setup you have used to run your artifact. This includes at least a persistent link to a publicly accessible archival repository where all the artifact's main components (software, data-sets, documentation, etc.) can be accessed and, where this apply, the minimal hardware and software requirements to run your artifact. It is also very good practice to list and describe in this section benchmarks where those are part of, or simply have been used to produce results with, your artifact.}
+
+\subsubsection{How to access}
+The code is available at: 
+Github \url{https://github.com/CentML/lorafusion} and Zenodo \url{https://zenodo.org/records/17051801}.
+
+\subsubsection{Hardware dependencies}
+The complete experimental evaluation requires a Linux system equipped with at least 192 GB of system memory, 256 GB of available disk storage, and 4 NVIDIA H100 GPUs interconnected via NVLink.
+
+For partial evaluation, kernel and layer-level benchmarks can be executed on systems with a single GPU. Performance results on alternative hardware configurations may differ from those reported in the paper. Systems with higher compute-to-memory bandwidth ratios typically yield superior performance, while older hardware with lower ratios may exhibit reduced performance gains.
+
+\subsubsection{Software dependencies}
+The artifact requires Conda for environment management. The software stack includes CUDA 12.4, PyTorch v2.6.0, megatron-core v0.11.0, and Triton v3.2.0. All dependencies are automatically installed through the provided setup scripts.
+
+\subsubsection{Benchmarks} 
+None
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Set-up}
+
+\begin{enumerate}
+    \item Clone the GitHub repository.
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+git clone https://github.com/CentML/lorafusion.git
+cd lorafusion
+git checkout eurosys-ae
+\end{lstlisting}
+
+    \item Install the requirements by running this command or following \texttt{docs/installation.md}.
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+conda create -y -n lorafusion python=3.12
+conda activate lorafusion
+cd benchmarks_paper
+bash scripts/setup/setup_env.sh
+\end{lstlisting}
+
+    \item Download the Hugging Face models and datasets. Make sure you are logged in and have access to them.
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+# huggingface-cli login
+python prepare_models.py
+python gen_sample_distribution.py
+\end{lstlisting}
+
+    \item Verify hardware-specific kernel configurations. The Triton kernels require hardware-specific tuning to optimize tiling strategies. Examine \texttt{lorafusion/ops/triton\_ops/config.py} to determine if pre-tuned configurations exist for the target hardware. Pre-configured settings are available for:
+    \begin{itemize}
+        \item NVIDIA H100 80GB HBM3 (recommended)
+        \item NVIDIA A100 SXM4 80GB
+        \item NVIDIA A100 PCIe 80GB
+        \item NVIDIA GeForce RTX 3090
+    \end{itemize}
+    For unsupported hardware configurations, execute the kernel tuning process:
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+cd /PATH/TO/lorafusion/
+python tools/tune_kernels.py
+\end{lstlisting}
+    Then, update \texttt{lorafusion/ops/triton\_ops/config.py} with the generated optimal configurations.
+\end{enumerate}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Evaluation workflow}
+
+\subsubsection{Major Claims}
+
+\begin{itemize}
+    \item (C1): \Name is up to $1.96\times$ faster (average $1.47\times$) than Megatron-LM, and up to $1.46\times$ faster (average $1.29\times$) than mLoRA. See Section~\ref{sec:evaluation-end-to-end-results} and Figure~\ref{fig:evaluation-fig-1-end-to-end}.
+    \item (C2): Our fused kernels are up to $1.39\times$ faster (average $1.27\times$) and can replace existing LoRA kernels. See Section~\ref{sec:evaluation-effectiveness-of-fused-lora-kernel} and Figure~\ref{fig:evaluation-fig-5-kernel-perf-fwd_bwd}, Figure~\ref{fig:evaluation-fig-6-layer-perf-normalized}, and Figure~\ref{fig:evaluation-fig-7-kernel-ncu-profile}.
+\end{itemize}
+
+\subsubsection{Complete Experimental Evaluation}
+
+The full experimental evaluation requires 4 NVIDIA GPUs, each with 80GB memory capacity.
+
+\begin{enumerate}
+    \item Navigate to the \texttt{benchmarks\_paper} directory.
+    \item Execute the complete evaluation suite:
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+bash scripts/run_all.sh all
+\end{lstlisting}
+    \begin{enumerate}
+        \item The complete evaluation encompasses all primary experiments and kernel performance assessments, requiring approximately 4 hours of computation time.
+        \item Detailed command specifications and timing estimates are available in \texttt{scripts/run\_all.sh}.
+        \item Individual experiment subsets can be executed by modifying the script parameters.
+    \end{enumerate}
+    \item Evaluation results are generated in the \texttt{results} directory, producing figures corresponding to Figure~\ref{fig:evaluation-fig-0-data-statistics}, Figure~\ref{fig:evaluation-fig-1-end-to-end}, Figure~\ref{fig:evaluation-fig-5-kernel-perf-fwd_bwd}, Figure~\ref{fig:evaluation-fig-6-layer-perf-normalized}, and Figure~\ref{fig:evaluation-fig-7-kernel-ncu-profile}.
+\end{enumerate}
+
+\subsubsection{Reduced-Scale Evaluation}
+
+For systems with limited GPU resources, kernel and layer-level benchmarks can be executed on a single GPU configuration.
+
+\begin{itemize}
+    \item Systems with GPUs containing 80GB or greater memory capacity can execute the comprehensive single-GPU evaluation suite:
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+bash scripts/run_all.sh all_single_gpu
+\end{lstlisting}
+    \item Systems with GPUs containing less than 80GB memory can execute kernel and layer benchmarks independently:
+    \vspace{3pt}
+\begin{lstlisting}[language=bash]
+bash scripts/run_all.sh layer
+bash scripts/run_all.sh kernel
+\end{lstlisting}
+\end{itemize}
+
+Results are generated in the \texttt{results} directory. For 80GB+ configurations, the evaluation produces a subset of Figure~\ref{fig:evaluation-fig-1-end-to-end} alongside Figure~\ref{fig:evaluation-fig-5-kernel-perf-fwd_bwd}, Figure~\ref{fig:evaluation-fig-6-layer-perf-normalized}, and potentially Figure~\ref{fig:evaluation-fig-7-kernel-ncu-profile} (contingent on NCU profiling availability).
+
+% \textit{Link explicitly the description of your experiments to the items you have provided in the previous subsection about Major Claims. We also highly encourage you to provide your estimates of human- and compute-time for each of the listed experiments. Follows an example:}
+% ~\\
+
+% \textit{Experiment (E1): [Optional Name] [30 human-minutes + 1 compute-hour]: provide a short explanation of the experiment and expected results.}\\\\
+% \textit{[How to]}\\
+% \textit{Describe thoroughly the steps to perform the experiment and to collect and organize the results as expected from your paper. We encourage you to use the following structure with three main blocks for the description of your experiment.} \\
+% ~\\
+% \textit{[Preparation]}
+% \textit{Describe in this block the steps required to prepare and configure the environment for this experiment.}\\
+% ~\\
+% \textit{[Execution]}
+% \textit{Describe in this block the steps to run this experiment.}\\
+% ~\\
+% \textit{[Results]}
+% \textit{Describe in this block the steps required to collect and interpret the results for this experiment.}\\
+% ~\\
+% \textit{In all of the above blocks, we also recommend you to provide precise indications about the expected outcome for each of the steps.}
+
+
+% ~\\
+
+% \textit{Experiment (E2): [Optional Name] [1 human-hour + 3 compute-hour]: provide a short explanation of the experiment and expected results.}\\\\
+% \textit{[How to]} \textit{ibid.}
+% ~\\
+
+% \textit{Experiment (E3): [Optional Name] [10 human-minutes + 30 compute-minutes]: provide a short explanation of the experiment and expected results.}\\\\
+% \textit{[How to]} \textit{ibid.}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Notes on Reusability}
+
+Experimental customization can be achieved by modifying \texttt{scripts/run\_all.sh} and associated sub-scripts. The artifact provides evaluation scripts and corresponding visualization tools for result generation.
+
+Performance characteristics on alternative GPU architectures may differ from H100-based results. Systems with lower compute-to-memory bandwidth ratios typically exhibit reduced performance gains. Power consumption constraints during kernel configuration tuning may affect optimal parameter selection and subsequent benchmark accuracy. For consistent performance evaluation across different hardware, manual GPU frequency configuration is recommended:
+\vspace{3pt}
+\begin{lstlisting}[language=bash]
+# Disable automatic frequency scaling
+sudo nvidia-smi -pm 1
+sudo nvidia-smi --auto-boost-default=0
+
+# Query supported frequency configurations
+nvidia-smi -q -d SUPPORTED_CLOCKS
+
+# Configure specific memory and graphics clock frequencies
+# sudo nvidia-smi -ac <memory_clock,graphics_clock>
+# e.g.,
+# sudo nvidia-smi -ac 6251,1050
+\end{lstlisting}
+
+% \label{sec:reuse}
+% {\em [Optional]}
+% \textit{This section is meant to optionally share additional information on how to use your artifact beyond the research presented in your paper. In fact, a broader objective of an artifact evaluation is to help you make your research reusable by others.\\
+% You can include in this section any sort of instruction that you believe it would help others re-use your artifact, like, for example, scaling down/up certain components of your artifact, working on different kinds of input or data-set, customizing the behavior of or replacing a specific module or an algorithm, etc.}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \subsection{General Notes}
+% \label{sec:gnotes}
+% %\subsection{Notes}
+% {\em [Optional]}
+% \textit{This section is meant to allow you to include any further important notes that may not fall within any of the previous categories. We kindly encourage you to remove this section where this sort of content may not be strictly needed rather than filling it with unnecessary or redundant information.}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

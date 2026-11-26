@@ -1,0 +1,294 @@
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs} % for professional tables
+% \usepackage{fontspec}
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{multirow}
+% inlined bib file
+% \usepackage{filecontents}
+\usepackage{fontawesome}
+\usepackage{subcaption}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{comment}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{lipsum}
+\usepackage[]{hyperref}
+\usepackage{comment}
+\usepackage{xspace}
+\usepackage{wasysym}
+\usepackage{float}
+\usepackage{stfloats}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\PassOptionsToPackage{table}{xcolor}
+\PassOptionsToPackage{x11names}{xcolor}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{makecell}
+\usepackage{nicematrix}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage[export]{adjustbox}
+\usepackage{float}
+\usepackage[noend]{algpseudocode}
+\usepackage{tabularx} % In the preamble
+
+% Markers
+\let\Bbbk\relax
+\usepackage{amssymb}
+\let\Bbbk\relax
+\usepackage{newtxmath}
+\usepackage{pifont} % for cross mark
+
+\definecolor{darkergreen}{RGB}{0,100,0} % Darker green
+\definecolor{darkerred}{RGB}{139,0,0} % Darker red
+\definecolor{lightergreen}{RGB}{34,139,34} % Lighter green, still subdued
+\definecolor{lighterred}{RGB}{205,92,92} % Lighter red, still subdued
+% faThumbsOUp means the unfilled one
+% faThumbsUp mean the solid one
+\newcommand{\positive}{\textcolor{lightergreen}{\faThumbsOUp}} % Positive symbol
+\newcommand{\negative}{\textcolor{lighterred}{\faThumbsODown}} % Negative symbol
+\definecolor{mydarkgreen}{HTML}{2E5E17}
+
+\SetCommentSty{textit}
+\newcommand\mygreen[1]{\textcolor{mydarkgreen}{\textit{#1}}}
+\SetCommentSty{mygreen}
+
+% chapter and section ref
+\usepackage{cleveref}
+\crefformat{section}{\S#2#1#3} % see manual of cleveref, section 8.2.1
+\crefformat{subsection}{\S#2#1#3}
+\crefformat{subsubsection}{\S#2#1#3}
+
+% Chart Makecell
+\usepackage{makecell}
+
+% Listing
+\usepackage{xcolor} % Required for custom colors
+\usepackage{listings} % Required for listings
+% Define custom colors
+
+% listing color and font
+% \usepackage{wasysym}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\definecolor{dmlgreen}    {RGB}{51,  160,  44}
+\definecolor{dmlblue}     {RGB}{31,  120, 180}
+\definecolor{dmlred}      {RGB}{202,   0,  32}
+\definecolor{brown}       {RGB}{139,  69,  19}
+
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{light-gray}{gray}{0.96}
+\definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
+\definecolor{OliveGreen}{rgb}{0.33, 0.42, 0.18}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage[utf8]{inputenc}
+\DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{8} % for bold
+\DeclareFixedFont{\ttm}{T1}{txtt}{m}{n}{8}  % for normal
+
+\newcommand{\updated}[1]{\noindent{\color{teal} {#1}}}
+\newcommand{\zhanda}[1]{\noindent{\color{orange} {\bf Zhanda: } {#1}}}
+
+\usepackage{xargs}                      % Use more than one optional parameter in a new commands
+\usepackage[colorinlistoftodos,prependcaption,textsize=small]{todonotes}
+\newcommandx{\note}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\improve}[2][1=]{\todo[linecolor=orange,backgroundcolor=orange!25,bordercolor=orange,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+\newcommandx{\fix}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+
+% Spacing between figure and its caption.
+% \usepackage{titlesec}
+\setlength{\abovecaptionskip}{5pt plus 2pt minus 2pt}
+\setlength{\belowcaptionskip}{-6pt}
+% Spacing of section titles. Format:
+% {left (don't touch)}{above}{below}
+% \titlespacing\section{0pt}{5pt plus 4pt minus 2pt}{5pt plus 2pt minus 2pt}
+% \titlespacing\subsection{0pt}{5pt plus 4pt minus 2pt}{5pt plus 2pt minus 2pt}
+% \titlespacing\subsection{0pt}{5pt plus 4pt minus 2pt}{5pt plus 2pt minus 2pt}
+% \titlespacing\subsubsection{0pt}{5pt plus 4pt minus 2pt}{5pt plus 2pt minus 2pt}
+
+% Python style for highlighting
+\newcommand\pythonstyle{\lstset{
+  language=Python,
+  backgroundcolor=\color{white}, %%%%%%%
+  basicstyle=\ttfamily\footnotesize,
+  otherkeywords={self},
+  keywordstyle=\footnotesize\color{deepblue},
+  emph={pipeline,unroll,tile},          
+  emphstyle=\footnotesize\color{deepred},    
+  stringstyle=\color{deepgreen},
+  commentstyle=\color{red},  %%%%%%%%
+  frame=tb,                         
+  showstringspaces=false,
+}}
+\lstnewenvironment{env_python}[2]
+{
+\lstset{
+  language=Python,
+  backgroundcolor=\color{light-gray},
+  otherkeywords={self},        
+  emph={to,tile,reuse_at,reorder,unroll,split,vectorize,quantize},          
+  emphstyle=\footnotesize\color{dmlred},  
+  belowcaptionskip=0.7\baselineskip,
+  aboveskip=-2mm,
+  belowskip=5mm,
+  showstringspaces=false,
+  columns=flexible,
+  escapechar=@,
+  basicstyle={\linespread{0.99}\fontencoding{T1}\footnotesize\fontfamily{lmtt}\fontseries{m}\selectfont},
+  numbers={left},
+  xleftmargin={2em},%
+  framesep=5pt, % margin top and down
+  framexleftmargin={1em},
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{deepgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  frame=tb, 
+  caption= #1, 
+  label= #2
+}%lstset
+  \vspace{\baselineskip}
+}%lstnewenvironment
+{}
+
+\lstset{
+  language=Python,
+  backgroundcolor=\color{aliceblue},
+  % otherkeywords={self},
+  emph={},          
+  emphstyle=\small\color{dmlred},  
+  belowcaptionskip=0.7\baselineskip,
+  aboveskip=0mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\linespread{1.1}\fontencoding{T1}\scriptsize\fontfamily{lmtt}\fontseries{m}\selectfont},
+  numbers={left},
+  xleftmargin={2em},%
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{deepgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  morecomment=[f][\lstbg{red!20}]-,
+  morecomment=[f][\lstbg{green!20}]+,
+  morecomment=[f][\textit]{@@},
+ }
+
+\newcommand{\lstbg}[3][0pt]{{\fboxsep#1\colorbox{#2}{\strut #3}}}
+\lstdefinelanguage{diff}{
+  backgroundcolor=\color{aliceblue},           
+  emph={},          
+  emphstyle=\small\color{dmlred},  
+  belowcaptionskip=0.7\baselineskip,
+  aboveskip=0mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\linespread{1.1}\fontencoding{T1}\scriptsize\fontfamily{lmtt}\fontseries{m}\selectfont},
+  numbers={left},
+  xleftmargin={2em},%
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  morecomment=[f][\lstbg{red!20}]-,
+  morecomment=[f][\lstbg{green!20}]+,
+  morecomment=[f][\textit]{@@},
+}
+
+\makeatletter
+\let\old@lstKV@SwitchCases\lstKV@SwitchCases
+\def\lstKV@SwitchCases#1#2#3{}
+\makeatother
+\usepackage{lstlinebgrd}
+\makeatletter
+\let\lstKV@SwitchCases\old@lstKV@SwitchCases
+
+\lst@Key{numbers}{none}{%
+    \def\lst@PlaceNumber{\lst@linebgrd}%
+    \lstKV@SwitchCases{#1}%
+    {none:\\%
+     left:\def\lst@PlaceNumber{\llap{\normalfont
+                \lst@numberstyle{\thelstnumber}\kern\lst@numbersep}\lst@linebgrd}\\%
+     right:\def\lst@PlaceNumber{\rlap{\normalfont
+                \kern\linewidth \kern\lst@numbersep
+                \lst@numberstyle{\thelstnumber}}\lst@linebgrd}%
+    }{\PackageError{Listings}{Numbers #1 unknown}\@ehc}}
+\makeatother
+
+% ========================================================
+\newcommand{\myparagraph}[1]{\vspace{1pt}\noindent\textbf{{#1}.\;}}
+\newcommand{\cmark}{\ding{51}} % pifont checkmark
+\newcommand{\xmark}{\ding{55}} % pifont cross
+\newcommand{\filledone}{\ding{182}\xspace}
+\newcommand{\filledtwo}{\ding{183}\xspace}
+\newcommand{\filledthree}{\ding{184}\xspace}
+\newcommand{\filledfour}{\ding{185}\xspace}
+\newcommand{\filledfive}{\ding{186}\xspace}
+\newcommand{\mynewpage}{\newpage\null\newpage}
+
+\definecolor{customcolor}{HTML}{f9ae78}
+\definecolor{customcolor2}{HTML}{3d5c6f}
+
+\newcommand{\update}[1]{\noindent{\color{cyan} {\bf } {#1}}}
+
+\usepackage{xcolor}
+\usepackage{listings}
+\lstdefinestyle{mystyle}{
+%     backgroundcolor=\color{cyan!20}, % Light blue background
+    basicstyle=\ttfamily\small,      % Small font
+%     keywordstyle=\color{blue},       % Blue for keywords like "cd"
+    numbers=left,                    % Line numbers on the left
+      numberstyle=\color{gray},   % Small gray numbers
+%     frame=single,                    % Border around the listing
+%     rulecolor=\color{gray!50},       % Gray border color
+%     breaklines=true                   % Allow line breaks
+    % xleftmargin=0pt,                 % No left margin
+    % framerule=0pt,
+    breakautoindent=false,
+    breakindent=10pt,
+    escapechar=|,
+}
+\lstset{style=mystyle}
+
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\usepackage[precision=2, unit=mm]{lengthconvert}
+\newcommand{\dummyfigure}[3]{%
+    \begin{tikzpicture}
+        \draw [
+            thick, 
+            pattern=north east lines, 
+            pattern color=black!10, 
+            inner sep=0,
+        ] 
+        (0,0) rectangle (#1 - \pgflinewidth, #2 - \pgflinewidth) 
+        node[
+            pos=0.5, 
+            align=center, 
+            font=\small, 
+            text width=#1,
+        ] {
+            #3 \\[2mm] 
+            \texttt{\tiny{Figure size: (\Convert{#1}, \Convert{#2})}}
+        };
+    \end{tikzpicture}%
+}

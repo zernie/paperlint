@@ -1,0 +1,1033 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{95}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Abid et~al\mbox{.}(2021)]%
+        {abid2021persistent}
+\bibfield{author}{\bibinfo{person}{Abubakar Abid}, \bibinfo{person}{Maheen Farooqi}, {and} \bibinfo{person}{James Zou}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Persistent Anti-Muslim Bias in Large Language Models}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 AAAI/ACM Conference on AI, Ethics, and Society}} \emph{(\bibinfo{series}{AIES ’21})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3461702.3462624}
+\showDOI{\tempurl}
+
+
+\bibitem[{Amanda Barrett}(2024)]%
+        {AP2024ChatGPTStance}
+\bibfield{author}{\bibinfo{person}{{Amanda Barrett}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Standards around generative AI}.
+\newblock \bibinfo{howpublished}{\url{https://blog.ap.org/standards-around-generative-ai}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Arshad and Ismail(2018)]%
+        {arshad2018workplace}
+\bibfield{author}{\bibinfo{person}{Rasidah Arshad} {and} \bibinfo{person}{Ida~RosnitaI Ismail}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Workplace incivility and knowledge hiding behavior: does personality matter?}
+\newblock \bibinfo{journal}{\emph{Journal of Organizational Effectiveness: People and Performance}} \bibinfo{volume}{5}, \bibinfo{number}{3} (\bibinfo{date}{September} \bibinfo{year}{2018}), \bibinfo{pages}{278–288}.
+\newblock
+\showISSN{2051-6614}
+\urldef\tempurl%
+\url{https://doi.org/10.1108/joepp-06-2018-0041}
+\showDOI{\tempurl}
+
+
+\bibitem[AssentGlobal(2024)]%
+        {LinkedIn2024ChatGPTPolicy}
+\bibfield{author}{\bibinfo{person}{AssentGlobal}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Writing A ChatGPT Policy For Your Organization}.
+\newblock \bibinfo{journal}{\emph{LinkedIn}} (\bibinfo{year}{2024}).
+\newblock
+\urldef\tempurl%
+\url{https://www.linkedin.com/pulse/writing-chatgpt-policy-your-organization-assentglobal/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[{Association for Computing Machinery}(2023)]%
+        {ACM2023AuthorshipPolicy}
+\bibfield{author}{\bibinfo{person}{{Association for Computing Machinery}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{New ACM Policy on Authorship}.
+\newblock \bibinfo{howpublished}{\url{https://www.acm.org/publications/policies/new-acm-policy-on-authorship}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Bandura and Adams(1977)]%
+        {bandura1977analysis}
+\bibfield{author}{\bibinfo{person}{Albert Bandura} {and} \bibinfo{person}{Nancy~E. Adams}.} \bibinfo{year}{1977}\natexlab{}.
+\newblock \showarticletitle{Analysis of self-efficacy theory of behavioral change}.
+\newblock \bibinfo{journal}{\emph{Cognitive Therapy and Research}} \bibinfo{volume}{1}, \bibinfo{number}{4} (\bibinfo{date}{December} \bibinfo{year}{1977}), \bibinfo{pages}{287–310}.
+\newblock
+\showISSN{1573-2819}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/bf01663995}
+\showDOI{\tempurl}
+
+
+\bibitem[Bender et~al\mbox{.}(2021)]%
+        {bender2021dangers}
+\bibfield{author}{\bibinfo{person}{Emily~M. Bender}, \bibinfo{person}{Timnit Gebru}, \bibinfo{person}{Angelina McMillan-Major}, {and} \bibinfo{person}{Shmargaret Shmitchell}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?: Can Language Models Be Too Big?}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency}} \emph{(\bibinfo{series}{FAccT ’21})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3442188.3445922}
+\showDOI{\tempurl}
+
+
+\bibitem[Bian et~al\mbox{.}(2016)]%
+        {bian2016new}
+\bibfield{author}{\bibinfo{person}{Xuemei Bian}, \bibinfo{person}{Kai-Yu Wang}, \bibinfo{person}{Andrew Smith}, {and} \bibinfo{person}{Natalia Yannopoulou}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{New insights into unethical counterfeit consumption}.
+\newblock \bibinfo{journal}{\emph{Journal of Business Research}} \bibinfo{volume}{69}, \bibinfo{number}{10} (\bibinfo{date}{October} \bibinfo{year}{2016}), \bibinfo{pages}{4249–4258}.
+\newblock
+\showISSN{0148-2963}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.jbusres.2016.02.038}
+\showDOI{\tempurl}
+
+
+\bibitem[Bicchieri and Dimant(2023)]%
+        {bicchieri2023norm}
+\bibfield{author}{\bibinfo{person}{Cristina Bicchieri} {and} \bibinfo{person}{Eugen Dimant}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Norm-Nudging: Harnessing Social Expectations for Behavior Change}.
+\newblock \bibinfo{journal}{\emph{SSRN Electronic Journal}} (\bibinfo{year}{2023}).
+\newblock
+\showISSN{1556-5068}
+\urldef\tempurl%
+\url{https://doi.org/10.2139/ssrn.4418351}
+\showDOI{\tempurl}
+
+
+\bibitem[Bommer et~al\mbox{.}(1987)]%
+        {bommer1987behavioral}
+\bibfield{author}{\bibinfo{person}{Michael Bommer}, \bibinfo{person}{Clarence Gratto}, \bibinfo{person}{Jerry Gravander}, {and} \bibinfo{person}{Mark Tuttle}.} \bibinfo{year}{1987}\natexlab{}.
+\newblock \showarticletitle{A behavioral model of ethical and unethical decision making}.
+\newblock \bibinfo{journal}{\emph{Journal of business ethics}}  \bibinfo{volume}{6} (\bibinfo{year}{1987}), \bibinfo{pages}{265--280}.
+\newblock
+
+
+\bibitem[Brown et~al\mbox{.}(2012)]%
+        {brown2012confirmatory}
+\bibfield{author}{\bibinfo{person}{Timothy~A Brown}, \bibinfo{person}{Michael~T Moore}, {et~al\mbox{.}}} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Confirmatory factor analysis}.
+\newblock \bibinfo{journal}{\emph{Handbook of structural equation modeling}}  \bibinfo{volume}{361} (\bibinfo{year}{2012}), \bibinfo{pages}{379}.
+\newblock
+
+
+\bibitem[Béjar and Bok(1987)]%
+        {bok2011secrets}
+\bibfield{author}{\bibinfo{person}{Helena Béjar} {and} \bibinfo{person}{Slssela Bok}.} \bibinfo{year}{1987}\natexlab{}.
+\newblock \showarticletitle{“Secrets” (On the Ethics of Concealment and Revelation)}.
+\newblock \bibinfo{journal}{\emph{Reis}} \bibinfo{number}{37} (\bibinfo{year}{1987}), \bibinfo{pages}{248}.
+\newblock
+\showISSN{0210-5233}
+\urldef\tempurl%
+\url{https://doi.org/10.2307/40183271}
+\showDOI{\tempurl}
+
+
+\bibitem[Caprara et~al\mbox{.}(2005)]%
+        {caprara2005new}
+\bibfield{author}{\bibinfo{person}{Gian~Vittorio Caprara}, \bibinfo{person}{Patrizia Steca}, \bibinfo{person}{Arnaldo Zelli}, {and} \bibinfo{person}{Cristina Capanna}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{A New Scale for Measuring Adults’ Prosocialness}.
+\newblock \bibinfo{journal}{\emph{European Journal of Psychological Assessment}} \bibinfo{volume}{21}, \bibinfo{number}{2} (\bibinfo{date}{January} \bibinfo{year}{2005}), \bibinfo{pages}{77–89}.
+\newblock
+\showISSN{2151-2426}
+\urldef\tempurl%
+\url{https://doi.org/10.1027/1015-5759.21.2.77}
+\showDOI{\tempurl}
+
+
+\bibitem[Carver et~al\mbox{.}(1999)]%
+        {carver1999self}
+\bibfield{author}{\bibinfo{person}{Charles~S. Carver}, \bibinfo{person}{John~W. Lawrence}, {and} \bibinfo{person}{Michael~F. Scheier}.} \bibinfo{year}{1999}\natexlab{}.
+\newblock \showarticletitle{Self-Discrepancies and Affect: Incorporating the Role of Feared Selves}.
+\newblock \bibinfo{journal}{\emph{Personality and Social Psychology Bulletin}} \bibinfo{volume}{25}, \bibinfo{number}{7} (\bibinfo{date}{July} \bibinfo{year}{1999}), \bibinfo{pages}{783–792}.
+\newblock
+\showISSN{1552-7433}
+\urldef\tempurl%
+\url{https://doi.org/10.1177/0146167299025007002}
+\showDOI{\tempurl}
+
+
+\bibitem[Chander et~al\mbox{.}(2018)]%
+        {chander2018working}
+\bibfield{author}{\bibinfo{person}{Ajay Chander}, \bibinfo{person}{Ramya Srinivasan}, \bibinfo{person}{Suhas Chelian}, \bibinfo{person}{Jun Wang}, {and} \bibinfo{person}{Kanji Uchino}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Working with beliefs: AI transparency in the enterprise.}. In \bibinfo{booktitle}{\emph{IUI Workshops}}, Vol.~\bibinfo{volume}{1}.
+\newblock
+
+
+\bibitem[Choi and Chung(2013)]%
+        {choi2013applying}
+\bibfield{author}{\bibinfo{person}{Gilok Choi} {and} \bibinfo{person}{Hyewon Chung}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Applying the Technology Acceptance Model to Social Networking Sites (SNS): Impact of Subjective Norm and Social Capital on the Acceptance of SNS}.
+\newblock \bibinfo{journal}{\emph{International Journal of Human-Computer Interaction}} \bibinfo{volume}{29}, \bibinfo{number}{10} (\bibinfo{date}{October} \bibinfo{year}{2013}), \bibinfo{pages}{619–628}.
+\newblock
+\showISSN{1532-7590}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/10447318.2012.756333}
+\showDOI{\tempurl}
+
+
+\bibitem[Cohen(2013)]%
+        {cohen2013statistical}
+\bibfield{author}{\bibinfo{person}{Jacob Cohen}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Statistical power analysis for the behavioral sciences}}.
+\newblock \bibinfo{publisher}{Routledge}.
+\newblock
+
+
+\bibitem[Connelly et~al\mbox{.}(2012)]%
+        {connelly2012knowledge}
+\bibfield{author}{\bibinfo{person}{Catherine~E Connelly}, \bibinfo{person}{David Zweig}, \bibinfo{person}{Jane Webster}, {and} \bibinfo{person}{John~P Trougakos}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Knowledge hiding in organizations}.
+\newblock \bibinfo{journal}{\emph{Journal of organizational behavior}} \bibinfo{volume}{33}, \bibinfo{number}{1} (\bibinfo{year}{2012}), \bibinfo{pages}{64--88}.
+\newblock
+
+
+\bibitem[Corbett and Denton(2023)]%
+        {corbett2023interrogating}
+\bibfield{author}{\bibinfo{person}{Eric Corbett} {and} \bibinfo{person}{Emily Denton}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Interrogating the T in FAccT}. In \bibinfo{booktitle}{\emph{2023 ACM Conference on Fairness, Accountability, and Transparency}} \emph{(\bibinfo{series}{FAccT ’23})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3593013.3594104}
+\showDOI{\tempurl}
+
+
+\bibitem[Dahl et~al\mbox{.}(2024)]%
+        {dahl2024large}
+\bibfield{author}{\bibinfo{person}{Matthew Dahl}, \bibinfo{person}{Varun Magesh}, \bibinfo{person}{Mirac Suzgun}, {and} \bibinfo{person}{Daniel~E Ho}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Large Legal Fictions: Profiling Legal Hallucinations in Large Language Models}.
+\newblock \bibinfo{journal}{\emph{Journal of Legal Analysis}} \bibinfo{volume}{16}, \bibinfo{number}{1} (\bibinfo{date}{January} \bibinfo{year}{2024}), \bibinfo{pages}{64–93}.
+\newblock
+\showISSN{1946-5319}
+\urldef\tempurl%
+\url{https://doi.org/10.1093/jla/laae003}
+\showDOI{\tempurl}
+
+
+\bibitem[Dawson(1997)]%
+        {dawson1997ethical}
+\bibfield{author}{\bibinfo{person}{Leslie~M Dawson}.} \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Ethical differences between men and women in the sales profession}.
+\newblock \bibinfo{journal}{\emph{Journal of Business Ethics}}  \bibinfo{volume}{16} (\bibinfo{year}{1997}), \bibinfo{pages}{1143--1152}.
+\newblock
+
+
+\bibitem[Diefenbach and Ullrich(2018)]%
+        {diefenbach2019disrespectful}
+\bibfield{author}{\bibinfo{person}{Sarah Diefenbach} {and} \bibinfo{person}{Daniel Ullrich}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Disrespectful Technologies: Social Norm Conflicts in Digital Worlds}}.
+\newblock \bibinfo{publisher}{Springer International Publishing}, \bibinfo{pages}{44–56}.
+\newblock
+\showISBNx{9783319949475}
+\showISSN{2194-5365}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-94947-5_5}
+\showDOI{\tempurl}
+
+
+\bibitem[Dignum(2022)]%
+        {dignum2023responsible}
+\bibfield{author}{\bibinfo{person}{Virginia Dignum}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Responsible Artificial Intelligence --- From Principles to Practice: A Keynote at TheWebConf 2022: A Keynote at TheWebConf 2022}.
+\newblock \bibinfo{journal}{\emph{ACM SIGIR Forum}} \bibinfo{volume}{56}, \bibinfo{number}{1} (\bibinfo{date}{June} \bibinfo{year}{2022}), \bibinfo{pages}{1–6}.
+\newblock
+\showISSN{0163-5840}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3582524.3582529}
+\showDOI{\tempurl}
+
+
+\bibitem[Draxler et~al\mbox{.}(2024)]%
+        {draxler2023ai}
+\bibfield{author}{\bibinfo{person}{Fiona Draxler}, \bibinfo{person}{Anna Werner}, \bibinfo{person}{Florian Lehmann}, \bibinfo{person}{Matthias Hoppe}, \bibinfo{person}{Albrecht Schmidt}, \bibinfo{person}{Daniel Buschek}, {and} \bibinfo{person}{Robin Welsch}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{The AI Ghostwriter Effect: When Users do not Perceive Ownership of AI-Generated Text but Self-Declare as Authors}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Computer-Human Interaction}} \bibinfo{volume}{31}, \bibinfo{number}{2} (\bibinfo{date}{February} \bibinfo{year}{2024}), \bibinfo{pages}{1–40}.
+\newblock
+\showISSN{1557-7325}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3637875}
+\showDOI{\tempurl}
+
+
+\bibitem[Dwivedi et~al\mbox{.}(2023)]%
+        {dwivedi2023explainable}
+\bibfield{author}{\bibinfo{person}{Rudresh Dwivedi}, \bibinfo{person}{Devam Dave}, \bibinfo{person}{Het Naik}, \bibinfo{person}{Smiti Singhal}, \bibinfo{person}{Rana Omer}, \bibinfo{person}{Pankesh Patel}, \bibinfo{person}{Bin Qian}, \bibinfo{person}{Zhenyu Wen}, \bibinfo{person}{Tejal Shah}, \bibinfo{person}{Graham Morgan}, {and} \bibinfo{person}{Rajiv Ranjan}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Explainable AI (XAI): Core Ideas, Techniques, and Solutions}.
+\newblock \bibinfo{journal}{\emph{Comput. Surveys}} \bibinfo{volume}{55}, \bibinfo{number}{9} (\bibinfo{date}{January} \bibinfo{year}{2023}), \bibinfo{pages}{1–33}.
+\newblock
+\showISSN{1557-7341}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3561048}
+\showDOI{\tempurl}
+
+
+\bibitem[Díaz-Rodríguez et~al\mbox{.}(2023)]%
+        {diaz2023connecting}
+\bibfield{author}{\bibinfo{person}{Natalia Díaz-Rodríguez}, \bibinfo{person}{Javier Del~Ser}, \bibinfo{person}{Mark Coeckelbergh}, \bibinfo{person}{Marcos López~de Prado}, \bibinfo{person}{Enrique Herrera-Viedma}, {and} \bibinfo{person}{Francisco Herrera}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Connecting the dots in trustworthy Artificial Intelligence: From AI principles, ethics, and key requirements to responsible AI systems and regulation}.
+\newblock \bibinfo{journal}{\emph{Information Fusion}}  \bibinfo{volume}{99} (\bibinfo{date}{November} \bibinfo{year}{2023}), \bibinfo{pages}{101896}.
+\newblock
+\showISSN{1566-2535}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.inffus.2023.101896}
+\showDOI{\tempurl}
+
+
+\bibitem[{Elsevier}(2024)]%
+        {Elsevier2024AIWritingPolicy}
+\bibfield{author}{\bibinfo{person}{{Elsevier}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{The use of generative AI and AI-assisted technologies in writing for Elsevier}.
+\newblock \bibinfo{howpublished}{\url{https://www.elsevier.com/about/policies-and-standards/the-use-of-generative-ai-and-ai-assisted-technologies-in-writing-for-elsevier}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Emami-Naeini et~al\mbox{.}(2020)]%
+        {emami2020ask}
+\bibfield{author}{\bibinfo{person}{Pardis Emami-Naeini}, \bibinfo{person}{Yuvraj Agarwal}, \bibinfo{person}{Lorrie Faith~Cranor}, {and} \bibinfo{person}{Hanan Hibshi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Ask the Experts: What Should Be on an IoT Privacy and Security Label?}. In \bibinfo{booktitle}{\emph{2020 IEEE Symposium on Security and Privacy (SP)}}. \bibinfo{publisher}{IEEE}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/sp40000.2020.00043}
+\showDOI{\tempurl}
+
+
+\bibitem[Festinger(1962)]%
+        {festinger1962cognitive}
+\bibfield{author}{\bibinfo{person}{Leon Festinger}.} \bibinfo{year}{1962}\natexlab{}.
+\newblock \showarticletitle{Cognitive dissonance}.
+\newblock \bibinfo{journal}{\emph{Scientific American}} \bibinfo{volume}{207}, \bibinfo{number}{4} (\bibinfo{year}{1962}), \bibinfo{pages}{93--106}.
+\newblock
+
+
+\bibitem[Forbes et~al\mbox{.}(2015)]%
+        {forbes2016analysis}
+\bibfield{author}{\bibinfo{person}{Sharon~L. Forbes}, \bibinfo{person}{Eldrede Kahiya}, {and} \bibinfo{person}{Chloe Balderstone}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Analysis of Snack Food Purchasing and Consumption Behavior}.
+\newblock \bibinfo{journal}{\emph{Journal of Food Products Marketing}} \bibinfo{volume}{22}, \bibinfo{number}{1} (\bibinfo{date}{October} \bibinfo{year}{2015}), \bibinfo{pages}{65–88}.
+\newblock
+\showISSN{1540-4102}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/10454446.2014.949992}
+\showDOI{\tempurl}
+
+
+\bibitem[Goffman(2016)]%
+        {goffman2016presentation}
+\bibfield{author}{\bibinfo{person}{Erving Goffman}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The presentation of self in everyday life}.
+\newblock In \bibinfo{booktitle}{\emph{Social Theory Re-Wired}}. \bibinfo{publisher}{Routledge}, \bibinfo{pages}{482--493}.
+\newblock
+
+
+\bibitem[{Government of Canada}(2023)]%
+        {Canada2024GenerativeAI}
+\bibfield{author}{\bibinfo{person}{{Government of Canada}}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Guide to using generative AI in the Government of Canada}.
+\newblock \bibinfo{howpublished}{\url{https://www.canada.ca/en/government/system/digital-government/digital-government-innovations/responsible-use-ai/guide-use-generative-ai.html}}.
+\newblock
+
+
+\bibitem[{Harvard University}(2024)]%
+        {Harvard2024ChatGPTGuidelines}
+\bibfield{author}{\bibinfo{person}{{Harvard University}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Guidelines for Using ChatGPT and Other Generative AI Tools at Harvard}.
+\newblock \bibinfo{howpublished}{\url{https://provost.harvard.edu/guidelines-using-chatgpt-and-other-generative-ai-tools-harvard}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Hayes and Krippendorff(2007)]%
+        {hayes2007answering}
+\bibfield{author}{\bibinfo{person}{Andrew~F. Hayes} {and} \bibinfo{person}{Klaus Krippendorff}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Answering the Call for a Standard Reliability Measure for Coding Data}.
+\newblock \bibinfo{journal}{\emph{Communication Methods and Measures}} \bibinfo{volume}{1}, \bibinfo{number}{1} (\bibinfo{date}{April} \bibinfo{year}{2007}), \bibinfo{pages}{77–89}.
+\newblock
+\showISSN{1931-2466}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/19312450709336664}
+\showDOI{\tempurl}
+
+
+\bibitem[Hechter and Opp(2001)]%
+        {hechter2001have}
+\bibfield{author}{\bibinfo{person}{Michael Hechter} {and} \bibinfo{person}{Karl-Dieter Opp}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{What have we learned about the emergence of social norms}.
+\newblock \bibinfo{journal}{\emph{Social norms}} (\bibinfo{year}{2001}), \bibinfo{pages}{394--415}.
+\newblock
+
+
+\bibitem[Higgs(2015)]%
+        {higgs2015social}
+\bibfield{author}{\bibinfo{person}{Suzanne Higgs}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Social norms and their influence on eating behaviours}.
+\newblock \bibinfo{journal}{\emph{Appetite}}  \bibinfo{volume}{86} (\bibinfo{date}{March} \bibinfo{year}{2015}), \bibinfo{pages}{38–44}.
+\newblock
+\showISSN{0195-6663}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.appet.2014.10.021}
+\showDOI{\tempurl}
+
+
+\bibitem[Hoffman(1998)]%
+        {hoffman1998women}
+\bibfield{author}{\bibinfo{person}{James~J Hoffman}.} \bibinfo{year}{1998}\natexlab{}.
+\newblock \showarticletitle{Are women really more ethical than men? Maybe it depends on the situation}.
+\newblock \bibinfo{journal}{\emph{Journal of Managerial Issues}} (\bibinfo{year}{1998}), \bibinfo{pages}{60--73}.
+\newblock
+
+
+\bibitem[Hu et~al\mbox{.}(2021)]%
+        {hu2021xaitk}
+\bibfield{author}{\bibinfo{person}{Brian Hu}, \bibinfo{person}{Paul Tunison}, \bibinfo{person}{Bhavan Vasu}, \bibinfo{person}{Nitesh Menon}, \bibinfo{person}{Roddy Collins}, {and} \bibinfo{person}{Anthony Hoogs}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{<scp>XAITK</scp>: The explainable AI toolkit}.
+\newblock \bibinfo{journal}{\emph{Applied AI Letters}} \bibinfo{volume}{2}, \bibinfo{number}{4} (\bibinfo{date}{October} \bibinfo{year}{2021}).
+\newblock
+\showISSN{2689-5595}
+\urldef\tempurl%
+\url{https://doi.org/10.1002/ail2.40}
+\showDOI{\tempurl}
+
+
+\bibitem[Kaebnick et~al\mbox{.}(2023)]%
+        {kaebnick2023editors}
+\bibfield{author}{\bibinfo{person}{Gregory~E. Kaebnick}, \bibinfo{person}{David~Christopher Magnus}, \bibinfo{person}{Audiey Kao}, \bibinfo{person}{Mohammad Hosseini}, \bibinfo{person}{David Resnik}, \bibinfo{person}{Veljko Dubljević}, \bibinfo{person}{Christy Rentmeester}, \bibinfo{person}{Bert Gordijn}, {and} \bibinfo{person}{Mark~J. Cherry}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Correction: Editors’ statement on the responsible use of generative AI technologies in scholarly journal publishing}.
+\newblock \bibinfo{journal}{\emph{Medicine, Health Care and Philosophy}} \bibinfo{volume}{26}, \bibinfo{number}{4} (\bibinfo{date}{December} \bibinfo{year}{2023}), \bibinfo{pages}{505–505}.
+\newblock
+\showISSN{1572-8633}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s11019-023-10183-7}
+\showDOI{\tempurl}
+
+
+\bibitem[Kapania et~al\mbox{.}(2024)]%
+        {kapania2024m}
+\bibfield{author}{\bibinfo{person}{Shivani Kapania}, \bibinfo{person}{Ruiyi Wang}, \bibinfo{person}{Toby Jia-Jun Li}, \bibinfo{person}{Tianshi Li}, {and} \bibinfo{person}{Hong Shen}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{" I'm categorizing LLM as a productivity tool": Examining ethics of LLM use in HCI research practices}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2403.19876}} (\bibinfo{year}{2024}).
+\newblock
+
+
+\bibitem[Karamolegkou et~al\mbox{.}(2023)]%
+        {karamolegkou2023copyright}
+\bibfield{author}{\bibinfo{person}{Antonia Karamolegkou}, \bibinfo{person}{Jiaang Li}, \bibinfo{person}{Li Zhou}, {and} \bibinfo{person}{Anders Søgaard}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Copyright Violations and Large Language Models}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing}}. \bibinfo{publisher}{Association for Computational Linguistics}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.18653/v1/2023.emnlp-main.458}
+\showDOI{\tempurl}
+
+
+\bibitem[Karim et~al\mbox{.}(2023)]%
+        {karim2023explainable}
+\bibfield{author}{\bibinfo{person}{Md~Rezaul Karim}, \bibinfo{person}{Tanhim Islam}, \bibinfo{person}{Md Shajalal}, \bibinfo{person}{Oya Beyan}, \bibinfo{person}{Christoph Lange}, \bibinfo{person}{Michael Cochez}, \bibinfo{person}{Dietrich Rebholz-Schuhmann}, {and} \bibinfo{person}{Stefan Decker}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Explainable AI for Bioinformatics: Methods, Tools and Applications}.
+\newblock \bibinfo{journal}{\emph{Briefings in Bioinformatics}} \bibinfo{volume}{24}, \bibinfo{number}{5} (\bibinfo{date}{July} \bibinfo{year}{2023}).
+\newblock
+\showISSN{1477-4054}
+\urldef\tempurl%
+\url{https://doi.org/10.1093/bib/bbad236}
+\showDOI{\tempurl}
+
+
+\bibitem[Kelley et~al\mbox{.}(2009)]%
+        {kelley2009nutrition}
+\bibfield{author}{\bibinfo{person}{Patrick~Gage Kelley}, \bibinfo{person}{Joanna Bresee}, \bibinfo{person}{Lorrie~Faith Cranor}, {and} \bibinfo{person}{Robert~W. Reeder}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{A “nutrition label” for privacy}. In \bibinfo{booktitle}{\emph{Proceedings of the 5th Symposium on Usable Privacy and Security}} \emph{(\bibinfo{series}{SOUPS ’09})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1572532.1572538}
+\showDOI{\tempurl}
+
+
+\bibitem[Kelley et~al\mbox{.}(2010)]%
+        {kelley2010standardizing}
+\bibfield{author}{\bibinfo{person}{Patrick~Gage Kelley}, \bibinfo{person}{Lucian Cesca}, \bibinfo{person}{Joanna Bresee}, {and} \bibinfo{person}{Lorrie~Faith Cranor}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Standardizing privacy notices: an online study of the nutrition label approach: an online study of the nutrition label approach}. In \bibinfo{booktitle}{\emph{Proceedings of the SIGCHI Conference on Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI ’10})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1753326.1753561}
+\showDOI{\tempurl}
+
+
+\bibitem[Kelly(2002)]%
+        {kelly2002psychology}
+\bibfield{author}{\bibinfo{person}{Anita~E Kelly}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The psychology of secrets}}.
+\newblock \bibinfo{publisher}{Springer Science \& Business Media}.
+\newblock
+
+
+\bibitem[Khara et~al\mbox{.}(2020)]%
+        {khara2020we}
+\bibfield{author}{\bibinfo{person}{Tani Khara}, \bibinfo{person}{Christopher Riedy}, {and} \bibinfo{person}{Matthew~B. Ruby}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{“We have to keep it a secret” – The dynamics of front and backstage behaviours surrounding meat consumption in India}.
+\newblock \bibinfo{journal}{\emph{Appetite}}  \bibinfo{volume}{149} (\bibinfo{date}{June} \bibinfo{year}{2020}), \bibinfo{pages}{104615}.
+\newblock
+\showISSN{0195-6663}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.appet.2020.104615}
+\showDOI{\tempurl}
+
+
+\bibitem[Kocielnik et~al\mbox{.}(2019)]%
+        {kocielnik2019will}
+\bibfield{author}{\bibinfo{person}{Rafal Kocielnik}, \bibinfo{person}{Saleema Amershi}, {and} \bibinfo{person}{Paul~N. Bennett}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Will You Accept an Imperfect AI?: Exploring Designs for Adjusting End-user Expectations of AI Systems: Exploring Designs for Adjusting End-user Expectations of AI Systems}. In \bibinfo{booktitle}{\emph{Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI ’19})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3290605.3300641}
+\showDOI{\tempurl}
+
+
+\bibitem[Kreie and Cronan(2002)]%
+        {kreie2002copyright}
+\bibfield{author}{\bibinfo{person}{Jennifer Kreie} {and} \bibinfo{person}{Timothy~Paul Cronan}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Copyright, Piracy, Privacy and Security Issues: Acceptable or Unacceptable Actions for End Users?: Acceptable or Unacceptable Actions for End Users?}}
+\newblock \bibinfo{publisher}{IGI Global}, \bibinfo{pages}{40–56}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.4018/978-1-931777-15-5.ch005}
+\showDOI{\tempurl}
+
+
+\bibitem[Kumar~Jha and Varkkey(2018)]%
+        {kumar2018you}
+\bibfield{author}{\bibinfo{person}{Jatinder Kumar~Jha} {and} \bibinfo{person}{Biju Varkkey}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Are you a cistern or a channel? Exploring factors triggering knowledge-hiding behavior at the workplace: evidence from the Indian R\&D professionals}.
+\newblock \bibinfo{journal}{\emph{Journal of Knowledge Management}} \bibinfo{volume}{22}, \bibinfo{number}{4} (\bibinfo{date}{February} \bibinfo{year}{2018}), \bibinfo{pages}{824–849}.
+\newblock
+\showISSN{1367-3270}
+\urldef\tempurl%
+\url{https://doi.org/10.1108/jkm-02-2017-0048}
+\showDOI{\tempurl}
+
+
+\bibitem[Lane and Wegner(1995)]%
+        {lane1995cognitive}
+\bibfield{author}{\bibinfo{person}{Julie~D Lane} {and} \bibinfo{person}{Daniel~M Wegner}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{The cognitive consequences of secrecy.}
+\newblock \bibinfo{journal}{\emph{Journal of personality and social psychology}} \bibinfo{volume}{69}, \bibinfo{number}{2} (\bibinfo{year}{1995}), \bibinfo{pages}{237}.
+\newblock
+
+
+\bibitem[Larsson and Heintz(2020)]%
+        {larsson2020transparency}
+\bibfield{author}{\bibinfo{person}{Stefan Larsson} {and} \bibinfo{person}{Fredrik Heintz}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Transparency in artificial intelligence}.
+\newblock \bibinfo{journal}{\emph{Internet Policy Review}} \bibinfo{volume}{9}, \bibinfo{number}{2} (\bibinfo{year}{2020}).
+\newblock
+
+
+\bibitem[Leary and Baumeister(2000)]%
+        {leary2000nature}
+\bibfield{author}{\bibinfo{person}{Mark~R. Leary} {and} \bibinfo{person}{Roy~F. Baumeister}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The nature and function of self-esteem: Sociometer theory}}.
+\newblock \bibinfo{publisher}{Elsevier}, \bibinfo{pages}{1–62}.
+\newblock
+\showISBNx{9780120152322}
+\showISSN{0065-2601}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/s0065-2601(00)80003-9}
+\showDOI{\tempurl}
+
+
+\bibitem[Leonard et~al\mbox{.}(2004)]%
+        {leonard2004influences}
+\bibfield{author}{\bibinfo{person}{Lori~N.K. Leonard}, \bibinfo{person}{Timothy~Paul Cronan}, {and} \bibinfo{person}{Jennifer Kreie}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{What influences IT ethical behavior intentions—planned behavior, reasoned action, perceived importance, or individual characteristics?}
+\newblock \bibinfo{journal}{\emph{Information \& Management}} \bibinfo{volume}{42}, \bibinfo{number}{1} (\bibinfo{date}{December} \bibinfo{year}{2004}), \bibinfo{pages}{143–158}.
+\newblock
+\showISSN{0378-7206}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.im.2003.12.008}
+\showDOI{\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2021)]%
+        {li2021makes}
+\bibfield{author}{\bibinfo{person}{Tianshi Li}, \bibinfo{person}{Camille Cobb}, \bibinfo{person}{Jackie~(Junrui) Yang}, \bibinfo{person}{Sagar Baviskar}, \bibinfo{person}{Yuvraj Agarwal}, \bibinfo{person}{Beibei Li}, \bibinfo{person}{Lujo Bauer}, {and} \bibinfo{person}{Jason~I. Hong}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{What makes people install a COVID-19 contact-tracing app? Understanding the influence of app design and individual difference on contact-tracing app adoption intention}.
+\newblock \bibinfo{journal}{\emph{Pervasive and Mobile Computing}}  \bibinfo{volume}{75} (\bibinfo{date}{August} \bibinfo{year}{2021}), \bibinfo{pages}{101439}.
+\newblock
+\showISSN{1574-1192}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.pmcj.2021.101439}
+\showDOI{\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2024)]%
+        {li2024matcha}
+\bibfield{author}{\bibinfo{person}{Tianshi Li}, \bibinfo{person}{Lorrie~Faith Cranor}, \bibinfo{person}{Yuvraj Agarwal}, {and} \bibinfo{person}{Jason~I. Hong}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Matcha: An IDE Plugin for Creating Accurate Privacy Nutrition Labels: An IDE Plugin for Creating Accurate Privacy Nutrition Labels}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies}} \bibinfo{volume}{8}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2024}), \bibinfo{pages}{1–38}.
+\newblock
+\showISSN{2474-9567}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3643544}
+\showDOI{\tempurl}
+
+
+\bibitem[Li et~al\mbox{.}(2022)]%
+        {li2022understanding}
+\bibfield{author}{\bibinfo{person}{Tianshi Li}, \bibinfo{person}{Kayla Reiman}, \bibinfo{person}{Yuvraj Agarwal}, \bibinfo{person}{Lorrie~Faith Cranor}, {and} \bibinfo{person}{Jason~I. Hong}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Understanding Challenges for Developers to Create Accurate Privacy Nutrition Labels}. In \bibinfo{booktitle}{\emph{CHI Conference on Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI ’22})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3491102.3502012}
+\showDOI{\tempurl}
+
+
+\bibitem[Liao and Wortman~Vaughan(2024)]%
+        {liao2023ai}
+\bibfield{author}{\bibinfo{person}{Q.~Vera Liao} {and} \bibinfo{person}{Jennifer Wortman~Vaughan}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{AI Transparency in the Age of LLMs: A Human-Centered Research Roadmap}.
+\newblock \bibinfo{journal}{\emph{Harvard Data Science Review}} \bibinfo{number}{Special Issue 5} (\bibinfo{date}{February} \bibinfo{year}{2024}).
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1162/99608f92.8036d03b}
+\showDOI{\tempurl}
+
+
+\bibitem[Lundberg et~al\mbox{.}(2019)]%
+        {lundberg2019explainable}
+\bibfield{author}{\bibinfo{person}{Scott~M Lundberg}, \bibinfo{person}{Gabriel Erion}, \bibinfo{person}{Hugh Chen}, \bibinfo{person}{Alex DeGrave}, \bibinfo{person}{Jordan~M Prutkin}, \bibinfo{person}{Bala Nair}, \bibinfo{person}{Ronit Katz}, \bibinfo{person}{Jonathan Himmelfarb}, \bibinfo{person}{Nisha Bansal}, {and} \bibinfo{person}{Su-In Lee}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Explainable AI for trees: From local explanations to global understanding}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1905.04610}} (\bibinfo{year}{2019}).
+\newblock
+
+
+\bibitem[Malhotra et~al\mbox{.}(2004)]%
+        {malhotra2004internet}
+\bibfield{author}{\bibinfo{person}{Naresh~K. Malhotra}, \bibinfo{person}{Sung~S. Kim}, {and} \bibinfo{person}{James Agarwal}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{Internet Users’ Information Privacy Concerns (IUIPC): The Construct, the Scale, and a Causal Model}.
+\newblock \bibinfo{journal}{\emph{Information Systems Research}} \bibinfo{volume}{15}, \bibinfo{number}{4} (\bibinfo{date}{December} \bibinfo{year}{2004}), \bibinfo{pages}{336–355}.
+\newblock
+\showISSN{1526-5536}
+\urldef\tempurl%
+\url{https://doi.org/10.1287/isre.1040.0032}
+\showDOI{\tempurl}
+
+
+\bibitem[Mandel et~al\mbox{.}(2016)]%
+        {mandel2017compensatory}
+\bibfield{author}{\bibinfo{person}{Naomi Mandel}, \bibinfo{person}{Derek~D. Rucker}, \bibinfo{person}{Jonathan Levav}, {and} \bibinfo{person}{Adam~D. Galinsky}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The Compensatory Consumer Behavior Model: How self‐discrepancies drive consumer behavior}.
+\newblock \bibinfo{journal}{\emph{Journal of Consumer Psychology}} \bibinfo{volume}{27}, \bibinfo{number}{1} (\bibinfo{date}{May} \bibinfo{year}{2016}), \bibinfo{pages}{133–146}.
+\newblock
+\showISSN{1532-7663}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.jcps.2016.05.003}
+\showDOI{\tempurl}
+
+
+\bibitem[McDonald et~al\mbox{.}(2019)]%
+        {mcdonald2019reliability}
+\bibfield{author}{\bibinfo{person}{Nora McDonald}, \bibinfo{person}{Sarita Schoenebeck}, {and} \bibinfo{person}{Andrea Forte}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Reliability and Inter-rater Reliability in Qualitative Research: Norms and Guidelines for CSCW and HCI Practice: Norms and Guidelines for CSCW and HCI Practice}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Human-Computer Interaction}} \bibinfo{volume}{3}, \bibinfo{number}{CSCW} (\bibinfo{date}{November} \bibinfo{year}{2019}), \bibinfo{pages}{1–23}.
+\newblock
+\showISSN{2573-0142}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3359174}
+\showDOI{\tempurl}
+
+
+\bibitem[{Medium}(2024)]%
+        {Medium2024DistStandards}
+\bibfield{author}{\bibinfo{person}{{Medium}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Medium's Distribution Standards: What Writers and Publications Need to Know}.
+\newblock \bibinfo{howpublished}{\url{https://help.medium.com/hc/en-us/articles/360006362473-Medium-s-Distribution-Standards-What-Writers-and-Publications-Need-to-Know}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Merken(2023)]%
+        {merken2023new}
+\bibfield{author}{\bibinfo{person}{Sara Merken}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{New York lawyers sanctioned for using fake ChatGPT cases in legal brief}.
+\newblock \bibinfo{journal}{\emph{Reuters}} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[{Michigan State University}(2024)]%
+        {MSU2024GenAIGuidance}
+\bibfield{author}{\bibinfo{person}{{Michigan State University}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Interim Guidance on Generative Artificial Intelligence (AI) for Research and Creative Activities}.
+\newblock \bibinfo{howpublished}{\url{https://research.msu.edu/generative-ai/guidance}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Nissenbaum(2004)]%
+        {nissenbaum2004privacy}
+\bibfield{author}{\bibinfo{person}{Helen Nissenbaum}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{Privacy as contextual integrity}.
+\newblock \bibinfo{journal}{\emph{Wash. L. Rev.}}  \bibinfo{volume}{79} (\bibinfo{year}{2004}), \bibinfo{pages}{119}.
+\newblock
+
+
+\bibitem[Nissenbaum(2020)]%
+        {nissenbaum2020privacy}
+\bibfield{author}{\bibinfo{person}{Helen Nissenbaum}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Privacy in context: Technology, policy, and the integrity of social life}}.
+\newblock \bibinfo{publisher}{Stanford University Press}.
+\newblock
+
+
+\bibitem[Orellana-Damacela et~al\mbox{.}(2000)]%
+        {orellana2000decisional}
+\bibfield{author}{\bibinfo{person}{Lucia~E Orellana-Damacela}, \bibinfo{person}{R~Scott Tindale}, {and} \bibinfo{person}{Yolanda Su{\'a}rez-Balc{\'a}zar}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{Decisional and behavioral procrastination: How they relate to self-discrepancies}.
+\newblock \bibinfo{journal}{\emph{Journal of Social Behavior and Personality}}  \bibinfo{volume}{15} (\bibinfo{year}{2000}).
+\newblock
+
+
+\bibitem[Parasuraman and Manzey(2010)]%
+        {parasuraman2010complacency}
+\bibfield{author}{\bibinfo{person}{Raja Parasuraman} {and} \bibinfo{person}{Dietrich~H. Manzey}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Complacency and Bias in Human Use of Automation: An Attentional Integration}.
+\newblock \bibinfo{journal}{\emph{Human Factors: The Journal of the Human Factors and Ergonomics Society}} \bibinfo{volume}{52}, \bibinfo{number}{3} (\bibinfo{date}{June} \bibinfo{year}{2010}), \bibinfo{pages}{381–410}.
+\newblock
+\showISSN{1547-8181}
+\urldef\tempurl%
+\url{https://doi.org/10.1177/0018720810376055}
+\showDOI{\tempurl}
+
+
+\bibitem[Pennebaker(1989)]%
+        {pennebaker1989confession}
+\bibfield{author}{\bibinfo{person}{James~W. Pennebaker}.} \bibinfo{year}{1989}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Confession, Inhibition, and Disease}}.
+\newblock \bibinfo{publisher}{Elsevier}, \bibinfo{pages}{211–244}.
+\newblock
+\showISSN{0065-2601}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/s0065-2601(08)60309-3}
+\showDOI{\tempurl}
+
+
+\bibitem[Rigdon(1996)]%
+        {rigdon1996cfi}
+\bibfield{author}{\bibinfo{person}{Edward~E. Rigdon}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{CFI versus RMSEA: A comparison of two fit indexes for structural equation modeling}.
+\newblock \bibinfo{journal}{\emph{Structural Equation Modeling: A Multidisciplinary Journal}} \bibinfo{volume}{3}, \bibinfo{number}{4} (\bibinfo{date}{January} \bibinfo{year}{1996}), \bibinfo{pages}{369–379}.
+\newblock
+\showISSN{1532-8007}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/10705519609540052}
+\showDOI{\tempurl}
+
+
+\bibitem[Rosenberg(1965)]%
+        {rosenberg1965rosenberg}
+\bibfield{author}{\bibinfo{person}{Morris Rosenberg}.} \bibinfo{year}{1965}\natexlab{}.
+\newblock \showarticletitle{Rosenberg self-esteem scale (RSE)}.
+\newblock \bibinfo{journal}{\emph{Acceptance and commitment therapy. Measures package}} \bibinfo{volume}{61}, \bibinfo{number}{52} (\bibinfo{year}{1965}), \bibinfo{pages}{18}.
+\newblock
+
+
+\bibitem[Rzepka and Berger(2018)]%
+        {rzepka2018user}
+\bibfield{author}{\bibinfo{person}{Christine Rzepka} {and} \bibinfo{person}{Benedikt Berger}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{User interaction with AI-enabled systems: A systematic review of IS research}.
+\newblock  (\bibinfo{year}{2018}).
+\newblock
+
+
+\bibitem[Sawatzky et~al\mbox{.}(2010)]%
+        {sawatzky2010self}
+\bibfield{author}{\bibinfo{person}{Richard Sawatzky}, \bibinfo{person}{Pamela~A Ratner}, \bibinfo{person}{Joy~L Johnson}, \bibinfo{person}{Jacek~A Kopec}, {and} \bibinfo{person}{Bruno~D Zumbo}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Self-reported physical and mental health status and quality of life in adolescents: a latent variable mediation model}.
+\newblock \bibinfo{journal}{\emph{Health and Quality of Life Outcomes}} \bibinfo{volume}{8}, \bibinfo{number}{1} (\bibinfo{year}{2010}), \bibinfo{pages}{17}.
+\newblock
+\showISSN{1477-7525}
+\urldef\tempurl%
+\url{https://doi.org/10.1186/1477-7525-8-17}
+\showDOI{\tempurl}
+
+
+\bibitem[Schelenz et~al\mbox{.}(2024)]%
+        {schelenz2023transparency}
+\bibfield{author}{\bibinfo{person}{Laura Schelenz}, \bibinfo{person}{Avi Segal}, \bibinfo{person}{Oduma Adelio}, {and} \bibinfo{person}{Kobi Gal}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Transparency-Check: An Instrument for the Study and Design of Transparency in AI-based Personalization Systems}.
+\newblock \bibinfo{journal}{\emph{ACM Journal on Responsible Computing}} \bibinfo{volume}{1}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2024}), \bibinfo{pages}{1–18}.
+\newblock
+\showISSN{2832-0565}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3636508}
+\showDOI{\tempurl}
+
+
+\bibitem[Schwarzer and Jerusalem(1995)]%
+        {schwarzer1995generalized}
+\bibfield{author}{\bibinfo{person}{Ralf Schwarzer} {and} \bibinfo{person}{Matthias Jerusalem}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Generalized self-efficacy scale}.
+\newblock \bibinfo{journal}{\emph{J. Weinman, S. Wright, \& M. Johnston, Measures in health psychology: A user’s portfolio. Causal and control beliefs}}  \bibinfo{volume}{35} (\bibinfo{year}{1995}), \bibinfo{pages}{37}.
+\newblock
+
+
+\bibitem[Scott and O’Hara(1993)]%
+        {scott1993self}
+\bibfield{author}{\bibinfo{person}{Lane Scott} {and} \bibinfo{person}{Michael~W. O’Hara}.} \bibinfo{year}{1993}\natexlab{}.
+\newblock \showarticletitle{Self-discrepancies in clinically anxious and depressed university students.}
+\newblock \bibinfo{journal}{\emph{Journal of Abnormal Psychology}} \bibinfo{volume}{102}, \bibinfo{number}{2} (\bibinfo{date}{May} \bibinfo{year}{1993}), \bibinfo{pages}{282–287}.
+\newblock
+\showISSN{0021-843X}
+\urldef\tempurl%
+\url{https://doi.org/10.1037/0021-843x.102.2.282}
+\showDOI{\tempurl}
+
+
+\bibitem[Serenko and Bontis(2016)]%
+        {serenko2016understanding}
+\bibfield{author}{\bibinfo{person}{Alexander Serenko} {and} \bibinfo{person}{Nick Bontis}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Understanding counterproductive knowledge behavior: antecedents and consequences of intra-organizational knowledge hiding}.
+\newblock \bibinfo{journal}{\emph{Journal of Knowledge Management}} \bibinfo{volume}{20}, \bibinfo{number}{6} (\bibinfo{date}{October} \bibinfo{year}{2016}), \bibinfo{pages}{1199–1224}.
+\newblock
+\showISSN{1367-3270}
+\urldef\tempurl%
+\url{https://doi.org/10.1108/jkm-05-2016-0203}
+\showDOI{\tempurl}
+
+
+\bibitem[Shin(2020)]%
+        {shin2020user}
+\bibfield{author}{\bibinfo{person}{Donghee Shin}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{User Perceptions of Algorithmic Decisions in the Personalized AI System:Perceptual Evaluation of Fairness, Accountability, Transparency, and Explainability}.
+\newblock \bibinfo{journal}{\emph{Journal of Broadcasting \& Electronic Media}} \bibinfo{volume}{64}, \bibinfo{number}{4} (\bibinfo{date}{October} \bibinfo{year}{2020}), \bibinfo{pages}{541–565}.
+\newblock
+\showISSN{1550-6878}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/08838151.2020.1843357}
+\showDOI{\tempurl}
+
+
+\bibitem[Shin(2021)]%
+        {shin2021effects}
+\bibfield{author}{\bibinfo{person}{Donghee Shin}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{The effects of explainability and causability on perception, trust, and acceptance: Implications for explainable AI}.
+\newblock \bibinfo{journal}{\emph{International Journal of Human-Computer Studies}}  \bibinfo{volume}{146} (\bibinfo{date}{February} \bibinfo{year}{2021}), \bibinfo{pages}{102551}.
+\newblock
+\showISSN{1071-5819}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.ijhcs.2020.102551}
+\showDOI{\tempurl}
+
+
+\bibitem[Slepian(2022)]%
+        {slepian2022process}
+\bibfield{author}{\bibinfo{person}{Michael~L. Slepian}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{A process model of having and keeping secrets.}
+\newblock \bibinfo{journal}{\emph{Psychological Review}} \bibinfo{volume}{129}, \bibinfo{number}{3} (\bibinfo{date}{April} \bibinfo{year}{2022}), \bibinfo{pages}{542–563}.
+\newblock
+\showISSN{0033-295X}
+\urldef\tempurl%
+\url{https://doi.org/10.1037/rev0000282}
+\showDOI{\tempurl}
+
+
+\bibitem[Slepian et~al\mbox{.}(2017)]%
+        {slepian2017experience}
+\bibfield{author}{\bibinfo{person}{Michael~L Slepian}, \bibinfo{person}{Jinseok~S Chun}, {and} \bibinfo{person}{Malia~F Mason}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{The experience of secrecy.}
+\newblock \bibinfo{journal}{\emph{Journal of Personality and Social Psychology}} \bibinfo{volume}{113}, \bibinfo{number}{1} (\bibinfo{year}{2017}), \bibinfo{pages}{1}.
+\newblock
+
+
+\bibitem[{TikTok}(2024)]%
+        {TikTok2024AIGenerated}
+\bibfield{author}{\bibinfo{person}{{TikTok}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{AI-Generated Content Label}.
+\newblock \bibinfo{howpublished}{\url{https://www.tiktok.com/creators/creator-portal/en-us/community-guidelines-and-safety/ai-generated-content-label/}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Toro~Isaza et~al\mbox{.}(2023)]%
+        {isaza2023fairy}
+\bibfield{author}{\bibinfo{person}{Paulina Toro~Isaza}, \bibinfo{person}{Guangxuan Xu}, \bibinfo{person}{Toye Oloko}, \bibinfo{person}{Yufang Hou}, \bibinfo{person}{Nanyun Peng}, {and} \bibinfo{person}{Dakuo Wang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Are Fairy Tales Fair? Analyzing Gender Bias in Temporal Narrative Event Chains of Children’s Fairy Tales}. In \bibinfo{booktitle}{\emph{Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}}. \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{pages}{6509–6531}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.18653/v1/2023.acl-long.359}
+\showDOI{\tempurl}
+
+
+\bibitem[Toy(2023)]%
+        {toy2023transparency}
+\bibfield{author}{\bibinfo{person}{Tolgahan Toy}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Transparency in AI}.
+\newblock \bibinfo{journal}{\emph{AI \& SOCIETY}} (\bibinfo{year}{2023}), \bibinfo{pages}{1--11}.
+\newblock
+
+
+\bibitem[{University of British Columbia Library}(2024)]%
+        {UBCLibrary2024CitingGenAI}
+\bibfield{author}{\bibinfo{person}{{University of British Columbia Library}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Citing Generative AI}.
+\newblock \bibinfo{howpublished}{\url{https://guides.library.ubc.ca/GenAI/cite}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[{University of Minnesota Libraries}(2024)]%
+        {UMNLib2024LibGuide}
+\bibfield{author}{\bibinfo{person}{{University of Minnesota Libraries}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{ChatGPT and other AI tools}.
+\newblock \bibinfo{howpublished}{\url{https://libguides.umn.edu/c.php?g=1314591&p=9664664}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[{Upwork Community}(2024)]%
+        {Upwork2024ChatGPTStance}
+\bibfield{author}{\bibinfo{person}{{Upwork Community}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Upwork's stance on use of ChatGPT}.
+\newblock \bibinfo{howpublished}{\url{https://community.upwork.com/t5/Freelancers/Upwork-s-stance-on-use-of-ChatGPT/m-p/1264376}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[von Eschenbach(2021)]%
+        {von2021transparency}
+\bibfield{author}{\bibinfo{person}{Warren~J. von Eschenbach}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Transparency and the Black Box Problem: Why We Do Not Trust AI}.
+\newblock \bibinfo{journal}{\emph{Philosophy \& Technology}} \bibinfo{volume}{34}, \bibinfo{number}{4} (\bibinfo{date}{September} \bibinfo{year}{2021}), \bibinfo{pages}{1607–1622}.
+\newblock
+\showISSN{2210-5441}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s13347-021-00477-0}
+\showDOI{\tempurl}
+
+
+\bibitem[Yao et~al\mbox{.}(2024)]%
+        {yao-etal-2024-samples}
+\bibfield{author}{\bibinfo{person}{Bingsheng Yao}, \bibinfo{person}{Guiming Chen}, \bibinfo{person}{Ruishi Zou}, \bibinfo{person}{Yuxuan Lu}, \bibinfo{person}{Jiachen Li}, \bibinfo{person}{Shao Zhang}, \bibinfo{person}{Yisi Sang}, \bibinfo{person}{Sijia Liu}, \bibinfo{person}{James Hendler}, {and} \bibinfo{person}{Dakuo Wang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{More Samples or More Prompts? Exploring Effective Few-Shot In-Context Learning for LLMs with In-Context Sampling}. In \bibinfo{booktitle}{\emph{Findings of the Association for Computational Linguistics: NAACL 2024}}. \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{pages}{1772–1790}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.18653/v1/2024.findings-naacl.115}
+\showDOI{\tempurl}
+
+
+\bibitem[{YouTube}(2024)]%
+        {YouTube2024ResponsibleAI}
+\bibfield{author}{\bibinfo{person}{{YouTube}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Our Approach to Responsible AI Innovation}.
+\newblock \bibinfo{howpublished}{\url{https://blog.youtube/inside-youtube/our-approach-to-responsible-ai-innovation/}}.
+\newblock
+\newblock
+\shownote{Accessed: 2024-01-12}.
+
+
+\bibitem[Yu and Li(2022)]%
+        {yu2022artificial}
+\bibfield{author}{\bibinfo{person}{Liangru Yu} {and} \bibinfo{person}{Yi Li}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Artificial Intelligence Decision-Making Transparency and Employees’ Trust: The Parallel Multiple Mediating Effect of Effectiveness and Discomfort}.
+\newblock \bibinfo{journal}{\emph{Behavioral Sciences}} \bibinfo{volume}{12}, \bibinfo{number}{5} (\bibinfo{date}{April} \bibinfo{year}{2022}), \bibinfo{pages}{127}.
+\newblock
+\showISSN{2076-328X}
+\urldef\tempurl%
+\url{https://doi.org/10.3390/bs12050127}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang and Xu(2016)]%
+        {zhang2016privacy}
+\bibfield{author}{\bibinfo{person}{Bo Zhang} {and} \bibinfo{person}{Heng Xu}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Privacy Nudges for Mobile Applications: Effects on the Creepiness Emotion and Privacy Attitudes: Effects on the Creepiness Emotion and Privacy Attitudes}. In \bibinfo{booktitle}{\emph{Proceedings of the 19th ACM Conference on Computer-Supported Cooperative Work \& Social Computing}} \emph{(\bibinfo{series}{CSCW ’16})}. \bibinfo{publisher}{ACM}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2818048.2820073}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2020)]%
+        {zhang2020lay}
+\bibfield{author}{\bibinfo{person}{Zhan Zhang}, \bibinfo{person}{Yegin Genc}, \bibinfo{person}{Aiwen Xing}, \bibinfo{person}{Dakuo Wang}, \bibinfo{person}{Xiangmin Fan}, {and} \bibinfo{person}{Daniel Citardi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Lay individuals’ perceptions of artificial intelligence (AI)‐empowered healthcare systems}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the Association for Information Science and Technology}} \bibinfo{volume}{57}, \bibinfo{number}{1} (\bibinfo{date}{October} \bibinfo{year}{2020}).
+\newblock
+\showISSN{2373-9231}
+\urldef\tempurl%
+\url{https://doi.org/10.1002/pra2.326}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2024)]%
+        {zhang2024s}
+\bibfield{author}{\bibinfo{person}{Zhiping Zhang}, \bibinfo{person}{Michelle Jia}, \bibinfo{person}{Hao-Ping~(Hank) Lee}, \bibinfo{person}{Bingsheng Yao}, \bibinfo{person}{Sauvik Das}, \bibinfo{person}{Ada Lerner}, \bibinfo{person}{Dakuo Wang}, {and} \bibinfo{person}{Tianshi Li}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{“It’s a Fair Game”, or Is It? Examining How Users Navigate Disclosure Risks and Benefits When Using LLM-Based Conversational Agents}. In \bibinfo{booktitle}{\emph{Proceedings of the CHI Conference on Human Factors in Computing Systems}} \emph{(\bibinfo{series}{CHI ’24}, Vol.~\bibinfo{volume}{10})}. \bibinfo{publisher}{ACM}, \bibinfo{pages}{1–26}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642385}
+\showDOI{\tempurl}
+
+
+\bibitem[Zumbo et~al\mbox{.}(2007)]%
+        {zumbo2007ordinal}
+\bibfield{author}{\bibinfo{person}{Bruno~D. Zumbo}, \bibinfo{person}{Anne~M. Gadermann}, {and} \bibinfo{person}{Cornelia Zeisser}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Ordinal Versions of Coefficients Alpha and Theta for Likert Rating Scales}.
+\newblock \bibinfo{journal}{\emph{Journal of Modern Applied Statistical Methods}} \bibinfo{volume}{6}, \bibinfo{number}{1} (\bibinfo{date}{May} \bibinfo{year}{2007}), \bibinfo{pages}{21–29}.
+\newblock
+\showISSN{1538-9472}
+\urldef\tempurl%
+\url{https://doi.org/10.22237/jmasm/1177992180}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

@@ -1,0 +1,25 @@
+\section{\edit{Discussion}}
+
+Here we offer a discussion of Quake’s system parameters, how the design extends to new hardware and use-cases.
+
+\subsection{Setting System Parameters}
+Quake exposes a few search and maintenance parameters, which we fix across all workloads unless otherwise stated. These defaults give stable performance with minimal tuning.
+
+\paragraph{Search parameters.} The \textit{initial candidate fraction} $f_M$ determines the number of partitions to consider in APS. It has the largest impact on performance. If set too low, APS may not meet the recall target; if too high, the initial scan dominates latency. We set this between 1\% and 10\%. In future work, we aim to remove this parameter entirely. The \textit{number of worker threads} is best set to the number of physical cores. For large problem sizes, Quake scales linearly with thread count until memory bandwidth is saturated (Figure~\ref{fig:scalability_threads}). The \textit{recompute threshold} controls how often APS updates its recall estimate. We set this to 1\%, which avoids unnecessary recomputation with negligible impact on recall (Table~\ref{tab:recall_overhead}).
+
+\paragraph{Maintenance parameters.} The \textit{split/merge threshold} $\tau$ sets the minimum predicted latency improvement required to trigger a split or delete. We set $\tau = 250$ns. Lower values increase maintenance cost and may cause over-splitting; higher values can allow imbalance to persist. The \textit{split access scaling parameter} $\alpha$ estimates the drop in access frequency after a split. We fix $\alpha = 0.9$, which worked well across all benchmarks. If maintenance tuning is needed, we recommend keeping $\alpha$ fixed and adjusting $\tau$. \textit{Refinement} is controlled by two parameters: the refinement radius $r_f$ (number of nearby partitions considered) and the number of refinement iterations. We use one iteration over the 50 nearest partitions. From our ablation study, disabling refinement reduces maintenance time by 75\% but increases query latency and reduces recall (Table~\ref{tab:maintenance_ablation}). The \textit{window size} for access frequency statistics is set equal to the maintenance interval. For example, if maintenance runs every 100{,}000 queries, the window also spans 100{,}000 queries. Smaller windows adapt faster but are more volatile.
+
+Most parameters are fixed across workloads. In practice, only the initial candidate fraction $f_M$ and the maintenance threshold $\tau$ benefit from tuning; however, their defaults are sufficient for the workloads we evaluated.
+
+\subsection{Deployment Considerations}
+Quake’s design can be extended to support a range of hardware and use-cases through minor changes to the cost model and APS logic. We reserve these extensions for future work.
+
+\paragraph{Heterogeneous Hardware} To adapt to devices with varying scan throughput such as CPUs, GPUs, or disk-backed storage, the cost model can be modified by profiling per-device scan latency (e.g., $\lambda_{\text{CPU}}(s)$, $\lambda_{\text{GPU}}(s)$, $\lambda_{\text{Disk}}(s)$) and updating partition cost estimates accordingly.
+
+\paragraph{Distributed Environments} In a distributed setting, each machine can run APS and maintenance independently on its local partitions. The cost model can account for partition locality and inter-node variation. A separate load balancer would be required to assign and replicate partitions across machines in a way that minimizes total query cost.
+
+\paragraph{Vector Compression} Vector compression techniques, such as Product Quantization~\cite{jegou_product_2011}, reduce scan cost. Quake can support compression by profiling scan latency over partitions of compressed vectors and updating $\lambda(s)$ in the cost model.
+
+\paragraph{Filters} Filtered queries can be supported by scaling per-partition recall probabilities in APS, based on the estimated number of items that pass the filter in each partition. This will enable Quake to avoid scanning partitions unlikely to contain matching results while preserving recall targets.
+
+\paragraph{Concurrency} The current implementation executes searches, updates, and maintenance serially. Quake can support concurrency through copy-on-write semantics, allowing background operations to build new index views while readers continue on the current one without blocking.

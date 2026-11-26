@@ -1,0 +1,43 @@
+\begin{table*}[t]
+\centering
+\caption{\textbf{[RQ1] Effectiveness of \sys.} This table shows the attack effectiveness of \sys across four different datasets, three different models, and three different recomputation methods. The KV cache system are conducted under default settings with a cache ratio $\delta = 0.3$ and a recomputation ratio $\rho = 0.1$. \textit{Acc} is the model's task accuracy reported to measure the impact of position-independent KV reuse on model utility. \textit{U-ASR} and \textit{T-ASR} is reported as the attack performance metrics. }
+\label{tab:rq1_main}
+
+\footnotesize
+\setlength{\tabcolsep}{0pt}
+
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l ccc ccc ccc ccc }
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c}{\textbf{HotpotQA}} & \multicolumn{3}{c}{\textbf{SQuAD}} & \multicolumn{3}{c}{\textbf{MedQA}} & \multicolumn{3}{c}{\textbf{PubMedQA}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+ & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR \\
+\midrule
+
+\rowcolor{sectionbg}
+\multicolumn{13}{l}{\textbf{Llama-3.1-8B}} \\
+Full        & 0.73 & --   & --   & 0.76 & --   & --   & 0.71 & --   & --   & 0.92 & -- & -- \\
+Vanilla     & 0.58 & 1.00 & 1.00 & 0.60 & 0.98 & 0.96 & 0.55 & 0.98 & 0.90 & 0.74 & 0.93 & 0.92 \\
+Random      & 0.63 & 0.95 & 0.94 & 0.69 & 0.98 & 0.89 & 0.63 & 0.93 & 0.87 & 0.79 & 0.92 & 0.89 \\
+EPIC        & 0.66 & 0.87 & 0.85 & 0.72 & 0.89 & 0.75 & 0.70 & 0.96 & 0.82 & 0.87 & 0.96 & 0.91 \\
+CacheBlend  & 0.68 & 0.92 & 0.89 & 0.72 & 0.94 & 0.85 & 0.68 & 0.88 & 0.80 & 0.89 & 0.92 & 0.86 \\
+
+\rowcolor{sectionbg}
+\multicolumn{13}{l}{\textbf{Ministral-8B}} \\
+Full        & 0.70 & --   & --   & 0.67 & --   & --   & 0.68 & --   & --   & 0.94 & -- & -- \\
+Vanilla     & 0.57 & 1.00 & 1.00 & 0.55 & 0.98 & 0.93 & 0.54 & 1.00 & 1.00 & 0.71 & 0.97 & 0.94 \\
+Random      & 0.61 & 0.97 & 0.97 & 0.62 & 0.89 & 0.87 & 0.63 & 1.00 & 1.00 & 0.75 & 0.91 & 0.88 \\
+EPIC        & 0.67 & 0.96 & 0.95 & 0.65 & 0.88 & 0.78 & 0.63 & 1.00 & 1.00 & 0.84 & 0.92 & 0.87 \\
+CacheBlend  & 0.66 & 0.94 & 0.94 & 0.66 & 0.93 & 0.87 & 0.65 & 1.00 & 1.00 & 0.85 & 0.89 & 0.85 \\
+
+\rowcolor{sectionbg}
+\multicolumn{13}{l}{\textbf{Qwen3-8B}} \\
+Full        & 0.82 & --   & --   & 0.84 & --   & --   & 0.73 & --   & --   & 0.95 & -- & -- \\
+Vanilla     & 0.61 & 0.96 & 0.94 & 0.68 & 1.00 & 1.00 & 0.57 & 0.97 & 0.96 & 0.75 & 1.00 & 1.00 \\
+Random      & 0.72 & 0.91 & 0.85 & 0.74 & 0.95 & 0.90 & 0.66 & 0.86 & 0.83 & 0.85 & 0.93 & 0.89 \\
+EPIC        & 0.75 & 0.88 & 0.87 & 0.75 & 0.92 & 0.86 & 0.71 & 0.93 & 0.84 & 0.92 & 0.95 & 0.93 \\
+CacheBlend  & 0.80 & 0.91 & 0.89 & 0.82 & 0.93 & 0.87 & 0.70 & 0.92 & 0.87 & 0.92 & 1.00 & 0.91 \\
+
+\bottomrule
+\end{tabular*}
+    \vspace{-0.1in}
+\end{table*}

@@ -1,0 +1,1460 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+
+
+% ready for submission
+% \usepackage{neurips_2025}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2025}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+\usepackage[final]{neurips_2025}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2025}
+
+\usepackage{xcolor}
+\definecolor{linkcolor}{HTML}{1B4F72} % Deep blue-teal
+% \definecolor{linkcolor}{HTML}{005073}
+\usepackage[hidelinks,colorlinks=true,linkcolor=linkcolor,citecolor=linkcolor,urlcolor=linkcolor]{hyperref}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{dsfont}         % double stroke font for \mathds
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{siunitx}
+
+% Notations' shortcuts 
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{bm}
+
+\newcommand\alphat{\Tilde{\alpha}}
+\newcommand\XS{\boldsymbol{X}_S}
+\newcommand\Xtest{\boldsymbol{X}_{n+1}}
+\newcommand\X{\boldsymbol{X}}
+\newcommand\xs{\boldsymbol{x}_S}
+\newcommand\XSb{\boldsymbol{X}_{\bar{S}}}
+\newcommand\xsb{\boldsymbol{x}_{\bar{S}}}
+\newcommand\x{\boldsymbol{x}}
+\newcommand\Xd{\boldsymbol{X}^\diamond}
+\newcommand\hC{\widehat{C}}
+\newcommand\cov{\text{cov}}
+\newcommand\Z{\boldsymbol{Z}}
+\newcommand\hV{\widehat{V}}
+\newcommand{\labs}{\left\lvert}
+\newcommand\hmu{\widehat{\mu}}
+\newcommand{\rabs}{\right\rvert}
+\newcommand{\defeq}{\overset{\mathrm{def}}{=}}
+\newcommand{\as}{\underset{n \to +\infty}{\overset{a.s}{\longrightarrow}}}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
+\newcommand{\indep}{\perp \!\!\! \perp}
+\newcommand{\hsig}{\widehat{\sigma}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\text{Var}}
+\newcommand{\Cov}{\text{Cov}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Xspace}{\mathcal{X}}
+\newcommand{\Yspace}{\mathcal{Y}}
+\newcommand{\Fclass}{\mathcal{F}}
+\newcommand{\ind}{\mathbb{I}} % Indicator function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Add tikz objects
+\usepackage[textsize=tiny]{todonotes}
+
+
+\usepackage{dblfloatfix}
+\usepackage{xcolor}
+\usepackage{tikz}
+\definecolor{redd}{HTML}{b30326}
+\definecolor{bloo}{HTML}{3a4cc0}
+\newcommand{\N}[1]{\textcolor{magenta}{#1}}
+\newcommand*\rdot{\tikz[baseline=(char.base)]{
+    \node[shape=circle,fill=redd,text=redd,minimum size=5pt,inner sep=0pt] (char) {x};}}
+\newcommand*\bdot{\tikz[baseline=(char.base)]{
+    \node[shape=circle,fill=bloo,text=bloo,minimum size=5pt,inner sep=0pt] (char) {x};}}
+    
+\definecolor{ours}{HTML}{219675}
+\newcommand{\ours}{\textcolor{ours}{\textbf{R-LOCO}}}
+
+
+\definecolor{loco}{HTML}{0A3026}
+\newcommand{\loco}{\textcolor{loco}{\textbf{LOCO}}}
+
+\definecolor{ourstree}{HTML}{1f77b4}
+\newcommand{\ourstree}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{tree}}
+
+\newcommand{\ourstrue}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{TC}}
+
+\newcommand{\oursinput}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{IC}}
+
+\definecolor{ourstauhi}{HTML}{2ca02c}
+
+\definecolor{lsv}{HTML}{996336}
+\newcommand{\lsv}{\textcolor{lsv}{\textbf{L-SV}}}
+\definecolor{lime}{HTML}{8c3236}
+\newcommand{\lime}{\textcolor{lime}{\textbf{LIME}}}
+\definecolor{rfocse}{HTML}{9467bd}
+
+\newcommand{\kmeans}{\textbf{KMeans}}
+\newcommand{\kmeanstwo}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{KMeans-2}}
+\newcommand{\kmeansfour}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{KMeans-4}}
+\newcommand{\kmeanseight}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{KMeans-8}}
+\newcommand{\kmeanstwenty}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{KMeans-20}}
+
+\newcommand{\affinityfive}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{Affinity-0.5}}
+\newcommand{\affinitysix}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{Affinity-0.6}}
+\newcommand{\affinitynine}{\textcolor{ours}{\textbf{R-LOCO}}\textsubscript{Affinity-0.9}}
+
+
+%For figure annotation circles
+\definecolor{circlefill}{HTML}{bce8da}
+\newcommand*\annot[1]{\tikz[baseline=(char.base)]{
+\node[shape=circle,draw=ours,fill=circlefill,minimum size=13pt,inner sep=0pt] (char) {#1};}}
+\definecolor{lightgray}{HTML}{d3d3d3}
+\definecolor{darkgray}{HTML}{4f4f4f}
+\newcommand*\annotgray[1]{\tikz[baseline=(char.base)]{
+\node[shape=circle,draw=darkgray,fill=lightgray,minimum size=13pt,inner sep=0pt] (char) {#1};}}
+
+
+% \newcommand{\ours}{\textcolor{ours}{\textbf{EPW}}
+
+\definecolor{kmm}{HTML}{2E5939} % Darker teal for KMM
+\newcommand{\kmm}{\textcolor{kmm}{\textbf{KMM}}}
+
+\definecolor{ours}{HTML}{1B7F5E} % Darker green for EPA
+\newcommand{\epr}{\textcolor{ours}{\textbf{EPA}}}
+
+\definecolor{seesc}{HTML}{C3752F} % Darker orange for SEES-C
+\newcommand{\seesc}{\textcolor{seesc}{\textbf{SEES-C}}}
+
+\definecolor{seesd}{HTML}{CC5C4A} % Darker peach for SEES-D
+\newcommand{\seesd}{\textcolor{seesd}{\textbf{SEES-D}}}
+
+\definecolor{covcolor}{HTML}{5E3D7F} % Darker purple for COV-CLF
+\newcommand{\covariate}{\textcolor{covcolor}{\textbf{COV-CLF}}}
+
+\definecolor{caluni}{HTML}{114D73} % Darker blue for CAL-UNI
+\newcommand{\caluni}{\textcolor{caluni}{\textbf{SRC-UNI}}}
+
+\definecolor{produni}{HTML}{7A1A1A} % Darker red for PROD-UNI
+\newcommand{\produni}{\textcolor{produni}{\textbf{TAR-UNI}}}
+
+
+\title{Regional Explanations: Bridging Local and Global Variable Importance}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Salim I.~Amoukou\thanks{Correspondence to: Salim I. Amoukou
+<salim.ibrahimamoukou@jpmorgan.com>}\\
+  J.P. Morgan AI Research \\
+ \And
+   Nicolas J-B.~Brunel \\
+   LaMME, ENSIIE, University Paris Saclay \& Capgemini Invent 
+  %Capgemini Invent, France
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+We analyze two widely used local attribution methods, Local Shapley Values and LIME, which aim to quantify the contribution of a feature value $x_i$ to a specific prediction $f(x_1, \dots, x_p)$.  Despite their widespread use, we identify fundamental limitations in their ability to reliably detect locally important features, even under ideal conditions with exact computations and independent features. We argue that a sound local attribution method should not assign importance to features that neither influence the model output (e.g., features with zero coefficients in a linear model) nor exhibit statistical dependence with functionality-relevant features. We demonstrate that both Local SV and LIME violate this fundamental principle. To address this, we propose R-LOCO (Regional Leave Out COvariates), which bridges the gap between local and global explanations and provides more accurate attributions. R-LOCO segments the input space into regions with similar feature importance characteristics. It then applies global attribution methods within these regions, deriving an instance's feature contributions from its regional membership. This approach delivers more faithful local attributions while avoiding local explanation instability and preserving instance-specific detail often lost in global methods.
+\end{abstract}
+
+
+\section{Introduction}
+
+Machine learning models are valued for their predictive capabilities, but often lack transparency. This opacity poses issues in high-stakes domains such as healthcare, finance, and criminal justice, where understanding the “why” behind a decision is as critical as the decision itself. In response, eXplainable AI (XAI) has emerged, developing methods and tools to explain model predictions.
+
+
+These tools can be categorized into local and global methods. Local explanations aim to provide insights into individual predictions, while global explanations focus on understanding the overall behavior of a model across the entire input space. Popular local methods, such as \textit{Local} Shapley Values \lsv{} \citep{lundbergshap} and \lime{} \citep{ribeiro2016why}, seek to create a local linear approximation of the model within the vicinity of a given instance. In contrast, global methods primarily consist of "leave-one-out" approaches \citep{Lei2016DistributionFreePI,  williamson2020efficient, sage, gan2022inference}, which assess performance changes when a variable is excluded.
+
+In this paper, we focus on local attribution methods, specifically \lsv{} and \lime{}, which are widely used but have limited theoretical understanding.
+While the intuition behind these methods are appealing, the exact quantities they estimate remain unclear. Apart from the case of linear or additive models \citep{bordt2023shapley, garreau2020explaining}, there is little work explaining the specific quantities these methods compute. A theoretical study on \lime{}, by \cite{garreau2020explaining}, shows that in the case of a linear model, the \lime{} coefficients are proportional to the partial derivatives.  However, it also reveals that the coefficient of important variables can vanish by simply changing a parameter of the method. 
+
+Beyond these established concerns, we highlight a fundamental limitation of \lsv{} and \lime{} that is orthogonal to the well-known issue of being “true to the data vs true to the model” \citep{chen2020true}. Building on our conclusion in \cite{amoukou2021accurate}, we posit that a reliable local attribution should not assign importance to features that neither influence the model output functionally nor exhibit statistical dependence on features that do. Even under ideal conditions—with independent features, exact computations, and no estimation error—we show that both \lsv{} and \lime{} violate this principle by attributing importance to irrelevant features. This highlights an often-overlooked vulnerability in these popular methods, distinct from issues of approximation error or feature correlation. 
+
+In contrast, most global methods are supported by the existing literature on feature importance \citep{breiman2001random, Lei2016DistributionFreePI, williamson2020efficient} and global sensitivity analysis \citep{iooss2015review}, and are backed by strong consistency and inference results. Our goal is to leverage global methods to define more accurate local attributions for each individual while benefiting from the advantages of global methods. We aim to find a partition of the input space where observations in each cell of the partition exhibit the same behavior concerning the underlying model. Then, we associate each observation with the global importance conditional on the cell it belongs to, hence deriving an attribution that is more locally faithful and possesses sound statistical properties.
+
+\textbf{Notations.} Consider a dataset represented as $\mathcal{D}_n = \{(\X_i, Y_i)\}_{i=1}^n$, where $\X_i=(X_{i1}, \dots, X_{ip}) \in \mathcal{X} \subseteq \mathbb{R}^p$ denotes the input variables and $Y_i \in \mathcal{Y} \subseteq \mathbb{R}$ represents the output, and $(\X_i, Y_i)$ are i.i.d. observations of $(\X, Y) \sim P = P_{\X} P_{Y |\X}$. We use $\X_S = (X_i)_{i \in S}$ to denote the subset of features, and $[p] = \{1, \dots, p\}$, and $\mathcal{P}(D)$ represents the power set of a set $D$.
+\vspace{-0.3cm}
+\section{Limitations of \textit{Local} Shapley Values} \label{chap:lsv}
+A cooperative game is a pair $(D, v)$, where $D=\{X_1, \dots, X_p\}$ represents a set of $p$ players, and $v: \mathcal{P}(\{1, \dots, p\}) \rightarrow \mathbb{R}$ denotes a value function that assigns a value to every possible coalition of players, reflecting the worth of each group. The value function $v$ is generally assumed to be positive and increasing monotonically \citep{dubey1977probabilistic}, which means that if $A \subseteq B$, then $v(A) \leq v(B)$. Here, $v(A)$ represents the value of $\X_A$. A key concept in the definition of SV is the marginal contribution, denoted as $\Delta_i(S)=v(S\cup i) - v(S)$. The marginal contribution is the improvement of the value of a coalition $S$ when a given player $i$ is added to the coalition. The SV of $X_i$ is the weighted average of the marginal contributions of $X_i$ across all subsets, expressed as:
+\begin{align*}
+\small \phi_{X_i} = \tiny \sum_{S \subseteq D\setminus\{i\}} w(S) \Delta_i(S) \ = \tiny \frac{1}{p} \sum_{S \subseteq D\setminus\{i\}} \binom{|D|-1}{|S|}^{-1} \Big[ v(S \cup i) - v(S) \Big].
+\end{align*}
+We can establish feature importance, by defining the value function. In the global sensitivity literature, a frequently used value function is $v(S) = \mathbb{V}(\mathbb{E}[Y \vert \XS])/\mathbb{V}(Y)$, which represents the explained variance or the variance of the best approximation of $Y$ given $\XS$. This value function is nonnegative and monotonically increasing, resulting in a positive global importance measure. When features are independent, this SV is closely related to the functional ANOVA decomposition \citep{efron1981jackknife,hoeffding1992class} and Sobol indices \citep{sobol1990sensitivity, chastaing2012generalized, Hooker2007GeneralizedFA}. The resulting SV are commonly referred to as Shapley Effects \citep{owen2014sobol, owen2017shapley}.
+
+In contrast to the global Shapley Values (SV) approach or Shapley Effects, \cite{NIPS2017_7062, lundberg2020local} adopt the game theory paradigm to explain a specific prediction $f(x_1, \dots, x_p)$ with players $D = \{X_1 = x_1, \dots, X_p=x_p\}$ using the value function $v(S) = \mathbb{E}[f(\x) | \XS=\xs]$ or $v(S) = \mathbb{E}[f(\xs, \X_{\Bar{S}})]$. Although debates continue over the choice between these two value functions \citep{heskes2020causal, janzing2019feature, chen2020true}, we assume in this work that the variables are independent, making these value functions equivalent. We refer to the resulting Shapley Values in this context as Local Shapley Values (\lsv{}).
+
+A key distinction between the global SV approach (Shapley Effects) and the local approach \lsv{}  hinges on the definitions of their respective value functions. While the global value function $v(S) = \mathbb{V}(\mathbb{E}[Y \vert \XS])/\mathbb{V}(Y)$ serves as an effective measure of the predictive power of variables $\XS$ for the overall model, it is unclear whether the local value function $v(S) = \mathbb{E}[f(\x) | \XS=\xs]$ genuinely represents the predictive power of $\XS=\xs$ for the specific prediction $f(\x)$. In the global case, a high value of $v(S) = \mathbb{V}(\mathbb{E}[Y \vert \XS])/\mathbb{V}(Y)$ indicates a strong predictive power of $\XS$, while the values taken by $v(S) = \mathbb{E}[f(\x) | \XS=\xs]$ in the local case do not have any intuitive order, i.e. a high or low value of $v(S)$ does not necessarily reflect the importance of $\XS=\xs$ for the prediction $f(\x)$ in regression problems, for example.
+
+
+
+% The interpretation of a negative Shapley Value is unclear. One might assume that a negative Shapley Value indicates that, on average, including this variable in a subset tends to lower the predictions. However, in a regression problem, the model may take negative values, and the negative \lsv{} could result from the model tending to produce negative values over numerous subsets.
+
+Moreover, the value function of \lsv{}, $v(S) = \mathbb{E}\big[ f(\X) \vert \XS = \xs\big]$, can be negative and does not satisfy the monotonic property, which may result in negative \lsv{}. Therefore, a cancelling effect can occur, where a variable that influences the decision ends up with a zero or low Shapley Value because the $\Delta_i(S)$ values across all subsets cancel each other out. It is important to note that Shapley Effects do not encounter the issues mentioned above, as they satisfy the non-negativity criterion suggested for feature importance \citep{johnson2004history, gromping2007estimators, feldman2005relative}. In fact, \cite{feldman2005relative} emphasized that an importance measure should be positive, as it evaluates the relative information a variable contributes to the model, and information is inherently non-negative.
+
+While the \textit{global} SV can be interpreted as percentages of the output’s variance \citep{idrissi2024development}, the quantities estimated by the \textit{local} SV are less clear. For example, what is the \lsv{} for a particular $X_1 = x_1$ really telling us about its contribution to the \textbf{specific} prediction $f(x_1, \dots, x_p)$?
+
+Lastly, there is no strong justification for calculating contributions across all possible subsets, as some of these subsets might be poor predictors, thus introducing noise into the feature importance. The average performance of a feature across all submodels may not be indicative of the particular performance of that feature in the set of optimal submodels.  Additionally, averaging over all subsets tends to reduce the local aspect of the contribution. To demonstrate this, let's assume  we have independent variables $\boldsymbol{X} \in \mathbb{R}^p$, and a piece-wise linear predictor $f$ defined as: 
+\begin{align} \label{eq:linear_switch}
+ f(X) = (a_1 X_1 + a_2 X_2) \mathds{1}_{X_{6} \leq 0} + (a_3 X_3 + a_4 X_4) \mathds{1}_{X_{6} > 0}.
+\end{align}
+Even if we choose an observation $\boldsymbol{x}=(x_1, \dots, x_p)$ such that $x_6 \leq 0$  and the predictor only uses $x_1, x_2$, the \lsv{} of $\phi_{x_3}, \phi_{x_4}$ is not necessarily zero. Using straightforward calculations, we can show that for all {\small $i \in \{3, 4\}$, $\phi_{x_i} = K\Big(a_i(\boldsymbol{x}_i -  \mathbb{E}[\boldsymbol{X}_i])\Big)$} where {\small $K \propto \mathbb{P}(X_6 > 0)$} is a constant.
+
+This highlights that the \lsv{} are not purely local measures but also exhibit global influences.  This occurs because when calculating the \lsv{} of $X_3 = x_3$ or $X_4 = x_4$, we also consider subsets $S$ that do not contain $X_6$. By marginalizing and changing the sign of $X_6$, we use the other linear model not used for this observation. We can extend the result above to show a similar issue with continuous piece-wise linear function.  This class of functions is quite versatile, as it encompasses neural networks with piece-wise linear activations such as ReLU or hard tanh which correspond to $\max(0, x)$ and $\max(-1, \min(1, x))$ respectively. Indeed, we can view feedforward neural networks as piece-wise linear functions that divide the input space into multiple linear regions, where the network itself behaves as an affine function within each region \citep{pascanu2013number, hanin2019complexity, hanin2019deep, chen2022improved}. 
+
+% \begin{definition}[\citep{chua1988canonical, ovchinnikov2000max, chen2022improved}]
+%     A function $f: \mathcal{X} \rightarrow \mathcal{Y}$ is a $m-$Continuous Piece-Wise Linear Function ($m$-CPWL) if there exists K finite set of disjoint convex polytopes $\{A_k\}_{k=1}^m$ such that $\cup_{k=1}^m A_k = \mathcal{X}$ and $f$ restricted to the domain $A_k, $ denoted as $ f_{\lvert_{A_k}}  : A_k \ni \x \mapsto f(\x)$ is affine for each $k\in \{1, \dots, m\}.$ 
+% \end{definition}
+% \vspace{-0.1cm}
+
+  % Figure \ref{fig:nn_pieces} shows an example of the evolution of linear regions within a feedforward neural networks with ReLU activation in 2 dimensions. 
+
+
+
+
+The important local variables of this model correspond to the coefficients of the linear model associated with the region $A_k$ to which the observation belongs. However, in the following, we provide a result demonstrating that these explanations cannot be retrieved using \textit{Local} Shapley Values.
+
+
+
+
+\begin{theorem}[Local Shapley Values for Piecewise Linear Models]
+\label{theo:sv_impossible}
+Let $f: \mathcal{X} \to \mathbb{R}$ be a piecewise linear function defined on a feature space $\mathcal{X} \subseteq \mathbb{R}^p$, which is partitioned into $m$ disjoint hyperrectangles, $\{A_k\}_{k=1}^m$, where each $A_k = \bigotimes_{i=1}^p [l_{i,k}, r_{i,k}]$ with $l_{i,k}, r_{i,k} \in \mathbb{R} \cup \{-\infty, \infty\}$. On each region $A_k$, the function is defined by a linear model $f_k(\mathbf{X}) = \sum_{i=1}^p a_{i,k} X_i + b_k$. The complete function is thus $f(\mathbf{X}) = \sum_{k=1}^m f_k(\mathbf{X}) \mathds{1}_{\mathbf{X} \in A_k}$. Consider an observation $\mathbf{x} = (x_1, \dots, x_p)$ located in a specific region $A_{k^\star}$ for some $k^\star \in \{1, \dots, m\}$. The model's prediction is therefore determined solely by the local model $f_{k^\star}$, i.e., $f(\mathbf{x}) = f_{k^\star}(\mathbf{x})$, and the set of truly local active features is $J_{k^\star} = \{i \in [p] \mid a_{i,k^\star} \neq 0\}$. We also define the set of features important globally $G = \{i \in [p] \mid \exists k \text{ s.t. } A_{i,k} \neq \mathbb{R}\}$. Let the covariates $X_i$ be mutually independent. The Local Shapley Value (SV) for the feature-value $X_l=x_l$ is given by $\phi_{x_l} = \sum_{k=1}^m \phi_{x_l}^k$, where each component $\phi_{x_l}^k$ is:
+\begin{equation} \label{eq:sv_nn_global}
+\begin{split}
+    \phi_{x_l}^k = & \left( \frac{\mathds{1}_{x_l \in A_{l, k}}}{\mathbb{P}(X_l \in A_{l, k})} - 1 \right) \sum_{S \subseteq D\setminus\{l\}} w(S) v_k(S) \\
+    & + a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{X_l \in A_{l, k}}\right]}{\mathbb{P}(X_l \in A_{l, k})}\right) \sum_{S \subseteq D\setminus\{l\}} w(S) \prod_{i \in S\cup \{l\}} \mathds{1}_{x_i \in A_{i, k}} \prod_{j \in D \setminus (S\cup \{l\})} \mathbb{P}(X_j \in A_{j, k})
+\end{split}
+\end{equation}
+with $w(S)= \frac{1}{p} \binom{p-1}{|S|}^{-1}$, and $v_k(S) = \mathbb{E}[f_k(\mathbf{X})\mathds{1}_{\mathbf{X} \in A_k} \mid \mathbf{X}_S = \mathbf{x}_S]$. The key implication of Equation~\eqref{eq:sv_nn_global} is that Local SVs can assign importance to a feature $j$ even if that feature is locally irrelevant (i.e., $  j\notin J_{k^\star}$) and globally irrelevant (i.e., $  j\notin G$). 
+\end{theorem}
+
+
+% \begin{theorem}\label{theo:sv_impossible}
+%     Let $f$ be a piecewise linear function with $m$ components defined by the collection $\{f_{\lvert A_1}, \dots, f_{\lvert A_k}\}$, where $\cup_{k=1}^m A_k = \mathcal{X}$. The regions $A_k$ are disjoint hyperrectangles, specifically $A_k = \bigotimes_{i = 1}^{p} A_{i,k}$, where $A_{i, k} = [l_{i, k}, r_{i, k}]$ with $l_{i, k}, r_{i, k} \in \overline{\mathbb{R}}$. Each component $f_{\lvert A_k}$ is represented as $f_k(\X) = \sum_{i=1}^p a_{i, k} X_i + b_k$, where the coefficients $a_{i,k}$ and $b_k$ are real numbers. Consequently, $f$ is defined as $f(\X) =  \sum_{k=1}^m \left(\sum_{i=1}^p a_{i, k} X_i + b_k \right)\mathds{1}_{A_k}(\X).$
+%     Consider $\x = (x_1, \dots, x_p) \in A_{k^\star}$, where $k^\star \in \{1, \dots, m\}$, sampled from a distribution $P_{\X}$ with independent covariates such that the model only used $f_{k^\star}(\x)$ as $f(\x) = f_{k^\star}(\x)$ on $A_{k^\star}$. The Local SV of a given feature-value $X_l = x_l$ is equal to $\phi_{x_l} = \sum_{k=1}^m \phi_{x_l}^k$, and $\phi_{x_l}^k$ is defined as\vspace{-0.2cm}
+%     {\small \begin{multline} \label{eq:sv_nn}
+%         \tiny \phi_{x_l}^k = \left(\frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} - 1 \right)  \sum_{S \subseteq D\setminus\{l\}} w(S) v_k(S) 
+%          + a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right]}{\mathbb{P}(X_l \in A_{l, k})}\right) \times \\ \sum_{S \subseteq D\setminus\{l\}} w(S) \times \prod_{i \in S\cup l} \mathds{1}_{A_{i, k}}(x_i) \prod_{j \in \overline{S}}\mathbb{P}(X_i \in A_{i, k}), 
+%     \end{multline}}
+% where $w(S)= \frac{1}{p} \binom{|D|-1}{|S|}^{-1}$ and $v_k(S) = \mathbb{E}[f_k(\X)\mathds{1}_{A_k}(\X) \; | \; \XS = \xs]$. Equation (\ref{eq:sv_nn}) demonstrates that even if the model only uses  $f_{k^\star}(\x)$ for a given observation $\x$, the Local SV $\x$ may depend on the coefficients of the unused linear models $f_k$ for $k \in \{1, \dots, m\}\setminus \{k^\star\}$. Put differently, if we separate $G_k:=\{i: A_{i,k}\neq\mathbb R\}\quad\text{(region-defining features)}$ and $J_k:=\{i: a_{i,k}\neq 0\}\quad\text{(prediction-influencing features)}.$ No relation between $G_k$ and $J_k$ is assumed. The locally important features at $\mathbf x$ are $J_{k^\star}$. because \ref{eq:sv_nn} may attributes values to all variable together, Local SVs generally fail to recover the locally important set $J_{k^\star}=\{i:a_{i,k^\star}\neq 0\}$ because it may attributes importance to variable  $J_{k}=\{i:a_{i,k}\neq 0\}$ puting asside all the $G_k$
+% \end{theorem}
+
+See the proof in the Appendix \ref{sup:proof_shapdecomposition}.  Theorem \ref{theo:sv_impossible} demonstrated that SV also present difficulties in expressing local importance measures for neural networks with piece-wise linear activation layers and, more generally, for continuous piece-wise linear functions.
+% \vspace{-0.4cm}
+\section{Limitations of \textcolor{black}{LIME}}
+
+The core idea of \lime{} \citep{ribeiro2016why} is to approximate a complex model with a simpler, interpretable model (e.g., a linear model) in the neighborhood of an instance $\x^\star$. However, \lime{} has several limitations due to its dependence on heuristic choices, such as the sampling distribution and the definition of locality. The typical sampling distribution ignores feature dependencies, which can lead to inconsistent explanations. Moreover, defining the neighborhood $\pi_{\x^\star}^h$ (e.g., using a Gaussian kernel) and tuning the kernel width $h$ is challenging, particularly in high-dimensional settings, which affects the stability and reliability of the explanations. \lime{} also exhibits instability, with different runs producing varying results due to the randomness in synthetic sample generation. Several studies \citep{Zafar2019DLIMEAD, Visani2020OptiLIMEOL,zhang2019should, alvarez2018robustness, Zhou2021SLIMESF} highlight these issues. Additionally, we have also demonstrated that \lime{}, like \lsv{}, struggles to detect the locally important variables of the piece-wise model as in (\ref{eq:linear_switch}). For more detailed analysis and further empirical analysis on these limitations, including sensitivity to bandwidth and reproducibility issues, please refer to the Appendix \ref{sup:lime_detailled}.
+
+\section{From Global Explanations to Regional Explanations}
+In this section, we follow the presentation of \cite{williamson2021general}, which introduces a general framework for global variable importance. We consider a comprehensive class $\mathcal{F}$ of functions mapping from $\mathcal{X}$ to $\mathcal{Y}$, and $\mathcal{F}_{-j}$ be the subset of $\mathcal{F}$ containing all functions that disregard the variable $X_j$. The conformity score $V(f(\X), Y)$ assesses the predictiveness of a prediction function $f \in \mathcal{F}$ on the observation $(\X, Y)$, where a high value implies high predictiveness. We define the oracle predictor with respect to the conformity score $V$ and distribution $P=P_{\X}P_{Y|\X}$ as follows:
+ \begin{align*}
+     \small f_0 = \arg \max_{f \in \mathcal{F}} \mathbb{E}_P\big[V\big(f(\X), Y\big)\big].
+ \end{align*}
+In a similar manner, we define $f_{-j}$ as the function maximizing $\mathbb{E}_{P}[V\left(f(\X), Y\right)]$ over all $f \in \mathcal{F}_{-j}$. Subsequently, we define the \textit{population-level importance} for the variable $X_j$ as the decrease in predictiveness when excluding $X_j$ from $\X =(X_1, \dots, X_p)$. This is commonly referred to as the Leave Out COvariates (\loco{}) importance in existing literature \citep{Lei2016DistributionFreePI, verdinelli2024feature}. The \loco{} importance for $X_j$ is defined as:
+\begin{align*}
+    \Psi_{j}(P) = \mathbb{E}_P\big[ \Delta_{j}(\X, Y)\big] \quad \text{where} \quad \Delta_{j}(\X, Y) = V\left(f_0(\X), Y\right) - V\left(f_{-j}(\X), Y\right).
+\end{align*}
+ We can use any conformity score to measure variable importance, depending on the problem. For regression tasks, we can use $V(f(\X), Y) = 1-[Y - f(\X)]^2/\sigma^2$, where $\sigma^2 = \mathbb{E}_P\big[ Y - \mathbb{E}_P[Y]\big]^2$ represents the variance of the target variable $Y$. This conformity score corresponds to the traditional $R^2$ score at the population level, i.e., $R^2 = \mathbb{E}_{P}[V\left(f(\X), Y\right)]$. Alternatively, for binary classification problems, we can use $V(f(\X), Y) = \mathds{1}_{Y = f(\X)}$, which corresponds to the accuracy score at the population level. Regarding the choice of the conformity score, there is no ground truth for variable importance as there are multiple definitions of what makes a variable important \citep{hooker2019benchmark, hama2022model, verdinelli2024feature}. Consequently, the choice of a conformity score should be contingent upon the specific context and goals of the analysis.
+
+Our approach aims to derive local explanations for a specific observation $(\X, Y)$ from the population-level importance $\Psi_{j}(P)$. This involves identifying a partition $ \cup_i A_i = \mathcal{X}$ containing observations with similar explanations, which means $\mathbb{V}_P(\Delta_j(\X, Y) \; \vert \; \X \in A_i) \approx 0$ for all $j \in \{1, \dots, p\}$ simultaneously. In other words, the observations within each partition have low variance in their feature importance. As a result, we can use $\Psi_{j}(P_{A_i}) = \mathbb{E}_{P_{A_i}}\big[ \Delta_j(\X, Y)\big] = \mathbb{E}_{P}\big[ \Delta_j(\X, Y) \; \vert \; \X \in A_i\big]$ as local explanations for all observations in $A_i$, since the random variable $\Delta_j(\X, Y)$ exhibits low variance within $A_i$. Essentially, our approach involves identifying a homogeneous group with respect to importance measure $\Delta_j(\X, Y)$ and attributing the global importance of this group as the local explanations of its members. Hence, it permits us to have local explanations while benefiting from all the inference results available for global explanations. 
+% \begin{figure*}[ht!]
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{figures/method_description_final.png}
+%     \caption{This diagram presents and contrasts our proposed method (\ours{}) with the global approach (\loco{}). Both approaches first transform the features into the feature importance space. The global approach (in \emph{grey}) then averages the importance scores column-wise across all observations, while \ours{} (in \emph{green}) averages the scores within each cluster, providing a more localized attribution.}
+%     % \caption{An overview of our method \ours{}  (\emph{green} colour) and the classical \textit{global} \loco{} (\emph{grey} colour).}
+%     \label{fig:method-desc}
+% \end{figure*}
+
+\subsection{Estimation and inference}
+To compute our local explanations, we need to compute two quantities: the \loco{} importance $\Psi_{j}(P) = \mathbb{E}_P\big[ \Delta_{j}(\X, Y)\big]$ for any distribution $P$ and the partition  $\cup_i A_i = \mathcal{X}$ that group observations by their feature importance similarity. The former has been extensively studied in \citep{williamson2021general}, where the authors proposed a nonparametric efficient estimation procedure using the following plug-in estimator:
+\begin{align} 
+    \small \widehat{\Psi}_{j}(\widehat{P}) = \mathbb{E}_{\widehat{P}}\big[ \widehat{\Delta_j}(\X, Y)\big] \quad \text{where} \quad \widehat{\Delta_j}(\X, Y) = V\left(\widehat{f}_0(\X), Y\right) - V\left(\widehat{f}_{-j}(\X), Y\right),
+    \label{eq:loco_estimator}
+\end{align}
+ $\widehat{P} = 1/n\sum_{i=1}^{n} \delta_{(\X_i, Y_i)}$ is the empirical distribution of $P$ based on $\mathcal{D}_n = \{(\X_i, Y_i)\}_{i=1}^n$ and $\widehat{f}_0, \widehat{f}_{-j}$ are estimators of the population minimizers $f_0$ and $f_{-j}$ respectively. $\widehat{f}_0, \widehat{f}_{-j}$ are obtained by building a predictive model for $Y$ using all features in $\X$ and after removing the variable $X_j$ respectively. This can be achieved using any machine learning algorithm. \cite{williamson2021general} demonstrated that the estimator defined in Equation (\ref{eq:loco_estimator}), is asymptotically efficient and enables valid statistical inference under regularity conditions.
+
+Having obtained a consistent estimator for $\Psi_{j}(P)$, we now propose a method to derive the partition $ \cup_i A_i = \mathcal{X}$. The initial step involves creating a new representation for each observation $\X_i = (X_{i1}, \dots, X_{ip})$ in $\mathcal{D}_n$ using the conformity score $V$. This is expressed as $\Tilde{\X}_i = \left(\widehat{\Delta}_{1}(\X_i, Y_i), \dots, \widehat{\Delta}_{p}(\X_i, Y_i)\right)$. Representing the data in the space of feature importance, rather than the original covariate space, allows for the grouping of observations that exhibit consistent behavior  with respect to the importance measure $\widehat{\Delta}_{j}(\X, Y) = V(\widehat{f}_0(\X), Y) - V(\widehat{f}_{-j}(\X), Y)$ across all variables $j \in \{1, \dots, p\}$ simultaneously.
+
+The subsequent step involves clustering similar observations based on their new representations $\Tilde{\X}$. This can be achieved using any clustering algorithm, such as K-means \citep{kmeansmacqueen1967some}, DBSCAN \citep{dbscanester1996density}, Tree-based clustering approach \citep{maimon2014data} or Affinity Propagation \citep{affinitypropfrey2007clustering}, ultimately resulting in a partition of $\mathcal{D}_n$ into $K$ sets $\textbf{C} = \{C_1, \dots, C_K\}$. Note that clustering in the feature importance space does not necessarily imply that observations will be closer in the input space. In the experimental section, we demonstrate that clustering in the feature-importance space provides a more meaningful basis for capturing the model’s actual behaviour, and we offer a theoretical explanation in Section~\ref{sec:why_feature_importance_cluster} within a controlled setting.
+
+
+The final step entails using the identified clusters $\textbf{C}$ to define a partition of $\mathcal{X}$. This is accomplished by assigning any new points $\x \in \mathcal{X}$ to their nearest partition $C_k$ with respect to a similarity function $d: \mathcal{X} \times \mathcal{X} \rightarrow \mathbb{R}^+$. We can use any similarity function. We use Euclidean or Manhattan distance. More formally, we define the corresponding region $\widehat{A}_k$ of cluster $C_k$ as
+\begin{equation*} \small \left\{ \x \in \mathcal{X} : \sum_{\X_i \in C_k} d(x, \X_i) < \sum_{\X_i \in C_l} d(x, \X_i) \; \text{for all} \;  k \neq l \right\}.
+\end{equation*} In order to establish a partition of $\mathcal{X}$, we must also account for the set of "undecidable" observations, which are those that simultaneously belong to multiple groups. We define this set $\widehat{A}_{K+1}$ as $\small \left\{\x \in \mathcal{X} : \exists k, l \in [k], \sum_{\X_i \in C_k} d(x, \X_i) = \sum_{\X_i \in C_l} d(x, \X_i)\right\}.$
+Hence, the local explanations of a given observation $\X_i$ that belongs to the region  $\widehat{A}_k$ can be represented by the vector $\left(\widehat{\Psi_{1}}(\widehat{P}_{\widehat{A}_k}), \dots, \widehat{\Psi_p}(\widehat{P}_{\widehat{A}_k})\right)$, where the contribution of the feature $X_j$, $\widehat{\Psi_{j}}(\widehat{P}_{\widehat{A}_k})$, is defined as
+\begin{align*} \label{eq:regional_loco}
+   \small  \widehat{\Psi}_{j}(\widehat{P}_{\widehat{A}_k})  = \mathbb{E}_{\widehat{P}_{\widehat{A}_k}}\big[ \widehat{\Delta}_j(\X, Y)\big] 
+    = \mathbb{E}_{\widehat{P}}\big[ \widehat{\Delta}_{j}(\X, Y) \; \vert \; \X \in \widehat{A}_k\big]
+     = \sum_{(\X_i, Y_i) \in C_k} \frac{\widehat{\Delta}_{j}(\X_i, Y_i)}{|C_k|}.
+\end{align*}
+We refer to this approach as \ours{}, and details can be found in Figure~\ref{fig:method-desc}. R-LOCO's construction addresses key limitations of \lsv{}, particularly for models like piecewise linear functions.
+
+\begin{theorem} 
+    Let $f$ be the piecewise linear function from Theorem \ref{theo:sv_impossible}. When the \ours{} clustering algorithm identifies cluster $C_{k^\star}$ within regions $A_{k^\star}$ , the R-LOCO attributions for $\x = (x_1, \dots, x_p) \in A_{k^\star}$, with $k^\star \in \{1, \dots, m\}$, are solely influenced by $f_{k^\star}$. They do not depend on coefficients of any $a_{i,k^\prime}$ from other regions $A_{k^\prime}$, where $k^\prime \neq k^\star$. \label{theo:rloco}
+\end{theorem}
+
+Unlike \lsv{}, which can be influenced by inactive components even under ideal conditions (\S\ref{chap:lsv}), Theorem \ref{theo:rloco} shows that \ours{} assigns importance exclusively to the active region whenever $C_{k^\star} \subseteq A_{k^\star}$. See the proof in \S\ref{proof:rloco}. In \S\ref{app:rloco_mixed}, we further analyze non-homogeneous (mixed) regions, where the attributions can depend on contamination from other regions; moreover, the induced bias scales proportionally with the contamination level (e.g., with the fraction of the mass of $C_{k^\star}$ contributed by points from $A_{k}$, $k \neq k^\star$).
+
+% See Proof in \S\ref{proof:rloco}. Unlike \lsv{}, which can be confounded by inactive model components as detailed in Section \ref{chap:lsv} even in optimal conditions, R-LOCO, under such ideal settings, correctly attributes importance based solely on the active local model component. However, analysing situations where this assumption does not hold, or depending on the ground truth
+% cluster approximation, is highly nontrivial, and left for future work.
+
+
+
+% : with correct clustering, i.e., given $\cup A_k = \mathcal{X}$,  the global model $f$ is equivalent to the local model $f_{\lvert A_k}$ within each cluster $A_k$. When LOCO is computed regionally, attributions cannot depend on unused features. Specifically, LOCO calculates the variance of the conditional expectation using all features minus the variance excluding the considered feature. Within the correct cluster, the model is equivalent to the local model, ensuring that attributions are confined to the relevant features.
+\vspace{-0.4cm}
+\section{Experiments 1: Controlled Setting}
+
+In our first set of experiments, we evaluate our approach, \ours{}, by comparing it with three baseline methods: two local attribution techniques, \lsv{} and \lime{}, and \loco{}, which serves as the global variant of our approach. We conduct experiments in a controlled environment where the ground-truth explanations are known, using independent features to assess each method’s performance without confounding bias. Our objective is to demonstrate that \ours{}, which lies between the local and global regimes, offers greater local fidelity than state-of-the-art local attribution methods and provides a more nuanced understanding of model behavior compared to global approaches.
+
+\textbf{\ours{} Variants:} We explored several variants of \ours{} in our experiments, each employing different clustering algorithms to capture local patterns. 
+\begin{itemize}
+    \item \ours{}: Uses AffinityPropagation clustering on the feature importance space. It is the default strategy of our proposal.
+    \item \ourstrue{}: Uses optimal clusters based on the base model structure, expected to perform better than other variants due to privileged model information. We use it as a \textbf{control baseline} to isolate the effect of the clustering in our method.
+      \item \ourstree{}: Utilizes a tree-based algorithm that clusters by minimizing the variance on the feature importance space within each cell.
+    \item \oursinput{}: Performs clustering directly in the input space rather than the feature importance space to investigate the benefits of clustering in feature importance space.
+\end{itemize}
+
+More details of the parameters for all methods can be found in the appendix \ref{sup:exp_details}.
+\subsection{Models Setup}
+
+To ensure a rigorous evaluation, we selected a model setup that inherently allows us to determine ground-truth local explanations. Specifically, we chose models that are locally additive, enabling us to use their inherent structure to evaluate the quality of local attribution. To avoid biases that might arise from feature dependencies, we ensured that all features were independent. For data generation, we created a set of $n$ samples denoted by $\{\X_i\}_{i=1}^n$, drawn from a distribution $\X \sim P_{\X} = \prod_{i=j}^p P_{X_j}$. Using a model $f$, we then constructed a dataset $\mathcal{D}_n = \{(\X_i, f(\X_i))\}_{i=1}^n$.
+
+The local attribution methods \lsv{} and \lime{} require both the model $f$ and dataset $\mathcal{D}_n$ to generate explanations. In contrast, \ours{} only required fixed input-output pairs, $\mathcal{D}_n$. This highlights a key advantage of \ours{}: it does not need direct access to the model's prediction function. Instead, it only needs a fixed dataset with predictions, making it suitable for scenarios where model access is restricted or for being applied directly to the data rather than a specific model. We conducted our experiments using three different models:
+
+\textbf{1st-order model:} We used a piecewise linear model where local feature importance can be interpreted similarly to classical linear models. Let $\X = (X_1, \dots, X_{6})$, with each component being independently distributed as $X_i \sim \mathcal{U}[-1, 1]$ for $i \in \{1, \dots, 6\}$. The predictor function is defined as follows:
+\begin{align} 
+    f(\X) = (X_1 + X_2) \cdot \mathbf{1}_{X_6 \leq 0} + (X_3 + X_4) \cdot \mathbf{1}_{X_6 > 0}
+\end{align}\label{model:1st-order_eq}
+\textbf{2nd-order model:}
+This model incorporates non-linear terms to introduce complexity while still being locally additive. Again, using independent variables $\X = (X_1, \dots, X_{10})$, where $X_i \sim \mathcal{U}[-1, 1]$ for all $i$, the predictor function was:
+\begin{align*}
+    f(\X) = (X_1 + X_2^2 + \sqrt{|X_3|}) \cdot \mathbf{1}_{X_{10} \leq 0} + (X_4 + X_5^2 + \sqrt{|X_6|}) \cdot \mathbf{1}_{X_{10} > 0}
+\end{align*}
+\textbf{2nd-order interaction model:}
+We increased the model complexity by including interaction effects, based on the function used in \citep{benard2021shaff}. The predictor was:
+\begin{equation*}
+f(\X)  = 3\sqrt{3} \times X_1 X_2 \; \mathds{1}_{X_3 > 0} + \sqrt{3} \times X_4  X_5 \mathds{1}_{X_3 \leq 0}  + 3 \times X_6  X_7 \; \mathds{1}_{X_8 > 0} +  X_9  X_{10} \; \mathds{1}_{X_8 \leq 0}.
+\end{equation*}
+
+\begin{table*}[htbp]
+\tiny
+\centering
+\caption{Performance metrics for methods across datasets from 1st-order to 2nd-order-interactions. TP: True Positives, FP: False Positives, NI attr.: Mean (q0.1 -- q0.95) of non-important features attributions.}
+\begin{tabular}{l*{3}{S[table-format=1.2] S[table-format=1.2] p{1.8cm}}}
+\toprule
+& \multicolumn{3}{c}{\textbf{1st-order}} & \multicolumn{3}{c}{\textbf{2nd-order}} & \multicolumn{3}{c}{\textbf{2nd-order-interact.}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+\textbf{Method} & {TP} & {FP} & {NI attr.} & {TP} & {FP} & {NI attr.} & {TP} & {FP} & {NI attr.} \\
+\midrule
+\ours{}      & 0.97 & 0.03 & 0.02 (0.01--0.04) & 0.86 & 0.14 & 0.02 (0.01--0.04) & 0.67 & 0.33 & 0.03 (0.02--0.07) \\
+\ourstrue{}   & 1.00 & 0.00 & 0.03 (0.03--0.03) & 1.00 & 0.00 & 0.03 (0.03--0.03) & 0.94 & 0.06 & 0.04 (0.03--0.04) \\
+\ourstree{} & 0.90 & 0.10 & 0.05 (0.02--0.11) & 0.73 & 0.27 & 0.04 (0.02--0.06) & 0.50 & 0.50 & 0.06 (0.05--0.07) \\
+\oursinput{}   & 0.89 & 0.11 & 0.05 (0.02--0.11) & 0.74 & 0.26 & 0.04 (0.03--0.07) & 0.65 & 0.35 & 0.05 (0.04--0.07) \\
+\loco{}    & 0.50 & 0.50 & 0.09 (0.09--0.09) & 0.50 & 0.50 & 0.05 (0.05--0.05) & 0.50 & 0.50 & 0.06 (0.05--0.07) \\
+\lsv{}    & 0.41 & 0.59 & 0.12 (0.08--0.18) & 0.30 & 0.70 & 0.08 (0.07--0.10) & 0.44 & 0.56 & 0.06 (0.05--0.09) \\
+\lime{}    & 0.53 & 0.47 & 0.12 (0.07--0.18) & 0.43 & 0.57 & 0.07 (0.05--0.10) & 0.44 & 0.56 & 0.06 (0.04--0.09) \\
+\bottomrule
+\end{tabular}
+\label{tab:results1}
+\end{table*}
+
+\begin{table*}[htbp]
+\tiny
+\centering
+\caption{Performance metrics for \ours{} using different clustering algorithms across datasets from 1st-order to 2nd-order-interactions. TP: True Positives, FP: False Positives, NI attr.: Mean (q0.1 -- q0.95) of non-important features attributions.}
+\begin{tabular}{l*{3}{S[table-format=1.2] S[table-format=1.2] p{1.8cm}}}
+\toprule
+& \multicolumn{3}{c}{\textbf{1st-order}} & \multicolumn{3}{c}{\textbf{2nd-order}} & \multicolumn{3}{c}{\textbf{2nd-order-interact.}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+\textbf{Method} & {TP} & {FP} & {NI attr.} & {TP} & {FP} & {NI attr.} & {TP} & {FP} & {NI attr.} \\
+\midrule
+\kmeanstwo & 0.98 & 0.02 & 0.03 (0.03--0.03) & 0.92 & 0.08 & 0.04 (0.03--0.06) & 0.57 & 0.43 & 0.05 (0.03--0.09) \\
+\kmeansfour & 0.97 & 0.03 & 0.03 (0.02--0.08) & 0.83 & 0.17 & 0.03 (0.03--0.06) & 0.62 & 0.38 & 0.04 (0.02--0.08) \\
+\kmeanseight & 0.96 & 0.04 & 0.03 (0.02--0.06) & 0.93 & 0.07 & 0.03 (0.02--0.04) & 0.59 & 0.41 & 0.04 (0.02--0.08) \\
+\kmeanstwenty & 0.97 & 0.03 & 0.02 (0.02--0.04) & 0.96 & 0.04 & 0.03 (0.02--0.04) & 0.64 & 0.36 & 0.04 (0.02--0.08) \\
+\affinityfive & 0.97 & 0.03 & 0.02 (0.01--0.04) & 0.86 & 0.14 & 0.02 (0.01--0.04) & 0.68 & 0.32 & 0.03 (0.02--0.07) \\
+\affinitysix & 0.97 & 0.03 & 0.02 (0.01--0.04) & 0.86 & 0.14 & 0.02 (0.01--0.04) & 0.67 & 0.33 & 0.03 (0.02--0.07) \\
+\affinitynine & 0.97 & 0.03 & 0.02 (0.01--0.04) & 0.86 & 0.14 & 0.02 (0.01--0.04) & 0.67 & 0.33 & 0.03 (0.02--0.07) \\
+\bottomrule
+\end{tabular}
+\label{tab:results2}
+\end{table*}
+
+\begin{figure*}[!ht]
+    \centering
+    \begin{minipage}{0.46\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/diabetes-results.png}
+        \caption{\emph{Diabetes} dataset.}
+        \label{fig:stability}
+    \end{minipage}
+    \hspace{0.05\linewidth}
+    \begin{minipage}{0.46\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/california-results.png}
+        \caption{\emph{California} dataset.}
+        \label{fig:entropy}
+    \end{minipage}
+    \label{fig:real_exp}
+\end{figure*}
+\subsection{Evaluation}
+For each model, we identify the $k$ variables that contribute locally to the prediction. We exclude the variables used for defining the region (e.g., in the 1st order model, we discard the variable $X_{6}$), as these variables may also be interpreted as globally important, which could bias the analysis. Instead, we focus solely on the $k$ variables directly involved in the computation of the final prediction. As a measure of true importance, we use the sum of the absolute feature–coefficient products across all functional components that include the feature, analogous to classical functional ANOVA contributions. In some settings, we introduce dummy variables that are irrelevant to the model and mutually independent, included solely to assess how different methods assign importance to uninformative features.
+
+To ensure a consistent comparison focused purely on importance magnitude, we normalise all attribution values. We divide the absolute value of each score by the total absolute sum per observation, thereby restricting all scores to the range $[0, 1]$ and disregarding their original directionality.
+
+
+We then evaluate the performance of each method by determining how many of the $k$ truly local important variables (those with non-zero coefficients) are correctly identified by their top $k$ most important features (True Positives) and how many irrelevant variables are incorrectly identified as important (False Positives). We also compute the average, as well as the 10th (q0.1) and 95th (q0.95) percentiles of the attributions assigned to non-important variables, which we denote as NI attributions. This assess the tendency of each method to over-attribute importance to irrelevant features.
+
+
+\subsection{Analysis} 
+% \vspace{-0.25cm}
+Table~\ref{tab:results1} presents the aggregated performance metrics of our experiments from 50 runs on the first three synthetic datasets.  The key observations from these results are as follows:
+\textbf{Poor Performance of \lsv{} and \lime{}:}
+\lsv{} and \lime{} consistently perform poorly across all experiments, with true positive (TP) rates of 30\% to 66\% and false positive (FP) rates of 34\% to 70\% on Table~\ref{tab:results1}. For example, in the 1st-order model, \lsv{} achieves a TP of 41\% and FP of 59\%, while \lime{} achieves TP of 53\% and FP of 47\%, indicating frequent misattributions. Moreover, their performance is almost identical to that of the global approach \loco{}, which is not designed to highlight local importance. 
+
+\textbf{Superior Performance of \ours{}:}
+\ours{} outperforms the baselines, with significantly higher accuracy. In the 1st-order model, \ours{} achieves a TP of 97\% and FP of 3\%. Although TP rates decrease slightly as model complexity grows, \ours{} consistently outperforms the baselines. 
+
+\ours{} assigns minimal importance to non-important features (1\% to 4\%), whereas \lsv{} and \lime{} assign 7\% to 18\%. This indicates \ours{} more effectively distinguishes between important and non-important features.
+
+
+
+% \paragraph{\ours{} as a Global Attribution Method.}
+% On the real-world datasets (Table~\ref{tab:results2}), \ours{} and \loco{} perform similarly, with TP rates of 81-100\% and FP rates of 0-19\%. This similarity stems from consistent feature usage across all leaves, suggesting \ours{} can also identify globally important features effectively. Although the baseline methods perform better in the context of global feature importance, they still fall short of our approach.
+
+\textbf{Impact of Clustering:}
+When using perfect clusters (\ourstrue{}), \ours{} achieves near-perfect performance, suggesting that clustering quality is the key factor for \ours{}' success. Results of \oursinput{} also show that clustering in the feature importance space (\ours{}) yields better results compared to clustering in input space.
+% \vspace{-0.5cm}
+
+\textbf{Summary:}
+Overall, the experimental results show that the baseline methods \lsv{} and \lime{} consistently perform poorly to identify locally important features and have performance close to the global approach \loco{}. In contrast, \ours{} and its variants significantly outperform these traditional local attribution methods, providing more locally faithful feature attributions. The effectiveness of \ours{} largely depends on the quality of the clustering process, particularly when clustering is performed in the feature importance space.
+
+\subsection{Impact of Clustering in \ours{}} \label{impact:clustering}
+
+To illustrate how clustering quality can be assessed in our method, we present a qualitative example using the first-order model. We focus on an observation where $X_6$ is positive, implying that the only locally important variables are $X_3$ and $X_4$.\begin{wrapfigure}{r}{0.5\columnwidth}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/rloco_example.png}
+    \caption{Feature attributions from \ours{} and \oursinput{} on the first-order model, highlighting the intra-group variance of feature importance.}
+    \label{fig:qualitative}
+\end{wrapfigure}
+
+Figure~\ref{fig:qualitative} compares feature attributions from \ours{} and \oursinput{} (which clusters in the input space), highlighting the variance of feature-importance scores within each cluster. Both methods identify $X_3$ and $X_4$ as the most important variables, but \ours{} exhibits substantially lower intra-cluster variance. Specifically, the average variance across all observations and features is $0.002$ for \ours{}, compared to $0.012$ for \oursinput{}. This lower variance suggests more consistent attributions within clusters, indicating higher clustering quality. By assessing the intra-cluster variance, practitioners can evaluate the clustering quality and make informed choices about clustering methods. 
+
+To further assess interpretability, we train a decision tree to predict the cluster assignments. This yields a transparent and human-readable proxy of the regions identified by each method. Interestingly, \ours{} discovers regions aligned with the true data-generating process by first splitting on the sign of $X_6$, whereas clustering in the input space fails to do so, prioritising other non-important variables.  The learned tree representation is displayed in ~\S\ref{exp:decision_tree}.
+
+
+
+\textbf{Parameter Variations:} To further assess clustering robustness, we conducted additional experiments using KMeans with cluster counts of 2, 4, 8, and 20, and Affinity Propagation with damping values of 0.5, 0.6, and 0.9.
+
+Table~\ref{tab:results2} summarizes these findings, underscoring the robustness of \ours{} to clustering variations.
+
+Our key observations are:
+\begin{itemize}
+    \item For both first and second-order models, as long as intra-cluster variance was minimized and clusters contained enough points, performance remained stable.
+    \item Increasing the number of clusters had little adverse effect, provided cluster sizes were sufficiently large.
+    \item In second-order interaction models with four ground-truth clusters, performance only declined when clusters were smaller than the true regions. Assigning more clusters than ground-truth also had minimal impact.
+\end{itemize}
+These results are consistent with Theorem \ref{theo:rloco}, which states that local accuracy may be achieved once the identified cluster is part of the ground-truth cluster or is only minimally contaminated.
+
+\subsubsection{Theoretical Analysis} \label{sec:why_feature_importance_cluster}
+
+To formalize the advantage of clustering in importance space, we analyze the first-order model (\S\ref{model:1st-order_eq}) with independent features $X_i \sim \mathcal{U}[-1, 1]$ for $i=1, \dots, 6$ and the function $f(\mathbf{X}) = (X_1 + X_2) \cdot \mathbf{1}_{X_6 \leq 0} + (X_3 + X_4) \cdot \mathbf{1}_{X_6 > 0}.$ This function operates in two distinct regimes based on the "switching" variable $X_6$: $R_A \coloneqq \{ \mathbf{x} \mid X_6 \le 0 \}$ and $R_B \coloneqq \{ \mathbf{x} \mid X_6 > 0 \}$. We compare the K-Means ($K=2$) decision rules derived from clustering in the input space versus the R-LOCO importance space.
+
+\paragraph{Clustering in Input Space.}
+The true cluster centroids are the conditional means $\mathbb{E}[\mathbf{X} \mid R_A]$ and $\mathbb{E}[\mathbf{X} \mid R_B]$, defined as $C_A = (0, 0, 0, 0, 0, -0.5)$ and $C_B = (0, 0, 0, 0, 0, 0.5).$ This follows from feature independence ($\mathbb{E}[X_i \mid R_A] = \mathbb{E}[X_i] = 0$ for $i \le 5$) and the uniform distribution ($\mathbb{E}[X_6 \mid X_6 \le 0] = -0.5$). The K-Means separating direction is $C_A - C_B = (0, 0, 0, 0, 0, -1)$. The decision rule, $\mathbf{x} \in R_A$ if $d(\mathbf{x}, C_A)^2 < d(\mathbf{x}, C_B)^2$, simplifies to a condition based \emph{only} on $X_6$. Therefore, input-space clustering merely rediscovers the "switching" variable $X_6$. The variability from the functionally active features ($X_1, \dots, X_4$) acts as noise, hindering a clean separation.
+
+\paragraph{Clustering in R-LOCO Importance Space.}
+Each sample $\mathbf{X}$ is mapped to its R-LOCO importance vector $\gamma(\mathbf{X}) = (\Delta_1, \ldots, \Delta_6)$, where $\Delta_j(\mathbf{X}) = (f(\mathbf{X}) - f_{-j}(\mathbf{X}))^2$ and $f_{-j}(\mathbf{X}) = \mathbb{E}[f(\mathbf{X}) \mid \mathbf{X}_{-j}]$. The importance-space centroids for $R_A$ and $R_B$ are $C_{\gamma, A} = \mathbb{E}[\gamma(\mathbf{X}) \mid R_A] = \bigl(\frac{1}{3}, \frac{1}{3}, 0, 0, 0, \frac{1}{3}\bigr)$ and $C_{\gamma, B}= \mathbb{E}[\gamma(\mathbf{X}) \mid R_B] = \bigl(0, 0, \frac{1}{3}, \frac{1}{3}, 0, \frac{1}{3}\bigr)$, respectively. See \ref{proof:centroids} for detailed derivations. The K-Means separating direction in this space is:
+$C_{\gamma, A} - C_{\gamma, B} = \bigl(\frac{1}{3}, \frac{1}{3}, -\frac{1}{3}, -\frac{1}{3}, 0, 0\bigr).$
+This decision rule \emph{only} depends on the components $(\Delta_1, \Delta_2, \Delta_3, \Delta_4)$ corresponding to the locally active features. Clustering in importance space successfully identifies \textbf{functional similarity}:
+\begin{itemize}
+    \item $R_A$ samples have large $(\Delta_1, \Delta_2)$ and $\Delta_{3,4} \approx 0$.
+    \item $R_B$ samples have large $(\Delta_3, \Delta_4)$ and $\Delta_{1,2} \approx 0$.
+\end{itemize}
+In short, input-space clustering is confounded by noise from irrelevant features, while importance-space clustering is robust to this noise and correctly groups samples by their underlying explanatory behaviour.
+
+\paragraph{Remark: Importance Representation and Failure Cases}
+We note however a counter-example: $f(X_1, X_2) = X_2 \cdot \operatorname{sgn}(X_1)$, with regimes $R_A = \{X_1 < 0\}$ and $R_B = \{X_1 \ge 0\}$. If we use the squared-loss importance $\Delta_j = (f(\mathbf{X}) - f_{-j}(\mathbf{X}))^2$, we find $f_{-1} = f_{-2} = 0$. This results in an importance vector $\gamma(\mathbf{X}) = (\Delta_1, \Delta_2) = (f(\mathbf{X})^2, f(\mathbf{X})^2) = (X_2^2, X_2^2)$. This representation is identical for both regimes, making them inseparable. The issue is that the squared loss $\Delta_j$ is \textbf{sign-agnostic} and discards the directional information that distinguishes the regimes.
+
+This motivates enriching the importance representation. For instance, including the signed R-LOCO residual, $\delta_j(\mathbf{X}) = f(\mathbf{X}) - f_{-j}(\mathbf{X})$, yields an enriched vector:
+\[
+\gamma'(\mathbf{X}) = (\Delta_1, \Delta_2, \delta_1, \delta_2) = (X_2^2, X_2^2, f(\mathbf{X}), f(\mathbf{X})).
+\]
+This enriched vector maps the two regimes to distinct, separable locations:
+\[
+\gamma'(\mathbf{X}) = (X_2^2, X_2^2, -X_2, -X_2) \text{ if } X_1 < 0,\ \text{and } (X_2^2, X_2^2, X_2, X_2) \text{ if } X_1 \ge 0.
+\]
+
+In this space, the regimes are easily distinguished by a clustering algorithm, underscoring the importance of the chosen representation.
+
+
+\vspace{-0.3cm}
+\section{Experiments 2: Real-world Settings}
+\label{sec:real_world_experiments}
+% \vspace{-0.3cm}
+In the preceding sections, we focused on the piecewise model setting, providing both theoretical and empirical evidence that \lsv{} and \lime{} can fail under ideal conditions (e.g., exact computation and independence assumptions). We also introduced \ours{} to address these shortcomings in a controlled context. 
+
+In this section, we extend our analysis to real-world tabular datasets, where \textbf{feature dependencies naturally arise}, and use widely adopted, high-performing models, XGBoost, for tabular data. We introduce two additional baselines:
+\begin{itemize}
+    \item \textbf{FDT \cite{laberge2024tackling}:} This approach is conceptually related to ours in that it seeks ``regional'' explanations; however, its objective is to find regions where multiple explanation methods agree. In contrast, \ours{} aims to identify zones of influence that are distinct to the model's behavior, using predictive loss as the criterion. 
+    \item \textbf{Clustering SHAP Values (CSHAP):} As described in the original SHAP paper \citep{lundberg2018consistent}, \lsv{} can be clustered to identify distinct zones of influence. Since SHAP does not directly employ group-wise averages, we adapt it for comparison by clustering SHAP values or \lsv{} (using the same algorithm as R-LOCO) and then computing averages for each group.
+\end{itemize}
+
+To evaluate the faithfulness of these methods, we measure the change in predictive performance when \emph{zero-masking} features deemed most important (top-$k$) and least important (bottom-$k$) by each approach. See \S\ref{exp:real_details} for details. A larger performance drop when masking the most important features indicates higher fidelity, whereas a smaller performance drop when masking the least important features is desirable.
+
+Figures~\ref{fig:stability} and~\ref{fig:entropy} show the results on the \emph{Diabetes} and \emph{California} datasets from \cite{uci_dataset}, respectively. In Figure \ref{fig:stability}, our method consistently outperformed all baselines. While FDT performed best among the baselines, clustering SHAP values (CSHAP) did not outperform standard SHAP. This highlights that, unlike LOCO features, SHAP values lack sufficient information to effectively identify the distinct zone of influence of the given model, and underscores the critical importance of selecting appropriate inputs for clustering. In Figure~\ref{fig:entropy}, our method was superior for identifying and perturbing the top three most important features, and FDT was slightly better for the remaining, but \ours{} outperformed when removing non-important features, indicating superior region definition. Finally, as shown in Appendix~\ref{sec:runtime-memory}, our method is also significantly faster at inference, since it only requires assigning a cluster to compute feature importance.
+
+\vspace{-0.2cm}
+\section{Conclusion}
+\vspace{-0.3cm}
+We presented a rigorous evaluation of widely used local attribution methods in settings where the true local features are known. Our findings reveal that, despite their intuitive appeal, common local methods (\lsv{}, \lime{}) can fail even under ideal conditions with no feature dependencies and perfect estimations. To address this, we proposed a \emph{regional} method that partitions the input space into homogeneous regions—thus enabling a hybrid approach combining the fidelity of global LOCO importance with more localized attributions. Unlike existing baselines, our framework offers a clear interpretation of a feature’s contribution as the increase in error when that feature is removed.
+
+
+Our method lies between fully global and purely local approaches: avoiding the instability of pointwise explanations while still preserving instance-level insights, which purely global approaches often lack. \ours{} implicitly assumes each region of the model can be approximated by an additive structure. A key challenge is selecting and refining these regions. One promising direction is to enrich the feature-importance representation (used for clustering) with second- or higher-order interactions, thus capturing more complex dependencies. While our initial analysis focused on independent variables for clarity, we have demonstrated that the approach also outperforms baselines on real-world datasets where dependencies naturally arise.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Acknowledgements}
+
+We thank the anonymous reviewers for their valuable suggestions, which helped improve this work, especially regarding the counterexample illustrating the failure of the base feature-importance mapping.
+
+
+\section*{Disclaimer}
+This work was in part conducted during Salim I. Amoukou’s PhD at LaMME, Université Paris-Saclay, in collaboration with the Stellantis Group.
+
+
+
+\bibliography{bib}
+\bibliographystyle{plainnat}
+
+\appendix
+\newpage
+\section{Proof of Theorem \ref{theo:sv_impossible}} \label{sup:proof_shapdecomposition}
+\begin{theorem}
+    Let $f$ be a piecewise linear function with $m$ components defined by the collection $\{f_{\lvert A_1}, \dots, f_{\lvert A_k}\}$, where $\cup_{k=1}^m A_k = \mathcal{X}$. The regions $A_k$ are disjoint hyperrectangles, specifically $A_k = \bigotimes_{i = 1}^{p} A_{i,k}$, where $A_{i, k} = [l_{i, k}, r_{i, k}]$ with $l_{i, k}, r_{i, k} \in \overline{\mathbb{R}}$. Each component $f_{\lvert A_k}$ is represented as $f_k(\X) = \sum_{i=1}^p a_{i, k} X_i + b_k$, where the coefficients $a_{i,k}$ and $b_k$ are real numbers. Consequently, $f$ is defined as:
+    \begin{align*}
+        f(\X) =  \sum_{k=1}^m \left(\sum_{i=1}^p a_{i, k} X_i + b_k \right)\mathds{1}_{A_k}(\X).
+    \end{align*}
+    Consider an observation $\mathbf{x} = (x_1, \dots, x_p)$ located in a specific region $A_{k^\star}$ for some $k^\star \in \{1, \dots, m\}$. The model's prediction is therefore determined solely by the local model $f_{k^\star}$, i.e., $f(\mathbf{x}) = f_{k^\star}(\mathbf{x})$, and the set of truly active features is $J_{k^\star} = \{i \in [p] \mid a_{i,k^\star} \neq 0\}$. We also define the set of features important globally $G = \{i \in [p] \mid \exists k \text{ s.t. } A_{i,k} \neq \mathbb{R}\}$. Let the covariates $X_i$ be mutually independent. The Local Shapley Value (SV) for the feature-value $X_l=x_l$ is equal to
+    \begin{equation*}
+        \phi_{x_l} = \sum_{k=1}^m \phi_{x_l}^k,
+    \end{equation*}
+    and $\phi_{x_l}^k$ is defined as 
+    \begin{multline} \label{eq:sup_sv_nn}
+        \phi_{x_l}^k = \left(\frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} - 1 \right)  \sum_{S \subseteq D\setminus\{l\}} w(S) v_k(S) \\
+         + a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right]}{\mathbb{P}(X_l \in A_{l, k})}\right) \sum_{S \subseteq D\setminus\{l\}} w(S) \times \prod_{i \in S\cup l} \mathds{1}_{A_{i, k}}(x_i) \prod_{j \in \overline{S}}\mathbb{P}(X_i \in A_{i, k}), 
+    \end{multline}
+    where $w(S)= \frac{1}{p} \binom{|D|-1}{|S|}^{-1}$ and $v_k(S) = \mathbb{E}[f_k(\X)\mathds{1}_{A_k}(\X) \; | \; \XS = \xs]$. Equation (\ref{eq:sup_sv_nn}) demonstrates that even if the model only uses  $f_{k^\star}(\x)$ for a given observation $\x$, the Local SV $\x$ may depend on the coefficients of the unused linear models $f_k$ for $k \in \{1, \dots, m\}\setminus \{k^\star\}$, which are not globally important neither.
+    \begin{proof}
+    Let's assume that $\prod_{i=1}^p \mathbb{P}(X_i \in A_{i, k}) > 0$ and intercepts $b_k = 0$ for all $k=1,\dots, m$ without loss of generality. Given an observation $\x = (x_1, \dots, x_p)$, we consider the Shapley Value of a feature-value $X_l = x_l$ defined as
+    \begin{align*}
+        \phi_{\x_l} =  \sum_{S \subseteq D\setminus\{l\}} w(S) \Big[ \Delta_l(S) \Big], 
+    \end{align*}
+    where $w(S)= \frac{1}{p} \binom{|D|-1}{|S|}^{-1}$, $\Delta_l(S) = v(S \cup l) - v(S)$ represent the marginal contribution, and $v(S) = \mathbb{E}\left[ f(\X) | \XS = \xs \right]$. Note that we can decompose $v(S)$ into $m$ separate terms as following:
+    \begin{align*}
+        v(S) & = \mathbb{E}\left[ \sum_{k=1}^m \left(\sum_{i=1}^p a_{i, k} X_i \right)\mathds{1}_{A_k}(\X) \;|\; \XS = \xs \right] \\
+            & = \sum_{k=1}^m \mathbb{E}\left[\left(\sum_{i=1}^p a_{i, k} X_i \right)\mathds{1}_{A_k}(\X) \;|\; \XS = \xs \right] \\
+            & = \sum_{k=1}^m v_k(S)
+    \end{align*}
+    Hence, we can decompose the Shapley Value of $\phi_{\x_l}$ due to the linearity property of SV as
+    \begin{align*}
+        \phi_{x_l} = \sum_{k=1}^m \phi^k_{x_l},
+    \end{align*}
+    where $\phi^k_{x_l}$ corresponds to the SV compute using the value function $v_k(S)$.  Therefore, we only need to prove that $\phi^k_{x_l}$ for $k \neq k^\star$ is not necessarily null to prove the Theorem. We have
+
+    \begin{align*}
+        \begin{split}
+         v_k(S) & = \mathbb{E}\left[\left(\sum_{i=1}^p a_{i, k} X_i \right)\mathds{1}_{A_k}(\X) \;|\; \XS = \xs \right] \\
+         & = \mathbb{E}\left[\left(\sum_{i \in S} a_{i, k} X_i  + \sum_{i \in \bar{S}} a_{i, k} X_i \right) \prod_{j=1}^p \mathds{1}_{A_{j, k}}(X_j) \;|\; \XS = \xs \right] \\
+         & = \left(\sum_{i \in S} a_{i, k} \x_i  \right) \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \bar{S}} \mathbb{P}(X_j \in A_{j, k}) \\
+         & \quad + \sum_{i \in \bar{S}} a_{i, k} \mathbb{E}\left[ X_i \mathds{1}_{A_{i, k}}(X_i)\right] \prod_{j \in \bar{S}: j \neq i}\mathbb{P}(X_j \in A_{j, k}) \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j).
+        \end{split} 
+    \end{align*}
+Similarly, we can write $v(S \cup l)$ as:
+    \begin{align*}
+         v_k(S\cup l) & =  \left(\sum_{i \in S\cup l} a_{i, k} x_i  \right) \prod_{j \in S\cup l} \mathds{1}_{A_{j, k}}(x_j) \prod_{j\in \overline{S\cup l}} \mathbb{P}(X_j \in A_{j, k}) \\
+         & \quad + \sum_{i \in \overline{S\cup l}} a_{i, k} \mathbb{E}\left[ X_i \mathds{1}_{A_{i, k}}(X_i)\right] \prod_{j \in \overline{S \cup l}: j \neq i}\mathbb{P}(X_j \in A_{j, k}) \prod_{j \in S\cup l} \mathds{1}_{A_{j, k}}(x_j) \\
+         & =  \left(\sum_{i \in S} a_{i, k} x_i  \right) \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \overline{S}} \mathbb{P}(X_j \in A_{j, k})  \times \frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})}\\
+         & \quad + \textcolor{teal}{a_{l, k} x_l   \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \overline{S}} \mathbb{P}(X_j \in A_{j, k})  \times \frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})}} \\ 
+         & \quad + \sum_{i \in \overline{S}} a_{i, k} \mathbb{E}\left[ X_i \mathds{1}_{A_{i, k}}(X_i)\right] \prod_{j \in \overline{S}: j \neq i}\mathbb{P}(X_j \in A_{j, k}) \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j) \times \frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} \\
+         & \quad - \textcolor{red}{a_{l, k} \mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right] \prod_{j \in \overline{S}: j \neq l}\mathbb{P}(X_j \in A_{j, k}) \prod_{j \in S} \mathds{1}_{A_{j, k}}(x_j) \times \frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})}} \\
+         \intertext{The terms highlighted in red and teal respectively represent the negative and positive contributions of the variable $X_l=x_l$ in $v_k(S\cup l)$, the other terms will be put together to form $v_k(S)$ as follows}
+         v_k(S\cup l) & = \frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} v_k(S) \\
+         & \quad + \frac{1}{\mathbb{P}(X_l \in A_{l, k})} \prod_{j \in S\cup l} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \overline{S}}\mathbb{P}(X_j \in A_{j, k}) \times a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right]}{\mathbb{P}(X_l \in A_{l, k})}\right).
+         \end{align*}
+    Hence, the marginal contribution of coalition $S$ of the SV $\phi^k_{x_l}$ is equal to:
+    \begin{align*}
+        \Delta^k_l(S) & = v_k(S \cup l) - v_k(S) \\
+                      & = v_k(S) \left(\frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} - 1 \right) \\
+                      & \quad + \prod_{j \in S\cup l} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \overline{S}}\mathbb{P}(X_j \in A_{j, k}) \times a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right]}{\mathbb{P}(X_l \in A_{l, k})}\right)
+    \end{align*}
+    Finally, we have 
+    \begin{multline*}
+        \phi_{x_l}^k = \left(\frac{\mathds{1}_{A_{l, k}}(x_l)}{\mathbb{P}(X_l \in A_{l, k})} - 1 \right)  \sum_{S \subseteq D\setminus\{l\}} w(S) v_k(S) \\
+         + a_{l, k} \left( x_{l} - \frac{\mathbb{E}\left[ X_l \mathds{1}_{A_{l, k}}(X_l)\right]}{\mathbb{P}(X_l \in A_{l, k})}\right) \sum_{S \subseteq D\setminus\{l\}} w(S) \times \prod_{j \in S\cup l} \mathds{1}_{A_{j, k}}(x_j) \prod_{j \in \overline{S}}\mathbb{P}(X_j \in A_{j, k})
+    \end{multline*}
+    \end{proof}    
+\end{theorem}
+
+
+\section{Proof of Theorem \ref{theo:rloco}}\label{proof:rloco}
+
+\begin{theorem} 
+    Let $f$ be the piecewise linear function from Theorem \ref{theo:sv_impossible}. When the \ours{} clustering algorithm identifies clusters $C_{k^\star}$ within regions $A_{k^\star}$ , the R-LOCO attributions for $\x = (x_1, \dots, x_p) \in A_{k^\star}$, with $k^\star \in \{1, \dots, m\}$ (the active region), are solely influenced by $f_{k^\star}$. They do not depend on coefficients any $a_{i,k^\prime}$ from other regions $A_{k^\prime}$, where $k^\prime \neq k^\star$. \label{app:theo_rloco}
+\end{theorem}
+
+\begin{proof}
+The R-LOCO attribution for a feature $X_j$ within the region defined by cluster $C_{k^\star}$ is given by the average change in the conformity score $V$ when that feature is removed:
+$$
+\hat{\Psi}_{j}(\hat{P}_{C_{k^\star}}) = \frac{1}{|C_{k^\star}|} \sum_{(\mathbf{x}_l, y_l) \in C_{k^\star}} \left[ V(f(\mathbf{x}_l), y_l) - V(f_{-j}(\mathbf{x}_l), y_l) \right]
+$$
+where $f$ is the full model and $f_{-j}(\mathbf{x}) = \mathbb{E}[f(\mathbf{X}) | \mathbf{X}_{-j} = \mathbf{x}_{-j}]$ is the model with feature $j$ marginalized out.
+
+The theorem's central assumption is that the clustering algorithm is that the identified cluster $C_{k^\star}$ is a subset of the true model region $A_{k^\star}$, i.e., $C_{k^\star} \subseteq A_{k^\star}$. We analyze the implications of this condition on both terms in the R-LOCO formula.
+
+\begin{enumerate}
+    \item \textbf{Analysis of the full model, $f(\mathbf{x}_l)$:}
+    For any observation $(\mathbf{x}_l, y_l) \in C_{k^\star}$, our core assumption implies $\mathbf{x}_l \in A_{k^\star}$. By definition, the global piecewise model $f(\mathbf{x}) = \sum_{k=1}^{m} f_k(\mathbf{x}) \mathds{1}_{\mathbf{x} \in A_k}$ simplifies to the active local model for any point within its region. Therefore, for all $\mathbf{x}_l \in C_{k^\star}$:
+    $$
+    f(\mathbf{x}_l) = f_{k^\star}(\mathbf{x}_l) = \mathbf{a}_{k^\star}^T \mathbf{x}_l + b_{k^\star}
+    $$
+    This shows that the first term, $V(f(\mathbf{x}_l), y_l)$, depends exclusively on the parameters of the local model $f_{k^\star}$.
+
+    \item \textbf{Analysis of the reduced model, $f_{-j}(\mathbf{x}_l)$:}
+    The proof is particularly concerned with features $j$ that are not globally important, meaning they are not used to define the region boundaries. Let $G = \{i \in [p] \mid \exists k \text{ s.t. } A_{i,k} \neq \mathbb{R}\}$ be the set of globally important features. If $j \notin G$, the condition $\mathbf{x} \in A_{k^\star}$ does not depend on the value of $x_j$.
+    
+    Consequently, for any $\mathbf{x}_l \in C_{k^\star} \subseteq A_{k^\star}$, any other point $\mathbf{X}$ that agrees with $\mathbf{x}_l$ on all other coordinates (i.e., $\mathbf{X}_{-j} = \mathbf{x}_{l, -j}$) must also lie within $A_{k^\star}$. This implies:
+    \begin{align*}
+        f_{-j}(\mathbf{x}_l) &= \mathbb{E}[f(\mathbf{X}) | \mathbf{X}_{-j} = \mathbf{x}_{l, -j}] \\
+        &= \mathbb{E}\left[ \sum_{k=1}^{m} f_k(\mathbf{X}) \mathds{1}_{\mathbf{X} \in A_k} \Big| \mathbf{X}_{-j} = \mathbf{x}_{l, -j} \right] \\
+        &= \mathbb{E}[f_{k^\star}(\mathbf{X}) | \mathbf{X}_{-j} = \mathbf{x}_{l, -j}]
+    \end{align*}
+    The last step holds because the indicator $\mathds{1}_{\mathbf{X} \in A_{k^\star}}$ is always 1 under the conditioning, while all other indicators $\mathds{1}_{\mathbf{X} \in A_{k'}}$ for $k' \neq k^\star$ are 0. The resulting expression for $f_{-j}(\mathbf{x}_l)$ depends only on the definition of $f_{k^\star}$.
+\end{enumerate}
+
+\noindent Since both $f(\mathbf{x}_l)$ and $f_{-j}(\mathbf{x}_l)$ depend solely on the parameters $(\mathbf{a}_{k^\star}, b_{k^\star})$ for any observation in $C_{k^\star}$, each term in the summation for $\hat{\Psi}_{j}$ is a function of $f_{k^\star}$ alone. The attribution, being an average of these terms, is therefore completely independent of the coefficients $(\mathbf{a}_{k'}, b_{k'})$ from any other region $k' \neq k^\star$. This concludes the proof.
+
+\subsection{Analysis under Cluster Contamination.} \label{app:rloco_mixed}
+ We now consider the practical scenario where the cluster is contaminated, meaning $C_{k^\star} \not\subseteq A_{k^\star}$. Let $C'_{k^\star} = C_{k^\star} \cap A_{k^\star}$ be the set of correctly clustered points and $C''_{k^\star} = C_{k^\star} \setminus A_{k^\star}$ be the set of contaminating points. For any point $\mathbf{x}_l \in C''_{k^\star}$, there exists some region $A_{k'}$ with $k' \neq k^\star$ such that $\mathbf{x}_l \in A_{k'}$. For these contaminating points, the global model evaluates to $f(\mathbf{x}_l) = f_{k'}(\mathbf{x}_l)$. Consequently, the R-LOCO summation for $\hat{\Psi}_{j}$ becomes a mixture:
+$$
+\hat{\Psi}_{j} = \frac{1}{|C_{k^\star}|} \left( \sum_{\mathbf{x}_l \in C'_{k^\star}} \Delta_j(\mathbf{x}_l) + \sum_{\mathbf{x}_l \in C''_{k^\star}} \Delta_j(\mathbf{x}_l) \right)
+$$
+where the terms $\Delta_j$ for points in $C'_{k^\star}$ depend on $f_{k^\star}$ as shown above, but the terms for points in $C''_{k^\star}$ depend on the parameters of other local models $f_{k'}$. As a result, the attribution is no longer local. It becomes "contaminated" by the influence of coefficients from the regions where the misclustered points originate. The magnitude of this effect is proportional to the fraction of contaminating points $|C''_{k^\star}| / |C_{k^\star}|$.
+\end{proof}
+
+
+
+
+% \section{\ours{} under Imperfect Clustering: Mixed Region Analysis} \label{app:rloco_mixed}
+% This analysis examines the behavior of \ours{} when the clustering algorithm is imperfect or fails to satisfy the inclusion assumption (as in Theorem \ref{theo:rloco} from the main paper). Specifically, we focus on cases where \ours{} fits an internal predictive model on a "mixed region"—a cluster $C_k$ that contains data points from two distinct underlying linear data-generating processes. The goal is to understand the nature of the resulting linear model and the corresponding feature attributions.
+
+% To highlight the core mechanics, we consider a simplified setting in which \ours{}'s internal fitted model is linear, and compute the LOCO importance within the identified cluster, similar to \S\ref{proof:rloco}.
+
+% \subsection{Preliminary: OLS and LOCO Importance in Linear Models}
+
+% \subsubsection{Ordinary Least Squares (OLS) Solution}
+% Consider a standard linear regression model:
+% $$ Y = \mathbf{X} \bm{\beta} + \bm{\epsilon} $$
+% where $\mathbf{Y}$ is an $N \times 1$ vector of responses, $\mathbf{X}$ is an $N \times (p+1)$ design matrix (including an intercept column), $\bm{\beta}$ is a $(p+1) \times 1$ vector of coefficients, and $\bm{\epsilon}$ is an $N \times 1$ vector of errors with $\E[\bm{\epsilon}] = \mathbf{0}$ and $\Cov(\bm{\epsilon}) = \sigma^2 \mathbf{I}$.
+% The OLS estimator for $\bm{\beta}$ is given by:
+% \begin{equation} \label{eq:ols_general_mixed}
+% \hat{\bm{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y}
+% \end{equation}
+
+% If the features $X_1, \dots, X_p$ are mean-centered (i.e., their sample mean is zero) and mutually orthogonal (i.e., $\sum_{l=1}^N X_{lj}X_{lk} = 0$ for $j \neq k$), the matrix $\mathbf{X}^T \mathbf{X}$ (for the feature coefficient part) becomes diagonal. The OLS estimate for an individual feature coefficient $\beta_j$ (for $j=1, \dots, p$) simplifies to:
+% \begin{equation} \label{eq:ols_orthogonal_mixed}
+% \hat{\beta}_j = \frac{\sum_{l=1}^N X_{lj} Y_l}{\sum_{l=1}^N X_{lj}^2} = \frac{\widehat{\Cov}(X_j, Y)}{\widehat{\Var}(X_j)}
+% \end{equation}
+% If features are also standardized such that their sample variance $\widehat{\Var}(X_j) = \frac{1}{N}\sum_{l=1}^N X_{lj}^2 = 1$ (assuming $X_j$ are mean-centered for this variance calculation), then $\sum_{l=1}^N X_{lj}^2 = N$, so $\hat{\beta}_j = \frac{1}{N}\sum_{l=1}^N X_{lj} Y_l$. The intercept is $\hat{\beta}_0 = \bar{Y}$.
+
+% \subsubsection{LOCO Importance for Linear Models}
+% The Leave Out COvariates (LOCO) importance for a feature $X_j$ measures the change in predictive performance when $X_j$ is removed. For linear models, using a conformity score related to the Sum of Squared Errors (SSE) or $R^2$, this importance can be quantified.
+
+% Let $b_j$ be the true coefficient of $X_j$ in the population model $Y = b_j X_j + \bm{b}_{-j}^T X_{\setminus j} + b_0 + \epsilon$. The population-level importance of $X_j$ (e.g., its unique contribution to explained variance) is proportional to $b_j^2 \Var(X_j^*)$, where $X_j^* = X_j - \E[X_j | X_{\setminus j}]$ is the part of $X_j$ orthogonal to other features $X_{\setminus j}$. Thus, $\Var(X_j^*) = \Var(X_j - \E[X_j | X_{\setminus j}])$.
+% \begin{equation} \label{eq:loco_general_linear_mixed}
+% \text{LOCO}_j \propto b_j^2 \Var(X_j - \E[X_j | X_{\setminus j}])
+% \end{equation}
+% If features $X_1, \dots, X_p$ are mutually independent (and mean-centered, so $\E[X_j]=0$), then $\E[X_j | X_{\setminus j}] = \E[X_j] = 0$, leading to $X_j^* = X_j$. The LOCO importance simplifies to being proportional to $b_j^2 \Var(X_j)$.
+% \begin{equation} \label{eq:loco_independent_linear_mixed}
+% \text{LOCO}_j \propto b_j^2 \Var(X_j)
+% \end{equation}
+% If features are also standardized so that $\Var(X_j) = 1$, then importance is directly proportional to $b_j^2$. When \ours{} estimates these quantities using an internal linear model $\hat{f}_{lin,C_k}$ with coefficients $\hat{\beta}_j$ (estimates of $b_j$), its reported importance $\hat{\Psi}_j(\hat{P}_{C_k})$ will be monotonically related to $\hat{\beta}_j^2$.
+
+% \subsection{Problem Setup for Mixed Region Analysis}
+
+% \subsubsection{Ground Truth Model}
+% The underlying data generating process is a piecewise linear model with two true, distinct regions, $A_1$ and $A_2$.
+% \begin{itemize}
+%     \item In region $A_1$: $Y = \beta_{10} + \beta_{11}X_1 + \beta_{12}X_2 + \epsilon$
+%     \item In region $A_2$: $Y = \beta_{20} + \beta_{21}X_1 + \beta_{22}X_2 + \epsilon$
+% \end{itemize}
+% Here, $Y$ is the response variable, $X_1, X_2$ are input features, and $\epsilon \sim N(0, \sigma^2)$ is i.i.d. noise, independent of $X_1, X_2$. The true coefficient vectors for features $(X_1, X_2)$ in the two regions are $\bm{\beta}_1 = (\beta_{11}, \beta_{12})^T$ and $\bm{\beta}_2 = (\beta_{21}, \beta_{22})^T$, respectively. We assume $\bm{\beta}_1 \neq \bm{\beta}_2$.
+
+% \subsubsection{Features}
+% For simplicity, we assume the features $X_1$ and $X_2$ satisfy the following population properties:
+% \begin{itemize}
+%     \item Mean-centered: $\E[X_1] = 0$, $\E[X_2] = 0$.
+%     \item Standardized: $\Var(X_1) = 1$, $\Var(X_2) = 1$.
+%     \item Independent (orthogonal): $\Cov(X_1, X_2) = 0$.
+% \end{itemize}
+% These assumptions simplify OLS estimator formulas and are assumed to approximately hold for samples drawn.
+
+% \subsubsection{Contaminated Cluster $C_k$}
+% \ours{} identifies a cluster $C_k$ containing $N$ data points $(X_{l1}, X_{l2}, Y_l)$ for $l=1, \dots, N$. This cluster is "contaminated," meaning:
+% \begin{itemize}
+%     \item $N_1 = \alpha_1 N$ points are drawn from the data distribution restricted to $A_1$.
+%     \item $N_2 = \alpha_2 N$ points are drawn from the data distribution restricted to $A_2$.
+% \end{itemize}
+% Here, $\alpha_1, \alpha_2 \ge 0$ and $\alpha_1 + \alpha_2 = 1$. These are the proportions of $C_k$ originating from regions $A_1$ and $A_2$.
+
+% \subsubsection{\ours{}'s Internal Linear Model}
+% Within the cluster $C_k$, \ours{} estimates a single linear model $\hat{f}_{lin, C_k}$ using OLS on all $N$ data points:
+% \begin{equation}
+% \hat{f}_{lin, C_k}(X) = \hat{\beta}_0 + \hat{\beta}_1 X_1 + \hat{\beta}_2 X_2
+% \end{equation}
+% Our goal is to understand the learned coefficients $\hat{\beta}_1, \hat{\beta}_2$ and their implications for LOCO-based feature importance.
+
+% \subsection{Analysis of Learned Coefficients $\hat{\beta}_j$ in Mixed Region}
+% Given the assumptions about features (mean-centered, standardized with $\Var(X_j)=1$, and independent), the OLS estimate for $\hat{\beta}_j$ (for $j=1,2$) from the $N$ points in $C_k$ is approximately:
+% \begin{equation}
+% \hat{\beta}_j \approx \frac{1}{N} \sum_{l=1}^{N} X_{lj} Y_l
+% \end{equation}
+% Splitting the sum based on the origin of data points:
+% \begin{equation}
+% \sum_{l \in C_k} X_{lj} Y_l = \sum_{l \in C_k \cap A_1} X_{lj} Y_l + \sum_{l \in C_k \cap A_2} X_{lj} Y_l
+% \end{equation}
+% For $X_l \in C_k \cap A_1$, $Y_l \approx \beta_{10} + \beta_{11}X_{l1} + \beta_{12}X_{l2}$. For $j=1$:
+% \begin{align*}
+% \sum_{l \in C_k \cap A_1} X_{l1} Y_l &\approx \sum_{l \in C_k \cap A_1} X_{l1} (\beta_{10} + \beta_{11}X_{l1} + \beta_{12}X_{l2}) \\
+% &= \beta_{10} \sum_{C_k \cap A_1} X_{l1} + \beta_{11} \sum_{C_k \cap A_1} X_{l1}^2 + \beta_{12} \sum_{C_k \cap A_1} X_{l1}X_{l2}
+% \end{align*}
+% Under our assumptions (approximate mean-centering within sub-samples, independence, and $\widehat{\Var}_{C_k \cap A_1}(X_1) \approx \Var(X_1) = 1$), this simplifies to $\sum_{l \in C_k \cap A_1} X_{l1} Y_l \approx \beta_{11} N_1$.
+% Similarly, $\sum_{l \in C_k \cap A_2} X_{l1} Y_l \approx \beta_{21} N_2$.
+
+% Substituting these into the expression for $\hat{\beta}_1$:
+% \begin{equation}
+% \hat{\beta}_1 \approx \frac{1}{N} (\beta_{11} N_1 + \beta_{21} N_2) = \frac{N_1}{N} \beta_{11} + \frac{N_2}{N} \beta_{21} = \alpha_1 \beta_{11} + \alpha_2 \beta_{21}
+% \end{equation}
+% By the same reasoning:
+% \begin{equation}
+% \hat{\beta}_2 \approx \alpha_1 \beta_{12} + \alpha_2 \beta_{22}
+% \end{equation}
+% And for the intercept:
+% \begin{equation}
+% \hat{\beta}_0 \approx \alpha_1 \beta_{10} + \alpha_2 \beta_{20} \quad (\text{assuming } \E[X_j|X \in A_j \cap C_k] \approx 0 \text{ for } j=1,2)
+% \end{equation}
+% \textbf{Result:} The coefficients of the single linear model learned by \ours{} on the contaminated cluster $C_k$ are approximately a weighted average of the true coefficients from the underlying linear pieces. The weights are the proportions ($\alpha_1, \alpha_2$) of data points from each true region within that cluster.
+
+% \subsection{Implications for LOCO-based Feature Importance in Mixed Region}
+% As established, the LOCO importance of $X_j$ (when features are independent and standardized) is proportional to $\hat{\beta}_j^2$. The \ours{} importance for $X_j$ in cluster $C_k$, $\hat{\Psi}_j(\hat{P}_{C_k})$, which we denote $\text{Importance}(X_j; C_k)$, follows this relationship:
+% \begin{equation}
+% \text{Importance}(X_1; C_k) \propto \hat{\beta}_1^2 \approx (\alpha_1 \beta_{11} + \alpha_2 \beta_{21})^2
+% \end{equation}
+% \begin{equation}
+% \text{Importance}(X_2; C_k) \propto \hat{\beta}_2^2 \approx (\alpha_1 \beta_{12} + \alpha_2 \beta_{22})^2
+% \end{equation}
+
+% \subsection{Analysis of ``Non-Relevant'' Attribution in Mixed Region}
+% Consider feature $X_1$. Suppose $X_1$ is non-relevant in region $A_1$ (i.e., its true coefficient $\beta_{11}=0$) but is relevant in region $A_2$ (i.e., $\beta_{21} \neq 0$).
+
+% \subsubsection{Learned Coefficient for $X_1$ (Non-Relevant in $A_1$)}
+% The learned coefficient for $X_1$ in $\hat{f}_{lin, C_k}$ is:
+% \begin{equation}
+% \hat{\beta}_1 \approx \alpha_1 (0) + \alpha_2 \beta_{21} = \alpha_2 \beta_{21}
+% \end{equation}
+
+% \subsubsection{\ours{} Importance for $X_1$ in Cluster $C_k$}
+% The importance measure for $X_1$ becomes:
+% \begin{equation}
+% \text{Importance}(X_1; C_k) \propto (\alpha_2 \beta_{21})^2
+% \end{equation}
+
+% \subsubsection{Interpretation of Non-Relevant Attribution}
+% \begin{itemize}
+%     \item \textbf{No Contamination ($\alpha_2 = 0$):} If $C_k$ is purely from $A_1$ ($\alpha_1=1, \alpha_2=0$), then $\hat{\beta}_1 \approx 0$. The \ours{} importance for $X_1$ will be (near) zero. This is consistent with Theorem \ref{theo:rloco} from the main paper, where a non-relevant feature in a pure region gets zero attribution.
+%     \item \textbf{With Contamination ($\alpha_2 > 0$):} If $C_k$ contains points from $A_2$ where $X_1$ is relevant ($\beta_{21} \neq 0$), then $\hat{\beta}_1 \approx \alpha_2 \beta_{21} \neq 0$. Consequently, $\text{Importance}(X_1; C_k) \propto (\alpha_2 \beta_{21})^2 > 0$.
+%     This implies $X_1$ receives a non-zero attribution for cluster $C_k$. From the perspective of points originating from $A_1$ (where $X_1$ is truly non-relevant), this constitutes a ``non-relevant'' or ``spurious'' attribution.
+% \end{itemize}
+% The magnitude of this non-relevant attribution for $X_1$ (from $A_1$'s viewpoint) depends on:
+% \begin{enumerate}
+%     \item \textbf{The proportion of contamination ($\alpha_2$):} Importance $\propto \alpha_2^2$. Higher contamination from the region where $X_1$ is relevant leads to a quadratically larger spurious attribution.
+%     \item \textbf{The true importance of $X_1$ in the contaminating region $A_2$ ($\beta_{21}$):} Importance $\propto \beta_{21}^2$. A stronger effect of $X_1$ in $A_2$ amplifies the ``bleed-through'' into $C_k$'s explanation.
+% \end{enumerate}
+
+% \subsection{Summary of Understanding for Mixed Regions}
+% This simplified theoretical analysis demonstrates that when \ours{} employs an internal linear model on a cluster $C_k$ mixing data from different underlying true linear functions ($f_1$ in $A_1$, $f_2$ in $A_2$):
+% \begin{enumerate}
+%     \item The linear model learned for $C_k$ will have coefficients that are approximately a weighted average of the true coefficients from the underlying regions. The weights are the proportions of data from each region within the cluster (e.g., $\hat{\beta}_j \approx \alpha_1 \beta_{1j} + \alpha_2 \beta_{2j}$).
+%     \item The LOCO-based feature importance calculated by \ours{} for $X_j$ in this cluster $C_k$ will reflect the magnitude (typically the square) of this averaged coefficient $\hat{\beta}_j$.
+%     \item Consequently, if a feature is non-relevant in one constituent part of the cluster (e.g., $A_1$) but relevant in another contaminating part (e.g., $A_2$), it will still receive a non-zero importance score for the cluster as a whole. This ``non-relevant'' attribution is quantitatively determined by the degree of contamination and the feature's true strength in the contaminating region(s).
+% \end{enumerate}
+% This underscores that the purity of clusters identified by \ours{} is critical for the faithfulness of its regional explanations to a single, underlying local data-generating process. Imperfect clustering leads to averaged explanations characteristic of the mixed region itself.
+
+\newpage
+\section{Experimental Details}\label{sup:exp_details}
+
+Each dataset is divided into three parts: training, calibration, and test. Initially, we split the data into a training set (75\%) and a test set (25\%). The training set is then further split evenly into a new training and calibration set. The calibration data is used by each method as background for computing approximations.
+
+For the baselines, we compute \lsv{} using the exact explainer from the \href{https://github.com/shap/shap}{SHAP library}.
+
+For \lime{}, we utilize the \href{https://github.com/marcotcr/lime}{LIME package} with default parameters, as described in the original paper \citep{lime}.
+
+For \ours{}, we use XGBoost (default parameters) as the base model to approximate the leave-one-out functions \(\widehat{f}_0\) and \(\widehat{f}_{-j}\). We use Affinity Propagation with damping = 0.8. Further implementation details will be given in the code repository.  We split our data into two sets: one for model fitting and the other for estimating attribution quantities.
+
+\section{Limitations of LIME: Detailled} \label{sup:lime_detailled}
+The main idea behind LIME \citep{ribeiro2016why} is to approximate a complex model using a simpler, more interpretable model, such as a linear model, in the vicinity of a given input instance. Given a model $f$, the local explanation $\xi(\x^\star)$ of an instance $\x^\star$ is an interpretable model $g \in G$, where $G$ is the set of linear models, such that
+\begin{align}
+    \xi(\x^\star) = \arg \min_{g \in G} \mathcal{L}(f, g, \pi_{\x^\star}^h) + \Omega(g),
+\end{align}
+where $\mathcal{L}(f, g, \pi_{x^\star}^h)$ measure of how unfaithful $g$ is in approximating $f$ over $\pi_{\x^\star}^h$, a measure of locality around $x^\star$ with width $h$, and $\Omega(g)$ is a measure of complexity of the local model $g$. The loss $\mathcal{L}$ is defined as
+\begin{align*}
+    \mathcal{L}(f, g, \pi_{x^\star}^h) = \sum_{x^\prime \sim P^\prime} \big[f(x^\prime) - g(x^\prime) \big]^2 \pi_{x^\star}^h(\x^\prime).
+\end{align*}
+In the original implementation \citep{ribeiro2016why}, $\pi_{\x^\star}^h$ is a Gaussian kernel, and the sum is taken over samples $\x^\prime \sim P^\prime$ where $P^\prime = \prod_{i} P_{X_i}$ is the marginal law of the features. 
+
+\begin{figure}[!htb]
+    \centering
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{figures/screen_2.png}
+        \caption{Distribution of LIME coefficients for $X_1$ and $X_3$ among observations with negative $x_5$ for the model (\ref{eq:linear_switch})}
+        \label{fig:lime_coef}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{figures/screen_1.png}
+        \caption{Variability of LIME coefficients wrt bandwidth selection on the German credit dataset $(n=1000, p=20)$ from UCI \citep{uci_dataset}}
+        \label{fig:lime_error}
+    \end{minipage}
+\end{figure}
+A primary concern with LIME stems from its reliance on arbitrary heuristics in its definition. Specifically, choosing the sampling distribution $P^\prime$ poses challenges, as the commonly used distribution disregards feature dependencies, and there is no guarantee that the model's local behavior on $P^\prime$ will be consistent with that on the observed data. Another significant issue lies in defining the neighborhood $\pi_{x^\star}^h$ and tuning the kernel width $h$, especially in high-dimension. The stability and sensitivity of LIME are heavily influenced by the selection of the perturbation sampling distribution, the definition of proximity $\pi_{x^\star}^h$ and the bandwidth $h$, which may result in varying explanations for the same instance under slightly varying settings. To illustrate this issue, we apply LIME on the piece-wise linear model defined in (\ref{eq:linear_switch}), with $a_1 = 0, a_2 = 2, a_3 = 0, a_4 = 5$.
+
+In Figure \ref{fig:lime_coef}, the distribution of LIME coefficients for $X_1$ and $X_3$ among observations with negative $x_6$ values shows that LIME assigns a non-null score to both $X_1$ and $X_3$, although the latter is not used locally for the displayed observations. Thus, LIME shares the same problem as L-SV in the piece-wise linear model with independent variables. It is also important to note that such discontinuities are not uncommon, as tabular data often contain discontinuities with categorical variables, and the meaning of constructing a linear approximation in such cases remains unclear. Besides this empirical evidence, we are currently working to compute the theoretical quantity of LIME coefficient for continuous piece-wise-linear functions, yielding impossible results similar to Thereom  \ref{theo:sv_impossible} for Local Shapley Values. 
+
+To demonstrate the sensitivity of LIME to bandwidth selection, we applied it to the German credit dataset $(n=1000, p=20)$ from UCI \citep{uci_dataset}. We trained a RF on $80\%$ of the dataset and computed LIME coefficients on the remaining data using two bandwidths, $h$ and $h^\prime$, of the proximity kernel $\pi_{\x^\star}^h$. We set $h$ using the median heuristic \citep{fukumizu2009kernel, flaxman2016bayesian, garreau2017large}, where $h$ is the median of the pairwise distance of $||\X_i - \X_j||_2$ and assigned $h^\prime = \frac{1}{2} h$. In Figure \ref{fig:lime_error}, we compare the relative absolute error of the LIME coefficients for all variables using the two bandwidths, i.e., $(\L_{\x_i}^{h} - L_{\x_i}^{h^\prime})/L_{\x_i}^{h}$, where $\L_{\x_i}^{h}, \L_{\x_i}^{h^\prime}$ represent the LIME coefficient of the variable $X_i$ using bandwith $h, h^\prime$ respectively. It reveals that the difference between the LIME coefficients could be much different after slightly modifying the bandwidth. Furthermore, we observed that $20\%$ of the coefficients also changed signs. In real-world scenarios, we lack information about the true local importance, making the bandwidth selection process indefinite. Moreover, LIME exhibits issues related to instability or irreproducibility. For example, \cite{zhang2019should, Zafar2019DLIMEAD, Visani2020OptiLIMEOL} have shown that repeated runs of the same setting of the algorithm on the same model and data point can yield different results. This inconsistency stems from the randomness introduced during the generation of the synthetic sample around the input. Several works \citep{Zafar2019DLIMEAD, Zhou2021SLIMESF} attempt to address this issue, using asymptotic analysis of the method to identify the minimum number of the sampled observations required for stability. Another aspect of stability is related to input perturbations. \cite{alvarez2018robustness} show that nearby observations may have completely different LIME coefficients.
+
+\section{Visual Description of \ours{}}
+
+\begin{figure*}[ht!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/method_description_final.png}
+    \caption{This diagram presents and contrasts our proposed method (\ours{}) with the global approach (\loco{}). Both approaches first transform the features into the feature importance space. The global approach (in \emph{grey}) then averages the importance scores column-wise across all observations, while \ours{} (in \emph{green}) averages the scores within each cluster, providing a more localized attribution. However, note that nothing stops us from applying any other global methods after the clusters are identified. The estimation of the region-based attributions is very generic; we could simply learn a linear model within each identified region and use it as a global explanation, or apply any more advanced global attribution techniques. For example, we could re-estimate the $\widehat{f}_0$, and $\widehat{f}_{-j}$ of $\widehat{\Delta_j}(\X, Y) = V\left(\widehat{f}_0(\X), Y\right) - V\left(\widehat{f}_{-j}(\X), Y\right)$ used to estimate $\widehat{\Psi}_{j}(\widehat{P}_{\widehat{A}_k})$ within the corresponding cluster instead of using the one learned to identify the clusters. We found that both strategies perform similarly in our experiments.}
+    % \caption{An overview of our method \ours{}  (\emph{green} colour) and the classical \textit{global} \loco{} (\emph{grey} colour).}
+    \label{fig:method-desc}
+\end{figure*}
+
+
+\section{Learned Tree of Section of \ref{impact:clustering}} \label{exp:decision_tree}
+
+\medskip
+The decision rules defining the regions shown in Section \ref{impact:clustering} are:
+
+\paragraph{Regions identified by R-LOCO in feature-importance space}
+\begin{verbatim}
+|--- X6 <= 0.00
+|   |--- X5 <= -0.86
+|   |   |--- class: 0
+|   |--- X5 >  -0.86
+|   |   |--- class: 0
+|--- X6 >  0.00
+|   |--- X4 <= -0.56
+|   |   |--- class: 1
+|   |--- X4 >  -0.56
+|   |   |--- class: 0
+\end{verbatim}
+
+\paragraph{Regions identified by clustering in the input space}
+\begin{verbatim}
+|--- X5 <= -0.01
+|   |--- X2 <= -0.00
+|   |   |--- class: 0
+|   |--- X2 >  -0.00
+|   |   |--- class: 1
+|--- X5 >  -0.01
+|   |--- X6 <= 0.05
+|   |   |--- class: 2
+|   |--- X6 >  0.05
+|   |   |--- class: 3
+\end{verbatim}
+
+\section{Derivations of the centroids for the 1st-order model} \label{proof:centroids}
+
+
+To formalize the advantage of clustering in importance space, we analyze a model with independent features $X_i \sim \mathcal{U}[-1, 1]$ for $i=1, \dots, 6$ and the function:
+\[
+f(\mathbf{X}) = (X_1 + X_2) \cdot \mathbf{1}_{X_6 \leq 0} + (X_3 + X_4) \cdot \mathbf{1}_{X_6 > 0}.
+\]
+This function operates in two distinct regimes based on the "switching" variable $X_6$: $R_A \coloneqq \{ \mathbf{x} \mid X_6 \le 0 \}$ and $R_B \coloneqq \{ \mathbf{x} \mid X_6 > 0 \}$. We compare the K-Means ($K=2$) decision rules derived from clustering in the input space versus the R-LOCO importance space.
+
+\paragraph{Clustering in Input Space}
+The true cluster centroids are the conditional means $\mathbb{E}[\mathbf{X} \mid R_A]$ and $\mathbb{E}[\mathbf{X} \mid R_B]$:
+\[
+C_A = (0, 0, 0, 0, 0, -0.5), \quad
+C_B = (0, 0, 0, 0, 0, 0.5).
+\]
+This follows from feature independence ($\mathbb{E}[X_i \mid R_A] = \mathbb{E}[X_i] = 0$ for $i \le 5$) and the uniform distribution ($\mathbb{E}[X_6 \mid X_6 \le 0] = -0.5$).
+
+The K-Means separating direction is $C_A - C_B = (0, 0, 0, 0, 0, -1)$. The decision rule, $d(\mathbf{x}, C_A)^2 < d(\mathbf{x}, C_B)^2$, simplifies to a condition based \emph{only} on $X_6$. Therefore, input-space clustering merely rediscovers the "switching" variable $X_6$. The variability from the functionally active features ($X_1, \dots, X_4$) acts as noise, hindering a clean separation.
+
+\paragraph{Clustering in R-LOCO Importance Space}
+Each sample $\mathbf{X}$ is mapped to its R-LOCO importance vector $\gamma(\mathbf{X}) = (\Delta_1, \ldots, \Delta_6)$, where $\Delta_j(\mathbf{X}) = (f(\mathbf{X}) - f_{-j}(\mathbf{X}))^2$ and $f_{-j}(\mathbf{X}) = \mathbb{E}[f(\mathbf{Y}) \mid \mathbf{Y}_{-j} = \mathbf{X}_{-j}]$.
+
+Consider $\mathbf{X} \in R_A$, where $X_6 \le 0$ and $f(\mathbf{X}) = X_1 + X_2$. We find the components $\Delta_j$ and their expectations $\mathbb{E}[\Delta_j \mid R_A]$:
+\begin{itemize}
+    \item \textbf{$j=1, 2$ (Active):} $f_{-1}(\mathbf{X}) = \mathbb{E}[Y_1+X_2] = X_2$.
+    \begin{itemize}
+        \item $\Delta_1 = (X_1+X_2 - X_2)^2 = X_1^2$.
+        \item $\mathbb{E}[\Delta_1 \mid R_A] = \mathbb{E}[X_1^2] = 1/3$. By symmetry, $\mathbb{E}[\Delta_2 \mid R_A] = 1/3$.
+    \end{itemize}
+    \item \textbf{$j=3, 4, 5$ (Inactive):} $f_{-3}(\mathbf{X}) = \mathbb{E}[X_1+X_2] = X_1+X_2$.
+    \begin{itemize}
+        \item $\Delta_{3,4,5} = (X_1+X_2 - (X_1+X_2))^2 = 0$.
+        \item $\mathbb{E}[\Delta_{3,4,5} \mid R_A] = 0$.
+    \end{itemize}
+    \item \textbf{$j=6$ (Switching):} $f_{-6}(\mathbf{X}) = \mathbb{E}_{Y_6}[(X_1+X_2)\mathbf{1}_{Y_6 \le 0} + (X_3+X_4)\mathbf{1}_{Y_6 > 0}] = \frac{1}{2}(X_1+X_2) + \frac{1}{2}(X_3+X_4)$.
+    \begin{itemize}
+        \item $\Delta_6 = \left( (X_1+X_2) - \frac{1}{2}(X_1+X_2+X_3+X_4) \right)^2 = \frac{1}{4}(X_1+X_2 - X_3-X_4)^2$.
+        \item $\mathbb{E}[\Delta_6 \mid R_A] = \frac{1}{4}\mathbb{E}[X_1^2 + X_2^2 + X_3^2 + X_4^2] = \frac{1}{4}(4 \cdot \frac{1}{3}) = 1/3$.
+    \end{itemize}
+\end{itemize}
+The importance-space centroid for $R_A$ is $C_{\gamma, A} = \bigl(\frac{1}{3}, \frac{1}{3}, 0, 0, 0, \frac{1}{3}\bigr)$.
+By symmetry, for $\mathbf{X} \in R_B$ (where $f(\mathbf{X}) = X_3+X_4$), the centroid is $C_{\gamma, B} = \bigl(0, 0, \frac{1}{3}, \frac{1}{3}, 0, \frac{1}{3}\bigr)$.
+
+\paragraph{Decision Rule and Interpretation}
+The K-Means separating direction in this space is:
+\[
+C_{\gamma, A} - C_{\gamma, B} = \bigl(\frac{1}{3}, \frac{1}{3}, -\frac{1}{3}, -\frac{1}{3}, 0, 0\bigr).
+\]
+This decision rule \emph{only} depends on the components $(\Delta_1, \Delta_2, \Delta_3, \Delta_4)$ corresponding to the locally active features. Clustering in importance space successfully identifies \textbf{functional similarity}:
+\begin{itemize}
+    \item $R_A$ samples have large $(\Delta_1, \Delta_2)$ and $\Delta_{3,4} \approx 0$.
+    \item $R_B$ samples have large $(\Delta_3, \Delta_4)$ and $\Delta_{1,2} \approx 0$.
+\end{itemize}
+In short, input-space clustering is confounded by noise from irrelevant features and only finds the geometric switch $X_6$. Importance-space clustering is robust to this noise and correctly groups samples by their underlying explanatory behavior.
+
+\paragraph{Remark: Importance Representation and Failure Cases}
+We note a known counter-example: $f(X_1, X_2) = X_2 \cdot \operatorname{sgn}(X_1)$, with regimes $R_A = \{X_1 < 0\}$ and $R_B = \{X_1 \ge 0\}$.
+
+If we use the squared-loss importance $\Delta_j = (f(\mathbf{X}) - f_{-j}(\mathbf{X}))^2$, we find $f_{-1} = f_{-2} = 0$. This results in an importance vector $\gamma(\mathbf{X}) = (\Delta_1, \Delta_2) = (f(\mathbf{X})^2, f(\mathbf{X})^2) = (X_2^2, X_2^2)$. This representation is identical for both regimes, making them inseparable. The issue is that the squared loss $\Delta_j$ is \textbf{sign-agnostic} and discards the directional information that distinguishes the regimes.
+
+This motivates enriching the importance representation. For instance, including the signed R-LOCO residual, $\delta_j(\mathbf{X}) = f(\mathbf{X}) - f_{-j}(\mathbf{X})$, yields an enriched vector:
+\[
+\gamma'(\mathbf{X}) = (\Delta_1, \Delta_2, \delta_1, \delta_2) = (X_2^2, X_2^2, f(\mathbf{X}), f(\mathbf{X})).
+\]
+This enriched vector maps the two regimes to distinct, separable locations:
+\[
+\gamma'(\mathbf{X}) = \begin{cases}
+(X_2^2, X_2^2, -X_2, -X_2) & \text{if } X_1 < 0 \text{ (Regime } R_A\text{)}, \\
+(X_2^2, X_2^2, X_2, X_2)  & \text{if } X_1 \ge 0 \text{ (Regime } R_B\text{)}.
+\end{cases}
+\]
+In this space, the regimes are easily distinguished by a clustering algorithm, underscoring the importance of the chosen representation.
+
+\section{Evaluation methodology for Real-World Data} \label{exp:real_details}
+
+\label{sec:evaluation-methodology}
+
+\subsection{Definitions}
+We begin by outlining the core components of our evaluation framework:
+
+\begin{itemize}
+    \item \textbf{Dataset} $\mathcal{D}$: A collection of $n$ samples. Each sample is a pair $(\mathbf{x}, y)$, where $\mathbf{x}$ denotes the input and $y$ the ground-truth target.
+    \item \textbf{Input} $\mathbf{x}$: A $d$-dimensional vector of numerical features.
+    \item \textbf{Model} $f(\mathbf{x})$: The predictive model that maps $\mathbf{x}$ to a prediction.
+    \item \textbf{Attribution Method} $A(\mathbf{x})$: A function that assigns a positive importance score to each of the $d$ input features. These scores correspond to normalized attributions from each explanation method (e.g., R-LOCO, SHAP).
+    \item \textbf{Error Function} $E(\mathbf{x}, y)$: A metric quantifying the discrepancy between the model’s prediction for $\mathbf{x}$ and the true label $y$:
+    \begin{itemize}
+        \item \textbf{Classification:} $E(\mathbf{x}, y) = 1$ if the prediction is incorrect, $0$ otherwise.
+        \item \textbf{Regression:} $E(\mathbf{x}, y)$ may be the absolute difference between the predicted and true values.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Masking Procedure}
+To assess feature importance, we apply a \emph{masking} (or \emph{occlusion}) technique as follows:
+
+\begin{enumerate}
+    \item For each input $\mathbf{x}$, compute the feature importance scores using $A(\mathbf{x})$.
+    \item Identify the indices of:
+    \begin{itemize}
+        \item The top-$k$ most important features (\textbf{Top-$k$ Indices}).
+        \item The bottom-$k$ least important features (\textbf{Bottom-$k$ Indices}).
+    \end{itemize}
+    \item Create two modified versions of $\mathbf{x}$:
+    \begin{align*}
+        \mathbf{x}^{\text{masked,top-}k} &: \text{Replace values at Top-$k$ indices with zero}, \\
+        \mathbf{x}^{\text{masked,bottom-}k} &: \text{Replace values at Bottom-$k$ indices with zero}.
+    \end{align*}
+\end{enumerate}
+
+\subsection{Error Calculation}
+We compute the average model error over the dataset under three conditions:
+
+\paragraph{Original Average Error (Baseline):}
+\[
+\text{AvgError}_{\text{Original}} = \frac{1}{n} \sum_{(\mathbf{x}, y) \in \mathcal{D}} E(\mathbf{x}, y)
+\]
+
+\paragraph{Top-$k$ Masked Average Error:}
+\[
+\text{AvgError}_{\text{Top-}k} = \frac{1}{n} \sum_{(\mathbf{x}, y) \in \mathcal{D}} E(\mathbf{x}^{\text{masked,top-}k}, y)
+\]
+
+\paragraph{Bottom-$k$ Masked Average Error:}
+\[
+\text{AvgError}_{\text{Bottom-}k} = \frac{1}{n} \sum_{(\mathbf{x}, y) \in \mathcal{D}} E(\mathbf{x}^{\text{masked,bottom-}k}, y)
+\]
+
+\subsection{Final Metrics for Figures}
+The values shown in Figures~1 and~2 represent the \emph{change in model error} due to masking, computed as follows:
+
+\paragraph{Top-$k$ Error Change (Left Figure):}
+Indicates the degradation in performance after removing the Top-$k$ most important features:
+\[
+\text{ChangeInError}_{\text{Top}}(k)
+= \text{AvgError}_{\text{Original}} - \text{AvgError}_{\text{Top-}k}.
+\]
+
+\paragraph{Bottom-$k$ Error Change (Right Figure):}
+Reflects the performance change after removing the Top-$k$ least important features:
+\[
+\text{ChangeInError}_{\text{Bottom}}(k)
+= \text{AvgError}_{\text{Original}} - \text{AvgError}_{\text{Bottom-}k}.
+\]
+
+
+\section{Runtime and Memory Usage Analysis}
+\label{sec:runtime-memory}
+
+We find that R-LOCO is significantly faster at inference time than the baselines. While our method incurs additional computational cost during training (due to clustering and model fitting), it performs inference with minimal overhead, as only the cluster assignment is required per sample. A similar pattern is observed for memory usage.
+
+In terms of scalability, R-LOCO’s \textbf{training} cost grows approximately linearly with the number of features. This behaviour is consistent with widely used explanation approaches such as SHAPLoss and its variants \citep{covert2020explaining}. Importantly, this training step is performed only once.
+
+Moreover, R-LOCO can be further optimised for tree-based models using efficient approximation methods such as \textit{Projected Forests} \citep{benard2021shaff, amoukou2021consistent}, where a single model can be reused to compute multiple conditional expectations efficiently.
+
+
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method} & \textbf{Train (s)} & \textbf{Infer (s)} & \textbf{Total (s)} & \textbf{Train (MB)} & \textbf{Infer (MB)} & \textbf{Peak (MB)} \\
+\midrule
+R-LOCO & 33.521 & 0.032 & 33.553 & 1687.9 & 8.6 & 2743.0 \\
+LIME   & 0.038  & 34.684 & 34.722 & 0.5 & 2.3 & 1.0 \\
+SHAP   & 0.002  & 20.698 & 20.700 & 0.0 & 0.8 & 6.8 \\
+\bottomrule
+\end{tabular}
+\caption{Runtime and memory usage comparison on the California dataset.}
+\label{tab:runtime-california}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method} & \textbf{Train (s)} & \textbf{Infer (s)} & \textbf{Total (s)} & \textbf{Train (MB)} & \textbf{Infer (MB)} & \textbf{Peak (MB)} \\
+\midrule
+R-LOCO & 1.611 & 0.010 & 1.621 & 12.2 & 0.5 & 1.7 \\
+SHAP   & 0.002 & 1.433 & 1.436 & 0.0 & 145.0 & 16.7 \\
+LIME   & 0.008 & 0.838 & 0.846 & 0.2 & 1.3 & 0.4 \\
+\bottomrule
+\end{tabular}
+\caption{Runtime and memory usage comparison on the Diabetes dataset.}
+\label{tab:runtime-diabetes}
+\end{table}
+
+
+
+
+
+
+
+
+
+% \section{Preliminaries and Definitions}
+
+% \begin{definition}[Piecewise Linear Function $f$]
+% Let $f: \Xspace \to \Yspace$ be a piecewise linear function as defined in Theorem \ref{theo:sv_impossible} of the paper. It is given by:
+% $$ f(X) = \sum_{k'=1}^{m} f_{k'}(X) \ind_{A_{k'}}(X) $$
+% where:
+% \begin{itemize}
+%     \item The regions $A_{k'}$ are disjoint hyperrectangles that form a partition of the input space $\Xspace$, i.e., $\cup_{k'=1}^{m} A_{k'} = \Xspace$ and $A_{k'} \cap A_{j'} = \emptyset$ for $k' \neq j'$.
+%     \item Each component $f_{k'}(X)$ is an affine function:
+%     $$ f_{k'}(X) = \sum_{i=1}^{p}a_{i,k'}X_{i} + b_{k'} = \bm{a}_{k'}^T X + b_{k'} $$
+%     where $X = (X_1, \dots, X_p)^T \in \R^p$ are the input features, and $\bm{a}_{k'} = (a_{1,k'}, \dots, a_{p,k'})^T$ and $b_{k'}$ are real-valued coefficients and intercept for region $A_{k'}$.
+% \end{itemize}
+% \end{definition}
+
+% \begin{definition}[LOCO Importance for a Distribution $P$]
+% The Leave-One-Covariate-Out (LOCO) importance for a feature $X_j$ with respect to a data distribution $P=P_X P_{Y|X}$ and a conformity score $V(\cdot, \cdot)$ is:
+% $$ \Psi_{j}(P) = \E_{P}[\Delta_{j}(X,Y)] $$
+% where $\Delta_{j}(X,Y) = V(f_{0}(X),Y) - V(f_{-j}(X),Y)$.
+% The oracle predictors are:
+% \begin{align*}
+% f_0 &= \arg\max_{g \in \Fclass} \E_{P}[V(g(X),Y)] \\
+% f_{-j} &= \arg\max_{g \in \Fclass_{-j}} \E_{P}[V(g(X),Y)]
+% \end{align*}
+% where $\Fclass$ is a class of functions and $\Fclass_{-j}$ is the subset of $\Fclass$ containing functions that disregard $X_j$.
+% \end{definition}
+
+% \begin{definition}[R-LOCO Attribution for a Region/Cluster]
+% Let $C_{k^*}$ be a cluster of data points identified by R-LOCO, and let $\hat{A}_{k^*}$ be the corresponding region in $\Xspace$. The R-LOCO attribution for feature $X_j$ in this region is given by the estimated conditional LOCO importance:
+% $$ \hat{\Psi}_{j}(\hat{P}_{\hat{A}_{k^*}}) = \E_{\hat{P}_{\hat{A}_{k^*}}}[\hat{\Delta}_{j}(X,Y)] = \frac{1}{|C_{k^*}|} \sum_{(X_l,Y_l)\in C_{k^*}} \hat{\Delta}_{j}(X_l,Y_l) $$
+% where $\hat{P}_{\hat{A}_{k^*}}$ is the empirical distribution of data points in $C_{k^*}$. The term $\hat{\Delta}_{j}(X_l,Y_l)$ is:
+% $$ \hat{\Delta}_{j}(X_l,Y_l) = V(\hat{f}_{0,\hat{A}_{k^*}}(X_l),Y_l) - V(\hat{f}_{-j,\hat{A}_{k^*}}(X_l),Y_l) $$
+% Here, $\hat{f}_{0,\hat{A}_{k^*}}$ and $\hat{f}_{-j,\hat{A}_{k^*}}$ are estimators of the oracle predictors $f_{0,\hat{A}_{k^*}}$ and $f_{-j,\hat{A}_{k^*}}$ specific to the data distribution $P_{\hat{A}_{k^*}}$ (i.e., conditional on $X \in \hat{A}_{k^*}$). These estimators are constructed using only the data points $(X_l, Y_l)$ for which $X_l \in C_{k^*}$.
+% \end{definition}
+
+% \section{Theorem 4.1 Statement}
+
+% \begin{theorem}[Influence on R-LOCO Attributions in Ideal Regions]
+% Let $f$ be the piecewise linear function defined above. Assume the R-LOCO clustering algorithm identifies a cluster $C_{k^*}$ such that all data points $X_l \in C_{k^*}$ also satisfy $X_l \in A_{k^*}$ for some specific true model region $A_{k^*}$. (This means the cluster $C_{k^*}$ is perfectly contained within or aligns with the true model region $A_{k^*}$, where $f(X) = f_{k^*}(X)$ is the active model).
+
+% Then, the R-LOCO attributions $\hat{\Psi}_{j}(\hat{P}_{\hat{A}_{k^*}})$ for any feature $X_j$, calculated for an instance $x \in A_{k^*}$ (and thus for cluster $C_{k^*}$), are solely influenced by the coefficients $\bm{a}_{k^*}$ and intercept $b_{k^*}$ of the active regional model $f_{k^*}(X)$. They do not depend on the coefficients $\bm{a}_{k'}$ or $b_{k'}$ from any other inactive region $A_{k'}$ where $k' \neq k^*$.
+% \end{theorem}
+
+% \section{Formal Proof of Theorem 4.1}
+
+% \begin{proof}
+% Let $C_{k^*}$ be a cluster identified by R-LOCO such that all observations $(X_l, Y_l)$ with $X_l \in C_{k^*}$ also have $X_l \in A_{k^*}$. This region $A_{k^*}$ is one of the true underlying regions where the model is $f(X) = f_{k^*}(X) = \bm{a}_{k^*}^T X + b_{k^*}$.
+
+% The R-LOCO attribution for a feature $X_j$ in the region $\hat{A}_{k^*}$ (corresponding to cluster $C_{k^*}$) is:
+% $$ \hat{\Psi}_{j}(\hat{P}_{\hat{A}_{k^*}}) = \frac{1}{|C_{k^*}|} \sum_{(X_l,Y_l)\in C_{k^*}} \left( V(\hat{f}_{0,\hat{A}_{k^*}}(X_l),Y_l) - V(\hat{f}_{-j,\hat{A}_{k^*}}(X_l),Y_l) \right) $$
+
+% 1.  \textbf{Oracle Predictors for Region $\hat{A}_{k^*}$}:
+%     Since the cluster $C_{k^*}$ consists solely of points from the true region $A_{k^*}$, the data distribution $P_{\hat{A}_{k^*}}$ (or its empirical estimate $\hat{P}_{\hat{A}_{k^*}}$ based on $C_{k^*}$) reflects the process $Y_l = f_{k^*}(X_l) + \epsilon_l$ for $X_l \in A_{k^*}$.
+%     The oracle predictor using all features, $f_{0,\hat{A}_{k^*}}$, is defined as:
+%     $$ f_{0,\hat{A}_{k^*}}(X) = \arg\max_{g \in \Fclass} \E_{P_{\hat{A}_{k^*}}}[V(g(X),Y)] $$
+%     Given that $Y \approx f_{k^*}(X)$ for $X \in \hat{A}_{k^*} (\equiv A_{k^*})$, the optimal predictor $f_{0,\hat{A}_{k^*}}(X)$ is $f_{k^*}(X) = \bm{a}_{k^*}^T X + b_{k^*}$.
+%     The estimator $\hat{f}_{0,\hat{A}_{k^*}}(X_l)$, learned using only data from $C_{k^*} \subseteq A_{k^*}$, will be an estimate of $f_{k^*}(X_l)$. For instance, if $\hat{f}_{0,\hat{A}_{k^*}}$ is obtained by fitting a linear model to the data in $C_{k^*}$, its parameters will be estimates of $\bm{a}_{k^*}$ and $b_{k^*}$. Thus, the functional form of $\hat{f}_{0,\hat{A}_{k^*}}$ and its predictions depend solely on the structure and coefficients of $f_{k^*}$. Specifically, they do not involve coefficients $\bm{a}_{k'}$ or $b_{k'}$ for any $k' \neq k^*$, as data from other regions $A_{k'}$ are not part of $C_{k^*}$ and thus not used in this estimation.
+
+% 2.  \textbf{Oracle Predictor Excluding $X_j$ for Region $\hat{A}_{k^*}$}:
+%     Similarly, the oracle predictor excluding feature $X_j$, $f_{-j,\hat{A}_{k^*}}$, is defined as:
+%     $$ f_{-j,\hat{A}_{k^*}}(X) = \arg\max_{g \in \Fclass_{-j}} \E_{P_{\hat{A}_{k^*}}}[V(g(X),Y)] $$
+%     Again, since $Y \approx f_{k^*}(X)$ for $X \in \hat{A}_{k^*}$, $f_{-j,\hat{A}_{k^*}}(X)$ is the best predictor of $f_{k^*}(X)$ using features $X_{\setminus j}$ (all features except $X_j$).
+%     The estimator $\hat{f}_{-j,\hat{A}_{k^*}}(X_l)$, learned using only data from $C_{k^*} \subseteq A_{k^*}$, will be an estimate of this function. For the affine form $f_{k^*}(X) = \sum_{i=1}^{p}a_{i,k^*}X_{i} + b_{k^*}$, the function $f_{-j,\hat{A}_{k^*}}(X)$ (and its estimate $\hat{f}_{-j,\hat{A}_{k^*}}(X_l)$) will have its functional form and parameters determined only by the coefficients $\bm{a}_{k^*}$ and $b_{k^*}$ of $f_{k^*}$. For example, if $f_{k^*}$ is additive and features are independent, $f_{-j,\hat{A}_{k^*}}(X)$ would be $f_{k^*}(X)$ with the term $a_{j,k^*}X_j$ removed or replaced by its conditional expectation given $X_{\setminus j}$ (which, for independent $X_j$, is $a_{j,k^*} \E[X_j]$). In any case, only parameters from $f_{k^*}$ are involved.
+
+% 3.  \textbf{Conformity Score Evaluation}:
+%     The conformity score $V(g(X_l),Y_l)$ is evaluated for each point $(X_l, Y_l) \in C_{k^*}$. We have $Y_l \approx f_{k^*}(X_l)$. The predictions $g(X_l)$ come from $\hat{f}_{0,\hat{A}_{k^*}}(X_l)$ and $\hat{f}_{-j,\hat{A}_{k^*}}(X_l)$.
+%     Since both $\hat{f}_{0,\hat{A}_{k^*}}(X_l)$ and $\hat{f}_{-j,\hat{A}_{k^*}}(X_l)$ are functions whose parameters depend only on the coefficients $(\bm{a}_{k^*}, b_{k^*})$ of $f_{k^*}$, the values of the conformity scores $V(\hat{f}_{0,\hat{A}_{k^*}}(X_l),Y_l)$ and $V(\hat{f}_{-j,\hat{A}_{k^*}}(X_l),Y_l)$ will also depend only on these coefficients $(\bm{a}_{k^*}, b_{k^*})$.
+
+% 4.  \textbf{Influence on $\hat{\Delta}_{j}(X_l,Y_l)$}:
+%     For each $(X_l, Y_l) \in C_{k^*}$, the term $\hat{\Delta}_{j}(X_l,Y_l) = V(\hat{f}_{0,\hat{A}_{k^*}}(X_l),Y_l) - V(\hat{f}_{-j,\hat{A}_{k^*}}(X_l),Y_l)$ therefore depends solely on the coefficients $(\bm{a}_{k^*}, b_{k^*})$ of the active regional model $f_{k^*}$. It is not influenced by coefficients $(\bm{a}_{k'}, b_{k'})$ from any other region $A_{k'}$ where $k' \neq k^*$.
+
+% 5.  \textbf{Conclusion for $\hat{\Psi}_{j}(\hat{P}_{\hat{A}_{k^*}})$}:
+%     The R-LOCO attribution $\hat{\Psi}_{j}(\hat{P}_{\hat{A}_{k^*}})$ is the average of these $\hat{\Delta}_{j}(X_l,Y_l)$ terms over all $(X_l,Y_l) \in C_{k^*}$. Since each term in the sum depends solely on the coefficients $(\bm{a}_{k^*}, b_{k^*})$, their average must also solely be influenced by (i.e., be a function of) these coefficients.
+
+% Therefore, under the stated ideal clustering conditions, the R-LOCO attributions for region $\hat{A}_{k^*}$ depend only on the coefficients of the true local model $f_{k^*}$ active in that region and are not influenced by parameters from other, inactive regions $A_{k'}$ ($k' \neq k^*$).
+% \end{proof}
+
+\newpage
+\section*{NeurIPS Paper Checklist}
+
+%%% BEGIN INSTRUCTIONS %%%
+
+%%% END INSTRUCTIONS %%%
+
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+    \item[] Answer:  \answerYes{}
+    \item[] Justification:  Yes, the main claims in the abstract and introduction accurately reflect the paper’s contributions and scope. We clearly state the identified limitations of L-SV and LIME.  Specifically, we argue that a sound local attribution method should not assign importance to features that do not influence the model output (e.g., features with zero coefficients in a linear model), and lack statistical dependence with functionality-relevant features. We introduce R-LOCO as a method to bridge local and global explanations, which overcomes these limitations. These claims are supported by theoretical results (Section 2, Theorem \ref{theo:sv_impossible}; Section 4.1, Theorem \ref{theo:rloco}, Theoretical analysis in \S\ref{sec:why_feature_importance_cluster}) and empirical evidence in controlled (Section 5) and real-world settings (Section 6).
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the abstract and introduction do not include the claims made in the paper.
+        \item The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. 
+        \item The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. 
+        \item It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 
+    \end{itemize}
+
+\item {\bf Limitations}
+    \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Most of the experiments and theoretical results in this paper focus on piecewise linear models. Extending these results to other settings should be done with caution, particularly because the notion of a "ground truth explanation" is difficult to define. Our second theorem on the utility of R-LOCO is proved under the condition that clusters either align with or are fully contained within the true underlying regions. To address more realistic scenarios, we also provide an analysis of cases where this assumption does not hold (See in \S\ref{app:rloco_mixed} or \ref{sec:why_feature_importance_cluster}), offering deeper insight into R-LOCO’s behavior under imperfect clustering. While the independence assumption may be seen as a limitation, we made it primarily to isolate the effects of attribution without confounding dependencies. In addition, we do evaluate R-LOCO on real-world datasets that naturally include feature dependencies, and our results demonstrate that the method remains effective and better than the baselines in these settings.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. 
+        \item The authors are encouraged to create a separate "Limitations" section in their paper.
+        \item The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be.
+        \item The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated.
+        \item The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon.
+        \item The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size.
+        \item If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness.
+        \item While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren't acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.
+    \end{itemize}
+
+\item {\bf Theory assumptions and proofs}
+    \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: 
+\begin{itemize}
+    \item For Theorem \ref{theo:sv_impossible} (Limitations of L-SV for piecewise linear functions): The assumptions (piecewise linear function f with m components, disjoint hyperrectangle regions $A_k$, independent covariates) are stated within the theorem. The full proof is provided in Appendix \ref{sup:proof_shapdecomposition}.
+    \item For Theorem \ref{theo:rloco} (\ours{} behaviour for piecewise linear functions): The assumptions (piecewise linear function from Theorem \ref{theo:sv_impossible}, \ours{} clustering algorithm correctly identifying regions corresponding to or included in $A_k$) are stated. A detailed proof is in Appendix \ref{proof:rloco}. 
+    \item For the theoretical analysis of \ours{} in \S\ref{app:rloco_mixed}, all assumptions and complete proofs are also given.
+\end{itemize}
+
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include theoretical results. 
+        \item All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced.
+        \item All assumptions should be clearly stated or referenced in the statement of any theorems.
+        \item The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. 
+        \item Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.
+        \item Theorems and Lemmas that the proof relies upon should be properly referenced. 
+    \end{itemize}
+
+    \item {\bf Experimental result reproducibility}
+    \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Indeed, we have provided all essential details required to conduct our experiments. Details regarding model setups (Section 5.1), R-LOCO variants (Section 5), evaluation metrics (Section 5.2), baseline parameters and R-LOCO implementation specifics (Appendix C), and real-world experiment configurations (Section 6) are included. The code will be released upon acceptance.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item If the paper includes experiments, a No answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not.
+        \item If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. 
+        \item Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed.
+        \item While NeurIPS does not require releasing code, the conference does require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example
+        \begin{enumerate}
+            \item If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm.
+            \item If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully.
+            \item If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset).
+            \item We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results.
+        \end{enumerate}
+    \end{itemize}
+
+
+\item {\bf Open access to data and code}
+    \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: We report on generating the synthetic experiments (Section 5.1),  citations for the open source data used and commit to releasing the code upon acceptance.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that paper does not include experiments requiring code.
+        \item Please see the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item While we encourage the release of code and data, we understand that this might not be possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).
+        \item The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+        \item The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why.
+        \item At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable).
+        \item Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.
+    \end{itemize}
+
+
+\item {\bf Experimental setting/details}
+    \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Yes, the experimental details are all given. Specifically, data splitting procedures are described in Appendix C. Hyperparameters for baseline methods like LIME (defaults) and R-LOCO's Affinity Propagation (damping=0.8) are mentioned in Appendix C. Section 5.3 explores variations in clustering parameters for R-LOCO. The models being explained (e.g., piecewise linear, XGBoost) are also specified.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.
+        \item The full details can be provided either with the code, in appendix, or as supplemental material.
+    \end{itemize}
+
+\item {\bf Experiment statistical significance}
+    \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification:  The analysis section (Section 5.3) mentions that results presented are aggregated over 50 runs. Table 1 and Table 2 report mean values and quantile ranges (q0.1 -- q0.95 for 'NI attr.'), which provide information about the distribution and variability of results.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The authors should answer "Yes" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper.
+        \item The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).
+        \item The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.)
+        \item The assumptions made should be given (e.g., Normally distributed errors).
+        \item It should be clear whether the error bar is the standard deviation or the standard error of the mean.
+        \item It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96\% CI, if the hypothesis of Normality of errors is not verified.
+        \item For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates).
+        \item If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.
+    \end{itemize}
+
+\item {\bf Experiments compute resources}
+    \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: We execute all experiments on a MacBook Pro M2, with none of them being particularly costly to conduct. All Results are obtainable within a few hours.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.
+        \item The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. 
+        \item The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn't make it into the paper). 
+    \end{itemize}
+    
+\item {\bf Code of ethics}
+    \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: The research conforms to the NeurIPS Code of Ethics. 
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.
+        \item If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics.
+        \item The authors should make sure to preserve anonymity (e.g., if there is a special consideration due to laws or regulations in their jurisdiction).
+    \end{itemize}
+
+
+\item {\bf Broader impacts}
+    \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: This paper focuses primarily on the positive social impact by improving model understanding and trustworthiness. This work advances the analysis of widely used explainability tools that play a crucial role in high-stakes fields such as healthcare. We highlight their limitations and propose a
+more theoretically sound and empirically robust approach to improve interpretability and reliability in model explanations.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that there is no societal impact of the work performed.
+        \item If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact.
+        \item Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations.
+        \item The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster.
+        \item The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.
+        \item If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).
+    \end{itemize}
+    
+\item {\bf Safeguards}
+    \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?
+    \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Not applicable. The paper does not release new large-scale models or datasets with high intrinsic risk for misuse.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper poses no such risks.
+        \item Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. 
+        \item Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images.
+        \item We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.
+    \end{itemize}
+
+\item {\bf Licenses for existing assets}
+    \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+    \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Yes, all data are correctly cited. 
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not use existing assets.
+        \item The authors should cite the original paper that produced the code package or dataset.
+        \item The authors should state which version of the asset is used and, if possible, include a URL.
+        \item The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+        \item For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided.
+        \item If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, \url{paperswithcode.com/datasets} has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset.
+        \item For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided.
+        \item If this information is not available online, the authors are encouraged to reach out to the asset's creators.
+    \end{itemize}
+
+\item {\bf New assets}
+    \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+    \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Not applicable. The paper primarily introduces a new method, R-LOCO. Code for this method is a new asset that is committed to be released upon acceptance (as stated in answers to Q4 and Q5). 
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not release new assets.
+        \item Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. 
+        \item The paper should discuss whether and how consent was obtained from people whose asset is used.
+        \item At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.
+    \end{itemize}
+
+\item {\bf Crowdsourcing and research with human subjects}
+    \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? 
+    \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Not applicable.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. 
+        \item According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 
+    \end{itemize}
+
+\item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
+    \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
+    \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Not applicable.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. 
+        \item We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. 
+        \item For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review.
+    \end{itemize}
+
+\item {\bf Declaration of LLM usage}
+    \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required.
+    %this research? 
+    \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+    \item[] Justification: Not applicable.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
+        \item Please refer to our LLM policy (\url{https://neurips.cc/Conferences/2025/LLM}) for what should or should not be described.
+    \end{itemize}
+\end{enumerate}
+
+
+\end{document}

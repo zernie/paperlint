@@ -1,0 +1,1064 @@
+% ===== Start TOC only for supp =====
+\clearpage
+\appendix
+
+
+% Real TOC begins here
+% \clearpage
+\twocolumn[{%
+  \begin{center}
+    % \vspace{2em}
+    {\huge \bfseries Instance Segmentation of Scene Sketches Using Natural Image Priors\\[1ex]
+    Supplementary Material}
+    \vspace{2em}
+
+    {\Large
+      Mia Tang$^{1}$ \quad
+      Yael Vinker$^{2}$ \quad
+      Chuan Yan$^{1}$ \quad
+      Lvmin Zhang$^{1}$ \quad
+      Maneesh Agrawala$^{1}$\\[0.5em]
+      $^1$Stanford University \quad
+      $^2$MIT CSAIL\\[0.5em]
+      % \texttt{miatang@cs.stanford.edu, yaelvi116@gmail.com, chuanyan@stanford.edu, lvmin@stanford.edu, maneesh@cs.stanford.edu}
+    }
+
+    % \vspace{2em}
+    {\large Project page: \href{https://inklayer.github.io}{\texttt{\textcolor{magenta}{https://inklayer.github.io}}}}
+
+    \vspace{2em}
+  \end{center}
+}]
+
+\restoreTOC
+\setcounter{tocdepth}{2}
+\renewcommand{\contentsname}{Contents}
+\tableofcontents
+% \clearpage
+
+\section{Sketch Editing Interface}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{figs/interface.png}
+    \caption{\textbf{InkLayer application. }Interactive interface for sketch editing, powered by our instance segmentation and layer completion algorithm.}
+    \vspace{-5mm}
+    \label{fig:interface}
+\end{figure}
+
+Our sketch segmentation and layering technique facilitates sketch editing, allowing users to drag or manipulate segmented objects without the need to manually sketch the affected regions. We demonstrate this through an interactive sketch editing interface (\Cref{fig:interface}) that enables users to upload a sketch, which is then segmented and transformed into completed, ordered layers as detailed in our paper. This facilitates more efficient sketch editing by allowing artists to easily move, copy, or delete pixels associated with specific object instances, as the sketch is represented as an ordered list of layers.
+
+
+% We offer an interactive sketch editing interface that enables users to upload a sketch, which is then segmented and transformed into completed, ordered layers as detailed in our paper. This facilitates more efficient sketch editing by allowing artists to easily move, copy, or delete pixels associated with specific object instances, as the sketch is represented as an ordered list of layers.
+
+
+\section{Refinement Module Ablation}
+
+\begin{table}[]
+\centering
+\begin{tabular}{l|cc|cc}
+\toprule
+\multirow{2}{*}{\diagbox{Dataset}{Metric}}  & \multicolumn{2}{c|}{\textbf{Acc} $\uparrow$} & \multicolumn{2}{c}{\textbf{IoU} $\uparrow$} \\
+                                  & w/o Ref. & w/ Ref. & w/o Ref. & w/ Ref. \\
+\midrule
+SketchyScene   & 0.85 & \textbf{0.92} & 0.79 & \textbf{0.88} \\
+Zhang \etal   & 0.79 & \textbf{0.86} & 0.67 & \textbf{0.74} \\ 
+SketchAgent    & 0.82 & \textbf{0.88} & 0.76 & \textbf{0.84} \\
+CLIPasso base  & 0.86 & \textbf{0.91} & 0.81 & \textbf{0.88} \\
+CLIPasso 01    & 0.82 & \textbf{0.87} & 0.79 & \textbf{0.86} \\
+CLIPasso 04    & 0.85 & \textbf{0.85} & 0.82 & \textbf{0.84} \\
+CLIPasso 11    & 0.82 & \textbf{0.89} & 0.77 & \textbf{0.85} \\
+InstantStyle  & 0.73 & \textbf{0.78} & 0.60 & \textbf{0.70} \\
+\midrule 
+All & 0.82 & \textbf{0.87 } & 0.75  & \textbf{0.82} \\
+    & $\pm$ 0.04 & $\pm$ 0.04 & $\pm$ 0.08 & $\pm$ 0.07 \\ 
+\bottomrule
+\end{tabular}
+\caption{\textbf{Comparison of segmentation performance with and without refinement module. }We see consistent improvement in performance across all datasets. }
+\vspace{-8mm}
+\label{tb:ablation}
+\end{table}
+\rev{
+We conduct an ablation study on our depth-guided refinement module across the benchmark datasets, with quantitative results summarized in Table~\ref{tb:ablation}. On average, removing the refinement module results in segmentation performance degradation of a 0.05 decrease in accuracy and a 0.07 decrease in IoU, underscoring its importance in achieving precise instance segmentation.}
+\rev{
+Figure~\ref{fig:refinement_ablation} presents qualitative comparisons of segmentation results for the same sketch, with and without the refinement module. These examples further illustrate the module’s effectiveness in resolving ambiguities and enhancing segmentation quality.}
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{4pt}
+    {\small
+    \resizebox{0.85\textwidth}{!}{ 
+    \begin{tabular}{c c c}
+        Sketch & w/o Refinement & \textbf{w/ Refinement (Ours)}  \\
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample11_input.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample11_no_refine.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample11_final_segment.png}} \\
+
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample14_input.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample14_no_refine.png}}  &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample14_final_segment.png}} \\
+
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample39_input.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample39_no_refine.png}}  &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample39_final_segment.png}} 
+        \\
+
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample124_input.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample124_no_refine.png}} &
+        \frame{\includegraphics[width=0.29\linewidth]{figs_supp/refinement_comparisons/L0_sample124_final_segment.png}} 
+        \\
+    \end{tabular}
+    }}
+    \caption{\rev{\textbf{Refinement module ablation.} We compare segmentation outputs with and without our depth-guided refinement module. The refinement significantly improves mask coherence and reduces visual artifacts, such as duplicated or fragmented object regions. As shown across diverse scene sketches, the refined results exhibit smoother boundaries, better alignment with object structure, and fewer inconsistencies—particularly in complex regions with overlapping or adjacent objects.}}
+    \label{fig:refinement_ablation}
+\end{figure*}
+
+
+\section{Depth Maps Accuracy}
+\rev{
+The effectiveness of our refinement module depends on accurately sorting object instances, which in turn relies on the quality of the estimated sketch depth maps. To generate these depth maps, we use DepthAnythingV2~\cite{depth_anything_v2}, a model trained on a diverse set of visual inputs including artworks and sketches. However, evaluating depth map accuracy remains challenging due to the lack of ground-truth depth annotations for our synthetic sketches. To address this, we present both qualitative visualizations and a proxy quantitative evaluation. Specifically, we assess depth map quality on InstantStyle sketches, for which we have access to the corresponding natural images. These natural images are assumed to yield more reliable depth estimations, enabling a comparative evaluation of the sketch-derived depth maps.}
+
+\subsection{Qualitative Evaluation of Depth Maps}
+\rev{
+We present qualitative results of the estimated depth maps in Figure~\ref{fig:sketch_depth_qual}, showcasing a variety of sketches across different datasets and scene types. These examples highlight the ability of DepthAnythingV2 to extract meaningful depth cues from sparse and stylized sketch inputs. Despite the abstract nature of the input sketches—ranging from realistic human figures to symbolic line drawings of animals and buildings—the model produces coherent depth estimates that reflect the relative spatial layout of the scene. These depth cues play a crucial role in our refinement module, helping to disambiguate overlapping regions and enforce depth-aware instance separation.}
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{1.5pt}
+    {\small
+    \resizebox{0.88\textwidth}{!}{ 
+    \begin{tabular}{c c @{\hskip 10pt} c c}
+            Sketch & Depth Map & Sketch & Depth Map \\
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/precise_17590_input.png}} &
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/precise_17590_depth_map.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0114144328_input.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0114144328_depth_map.png}} \\
+            
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/precise_55618_input.png}} &
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/precise_55618_depth_map.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0004_input.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0004_depth_map.png}} \\
+            
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/C0_input.png}} &
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/C0_depth_map.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/34824_input.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/34824_depth_map.png}} \\
+            
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/SC_85_input.png}} &
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/SC_85_depth_map.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/152340_input.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/152340_depth_map.png}} \\
+            
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/SC_860_input.png}} &
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/SC_860_depth_map.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0007_input.png}} & 
+            \frame{\includegraphics[width=0.22\linewidth]{figs_supp/depth_map/0007_depth_map.png}} \\
+        \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\rev{\textbf{Sketch and corresponding DepthAnythingV2~\shortcite{depth_anything_v2} depth map pairs.} We show qualitative results on sketch depth maps of scenes across datasets, demonstrating the reasonable performance of this depth estimator directly on sketches. The model generalizes surprisingly well across a wide spectrum of sketch styles, from highly abstract and symbolic representations to more detailed and realistic ones. Despite the lack of color or shading cues, the predicted depth maps often capture overall scene layout and object ordering effectively.}}
+    \label{fig:sketch_depth_qual}
+    }
+\end{figure*}
+
+
+\subsection{Quantitative Evaluation of Depth Maps}
+
+%%CHUAN 
+% For the quantitative evaluation, rather than computing the average absolute relative error, we assess the consistency of object ordering between the predicted depth maps from sketches and the ground truth depth maps using Kendall’s Tau coefficient. This approach is adopted because our method relies on relative depth for sketch-based object layering, making the absolute depth values less critical.
+% The comparative experiments indicate an average of 80\% agreement between the predicted object ordering from sketches and the ground truth. The evaluation methodology is illustrated in Figure~\ref{fig:depth_order_evaluation}.
+\rev{For the quantitative evaluation of depth quality, we assess the consistency of object ordering between the predicted depth maps (from sketches) and the ground truth depth maps (from corresponding natural images) using Kendall’s Tau coefficient. Rather than relying on absolute depth metrics such as average relative error, we adopt this rank-based approach to better reflect our method’s reliance on relative depth for instance layering. Since our refinement module operates on object ordering rather than precise depth values, this metric offers a more meaningful evaluation.}
+\rev{
+Our results show an average of 80\% agreement in object ordering, demonstrating the effectiveness of sketch-based depth estimation for supporting depth-aware segmentation. }
+
+
+\section{InkScenes Dataset Generation Details}
+In this section, we provide additional details on our synthetic dataset \datasetname{}'s creation process. 
+
+\subsection{Generating Vector Scene Sketches}
+We employ CLIPasso \shortcite{vinker2022clipasso} and SketchAgent \shortcite{vinker2024sketchagent} to generate diverse vector sketches of single objects. For each generation method, we create 10 distinct object instances for all 45 classes in the SketchyScene dataset \shortcite{Zou18SketchyScene}, ensuring sufficient variability in our synthetic scenes.
+For CLIPasso's image-to-vector conversion, we first generate photorealistic synthetic images using SDXL \shortcite{rombach2021highresolution}. The generation process uses a consistent prompt template: \textit{``A realistic image of a \{class\_name\} with a blank background"}. Figure~\ref{fig:clipasso_component} demonstrates representative pairs of synthetic input images and their corresponding generated vector sketches. 
+For SketchAgent, we generate sketches directly from class labels as text prompts, producing 10 samples per class. Figure~\ref{fig:sketchagent_component} illustrates representative examples of the generated object sketches.
+\begin{figure}[H]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{1\linewidth}{!}{ 
+    \begin{tabular}{c c  c c }
+        Input Synthetic Image & Object Vector Sketch & Input Synthetic Image & Object Vector Sketch \\
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/cat_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/cat_2_16strokes_seed0_best.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/apple_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/apple_0_16strokes_seed2000_best.png}} \\
+
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/duck_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/duck_4_16strokes_seed0_best.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/cloud_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/cloud_3_16strokes_seed1000_best.png}} \\
+
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/bench_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/bench_1_16strokes_seed2000_best.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/bicycle_input.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/bicycle_2_16strokes_seed2000_best.png}} \\
+    \end{tabular}
+    }}
+    \vspace{-0.3cm}  \caption{Examples pairs of input synthetic image and output generated object vector sketch. }
+    \label{fig:clipasso_component}
+    \vspace{-5mm}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{1\linewidth}{!}{ 
+    \begin{tabular}{c c  c c }
+        ``bus" & ``bird" & ``cat" & ``butterfly"\\ 
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_bus.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_bird.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_cat.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_butterfly.png}} \\
+
+        ``chair" & ``flower" & ``people" & ``house" \\
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_chair.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_flower.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_person.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_house.png}} \\
+
+        ``basket" & ``bench" & ``cup" & ``car" \\
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_basket.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_bench.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_cup.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs_supp/dataset/agent_car.png}} \\
+    \end{tabular}
+    }}
+    \vspace{-0.3cm}  \caption{Examples of object vector sketches generated by SketchAgent.}
+    \label{fig:sketchagent_component}
+\end{figure}
+
+\subsection{Generating Sketches from Natural Images}
+To expand beyond SketchyScene's object categories, we employ InstantStyle \shortcite{Wang2024InstantStyleFL} to transform a subset of Visual Genome \shortcite{VisualGenome2017} images into sketches, using a single CLIPasso object sketch as the style reference. Figure~\ref{fig:instant_gallery} showcases a gallery of examples from our InstantStyle-generated scene sketch dataset.
+
+\section{InkScenes Dataset Statistics}
+\rev{In this section, we present detailed information about our benchmark dataset, \textit{\datasetname{}}. While the CLIPasso variants and SketchAgent styles of our \datasetname{} dataset contain the same set of classes and scene complexity as original SketchyScene, our InstantStyle dataset contributes new categories and scene layouts. Figure~\ref{fig:dataset_distribution} shows the distribution of categories across the entire dataset, grouped in high-level semantic categories. Additionally, we show the InstantStyle dataset's scene complexity in Figure~\ref{fig:scene_complexity}, and the class distribution in Figure ~\ref{fig:instantstyle_dataset_distribution}.
+The full list of categories in our \datasetname{} dataset is provided in Table~\ref{tab:class_split}, grouped into base categories (those included in SketchyScene) and novel categories (unseen and not present in SketchyScene). We omit the "others" category from SketchyScene due to its ambiguity, which makes it unsuitable for generating our new synthetic components.}
+
+\begin{figure}[t]
+    \centering
+    \caption*{\textbf{InkScenes Dataset: Semantic Category Distribution}} 
+    \includegraphics[width=1\linewidth]{figs_supp/INK_dataset_semantic_category_distribution.pdf}
+    \caption{\rev{\textbf{Distribution of object categories in the \datasetname{} dataset, grouped into high-level semantic categories. } We group all 98 unique classes into high-level categories such as animals, nature, vehicles, and household objects. }}
+    \label{fig:dataset_distribution}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\small
+\vspace{-1mm}
+\resizebox{0.95\columnwidth}{!}{%
+\begin{tabular}{p{0.45\linewidth} | p{0.45\linewidth}}
+\multicolumn{1}{c}{\textbf{Base Classes (45)}} & \multicolumn{1}{c}{\textbf{Novel Classes (53)}} \\
+\toprule
+airplane\newline
+apple\newline
+balloon\newline
+banana\newline
+basket\newline
+bee\newline
+bench\newline
+bicycle\newline
+bird\newline
+bottle\newline
+bucket\newline
+bus\newline
+butterfly\newline
+car\newline
+cat\newline
+chair\newline
+chicken\newline
+cloud\newline
+cow\newline
+cup\newline
+dinnerware\newline
+dog\newline
+duck\newline
+fence\newline
+flower\newline
+grape\newline
+grass\newline
+horse\newline
+house\newline
+moon\newline
+mountain\newline
+people/person\newline
+picnic rug\newline
+pig\newline
+rabbit\newline
+road\newline
+sheep\newline
+sofa\newline
+star\newline
+street lamp\newline
+sun\newline
+table\newline
+tree\newline
+truck\newline
+umbrella\newline
+
+
+&
+sandwich\newline
+refrigerator\newline
+couch\newline
+pizza\newline
+laptop\newline
+bed\newline
+mouse\newline
+toilet\newline
+orange\newline
+toaster\newline
+kite\newline
+cell phone\newline
+cake\newline
+carrot\newline
+parking meter\newline
+tv\newline
+knife\newline
+remote\newline
+train\newline
+tie\newline
+vase\newline
+potted plant\newline
+clock\newline
+sports ball\newline
+handbag\newline
+fire hydrant\newline
+wine glass\newline
+elephant\newline
+skateboard\newline
+keyboard\newline
+teddy bear\newline
+skis\newline
+backpack\newline
+spoon\newline
+book\newline
+stop sign\newline
+broccoli\newline
+zebra\newline
+donut\newline
+sink\newline
+surfboard\newline
+snowboard\newline
+motorcycle\newline
+suitcase\newline
+dining table\newline
+boat\newline
+fork\newline
+microwave\newline
+oven\newline
+bowl\newline
+tennis racket\newline
+toothbrush\newline
+hot dog
+\\
+\bottomrule
+\end{tabular}
+}
+% \vspace{-2mm}
+\caption{\textbf{Full List of Classes in \datasetname{} Dataset. } The Base Classes are the same as SketchyScene\shortcite{Zou18SketchyScene} dataset. The Novel Classes are  introduced by our InstantStyle dataset. }
+\label{tab:class_split}
+\vspace{-8mm}
+\end{table}
+
+
+
+
+\begin{figure*}[t]
+    \centering
+    \vspace{-5mm}
+    \caption*{\textbf{InkScenes InstantStyle Variant: Class Distribution}} 
+    \includegraphics[width=1\linewidth]{figs_supp/InstantStyle_Distribution.pdf}
+    \vspace{-8mm}
+    \caption{\rev{\textbf{Class distribution of the InstantStyle portion of the \datasetname{} dataset.}  By incorporating 53 novel object categories with varied frequencies, our dataset expands beyond prior scene sketch datasets and introduces realistic long-tailed challenges for instance segmentation. This diverse distribution is essential for evaluating model generalization across both common and rare object classes.}}
+    \label{fig:instantstyle_dataset_distribution}
+    \vspace{-5mm}
+\end{figure*}
+
+
+\begin{figure}[t]
+    \centering
+    \caption*{\textbf{InkScenes InstantStyle Variant: Scene Composition Complexity}} 
+    \includegraphics[width=1\linewidth]  {figs_supp/INK_dataset_InstantStyle_scene_complexity.pdf}
+    \caption{\rev{\textbf{Scene‑level complexity of the InstantStyle portion of \datasetname{}. }
+    Each bar counts how many sketches contain a given number of object instances (background excluded). Most scenes cluster around 5–6 objects (median$\thickapprox$5, mean$\thickapprox$6), with a modest long‑tail of denser compositions up to ten objects.  }
+    }
+    \label{fig:scene_complexity}
+\end{figure}
+
+\section{Performance on Human-Drawn Sketches}
+
+\rev{To ensure the practical utility of our method, it is important that it generalizes beyond synthetic datasets to real-world, human-drawn sketches. In the main paper, we evaluate performance on one such dataset introduced by Zhang et al.~\shortcite{zhang2018CBSC}. In this section, we extend our evaluation to two additional datasets containing human-drawn sketches, which required more careful consideration in both setup and analysis.}
+
+\subsection{Performance on FSCOCO-Seg}
+
+\rev{FSCOCO-Seg~\cite{bourouis2024open} is a freehand scene sketch dataset comprising 500 sketches (originally from FS-COCO ~\cite{fscoco} dataset) with ground-truth semantic segmentation labels, but no instance-level annotations. To evaluate our method on this dataset, we convert our predicted instance segmentation outputs into semantic segmentation maps using the provided ground-truth labels.}
+\rev{
+Our method achieves a pixel accuracy of 0.85 and an IoU of 0.75, demonstrating strong generalization to freehand sketches. Figure~\ref{fig:fscoco_results} shows qualitative instance segmentation results on FSCOCO-Seg, highlighting the method’s ability to segment complete object instances even in abstract and loosely drawn scenes.}
+
+
+\subsection{Performance on Product Design Sketches}
+\rev{We do additional qualitative evaluation on product design sketches from OpenSketch dataset ~\cite{OpenSketch19} in Fig. ~\ref{fig:opensketch_results}. Since OpenSketch contains product design sketch of single, individual objects, we manually created scenes by combining multiple object sketches. While our method generally succeeds in segmenting individual objects across scenes, we observe limitations such as artifacts on objects with long, thick construction lines, and segmenting objects apart from their construction lines.}
+
+
+
+\subsection{Performance on Zhang \etal}
+\rev{
+In addition to the numerical evaluations we include in the main paper, we  present qualitative results on Zhang \etal \shortcite{zhang2018CBSC}'s dataset in Fig ~\ref{fig:zhang_results}. This dataset consists of 330 scene sketches drawn by humans, spanning 74 categories with 24 novel categories not included in our \datasetname{}. Our performance on this dataset further shows our generalization capabilities for unseen categories and scenes.} 
+
+ 
+\section{Additional Qualitative Comparisons}
+We present additional qualitative comparisons between our approach and baseline methods across  benchmark scene sketch datasets in Fig.~\ref{fig:comparison_instance_sketchyscene} for SketchyScene, Fig.~\ref{fig:comparison_instance_sketchagent} for SketchAgent, Fig.~\ref{fig:comparison_instance_clipasso} for CLIPasso, Fig.~\ref{fig:comparison_instance_instantstyle} for InstantStyle, to accompany our numerical evaluations included in the paper. 
+To compare with semantic segmentation method, Bourouis \etal \shortcite{bourouis2024open} and \rev{SketchSeger ~\cite{yang2023sceneHierTransformer}}, we created a filtered version of all eight datasets, where each scene contains at most one instance per object class. These filtered scenes remain challenging for existing methods despite their reduced complexity. We show qualitative results in Fig. ~\ref{fig:comparison_openvocab_sketchyscene} for filtered SketchyScene dataset, Fig. ~\ref{fig:comparison_openvocab_sketchagent} for filtered SketchAgent dataset, and Fig. ~\ref{fig:comparison_openvocab_clipasso} for filtered CLIPasso dataset, Fig. ~\ref{fig:comparison_openvocab_zhangetal} for filtered Zhang \etal dataset,  to accompany our qualitative results shown in the paper. 
+
+\newpage
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{1.5pt}
+    {\small
+    \resizebox{0.88\textwidth}{!}{ 
+    \begin{tabular}{c c @{\hskip 10pt} c c}
+         Sketch & Segmentation &  Sketch & Segmentation \\
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000019239_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000019239_final_segment.png}} &
+         \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000076632_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000076632_final_segment.png}} \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000111000_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000111000_final_segment.png}} &
+         \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000094632_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000094632_final_segment.png}} \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000305644_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000305644_final_segment.png}} &
+         \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000277498_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000277498_final_segment.png}} \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000352899_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000352899_final_segment.png}} &
+         \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000409496_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000409496_final_segment.png}} \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000477143_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000477143_final_segment.png}} &
+         \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000455476_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/FSCOCO_good_examples/000000455476_final_segment.png}} \\
+    \end{tabular}
+    }}
+    \caption{\rev{\textbf{FSCOCO-Seg Performance. }We qualitatively evaluate our method on scenes from the FSCOCO-Seg dataset. Overall, the segmentations are visually accurate and align well with object boundaries in diverse, hand-drawn scenes. While our method performs well across a variety of object categories and layouts, we observe some artifacts in regions with heavy occlusion, where foreground and background objects may blend or be incompletely separated.}}
+    \label{fig:fscoco_results}
+\end{figure*}
+
+\newpage
+
+\begin{figure*}[t]
+    \centering
+    \setlength{\tabcolsep}{1.5pt} % spacing between columns
+    {\small
+    \resizebox{0.88\textwidth}{!}{ 
+    \begin{tabular}{c c @{\hskip 10pt} c c}
+        Sketch & Segmentation & Sketch & Segmentation \\
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1/ours.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_5/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_5/ours.png}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_1/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_1/ours.png}}& \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_6/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_6/ours.png}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_2/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_2/ours.png}}& \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_7/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_7/ours.png}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_3/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_3/ours.png}}& \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_8/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_8/ours.png}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_4/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_4/ours.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_9/input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/opensketch_visualizations/Artboard_1_9/ours.png}} \\
+    \end{tabular}
+    }}
+    \caption{\rev{\textbf{OpenSketch Performance. }We qualitatively evaluate our method on manually composed scenes from the OpenSketch dataset. For clearer occlusion handling, we manually added coarse white backgrounds behind foreground objects. Our method segments individual objects reasonably well, especially when sketches are not heavily cluttered with construction lines. For example, segmentation struggles with the background object in the second example of row 2, which contains dense construction lines.}}
+    \label{fig:opensketch_results}
+\end{figure*}
+
+\newpage
+
+
+\begin{figure*}[t]
+    \centering
+    \setlength{\tabcolsep}{1.5pt} % spacing between columns
+    \resizebox{0.88\textwidth}{!}{ 
+    {\small
+    \begin{tabular}{c c @{\hskip 10pt} c c }
+        Sketch & Segmentation & Sketch & Segmentation \\
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114153955_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114153955_final_segment.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0117204922_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0117204922_final_segment}} \\
+      
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114220731_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114220731_final_segment.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115001055_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115001055_final_segment}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115124951_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115124951_final_segment.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115173307_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115173307_final_segment.png}} 
+        \\
+        
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0116154003_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0116154003_final_segment}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115170719_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0115170719_final_segment}} 
+        \\
+
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114203929_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0114203929_final_segment.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0117205531_input.png}} &
+        \frame{\includegraphics[width=0.22\linewidth]{figs_supp/CBSC_good_results/0117205531_final_segment}} 
+        \\
+    \end{tabular}
+    }}
+    \caption{\rev{\textbf{Zhang \textit{et al.} Performance.} We show our segmentation outputs of Zhang \textit{et al.} across a diverse range of scene sketches. The examples span indoor scenes (e.g., bedrooms, desks), outdoor urban settings (e.g., train station), and natural environments with animals, both in close-up and distant views. Our method demonstrates reasonable segmentation performance across this broad spectrum of semantic and spatial contexts.}}
+    \label{fig:zhang_results}
+\end{figure*}
+
+\newpage
+
+%%%% FIGS
+%%%% dataset: InstantStyle
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.88\textwidth}{!}{ 
+    \begin{tabular}{c c c}
+        \frame{\includegraphics[trim=0 1.3cm 0 0.1cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/17590.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/31188.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 1.2cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/33444.png}} \\
+
+        \frame{\includegraphics[trim=0 3.2cm 0 0cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/221223.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/520657.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 1.2cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/283809.png}} \\
+
+        \frame{\includegraphics[trim=0 1.3cm 0 1.2cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/291981.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/400571.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 2cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/528966.png}} \\
+
+        \frame{\includegraphics[trim=0 0 0 2.4cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/229598.png}} &
+        \frame{\includegraphics[trim=0 0 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/302657.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 1cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/332270.png}} \\
+
+        \frame{\includegraphics[trim=0 0 0 2.4cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/407139.png}} &
+        \frame{\includegraphics[trim=0 0 0 0.5cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/409092.png}} &
+        \frame{\includegraphics[trim=0 0.5cm 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/410898.png}} \\
+
+        \frame{\includegraphics[trim=0 0 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/503500.png}} &
+        \frame{\includegraphics[trim=0 0 0 0cm,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/509864.png}} &
+        \frame{\includegraphics[trim=0 0 0 0,clip,width=0.32\linewidth]{figs_supp/dataset_scene/InstantStyle/539694.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Example sketches from our InstantStyle dataset}. These sketches are derived from Visual Genome ~\shortcite{VisualGenome2017} containing 5 to 10 annotated objects. For visual clarity, we mask unsegmented regions in the generated sketches. This dataset contains 53 new categories that are not part of SketchyScene's  45 classes, and contain 1068 sketches in total. }
+    \label{fig:instant_gallery}
+    }
+\end{figure*}
+
+\newpage
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.92\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c c}
+        Input & SketchyScene & Grounded SAM & \rev{Automatic SAM} & \textbf{Ours} \\
+        
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample78/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample78/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample78/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample78/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample78/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample14/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample14/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample14/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample14/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample14/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample17/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample17/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample17/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample17/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample17/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample52/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample52/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample52/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample52/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample52/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample62/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample62/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample62/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample62/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample62/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample662/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample662/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample662/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample662/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/L0_sample662/ours.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Qualitative comparison of instance segmentation methods on the SketchyScene dataset.} Our method surpasses SketchyScene, Grounded SAM and Automatic SAM baselines by delivering fine-grained, semantically consistent segmentations with precise boundaries. In the urban scene (row 1), our approach accurately segments all object instances, cleanly separating the sun, tree, building, and character from each other. For the park scenes (rows 2 and 3), it captures intricate details, such as the dog's face and picnic items, which are either missed or over-segmented by other methods. In the residential and cottage scenes (rows 4 and 5), our method effectively delineates repetitive patterns like fences and handles dense objects like trees, preserving structural integrity where other approaches struggle. These results highlight the robustness of our method in managing complex and detailed sketches.}
+    \label{fig:comparison_instance_sketchyscene}
+    }
+\end{figure*}
+% \input{figs_supp/tex/compare_SketchAgent}
+\newpage
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.92\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c c}
+        Input & SketchyScene & Grounded SAM & \rev{Automatic SAM} & \textbf{Ours} \\
+        
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1099/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1099/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1099/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1099/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1099/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1110/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1110/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1110/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1110/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1110/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0618/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0618/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0618/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0618/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0618/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0002/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0002/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0002/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0002/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0002/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1031/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1031/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1031/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1031/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1031/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1060/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1060/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1060/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1060/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1060/ours.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Qualitative comparison of instance segmentation methods on the SketchAgent dataset.} Both SketchyScene, Grounded SAM and Automatic SAM struggle to segment these abstract sketches, which differ significantly from their training data of clipart-like and real objects. Our method successfully segments individual instances while maintaining object boundaries, even in challenging cases like the last row where objects overlap with a grid-patterned picnic blanket.}
+    \label{fig:comparison_instance_sketchagent}
+    }
+\end{figure*}
+\newpage
+
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.92\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c c}
+        Input & SketchyScene & Grounded SAM & \rev{Automatic SAM} & \textbf{Ours} \\
+        
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0051/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0051/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0051/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0051/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0051/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0078/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0078/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0078/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0078/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0078/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0047/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0047/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0047/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0047/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0047/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0158/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0158/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0158/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0158/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/0158/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1104/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1104/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1104/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1104/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1104/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1072/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1072/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1072/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1072/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/1072/ours.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Qualitative comparison of instance segmentation methods on the CLIPasso base dataset.} Our method successfully detects both large and small objects with ambiguous openings in their silhouettes, whereas baseline methods either merge multiple instances into one or fail to detect them entirely.}
+    \label{fig:comparison_instance_clipasso}
+    }
+\end{figure*}
+\newpage
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.92\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c c}
+        Input & SketchyScene & Grounded SAM & \rev{Automatic SAM} & \textbf{Ours} \\
+        
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/86750/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/86750/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/86750/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/86750/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/86750/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/162285/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/162285/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/162285/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/162285/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/162285/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/193547/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/193547/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/193547/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/193547/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/193547/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/574350/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/574350/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/574350/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/574350/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/574350/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/576973/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/576973/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/576973/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/576973/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/576973/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/176038/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/176038/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/176038/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/176038/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/176038/ours.png}} \\
+
+         \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/36012/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/36012/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/36012/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/36012/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/36012/ours.png}} \\
+
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/302657/input.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/302657/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/302657/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/302657/grid_SAM.png}} &
+        \frame{\includegraphics[width=0.20\linewidth]{figs_supp/instance_seg_visualizations/302657/ours.png}} \\
+        
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Qualitative comparison of instance segmentation methods on the InstantStyle dataset.} This dataset poses a significantly greater challenge compared to the others due to its increased complexity, including diverse perspectives, intricate textures, and frequent occlusions. Despite these difficulties, our method effectively locates object instances, such as the glass of water in row 2, the fork in row 3, and the food in dishes and bottles in row 4. Even with ambiguous shapes, as shown in row 5, our method outperforms GroundedSAM by successfully segmenting the umbrella on the right separately from the person holding it. In the final row, our approach demonstrates its capability by accurately segmenting both the pile of clothes on the couch and the couch itself.}
+    \label{fig:comparison_instance_instantstyle}
+    }
+\end{figure*}
+\newpage
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.82\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c}
+        Input & \rev{Bourouis \etal} & \rev{SketchSeger} & \textbf{Ours}  \\
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample3/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample3/OpenVocab_001_thresh.png}}  &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample3/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample3/ours.png}} \\
+
+        & \makecell{cat, chair, dog, people, sofa, table} & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample8/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample8/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample8/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample8/ours.png}} \\
+
+        & \makecell{cat, chair, dog, people, table} & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample14/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample14/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample14/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample14/ours.png}} \\
+
+        & \makecell{bench, cloud, dog, flower, grass,\\ people, sun, tree} & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample491/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample491/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample491/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample491/ours.png}} \\
+
+        & \makecell{car, chicken, cloud, cow, fence,\\ grass, house, sun, tree} & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample737/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample737/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample737/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/L0_sample737/ours.png}} \\
+
+        & \makecell{bench, duck, moon, star, tree, others}  & & 
+    \end{tabular}
+    }
+    \vspace{-0.3cm}
+    \caption{\textbf{Qualitative comparison of segmentation on filtered SketchyScene dataset. } We prompt Bourouis \etal’s method with ground truth labels and use confidence threshold of 0.01 to ensure all sketch pixels are segmented, while using SketchSeger as-is since it does not accept input labels. However, Bourouis \etal struggles to accurately identify instances of the correct class, often assigning multiple class labels to the same object, as indicated by the color gradients. SketchSeger also fails to provide clean segmentations for many scenes. In contrast, our method effectively segments object instances, ensuring clear separation and consistent labeling.}
+    \label{fig:comparison_openvocab_sketchyscene}
+    }
+\end{figure*}
+\newpage
+
+\begin{figure*}
+\vspace{-3mm}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.82\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c}
+        Input & \rev{Bourouis \etal} & \rev{SketchSeger} & \textbf{Ours}  \\
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0749/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0749/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0749/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0749/ours.png}} \\
+
+        & \makecell{basket, bucket, cat, cloud, grass, sun}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0032/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0032/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0032/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0032/ours.png}} \\
+
+        & \makecell{cloud, dog, duck, grass, house, \\ people, sun, tree}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0035/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0035/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0035/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0035/ours.png}} \\
+
+        & \makecell{car, cloud, fence, house, people,\\ sun, tree }  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0565/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0565/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0565/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0565/ours.png}} \\
+
+        & \makecell{flower, people, tree }  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0017/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0017/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0017/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0017/ours.png}} \\
+
+        & \makecell{bench, cat, dog, flower, grass, people, \\ picnic rug, tree}  & & 
+    \end{tabular}
+    }
+    \vspace{-0.3cm}
+    \caption{\textbf{Qualitative comparison of segmentation on filtered SketchAgent dataset. } We prompt Bourouis \etal’s method with ground truth labels and use confidence threshold of 0.01 to ensure all sketch pixels are segmented, while using SketchSeger as-is since it does not accept input labels. However, Bourouis \etal struggles to accurately identify instances of the correct class, often assigning multiple class labels to the same object, as indicated by the color gradients. SketchSeger also fails to provide clean segmentations for many scenes. In contrast, our method effectively segments object instances, ensuring clear separation and consistent labeling.}
+    \label{fig:comparison_openvocab_sketchagent}
+    }
+\end{figure*}
+\newpage
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.79\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c}
+        Input & \rev{Bourouis \etal} & \rev{SketchSeger} & \textbf{Ours}  \\
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0303/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0303/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0303/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0303/ours.png}} \\
+         & \makecell{cloud, grass, mountain, people, \\ sun, tree}  & & \\
+        
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0500/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0500/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0500/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0500/ours.png}} \\
+         & \makecell{cat, chicken, cloud, cow, dog,\\ duck, fence, grass, horse, house, \\pig, rabbit, sheep, tree }  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0505/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0505/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0505/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0505/ours.png}} \\
+         & \makecell{chicken, cloud, cow, duck, grass,\\ horse, house, pig, sheep, tree, truck}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0649/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0649/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0649/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0649/ours.png}} \\
+         & \makecell{apple, basket, butterfly, flower, grass,\\ picnic rug, pig, sun, tree}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0688/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0688/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0688/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/0688/ours.png}} \\
+         & \makecell{dog, duck, grass, moon, star, tree}  & & 
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\textbf{Qualitative comparison of segmentation on filtered CLIPasso dataset. } We prompt Bourouis \etal’s method with ground truth labels and use confidence threshold of 0.01 to ensure all sketch pixels are segmented, while using SketchSeger as-is since it does not accept input labels. However, Bourouis \etal struggles to accurately identify instances of the correct class, often assigning multiple class labels to the same object, as indicated by the color gradients. SketchSeger also fails to provide clean segmentations for many scenes. In contrast, our method effectively segments object instances, ensuring clear separation and consistent labeling.}
+    \label{fig:comparison_openvocab_clipasso}
+    }
+\end{figure*}
+\newpage
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.95\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c}
+        Input & Bourouis \etal & SketchSeger & \textbf{Ours}  \\
+        \frame{\includegraphics[trim=200 50 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/140626/input.png}} &
+        \frame{\includegraphics[trim=200 50 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/140626/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=200 50 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/140626/SketchSeger.png}} &
+        \frame{\includegraphics[trim=200 50 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/140626/ours.png}} \\
+        & \makecell{person, suitcase, train, umbrella}  & & \\
+
+        \frame{\includegraphics[trim=200 200 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/171353/input.png}} &
+        \frame{\includegraphics[trim=200 200 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/171353/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=200 200 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/171353/SketchSeger.png}} &
+        \frame{\includegraphics[trim=200 200 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/171353/ours.png}} \\
+        & \makecell{cloud, horse, mountain, river, tree}  & & \\
+
+        \frame{\includegraphics[trim=450 200 400 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0114152807/input.png}} &
+        \frame{\includegraphics[trim=450 200 400 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0114152807/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=450 200 400 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0114152807/SketchSeger.png}} &
+        \frame{\includegraphics[trim=450 200 400 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0114152807/ours.png}} \\
+        & \makecell{bread, chair, cup, knife, pizza, table}  & & \\
+
+        \frame{\includegraphics[trim=0 0 300 200, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0114173600/input.png}} &
+        \frame{\includegraphics[trim=0 0 300 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114173600/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=0 0 300 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114173600/SketchSeger.png}} &
+        \frame{\includegraphics[trim=0 0 300 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114173600/ours.png}} \\
+        & \makecell{book, candle, cell phone, table}  & & \\
+
+        \frame{\includegraphics[trim=0 400 700 0, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0115170719/input.png}} &
+        \frame{\includegraphics[trim=0 400 700 0, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0115170719/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=0 400 700 0, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0115170719/SketchSeger.png}} &
+        \frame{\includegraphics[trim=0 400 700 0, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0115170719/ours.png}} \\
+        & \makecell{bed, clock, couch, person, pillow}  & & \\
+
+        \frame{\includegraphics[trim=250 250 550 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114153955/input.png}} &
+        \frame{\includegraphics[trim=250 250 550 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114153955/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=250 250 550 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114153955/SketchSeger.png}} &
+        \frame{\includegraphics[trim=250 250 550 200, clip,width=0.23\linewidth]{figs_supp/filtered_visualizations/0114153955/ours.png}} \\
+        & \makecell{bed, book, clock, mug, person,\\ pillow, table, vase}  & & \\
+
+        \frame{\includegraphics[trim=25 250 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0115001055/input.png}} &
+        \frame{\includegraphics[trim=25 250 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0115001055/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=25 250 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0115001055/SketchSeger.png}} &
+        \frame{\includegraphics[trim=25 250 100 0, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/0115001055/ours.png}} \\
+        & \makecell{bench,  bird, bush,  cat, cloud,\\ hat, person, tree}  & & \\
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\rev{\textbf{Qualitative comparison of segmentation on filtered Zhang \etal dataset. } We prompt Bourouis \etal’s method with ground truth labels and use confidence threshold of 0.01 to ensure all sketch pixels are segmented, while using SketchSeger as-is since it does not accept input labels. Our method accurately segments object instances across diverse scenes, including city life (first and last rows), natural environments (second row), and indoor settings (third to sixth rows). In contrast, baseline methods often struggle to produce clean segmentations for individual objects.}}
+    \label{fig:comparison_openvocab_zhangetal}
+    }
+\end{figure*}
+\newpage
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {\small
+    \resizebox{0.95\textwidth}{!}{ 
+    \begin{tabular}{c @{\hskip 10pt} c c c}
+        Input & Bourouis \etal & SketchSeger & \textbf{Ours}  \\
+        \frame{\includegraphics[trim=0 0 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/1180/input.png}} &
+        \frame{\includegraphics[trim=0 0 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/1180/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[trim=0 0 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/1180/SketchSeger.png}} &
+        \frame{\includegraphics[trim=0 0 0 100, clip, width=0.23\linewidth]{figs_supp/filtered_visualizations/1180/ours.png}} \\
+        & \makecell{person, dining table,  cake}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/516341/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/516341/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/516341/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/516341/ours.png}} \\
+        & \makecell{person, bottle, laptop}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/520657/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/520657/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/520657/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/520657/ours.png}} \\
+        & \makecell{bowl, chair, cup, dining table, sandwich}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/166692/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/166692/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/166692/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/166692/ours.png}} \\
+        & \makecell{book, dining table, cake, person}  & & \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/191301/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/191301/OpenVocab_001_thresh.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/191301/SketchSeger.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs_supp/filtered_visualizations/191301/ours.png}} \\
+        & \makecell{cake, cup, dining table, person, spoon}  & & \\
+
+    \end{tabular}
+    }
+    \vspace{-0.1cm}
+    \caption{\rev{\textbf{Qualitative comparison of segmentation on filtered InstantStyle dataset. } We prompt Bourouis \etal’s method with ground truth labels and use confidence threshold of 0.01 to ensure all sketch pixels are segmented, while using SketchSeger as-is since it does not accept input labels. Compared to Bourouis \etal, which sometimes fails to delineate smaller or overlapping objects, and SketchSeger, which often merges semantically distinct regions or misses foreground elements, our method produces cleaner, more precise instance boundaries and better preserves object semantics—particularly in scenes with clutter, occlusion, or fine-grained details.}}
+    \label{fig:comparison_openvocab_instanstyle}
+    }
+\end{figure*}
+

@@ -1,0 +1,159 @@
+\section{Method}
+
+\begin{figure*}[htb]
+\centering
+\includegraphics[width=0.99\textwidth]{fig/Model_Overview_5_4.pdf}
+\caption{Overview of our proposed ExDR framework. ExDR consists of two main components: (1) a retrieval triggering module that dynamically determines whether retrieval is necessary based on response analysis, and (2) an evidence retrieval module that retrieves targeted evidence, including both positive and negative samples guided by fine-grained deception labels, to enrich the context and improve model generation.}
+\label{fig1}
+\end{figure*}
+In this section, we introduce \textbf{ExDR}, a retrieval-augmented framework for Multimodal Fake News Detection, as illustrated in Figure~\ref{fig1}. ExDR consists of two core modules. The retrieval triggering module leverages confidence estimation derived from the model's output to decide when retrieval is necessary. 
+The evidence retrieval module fetches targeted supporting evidence using entity-enriched features and multi-granularity deception signals. Together, these modules jointly enhance retrieval efficiency and detection performance.
+
+\subsection{Preliminaries}
+\label{sec:pre}
+
+
+\subsubsection{Task Definition}
+
+A Multimodal Fake News Detection (MFND) dataset is defined as $\mathcal{D} = \{(I_i, T_i, y_i)\}$, where $I_i$ represents an image, $T_i$ denotes the textual content, $y_i \in \{\textsc{Real}, \textsc{Fake}\} $ is the binary label for the pair $(I_i, T_i)$.
+\subsubsection{Data Preparation}
+We construct our retrieval corpus from the official training split of the AMG~\cite{guo2025each} dataset. This dataset provides not only binary labels but also fine-grained deception labels $\tilde{y}_i$ for each fake news sample, as shown in \textsc{Appendix}~\ref{appendix:deception_label}. To enrich this corpus with explicit reasoning, we leverage GPT-4o to generate a textual explanation $E_i$ for each sample $(I_i, T_i)$, justifying its corresponding label $\tilde{y}_i$. The final retrieval corpus is thus a collection of tuples $D_{corpus} = \{(I_i, T_i, E_i, \tilde{y}_i)\}$. The prompt used for explanation generation is shown in Figure~\ref{fig1}, and the quality of the generated explanations is validated via human evaluation in Appendix~\ref{appendix:human_verify}.
+
+Moreover, the AMG validation set $\mathcal{D}_{\text{val}}$ is used to determine the optimal configuration for retrieval triggering.
+
+
+\subsubsection{Response Formation}
+Unlike traditional Multimodal Fake News Detection methods that typically output only a classification label, we adopt a Chain-of-Thought~\cite{wei2022chain} prompting format to generate both the answer and the reasoning process from the model. Specifically, the model's response consists of two parts:
+
+\textbf{1) Detection}
+determines whether the input image--text pair is labeled as \textsc{Real} or \textsc{Fake}.
+\textbf{2) Explanation}
+provides the rationale behind the detection decision.
+
+Each part serves as an independent retrieval trigger, and the final retrieval decision is made based on their joint signals.
+Detailed prompt used for response generation is provided in Appendix~\ref{sec:appendix_prompting}. 
+\subsection{When to Retrieve: Multi-Level Confidence Estimation}
+\label{sec:when}
+Most dynamic RAG works, which are typically designed for generation tasks such as QA, trigger retrieval based on next-token uncertainty~\cite{su2024dragin,jiang2023active}.
+%Most dynamic RAG works, designed for generation tasks like QA trigger retrieval based on next-token uncertainty~\cite{su2024dragin,jiang2023active}. 
+This token-centric approach is not optimal for classification, where the final prediction is a single label rather than a token sequence.
+To bridge this gap, we introduce a novel triggering mechanism that evaluates the model's confidence based on its decision explanation. Specifically, we design a multi-level confidence evaluation method that integrates three complementary dimensions centered on the predicted label: Label-level Uncertainty, Token-level Support, and Sentence-level Confidence.
+
+\subsubsection{Label-level Uncertainty.}
+Label-level Uncertainty serves as a fundamental and explicit indicator of the model’s certainty in assigning a predefined label. It provides a direct measure of the reliability of the classification decision. Formally, we define it as:
+\begin{equation}
+     \tau_{\text{label}} = \left| \frac{\log p_{\text{real}} - \log p_{\text{fake}}}{\log p_{\text{real}} + \log p_{\text{fake}}} \right| ,
+\end{equation}
+where $p_{\text{real}}$ and $p_{\text{fake}}$ denote the generation probabilities for the \textsc{Real} and \textsc{Fake} labels, respectively, obtained from the model under the prompt-based classification setting.
+
+\subsubsection{Token-level Support.}
+While explicit classification indicators such as \textsc{Real} and \textsc{Fake} provide valuable signals, they may not fully reflect the model's decision-making process, particularly when the model exhibits overconfidence or when its predictions are influenced by localized biases. To obtain a more comprehensive understanding of the model's confidence, we analyze the distribution of the top-$K$ candidate tokens at the classification position.
+
+We evaluate each candidate token's semantic alignment with the predicted label through hierarchical matching: direct lexical matching against curated lexicons $\mathcal{L}_{\text{real}}$ and $\mathcal{L}_{\text{fake}}$ (e.g., ``genuine", ``false"), followed by semantic similarity matching for out-of-lexicons tokens. The token-level support score is then computed as:
+
+\begin{equation} \tau_{\text{tok}} = \frac{N_{\text{sup}}}{K}, \end{equation}
+where $N_{\text{sup}}$ denotes the count of top-$K$ candidate tokens that semantically support the model's current prediction.
+The detail of $\mathcal{L}_{\text{real}}$ and $\mathcal{L}_{\text{fake}}$, along with the alignment method, is provided in the \textsc{Appendix}~\ref{appendix:Lexicons}.
+\subsubsection{Sentence-level Confidence. }
+In addition to token-level analysis, we compute the perplexity of the model-generated explanation as an indicator of the model’s reasoning-level confidence toward the predicted label. The sentence-level confidence is defined as:
+\begin{equation}
+\tau_{\text{sent}} = \exp\left(\frac{1}{n} \sum_{i=1}^{n} \log P(t_i)\right) ,
+\end{equation}
+where $P(t_i)$ denotes the generation probability of the $i$-th token in the explanation, and 
+$n$ is the total number of tokens. 
+
+Centered on the predicted class label, these three indicators collectively evaluate the model’s output across multiple dimensions, including the label logit, the distribution of candidate tokens, and the coherence of the generated reasoning.
+
+\subsubsection{Confidence Threshold Optimization}
+After establishing the evaluation indicators, we determine thresholds for triggering retrieval. Our goal is to improve MFND by selectively activating retrieval based on the three confidence scores. As the thresholds are continuous, exhaustive grid search is computationally prohibitive. We therefore adopt a two-stage hybrid strategy that balances \textbf{global exploration} and \textbf{local exploitation}.
+
+We first conduct a coarse-grained global exploration scan over the entire feasible threshold space $\mathcal{T}$, where each dimension corresponds to the empirical range of confidence scores observed on $\mathcal{D}{\text{val}}$. Specifically, given $N_{iter}$ sampling iterations, we perform Monte Carlo sampling to draw candidate threshold triplets:
+
+\begin{equation}
+T^{(j)} = \left( \theta^{(j)}_{\text{label}}, \theta^{(j)}_{\text{tok}} ,\theta^{(j)}_{\text{sent}} \right), \quad j = 1, 2, \ldots, N_{iter}.
+\end{equation}
+
+For each combination $T^{(j)}$, we define the retrieval triggering logic on $\mathcal{D}_{\text{val}}$:
+\begin{equation}
+\begin{split}
+\text{Trigger}^{(j)}(x) = \mathbb{I} \big[ \tau_{\text{label}}(x) < \theta^{(j)}_{\text{label}} &\land \tau_{\text{tok}}(x) < \theta^{(j)}_{\text{tok}}\\
+&\land \tau_{\text{sent}}(x) < \theta^{(j)}_{\text{sent}} \big] ,
+\end{split}
+\end{equation}
+where $\mathbb{I}\left[\cdot \right]$ is the indicator function. 
+
+Once retrieval is triggered, the retrieved samples are incorporated into the prompt as context, and the model generates a new prediction based on this augmented input.
+
+The performance of each combination is evaluated by: 
+\begin{equation} 
+\text{Score}^{(j)} = \sum_{(x, y) \in \mathcal{D}_{\text{val}}} \mathbb{I}[ \hat{y}_{T^{(j)}}(x) = y ],
+\end{equation}
+where $\hat{y}_{{T}^{(x)}}$ denotes the final prediction, selected between the original and retrieval-augmented predictions according to the $\text{Trigger}(x)$.
+
+
+After the global exploration phase, we identify the top-$K$ triplets of threshold configurations that yield the best performance. These top-performing configurations serve as central points for subsequent fine-grained local exploitation.
+For each of the $K$ selected centers, we perform a localized grid search in their immediate neighborhood by perturbing each threshold dimension with a small step size $\delta$. The final optimal threshold configuration is selected as the one that achieves the highest accuracy on $D_{val}$ across all candidates evaluated during both the global and local search stages:
+\begin{equation}
+(\theta_{\text{label}}^*, \theta_{\text{tok}}^*, \theta_{\text{sent}}^*) = \arg\max_{T} \text{Score}(T) .
+\end{equation}
+
+By combining global and local search, this approach ensures both efficient exploration and precise tuning, leading to a well-generalized threshold configuration, which is subsequently fixed and used for experiments.
+
+
+\subsection{How to Retrieve: Entity-enriched Multimodal Hybrid Indexing}
+After retrieval is triggered, we construct an effective indexing strategy based on key entities derived from the news content. 
+Prior multimodal approaches typically rely solely on image-text representations~\cite{RGCL2024Mei}, which often contain noisy or irrelevant information and overlook entities that are critical for identifying deception.
+To address this limitation, we propose an explanation-guided entity-enriched multimodal hybrid indexing method. We extract key entities from the model-generated explanation, as they tend to highlight potentially deceptive content. 
+These entities are more likely to reflect inconsistencies or fabrications, making them effective anchors for constructing semantically meaningful indexing representations.
+
+Specifically, we begin by employing a pre-trained Named Entity Recognition (NER) model to extract a set of key entities $\mathcal{E}_t = \{e_1, \dots, e_t, \dots\}$ from the explanation $E_t$. 
+These entities serve as potential deception indicators.
+
+Next, we leverage a frozen CLIP encoder to obtain three hybrid feature vectors: (1) the visual feature $\mathbf{v}_t$ extracted from the image, (2) the textual feature $\mathbf{t}_t$ derived from the original text, and (3) the entity feature $\mathbf{e}_t$ obtained by encoding a natural-language concatenation of the extracted entities. To integrate these modalities, we compute an averaged feature:
+
+\begin{equation}
+\mathbf{f}_t = \frac{ \mathbf{v}_t + \mathbf{t}_t + \mathbf{e}_t }{3} ,
+\end{equation}
+where $\mathbf{f}_t$ jointly captures the visual context, the textual claim, and the explanation-guided entity information. 
+
+The fused feature $\mathbf{f}_t$ is subsequently $L_2$-normalized to yield the final entity-enriched indexing representation:
+
+\begin{equation}\quad 
+\hat{\mathbf{f}}_t = \frac{\mathbf{f}_t}{\|\mathbf{f}_t\|_2}.
+\end{equation}
+
+By enriching image-text features with entity information, this entity-enriched indexing facilitates more targeted and semantically aligned retrieval for MFND.
+
+\subsection{What to Retrieve: Multi-Granularity Deceptive Evidence}
+Standard evidence retrievals often retrieve broadly similar samples, overlooking the fine-grained, deception-specific evidence required to verify a claim.
+We address this through a two-step process: 
+(1) infer a fine-grained deception label from the model’s explanation, and (2) use the inferred label to retrieve targeted contrastive examples.
+
+
+\subsubsection{Explanation-Guided Label Inference}
+We assign a fine-grained deception label $\hat{y}_t$ to the model-generated explanation $E_t$.
+First, we compute the cosine similarity between $E_t$ and  explanations $E_i$ in the corpus $D_{\text{corpus}}$, retrieving the top-$K$ most similar explanations and their corresponding fine-grained labels $\tilde{y}_i$:
+
+\begin{equation}
+N_t = \operatorname{Top}K \left\{ \cos(E_t, E_i) \mid i \in D_{\text{corpus}} \right\},
+% N_t = \underset{i \in D_{\text{corpus}}}{\text{Top-}K}\left( \text{sim}(E_t, E_i) \right),
+\end{equation}
+where $N_t$ denotes the set of indices of the top-$K$ most similar explanations, and $\cos(\cdot, \cdot)$ denotes the cosine similarity.
+
+Next, the infered fine-grained label $\hat{y}_t$ is determined via a majority vote among the fine-grained labels $\tilde{\mathbf{y}}$ of the retrieved candidates:
+\begin{equation}
+\hat{{y}}_t = \underset{c\in \mathbf{\tilde{y}}}{\arg\max} \sum_{i \in N_t} \mathbb{I}(\tilde{y}_i = c).
+\end{equation}
+
+\subsubsection{Contrastive Evidence Retrieval}
+With the entity-enriched feature $\hat{\mathbf{f}}_t$ and the inferred fine-grained label $\hat{y}_t$, we retrieve informative contrastive evidence to support or refute the model's prediction. 
+To enable efficient similarity search, we build an FAISS index over the fused features ${\hat{\mathbf{f}}_i} \in D_{\text{corpus}}$, and adopt the dot product as the similarity metric. We retrieve two types of contrastive examples: a positive instance $\mathbf{x}^{+}$ whose fine-grained label matches $\hat{y}_t$, and a negative instance $\mathbf{x}^{-}$ whose binary label differs from $y_t$:
+
+\begin{equation} s_i = \hat{\mathbf{f}}_t \cdot \hat{\mathbf{f}}_i, \end{equation}
+
+\begin{equation} \mathbf{x}^{+} = \underset{i: \hat{{y}}_t = \tilde{{y}}_i}{\arg\max} \: s_i, \end{equation}
+
+\begin{equation} \mathbf{x}^{-} = \underset{i: {y}_t \neq {y}_i, }{\arg\max} \: s_i.\end{equation}
+
+Finally, the two retrieved samples are prepended to the original input to form the full context $[\mathbf{x}^{+};\mathbf{x}^{-};\mathbf{x}]$. This contrastive context exposes the model to both supporting and opposing instances, facilitating a more informed decision under ambiguous or hard cases. Prompt details are shown in Appendix~\ref{sec:appendix_prompting}.
+

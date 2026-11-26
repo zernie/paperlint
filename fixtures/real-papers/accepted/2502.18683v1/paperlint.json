@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "chi-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-sigconf"
+      },
+      "opened": "2025-02-25",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-02-25",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

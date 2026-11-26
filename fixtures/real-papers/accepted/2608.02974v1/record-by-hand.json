@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "background.tex",
+      "role": "body"
+    },
+    {
+      "path": "motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/motivation_examples.tex",
+      "role": "body"
+    },
+    {
+      "path": "approach.tex",
+      "role": "body"
+    },
+    {
+      "path": "approach/concurrent_features.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/entity.tex",
+      "role": "body"
+    },
+    {
+      "path": "approach/knowlege_base.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/fun_call.tex",
+      "role": "body"
+    },
+    {
+      "path": "approach/fault_localization.tex",
+      "role": "body"
+    },
+    {
+      "path": "evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results/dataset.tex",
+      "role": "body"
+    },
+    {
+      "path": "RQs/RQ1.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results/overall_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "RQs/RQ2.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results/results_by_types.tex",
+      "role": "body"
+    },
+    {
+      "path": "RQs/RQ3.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results/ablation.tex",
+      "role": "body"
+    },
+    {
+      "path": "RQs/RQ4.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/results/results_post.tex",
+      "role": "body"
+    },
+    {
+      "path": "discussion.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "9ece9025da5ef5096c42f065ec3f81b568913b9eb8ec36f766f9554a352ef61a",
+    "introduction.tex": "6e39e723b7cd18c211ba83fd4701b5847c6a6d9f5c52612117410ab5e528bf5f",
+    "background.tex": "e4a5580ae008d11a3ac4ca6455a05b62571fde59ce4226d38acc93ba515f3e70",
+    "motivation.tex": "59e1798fd03d5b3a0c5a88cd6ab3e11f8a0faaa927afca344c674c25ba17e0d3",
+    "tables/motivation_examples.tex": "1def25149679347ffd7e26d62fcce870faf821ca7c567f0716b2c2e3272257ec",
+    "approach.tex": "937d0d95c0d5db928d19425d3e12fe5e0b089e4f1b5316902b1aff7fdf795413",
+    "approach/concurrent_features.tex": "4b91c2c60c6cdfa6a0b59b889f8845adca7de60c0d8ac1ad2d9fe27b1f6ca293",
+    "tables/entity.tex": "27ede0ae5f1ffca9be790154c3b3c64ca0c6ba16afa6883dedf6ee6a5b39bb2c",
+    "approach/knowlege_base.tex": "a9cc0830b2bcd87e8d811041e1b7b98d7cda7446689c979672773527322a306b",
+    "tables/fun_call.tex": "a45170b1d92865f05c5544aa3c3c97a7313e3b175005964831b903210588f54b",
+    "approach/fault_localization.tex": "ab7a02a4e5fe01f0ba94319fdf09b6b4a14020d593e4b7a3533b046312b5d3ad",
+    "evaluation.tex": "66e13fbb7ce3f301f1649dbd559023c5297228f8d8e3db45da6588683ecc80d0",
+    "tables/results/dataset.tex": "af1c9a2888700a7781a7d2eb03cc9dfb97e1c541df765e07faf3570e0bb417d6",
+    "RQs/RQ1.tex": "18a7eeeb50501e0dd5025f35adca3ccbab326ff81545d321f19125adde2bb1fd",
+    "tables/results/overall_results.tex": "569c2343dd338380b3dcd04a42df378afa4272fe1a2882e29e3a6be682ac4225",
+    "RQs/RQ2.tex": "387e303f0b95f11b5dccdc08a9d046425ce042fd0ae04485df4e10d35b0cab80",
+    "tables/results/results_by_types.tex": "22da61a6e5e33ab92c9797f6cc9889a9a807f1aba906c7ea94f2305525a1690c",
+    "RQs/RQ3.tex": "828d29f12e8f3411e5f73fd97dfadc141ca89d29a0db4bd097ee8ebe303cb69a",
+    "tables/results/ablation.tex": "3c5caeba647c367b9c4cb3994e43ffd3af5a997f90e3e67deeda2b770e1e91de",
+    "RQs/RQ4.tex": "a60c8cd440afe7fa83dd2a99bd41b6268f64e43cf63a6a505edf9eaf1648cfcd",
+    "tables/results/results_post.tex": "0eac67a3895ee8d1a949aa0237478d192543d081241f3c8d14d6ef813a736f56",
+    "discussion.tex": "916b8571d334e42a845c88aefdc8efd28503cb69b2ae3dcb8b0ad45e2b380e52"
+  }
+}

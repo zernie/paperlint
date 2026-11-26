@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{\textbf{[RQ2-1] Robustness of \sys to Chunk Size $L_\mathrm{chunk}$.} This table shows the robustness to chunk size using 200 samples from the HotpotQA dataset. The experiments employ Llama-3.1-8B under default settings with a cache ratio $\delta = 0.3$ and a recomputation ratio $\rho = 0.1$. \textit{Acc} is the model's task accuracy to measure the impact of position-independent KV reuse on model utility, where the performance without KV cache is 0.73. \textit{U-ASR} and \textit{T-ASR} is reported as the attack performance metrics.}
+\label{tab:rq2_asr_vs_chunk_size}
+\setlength{\tabcolsep}{0pt} 
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} l ccc ccc ccc ccc ccc }
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c}{$L_\mathrm{chunk} = 32$} & \multicolumn{3}{c}{$L_\mathrm{chunk} = 64$} & \multicolumn{3}{c}{$L_\mathrm{chunk} = 128$} & \multicolumn{3}{c}{$L_\mathrm{chunk} = 256$} & \multicolumn{3}{c}{$L_\mathrm{chunk} = 512$} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13} \cmidrule(lr){14-16}
+ & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR & Acc & U-ASR & T-ASR \\
+\midrule
+Vanilla     & 0.58 & 1.00 & 1.00 & 0.58 & 1.00 & 1.00 & 0.58 & 1.00 & 1.00 & 0.59 & 1.00 & 1.00 & 0.57 & 1.00 & 1.00 \\
+Random      & 0.63 & 0.95 & 0.94 & 0.61 & 0.95 & 0.95 & 0.64 & 0.94 & 0.93 & 0.63 & 0.94 & 0.92 & 0.62 & 0.93 & 0.90 \\
+EPIC        & 0.66 & 0.87 & 0.85 & 0.67 & 0.89 & 0.88 & 0.68 & 0.87 & 0.86 & 0.66 & 0.88 & 0.87 & 0.71 & 0.85 & 0.84 \\
+CacheBlend  & 0.68 & 0.92 & 0.89 & 0.68 & 0.91 & 0.91 & 0.70 & 0.92 & 0.90 & 0.68 & 0.89 & 0.85 & 0.69 & 0.91 & 0.89 \\
+\bottomrule
+\end{tabular*}
+\end{table*}

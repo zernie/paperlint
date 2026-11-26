@@ -1,0 +1,243 @@
+\section{Method}
+Given a raster sketch, our goal is to produce a segmentation map such that pixels belonging to the same object instance are grouped together. Based on the segmentation map, we also divide the sketch into layers, sorted by depth. Our pipeline is illustrated in \Cref{fig:methods}. Given the input sketch, we first perform object detection using a fine-tuned Grounding DINO model, which produces a set of candidate object bounding boxes. These bounding boxes are then used to produce an initial set of object masks with a pre-trained Segment Anything (SAM) \cite{kirillov2023segany} model. Next, we perform a refinement stage that leverages scene depth information to assign the final segmentation. This stage also employs a pre-trained inpainting model \cite{von-platen-etal-2022-diffusers} to produce scene layers. 
+%We next describe each stage in detail.
+
+% \begin{figure}[b]
+%     \centering
+%     \includegraphics[trim=31cm 0cm 60cm 0cm,clip,width=0.3\linewidth]{figs/placeholder_GDINO.png}
+%     \includegraphics[trim=90cm 0cm 0cm 0cm,clip,width=0.3\linewidth]{figs/placeholder_GDINO.png}
+%     \includegraphics[width=0.3\linewidth]{figs/placeholder2.png}
+%     \caption{Grounding DINO performance. Left: the model produces plausible results for natural images, even for such a challenging input. Right: Yet even for a less complex scene sketch \yael{mia please replace this sketch}, the model struggles with operating on sketches.\maneesh{I'd make the figs bigger so the entire column width is used.} }
+%     \label{fig:groundDINO}
+% \end{figure}
+
+\subsection{Sketch-Aware Object Detection}
+Grounding DINO \cite{liu2023grounding} is an object detection model which outputs bounding boxes for recognized object instances, based on a given text prompt describing the scene. While effective for natural images, the model in its original configuration demonstrates limited generalization to sketches (we show this numerically in \Cref{sec:results}). 
+To address this limitation, we fine-tune Grounding DINO on sketches.  
+% While standard fine-tuning approaches typically require large-scale datasets of segmented and labeled scene images, such datasets are particularly scarce in the sketch domain. 
+The largest available annotated sketch dataset containing complex scenes is SketchyScene~\cite{Zou18SketchyScene}. It contains 30K segmented sketches across 45 class labels.
+We find that a naive fine-tuning with the SketchyScene data leads to severe overfitting to the small set of predefined object classes.
+
+To overcome this overfitting, we propose a class-agnostic fine-tuning strategy. Instead of relying on predefined class labels, we train the model to distinguish between instances based on their visual characteristics, aiming to push the model to rely on Gestalt properties such as closure, continuity, and emergence, to group together strokes forming a single object. Specifically, we utilize a small subset of 5000 sketches from the SketchyScene dataset, and consolidate their class labels into a single label, ``object''.  We use a Grounding DINO model initialized with a pretrained Swin Transformer~\cite{liu2021Swin} backbone and fine-tune the model's detection head for bounding box prediction. For training, we employ standard object detection losses used in the original Grounding DINO training (Focal Loss, L1 Loss, and GIoU Loss), while eliminating the class recognition loss. At inference, the model is prompted with the input image and the word ``object'' to detect all potential object instances in the scene. This results in an initial set of $k$ bounding boxes $B=\{B_i\}_{i=1}^k$ and a confidence score per bounding box. 
+% We later filter this initial set using an enhanced Non-Maximum Suppression (NMS) approach (Section \maneesh{put fwd pointer to section.}).\yael{maybe we can remove "enhanced"? I dont want us to overclaim about simple/trivial components}
+
+\vspace{-2mm}
+\subsection{Mask Extraction and Bounding Boxes Refinement}
+Once the bounding boxes are obtained, we use a pretrained Segment Anything (SAM) model \cite{kirillov2023segany} to extract masks for the corresponding objects directly from the sketch. This results in an initial set of $k$ masks $M=\{M_i\}_{i=1}^k$ which we refine using simple binary operations such as morphological closing and flood-fill, to eliminate small artifacts.
+
+Next, we use the refined masks to enhance the set of generated bounding boxes. A common practice is to eliminate redundant bounding boxes often corresponding to the same object (such as $B_i, B_j$ shown in red and blue in \Cref{fig:methods}) using Non-Maximum Suppression (NMS), which filters out bounding boxes with low confidence scores that has significant intersection with others. However, IoU of the bounding boxes may not reliably reflect object overlap in cases where objects do not fully cover the pixels in their bounding boxes. This issue is especially pronounced in sketches, which are sparser than photorealistic images.
+We use the initial set of masks to compute a more fine-grained IoU. Specifically, for a pair of overlapping bounding boxes $B_i$ and $B_j$, we extract the regions within the bounding boxes that intersect with the \rev{sketch $S$}: $M_i * S, M_j * S$, and compute the IoU of these regions to define an ``overlapping'' score between two objects $i, j$:
+\vspace{-1pt} 
+\begin{equation} 
+\mathcal{O}(i, j) = \text{IoU}(M_i * S, M_j * S).
+\end{equation}
+% we calculate the IoU based on the regions within the bounding boxes that are part of the sketch: $M_i * S, M_j * S$. pixels in the sketch $S$, using the masks to define their respective regions:
+
+% \begin{equation} 
+% \text{IoU}_S(i, j) = \text{IoU}(M_i * S, M_j * S),
+% \end{equation}
+
+% Where $M_i$ and $M_j$ are the masks corresponding to the bounding boxes $B_i$ and $B_j$, and $*$ is the element-wise multiplication.
+
+\vspace{-1pt} 
+For an overlapping pair $B_i, B_j$ if $\mathcal{O}(i, j) > 0.5$, we consider the detections to be covering the same object and retain only the bounding box with the highest confidence score.
+This results in a filtered set of bounding boxes $\hat{B}\subseteq B$ and their corresponding masks $\hat{M} \subseteq M$.
+
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{figs/placeholder_sketch_NMS.png}
+%     \caption{Motivation for sketch NMS. The bonding's boxes have a low IoU value of 0.4, but their sketch content IoU value is as high as 0.8. \maneesh{Hard to see the issue at this size.}}
+%     \label{fig:sketchNMS}
+% \end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figs/depth_sort.pdf}
+    \vspace{-6mm} 
+    \caption{\textbf{Resolving ambiguities in overlapping regions.} The depth map $D$ is sampled along sketch pixels at evenly spaced points, and the sampled points are grouped by their corresponding object (e.g., $P_i$ corresponds to the $i$'th object). Each object is assigned a depth score based on the majority of depth values from the sampled points. Ambiguous pixels are then assigned to the mask with the highest depth score, prioritizing foreground objects.}
+    \label{fig:mask-sort}
+    \vspace{-2mm}
+\end{figure}
+
+% The set of filtered masks requires further refinement as it contains overlapping regions, which lead to ambiguity in pixel assignments. \maneesh{What are the "filtered masks". We just did NMS on the bounding boxes, so I've lost track of what the filtered masks are.} \yael{each bbox has a corresponding mask, so filtering bbox is also filtering masks, I wrote it above "filtered bbox and their corresponding masks"}
+% To resolve such ambiguous pixels, we post-process the masks into disjoint regions by assigning each pixel to the mask corresponding to the object in the foreground. 
+The filtered set of masks may still include overlapping regions, as illustrated in \cref{fig:mask-sort}, where it is unclear which instance the pixels should be associated with. To resolve such overlaps and assign each pixel to a single object instance, we give priority to objects in the foreground.
+We utilize DepthAnythingV2 \cite{depth_anything_v2} to extract the depth map $D$ of the input sketch. We then sample $D$ along the sketch pixels at equally spaced points $P=\{p_1,p_2,\dots ,p_n\}$, analogous to projecting rays through the sketch pixels to the scene. For each mask $M_i$, we identify the subset of points that lie within the mask: $P_i = \{p \in P | p\in M_i\}$. For example, in \Cref{fig:mask-sort}, $P_i$ represents the set of points belonging to the sofa, while $P_j$ denotes the set of points belonging to the cat. For each point $p \in P_i$ we associate a depth value $D(p)$ using the depth map. We then compute a depth score for each mask as the mode of the depth values associated with its sampled points:
+\vspace{-3pt} 
+\begin{equation}
+    ds(M_i) = \arg \max_{D(p)} \text{count}(\{D(p)| p \in P_i\}).
+\end{equation}
+
+\vspace{-2pt} 
+Based on this score, we assign ambiguous pixels to the mask with the highest depth score, ensuring that foreground objects take precedence. 
+% \begin{equation}
+%     label(x) = \arg \max_{i} (\{score(M_i)|x\in M_i\})
+% \end{equation}
+% \maneesh{How is the score used to assign a instance label to the pixel? I think a final step might be missing. Also is this depth priority score equal to the layer depth? If so we should say that. If not we should explain how we compute layer depth.} \yael{i clarified the process in the text and figure}
+Lastly, to ensure complete coverage of the sketch, we employ a watershed-based~\cite{watershed1991} refinement, propagating existing mask labels to  unlabeled sketch pixels.
+
+
+\subsection{Layer Inpainting}
+As a final step we extract complete layers for each object in the sketch, inpainting any occluded regions using  a pretrained SDXL inpainting model~\cite{von-platen-etal-2022-diffusers}. The goal of this stage is to support basic sketch editing operations, such as translation and scaling.
+We isolate each object $i$ by intersecting the sketch with its corresponding mask $M_i * S$ (\Cref{fig:layers-inpaint}). 
+We then identify the group of masks that intersect with $M_i$: $\mathcal{H}(M_i)=\{M_j | M_j \cap M_i \neq \varnothing \}$. Finally, we define the inpainting mask $C_i$ as the intersection of $\mathcal{H}(M_i)$ with the object's bounding box: $C_i = \mathcal{H}(M_i) \cap B_i$ (shown in green in \cref{fig:layers-inpaint}), and feed it into the pretrained inpainting model.
+% \maneesh{Not sure I follow this. What is Ci, and what is I(Mi)?}
+
+\subsection{Implementation Details}
+Optimization is performed with the AdamW optimizer, configured with an initial learning rate of 6e-5 and a weight decay of 0.0005 to promote generalization and prevent overfitting. Training is conducted with a batch size of 4 and automatic learning rate scaling to ensure stable updates and efficient adaptation.
+For the train, validation, and test sets, we sampled 5,000, 500, and 500 images, respectively, from the original SketchyScene train, val, and test splits. The experiment was conducted on a single NVIDIA 4090 GPU, with a total training time of four hours.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figs/inpainting_pipe.pdf}
+    \vspace{-6mm} 
+    \caption{\textbf{Layer completion. }Object layers are isolated and inpainted using a pretrained SDXL model. The inpainting mask for each object is defined by intersecting overlapping masks with the object's bounding box.}
+    \vspace{-2mm}
+    \label{fig:layers-inpaint}
+\end{figure}
+
+
+\begin{figure}[t]
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    % \vspace{-3mm}
+    {\small
+    \begin{tabular}{c c c}
+        Sketch & Bounding Box & Segmentation \\
+        \frame{\includegraphics[width=0.32\linewidth]{figs/sketchyscene_layout/L0_sample3.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs/sketchyscene_layout/bboxes.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs/sketchyscene_layout/masks.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.4cm}   
+     \caption{SketchyScene dataset provides ground truth object bounding boxes and pixel-level instance segmentation masks for scene layouts.}
+    \vspace{-3mm}   
+    \label{fig:SketchySceneLayout}
+\end{figure}
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    {
+    \begin{tabular}{c @{\hspace{0.4cm}} c c c @{\hspace{0.4cm}} c}
+    \toprule
+        \multirow{2}{3cm}{SketchyScene Layout} & \multicolumn{3}{c}{\xrfill[0.5ex]{0.5pt}\; \textbf{Stroke Style Variation} \; \xrfill[0.5ex]{0.5pt}} & \multirow{2}{3cm}{\centering SketchAgent} \\
+         & \textit{Calligraphic Pen} & \textit{Charcoal} & \textit{Brush Pen} & \\
+        \midrule
+        \frame{
+        \includegraphics[width=0.174\linewidth]{figs/dataset_examples/L0_sample156.png}}&
+        \frame{\includegraphics[width=0.174\linewidth]{figs/dataset_examples/0156_01.png}} &
+        \frame{\includegraphics[width=0.174\linewidth]{figs/dataset_examples/0156_04.png}} &
+        \frame{\includegraphics[width=0.174\linewidth]{figs/dataset_examples/0156_11.png}} &
+        \frame{\includegraphics[width=0.174\linewidth]{figs/dataset_examples/sketch_agent_0156.png}} \\
+
+        & 
+        \includegraphics[width=0.1\linewidth]{figs/strokes/brush_01.png} &
+        \includegraphics[width=0.1\linewidth]{figs/strokes/brush_04.png} &
+        \includegraphics[width=0.1\linewidth]{figs/strokes/brush_11.png} &
+        \\
+       
+    \end{tabular}
+
+     % \begin{tabular}{c c c c c}
+     % % \midrule
+     % \multicolumn{5}{c}{\xrfill[0.5ex]{0.5pt}\; Drawing Style Variation \; \xrfill[0.5ex]{0.5pt}}\\
+     % \midrule
+     %    \frame{\includegraphics[height=2.1cm, width=0.172\linewidth]{figs/dataset_examples/6225.png}} &
+     %    \frame{\includegraphics[height=2.1cm, width=0.172\linewidth]{figs/dataset_examples/101686.png}} &
+     %    \frame{\includegraphics[height=2.1cm, width=0.172\linewidth]{figs/dataset_examples/118330.png}} &
+     %    \frame{\includegraphics[height=2.1cm, width=0.172\linewidth]{figs/dataset_examples/182362.png}} &
+     %    \frame{\includegraphics[height=2.1cm, width=0.172\linewidth]{figs/dataset_examples/467564.png}} \\
+        % \bottomrule
+    % \end{tabular}
+    }
+    \vspace{-0.4cm}
+    \caption{\textbf{Samples from our \datasetname{} dataset.} We augment the SketchyScene dataset by generating vector sketches with varied drawing styles based on SketchyScene's scene layouts. Stroke style variation is introduced by re-rendering the scenes with three different brush styles. Additionally, we create a more symbolic and challenging sketch type, resembling children's drawings, shown on the right, while maintaining the same scene layouts.}
+    \label{fig:dataset}
+\end{figure*}
+
+\begin{figure}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \vspace{-4pt}
+    {\small
+    \begin{tabular}{c c c}
+        Input Image & InstantStyle Sketch & Instance Segmentation \\
+        \frame{\includegraphics[width=0.32\linewidth]{figs/instantstyle_examples/1424_vis.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs/instantstyle_examples/1424_sketch.png}} &
+        \frame{\includegraphics[width=0.32\linewidth]{figs/instantstyle_examples/1424_vis_image.png}}
+        \\
+
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs/instantstyle_examples/242210_vis.png}}  &
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs/instantstyle_examples/242210_sketch.png}} &
+        \frame{\includegraphics[trim=0 1.3cm 0 0,clip,width=0.32\linewidth]{figs/instantstyle_examples/242210_sketch_vis.png}}
+        
+        \\
+
+        % \includegraphics[width=0.32\linewidth]{figs/dataset_examples/467564.png} &
+        % \includegraphics[width=0.32\linewidth]{figs/dataset_examples/467564.png} &
+        % \includegraphics[width=0.32\linewidth]{figs/dataset_examples/467564.png} \\
+    \end{tabular}
+    }
+    \vspace{-0.3cm}    
+    \caption{\textbf{Illustration of our \datasetname{} dataset.} The input images are sourced from the Visual Genome dataset \cite{VisualGenome2017}, which we filter to a subset of scenes containing 5 to 10 object instances. We generate the corresponding sketches with InstantStyle \cite{Wang2024InstantStyleFL}.}
+    \vspace{-10pt}
+    \label{fig:instantstyle}
+\end{figure}
+
+\section{Scene Sketch Segmentation Benchmark}
+To evaluate our performance across a diverse set of sketches, we construct a synthetic annotated scene-sketch dataset: \datasetname{}. This dataset focuses on three key axes of variation, designed to extend existing datasets: (1) drawing style, (2) stroke style, and (3) object categories. 
+% \maneesh{Not sure what drawing style is vs. stroke style. Should probably define below. Also we use different terms (sketch style and stroke variations) below which is confusing.} \mia{WIP} 
+We define drawing style as a spectrum ranging from symbolic, which emphasizes abstraction and simplified representation, to realistic, which prioritizes detailed and lifelike depiction. We define stroke variation as the differences in texture, width, and flow that characterize individual strokes, similar to the variety of brush types in digital drawing software.
+% By independently varying each axis, the dataset enables the isolation and analysis of how these factors influence segmentation results.
+Our dataset combines two complementary pipelines to enhance diversity and object variety. 
+
+\paragraph{SketchyScene Layouts}
+% The first pipeline builds on the SketchyScene \cite{Zou18SketchyScene} dataset. 
+The SketchyScene dataset \cite{Zou18SketchyScene} consists of 7,265 scene layouts containing 45 object categories. These layouts are of high quality, as they were manually constructed by humans. Each data sample includes an input sketch, object class labels, bounding boxes, and a pixel-wise segmentation map (see \cref{fig:SketchySceneLayout}).
+The sketches in the dataset share a consistent clipart-like style. We extend the SketchyScene dataset to include more diverse sketch styles and stroke variations. Specifically, we incorporate recent object sketching methods that introduce significantly different sketch appearances compared to SketchyScene. These include CLIPasso \cite{vinker2022clipasso}, which transforms images of individual objects into sketches with relatively high image fidelity, and SketchAgent \cite{vinker2024sketchagent}, which generates symbolic sketches resembling children’s drawings, offering a more challenging out-of-distribution case.
+Both techniques produce vector-format sketches, which we use to assemble scene sketches while avoiding artifacts caused by transformations. Each object is placed at its ground truth location and scaled to fit its bounding box while preserving its aspect ratio. \Cref{fig:dataset} demonstrate sketches produced from a given SketchyScene layout. 
+% The ground truth pixel-wise segmentation maps for the new samples are defined by rasterizing the per-object sketches and stacking them according to the ordered object scene data from SketchyScene.
+% We utilize the vector sketches to introduce stroke style variations, reflecting different tools that might be used in sketching like ink, marker, etc. 
+% Using vector formats makes it both efficient and straightforward to introduce brush style variations, as it simply involves applying a style to the parametric representation and re-rendering the sketch.
+% For the CLIPasso-style sketches, we generate three distinct stroke styles: pen, pencil, and ink using the \yael{X METHOD??}\mia{Put in chuan's writing}. 
+Exploring stroke variation is crucial for testing the robustness of automatic segmentation approaches, as real-world scenarios often involve highly diverse sketch styles. 
+We augment the vector sketch using three distinct brush styles through the Adobe Illustrator Scripting API - Calligraphic Pen, Charcoal, and Brush Pen. For each brush type, we manually select the stroke width that best preserved a natural and visually appealing result.
+% \Cref{fig:dataset} shows selected samples from our dataset, with the original SketchyScene's input on the left and our generated sketches on the right. 
+
+
+
+
+
+\paragraph{Extended Categories}
+To extend the range of 45 object categories available in SketchyScene, we utilize the Visual Genome dataset \cite{VisualGenome2017}, a large-scale dataset containing diverse and richly annotated images containing over 33,877 distinct object categories. 
+% \yael{Mia, please describe this dataset further and highlight its advantages compared to others.}\mia{done}
+% The Visual Genome dataset includes many complex scenes with numerous objects (sometimes more than 40 objects per scene). The objects come from 33,877 distinct categories, offering an exceptionally wide range of diversity. 
+% Compared to other natural image datasets, the Visual Genome dataset stands out for featuring images that encapsulate complex and meaningful relationships between numerous objects, as it is specifically designed to model interactions within objects in an image, making it an ideal source for generating meaningful scene sketches. 
+% However, 
+We use InstantStyle \cite{Wang2024InstantStyleFL}, a state-of-the-art style transfer method, to generate corresponding raster sketches from the input scene images, and segment the sketch objects based on the provided image segmentation. As sketches are typically sparse, and very small objects may disappear during the translation from image to sketch, we filtered the dataset to include 1068 images containing five to ten distinct objects per scene. Our InstantStyle subset of the \datasetname{} dataset includes a total of 72 categories, featuring 53 novel object classes not present in SketchyScene. A few examples of the resulting dataset are shown in \Cref{fig:instantstyle}.
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=1\linewidth]{figs/compare_real_sketch_seg_result.png} 
+%   \caption{\yael{I think we can move this to the method with more analysis}Segmentation results for a natural image and an artist-drawn sketch of the same scene, both prompted with the label ``sheep''. The left column of each pair shows the input, while the right column displays the corresponding segmentation output produced by Grounded SAM. \mia{find an example where original groundingDINO (1) has good bbox on real image and (2) has bad bbox on sketch, which will lead to good vs bad segmentation results on real vs sketch, then this figure will make more sense}}  
+%   \label{fig:compare_natural_vs_sketch}
+% \end{figure}
+
+
+
+
+
+
+
+
+
+
+
+% LocalWords:  pre XYZ GroundingDINO liu objectness kirillov segany
+% LocalWords:  MagicFixup photorealistic Yael's inpainting pretrained
+% LocalWords:  SketchyScene overfitting Swin GIoU DINO's NMS IoU SDXL
+% LocalWords:  detections DepthAnything Chuan disocclude inpainted
+% LocalWords:  cartoonish dont CLIPasso AdamW

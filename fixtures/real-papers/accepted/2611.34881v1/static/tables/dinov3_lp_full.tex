@@ -1,0 +1,56 @@
+\subsection{DINOv3 ViT-B/16 Linear Probe: Full Results}
+\label{app:dinov3_lp}
+
+We additionally evaluate typicality bias under the linear-probe (LP) protocol on DINOv3 ViT-B/16, where only a linear classification head is trained on top of the frozen pretrained backbone. This isolates the contribution of the backbone's representations from end-to-end fine-tuning: any gap that survives the LP setup is encoded in the backbone itself and must be read out of features the backbone already provides, while any gap reduction obtained by augmentation must operate purely through the head's training signal. We restrict the LP study to Std.\ and three paste augmentations of the FT sweep (\S\ref{app:dinov3_full}), SCP, XPaste and XPaste\,+\,AAS, since the goal of this section is to characterize the \emph{ceiling} on what augmentation can achieve in the frozen-backbone regime, not to repeat a full sweep. Unlike in the fine-tuned tables, the AAS row here (XPaste\,+\,AAS$^{\dagger}$) applies AAS sampling over the whole LP schedule rather than as the late stage of Sec.~\ref{sec:aas}, and every row is a single training draw. 
+
+Tab.~\ref{tab:dinov3_lp_main} reports the in-domain results together with mean STRANGE-Bench statistics;  Tab.~\ref{tab:dinov3_lp_cd} reports the cross-domain transfer to Objects365; and Tab.~\ref{tab:dinov3_lp_strange} reports the full per-tier STRANGE-Bench breakdown. Three observations stand out. \emph{First}, the standard augmentation recipe (\emph{Std.}) attains the highest in-domain F1 on COCO val and on the typical split, but also exhibits the largest typicality gap ($\Delta^{\text{T-A}} = 8.6$); paste-based methods trade a small amount of in-domain F1 ($1.5$ to $2.3$~p.p.\@) for substantially smaller gaps ($5.7$ to $5.9$). \emph{Second}, on STRANGE-Bench, \emph{XPaste\,+\,AAS$^{\dagger}$} is the strongest mitigator under the LP protocol: it achieves the lowest mean tier gap ($\Delta_{1\text{-}5} = 6.0$), the highest atypical mean ($68.1$) and $T_{\text{never}}$ score ($70.1$), and the smallest gap at T2 to T5; XPaste is second on these three metrics ($8.1$, $67.3$, $67.9$) and SCP third ($9.2$, $57.5$, $55.7$). \emph{Third}, the STRANGE-Bench ordering is the same as under end-to-end fine-tuning (XPaste\,+\,AAS, then XPaste, then SCP; Tab.~\ref{tab:dinov3_main} and \S\ref{app:dinov3_full}): the AAS tilt lowers $\Delta_{1\text{-}5}$ from $8.1$ to $6.0$ and raises $T_{\text{never}}$ from $67.9$ to $70.1$ over XPaste even when only the head is trained, but the residual gap stays larger than after fine-tuning ($-0.8$).
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{DINOv3 ViT-B/16 linear probe: typicality bias under
+augmentation.} With the backbone frozen, XPaste\,+\,AAS$^{\dagger}$ \emph{(ours)} has the smallest STRANGE-Bench gap ($6.0$ against $23.9$ for Std.), the highest atypical mean and the highest $T_{\text{never}}$ ($70.1$), while Std.\ keeps the highest COCO F1$^{\text{val}}$ and SCP has the smallest COCO gap ($5.7$). F1$_{\text{micro}}$ (\%) on COCO val, the COCO quintile paired split and STRANGE-Bench; one training draw per row. $^{\dagger}$AAS sampling ($\beta = 3.5$) over the whole linear-probe schedule, without the late stage on generated scenes and the weight averaging of Sec.~\ref{sec:aas}. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:dinov3_lp_main}
+\input{static/tables/generated/dinov3_lp_main_tabular}
+\end{table*}
+
+\noindent\textbf{Why augmentation hits a ceiling under LP.}
+The residual gap that no LP augmentation closes ($\Delta_{1\text{-}5} \geq 6.0$, $T_{\text{never}} \leq 70.1$) points to the frozen features: DINOv3 is pretrained without labels on about $1.7$ billion images (LVD-1689M~\cite{simeoni2025dinov3}), and the gap of the Std.\ probe grows with the pretraining data (DINOv1 $19.3$, DINOv2 $21.5$, DINOv3 $23.9$; App.~\ref{app:scale_ladder}), which is consistent with co-occurrence structure that is already present in the features. Once the backbone is frozen, the head-only training signal cannot edit those internal representations; it can only re-route how they are linearly combined into class logits. Paste-based methods re-balance the head's input distribution and lower the gap from $23.9$ to between $6.0$ and $9.2$; the remainder may reflect co-occurrence structure that a linear head cannot separate from the pretrained representation. End-to-end FT (\S\ref{app:dinov3_full}) lets the gradient reach the backbone, so the pasted atypical samples can also change the features; this is consistent with FT's $\Delta_{1\text{-}5} = -0.8$ for XPaste\,+\,AAS versus LP's $6.0$ for XPaste\,+\,AAS$^{\dagger}$.
+
+\noindent\textbf{In-domain typicality.}
+Tab.~\ref{tab:dinov3_lp_main} consolidates the LP results on COCO val, the COCO paired typicality splits, and the STRANGE-Bench means over T1 to T5 plus $T_{\text{never}}$. Two effects are visible. On the COCO columns, Std.\ achieves the highest absolute F1 ($\text{F1}^{\text{val}} = 74.6$, $\text{F1}^{\text{T}} = 71.8$; XPaste has the highest $\text{F1}^{\text{A}}$, $64.4$) but with an $8.6$~p.p.\@ typicality gap; all three paste methods (SCP, XPaste, XPaste\,+\,AAS) give up $1.5$ to $2.3$~p.p.\@ of $\text{F1}^{\text{val}}$ in exchange for gaps of $5.7$ to $5.9$. On the STRANGE-Bench columns the contrast is much sharper: Std.\ has $\Delta_{1\text{-}5} = 23.9$, more than $2\times$ the in-domain gap, and the lowest $T_{\text{never}}$ ($38.9$). All three paste methods cut the gap to between a quarter and two fifths ($6.0$ to $9.2$) and raise $T_{\text{never}}$ to $55.7$ to $70.1$. XPaste\,+\,AAS$^{\dagger}$ \emph{(ours)} leads on $\Delta_{1\text{-}5}$ ($6.0$) and on $T_{\text{never}}$ ($70.1$), ahead of XPaste ($8.1$, $67.9$) and SCP ($9.2$, $55.7$). Note that the LP setting keeps the FT ordering (\S\ref{app:dinov3_full}, $\Delta_{1\text{-}5} = -0.8$ for XPaste\,+\,AAS) but not its size: under the frozen backbone, the best mean tier gap is $6.0$.
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{DINOv3 ViT-B/16 linear probe: cross-domain
+(Objects365) typicality.} XPaste\,+\,AAS$^{\dagger}$ \emph{(ours)} has the smallest gap ($15.0$ against $18.0$ for Std.) and SCP the highest typical and atypical F1. F1$_{\text{micro}}$ (\%) on the Objects365 val quintile paired split ranked by COCO \texttt{train2017} NPMI (the Objects365-NPMI split of Tab.~\ref{tab:dinov3_ft_cd} was not evaluated for the probe); COCO columns as in Tab.~\ref{tab:dinov3_lp_main}. Best per column in \textbf{bold}, second-best~\underline{underlined}.}
+\label{tab:dinov3_lp_cd}
+\input{static/tables/generated/dinov3_lp_cd_tabular}
+\end{table*}
+
+\noindent\textbf{Cross-domain typicality.}
+Tab.~\ref{tab:dinov3_lp_cd} reports the cross-domain transfer to
+Objects365 (paired O365 splits, mapped onto the COCO-80 vocabulary).
+As in DINOv3 FT, absolute F1 is much lower than in-domain because
+of the domain shift, and Std.\ again has the largest gap ($18.0$); SCP has the highest typical and atypical scores ($50.1 / 33.6$), and XPaste\,+\,AAS$^{\dagger}$ \emph{(ours)} the smallest gap ($15.0$; XPaste $15.3$, SCP $16.6$). The LP gaps are larger than the FT gaps on the same split ($12.6$ to $14.2$~p.p.\@, \S\ref{app:dinov3_full}), and paste lowers them more: by $1.4$ to $3.0$~p.p.\@ against Std.\ under LP and by at most $1.0$ under FT (XPaste: $-2.7$ under LP, $+0.4$ under FT).
+
+\begin{table*}[!htp]%
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\caption{\textbf{DINOv3 ViT-B/16 linear probe: per-tier
+STRANGE-Bench breakdown.} The Std.\ gap grows at every tier, from $10.8$ at T1 to $37.2$ at T5; every paste row keeps it at $12.2$ or below, and XPaste\,+\,AAS$^{\dagger}$ \emph{(ours)} has the smallest gap at T2 to T5 ($3.4$ to $7.4$). F1$_{\text{micro}}$ (\%) of the typical (T) and atypical (A) arm of each tier and their gap $\Delta$; Mean T1--T5 is the mean over the five tiers ($T_{1\text{-}5}$ in Tab.~\ref{tab:dinov3_lp_main}); rows as in Tab.~\ref{tab:dinov3_lp_main}. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:dinov3_lp_strange}
+\input{static/tables/generated/dinov3_lp_strange_tabular}
+\end{table*}
+
+\noindent\textbf{Per-tier STRANGE-Bench breakdown.}
+Tab.~\ref{tab:dinov3_lp_strange} reports the full per-tier
+STRANGE-Bench breakdown for DINOv3 LP. Two patterns are visible.
+First, the Std.\ baseline gap grows at every tier, from $\Delta = 10.8$ at T1 to $\Delta = 37.2$ at T5, which confirms that contextual load amplifies the bias
+under LP just as it does under FT. Second, all paste-based
+augmentations cut the gap at every tier, to between $3.4$ and $12.2$ (T5: $7.1$ to $12.2$ vs.\ $37.2$ for Std.); XPaste\,+\,AAS$^{\dagger}$ has the smallest gap at T2 to T5 and XPaste at T1.
+The $T_{\text{never}}$ column tells the same story: XPaste\,+\,AAS$^{\dagger}$ at $70.1$ above XPaste at $67.9$ and SCP at $55.7$, all well above Std.'s $38.9$.

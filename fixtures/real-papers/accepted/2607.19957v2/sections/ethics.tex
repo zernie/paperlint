@@ -1,0 +1,44 @@
+
+\section*{Ethical Considerations}
+We discuss ethical considerations by centering the impacts on each stakeholder across two phases: the \emph{research process} (attack design and evaluation) and the \emph{publication of results} (deployment implications).
+% 
+We then describe the mitigation and conclude with justification for conducting this research.
+
+\paragraph{Stakeholder Analysis.}
+Consider three stakeholder groups:
+\begin{icompact}
+\item \emph{Model providers and infrastructure operators} who develop LLM serving systems and cache reuse frameworks. Our findings reveal an underexplored threat in position-independent KV-cache reuse, showing that efficiency optimizations can introduce new attack surfaces. This can inform safer cache reuse mechanisms and improve system-level security posture. The potential negative impact is that attack insights could be misused against systems that deploy cache reuse without sufficient integrity protections.
+
+\item \emph{End users} of LLM systems, whose interactions depend on reliable context integrity and isolation. They may benefit from defenses against unintended cross-context influence, while insecure reuse mechanisms could affect response reliability in shared infrastructure settings.
+
+\item \emph{Researchers and practitioners} studying LLM systems, who benefit from understanding system-level risks. Our work frames KV-cache reuse as a security-relevant component and may motivate further defensive research, while detailed technical analysis could lower the barrier for reproducing attacks without appropriate safeguards.
+\end{icompact}
+
+\paragraph{Mitigation (Implemented).}
+We took steps to minimize harm to the identified stakeholders and promote defensive progress.
+\begin{icompact}
+\item \emph{For model providers and infrastructure operators, responsible disclosure}: Prior to publication, we contacted the founders of a startup commercializing position-independent cache reuse technology and shared our threat model, technical analysis, and empirical results. Follow-up discussions were scheduled to explore safer reuse designs.
+
+\item \emph{For end users, no real-world harm}: All experiments used public datasets and public or locally deployed models in controlled offline environments. We did not use private user data, interact with real users, or test production services.
+
+\item \emph{For researchers and practitioners, defense analysis}: We evaluate mitigation directions, including recomputation-based protection, cache compression, and existing defensive mechanisms, and provide system-level recommendations rather than only exploit guidance.
+\end{icompact}
+
+\paragraph{Recommended Future Safeguards.}
+We suggest that real-world systems incorporate safeguards that address the risks faced by both infrastructure operators and end users: (1) a hybrid mechanism that recomputes high-impact KV states while compressing irrelevant entries, ensuring that user-computed data constitutes the majority of the cache; and (2) a deviation-based rejection policy that denies reuse whenever recomputation reveals deviation exceeding a predefined safety threshold.
+
+\paragraph{Justification for Research.}
+KV cache reuse improves LLM efficiency but introduces underexplored security risks. Identifying and responsibly disclosing these risks is essential to ensure efficiency gains do not compromise system integrity.
+
+\section*{Open Science}
+To support open science, \sys is publicly at \url{https://github.com/YichiCS/KV-Cache-Hijack} and \url{https://zenodo.org/records/20403786}. 
+
+\section*{Acknowledgment} 
+We thank the reviewers and shepherd for their constructive comments on our work. 
+% 
+The Authors acknowledge the National Artificial Intelligence Research Resource (NAIRR) Pilot for contributing to this research result.
+% 
+Huan Zhang is supported in part by the AI2050 program at Schmidt Sciences (AI2050 Early Career Fellowship).
+
+\bibliographystyle{plain}
+\bibliography{reference}

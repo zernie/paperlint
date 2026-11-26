@@ -1,0 +1,225 @@
+% Settings for the long url in reference\hypersetup{breaklinks=true}
+\def\UrlBreaks{\do\/\do-\do\.}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath} % required for cases
+\allowdisplaybreaks
+\usepackage{amsthm} % required for proof
+\let\Bbbk\relax
+\usepackage{amssymb} % http://ctan.org/pkg/amssymb
+\usepackage{array} % required for new table column types
+\usepackage{balance}
+\usepackage{caption} % For captions outside of figures/tables environments
+\usepackage{comment}
+\usepackage{enumitem}
+% \usepackage[pass,showframe]{geometry} % for debugging only
+% \showthe\textwidth
+% \showthe\textheight
+\usepackage{graphicx} % Required for including images
+% \usepackage{filecontents} % inlined bib file
+\usepackage{flushend}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{makecell}
+% \usepackage{minted}
+\usepackage{multirow}
+\usepackage{pifont} % http://ctan.org/pkg/pifont
+\usepackage{siunitx}
+\usepackage{stfloats} % bollom placement of figure*
+\usepackage{subcaption} % Required for subfigures
+\usepackage{tabularx}
+\usepackage{textcomp}
+\usepackage{tikz} % to be able to draw some self-contained figs
+\usetikzlibrary{positioning,fit}
+\usepackage{wrapfig} % Required for wrapping text around the figure
+\usepackage{xcolor}
+
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+
+\makeatletter
+% Right-justify line numbers in a fixed-width box
+\algrenewcommand\alglinenumber[1]{%
+  \makebox[1.5em][r]{\footnotesize #1:}\hspace*{0.25em}%
+}
+\makeatother
+
+\newcommand{\cmark}{\ding{51}}
+\definecolor{lightgray}{gray}{0.8} % 0.5 is the gray level; 0 is black, 1 is white
+\newcommand{\hxmark}{\textcolor{lightgray}{\ding{51}}}
+% \newcommand{\hmark}{\textcolor{gray}{\ding{51}}}
+\definecolor{darkgray}{gray}{0.6} % 0.5 is the gray level; 0 is black, 1 is white
+\newcommand{\hcmark}{\textcolor{darkgray}{\ding{51}}}
+\newcommand{\xmark}{\ding{55}}
+
+\definecolor{darkred}{RGB}{153, 0, 0} 
+
+\newtoggle{our_comments}
+\newtoggle{our_contents}
+\toggletrue{our_comments}
+% \togglefalse{our_comments}
+\toggletrue{our_contents}
+
+\newcommand{\feedback}[1]{
+\iftoggle{our_comments}{%
+    {\color{purple} #1}
+}{}}
+
+\newcommand{\xmc}[1]{
+\iftoggle{our_comments}{%
+    {\color{cyan} XM: #1}
+}{}}
+
+
+\newcommand{\akc}[1]{
+\iftoggle{our_comments}{%
+    {\color{violet} AK: #1}
+}{}}
+
+% \newcommand{\akt}[1]{\iftoggle{our_contents}{{\color{teal} #1}}{}}
+\newcommand{\akt}[1]{\iftoggle{our_contents}{{#1}}{}}
+
+\newcommand{\htc}[1]{
+\iftoggle{our_comments}{%
+    {\color{orange} HT: #1}
+}{}}
+
+\newcommand{\htt}[1]{\iftoggle{our_comments}{{\color{orange}#1}}{}}
+
+\newcommand{\kwc}[1]{
+\iftoggle{our_comments}{%
+    {\color{magenta} KSW: #1}
+}{}}
+
+\newcommand{\kwt}[1]{
+\iftoggle{our_contents}{%
+    {\color{cyan} #1}
+}{}}
+
+\newcommand{\ssc}[1]{
+\iftoggle{our_comments}{%
+    {\color{olive} SS: #1}
+}{}}
+
+\newcommand{\igc}[1]{
+\iftoggle{our_comments}{%
+    {\color{brown} \bf IG: #1}
+}{}}
+
+\newcommand{\igt}[1]{
+\iftoggle{our_contents}{%
+    {\color{blue} IG Text: #1}
+}{}}
+
+\newcommand{\RPCa}{RPC-A}
+\newcommand{\RPCs}{RPC-S}
+\newcommand{\RPCc}{RPC-C}
+\newcommand{\abstraction}{RASC}
+\newcommand{\abs}{RASC}
+\newcommand{\sysname}{Rascal}
+\newcommand{\dynpoller}{our dynamic polling strategy}
+\newcommand{\scheduler}{DAG-TL}
+\newcommand{\rescheduler}{our rescheduler}
+\newcommand{\Figure}{Fig.}
+\newcommand{\Table}{Table}
+\newcommand{\Section}{Sec.}
+\newcommand{\Rgaragetrash}{R1}
+\newcommand{\Rlockdoor}{R1}
+\newcommand{\Rfiredetected}{R2}
+\newcommand{\Rperimeterlights}{R2}
+\newcommand{\Relevatorup}{R3}
+\newcommand{\Rpetvacuum}{R3}
+\newcommand{\Rprinter}{R4}
+
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newcommand{\Figures}{Figs.}
+\newcommand{\Algorithm}{Algo.}
+\newcommand{\Theorem}{Theorem}
+\newcommand{\Corollary }{Corollary}
+\newcommand{\Safety}{Safety}
+\newcommand{\Liveness}{Liveness}
+\newcommand{\Rule}{Rule}
+\newcommand{\Equation}{Eqn.}
+\newcommand{\Fact}{Fact}
+\newcommand{\Invariant}{Inv.}
+\newcommand{\Appendix}{Appendix}
+\newtheorem{fact}{Fact}
+\newtheorem{invariant}{Invariant}
+
+\newtheoremstyle{thmparen}%
+  {3pt}{3pt}%   Space above/below
+  {}{}%         Body font / indent
+  {\bfseries}%  Head font (bold)
+  {.}%          Punctuation after head
+  {0.5em}%      Space after head
+  {\thmname{#1}~\thmnumber{#2}\thmnote{ (#3)}}
+
+\theoremstyle{thmparen}
+
+% Generic inner theorem whose name we can swap
+\newtheorem{innercustomgeneric}{\customgenericname}
+\providecommand{\customgenericname}{}
+
+% Factory: \newcustomtheorem{<envname>}{<DisplayedName>}
+% Usage: \begin{reptheorem}[Title]{<number>} ... \end{reptheorem}
+\newcommand{\newcustomtheorem}[2]{%
+  \newenvironment{#1}[2][]% [optional title][forced number]
+  {%
+    \renewcommand\customgenericname{#2}%
+    \renewcommand\theinnercustomgeneric{##2}%
+    \innercustomgeneric[##1]%
+  }{\endinnercustomgeneric}%
+}
+
+\newcustomtheorem{reptheorem}{Theorem}
+
+\newcommand{\squishlist}
+{
+    \begin{list}{$\bullet$}
+    {
+        \setlength{\itemsep}{0pt}      \setlength{\parsep}{3pt}
+        \setlength{\topsep}{3pt}       \setlength{\partopsep}{0pt}
+        \setlength{\leftmargin}{1em} \setlength{\labelwidth}{1em}
+        \setlength{\labelsep}{0.5em}
+    }
+}
+\newcommand{\squishend}
+{
+    \end{list}
+}
+
+\newcommand{\squishenum}
+{
+    \begin{list}{\arabic{enumi}.}
+    {
+        \usecounter{enumi}
+        \setlength{\itemsep}{0pt}      \setlength{\parsep}{3pt}
+        \setlength{\topsep}{3pt}       \setlength{\partopsep}{0pt}
+        \setlength{\leftmargin}{1.5em} \setlength{\labelwidth}{1em}
+        \setlength{\labelsep}{0.5em}
+    }
+}
+
+\newcommand{\debugbox}[1]{%
+  \fbox{\begin{minipage}{\linewidth}#1\end{minipage}}}
+
+\lstdefinelanguage{yaml}{
+  morekeywords={true,false,null,y,n},
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]'
+}
+
+\lstdefinestyle{codeblock}{
+  basicstyle=\ttfamily\scriptsize,
+  numbers=left,
+  numbersep=4pt,
+  xleftmargin=9pt,
+  breaklines=true,
+  frame=lines,
+  showstringspaces=false,
+  columns=fullflexible
+}

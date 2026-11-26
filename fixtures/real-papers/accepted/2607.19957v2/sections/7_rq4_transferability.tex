@@ -1,0 +1,34 @@
+\subsection{RQ4: Transferability}~\label{sec:trans}
+
+
+\input{tables/rq4_main}
+\input{tables/rq4_acc}
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{assets/Ablation.pdf}
+    \vspace{-0.3in}
+    \caption{\textbf{Ablation studies of \sys hyperparameters.} We evaluate the impact of four \sys hyperparameters on effectiveness: (a) adversarial prefix length, (b) number of GCG optimization steps, (c) top-$k$ candidates, and (d) search width.}
+    \label{fig:ablation}
+    \vspace{-0.1in}
+\end{figure*}
+
+
+\paragraph{Setup.}
+RQ4 focuses on the cross-model transferability of \sys, specifically examining its attack effectiveness under the black-box setting described in Section~\ref{sec:threat_model}.
+% 
+We optimize the prefix $p$ on a proxy model and send the constructed malicious query $p\oplus\tilde{X}$ to the target model. We then evaluate the success rate of the target LLM generating the response $\tilde{r}$ for the query $X\oplus q$, under the condition that a position-independent cache hit (as defined in Definition~\ref{def:position_independent_cache_hit}) occurs between $X$ and $\tilde{X}$.
+% 
+We employ Llama-3.1-8B as the proxy model for prefix optimization. All experiments are conducted on the HotpotQA dataset using Llama-3.1-8B and the same hyperparameters as in Section~\ref{sec:rq1}. 
+% 
+We evaluate the effectiveness of with full KV cache (\textit{Vanilla}), and with three recomputation methods (\textit{Random}, \textit{EPIC}, and \textit{CacheBlend}). We use black-box setting and report U-ASR and T-ASR for the effectiveness of \sys.
+
+\paragraph{Results.}
+Table~\ref{tab:rq4_main} presents experimental results demonstrating that \sys exhibits robust cross-model transferability. When the target LLM is the large-parameter Llama-3.3-70B, \sys maintains high efficacy, achieving 75\% U-ASR and 37\% T-ASR. Similarly, \sys achieves 76\% U-ASR and 37\% T-ASR against models with comparable parameter counts but distinct architectures like Qwen3-8B and 14B. These results indicate that the prefix $p$ optimized by \sys poses a significant threat in black-box settings and enables attack transferability across models of varying parameter sizes and architectures.
+
+We observe a performance divergence when transferring the attack to smaller target models. Specifically, on Qwen3-4B and Llama-3.2-1B, while \sys achieves a high U-ASR of approximately 90\%, the T-ASR drops significantly to 13\%. We attribute this low T-ASR to the capability gap between models, as indicated by the main task performance in Table~\ref{tab:rq4_acc}. 
+% 
+Drawing on the Platonic Representation Hypothesis~\cite{huh2024position}, which suggests that increasingly capable models converge toward a shared representation space, we argue that prefixes optimized on larger proxy models are effective against similarly capable or stronger targets. However, the representation spaces of smaller models likely diverge from that of the proxy, making it difficult to precisely steer them to generate the specific target response $\tilde{r}$. Conversely, the U-ASR remains high because the prefix $p$ successfully perturbs the KV cache. This induces substantial contextual hallucinations, causing the model to generate irrelevant or incorrect responses even if it fails to match the exact target string.
+
+\paragraph{Conclusion.}
+In summary, our experiments confirm that \sys possesses strong transferability. This ensures that \sys remains a threat not only in white-box scenarios but also in black-box settings where the attacker lacks access to the target model's parameters and gradients.
+

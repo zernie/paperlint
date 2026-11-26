@@ -1,0 +1,596 @@
+\section{Evaluation}
+\subsection{Experimental Settings}
+\noindent \textbf{Target Libraries.}
+We evaluate \appname on two representative DL libraries: \textit{Transformers}~\cite{transformers} and \textit{Megatron}~\cite{megatron}.
+Transformers is a widely used, community-maintained framework for general-purpose NLP and multimodal modeling, with over 20,000 pull requests and frequent feature updates.
+\textit{Megatron}, by contrast, is an internally maintained \textit{NVIDIA}~\cite{nvidia} library optimized for large-scale distributed training; it has limited PR activity but continuously updated commits on its \texttt{main} branch.
+These two libraries represent complementary scenarios: community-driven open development and enterprise-scale infrastructure evolution.
+While \appname is generalizable to other scientific computing libraries, we focus on DL frameworks because their defects are often configuration-sensitive, tensor-dependent, and hardware-specific (e.g., GPU precision modes), making them representative targets for evaluating defect and impact analysis.
+
+\noindent \textbf{PR/Commit Sampling and Annotation.}
+For \textit{Transformers}, we collect all PRs merged during the Q2 2025 (April–June), obtaining 718 candidates.
+We then perform a two-step procedure:
+(1) \textit{Filtering}: PRs clearly unrelated to defect fixing (e.g., documentation, testing) are removed based on title and diff.
+(2) \textit{Manual annotation}: the remaining 157 PRs are independently reviewed by two DL-domain experts, who decide whether the change is a \emph{real defect fix} or a benign change. 
+Disagreements are later reconciled by discussion.
+For \textit{Megatron}, since it does not actively maintain public PRs, we collect 535 recent commits from the \texttt{main} branch, exclude 465 non-defect cases, and retain 70 candidates.
+These are annotated by the same two experts using identical criteria to ensure consistency across PR- and commit-based workflows.
+
+
+\noindent \textbf{Baselines and Metrics.} 
+We compare \appname against three representative baselines: FlatLLM (Base), FlatLLM (Reasoning), and PyCG~\cite{salis2021pycg}.
+FlatLLM (Base) serves as a zero-shot summarization baseline~\cite{liu2019automatic,xiao2024generative}, reflecting the common practice of using a single general-purpose LLM to interpret PRs or commits without orchestration.
+Although these models are primarily designed for commit or pull request summarization, they provide a realistic and conservative comparison for uncoordinated LLM reasoning over code changes.
+We also compare \appname with FlatLLM (Reasoning), a self-reasoning baseline that uses the \texttt{DeepSeek-R1}~\cite{deepseekr1}. 
+Unlike FlatLLM (Base), FlatLLM (Reasoning) is capable of reasoning internally and handling both defect pattern generation and impact analysis within the same model.
+% \textcolor{blue}{Finally, we include a non-LLM-based baseline, PyCG, which uses a static call graph to identify potential defect impacts by analyzing function-call relationships.} 
+Finally, PyCG provides a non-LLM static call-graph baseline.
+Unlike prior work on commit summarization using ROUGE~\cite{liu2019automatic,rouge}, our task produces structured representations (defect patterns) intended for downstream reasoning.
+We therefore adopt expert-driven field-level scoring for summary evaluation and binary classification metrics (precision, recall, F1) for defect impact analysis.
+
+\noindent \textbf{LLM Configuration.}
+All agents in \appname use \texttt{DeepSeek-V3}~\cite{deepseek} as the backbone model.
+We select \texttt{DeepSeek-V3} for its ability to efficiently process heterogeneous inputs (e.g., PR discussions, code diffs, and AST fragments) while maintaining stable reasoning quality at a manageable token cost.
+To ensure reproducibility and avoid mixed-model effects, all agents share the same base model under deterministic decoding settings (temperature = 0, top-p = 1.0).
+% This unified configuration ensures consistent reasoning across agents while preserving clarity in ablation and baseline comparisons.
+
+
+\noindent \textbf{Client Collection.}
+\label{sec:clientcollection}
+For PR analysis, we start from the 122 true-positive defect patterns and collect open-source downstream clients on GitHub that depend on \textit{Transformers}.
+For each defect pattern, we extract key identifiers (e.g., model names, parameters, function calls such as \texttt{from\_pretrained()} and \texttt{attn\_implementation}) as query anchors to locate potential clients.
+We retain only clients that can be successfully executed, pass integrity checks (e.g., dependency installation, model loading), and are not trivial forks or toy examples.
+The resulting clients cover diverse downstream usage scenarios, including NLP fine-tuning pipelines, multimodal training frameworks, and inference services, representative of the broader \textit{Transformers} ecosystem.
+For commit-level evaluation, we use \texttt{MindSpeed}~\cite{mindspeed}, a production-grade open-source project built on \textit{Megatron} for large-scale distributed training and deployment.
+Its industrial workflow and extensive reuse of \textit{Megatron} modules make it an ideal environment for validating downstream impacts of commit-level fixes.
+
+
+\subsection{RQ1: Can \appname effectively generate defect patterns?}
+\noindent\textbf{Methodology.}
+A key goal of \appname is to distinguish real bug-fix commits from benign changes and to extract precise, structured defect patterns from natural language and code changes.
+To assess this capability, we evaluate \appname on 157 recent PRs from the \texttt{Transformers}. 
+These PRs include a wide variety of silent defects—bugs that do not crash the program but can cause incorrect behavior or inefficiency under certain conditions.
+
+\noindent\textbf{Results and Analysis.}  
+As shown in Table~\ref{tab:rq1-bigtable}, \appname achieves high performance in defect identification, with a precision of 90\%, recall of 99\%, and F1-score of 95\%.
+The specificity (i.e., true negative rate) is 62\%, indicating that \appname can also effectively distinguish non-defect changes such as documentation updates or test refactoring.
+Compared to FlatLLM (base), which uses a single LLM summarization prompt without agentic coordination, \appname exhibits superior accuracy across all metrics, demonstrating the advantage of its structured reasoning and patch-aware analysis.
+\appname correctly flags non-defect PRs such as \#38212 (fixing logging links) and \#38260 (adding decorators and docstrings) by recognizing their lack of semantic impact on runtime behavior. 
+In contrast, the FlatLLM(base) misclassifies these cases due to the presence of keywords like \textit{fix} and superficial lexical changes.
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Defect Identification Performance Comparison.}
+\label{tab:rq1-bigtable}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Tool} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+\midrule
+\appname & 122 & 13 & 1 & 21 & \textbf{90\%} & \textbf{99\%} & \textbf{95\%} & \textbf{62\%} \\
+FlatLLM (Base) & 112 & 27 & 10 & 7 & 81\% & 92\% & 86\% & 21\% \\
+FlatLLM (Reasoning) & 116 & 19 & 6 & 15 & 86\% & 95\% & 90\% & 44\% \\
+\bottomrule
+\end{tabular}
+\vspace{-0.3cm}
+\end{table}
+\vspace{0.2em}
+
+% \begin{table}[ht]
+% \centering
+% \small
+% \setlength{\tabcolsep}{3pt}
+% \caption{Defect Identification Performance Comparison.}
+% \label{tab:rq1-bigtable}
+% \begin{tabular}{lcccccccc}
+% \toprule
+% \textbf{Tool} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+% \midrule
+% \appname & \textcolor{blue}{122} & \textcolor{blue}{13} & \textcolor{blue}{1} & \textcolor{blue}{21} & \textcolor{blue}{\textbf{90\%}} & \textcolor{blue}{\textbf{99\%}} & \textcolor{blue}{\textbf{95\%}} & \textcolor{blue}{\textbf{62\%}} \\
+% FlatLLM \textcolor{blue}{(Base)} & \textcolor{blue}{112} & \textcolor{blue}{27} & \textcolor{blue}{10} & \textcolor{blue}{7} & \textcolor{blue}{81\%} & \textcolor{blue}{92\%} & \textcolor{blue}{86\%} & \textcolor{blue}{21\%} \\
+% \textcolor{blue}{FlatLLM (Reasoning)} & \textcolor{blue}{116} & \textcolor{blue}{19} & \textcolor{blue}{6} & \textcolor{blue}{15} & \textcolor{blue}{86\%} & \textcolor{blue}{95\%} & \textcolor{blue}{90\%} & \textcolor{blue}{44\%} \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.4cm}
+% \end{table}
+% \vspace{0.2em} 
+
+
+
+While FlatLLM(Reasoning) improves recall over FlatLLM(Base) by generating intermediate reasoning chains, it often produces redundant or speculative interpretations when the patch semantics are ambiguous.
+For example, in PR \#37905 fixing unintended quantization of tied embeddings, FlatLLM(Reasoning) misclassified the change as a performance optimization due to keyword overlap.
+In contrast, \appname’s multi-agent coordination enables explicit semantic verification, correctly linking the quantization configuration to the tied-weight condition and identifying it as a real defect.
+
+\noindent\textbf{Error Analysis.}
+We manually inspect all false positives.
+We find that 13 PRs are flagged as defects despite having no effect on core functionality.
+These cases primarily involve bug fixes in test components.
+For example, PR~\#38471 adjusts \texttt{FlexAttn} test logic to handle edge-case tensors in \texttt{Zamba2} and \texttt{Deepseek3} models, fixing a bug where \texttt{Gemma3IntegrationTest} was never executed.
+While technically correcting a bug in test behavior, such patches do not influence production usage.
+\appname currently lacks the ability to distinguish between test scaffolding and runtime code.
+Incorporating learned classifiers or test directory heuristics could further reduce false positives in future iterations.
+
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Field-wise accuracy and inter-rater agreement of defect patterns (N = 157).}
+\label{tab:field-score}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Field} & \textbf{Miss (0)} & \textbf{Part. (1)} & \textbf{Acc. (2)} & \textbf{Avg.} & \textbf{Cohen’s $\kappa$} \\
+\midrule
+Bug Background & 31 (10\%) & 61 (19\%) & 222 (71\%) & 1.61 & 0.71 \\
+Impact Scope & 11 (4\%) & 38 (12\%) & 265 (84\%) & 1.81 & 0.74 \\
+Trigger Conditions & 34 (11\%) & 122 (39\%) & 158 (50\%) & 1.39 & 0.71 \\
+\bottomrule
+\end{tabular}
+\vspace{-0.35cm}
+\end{table}
+
+% \begin{table}[ht]
+% \centering
+% \small
+% \setlength{\tabcolsep}{3pt}
+% \caption{Field-wise accuracy \textcolor{blue}{and inter-rater agreement of defect patterns (N = 157)}.}
+% \label{tab:field-score}
+% \begin{tabular}{lccccc}
+% \toprule
+% \textbf{Field} & \textbf{Miss (0)} & \textbf{Part. (1)} & \textbf{Acc. (2)} & \textbf{Avg.} & \textcolor{blue}{\textbf{Cohen’s $\kappa$}} \\
+% \midrule
+% Bug Background & \textcolor{blue}{31 (10\%)} & \textcolor{blue}{61 (19\%)} & \textcolor{blue}{222 (71\%)} & \textcolor{blue}{1.61} & \textcolor{blue}{0.71} \\
+% Impact Scope & \textcolor{blue}{11 (4\%)} & \textcolor{blue}{38 (12\%)} & \textcolor{blue}{265 (84\%)} & \textcolor{blue}{1.81} & \textcolor{blue}{0.74} \\
+% Trigger Conditions & \textcolor{blue}{34 (11\%)} & \textcolor{blue}{122 (39\%)} & \textcolor{blue}{158 (50\%)} & \textcolor{blue}{1.39} & \textcolor{blue}{0.71} \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.35cm}
+% \end{table}
+
+
+\noindent\textbf{Structured Field Evaluation.}
+Beyond binary classification, we further assess the quality of structured defect reports generated by \appname.
+Each report includes three key fields—\texttt{bug\_background}, \texttt{impact\_scope}, and \texttt{trigger\_conditions}—that are essential for downstream impact analysis.
+Two domain experts with over five years of DL development experience independently rated each field on a 3-point scale (0 = missing, 1 = partially correct, 2 = fully accurate).
+The 3-point design balances granularity and reliability: binary labels overlook partially correct cases, whereas finer scales reduce consistency.
+Each expert annotated all samples independently to prevent mutual influence.
+Cohen’s Kappa averaged 0.72 (range 0.71–0.74), indicating substantial inter-rater agreement.
+Disagreements (9\%) were discussed and resolved through reference to PR diffs and commit metadata until consensus was reached.
+As shown in Table~\ref{tab:field-score}, \appname achieves high field-level accuracy:
+over 70\% of the \texttt{bug\_background} and 84\% of the \texttt{impact\_scope} entries are rated fully accurate.
+The \texttt{trigger\_conditions} field is comparatively harder, with partial scores in cases involving multiple parameters or environment dependencies.
+
+
+\noindent\textbf{Defect Type Distribution.}
+Modeling trigger conditions proves to be the most challenging.
+In many PRs, preconditions are implicit—distributed across config defaults, internal logic, and usage assumptions.
+For example, PR~\#37575’s behavior depends on both a device setting (NPU) and an unset scale parameter.
+Capturing such cross-cutting logic requires synthesizing patch semantics, device context, and optional configurations.
+Future directions include integrating execution traces or dependency graphs to further enhance condition extraction.
+
+\begin{table*}
+\centering
+\caption{Defect Taxonomy and Examples in Transformers PRs.}
+\label{tab:defect-categories}
+\begin{tabular}{clcll}
+\toprule
+\textbf{Type} & \textbf{Name} & \textbf{Count} & \textbf{Description} & \textbf{Example PRs} \\
+\midrule
+A & Configuration Misuse & 16 & Incorrect parameter settings, misuse of optional arguments & \#38223, \#38288 \\
+B & Missing Preconditions & 13 & Lack of boundary checks or unsafe fallback logic & \#38264, \#38945 \\
+C & Semantic Logic Errors & 56 & Flawed control flow, tensor misalignment, wrong fallback logic & \#37704, \#38290 \\
+D & Compatibility Issues & 23 & Incompatibilities due to API changes or module relocations & \#38841, \#39083 \\
+E & Concurrency Bugs & 4 & Synchronization issues or data races across devices/threads & \#38557, \#38876 \\
+F & Performance/Resource Bugs & 6 & Memory inefficiencies, unbounded CPU usage & \#38901, \#39043 \\
+G & Crash or Fatal Errors & 4 & Crashes due to runtime exceptions or unsupported behavior & \#37690, \#38668 \\
+\bottomrule
+\end{tabular}
+\vspace{-0.3cm}
+\end{table*}
+
+
+% \begin{table*}
+% \centering
+% \caption{Defect Taxonomy and Examples in Transformers PRs.}
+% \label{tab:defect-categories}
+% \begin{tabular}{clcll}
+% \toprule
+% \textbf{Type} & \textbf{Name} & \textbf{Count} & \textbf{Description} & \textbf{Example PRs} \\
+% \midrule
+% A & Configuration Misuse & \textcolor{blue}{16} & Incorrect parameter settings, misuse of optional arguments & \textcolor{blue}{\#38223, \#38288} \\
+% B & Missing Preconditions & \textcolor{blue}{13} & Lack of boundary checks or unsafe fallback logic & \textcolor{blue}{\#38264, \#38945} \\
+% C & Semantic Logic Errors & \textcolor{blue}{56} & Flawed control flow, tensor misalignment, wrong fallback logic & \textcolor{blue}{\#37704, \#38290} \\
+% D & Compatibility Issues & \textcolor{blue}{23} & Incompatibilities due to API changes or module relocations & \textcolor{blue}{\#38841, \#39083} \\
+% E & Concurrency Bugs & \textcolor{blue}{4} & Synchronization issues or data races across devices/threads & \textcolor{blue}{\#38557, \#38876} \\
+% F & Performance/Resource Bugs & \textcolor{blue}{6} & Memory inefficiencies, unbounded CPU usage & \textcolor{blue}{\#38901, \#39043} \\
+% G & Crash or Fatal Errors & \textcolor{blue}{4} & Crashes due to runtime exceptions or unsupported behavior & \textcolor{blue}{\#37690, \#38668} \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.3cm}
+% \end{table*}
+
+To assess whether \appname generalizes beyond narrow bug categories, we categorize all 122 true positive PRs into seven types (Table~\ref{tab:defect-categories}).
+\appname achieves consistent performance across all categories, reflecting its robustness in modeling diverse defect semantics.
+Notably, only four PRs belong to Type~G (crash), while over 97\% fall into non-crash categories.
+These silent defects are difficult to detect via traditional testing, often requiring semantic patch interpretation and usage context reasoning.
+The dominance of Type~C and D defects underscores the need for tools like \appname that move beyond crash detection and proactively reason about latent faults in modern DL systems.
+
+
+% \begin{table}
+% \centering
+% \small
+% \caption{Field-wise accuracy and inter-rater agreement of defect patterns (N = 157).}
+% \label{tab:field-score}
+% \begin{tabular}{lcccc}
+% \toprule
+% \textbf{Field} & \textbf{Miss (0)} & \textbf{Part. (1)} & \textbf{Acc. (2)} & \textbf{Cohen’s $\kappa$} \\
+% \midrule
+% Bug Background & 31(9.9\%) & 61(19.4\%) & 222(70.7\%) & 0.71 \\
+% Impact Scope & 11(3.5\%) & 38(12.1\%) & 265(84.4\%) & 0.74 \\
+% Trigger Conditions & 34(10.8\%) & 122(38.9\%) & 158(50.3\%) & 0.71 \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.4cm}
+% \end{table}
+
+
+
+
+
+\subsection{RQ2: How effective is \appname in analyzing whether a client is affected by a defect?}
+\noindent\textbf{Methodology.}
+After identifying bug-fix PRs and constructing structured defect patterns, a key challenge is to determine whether a downstream client program is genuinely \textit{affected}—i.e., whether it satisfies the trigger conditions of the defect and may exhibit incorrect behavior at runtime.
+% After constructing structured defect patterns in Step~2, the next challenge is to determine whether downstream clients are \textit{affected}—i.e., whether their code satisfies the triggering conditions of a given defect.
+We evaluate \appname on 122 real-world \texttt{(defect, client)} pairs collected from the benchmark described in Sec.~\ref{sec:clientcollection}, and compare it against the three baselines.
+
+\noindent\textbf{Results and Comparison.}
+As shown in Table~\ref{tab:rq2-impact}, \appname achieves the best overall balance between precision and recall (\textbf{F1 = 85\%}), substantially outperforming all baselines.
+Compared with FlatLLM(Base), which tends to over-report due to superficial lexical or contextual cues, \appname improves precision by 17 points (80\% vs.\ 63\%) and specificity by 28 points (72\% vs.\ 44\%).
+FlatLLM(Reasoning) performs moderately better than Base (F1 = 74\% vs.\ 68\%) owing to its internal reasoning ability, but still suffers from false positives and missed configuration-dependent cases due to the lack of structural verification.
+PyCG achieves the lowest overall performance (F1 = 47\%, Prec.\ = 44\%, Rec.\ = 50\%), as its static call-graph analysis misses dynamic dependencies and merges high-level APIs, causing many false positives and low recall.
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Impact Analysis Performance (N=122). The client set corresponds to TP defect patterns identified in RQ1.}
+\label{tab:rq2-impact}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Tool} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+\midrule
+\textbf{\appname}          & \textbf{61} & \textbf{15} & \textbf{7}  & \textbf{39} & \textbf{80\%} & \textbf{90\%} & \textbf{85\%} & \textbf{72\%} \\
+FlatLLM (Base)              & 50          & 30          & 18          & 24          & 63\%         & 74\%          & 68\%          & 44\%          \\
+FlatLLM (Reasoning)         & 54          & 25          & 14          & 29         & 68\%          & 79\%          & 74\%          & 54\%          \\
+PyCG                       & 34          & 44          & 34          & 10          & 44\%          & 50\%          & 47\%          & 19\%         \\
+\bottomrule
+\end{tabular}
+\vspace{-0.3cm}
+\end{table}
+
+
+
+% \begin{table}[ht]
+% \centering
+% \small
+% \setlength{\tabcolsep}{3pt}
+% \caption{Impact Analysis Performance \textcolor{blue}{(N=122). The client set corresponds to TP defect patterns identified in RQ1.}}
+% \label{tab:rq2-impact}
+% \begin{tabular}{lcccccccc}
+% \toprule
+% \textbf{Tool} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+% \midrule
+% \textbf{\appname}          & \textcolor{blue}{\textbf{61}} & \textcolor{blue}{\textbf{15}} & \textcolor{blue}{\textbf{7}}  & \textcolor{blue}{\textbf{39}} & \textcolor{blue}{\textbf{80\%}} & \textcolor{blue}{\textbf{90\%}} & \textcolor{blue}{\textbf{85\%}} & \textcolor{blue}{\textbf{72\%}} \\
+% \textcolor{blue}{FlatLLM (Base)}              & \textcolor{blue}{50}          & \textcolor{blue}{30}          & \textcolor{blue}{18}          & \textcolor{blue}{24}          & \textcolor{blue}{63\%}         & \textcolor{blue}{74\%}          & \textcolor{blue}{68\%}          & \textcolor{blue}{44\%}          \\
+% \textcolor{blue}{FlatLLM (Reasoning)}         & \textcolor{blue}{54}          & \textcolor{blue}{25}          & \textcolor{blue}{14}          & \textcolor{blue}{29}         & \textcolor{blue}{68\%}          & \textcolor{blue}{79\%}          & \textcolor{blue}{74\%}          & \textcolor{blue}{54\%}          \\
+% \textcolor{blue}{PyCG}                       & \textcolor{blue}{34}          & \textcolor{blue}{44}          & \textcolor{blue}{34}          & \textcolor{blue}{10}          & \textcolor{blue}{44\%}          & \textcolor{blue}{50\%}          & \textcolor{blue}{47\%}          & \textcolor{blue}{19\%}         \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.35cm}
+% \end{table}
+
+
+\noindent\textbf{Qualitative Analysis.}
+We find that \appname’s advantage stems from its ability to (1) \textit{match actual usage contexts in client code} and (2) \textit{verify their relevance through static AST checks}.
+For example, in PR~\#38238, where the fix targets the configuration \texttt{decoder\_bbox \_embed\_share=False}, \appname correctly infers that a client using \texttt{GroundingDinoForObjectDetection} is \textbf{not affected} because the trigger condition is unmet—whereas both LLM baselines misclassify it as positive.
+Similarly, for PR~\#38285, where the bug occurs inside a conditional macro, FlatLLM(Reasoning) fails to detect the impact due to implicit control flow, while \appname succeeds by structurally matching the AST predicates.
+
+
+% For example, in PR~\#38238, a bug is fixed for the configuration \texttt{decoder\_bbox\_embed\_share=False}. 
+% Although the client uses the risky model \texttt{GroundingDinoForObject Detection}, \appname correctly determines the client is \textbf{not affected} because the trigger condition (\texttt{False}) is not met, demonstrating precision in negative inference (TN).
+% In contrast, the baseline often generates false positives.
+% PR~\#38257 addresses an import error for dynamic module loading. 
+% The client invokes the affected function, but due to the broader error handling in the patch, no observable failure actually occurs. 
+% \appname accurately captures this subtle boundary and avoids over-reporting.
+
+To further verify correctness, we construct test scripts for 50 randomly sampled TP cases and confirm that each exhibits the expected faulty behavior when executed under vulnerable library versions, such as memory bloat, incorrect attention scaling, or silent numerical drift.
+These results show that \appname can go beyond surface-level call matching to semantically reason about trigger satisfaction in real-world usage. 
+Its structured impact reports and context-aware analysis lead to both higher accuracy and more actionable diagnostics compared to prompt-only LLM summarization.
+
+
+%
+% After identifying bug-fix PRs and constructing structured defect patterns (Step 2), a key challenge is to determine whether a downstream client program is genuinely \textit{affected} — i.e., whether it satisfies the trigger conditions of the defect and may exhibit incorrect behavior at runtime.
+
+% We compare \appname against a strong single-shot summarization baseline based on \textit{Deepseek-V3}. 
+% Given a defect description and a raw client code snippet, we prompt \textit{Deepseek-V3} to predict whether the client is affected.
+% This represents a non-agentic, end-to-end LLM approach that lacks structured reasoning or static validation.
+% Table~\ref{tab:rq2-impact} shows that \appname achieves significantly higher precision (83\% vs. 72\%) and recall (98\% vs. 74\%) than the baseline. 
+% \appname correctly identifies nearly all affected clients while reducing false positives, resulting in a strong F1-score of 90\%.
+
+% We find that \appname's advantage stems from its ability to (1) \textit{match actual usage contexts in client code} and (2) \textit{verify their relevance through static AST checks}.
+% For example, in PR~\#38238, a bug is fixed for the configuration \texttt{decoder\_bbox\_embed\_share=False}. 
+% Although the client uses the risky model \texttt{GroundingDinoForObject Detection}, \appname correctly determines the client is \textbf{not affected} because the trigger condition (\texttt{False}) is not met, demonstrating precision in negative inference (TN).
+% In contrast, the baseline often generates false positives.
+% PR~\#38257 addresses an import error for dynamic module loading. 
+% The client invokes the affected function, but due to the broader error handling in the patch, no observable failure actually occurs. 
+% \appname accurately captures this subtle boundary and avoids over-reporting.
+
+% To further verify correctness, we construct test scripts for 30 randomly sampled TP cases and confirm that each exhibits the expected faulty behavior when executed under vulnerable library versions, such as memory bloat, incorrect attention scaling, or silent numerical drift.
+% These results show that \appname can go beyond surface-level call matching to semantically reason about trigger satisfaction in real-world usage. 
+% Its structured impact reports and context-aware analysis lead to both higher accuracy and more actionable diagnostics compared to prompt-only LLM summarization.
+
+
+\subsection{RQ3: How does each component contribute to defect modeling and impact analysis?}
+\subsubsection{Defect Pattern Generation Module Ablation} 
+We perform an ablation study to evaluate the contribution of two key design dimensions in our approach: the use of \textit{coordinated framework} and the \textit{adaptive context expansion} mechanism for PRs.
+Our goal is to quantify how each design choice affects the accuracy of defect pattern extraction.
+To this end, we construct the dataset from Transformers PRs annotated in RQ1, and compare the following variants:
+- \textbf{\appname (Full)}: Uses both the coordinated framework and adaptive context expansion.
+- \textbf{w/o Adaptive Context}: Disables context expansion; each agent processes a fixed-size content window.
+- \textbf{w/o Coordination}: Replaces multi-agent coordination  with a single LLM prompt that ingests all content (PR title, body, patch) at once, with no agent collaboration or role differentiation.
+
+\begin{table}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Ablation Study on Defect Pattern Extraction (N=157).}
+\label{tab:rq3-ablation}
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{System Variant} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+\midrule
+\appname (Full)        &  122 & 13 &  1 & 21 & \textbf{90\%} & \textbf{99\%} & \textbf{95\%} & \textbf{62\%}  \\
+w/o Coordination         &  78 & 27 & 45 &  7 & 74\%          & 63\%          & 68\%          & 21\%          \\
+w/o Adaptive Context     & 118 & 17 &  5 & 17 & 87\%          & 96\%          & 91\%          & 50\%          \\
+\bottomrule
+\end{tabular}
+\vspace{-0.4cm}
+\end{table}
+
+
+% \begin{table}
+% \centering
+% \small
+% \setlength{\tabcolsep}{3pt}
+% \caption{Ablation Study on Defect Pattern Extraction\textcolor{blue}{(N=157)}.}
+% \label{tab:rq3-ablation}
+% \begin{tabular}{lccccccccc}
+% \toprule
+% \textbf{System Variant} & \textcolor{blue}{\textbf{TP}} & \textcolor{blue}{\textbf{FP}} & \textcolor{blue}{\textbf{FN}} & \textcolor{blue}{\textbf{TN}} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+% \midrule
+% \appname (Full)        &  \textcolor{blue}{122} & \textcolor{blue}{13} &  \textcolor{blue}{1} & \textcolor{blue}{21} & \textcolor{blue}{\textbf{90\%}} & \textcolor{blue}{\textbf{99\%}} & \textcolor{blue}{\textbf{95\%}} & \textcolor{blue}{\textbf{62\%}}  \\
+% \textcolor{blue}{w/o Coordination}         &  \textcolor{blue}{78} & \textcolor{blue}{27} & \textcolor{blue}{45} &  \textcolor{blue}{7} & \textcolor{blue}{74\%}          & \textcolor{blue}{63\%}          & \textcolor{blue}{68\%}          & \textcolor{blue}{21\%}          \\
+% w/o Adaptive Context     & \textcolor{blue}{118} & \textcolor{blue}{17} &  \textcolor{blue}{5} & \textcolor{blue}{17} & \textcolor{blue}{87\%}          & \textcolor{blue}{96\%}          & \textcolor{blue}{91\%}          & \textcolor{blue}{50\%}          \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.4cm}
+% \end{table}
+
+
+Table~\ref{tab:rq3-ablation} reports precision, recall, and F1 scores for defect classification. 
+The full \appname achieves the highest performance (F1 = 95\%), while removing context adaptation causes a moderate decline (F1 = 91\%), primarily due to missed trigger conditions dispersed across PR metadata.
+The single-prompt variant exhibits the largest drop (F1 = 68\%), as it lacks structured decomposition and often fails to disambiguate configuration details or code-specific semantics.
+We find that this variant frequently hallucinates parameter names or overlooks patch semantics when processing longer inputs.
+
+These results highlight that: (1) \textbf{adaptive context expansion} is crucial for capturing scattered defect signals across multi-round PR discussions, and (2) \textbf{multi-agent specialization} offers better grounding and modular control compared to flat summarization.
+Together, these components enable \appname to robustly extract structured, actionable defect patterns across diverse bug types.
+
+\subsubsection{Impact Analysis Module Ablation}
+We evaluate the contribution of two critical modules in our pipeline: (1) the \textit{verification layer} that checks structural consistency between predicted risk factors and client code, and (2) the \textit{domain mapping layer} that maps internal library changes to user-facing constructs.
+
+To prevent false positives from LLM hallucinations, \appname performs AST-based validation to confirm that predicted risk parameters and method calls are actually present in the matched client context. 
+This layer also re-invokes the Impact Analyzer with feedback when inconsistencies arise.
+Library patches often involve internal APIs (e.g., \texttt{scale\_mask}, \texttt{prepare\_inputs}) that users do not call directly. 
+\appname encodes a set of DL-specific heuristics to project such internal signals to observable constructs—e.g., translating a buffer allocation bug to \texttt{AutoModel.from\_pretrained()} in user code. 
+This mapping is crucial for matching abstract trigger conditions with real-world usage.
+
+We construct two system variants:
+- \textbf{w/o Verification Layer:} Skips consistency checks. The model’s first prediction is accepted without AST validation or retry logic.
+- \textbf{w/o Domain Mapping:} Disables mapping from internal changes to user-facing methods and parameters.
+Table~\ref{tab:rq3-impact} shows the performance impact on the Transformers client dataset.
+Removing the verification layer significantly increases false positives, reducing precision from 80\% to 66\%.
+Manual inspection reveals typical failure cases where the model hallucinates parameters such as \texttt{flash\_mask\_type}, which do not exist in the actual client code.
+Without domain mapping, recall drops (90\%→76\%) as the model fails to align internal logic with surface-level usage.
+For instance, in PR \#38257 (import error handling), the risk method \texttt{\_get\_module()} is never directly called by users, but its failure propagates through \texttt{AutoModel.from\_pretrained()}. Without mapping, this link is missed.
+
+\begin{table}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Ablation Study on Client Impact Analysis (N = 122).}
+\label{tab:rq3-impact}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{System Variant} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+\midrule
+\textbf{\appname (Full)}      & \textbf{61} & \textbf{15} & \textbf{7}  & \textbf{39} & \textbf{80\%} & \textbf{90\%} & \textbf{85\%} & \textbf{72\%} \\
+w/o Verification Layer        & 59          & 30          & 9           & 24          & 66\%          & 87\%          & 75\%          & 44\%          \\
+w/o Domain Mapping            & 52          & 22          & 16          & 32          & 70\%          & 76\%          & 73\%          & 59\%          \\
+\bottomrule
+\end{tabular}
+\vspace{-0.4cm}
+\end{table}
+
+% \begin{table}
+% \centering
+% \small
+% \setlength{\tabcolsep}{3pt}
+% \caption{Ablation Study on Client Impact Analysis (N = 122)}.
+% \label{tab:rq3-impact}
+% \begin{tabular}{lcccccccc}
+% \toprule
+% \textbf{System Variant} & \textcolor{blue}{\textbf{TP}} & \textcolor{blue}{\textbf{FP}} & \textcolor{blue}{\textbf{FN}} & \textcolor{blue}{\textbf{TN}} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+% \midrule
+% \textbf{\appname (Full)}      & \textcolor{blue}{\textbf{61}} & \textcolor{blue}{\textbf{15}} & \textcolor{blue}{\textbf{7}}  & \textcolor{blue}{\textbf{39}} & \textcolor{blue}{\textbf{80\%}} & \textcolor{blue}{\textbf{90\%}} & \textcolor{blue}{\textbf{85\%}} & \textcolor{blue}{\textbf{72\%}} \\
+% w/o Verification Layer        & \textcolor{blue}{59}          & \textcolor{blue}{30}          & \textcolor{blue}{9}           & \textcolor{blue}{24}          & \textcolor{blue}{66\%}          & \textcolor{blue}{87\%}          & \textcolor{blue}{75\%}          & \textcolor{blue}{44\%}          \\
+% w/o Domain Mapping            & \textcolor{blue}{52}          & \textcolor{blue}{22}          & \textcolor{blue}{16}          & \textcolor{blue}{32}          & \textcolor{blue}{70\%}          & \textcolor{blue}{76\%}          & \textcolor{blue}{73\%}          & \textcolor{blue}{59\%}          \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.4cm}
+% \end{table}
+
+These results highlight the importance of grounded reasoning and domain abstraction in client impact analysis. 
+Naively prompting LLMs—even with defect-aware context—is insufficient unless predictions are anchored in concrete code structure and adapted to real-world usage patterns.
+
+
+\subsection{RQ4: Can \appname Effectively Handle Defect and Impact Analysis from Commits?}
+\noindent\textbf{Methodology.}
+We evaluate \appname on \textit{Megatron}, a commit-driven project without PRs, to examine its generalizability beyond PR-based workflows (Table~\ref{tab:rq4-merged}).
+Unlike PR-based analysis, this setting evaluates whether \appname can maintain accuracy when only minimal commit information is available.
+
+
+\noindent\textbf{Results.}
+For defect pattern generation, it achieves a precision of 96\% and a recall of 90\%, despite the absence of high-level PR context. 
+The few false negatives mainly correspond to commits involving test or documentation fixes that contain partial but non-functional code edits. 
+This result indicates that \appname’s architecture—combining AST-based filtering, patch reasoning, and contextual alignment—retains high accuracy even when contextual cues are minimal.
+
+\begin{table}[ht]
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Defect and Impact Analysis from Commits.}
+\label{tab:rq4-merged}
+\begin{tabular}{llcccccccc}
+\toprule
+\textbf{Task} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Spec.} \\
+\midrule
+\textbf{Defect Pattern} & 54 & 2 & 6 & 8 & \textbf{96\%} & \textbf{90\%} & \textbf{93\%} & 80\% \\
+\textbf{Impact Analysis} & 12 & 8 & 5 & 29 & 60\% & 71\% & 65\% & 78\% \\
+\bottomrule
+\end{tabular}
+\vspace{-0.4cm}
+\end{table}
+
+
+% \begin{table}[ht]
+% \centering
+% \setlength{\tabcolsep}{3pt}
+% \caption{Defect and Impact Analysis from Commits.}
+% \label{tab:rq4-merged}
+% \begin{tabular}{llcccccccc}
+% \toprule
+% \textbf{Task} & \textcolor{blue}{\textbf{TP}} & \textcolor{blue}{\textbf{FP}} & \textcolor{blue}{\textbf{FN}} & \textcolor{blue}{\textbf{TN}} & \textcolor{blue}{\textbf{Prec.}} & \textcolor{blue}{\textbf{Rec.}} & \textcolor{blue}{\textbf{F1}} & \textcolor{blue}{\textbf{Spec.}} \\
+% \midrule
+% \textbf{Defect Pattern} & \textcolor{blue}{54} & \textcolor{blue}{2} & \textcolor{blue}{6} & \textcolor{blue}{8} & \textcolor{blue}{\textbf{96\%}} & \textcolor{blue}{\textbf{90\%}} & \textcolor{blue}{\textbf{93\%}} & \textcolor{blue}{80\%} \\
+% \textbf{Impact Analysis} & \textcolor{blue}{12} & \textcolor{blue}{8} & \textcolor{blue}{5} & \textcolor{blue}{29} & \textcolor{blue}{60\%} & \textcolor{blue}{71\%} & \textcolor{blue}{65\%} & \textcolor{blue}{78\%} \\
+% \bottomrule
+% \end{tabular}
+% \vspace{-0.4cm}
+% \end{table}
+
+
+\noindent\textbf{Impact Analysis.}
+For impact analysis, the task becomes considerably more challenging.
+Unlike PRs, commits lack discussion and rationale context.
+As a result, while recall remains high (the system still identifies most real impacts), precision declines due to increased false associations from superficial diffs.
+Despite this sparsity, \appname still achieves a recall of 71\% and a precision of 60\%, successfully identifying 12 developer-confirmed client impacts among 54 true defect patterns.
+
+
+\noindent\textbf{Developer-Confirmed Impacts.}
+In the downstream client repository \texttt{MindSpeed}~\cite{mindspeed}, the development team validated \appname’s predictions, confirming 12 affected commits with real runtime impacts.
+Among these, four were categorized as \textbf{high-risk} defects that directly degraded model accuracy or stability (e.g., gradient scaling), while the remaining eight were \textbf{low-risk} fixes such as logging inconsistencies, checkpoint I/O errors, or boundary-type corrections.
+Table~\ref{tab:rq4-commits} summarizes representative developer-confirmed cases, illustrating how \appname distinguishes critical defects from benign propagation in industrial DL systems.
+
+
+To further illustrate \appname’s effectiveness, we highlight two developer-confirmed cases from \textit{Megatron}.
+In commit \textit{3bdcbbb Fix DDP scaling factor with Context Parallel}~\cite{3bdcbbb}, \textit{Megatron} developers fixed a bug in gradient scaling logic by adding a missing flag:
+\begin{lstlisting}[language=Python]
+# Original:
+target_gradient_scaling_factor = 1.0 / parallel_state.get_data_parallel_world_size()
+
+# Fixed:
+target_gradient_scaling_factor = 1.0 / parallel_state.get_data_parallel_world_size(
+with_context_parallel=True)
+\end{lstlisting}
+
+\appname successfully identified this as a silent numerical defect and generated a defect pattern with trigger conditions based on the usage of context parallelism.
+In the downstream client \texttt{MindSpeed}~\cite{mindspeed}, which integrates \textit{Megatron} modules for large-scale model pretraining and deployment, a corresponding usage case was automatically matched through static analysis and flagged as \texttt{is\_affected: true}.
+The developers later confirmed the bug's relevance and acknowledged its active impact on \texttt{MindSpeed}'s performance.
+Instead of performing a full \textit{Megatron} upgrade (which would introduce compatibility issues), the developers implemented a localized patch incorporating the upstream fix - demonstrating the practical value of our impact analysis.
+
+
+\begin{table}
+\centering
+\small
+\caption{Developer-confirmed affected commits in \textit{Megatron}.}
+\label{tab:rq4-commits}
+\begin{tabular}{lll}
+\toprule
+\textbf{Risk} & \textbf{Commit} & \textbf{Primary Impact} \\
+\midrule
+High & \texttt{06e9f28}~\cite{06e9f28} & LR scaling bug under FSDP+TP mode \\
+High & \texttt{1674ce3}~\cite{1674ce3} & Vision weight inconsistency under TP4 \\
+High & \texttt{3bdcbbb}~\cite{3bdcbbb} & Gradient scaling instability (context parallel) \\
+High & \texttt{dc4c5e7}~\cite{dc4c5e7} & Pipeline gradient accumulation mismatch \\
+\midrule
+Low & \texttt{8e2de56}~\cite{8e2de56} & Loss logging accumulation error \\
+Low & \texttt{9a45638}~\cite{9a45638} & Optimizer checkpoint save/load fix \\
+Low & \texttt{a77a883}~\cite{a77a883} & PP layer uneven split bugfix \\
+Low & \texttt{db07e3f}~\cite{db07e3f} & Rotary-pos cosine check correction \\
+\bottomrule
+\end{tabular}
+\vspace{-0.5cm}
+\end{table}
+
+Another case refers to \textit{Megatron} Commit \texttt{1674ce3}~\cite{1674ce3}.
+This commit addresses a training defect in \textit{Megatron} where vision encoder weights were not correctly marked as non-tensor-parallelizable, leading to incorrect gradient reductions in TP-enabled training.
+\appname automatically identified this commit as a real defect and extracted its root cause and trigger conditions. 
+It further confirmed that \texttt{MindSpeed} is affected under TP4 configurations.
+Empirical validation revealed that the bug caused gradient inconsistencies for unsharded vision weights during training and severe visual artifacts (\textit{screen tearing}) during inference.
+To mitigate the issue, the \texttt{MindSpeed} team applied deterministic training mode to ensure consistent updates and is actively evaluating a fix by adding a new function \texttt{\_allreduce\_duplicate\_grads()} and modifying \texttt{finalize\_model\_grads()}.
+Together, these results demonstrate that \appname can effectively uncover and contextualize silent defects that propagate into large-scale production systems, underscoring its robustness in real-world DL infrastructure.
+
+
+\subsection{RQ5: What is the cost of using \appname?}
+\noindent\textbf{Methodology.}
+We analyze the computational efficiency of \appname when processing defect and impact analysis tasks, covering 157 PRs and 70 commits.
+
+
+\noindent\textbf{Results.}
+As shown in Table~\ref{tab:cost}, the \textit{Defect Pattern (PR)} task consumes about 5K tokens and 0.5 minutes per case, mainly due to the larger PR context.
+\textit{Defect Pattern (Commit)} is lighter (<2K tokens, <0.3 min), while \textit{Impact Analysis (Client)} costs roughly 3K tokens and 1 minute per case due to multi-source reasoning.
+These results show that token consumption and runtime scale with task complexity—PRs require richer contextual reasoning, while commits are lighter; client-side analysis incurs higher overhead due to multi-source dependency tracing.
+Across all evaluated tasks, the total token consumption reaches approximately 1.29 million tokens, corresponding to a cost of about \$0.5 under \texttt{DeepSeek-V3}' pricing.
+This demonstrates that even under conservative assumptions, the entire evaluation can be reproduced at negligible cost (under \$1).
+
+\begin{table}[ht]
+\centering
+\small
+
+\setlength{\tabcolsep}{3pt}
+\caption{Computation cost and runtime of \appname across different task types. Tokens include both input and output.}
+\label{tab:cost}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Task Type} & \textbf{\makecell{Avg. \\ Tokens}} & \textbf{\makecell{Total \\ Tokens}}  & \textbf{\makecell{Avg. \\ Time (min)}} & \textbf{\makecell{Total \\ Time (min)}} \\
+\midrule
+Defect Pattern (PR)     & 5K   & 785K   & 0.5  & 78.5 \\
+Defect Pattern (Commit) & <2K  & 140K   & <0.3 & 21  \\
+Impact Analysis (Client)& 3K   & 366K   & 1.0  & 122 \\
+\midrule
+\textbf{Total} & - & \textbf{1.29M}  & - & \textbf{221.5} \\
+\bottomrule
+\end{tabular}
+}
+\vspace{-0.4cm}
+\end{table}
+
+
+\noindent\textbf{Comparison with Baselines.}
+Compared with baseline models, the cost of \appname remains competitive.
+\textit{FlatLLM (Base)} consumes a similar number of tokens, since its input context (PR body and code diffs) is comparable.
+\textit{FlatLLM (Reasoning)} processes the same input but incurs higher expenses due to internal reasoning chains and longer inference times.
+In contrast, \appname introduces only minor coordination overhead while achieving faster overall execution, as each agent operates within a focused sub-context.
+The overall computational cost (in terms of tokens, runtime, and monetary expense) remains within a reasonable range.
+Considering its analytical depth and coordination capability, \appname achieves an effective balance between efficiency and accuracy, demonstrating strong practicality for real-world deployment.

@@ -1,0 +1,149 @@
+\section{Evaluation}
+\label{sec:evaluation}
+We evaluated iFinder on the ground-truth dataset with the known CN iTrues collected from GitHub security issues, and focused on the following research questions:
+
+\noindent\textbf{RQ1} \textit{How effective is iFinder at discovering (known) iTrue vulnerabilities?}
+
+\noindent\textbf{RQ2} \textit{How much does the code-specification cross-checking reduce false positives?}
+
+\noindent\textbf{RQ3} \textit{To what extent does feedback-aware refinement improve PoC generation success?}
+
+\noindent\textbf{RQ4} \textit{What are the time and token costs of running iFinder?}
+
+
+RQ1 provides an overview of iFinder's effectiveness in detecting iTrue vulnerabilities. RQ2 and RQ3 evaluate the effectiveness of our two main proposed techniques, code-specification cross-checking and feedback-aware refinement, in mitigating LLM hallucinations. RQ4 further examines the efficiency of iFinder.
+
+
+\subsection{Experimental Setup}
+
+
+\noindent\textbf{Ground truth dataset.}
+As discussed in Section~\ref{sec:preprocessing}, these known iTrue vulnerabilities are classified into six patterns with the following distribution: \textit{Malformed Field} (11), \textit{Absent Field} (1), \textit{Invalid Value} (6), \textit{Invalid State} (1), \textit{Invalid Reference} (1), and \textit{Resource Exhaustion} (2). The distribution is heavy-tailed, with a small number of patterns accounting for most instances.
+
+
+\noindent\textbf{Tested CN implementations.}
+We evaluated iFinder on two open-source CN implementations, Open5GS and free5GC. Since each ground-truth vulnerability exists only in a specific range of versions, we selected multiple version snapshots to cover the affected releases referenced by the corresponding issues. Specifically, we used Open5GS v2.7.5, v2.7.2, and v2.4.14, as well as free5GC v3.3.0 and v2.0.2. This setup ensures that each vulnerability is evaluated on a version in which it is known to exist. 
+
+\noindent\textbf{Evaluation metrics.}
+For vulnerability detection, we report true positives (TP), false positives (FP), and false negatives (FN), along with precision, recall, and F1.
+A report is counted as a true positive (TP) if it correctly identifies a ground-truth vulnerability; similarly, we define false positives (FPs) and false negatives (FNs).
+For PoC generation, we consider a PoC successful if it triggers the expected behavior.
+
+\noindent\textbf{System Implementation}.
+We implement iFinder's multi-agent pipeline using the Claude Agent SDK. All methods, including the prompt-only baseline, use Claude Opus 4.5 as the underlying LLM. We ran all methods with the default configurations (e.g., decoding parameters and context limits) and capped the number of refinement iterations per vulnerability to five. We measured runtime as wall-clock time and reported token usage as the total input and output tokens consumed by all agents (including refinement), which we further converted to cost using the pricing of the provider.
+All experiments are repeated five times, and we report the average results.
+
+
+
+
+\subsection{RQ1: Detection Effectiveness}
+
+
+
+To answer RQ1, we evaluated iFinder's ability to identify the 22 known vulnerabilities and compared its performance against a prompt-only baseline.
+Notably, this baseline is not a pure LLM setup; it is fed with the patterns we summarized from GitHub issues. We adopted this enriched baseline because directly asking the LLM to discover vulnerabilities yielded severe hallucinations and no usable results.
+We report TP and FN to compute recall, which measures how well the approach identifies the known vulnerabilities. In addition, we report the number of newly discovered vulnerabilities and FP among all findings, from which we compute precision.
+The results are summarized in Table~\ref{tab:effectiveness}. 
+Overall, iFinder achieved an F1 score of $71.429\%$, which is more than twice that of the baseline.
+More specifically, iFinder identified $68.182\%$ of the ground-truth vulnerabilities, which is roughly twice as high as the baseline.
+To understand the remaining gap, we manually reviewed all seven missed cases and attributed them to two root causes.
+First, \textit{pattern coverage gaps}: four cases involve corner-case validation logic not captured by the generalized detection patterns distilled from cluster-level root causes. 
+Second, \textit{incomplete context construction}: three cases lie on long cross-module execution paths whose caller chains the DA cannot reliably reconstruct, so the missing check cannot be confirmed and therefore the candidate was not flagged.
+Notably, while the baseline performed substantially worse, it did not completely lose utility, achieving $28.205\%$ precision. 
+This is because the baseline incorporates the patterns we summarized, which also highlights the utility of these patterns in guiding LLM-based vulnerability discovery.
+In contrast, more than $2/3$ of the reported vulnerabilities were confirmed to be real.
+In a later section, we further discuss how our proposed code-specification cross-checking improves precision in detail.
+
+
+\begin{table}[!t]
+  \centering
+  \caption{Detection performance on the 22 ground-truth vulnerabilities.}
+  \resizebox{0.48\textwidth}{!}{
+    \begin{tabular}{lccccccc}
+    \toprule
+    Configuration & TP & FP & FN & New & Precision & Recall & F1\\
+    \midrule
+    \textbf{Prompt-only} & 8 & 56 & 14 & 14 & 28.205\% & 36.364\% & 31.769\% \\
+    \textbf{iFinder} & 15 & 12 & 7 & 21 & 75.000\% & 68.182\% & 71.429\% \\
+    \bottomrule
+    \end{tabular}
+  }
+  \label{tab:effectiveness}
+\end{table}
+
+
+
+
+
+
+\subsection{RQ2 + RQ3: Ablation Study}
+\label{sec:ablation}
+
+To answer RQ2 and RQ3, we conducted an ablation study to evaluate the effectiveness of our two proposed primitives: code-specification cross-checking, performed by the VA, and feedback-aware refinement, performed by the EA. 
+Comparing DA, DA+VA, and DA+VA+EA (Table~\ref{tab:ablation}), we found that code-specification cross-checking reduced the FP from 62 to 19, improving the precision from 36.735\% to 65.455\%.
+To assess feedback-aware refinement, we provided the 22 ground-truth vulnerabilities to the EA and to the prompt-only baseline (i.e., directly prompting the LLM) and measured how well each generated valid PoCs.
+The EA produced valid PoCs for 19 of the 22 ground-truth vulnerabilities, whereas the prompt-only baseline succeeded on only 8, demonstrating the effectiveness of feedback-aware refinement in enabling reliable PoC generation.
+The EA further reduced FP from 19 to 12 by discarding candidates whose PoCs fail to trigger the intended flaw, yielding the full-pipeline precision of 75\%.
+Still 12 FPs remained because a generated PoC can trigger a real yet unintended vulnerability located prior to the target flaw on the execution path. 
+The EA only checks whether a PoC produces the expected runtime effect, which in the case of an FP, is always a crash. 
+It does not verify whether the crash site corresponds to the intended vulnerability candidate.
+We identify these cases by manual inspection: for each PoC the EA reports as successful, we compare the \textit{observed crash site} from the runtime logs against the \textit{expected crash site}, i.e., the dangerous operation and its handler path localized by the DA and the VA. 
+If the observed crash site does not match the expected crash site, the PoC is believed to have triggered an unintended vulnerability, so we count the report as an FP. 
+
+
+
+\begin{table}[!t]
+  \centering
+  \caption{Ablation study.}
+  \resizebox{0.48\textwidth}{!}{
+    \begin{tabular}{lccccccc}
+    \toprule
+    Configuration & TP & FP & FN & New & Precision & Recall & F1\\
+    \midrule
+    \textbf{DA}    & 15 & 62 & 7 & 21 & 36.735\% & 68.182\% & 47.745\% \\
+    \textbf{DA+VA} & 15 & 19 & 7 & 21 & 65.455\% & 68.182\% & 66.790\% \\
+    \textbf{DA+VA+EA} & 15 & 12 & 7 & 21 & 75.000\% & 68.182\% & 71.429\% \\
+    \bottomrule
+    \end{tabular}
+  }
+  \label{tab:ablation}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{RQ4: Overhead Analysis}
+
+
+To answer RQ4, we measured the runtime and token usage of each pipeline stage; the results are summarized in Table~\ref{tab:performance}.
+The Discovery Agent accounted for the majority of the runtime (39.436\%), as it scans the codebase to locate message handlers and performs LLM-based backward analysis before producing vulnerability candidates. Vetting was comparatively lightweight (32.394\%) because it operates only on DA vulnerability candidates and retrieves minimal protocol-aligned context. Exploitation time varies with the number of refinement iterations (up to 5). 
+
+
+\begin{table}[ht]
+  \centering
+  \caption{Time and token breakdown per target implementation.}
+  \small
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    \textbf{Stage} & \textbf{Avg. Time (s)\,$\downarrow$} & \textbf{Tokens\,$\downarrow$} \\
+    \midrule
+    Discovery     & 280  & 2.1M \\
+    Vetting       & 230  & 3.3M \\
+    Exploitation  & 200  & 4.4M \\
+    \midrule
+    \textbf{Total} & \textbf{710} & \textbf{9.8M} \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:performance}
+\end{table}
+
+
+

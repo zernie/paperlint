@@ -1,0 +1,70 @@
+\section{Design Goals}
+\label{sec:properties}
+
+We discuss \Table~\ref{tab:properties}'s key goals in detail. 
+
+\noindent \textbf{Action progress updates.} 
+This goal implies that 
+the primitive should provide feedback at key points of the action execution: acknowledgment, action start, and action end (and if the device supports it, during the action). Doing so may require polling, and this polling needs to be efficient. 
+
+\noindent \textbf{Action failure detection.} When an action fails, the primitive should detect it quickly.
+This property may be implemented atop RPC-complete with the use of a timeout after the expected action length is over; however, that is not trivial since there is no fixed length for each action.
+
+
+\begin{figure}[h]
+    \vspace{-0.3cm}
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        {\includegraphics[width=0.95\textwidth]{figures/goals/garage-routine-desc.pdf}}
+        \caption{\small \textit{Routine description:} (i) the garage door opens; (ii) the trashcan is moved out into the driveway; (iii) the garage door closes.}
+        \label{fig:garage-routine-desc}
+    \end{subfigure}
+    \hspace{0.01cm}
+    \begin{subfigure}[t]{0.47\linewidth}
+        \centering
+        {\includegraphics[width=\linewidth]{figures/goals/garage-routine-failure.pdf}}
+        \caption{\small \textit{Action failures:} the trashcan gets stuck below the garage door because of an obstacle and the garage door cannot close.}
+        \label{fig:garage-routine-failure}
+    \end{subfigure}
+    \par\medskip
+    \begin{subfigure}[t]{0.47\linewidth}
+        \centering
+        {\includegraphics[width=\textwidth]{figures/goals/garage-routine-fallback.pdf}}
+        \caption{\small \textit{Fallback actions:} the trashcan moves back inside after the first movement's failure and the garage door closes.}
+        \label{fig:garage-routine-fallback}
+    \end{subfigure}
+    \hspace{0.01cm}
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        {\includegraphics[width=\textwidth]{figures/goals/garage-routine-workflow.pdf}}
+        \caption{\small \textit{Routine as a workflow:} diverse action dependencies allow for fine-grained control with \textit{co-actions} and \textit{fallback actions}.
+        }
+        \label{fig:garage-routine-workflow}
+    \end{subfigure}
+    \vspace{-0.3cm}
+    \caption{\small \textbf{Routine with exception handling. {\it Garage door opens, automatic trash can~\cite{smartcan_protolabs}
+    goes out, garage door closes. Letter inside arrow indicates trigger event: S=Start, C=Complete, F=Failure.}
+    }}
+    \label{fig:garage-routine}
+    \vspace{-0.3cm}
+\end{figure}
+
+
+\noindent \textbf{Diverse action dependencies.}
+The primitive must support rich inter-action dependencies. For a given example (garage door opens and closes to let the smart trashcan out), \Figures~\ref{fig:garage-routine}(a,b) show two scenarios, and \Figures~\ref{fig:garage-routine}(c,d) show two variants. 
+In 
+\Figure~\ref{fig:garage-routine-workflow},
+actions $A2$ and $A3$ are \textit{co-actions} of action $A1$. The co-action concept allows (i) the light to turn off {\it before} the garage door starts opening, so that insects are not attracted inside, and (ii) the inside door to be locked only if the garage door starts opening; in case the garage door cannot open ($A1$ fails), there is no safety gap. 
+If the trashcan move \textit{fails} en route to the driveway (\Figure~\ref{fig:garage-routine-failure}), the \textit{fallback action} $A5$ will move the trashcan to its original spot) and, finally, $A6$ will close the garage door 
+to prevent exposure to robbers. 
+If one were to implement \Figure~\ref{fig:garage-routine-workflow} via RPC, 
+users must stitch together multiple routines (here, roughly four--one extra for every unsupported dependency type) guarded by complex device-state predicates to emulate progress points, and add extra conditions to block unintended triggers. This is prohibitive. 
+
+\noindent \textbf{Dynamic action scheduling.}
+When action lengths differ from the schedule, the primitive should reschedule the sequence of planned actions. 
+Previous smart home scheduling for routines~\cite{SafeHomeEuroSys2021}  
+(like \Figure~\ref{fig:garage-routine-desc}) ignores
+unbounded  action lengths and diverse action dependencies (\Figures~\ref{fig:energy-saving-vacuum-rasc}, \ref{fig:garage-routine-workflow}), instead sticking to a static schedule.
+Action durations are context-dependent (e.g., a vacuum may clean longer based on the floor area, dirt level, etc.), and failures are unpredictable at compile or schedule time. 
+The schedule must change, ensuring: (a) \textit{safety}, i.e., no two actions trigger for the same device at the same time (which might cause the device to reject an action),  (b) action dependencies are upheld, and (c) if a previous action finishes early, the next dependent action can start early.
+\RPCa{} and \RPCs{} cannot handle this, and \RPCc{} only allows us to detect when an action completes. \abstraction{} is more powerful. 

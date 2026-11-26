@@ -1,0 +1,129 @@
+\appendix
+
+\section{Details on 3PA Protocol}
+\label{app:3pa}
+
+Suppose there are $n$ possible fault locations in the system, namely $f_1, f_2, ..., f_n$, making up the fault space $\mathbb F$. Injecting $f_i$ into test $t_j$ causes a $m$ additional faults: 
+\begin{equation} 
+I(f_i, t_j)=[f_{{k_1}}, f_{{k_2}}, ..., f_{{k_m}}]\quad k_x\in[1..n], x \in [1..m]
+\end{equation}
+
+\subsection{IDF Vectorization}
+\label{app:3pa:idf}
+
+Each $I(f_i, t_{i_1})$ is vectorized using the inverse document frequency (IDF)~\cite{schutze2008introduction}, resulting in a real vector of length $n$, with each element ranging from 0 to 1. Vectorization is a common technique before applying clustering algorithms~\cite{schutze2008introduction}.
+\begin{equation}
+V(f_i, t_j)=\mathrm{IDF_v}(I(f_i, t_j), \mathbb{F}) \quad \in [0,1]^n
+\end{equation}
+
+IDF measures how often a fault is triggered in all the fault injection runs. Formally, it is defined~\cite{schutze2008introduction} as:
+\begin{equation}
+\mathrm{IDF}(f, \mathbb F) = \log \frac{1 + N}{1 + N_f}
+\end{equation}
+
+$N$ is the total number of fault injection experiments, and $N_f$ is the number of experiments that triggers the additional fault $f$. The plus one smooths the IDF values and prevents zero divisions.
+
+To vectorize $I(f_i, t_j)$ using IDF, each triggered fault is replaced with its IDF value, and other elements in $V(f_i, t_j)$ are set to zero. L2 normalization is applied to the final vector. Formally, the vectorization is defined as:
+\begin{equation}
+\begin{aligned}
+V(f_i, t_j) &= \mathrm{IDF_v}(I(f_i, t_j), \mathbb{F}) = \frac{(v_1, v_2, ..., v_n)}{\lVert (v_1, v_2, ..., v_n) \rVert} \\
+v_{x} &= 
+\begin{cases}
+    \mathrm{IDF}(f_x, \mathbb F), & \mathrm{if} \; f_x \in I(f_i, t_j) \\
+    0,                            & \mathrm{otherwise}
+\end{cases} \\
+\mathrm{where} \quad x &\in [1..n]
+\end{aligned}
+\end{equation}
+
+\subsection{Phase One}
+
+In phase one of the 3PA protocol, \tool injects each fault $f_i$ into workload $t_{i_1}$ that reaches $f_i$'s program location 
+and has the highest code coverage. 
+We perform a hierarchical clustering~\cite{kaufman2009finding} of the faults in $\mathbb F$ using the cosine distance $\mathrm{D_c}$ between all vectorized interferences $V(F_i, T_{i_1})$, as defined below:
+\begin{equation}
+\begin{aligned}
+\mathrm{D_c}(V(f_i, t_{i_1}), V(f_j, Tt_{j_1})) &= 1 - \frac{V(f_i, t_{i_1}) \cdot V(f_j, t_{j_1})}{\lVert V(f_i, t_{i_1}) \rVert \lVert V(f_j, t_{j_1}) \rVert } \\
+\mathrm{where} \quad i, j &\in [1..n], i \neq j
+\end{aligned}
+\end{equation}
+
+By the end of phase one, each fault $f_i$ is clustered in to a group $G_j$ with other faults having similar interferences on the system once injected.
+
+\subsection{Phase Two}
+
+In phase two of the 3PA protocol, an intra-cluster interference similarity score is calculated for each cluster $G_i$.
+This score is the average pairwise cosine distance of all vectorized interference results within the cluster.
+That is, suppose $G_i$ has $p$ faults $f_{i_1}, f_{i_2}, ..., f_{i_p}$, $f_{i_k}$ is injected into $q_k$ different workloads $t_1^{i_k}, t_2^{i_k}, ..., t_{q_k}^{i_k}$, cluster $G_i$ has $\Sigma_{k=1}^p q_k$ vectorized interference results $V(f_i, t_j)$, the similarity score is defined as:
+\begin{equation}
+\begin{aligned}
+\mathrm{SimScore}(G_i) &= 1-\overline{\mathrm{D_c}(V(f_a, t_x^a), V(f_b, t_y^b)} \; \in [0,1] \\
+\mathrm{where} \quad a, b &\in [1..p], x \in [1..q_a], y \in [1..q_b], a \neq b
+\end{aligned}
+\end{equation}
+
+$\mathrm{SimScore}(G_i)$ ranges from 0 to 1. A value of 1 indicates that all faults in cluster $G_i$ triggers the same set of additional faults among all injection runs.
+
+\subsection{Phase Three}
+
+In phase three of the 3PA protocol, 
+the budget allocation weight for cluster $G_i$ is defined as: 
+\begin{equation}
+\mathrm{W}(G_i)=\max{(\epsilon, 1-\mathrm{SimScore}(G_i))} \quad \in [0,1]
+\end{equation}
+
+Each group has a minimum weight $\epsilon$ of 0.01, ensuring every cluster receives some budget, even with perfectly matched intra-group interference results.
+
+\section{Additional Implementation Details}
+\label{app:impl}
+
+\subsection{Dynamic Call Graph Collection}
+
+Loop scalability analysis in \tool (\Cref{sec:fia:faults-to-inject}) requires a call graph to identify the functions reachable from each loop.
+During development, we find that WALA's static call graph struggles with polymorphism. More accurate algorithms such as 2-CFA~\cite{shivers1988control} do not scale well for large systems, such as HDFS with over 359,000 lines of code.
+To address this, we uses \texttt{async-profiler}~\cite{async-prof}'s CPU sampler alongside \tool's tracing capabilities to collect runtime stack snapshots, from which a dynamic call graph is reconstructed.
+
+\subsection{Parameterized JUnit Test} 
+
+A challenge in test execution is the wide use of parameterized JUnit tests~\cite{junit-parameterized-test}, which reuses the test methods with different input parameters, often generated dynamically.
+\tool uses a modified version of JUnit that skips the test body execution and focuses solely on parameter generation. A custom test filter intercepts this process and captures parameters for testing.
+
+\section{Artifact Appendix} 
+
+This artifact contains a minimum working example of the \tool. 
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Description \& Requirements}
+
+\subsubsection{How to access}
+
+The code can be downloaded at \url{https://doi.org/10.5281/zenodo.17049891}.
+
+The Zenodo artifact contains one file, \texttt{CSnake-AE.tar.zst}, it contains a folder \texttt{CSnake-AE} with a \texttt{README.md} inside. The readme file contains all the necessary steps for the artifact evaluation process.
+
+It is mandatory that the file is downloaded into \texttt{``/''} under Linux and extracted there. In other words, the code will be located at \texttt{/CSnake-AE}.
+
+\subsubsection{Hardware dependencies}
+
+Detailed requirements are listed inside \texttt{README.md}. We recommend using a machine with at least 256GB of memory and 50GB of SSD storage space. 
+
+\subsubsection{Software dependencies}
+
+We list detailed commands for installing all the software dependencies in \texttt{README.md}.
+
+\subsubsection{Benchmarks} 
+
+None.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Set-up}
+
+See \texttt{README.md} for details.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Evaluation workflow}
+
+\texttt{README.md} contains nine steps of demonstrating the functionality of \tool. 
+
+\tool's static analyzer is executed in Step 1.
+\tool's profile run of integration tests is executed in Step 2--4. Step 5 analyzes the output and prepare \tool for fault injection runs. Step 6 and 7 executes the fault injection run. Meanwhile, our runtime agents for fault injection and monitoring is exercised. Step 8 performs the fault causality analysis. Step 9 runs the bug detector, performing the local compatibility check and parallel beam search.

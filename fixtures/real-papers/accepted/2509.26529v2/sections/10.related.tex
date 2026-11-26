@@ -1,0 +1,56 @@
+\section{Related Work}
+
+\para{Cascading Failure.} 
+\tool gains insight from the 
+work of \citet{qian2023vicious} and \citet{huang2022metastable} on \vcs in distributed systems. Following their work, diagnosis~\cite{harsh2023murphy,li2024exchain, sruthi2024demystifying}
+and mitigation~\cite{li2023towards, meza2023defcon} techniques 
+have been proposed and studied. 
+However, none of them focuses on 
+exposing 
+\vcs caused 
+using testing or fault injection. 
+\citet{li2018pcatch} 
+proposes a technique to detect 
+\textit{performance cascading failures}, 
+a subtype of cascading failures that 
+only involves performance interference 
+by tracking a variant of happens-before relationship causality. 
+In comparison, 
+\tool detects fault propagation involving both performance interference and functional interference 
+through counterfactual causality analysis. 
+
+Another line of work uses queuing models~\cite{habibi2023msf} and Markov chains~\cite{isaacs2025analyzing, isaacs2025formal} to analyze the behavior of request-response server systems and identify potential metastable failures. Such approaches require developers to provide multiple layers of specifications, including CTMC (continuous time Markov chain) models and DES (discrete event simulator) models. 
+In comparison, \tool works on the bytecode of the system directly and is not limited to request-response server systems.
+
+
+\para{Automatic Bug Detection and Diagnosis in Distributed Systems.} Recently, there has been a rise in the focus on automatically detecting and diagnosing failures in distributed systems, including performance cascading bugs~\cite{li2018pcatch}, exception-dependent failures~\cite{li2024exchain}, upgrade failures~\cite{zhang2021understanding}, timeout bugs \cite{chen2024chronos}, and partial failures~\cite{wu2024efficient}. Compared with their work, \tool's causal stitching links multiple faults injected in to the system. None of the prior work can provide detailed insight into the root causes as well as the propagation chains of the \vcs.
+
+\para{Fault Injection.} 
+Traditionally, 
+fault injection techniques
+\cite{hsueh1997fault,
+marinescu2009lfi, 
+natella2016assessing,bai2016testing,bai2016mining}
+focus on 
+single-node system. 
+Recently, 
+it has become a popular~\cite{alquraan2018analysis, chen2020cofi, ganesan2017redundancy, gunawi2011fate, lu2019crashtuner, 
+marinescu2009lfi,
+alvaro2015lineage,
+joshi2011prefail,
+ju2013fault,
+mohan2018finding,
+li2019efficient,
+sun2022automatic,
+meiklejohn2021service,
+zhang20213milebeach,
+chen2023push,
+jepsenio} 
+technique in testing distributed systems. Compared with \tool, many of them inject coarse-grained external faults such as node failures and network partitions to expose crash recovery bugs. Although more advanced techniques exist, such as injecting faults during variable accesses~\cite{lu2019crashtuner}, none of them are able to detect and expose the entire causal chain of \vcs. \tool performs fine-grained injection of delay, exception, and return value negation into the system. Combined with the fault causality analysis, \tool is the only tool that can detect and diagnose \vcs in distributed systems.
+
+\para{Fuzzing.}
+Fuzzing is a software testing technique that feeds programs with large volumes of random
+inputs to uncover bugs with predefined oracles such as crashes. Prior work mainly applies fuzzing techniques to single-node systems and programs~\cite{jiang2020fuzzing, jiang2022context, xie2022rozz, gao2025detecting, jiang2023dynsql, bai2024multi,bai2023testing, afl, AFLplusplus-Woot20, bohme2017directed, dinesh2020retrowrite}, such as operating systems~\cite{vyukov2015syzkaller,gong2025snowplow,sun2021healer,jiang2019fuzzing}, network protocols~\cite{zou2021tcp,pham2020aflnet}, and filesystems~\cite{jiang2022context,kim2019finding}. Recently, fuzzing has also been applied to test distributed systems~\cite{crashfuzz, meng2023greybox, zou2025blackbox} and shows promising results.
+
+\tool complements existing black-/grey-box fuzzing techniques. While fuzzing explores new behaviors by mutating test inputs (e.g., message sequences, code coverage), \tool extends fault causality chains, which can be used as feedback information for existing fuzzers. For instance, when \tool stitches $f_1 \rightarrow f_2$ in $t_1$ and $f_2 \rightarrow f_3$ in $t_2$ to $f_1 \rightarrow f_2 \rightarrow f_3$, such a causality chain can guide the fuzzers to mutate $t_1$ and $t_2$ together (e.g., merging workload in both tests), helping triggering \vcs.
+

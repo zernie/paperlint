@@ -1,0 +1,403 @@
+\section{Program Transformation}
+\label{sec:transformation}
+
+We now present program transformation techniques that replace libc streams in
+C2Rust-generated code with Rust std streams using the analysis results.
+%
+The transformation consists of four steps:
+%
+transforming types (\cref{sec:transformation:types}),
+%
+transforming stream construction expressions
+(\cref{sec:transformation:streams}),
+%
+transforming assignments and function calls
+(\cref{sec:transformation:assignments}),
+%
+and propagating errors (\cref{sec:transformation:errors}).
+%
+% While we apply all these changes in a single pass by traversing the program
+% once, we explain them as separate steps for clarity.
+
+\subsection{Transforming Types}
+\label{sec:transformation:types}
+
+In this step, we replace each type annotation of \C{*mut\ FILE} (Rust syntax for
+\C{FILE*}) with an appropriate type from Rust std.
+%
+We define the stream types provided by Rust std as follows:
+%
+\[
+  %
+  \small
+  %
+  \begin{array}{@{}r@{~}r@{~}l@{}}
+  %
+    B &::=& \tstdin\ |\ \tstdout\ |\ \tstderr\ |\ \tfile \\
+  %
+    &|& \tbufreader\ |\ \tbufwriter\ |\ \tchild \\
+  %
+    T &::=& \tread\ |\ \tbufread\ |\ \twrite\ |\ \tseek \\
+  %
+    \beta &::=& \overline{T} \\
+  %
+    \tau &::=& B\ |\ \tptr{B}\ |\ \tbox{\beta}\ |\ \tdynptr{\beta}\ |\
+    \timpl{\beta} \\
+  %
+  \end{array}
+  %
+\]
+
+$B$ is a \emph{base type}, where {\small$\tstdin$}, {\small$\tstdout$},
+{\small$\tstderr$}, {\small$\tfile$}, and {\small$\tchild$} correspond to each
+origin, and {\small$\tbufreader$} and {\small$\tbufwriter$} wrap files with
+buffers.
+%
+We use \C{Child} for pipes instead of \C{ChildStdin} or \C{ChildStdout}, due to
+the behavior of \C{pclose} in libc, which waits for the subprocess to terminate.
+%
+In Rust std, a subprocess is represented by \C{Child}, which can be waited on
+and contains \C{ChildStdin} and \C{ChildStdout} as fields for I/O.
+%
+To ensure correct translation of \C{pclose}, we use \C{Child} as a stream
+originating from a pipe.
+
+$T$ is a trait corresponding to each capability except $\cclose$.
+%
+$\beta$ is a list of traits, representing bounds.
+
+A type $\tau$ is either a base type, a raw pointer to a base type, \C{dyn}
+wrapped by \C{Box}, \C{dyn} wrapped by a raw pointer, or \C{impl}.
+%
+% When $\beta$ after \C{dyn} contains multiple bounds, we define a subtrait
+% inheriting all the bounds and use it as the bound.
+%
+% For \C{impl}, the bounds in $\beta$ are simply enumerated using \C{+}.
+%
+We use raw pointers instead of references because references require their
+lifetimes to be decided, which is unrelated to I/O and outside the scope of this
+work.
+%
+Existing techniques~\cite{emre2021translating, emre2023aliasing,
+zhang2023ownership} can be applied to replace raw pointers with references.
+
+\begin{algorithm}[t]
+  \caption{Type decision}
+  \label{alg:type}
+  \setstretch{0.8}
+  \footnotesize
+  \Fn{decideType($l$)}{
+    \lIf{$l$ is a parameter}{
+      \Return{$\timpl{\boundof{\capset{l}}}$}\label{line:type2}
+    }\ElseIf{$\#(\oriset{l})=1$}{\label{line:type3}
+      \lIf{$\oriset{l}=\{\ostdin\}$}{
+        $B:=\tstdin$\label{line:type4}
+      }\lElseIf{$\oriset{l}=\{\ostdout\}$}{
+        $B:=\tstdout$\label{line:type5}
+      }\lElseIf{$\oriset{l}=\{\ostderr\}$}{
+        $B:=\tstderr$\label{line:type6}
+      }\ElseIf{$\oriset{l}=\{\ofile\}$}{\label{line:type7}
+        \lIf{$\cwrite\not\in\capset{l}$}{
+          $B:=\tbufreader$\label{line:type8}
+        }\ElseIf{$\{\cread,\cbufread\}\cap\capset{l}=\emptyset$}{\label{line:type9}
+          $B:=\tbufwriter$\;\label{line:type10}
+        }\lElse{
+          $B:=\tfile$\label{line:type11}
+        }
+      }\lElse{
+        $B:=\tchild$\label{line:type12}
+      }
+      \lIf{$\cclose\in\capset{l}$}{
+        \Return{$B$}\label{line:type13}
+      }\lElse{
+        \Return{$\tptr{B}$}\label{line:type14}
+      }
+    }\Else{\label{line:type15}
+      \lIf{$\cclose\in\capset{l}$}{
+        \Return{$\tbox{\boundof{\capset{l}}}$}\label{line:type16}
+      }\lElse{
+        \Return{$\tdynptr{\boundof{\capset{l}}}$}\label{line:type17}
+      }
+    }
+  }
+\end{algorithm}
+
+\cref{alg:type} shows how we decide the type of each location $l$ based on its
+origins and capabilities.
+%
+The type determined by this algorithm replaces the type annotation of the
+location.
+%
+We treat the cases where $l$ is a parameter and where it is not differently.
+%
+We first discuss the non-parameter cases, which are further divided into
+single-origin and multi-origin cases.
+
+When only one origin is possible, we determine the base type according to the
+origin (lines~\ref{line:type4}--\ref{line:type12}).
+%
+A notable case is when the origin is $\ofile$, where we also examine the
+capabilities.
+%
+If the location is not used for writing, we use {\small$\tbufreader$}, and if it
+is not used for reading, we use {\small$\tbufwriter$}, making the stream
+buffered.
+%
+However, if the location is used for both reading and writing, we use
+{\small$\tfile$} to support both kinds of operations.
+%
+Finally, if the location is used for closing, we assign the base type as the
+type of the location (line~\ref{line:type13});
+%
+otherwise, we use a raw pointer (line~\ref{line:type14}).
+
+When multiple origins are possible, we use \C{dyn} to allow storing different
+base types in the location.
+%
+If the location is used for closing, we wrap the \C{dyn} type in a \C{Box}
+(line~\ref{line:type16});
+%
+otherwise, we use a raw pointer (line~\ref{line:type17}).
+%
+Here, ${\it bound}$ converts the given set of capabilities into bounds by
+mapping each capability to its corresponding trait, while ignoring $\cclose$.
+
+Finally, when $l$ is a parameter, we use \C{impl} regardless of the number of
+origins to give the most general type to the parameter (line~\ref{line:type2}).
+%
+We also do not check whether the stream is used for closing.
+%
+This is because we can handle this at the call site instead---passing an owning
+value to close the stream, or a borrowing value to leave it open.
+%
+% Note that for each of \C{Read}, \C{BufRead}, \C{Write}, and \C{Seek}, if a type
+% $A$ implements a trait, then \C{\&mut} $A$ also implements the same trait,
+% allowing functions to accept both owning and borrowing values.
+
+% For example, consider a function that reads the given stream. Even if the
+% current version of the program always call this function with a file, it may
+% need to call it with standard input in the future. If we use $\tfile$ as the
+% parameter type, such change requires fixing the function signature, while using
+% \C{impl} already allows passing standard input. As \C{impl} does not incur any
+% run-time overhead, we have no reason to give up this flexibility.
+
+In fact, since libc streams can be null pointers while Rust std streams cannot,
+we need to use \C{Option}\CT{<}$\tau$\CT{>} instead of $\tau$ as the type of
+each location.
+%
+An \C{Option} value is either \C{Some(}$v$\C{)}, representing a non-null stream,
+or \C{None}, representing a null stream.
+%
+However, this issue of nullability arises not only in the context of I/O, but
+also when handling any raw pointer;
+%
+previous studies that replace raw pointers with references also wrap references
+in \C{Option}~\cite{emre2021translating, emre2023aliasing, zhang2023ownership}.
+%
+Thus, the remaining discussion omits \C{Option} to focus on I/O-specific
+aspects.
+
+\subsection{Transforming Stream Construction Expressions}
+\label{sec:transformation:streams}
+
+In this step, we transform each expression that constructs a libc stream into an
+expression that constructs a Rust std stream.
+%
+We replace \C{stdin}, \C{stdout}, and \C{stderr} with \C{stdin()}, \C{stdout()},
+and \C{stderr()} because standard streams are global variables in libc but are
+returned from functions in Rust std.
+%
+We also replace \C{fopen} calls with calls to functions that return \C{File},
+such as \C{File{::}open}, and replace \C{popen} calls with
+\C{Command{::}new(..).spawn()}, which returns \C{Child}.
+
+\subsection{Transforming Assignments and Function Calls}
+\label{sec:transformation:assignments}
+
+In this step, we transform assignments and function calls involving streams.
+%
+This is necessary because the types of the left value (or parameter) and the
+right value (or argument) may differ.
+%
+For example, the left value can have more origins than the right value according
+to the analysis, resulting in the left value having \C{Box} while the right
+value has a base type.
+%
+Therefore, we must transform each right value to make it conform to the type of
+the left value.
+
+\begin{table}[t]
+  \caption{Transformation of right values according to types}
+  \label{tab:rvalue}
+  \vspace{-1em}
+  \centering
+  $
+  \footnotesize
+  \begin{array}{@{~}c@{~}||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}}
+    & B_r & \tptr{B_r} & \tbox{\beta_r} & \tdynptr{\beta_r} \\ \hline\hline
+    B_l & e\ ^\dagger & & & \\ \hline
+    \tptr{B_l} & \eptr{e} & e & & \\ \hline
+    \tbox{\beta_l} & {\tt Box{::}new}(e) & & e & \\ \hline
+    \tdynptr{\beta_l} & \eptr{e} & e & e.{\tt as\_mut\_ptr}() & e \\
+  \end{array}
+  $
+  \vspace{0.25em}
+
+  {\scriptsize ${}^\dagger$
+  ${\tt BufReader{::}new}(e)$ when $B_l=\tbufreader$ and $B_r=\tfile$;\\[-0.5em]
+  ${\tt BufWriter{::}new}(e)$ when $B_l=\tbufwriter$ and $B_r=\tfile$}
+  \vspace{-1em}
+\end{table}
+
+We first discuss the transformation of the right values of assignments, as
+summarized in \cref{tab:rvalue}.
+%
+Rows represent the types of left values, and columns represent the types of
+right values.
+%
+Each cell shows how the right value is transformed, where $e$ denotes the
+original expression.
+%
+Since \C{impl} types only appear as parameter types when transforming function
+calls, they are not considered in assignment transformations.
+
+An empty cell in the table indicates that such a case never occurs.
+%
+Since the right value has more capabilities than the left, we never convert a
+borrowing value to an owning value.
+%
+Likewise, as the right value has fewer origins, we never convert a \C{dyn} type
+to a base type.
+
+During the transformation, we only compare the categories of the types (i.e.,
+base type, raw pointer, \C{Box\ dyn}, and \C{dyn} pointer) and do not check
+whether the inner base types ($B_l$ and $B_r$) or bounds ($\beta_l$ and
+$\beta_r$) are compatible.
+%
+This is because types that make conversion infeasible never occur, as types are
+determined from the origins and capabilities computed by the analysis.
+%
+For example, we never transform {\small$\tstdin$} to {\small$\tstdout$}.
+%
+The only exception is when converting {\small$\tfile$} to {\small$\tbufreader$}
+or {\small$\tbufwriter$}, where we use \C{BufReader{::}new(}$e$\C{)} or
+\C{BufWriter{::}new(}$e$\C{)}, instead of $e$.
+
+\begin{table}[t]
+  \caption{Transformation of arguments according to types}
+  \label{tab:arg}
+  \vspace{-1em}
+  \centering
+  $\footnotesize
+  \begin{array}{@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}}
+    B & \tptr{B} & \tbox{\beta} & \tdynptr{\beta} \\ \hline\hline
+    {\tt\&mut\ }e & e & e.{\tt as\_mut}() & e \\
+  \end{array}$
+  \vspace{-1.5em}
+\end{table}
+
+We now describe the transformation of arguments for user-defined function calls.
+%
+If the parameter of the function requires $\cclose$, then the argument remains
+unchanged, as its type is guaranteed to be a base type or \C{Box}, and passing
+the owning value allows the function to close the stream.
+%
+On the other hand, if the parameter does not require $\cclose$, we transform the
+argument based on its type, as shown in \cref{tab:arg}.
+%
+For owning values, we take their addresses to prevent the stream from being
+closed;
+%
+for borrowing values, we pass them as-is.
+
+Finally, we discuss the transformation of libc API function calls.
+%
+The only two functions that close a stream are \C{fclose} and \C{pclose}.
+%
+We transform these into calls to \C{drop}, keeping the arguments unchanged.
+%
+Other function calls are translated into their Rust std equivalents.
+%
+For example, \C{fputc(}$v, e$\C{)} becomes $e'$\C{.write\_all(\&[}$v$\C{])}, where
+$e'$ is the transformed form of $e$ according to \cref{tab:arg}.
+%
+The supplementary material~\cite{supp} lists all libc I/O functions and their
+translations in Rust std.
+
+Below is an example showing the result of the transformation up to this step:
+
+\begin{lstlisting}[language=Rust]
+// Before transformation
+let x: *mut FILE = fopen(..);
+let y: *mut FILE = popen(..);
+let z: *mut FILE;
+if cond { z = x; } else { z = y; }
+fputc('a', z); fclose(x); pclose(y);
+// After transformation
+let x: BufWriter<File> = BufWriter::new(File(..));
+let y: Child = Command::new(..).spawn();
+let z: *mut dyn Write;
+if cond { z = &raw mut x; } else { z = &raw mut y; }
+z.write_all(&['a']); drop(x); drop(y);
+\end{lstlisting}
+
+\noindent
+%
+Here, \C{x} and \C{y} have base types because each has a single origin and is
+closed, while \C{z} is a \C{dyn} pointer because it has multiple origins and is
+not closed, necessitating proper conversions in the assignments from \C{x} and
+\C{y} to \C{z}.
+
+\subsection{Propagating Errors}
+\label{sec:transformation:errors}
+
+In this step, we transform the program to propagate errors.
+%
+We first define a local variable to store a stream indicator in each function
+that either checks the indicator or contains an error source.
+%
+Each variable is initialized to \C{0}, indicating no error.
+%
+We also replace each \C{feof}/\C{ferror} call with an expression that reads this
+error variable.
+
+We then transform each Rust std API call acting as a source to check whether the
+returned \C{Result} is \C{Err}.
+%
+If so, we update the error variable to a non-zero value, indicating an error.
+
+Finally, we transform user-defined functions to propagate errors.
+%
+If a source is in a callee, we modify the callee to return a tuple consisting of
+the original return value and the error value;
+%
+at the call site, we use the returned error value to update the caller's error
+variable.
+%
+Conversely, if a source is in a caller, we transform the callee to take an
+additional parameter, and modify the caller to pass the error variable as an
+argument.
+
+Below is an example showing the result of the transformation, where \C{bar}
+contains a source:
+
+\begin{lstlisting}[language=Rust]
+// Before transformation
+fn bar(x:*mut FILE)->i32 {fputc('a', x); return ..;}
+bar(y); if ferror(y) != 0 { .. }
+// After transformation
+fn bar(x: impl Write) -> (i32, i32) { let e = 0;
+    if x.write_all(&['a']).is_err() { e = 1; }
+    return (.., e); }
+let e=0; let (_, _e)=bar(&mut y); e=_e; if e!=0 {..}
+\end{lstlisting}
+
+Unfortunately, the transformed code does not follow Rust's idioms for error
+handling.
+%although it preserves the behavior of the original program.
+%
+The idiomatic approach would be to transform functions to take or return
+\C{Option}/\C{Result} values instead of integers.
+%
+Since this work focuses on preserving semantics during I/O translation, we leave
+improving idiomaticity to future work.

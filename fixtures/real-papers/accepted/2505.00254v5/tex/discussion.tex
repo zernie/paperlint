@@ -1,0 +1,7 @@
+\section{Limitations and Future Work}
+
+
+There are also limitations in the current design of \sysname, which we explore for future work. Specifically: 1) The existing agentic retrieval and generation mechanism relies on a fixed tree-search strategy based on the Monte Carlo approach. While effective, this method is computationally expensive. The trajectories collected during the search process could be leveraged as training data to develop a model capable of dynamically selecting optimal search actions and depths based on the query and context. 2) Although the integrated VLM demonstrates robust general video understanding and reasoning capabilities, it may encounter challenges in certain specialized visual tasks, such as precise object counting. Incorporating lightweight, task-specific vision models as tools within the system could improve accuracy for such queries. Our future work will focus on enabling the VLM, functioning as an autonomous agent, to intelligently invoke these specialized tools, thereby addressing its limitations in handling specific tasks.
+
+
+

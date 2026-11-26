@@ -1,0 +1,145 @@
+\begin{thebibliography}{28}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Abnar and Zuidema(2020)}]{abnar-zuidema-2020-quantifying}
+Abnar, S.; and Zuidema, W. 2020.
+\newblock Quantifying Attention Flow in Transformers.
+\newblock In Jurafsky, D.; Chai, J.; Schluter, N.; and Tetreault, J., eds., \emph{Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics}, 4190--4197. Online: Association for Computational Linguistics.
+
+\bibitem[{Arteaga, Sch{\"o}n, and Pielawski(2024)}]{arteaga2024hallucination}
+Arteaga, G.~Y.; Sch{\"o}n, T.~B.; and Pielawski, N. 2024.
+\newblock Hallucination Detection in {LLM}s: Fast and Memory-Efficient Finetuned Models.
+\newblock In \emph{Northern Lights Deep Learning Conference 2025}.
+
+\bibitem[{Balabanov and Linander(2025)}]{balabanov2025uncertainty}
+Balabanov, O.; and Linander, H. 2025.
+\newblock Uncertainty quantification in fine-tuned {LLM}s using Lo{RA} ensembles.
+\newblock In \emph{ICLR Workshop: Quantify Uncertainty and Hallucination in Foundation Models: The Next Frontier in Reliable AI}.
+
+\bibitem[{Bang et~al.(2025)Bang, Ji, Schelten, Hartshorn, Fowler, Zhang, Cancedda, and Fung}]{bang2025hallulensllmhallucinationbenchmark}
+Bang, Y.; Ji, Z.; Schelten, A.; Hartshorn, A.; Fowler, T.; Zhang, C.; Cancedda, N.; and Fung, P. 2025.
+\newblock HalluLens: LLM Hallucination Benchmark.
+\newblock arXiv:2504.17550.
+
+\bibitem[{Cecere et~al.(2025)Cecere, Bacciu, Tobías, and Mantrach}]{cecere2025montecarlotemperaturerobust}
+Cecere, N.; Bacciu, A.; Tobías, I.~F.; and Mantrach, A. 2025.
+\newblock Monte Carlo Temperature: a robust sampling strategy for LLM's uncertainty quantification methods.
+\newblock arXiv:2502.18389.
+
+\bibitem[{Chen et~al.(2024)Chen, Liu, Chen, Gu, Wu, Tao, Fu, and Ye}]{chen2024insidellmsinternalstates}
+Chen, C.; Liu, K.; Chen, Z.; Gu, Y.; Wu, Y.; Tao, M.; Fu, Z.; and Ye, J. 2024.
+\newblock INSIDE: LLMs' Internal States Retain the Power of Hallucination Detection.
+\newblock arXiv:2402.03744.
+
+\bibitem[{Chuang et~al.(2024)Chuang, Qiu, Hsieh, Krishna, Kim, and Glass}]{chuang2024lookbacklensdetectingmitigating}
+Chuang, Y.-S.; Qiu, L.; Hsieh, C.-Y.; Krishna, R.; Kim, Y.; and Glass, J. 2024.
+\newblock Lookback Lens: Detecting and Mitigating Contextual Hallucinations in Large Language Models Using Only Attention Maps.
+\newblock arXiv:2407.07071.
+
+\bibitem[{Huang et~al.(2025)Huang, Yu, Ma, Zhong, Feng, Wang, Chen, Peng, Feng, Qin, and Liu}]{Huang_2025}
+Huang, L.; Yu, W.; Ma, W.; Zhong, W.; Feng, Z.; Wang, H.; Chen, Q.; Peng, W.; Feng, X.; Qin, B.; and Liu, T. 2025.
+\newblock A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions.
+\newblock \emph{ACM Transactions on Information Systems}, 43(2): 1–55.
+
+\bibitem[{Hung et~al.(2023)Hung, Rim, Frost, Bruckner, and Lawrence}]{hung2023walkingtightropeevaluating}
+Hung, C.-C.; Rim, W.~B.; Frost, L.; Bruckner, L.; and Lawrence, C. 2023.
+\newblock Walking a Tightrope -- Evaluating Large Language Models in High-Risk Domains.
+\newblock arXiv:2311.14966.
+
+\bibitem[{Ji et~al.(2023)Ji, Lee, Frieske, Yu, Su, Xu, Ishii, Bang, Madotto, and Fung}]{Ji_2023}
+Ji, Z.; Lee, N.; Frieske, R.; Yu, T.; Su, D.; Xu, Y.; Ishii, E.; Bang, Y.~J.; Madotto, A.; and Fung, P. 2023.
+\newblock Survey of Hallucination in Natural Language Generation.
+\newblock \emph{ACM Computing Surveys}, 55(12): 1–38.
+
+\bibitem[{Joshi et~al.(2017)Joshi, Choi, Weld, and Zettlemoyer}]{joshi2017triviaqalargescaledistantly}
+Joshi, M.; Choi, E.; Weld, D.~S.; and Zettlemoyer, L. 2017.
+\newblock TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Reading Comprehension.
+\newblock arXiv:1705.03551.
+
+\bibitem[{Kirchhof, Kasneci, and Kasneci(2025)}]{kirchhof2025positionuncertaintyquantificationneeds}
+Kirchhof, M.; Kasneci, G.; and Kasneci, E. 2025.
+\newblock Position: Uncertainty Quantification Needs Reassessment for Large-language Model Agents.
+\newblock arXiv:2505.22655.
+
+\bibitem[{Kossen et~al.(2024)Kossen, Han, Razzak, Schut, Malik, and Gal}]{kossen2024semanticentropyprobesrobust}
+Kossen, J.; Han, J.; Razzak, M.; Schut, L.; Malik, S.; and Gal, Y. 2024.
+\newblock Semantic Entropy Probes: Robust and Cheap Hallucination Detection in LLMs.
+\newblock arXiv:2406.15927.
+
+\bibitem[{Kuhn, Gal, and Farquhar(2023)}]{kuhn2023semanticuncertaintylinguisticinvariances}
+Kuhn, L.; Gal, Y.; and Farquhar, S. 2023.
+\newblock Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation.
+\newblock arXiv:2302.09664.
+
+\bibitem[{Kwiatkowski et~al.(2019)Kwiatkowski, Palomaki, Redfield, Collins, Parikh, Alberti, Epstein, Polosukhin, Kelcey, Devlin, Lee, Toutanova, Jones, Chang, Dai, Uszkoreit, Le, and Petrov}]{47761}
+Kwiatkowski, T.; Palomaki, J.; Redfield, O.; Collins, M.; Parikh, A.; Alberti, C.; Epstein, D.; Polosukhin, I.; Kelcey, M.; Devlin, J.; Lee, K.; Toutanova, K.~N.; Jones, L.; Chang, M.-W.; Dai, A.; Uszkoreit, J.; Le, Q.; and Petrov, S. 2019.
+\newblock Natural Questions: a Benchmark for Question Answering Research.
+\newblock \emph{Transactions of the Association of Computational Linguistics}.
+
+\bibitem[{Malinin and Gales(2021)}]{malinin2021uncertainty}
+Malinin, A.; and Gales, M. 2021.
+\newblock Uncertainty Estimation in Autoregressive Structured Prediction.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Manakul, Liusie, and Gales(2023)}]{manakul2023selfcheckgptzeroresourceblackboxhallucination}
+Manakul, P.; Liusie, A.; and Gales, M. J.~F. 2023.
+\newblock SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Generative Large Language Models.
+\newblock arXiv:2303.08896.
+
+\bibitem[{Ming et~al.(2025)Ming, Purushwalkam, Pandit, Ke, Nguyen, Xiong, and Joty}]{ming2025faithevallanguagemodelstay}
+Ming, Y.; Purushwalkam, S.; Pandit, S.; Ke, Z.; Nguyen, X.-P.; Xiong, C.; and Joty, S. 2025.
+\newblock FaithEval: Can Your Language Model Stay Faithful to Context, Even If "The Moon is Made of Marshmallows".
+\newblock arXiv:2410.03727.
+
+\bibitem[{Naveed et~al.(2025)Naveed, Khan, Qiu, Saqib, Anwar, Usman, Akhtar, Barnes, and Mian}]{10.1145/3744746}
+Naveed, H.; Khan, A.~U.; Qiu, S.; Saqib, M.; Anwar, S.; Usman, M.; Akhtar, N.; Barnes, N.; and Mian, A. 2025.
+\newblock A Comprehensive Overview of Large Language Models.
+\newblock \emph{ACM Trans. Intell. Syst. Technol.}
+\newblock Just Accepted.
+
+\bibitem[{Quevedo et~al.(2024)Quevedo, Yero, Koerner, Rivas, and Cerny}]{quevedo2024detectinghallucinationslargelanguage}
+Quevedo, E.; Yero, J.; Koerner, R.; Rivas, P.; and Cerny, T. 2024.
+\newblock Detecting Hallucinations in Large Language Model Generation: A Token Probability Approach.
+\newblock arXiv:2405.19648.
+
+\bibitem[{Rajpurkar, Jia, and Liang(2018)}]{rajpurkar2018knowdontknowunanswerable}
+Rajpurkar, P.; Jia, R.; and Liang, P. 2018.
+\newblock Know What You Don't Know: Unanswerable Questions for SQuAD.
+\newblock arXiv:1806.03822.
+
+\bibitem[{Reddy, Chen, and Manning(2019)}]{reddy2019coqaconversationalquestionanswering}
+Reddy, S.; Chen, D.; and Manning, C.~D. 2019.
+\newblock CoQA: A Conversational Question Answering Challenge.
+\newblock arXiv:1808.07042.
+
+\bibitem[{Vazhentsev et~al.(2024)Vazhentsev, Fadeeva, Xing, Panchenko, Nakov, Baldwin, Panov, and Shelmanov}]{vazhentsev2024unconditionaltruthfulnesslearningconditional}
+Vazhentsev, A.; Fadeeva, E.; Xing, R.; Panchenko, A.; Nakov, P.; Baldwin, T.; Panov, M.; and Shelmanov, A. 2024.
+\newblock Unconditional Truthfulness: Learning Conditional Dependency for Uncertainty Quantification of Large Language Models.
+\newblock arXiv:2408.10692.
+
+\bibitem[{Vazhentsev et~al.(2025)Vazhentsev, Rvanova, Kuzmin, Fadeeva, Lazichny, Panchenko, Panov, Baldwin, Sachan, Nakov, and Shelmanov}]{vazhentsev2025uncertaintyawareattentionheadsefficient}
+Vazhentsev, A.; Rvanova, L.; Kuzmin, G.; Fadeeva, E.; Lazichny, I.; Panchenko, A.; Panov, M.; Baldwin, T.; Sachan, M.; Nakov, P.; and Shelmanov, A. 2025.
+\newblock Uncertainty-Aware Attention Heads: Efficient Unsupervised Uncertainty Quantification for LLMs.
+\newblock arXiv:2505.20045.
+
+\bibitem[{Xu, Jain, and Kankanhalli(2025)}]{xu2025hallucinationinevitableinnatelimitation}
+Xu, Z.; Jain, S.; and Kankanhalli, M. 2025.
+\newblock Hallucination is Inevitable: An Innate Limitation of Large Language Models.
+\newblock arXiv:2401.11817.
+
+\bibitem[{Zha et~al.(2023)Zha, Yang, Li, and Hu}]{zha2023alignscoreevaluatingfactualconsistency}
+Zha, Y.; Yang, Y.; Li, R.; and Hu, Z. 2023.
+\newblock AlignScore: Evaluating Factual Consistency with a Unified Alignment Function.
+\newblock arXiv:2305.16739.
+
+\bibitem[{Zhang, Zhang, and Zheng(2024)}]{zhang2024vluncertaintydetectinghallucinationlarge}
+Zhang, R.; Zhang, H.; and Zheng, Z. 2024.
+\newblock VL-Uncertainty: Detecting Hallucination in Large Vision-Language Model via Uncertainty Estimation.
+\newblock arXiv:2411.11919.
+
+\bibitem[{Zhang et~al.(2023)Zhang, Qiu, Guo, Deng, Zhang, Zhang, Zhou, Wang, and Fu}]{zhang2023enhancinguncertaintybasedhallucinationdetection}
+Zhang, T.; Qiu, L.; Guo, Q.; Deng, C.; Zhang, Y.; Zhang, Z.; Zhou, C.; Wang, X.; and Fu, L. 2023.
+\newblock Enhancing Uncertainty-Based Hallucination Detection with Stronger Focus.
+\newblock arXiv:2311.13230.
+
+\end{thebibliography}

@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix2020.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "macro.tex",
+      "role": "body"
+    },
+    {
+      "path": "abstract_v1.tex",
+      "role": "body"
+    },
+    {
+      "path": "intro_v3.tex",
+      "role": "body"
+    },
+    {
+      "path": "background.tex",
+      "role": "body"
+    },
+    {
+      "path": "motivation_v2.tex",
+      "role": "body"
+    },
+    {
+      "path": "overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "design-v2.tex",
+      "role": "body"
+    },
+    {
+      "path": "scheduler-v3.tex",
+      "role": "body"
+    },
+    {
+      "path": "eval-v1.tex",
+      "role": "body"
+    },
+    {
+      "path": "rw-v2.tex",
+      "role": "body"
+    },
+    {
+      "path": "conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "20da672043e46e055a2afe0ba4629c83d0405018c87b475a977f79b6b47829e0",
+    "usenix2020.sty": "d6bbc3538d33c574b6ff83237c959269b6a50f88802e972ac0c82da89c35337e",
+    "macro.tex": "981a11860f35a783b09550f32d022c4b8a18578d255fe014e6078dbd85a3f0ef",
+    "abstract_v1.tex": "3e9f60640eaee0edf6f052e1040f94d5586d4f5a9522ae2a0ad585c625b01066",
+    "intro_v3.tex": "b6921903a4b3fc149ee5a1e740b1ec8614b2ac137ad9c1ac0223920d67c256bf",
+    "background.tex": "d198238e19d96e00cf4bf17dafdc99dc5f6c83b558b7249fbd812e9c7c2fd1d9",
+    "motivation_v2.tex": "c63c5ade515829070beac14cddb85c610993ad550176a9841c070a98849253aa",
+    "overview.tex": "4681d224ff3ba215dc909ae922f9d6159ea6ee665f88559f6917f0ff4d09ce9c",
+    "design-v2.tex": "4515f217178f0555bddcdc318701de2f1d50cf777c8b90a63ea9d25111649c5c",
+    "scheduler-v3.tex": "846deb1760f791c5e8fda4a9456dda0c4f16513aa09a1883382d8a86cebc4928",
+    "eval-v1.tex": "48acebde6e9f5a5dd0dc69dc0ba0bdc757ca7ee741292e5bd61eea2601492b86",
+    "rw-v2.tex": "48012326fb4bd38aa7845ca30ee4318d45220a21251f9c3a2df7d9364560ace5",
+    "conclusion.tex": "52e4040b57990c131c3f4e3f18f1fecfb89457ffdade1da1b1f57a451d3ba814",
+    "appendix.tex": "d5c1b4a49d3206cf07de792512fa137c78bcf0665fdcfbb499689fe0c8ffe8b0"
+  }
+}

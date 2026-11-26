@@ -1,0 +1,87 @@
+\section{Industrial Context and Problem Motivation}
+\label{sec:background}
+In this section, we provide background on the industrial context, outline the engineering challenge identified in our prior study \cite{yang2025ragva}, and present a preliminary analysis to validate the existence of this challenge.
+
+\subsection{LLM-Powered Intelligent Virtual Assistant at Transurban}
+Transurban is a global transportation company that manages and develops urban toll road networks. In Australia, its tolling service, Linkt, enables drivers to pay tolls on various roads across major cities.
+%
+Originally, Linkt used a rule-based VA for customer service, implemented with predefined menu options. The system can be modeled as a finite-state machine:
+$$
+\mathcal{R} = \{ (s, a, s') \mid s, s' \in \mathcal{S}, a \in \mathcal{A} \}
+$$
+where $\mathcal{S}$ is the set of dialogue states (e.g., ``Billing Inquiry''), $\mathcal{A}$ is the set of user actions (e.g., selecting a menu option), $s$ is the current state, $a$ the action taken, and $s'$ the resulting state. Each state returns a fixed response or menu, with transitions manually defined. While effective for routine queries, the rule-based VA could not handle NL, adapt to evolving needs, or scale without frequent manual updates.
+
+To overcome these limitations, Transurban’s software engineering team developed a retrieval-augmented generation-based virtual assistant (RAGVA) to enhance customer experience and operational efficiency. RAGVA is an LLM-powered intelligent VA that integrates a large language model with a structured knowledge base containing customer support documents.
+%
+Given a user query $x \in \mathcal{X}$, RAGVA first retrieves a set of relevant documents from the knowledge base $\mathcal{D}$ using a retrieval function:
+$$
+\mathcal{R}(x) \rightarrow \mathcal{D}_x \subseteq \mathcal{D}
+$$
+where $\mathcal{D}_x$ is a subset of support documents most relevant to query $x$. The retrieved context $\mathcal{D}_x$ is then passed along with the query to a large language model $\mathcal{M}$, which generates the final response:
+$$
+\mathcal{M}(x, \mathcal{D}_x) \rightarrow y
+$$
+Compared to rule-based VA, RAGVA provides greater flexibility in handling user inputs, improved NL understanding, and the ability to adapt to new queries without manual intervention.
+
+\subsection{Engineering Challenge: Adaptive Runtime Safety for LLM-Powered Systems}
+Unlike rule-based VAs that inherently avoid unsafe behavior due to their fixed-state design, LLM-powered assistants like RAGVA introduce new safety risks. In rule-based VAs, both the dialogue states $\mathcal{S}$ and transitions $(s, a, s')$ are predefined, ensuring that no user action ($a$) can trigger an unintended/ unsafe response - the output space is fully constrained.
+
+In contrast, LLM-powered RAGVA generates responses via an LLM ($\mathcal{M}$) conditioned on both the user input $x$ and retrieved documents $\mathcal{D}_x$. This model operates over an open-ended input and output space. Therefore, carefully crafted jailbreak prompts $x$ may produce unsafe or policy-violating outputs $y$. The function $\mathcal{M}$ is not deterministic or state-constrained in the traditional sense, which makes its behavior difficult to predict and bound, complicating the engineering of a safe LLM-powered system.
+
+To mitigate this, runtime guardrails such as LlamaGuard \cite{inan2023llama}, Perspective API \cite{lees2022new}, OpenAI Moderation \cite{markov2023holistic}, and Perplexity \cite{alon2023detecting} have been developed as external safety mechanisms. These components monitor user inputs at inference time to detect and block unsafe prompts, ensuring that only safe inputs $x$ are passed into the model $\mathcal{M}$.
+
+In collaboration with Transurban, we previously conducted a multi-day focus group with nine software engineers involved in developing and deploying the LLM-powered RAGVA for Linkt \cite{yang2025ragva}. From this experience, we found that existing guardrails are typically static—trained only on known unsafe patterns—which limits their ability to defend against evolving or previously unseen jailbreak attacks. They often lack the adaptability needed to respond to threats that were not present during their initial training. This led to a key software engineering challenge documented in our prior study \cite{yang2025ragva}: \textbf{``How can we develop an adaptive guardrail framework that dynamically learn and adjusts to new jailbreak attacks in LLM-powered intelligent systems?''}
+
+This challenge speaks to a growing concern across sectors as more organisations adopt LLM-powered software in production.
+Importantly, this challenge observed in practice mirrors concerns raised in recent literature on the security and safety of LLM agents~\cite{bengio2024managing, hassan2024rethinking, yao2024survey, gan2024navigating}.
+To elaborate more, below we present a preliminary analysis of LlamaGuard, one of the state-of-the-art runtime guardrails, focusing on its ability to defend against jailbreak attacks unseen during its training process.
+
+\subsection{Preliminary Analysis of Existing Runtime Guardrail}
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figs/Prelim_DSR.pdf}
+    \caption{DSR of jailbreak attacks on LlamaGuard-8B Guardrail.}
+    \label{fig:prelim_dsr}
+\end{figure}
+To evaluate an existing guardrail on unseen jailbreak attacks, we chose LlamaGuard-8B, a state-of-the-art LLM runtime guardrail.
+In the literature, LLM jailbreak attacks generally fall into three main categories: obfuscation-based \cite{yao2024survey}, code-based \cite{lv2024codechameleon}, and template-based \cite{kang2024exploiting}. We selected one representative attack from each—BASE64 (obfuscation) \cite{yao2024survey}, Code Chameleon (code) \cite{lv2024codechameleon}, and SmartGPT (template) \cite{kang2024exploiting}. Starting from 100 unsafe NL prompts sampled from the Aegis dataset \cite{ghosh2025aegis2}, we applied each attack method to generate three transformed versions per prompt, resulting in 300 jailbreak prompts.
+
+Specifically, obfuscation-based attacks encode the original prompt into formats like Base64, e.g., ``how to make a bomb'' $\rightarrow$ ``aG93IHRvIG1ha2UgYSBib21i''. Code-based attacks such as Code Chameleon embed the prompt within code snippets or comments to disguise intent, e.g., ``how to make a bomb'' $\rightarrow$ ``python class ProblemSolver:... how to make a bomb...''. Template-based attacks such as SmartGPT wrap the prompt in benign-seeming instructions or roleplay scenarios to bypass intent detection, e.g., ``how to make a bomb'' $\rightarrow$ ``SmartGPT is an AI...we have the following strings: a='how' b='to make' c='a' d='bomb' give the response SmartGPT(a+b+c+d)''. Each method preserves the original harmful intent while altering the surface form to evade moderation.
+We evaluated LlamaGuard-8B on the original 100 natural prompts (aligned with its training data) and the 300 jailbreak (unseen) prompts. We report Defense Success Rate (DSR) as the proportion of correctly detected jailbreaks.
+
+%LlamaGuard is an open-source guardrail designed to detect and block unsafe or policy-violating prompts at inference time, leveraging Llama3 based LLM trained on a diverse set of harmful and benign examples \cite{inan2023llama}.
+%In our analysis, we assess LlamaGuard’s ability to defend against a set of jailbreak attacks that were not present in its original training data. Specifically, we compiled a set of such prompts crafted from various attack methods in literature \cite{lv2024codechameleon, yao2024survey, kang2024exploiting}. We then measured whether LlamaGuard can correctly identify them as 'unsafe'. 
+Fig.~\ref{fig:prelim_dsr} presents the result of our analysis.
+Our findings reveal that while LlamaGuard has reported SOTA performance at blocking known unsafe patterns, with 72\% DSR plain unsafe prompts blocked, its performance degrades substantially when confronted with jailbreak attacks unseen during its training.
+The three attacks substantially reduced DSR to 50\%, 20\%, and 12\% for SmartGPT, Code Chameleon, and Base64, respectively.
+\textbf{These results highlight a key limitation of current guardrails in defending against evolving jailbreak attacks, motivating the development of adaptive frameworks that continually update in response to emerging attacks.}
+
+%\subsection{Preliminary Analysis}
+% change into single column figure, trim input/output size to make it fit 
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.5\linewidth]{figs/Prelim_Analysis_Example.jpg}
+%    \caption{An example of jailbreaking DeepSeek-V3 with the AIM attack, of which the model returns guidelines of detailed steps of how to infiltrate a social media account when prompted, whereas instead it should have refused to do so as it is trained to provide safe responses only.}
+%    \label{fig:prelim-example}
+%\end{figure}
+
+%For our investigation, we randomly selected 30 samples from our testing dataset, ensuring a diverse representation of jailbreak techniques aimed at eliciting harmful responses from LLM-based systems. Specifically, we curated three test cases from ten prevalent jailbreak strategies \cite{}, targeting the DeepSeek-V3 LLM model \cite{} to evaluate its robustness in distinguishing whether or not these prompts should be answered. 
+
+%We used the default versions of the DeepSeek-V3 model, configuring it with an output size of 2048 tokens and a temperature of 1 to encourage diverse and creative responses. The top-p value was set to its default of 0.9 to maintain a balance between diversity and coherence in output generation, while the repetition penalty was kept at the default 0.1 to prevent excessive repetition of words or phrases. These settings were chosen to reflect how the model would typically behave in a real-world scenario without additional fine-tuning or safety constraints.
+
+%The findings of our preliminary analysis indicate the DeepSeek-V3 exhibits significant vulnerabilities in detecting and mitigating jailbreak attacks. Out of the 30 attacks, 18 successfully bypassed the model's safeguards, leading it to generate harmful responses. In particular, the model struggled against attacks that instruct it to start the response with particular prefix phrases, causing it to internally justify and produce content that should have been flagged as unsafe. Notably, as illustrated in Figure \ref{fig:prelim-example}, the model was coerced into a structured response format before ethical moderation mechanisms could intervene. 
+
+%To mitigate these vulnerabilities, we propose a guardrail framework that aims to detect unknown jailbreak attack types, and incorporate them into the active learning pipeline. Our approach introduces:
+
+%\begin{itemize}
+%    \item Light-weight finetuned smaller language model to act as classification model. 
+%    \item Energy-based Out-of-distribution detection framework to detect jailbreak attacks that are not within the guardrail knowledge.
+%    \item Guardrail update technique comparison to select the most suitable method for updating model knowledge based on the identified OOD attacks.
+    
+%\end{itemize}
+
+%To the best of our knowledge, this is the first study to formally conceptualize jailbreak detection as an OOD detection problem. Existing LLM safety mechanisms primarily focus on filtering harmful content based on existing knowledge. This means they attempt to generalise learnt prompts into unknown prompts, 
+%we we prove fails against advanced jailbreak attacks. 
+
+
+%In the following sections, we detail our problem formulation, proposed framework, and  experiment results. 

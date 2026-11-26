@@ -1,0 +1,115 @@
+\section{Discussion}
+\label{sec:discussion}
+In the previous section, we evaluated the effectiveness of our proposed \ourapp~approach for OOD detection and continual learning against other baselines.
+While our results demonstrate clear advancements, it remains unclear (1) whether our approach can still perform well in a setting where a single continual model is built across all attacks, rather than reinitialising the model for each attack; (2) what the trade-offs are between different continual learning (CL) update methods; and (3) what is the computational efficiency of our approach compared to other baselines. Thus, we evaluate a single continual model across all attacks, compare LoRA with full SFT as update strategies, and analyze the computational efficiency of each approach.
+%While our results demonstrate clear advancements, there exist several practical considerations to further analyse.
+%In this section, we examine three key aspects: (1) knowledge retention of previously learnt attacks in sequential continual learning scenarios, (2) the trade-offs between different guardrail updating methods (LoRA vs. SFT), and (3) computational efficiency compared to baseline approaches. These discussions provide insights into the practical deployment implications and limitations of our approach.
+
+\begin{table}[h]
+\centering
+\caption{(Discussion) DSR of \ourapp~under Sequential Continual Learning with and without Early Stopping across 10 OOD Attack Types.}
+\label{tab:lora_dsr_results}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+\textbf{Attack Type} & \textbf{DSR (No Early Stopping)} & \textbf{DSR (Early Stopping)} \\
+\midrule
+AIM Attack & 1.00 & 1.00 \\
+Base64 Attack & 1.00 & 0.86 \\
+Caesar Attack & 1.00 & 1.00 \\
+Code Chameleon Attack & 1.00 & 1.00 \\
+Combination Attack & 1.00 & 1.00 \\
+DAN Attack & 1.00 & 1.00 \\
+DeepInception Attack & 1.00 & 1.00 \\
+Self Cipher Attack & 1.00 & 1.00 \\
+SmartGPT Attack & 1.00 & 1.00 \\
+Zulu Attack & 1.00 & 0.92 \\
+\midrule
+\textbf{Average} & \textbf{1.00} & \textbf{0.98} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{Continual Performance Without Model Reinitialization}
+%\ray{say why we do the setup in RQ2 and RQ3 (fair comparison between different methods), but in the industry's context, we only have 1 continuous model, so in the context, what would it look like }
+%In RQ2 and RQ3, we initialised a separate copy of the base-trained~\ourapp~from RQ1 for each attack. This approach ensured a fair comparison by isolating the effects of individual attacks on model adaptation performance.
+%In industry settings, guardrails are typically deployed as a single, continuously updated model that incrementally incorporates new external knowledge over time.
+%In that context, while RQ3 focuses on the evaluation of~\ourapp with whether it has retained previous knowledge on classifying the validation dataset, it does not explicitly evaluate whether learning new attacks does not compromise knowledge retention of previously learnt attacks.
+In a typical industry setup, a guardrail is deployed as an additional layer before user inputs reach the underlying LLM. This guardrail often operates as a single continually updated model that incrementally incorporates new external knowledge—such as OOD prompts—to adapt over time. To reflect this real-world scenario, we construct a single continual version of \ourapp, which is updated sequentially across all 10 attacks without reinitialization between them.
+
+We apply continual learning by updating the same \ourapp~model using OOD prompts from each attack in the same experimental dataset used in RQ2. After each update, we evaluate the model's DSR on the test set corresponding to the respective attack. We consider two update settings: in the early stop setting, the continual learning process halts once the model achieves 95\% DSR on the current attack; in the no early stop setting, training continues through all OOD prompts regardless of intermediate performance.
+
+Table~\ref{tab:lora_dsr_results} presents the DSR results for our sequential continual learning setup. The results show that \ourapp~achieves a 100\% DSR across all 10 attacks when trained without early stopping. Even with early stopping enabled, the model maintains an average DSR of 98\%.
+Notably, the Obfuscation-Based attacks—Base64 (86\%) and Zulu (92\%)—prove the most challenging to defend under early stopping. This suggests that these attacks require more adaptation steps for the model to fully internalize their patterns in a guardrail.
+Overall, these results indicate that our continual learning framework not only adapts effectively to new attack types but also retains knowledge of previously encountered ones. This makes it well-suited for real-world deployment, where a single guardrail must continuously evolve to defend against emerging threats without forgetting past vulnerabilities.
+%\ray{Therefore, we conducted additional experiments to evaluate this by continuously updating a single~\ourapp~model with all 10 attacks sequentially, and then evaluating its performance on the test set of each individual attack. Table~\ref{tab:lora_dsr_results} shows the DSR of this sequential continual learning approach compared to the isolated training approach from RQ2. The results demonstrate that our LoRA-based~\ourapp~achieves perfect defense success rates (DSR = 1.00) across all 10 attacks when trained without early stopping, exceeding the DSR achieved in RQ2. Even with early stopping enabled, the model achieves an average DSR of 0.98, with only minor performance degradation on Base64 (0.86) and Zulu (0.92) attacks. This indicates that our LoRA-based continual learning approach effectively preserves knowledge of previously learnt attacks while adapting to new ones, making it suitable for real-world deployment scenarios where guardrails must continuously evolve to defend against emerging threats.}
+
+\begin{table}[htbp]
+\centering
+\caption{(Discussion) Comparison of SFT vs LoRA Performance on Jailbreak Defense}
+\label{tab:sft_lora_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\multirow{2}{*}{\textbf{Statistic}} & \multicolumn{2}{c}{\textbf{Full Fine-Tuning}} & \multicolumn{2}{c}{\textbf{LoRA}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& \textbf{DSR} & \textbf{F1-Score} & \textbf{DSR} & \textbf{F1-Score} \\
+\midrule
+Min & 1.00 & 0.800 & 0.90 & 0.848 \\
+Median & 1.00 & 0.800 & 1.00 & 0.852 \\
+Max & 1.00 & 0.801 & 1.00 & 0.856 \\
+\midrule
+\textbf{Average} & \textbf{1.00} & \textbf{0.800} & \textbf{0.99} & \textbf{0.852} \\
+\bottomrule
+
+\end{tabular}
+\end{table}
+
+
+\subsection{Trade-offs Between LoRA and Full Fine-Tuning for CL}
+In our continual learning (CL) framework, we adopted LoRA-based adaptation for updating the guardrails.
+LoRA is known for its computational efficiency, as it updates only a small subset of parameters while keeping the rest of the pre-trained model frozen. This selective adaptation can lead to better knowledge retention—reflected as stronger in-distribution performance in our context—and has been shown to mitigate catastrophic forgetting compared to full-parameter fine-tuning~\cite{hu2022lora,he2022towards}. While our results confirm LoRA's effectiveness, it remains unclear whether it consistently offers better knowledge retention than full fine-tuning in the context.
+%LoRA (Low-Rank Adaptation) offers several practical advantages: it is computationally efficient, requires updating only a small subset of parameters, and has been shown to mitigate catastrophic forgetting compared to full-parameter fine-tuning in many settings~\cite{hu2022lora,he2022towards}. Our results demonstrate that LoRA enables rapid adaptation to new jailbreak attacks while maintaining strong knowledge retention on previously learnt tasks.
+
+%However, it is important to acknowledge that different fine-tuning strategies may yield different trade-offs between adaptation speed, model performance, and knowledge retention. For example, Supervised Fine-Tuning (SFT) \cite{howard2018universal}, which updates all model parameters, may allow for better learning of new threats but at the risk of increased forgetting of prior knowledge, as observed in prior continual learning literature~\cite{parisi2019continual}. 
+
+To investigate this, we compare our LoRA-based approach~\cite{hu2022lora} with full fine-tuning~\cite{howard2018universal} using the same experimental setup as in RQ2 and RQ3. Since the evaluation spans ten different attacks, we report the minimum, median, and maximum values for both DSR (representing performance for OOD prompts) and F1-Score (performance for in-distribution prompts).
+%
+Table~\ref{tab:sft_lora_comparison} presents the performance comparison between LoRA and full fine-tuning across all 10 attacks. Our LoRA-based approach achieves a median DSR of 100\% and a median F1-Score of 85\% on in-distribution prompts, indicating strong knowledge retention. In contrast, full fine-tuning also achieves a median DSR of 100\% but yields a lower median F1-Score of 80\%. These results are consistent with prior findings in the continual learning literature and demonstrate that our LoRA-based method more effectively preserves previously learned knowledge while adapting to new threats.
+
+
+% Future work should systematically compare a broader range of adaptation techniques for continual learning framework. Such studies would provide deeper insights into the optimal strategies for guardrail updating in real-world LLM-powered systems, where both rapid adaptation and robust knowledge retention are essential for long-term safety and reliability.
+
+\begin{table}[h]
+\centering
+\vspace*{-0.5em}
+\caption{(Discussion) Training \& inference time per sample, and memory usage during training}
+\label{tab:computation_requirements}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{AdaptiveGuard} & \textbf{LlamaGuard 1B} & \textbf{LlamaGuard 8B} \\
+ & \textbf{LoRA} & \textbf{LoRA} & \textbf{LoRA} \\
+\midrule
+Training Time & 0.60s & 1.06s & 2.04s \\
+Inference Time & 0.01s & 0.25s & 1.10s \\
+Memory Usage & 1.3 GB & 4.0 GB & 27.1 GB \\
+\bottomrule
+\vspace*{-1.5em}
+\end{tabular}
+\end{table} 
+
+\subsection{\hbox{Computational Efficiency: \ourapp~and Baselines}}
+In the context of practical deployment of our \ourapp, computational resources are a key consideration factor.
+Therefore, we analyse (1)~the training time per iteration (update step), (2)~inference time per testing sample, and (3)~training and testing memory usage.
+We conduct the analysis using the datasets from RQ2 and RQ3, comprising 992 jailbreak attacks, 314 safe, and 640 unsafe NL prompts.
+We compare our approach (\ourapp+LoRA) with the baselines LlamaGuard-1B+LoRA and LlamaGuard-8B+LoRA.
+%We measure time in milliseconds and memory in gigabytes.
+
+%When compared to the full SFT of ~\ourapp, the~\ourapp+LoRA CL approach reduces training time by 20\% (0.60 vs 0.75 seconds per iteration) while requiring 57\% less memory (1.3 GB vs 3.0 GB). 
+%Most notably, LoRA updates only 17.08\% of the model parameters (21.3M) compared to the 100\% parameter updates (124M) required for full fine-tuning, making our approach substantially more parameter-efficient.
+Table \ref{tab:computation_requirements} summarises the computational efficiency of our approach compared to baseline methods during both training and inference.
+Compared to the LlamaGuard baselines, our method demonstrates substantially greater efficiency.
+Specifically, compared to LlamaGuard-1B and LlamaGuard-8B, \ourapp~achieves 43\% and 71\% faster training times during continual learning (CL), delivers 25× and 110× faster inference, and reduces memory usage by 67\% and 95\%, respectively.
+These substantial gains stem from the compact architecture of our base model, GPT-2 (approximately 137M parameters), in contrast to the considerably larger LlamaGuard models with 1B and 8B parameters.
+These results highlight the practicality of our approach for resource-constrained settings.

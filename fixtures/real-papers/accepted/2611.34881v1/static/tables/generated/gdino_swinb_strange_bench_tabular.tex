@@ -1,0 +1,18 @@
+\begin{tabular}{l ccc ccc ccc ccc ccc ccc c}
+\toprule
+& \multicolumn{3}{c}{\textbf{Tier 1}} & \multicolumn{3}{c}{\textbf{Tier 2}} & \multicolumn{3}{c}{\textbf{Tier 3}} & \multicolumn{3}{c}{\textbf{Tier 4}} & \multicolumn{3}{c}{\textbf{Tier 5}} & \multicolumn{3}{c}{\textbf{Mean T1--T5}} & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13} \cmidrule(lr){14-16} \cmidrule(lr){17-19}
+Aug & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & $T_{\text{never}}\uparrow$ \\
+\midrule
+Zero Shot & 94.9 & 95.0 & \underline{$-0.1$} & 95.0 & 94.4 & 0.6 & 93.3 & 89.7 & 3.6 & 92.4 & 88.2 & 4.2 & 90.9 & 87.2 & 3.7 & 93.3 & 90.9 & 2.4 & 92.4 \\
+\midrule
+\multicolumn{20}{l}{\emph{Non-generative}} \\
+SCP & 94.7 & 95.0 & \textbf{\boldmath $-0.3$} & 95.0 & 95.3 & $-0.3$ & 92.6 & 92.2 & 0.4 & 92.8 & 89.9 & 2.9 & 91.5 & 89.8 & 1.7 & 93.3 & 92.4 & 0.9 & 93.3 \\
+\midrule
+\multicolumn{20}{l}{\emph{Generative}} \\
+XPaste & 95.3 & 95.4 & \underline{$-0.1$} & 95.5 & \underline{96.3} & \textbf{\boldmath $-0.8$} & 93.4 & 93.0 & 0.4 & 93.5 & \underline{91.9} & \underline{1.6} & 92.0 & \underline{91.6} & \underline{0.4} & 93.9 & 93.6 & \textbf{0.3} & \underline{94.6} \\
+\midrule
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & \underline{96.2} & \underline{95.7} & 0.5 & \underline{96.0} & \underline{96.3} & $-0.3$ & \underline{93.5} & \underline{93.7} & \textbf{\boldmath $-0.2$} & \underline{93.6} & 91.4 & 2.2 & \underline{92.4} & 91.5 & 0.9 & \underline{94.3} & \underline{93.7} & \underline{0.6} & 94.5 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{97.0} & \textbf{96.1} & 0.9 & \textbf{96.4} & \textbf{97.0} & \underline{$-0.6$} & \textbf{94.2} & \textbf{93.9} & \underline{0.3} & \textbf{94.3} & \textbf{93.1} & \textbf{1.2} & \textbf{92.9} & \textbf{93.2} & \textbf{\boldmath $-0.3$} & \textbf{95.0} & \textbf{94.7} & \textbf{0.3} & \textbf{95.2} \\
+\bottomrule
+\end{tabular}

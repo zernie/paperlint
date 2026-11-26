@@ -1,0 +1,245 @@
+\begin{thebibliography}{32}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{AlAbwaini et~al.(2018)AlAbwaini, Aldaaje, Jaber, Abdallah, and
+  Tamimi}]{alabwaini2018using}
+Nour AlAbwaini, Amal Aldaaje, Tamara Jaber, Mohammad Abdallah, and Abdelfatah
+  Tamimi. 2018.
+\newblock Using program slicing to detect the dead code.
+\newblock In \emph{2018 8th International Conference on Computer Science and
+  Information Technology (CSIT)}, pages 230--233. IEEE.
+
+\bibitem[{Bhatia et~al.(2024)Bhatia, Qiu, Hasabnis, Seshia, and
+  Cheung}]{bhatia2024verified}
+Sahil Bhatia, Jie Qiu, Niranjan Hasabnis, Sanjit~A. Seshia, and Alvin Cheung.
+  2024.
+\newblock \href {https://openreview.net/forum?id=spwE9sLrfg} {Verified code
+  transpilation with {LLM}s}.
+\newblock In \emph{The Thirty-eighth Annual Conference on Neural Information
+  Processing Systems}.
+
+\bibitem[{Boomsma et~al.(2012)Boomsma, Hostnet, and Gross}]{boomsma2012dead}
+Hidde Boomsma, BV~Hostnet, and Hans-Gerhard Gross. 2012.
+\newblock Dead code elimination for web systems written in php: Lessons learned
+  from an industry case.
+\newblock In \emph{2012 28th IEEE International Conference on Software
+  Maintenance (ICSM)}, pages 511--515. IEEE.
+
+\bibitem[{Chen et~al.(1998)Chen, Gansner, and Koutsofios}]{chen1998c++}
+Yih-Fam Chen, Emden~R Gansner, and Eleftherios Koutsofios. 1998.
+\newblock A c++ data model supporting reachability analysis and dead code
+  detection.
+\newblock \emph{IEEE Transactions on Software Engineering}, 24(9):682--694.
+
+\bibitem[{Feng et~al.(2020)Feng, Guo, Tang, Duan, Feng, Gong, Shou, Qin, Liu,
+  Jiang et~al.}]{feng2020codebert}
+Zhangyin Feng, Daya Guo, Duyu Tang, Nan Duan, Xiaocheng Feng, Ming Gong, Linjun
+  Shou, Bing Qin, Ting Liu, Daxin Jiang, et~al. 2020.
+\newblock Codebert: A pre-trained model for programming and natural languages.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2020}, pages 1536--1547.
+
+\bibitem[{Gao et~al.(2023)Gao, Wang, and Wang}]{gao2023discrete}
+Fengjuan Gao, Yu~Wang, and Ke~Wang. 2023.
+\newblock Discrete adversarial attack to models of code.
+\newblock \emph{Proceedings of the ACM on Programming Languages},
+  7(PLDI):172--195.
+
+\bibitem[{Han et~al.(2024)Han, Kim, Yoo, Lee, and Hwang}]{han2024archcode}
+Hojae Han, Jaejin Kim, Jaeseok Yoo, Youngwon Lee, and Seung-won Hwang. 2024.
+\newblock Archcode: Incorporating software requirements in code generation with
+  large language models.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 13520--13552.
+
+\bibitem[{Hu et~al.(2022)Hu, yelong shen, Wallis, Allen-Zhu, Li, Wang, Wang,
+  and Chen}]{hulora}
+Edward~J Hu, yelong shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean
+  Wang, Lu~Wang, and Weizhu Chen. 2022.
+\newblock \href {https://openreview.net/forum?id=nZeVKeeFYf9} {Lo{RA}: Low-rank
+  adaptation of large language models}.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{IntelliJ(2011)}]{intellij2011most}
+IDEA IntelliJ. 2011.
+\newblock the most intelligent java ide.
+\newblock \emph{JetBrains [online].[cit. 2016-02-23]. Dostupn{\'e} z:
+  https://www. jetbrains. com/idea/\# chooseYourEdition}.
+
+\bibitem[{Jain et~al.()Jain, Zhang, Chiang, Gonzalez, Sen, and
+  Stoica}]{jainllm}
+Naman Jain, Tianjun Zhang, Wei-Lin Chiang, Joseph~E Gonzalez, Koushik Sen, and
+  Ion Stoica.
+\newblock Llm-assisted code cleaning for training accurate code generators.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[{Khare et~al.(2023)Khare, Dutta, Li, Solko-Breslin, Alur, and
+  Naik}]{khare2023understanding}
+Avishree Khare, Saikat Dutta, Ziyang Li, Alaia Solko-Breslin, Rajeev Alur, and
+  Mayur Naik. 2023.
+\newblock Understanding the effectiveness of large language models in detecting
+  security vulnerabilities.
+\newblock \emph{arXiv preprint arXiv:2311.16169}.
+
+\bibitem[{Kim et~al.(2020)Kim, Yi, Kim, and Yoon}]{kim2020interpretation}
+Siwon Kim, Jihun Yi, Eunji Kim, and Sungroh Yoon. 2020.
+\newblock Interpretation of nlp models through input marginalization.
+\newblock In \emph{Proceedings of the 2020 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, pages 3154--3167.
+
+\bibitem[{Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang,
+  and Stoica}]{kwon2023efficient}
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
+  Joseph Gonzalez, Hao Zhang, and Ion Stoica. 2023.
+\newblock Efficient memory management for large language model serving with
+  pagedattention.
+\newblock In \emph{Proceedings of the 29th Symposium on Operating Systems
+  Principles}, pages 611--626.
+
+\bibitem[{Li et~al.(2024)Li, Zhou, and Shen}]{li2024rewriting}
+Haochen Li, Xin Zhou, and Zhiqi Shen. 2024.
+\newblock Rewriting the code: A simple method for large language model
+  augmented code search.
+\newblock \emph{arXiv preprint arXiv:2401.04514}.
+
+\bibitem[{Li et~al.(2016)Li, Monroe, and Jurafsky}]{li2016understanding}
+Jiwei Li, Will Monroe, and Dan Jurafsky. 2016.
+\newblock Understanding neural networks through representation erasure.
+\newblock \emph{arXiv preprint arXiv:1612.08220}.
+
+\bibitem[{Malavolta et~al.(2023)Malavolta, Nirghin, Scoccia, Romano, Lombardi,
+  Scanniello, and Lago}]{malavolta2023javascript}
+Ivano Malavolta, Kishan Nirghin, Gian~Luca Scoccia, Simone Romano, Salvatore
+  Lombardi, Giuseppe Scanniello, and Patricia Lago. 2023.
+\newblock Javascript dead code identification, elimination, and empirical
+  assessment.
+\newblock \emph{IEEE Transactions on Software Engineering}, 49(7):3692--3714.
+
+\bibitem[{Mosca et~al.(2022)Mosca, Szigeti, Tragianni, Gallagher, and
+  Groh}]{mosca2022shap}
+Edoardo Mosca, Ferenc Szigeti, Stella Tragianni, Daniel Gallagher, and Georg
+  Groh. 2022.
+\newblock Shap-based explanation methods: a review for nlp interpretability.
+\newblock In \emph{Proceedings of the 29th international conference on
+  computational linguistics}, pages 4593--4603.
+
+\bibitem[{Nguyen et~al.(2021)Nguyen, Kim, and Nguyen}]{nguyen2021effectiveness}
+Giang Nguyen, Daeyoung Kim, and Anh Nguyen. 2021.
+\newblock The effectiveness of feature attribution methods and its correlation
+  with automatic evaluation scores.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  34:26422--26436.
+
+\bibitem[{Puri et~al.(2021)Puri, Kung, Janssen, Zhang, Domeniconi, Zolotov,
+  Dolby, Chen, Choudhury, Decker, Thost, Buratti, Pujar, Ramji, Finkler,
+  Malaika, and Reiss}]{puri2021codenet}
+Ruchir Puri, David~S Kung, Geert Janssen, Wei Zhang, Giacomo Domeniconi,
+  Vladimir Zolotov, Julian Dolby, Jie Chen, Mihir Choudhury, Lindsey Decker,
+  Veronika Thost, Luca Buratti, Saurabh Pujar, Shyam Ramji, Ulrich Finkler,
+  Susan Malaika, and Frederick Reiss. 2021.
+\newblock \href {https://openreview.net/forum?id=6vZVBkCDrHT} {Codenet: A
+  large-scale {AI} for code dataset for learning a diversity of coding tasks}.
+\newblock In \emph{Thirty-fifth Conference on Neural Information Processing
+  Systems Datasets and Benchmarks Track (Round 2)}.
+
+\bibitem[{Romano and Scanniello(2018)}]{romano2018exploring}
+Simone Romano and Giuseppe Scanniello. 2018.
+\newblock Exploring the use of rapid type analysis for detecting the dead
+  method smell in java code.
+\newblock In \emph{2018 44th Euromicro conference on software engineering and
+  advanced applications (SEAA)}, pages 167--174. IEEE.
+
+\bibitem[{Romano et~al.(2016)Romano, Scanniello, Sartiani, and
+  Risi}]{romano2016graph}
+Simone Romano, Giuseppe Scanniello, Carlo Sartiani, and Michele Risi. 2016.
+\newblock A graph-based approach to detect unreachable methods in java
+  software.
+\newblock In \emph{Proceedings of the 31st Annual ACM symposium on applied
+  computing}, pages 1538--1541.
+
+\bibitem[{Romano et~al.(2020)Romano, Vendome, Scanniello, and
+  Poshyvanyk}]{8370748}
+Simone Romano, Christopher Vendome, Giuseppe Scanniello, and Denys Poshyvanyk.
+  2020.
+\newblock \href {https://doi.org/10.1109/TSE.2018.2842781} {A multi-study
+  investigation into dead code}.
+\newblock \emph{IEEE Transactions on Software Engineering}, 46(1):71--99.
+
+\bibitem[{Seipp()}]{Vulture}
+Jendrik Seipp.
+\newblock Vulture, find dead python code.
+\newblock \url{https://github.com/jendrikseipp/vulture/}.
+
+\bibitem[{Tang et~al.(2024{\natexlab{a}})Tang, Hu, Zhou, Zhong, Zheng, Si, and
+  Ellis}]{tang2024code}
+Hao Tang, Keya Hu, Jin~Peng Zhou, Si~Cheng Zhong, Wei-Long Zheng, Xujie Si, and
+  Kevin Ellis. 2024{\natexlab{a}}.
+\newblock \href {https://openreview.net/forum?id=o863gX6DxA} {Code repair with
+  {LLM}s gives an exploration-exploitation tradeoff}.
+\newblock In \emph{The Thirty-eighth Annual Conference on Neural Information
+  Processing Systems}.
+
+\bibitem[{Tang et~al.(2024{\natexlab{b}})Tang, Kim, Song, Lothritz, Li, Ezzini,
+  Tian, Klein, and Bissyand{\'e}}]{Tang2024CodeAgentAC}
+Xunzhu Tang, Kisub Kim, Yewei Song, Cedric Lothritz, Bei Li, Saad Ezzini, Haoye
+  Tian, Jacques Klein, and T{\'e}gawend{\'e}~F. Bissyand{\'e}.
+  2024{\natexlab{b}}.
+\newblock Codeagent: Autonomous communicative agents for code review.
+
+\bibitem[{Wang et~al.(2024)Wang, Zhang, Su, Xu, and
+  Zhang}]{wang-etal-2024-sanitizing}
+Chengpeng Wang, Wuqi Zhang, Zian Su, Xiangzhe Xu, and Xiangyu Zhang. 2024.
+\newblock \href {https://doi.org/10.18653/v1/2024.findings-emnlp.217}
+  {Sanitizing large language models in bug detection with data-flow}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2024}, pages 3790--3805, Miami, Florida, USA. Association for
+  Computational Linguistics.
+
+\bibitem[{Wang et~al.(2017)Wang, Zhang, Zhao, and Chen}]{wang2017dead}
+Xing Wang, Yingzhou Zhang, Lian Zhao, and Xinghao Chen. 2017.
+\newblock Dead code detection method based on program slicing.
+\newblock In \emph{2017 International Conference on Cyber-Enabled Distributed
+  Computing and Knowledge Discovery (CyberC)}, pages 155--158. IEEE.
+
+\bibitem[{Wei et~al.()Wei, Durrett, and Dillig}]{weicoeditor}
+Jiayi Wei, Greg Durrett, and Isil Dillig.
+\newblock Coeditor: Leveraging repo-level diffs for code auto-editing.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[{Yadavally et~al.(2024)Yadavally, Li, Wang, and
+  Nguyen}]{yadavally2024learning}
+Aashish Yadavally, Yi~Li, Shaohua Wang, and Tien~N Nguyen. 2024.
+\newblock A learning-based approach to static program slicing.
+\newblock \emph{Proceedings of the ACM on Programming Languages},
+  8(OOPSLA1):83--109.
+
+\bibitem[{Yang et~al.(2024)Yang, Le~Goues, Martins, and
+  Hellendoorn}]{yang2024large}
+Aidan~ZH Yang, Claire Le~Goues, Ruben Martins, and Vincent Hellendoorn. 2024.
+\newblock Large language models for test-free fault localization.
+\newblock In \emph{Proceedings of the 46th IEEE/ACM International Conference on
+  Software Engineering}, pages 1--12.
+
+\bibitem[{Zhao et~al.(2024)Zhao, Huang, Ma, Li, Zhang, Jiang, Liu, Zhu, and
+  Su}]{zhao-etal-2024-repair}
+Yuze Zhao, Zhenya Huang, Yixiao Ma, Rui Li, Kai Zhang, Hao Jiang, Qi~Liu, Linbo
+  Zhu, and Yu~Su. 2024.
+\newblock \href {https://doi.org/10.18653/v1/2024.findings-acl.973}
+  {{R}e{P}air: Automated program repair with process-based feedback}.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  ACL 2024}, pages 16415--16429, Bangkok, Thailand. Association for
+  Computational Linguistics.
+
+\bibitem[{Zheng et~al.(2024)Zheng, Zhang, Zhang, Ye, Luo, Feng, and
+  Ma}]{zheng2024llamafactory}
+Yaowei Zheng, Richong Zhang, Junhao Zhang, Yanhan Ye, Zheyan Luo, Zhangchi
+  Feng, and Yongqiang Ma. 2024.
+\newblock \href {http://arxiv.org/abs/2403.13372} {Llamafactory: Unified
+  efficient fine-tuning of 100+ language models}.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics (Volume 3: System Demonstrations)}, Bangkok,
+  Thailand. Association for Computational Linguistics.
+
+\end{thebibliography}

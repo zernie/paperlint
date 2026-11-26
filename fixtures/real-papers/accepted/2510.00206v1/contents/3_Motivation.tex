@@ -1,0 +1,124 @@
+\normalsize
+
+\section{Motivation}
+\label{sec:motivation}
+
+We identify two key limitations in existing LoRA fine-tuning systems: significant runtime overhead from redundant memory access (§\ref{sec:motivation-lora-overhead}), and missed optimization opportunities in multi-job training scenarios (§\ref{sec:motivation-multi-lora-oversight}).
+
+\subsection{Significant Runtime Overhead of LoRA Modules}
+\label{sec:motivation-lora-overhead}
+
+\begin{figure}[t]
+    \centering
+
+    \begin{minipage}[c]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/motivation-fig-1-a-lora_benchmark_figure_forward_throughput.pdf}
+        {\small (a) Forward pass throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/motivation-fig-1-b-lora_benchmark_figure_backward_throughput.pdf}
+        {\small (b) Backward pass throughput}
+    \end{minipage}
+
+    \caption{Throughput comparison of the frozen linear layer ($n$=$k$=4096) vs. the corresponding LoRA linear layer with different numbers of tokens and ranks.}
+    \label{fig:motivation-lora-overhead-with-batch-size}
+\end{figure}
+
+Although LoRA greatly reduces memory usage by introducing only a small number of trainable parameters, it leads to significant runtime overhead in practice.
+Figure~\ref{fig:motivation-lora-overhead-with-batch-size} compares the throughput of a frozen linear layer ($n$=$k$=4096) against its LoRA-equipped linear layer with different numbers of tokens and ranks.
+The dark blue lines represent the throughput of the frozen linear layer, and other lines represent the throughput when LoRA modules are applied.
+We make several key observations:
+First, the throughput of LoRA linear modules is consistently lower than that of the frozen linear layer, exhibiting a slowdown of approximately 40\% and 36\% for forward and backward passes, respectively, regardless of the number of tokens.
+Second, \texttt{torch.compile}~\cite{ansel2024pytorch-compile}, which provides compiler-based fusion capabilities in PyTorch, provides zero benefits in the forward pass and only negligible improvements in the backward pass.
+Third, the choice of LoRA rank ($r$=16 or $r$=32) also minimally impacts throughput, indicating that the overhead is dominated by inefficient memory access patterns rather than algorithmic cost.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figures/motivation-fig-2-lora_breakdown.pdf}
+    \caption{Runtime breakdown of a LoRA linear module with $n$=$k$=4096, $r$=16, and $tokens$=8192. \texttt{@} is matrix multiplication, \texttt{d} indicates a gradient, and \texttt{.T} represents a transpose.}
+    \label{fig:motivation-lora-overhead-breakdown}
+\end{figure}
+
+The above profiling results are surprising. 
+In theory, the LoRA adapter should only incur minimal FLOPs and memory accesses overhead since $r \ll n,k$.
+To investigate the source of the overhead, we perform detailed profiling on both the layer-level and kernel-level.
+As shown in Figure~\ref{fig:motivation-lora-overhead-breakdown}, the total runtime is dominated by three categories of operations: (1) GEMM operations of the frozen linear layer ($XW$), (2) GEMM operations from LoRA modules (down- and up-projections $\widehat{X}A$ and $SB$), and (3) other element-wise operations. 
+Although the original GEMM operation still dominates runtime (59\% and 60\% for forward and backward passes, respectively), the LoRA-specific GEMM operations and element-wise computations introduce substantial overhead.
+Specifically, LoRA GEMM operations account for 10.76\% and 20.37\% of overall runtime for forward and backward passes, respectively.
+These kernels are memory-bandwidth-bound because of the small rank $r$, and thus the memory read and write of the large activation tensor become the bottleneck.
+A simple analysis shows that the arithmetic intensity $\mathbb{I}$ of LoRA's down-projection GEMM operation ($\widehat{X}A$) in half-precision is:
+\begin{equation}
+        \text{Arithmetic Intensity $\mathbb{I}$} =\frac{1}{\frac{1}{r}+\frac{1}{n}+\frac{1}{m}} \ll \mathbb{B}
+\end{equation}
+where $r$, $n$, and $m$ denote the LoRA rank, output dimension, and batch size, respectively. This intensity $\mathbb{I}$ is far below the machine balance $\mathbb{B}$ (e.g. $\sim$295 for FP16 on NVIDIA H100 GPUs) because of the small $r$, confirming that performance is bottlenecked by memory bandwidth rather than compute throughput.
+Moreover, the additional element-wise operations, including dropout, element-wise multiplication, and addition of the partial results from the branches, take 30.46\% and 17.49\% of the total execution time.
+These operations are also memory-bound because of the large size of the input and output activation tensors.
+To further quantify the memory impact, we profile the kernels using NVIDIA Nsight Compute~\cite{nsight-compute}, which shows that the total GPU global memory read/write traffic increases by approximately 2.64$\times$ compared to the original frozen linear layer.
+
+Therefore, we conclude that the runtime overhead is primarily due to the redundant memory accesses of the large activation tensor relative to their small computational scale.
+This analysis highlights that while the additional parameters and FLOPs introduced by LoRA seem negligible, the runtime overhead is significant due to the extra memory access.
+
+% ================================================================
+
+\subsection{Overlooked Opportunities in Multi-LoRA}
+\label{sec:motivation-multi-lora-oversight}
+
+Multi-LoRA techniques refer to grouping multiple LoRA adapters sharing the same base model from separate tasks into a single batched operation. 
+Such techniques have been widely adopted in LLM serving scenarios to improve GPU utilization by mitigating memory-bandwidth-bound bottlenecks of the frozen GEMM operations caused by small token counts during decoding~\cite{chen2024punica,sheng2023s-lora,wu2024dlora}.
+However, multi-LoRA techniques are rarely used in fine-tuning. Although mLoRA~\cite{ye2023mlora} and Zheng et al.~\cite{zheng2024online} initially used multi-LoRA grouping to reduce the memory footprint of replicated pre-trained models and improve training efficiency, its broader implications for performance optimization remain overlooked.
+In this section, we first identify two key opportunities where multi-LoRA can significantly improve training efficiency: reducing distributed training overhead and improving GPU load balance. We also explicitly analyze the limitations of existing multi-LoRA techniques.
+
+\begin{figure}[t]
+    \centering
+
+    \begin{minipage}[c]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/motivation-fig-3-gbz-perf.pdf}
+        \caption[Ideal throughput of LLaMa-3.1-70B on 4 H100 GPUs vs. global batch sizes.]{
+            Ideal throughput\footnotemark of LLaMa-3.1-70B on 4 H100 GPUs vs. global batch sizes.
+        }
+        \label{fig:motivation-gbz-perf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/motivation-fig-5-imbalance.pdf}
+        \caption{Number of tokens per micro-batch with a fixed micro batch size = 4.}
+        \label{fig:motivation-imbalance}
+    \end{minipage}
+\end{figure}
+\footnotetext{"Ideal" assumes uniform tokens per microbatch and no load imbalance.}
+
+\myparagraph{Mitigating Distributed Parallelism Overhead}
+By grouping adapters from multiple jobs, multi-LoRA can significantly increase global batch sizes with independent groups of tokens.
+As Figure~\ref{fig:motivation-gbz-perf} illustrates, increasing global batch size from 4 to 32 enhances ideal throughput by 84\% and 45\% for FSDP and PP, respectively.
+This improvement occurs because larger batch sizes improve computation-communication overlap in FSDP and reduce pipeline bubbles in PP, significantly reducing the overhead of distributed parallelism.
+Additionally, since adapters from independent jobs have no interdependencies, multi-LoRA naturally enables near-zero pipeline bubbles by fully utilizing pipeline stages.
+While mLoRA~\cite{ye2023mlora} primarily focused on reducing memory usage on mid-range clusters and implementing uniform adapter filling in pipeline parallelism, our approach broadens these insights to address overhead in general distributed parallelism scenarios.
+
+\myparagraph{Reducing Load Imbalance Across GPUs}
+In ideal scenarios, tokens per micro-batch are uniform, but real workloads often have significant variations, causing load imbalance. 
+Figure~\ref{fig:motivation-imbalance} shows token counts per micro-batch size of 4 for two datasets: CNN/DailyMail~\cite{cnn-dailymail-dataset}, a common summarization dataset, and a Mix combining three summarization datasets (XSum~\cite{xsum-dataset}, CNN/DailyMail~\cite{cnn-dailymail-dataset}, and WikiSum~\cite{wikisum-dataset}). 
+Detailed length distributions are provided in Figure~\ref{fig:evaluation-fig-0-data-statistics}. 
+The substantial variation in tokens per micro-batch creates critical load imbalance in distributed training, limiting performance to the slowest GPU. In FSDP, different ranks process different microbatches but must synchronize before each layer, while in pipeline parallelism, imbalance creates pipeline bubbles across stages. 
+Both scenarios degrade performance. 
+As shown in the top sub-figures of Figure~\ref{fig:motivation-practical-slowdown}, practical LoRA fine-tuning experiences a significant slowdown (up to $\sim$30\%) compared to ideal fixed-length distributed training when token counts are imbalanced.
+
+With multi-LoRA fine-tuning, the global batch size includes more samples, creating an opportunity to batch them in a way that balances token counts per microbatch. This mitigates the impact of sequence length variability. 
+Figure~\ref{fig:motivation-practical-slowdown} (bottom) further illustrates the theoretical ideal throughput improvements achievable (up to 2.28$\times$) by effectively addressing both inefficiencies through multi-LoRA fine-tuning.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.99\linewidth]{figures/motivation-fig-4-practical-slowdown.pdf}
+    \caption{Performance slowdown of practical LoRA fine-tuning of LLaMa-3.1-70B on 4 H100 GPUs compared to ideal fixed-length distributed training scenarios.}
+    \label{fig:motivation-practical-slowdown}
+\end{figure}
+
+\myparagraph{Limitations of mLoRA}
+While mLoRA~\cite{ye2023mlora} represents an important step towards multi-LoRA fine-tuning, its design has several limitations that hinder performance and scalability.
+First, mLoRA assumes uniform adapter grouping and schedules according to memory capacity, but does not handle load imbalance from variable sequence lengths found in real workloads. Furthermore, its \texttt{BatchLoRA} kernel reduces kernel launch overhead but still does not solve the core memory redundant access bottleneck identified in Section~\ref{sec:motivation-lora-overhead}.
+Finally, mLoRA's design is narrowly focused on Pipeline Parallelism and relies on inefficient CPU-based communication, which limits scalability on modern GPU clusters with high-bandwidth interconnects like NVLink~\cite{nvlink}. 

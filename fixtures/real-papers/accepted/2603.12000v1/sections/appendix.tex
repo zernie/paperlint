@@ -1,0 +1,261 @@
+% !TeX root = ../main.tex
+\appendix \label{app1}
+\section{Thematic Framework}
+
+As an overview of our synthesis, \Cref{tab:thematic-tree} presents the thematic tree linking overarching themes and subthemes to the research questions, alongside concise definitions and representative quotations.
+
+\input{tables/thematic_tree}
+
+
+\section{Literature Synthesis}
+
+Table~\ref{tab:lit-synthesis} provides a structured overview of the key literatures informing our study, their central constructs and findings, their relevance to understanding crypto KOLs, and the gaps that remain.
+
+\begin{table*}[p]
+\centering
+\caption{Synthesis of prior research streams. %Key constructs, findings, relevance to crypto key opinion leaders, and remaining gaps addressed by this study.
+}
+\label{tab:lit-synthesis}
+\footnotesize
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{} p{3cm} p{3cm} p{3.8cm} p{3.6cm} p{3.5cm} @{}}
+\toprule
+\textbf{Research Stream} & \textbf{Key Constructs} & \textbf{Central Findings} & \textbf{Relevance to Crypto KOLs} & \textbf{Gap Addressed} \\
+\midrule
+Influencer culture \& parasociality \newline {\cite{MarwickStatusUpdate2013,AbidinVisibility2016,Lou2019,Labrecque2014,Reinikainen2020,Khamis2017,Enke2019,BaymPlaying2018}}
+  & Visibility labour; relational labour; authenticity; parasocial interaction
+  & Credibility cultivated through curated authenticity and affective bonds; trust based on perceived closeness
+  & KOLs engage in similar visibility and relational labour; credibility central to influence
+  & Does not address financial stakes or speculative contexts \\[6pt]
+Finfluencers \& social-media finance \newline {\cite{GuanFinfluencer2023,HayesFinfluence2024,HaaseFinfluencersSentiment2025,MeyerHighOnBitcoin2023,StefanouFinfluencersReg2022}}
+  & Finfluencer; emotional contagion; sentiment transfer; financialisation
+  & Finfluencers shape crowd sentiment; emotional contagion amplifies herd dynamics
+  & KOLs are crypto-specific finfluencers with intensified risks
+  & Focuses on audiences and markets, not on finfluencers as workers \\[6pt]
+Creator labour \& financialisation \newline {\cite{DuffyAspirationalWork2017,DuffyNestedPrecarities2021,DuffyPlatformPractices2019,CotterVisibilityGame2019,AlacovskaSpeculativeLabour2024,AbidinInternetCelebrity2018}}
+  & Aspirational labour; nested precarities; speculative labour
+  & Creators face layered precarities; financialisation entangles creative work with volatile markets
+  & KOLs experience double exposure to algorithmic and financial volatility
+  & Does not examine crypto-specific contexts \\[6pt]
+Crypto users \& communities \newline {\cite{MoserBitcoinUsability2013,Krombholz2016,Mai2020,Abramova2021,KhairuddinBitcoinMotivations2016,SasKhairuddin2017,BappyCentralizedTrust2025}}
+  & Mental models; usability; centralised trust; user motivations
+  & Users hold fragile mental models; paradoxically trust centralised actors in decentralised systems
+  & Users ``outsource'' due diligence to KOLs as trust anchors
+  & Focuses on users, not intermediaries \\[6pt]
+Regulation \& consumer protection \newline {\cite{StefanouFinfluencersReg2022,SECInvestorCrypto,FCA2023Finfluencer,ASAInfluencer2023}}
+  & Investor protection; disclosure; regulatory fragmentation
+  & Finfluencer promotion evades traditional regimes; crypto regulation is patchy
+  & KOLs operate in regulatory grey zones; accountability unclear
+  & Does not examine KOL perspectives on regulation \\[6pt]
+Scams \& fraud \newline {\cite{OakScamReddit2025,Cernera2023rugpulls}}
+  & Rug pulls; scam discourse; community vigilance
+  & Scams are pervasive; communities develop grassroots guidance roles
+  & KOLs may help or harm users navigating scams
+  & Does not examine KOL role or responsibility \\[6pt]
+SDT \& online work \newline {\cite{DeciRyan1985,RyanDeci2000,NovMotivatesWikipedians2007,TyackMeklerSDT2020,LiuAnxietyCommunities2021,torhonen2019}}
+  & Autonomy; competence; relatedness; intrinsic vs.\ extrinsic motivation
+  & SDT needs predict sustained, high-quality engagement; prosocial motives common among creators
+  & SDT offers lens on KOL motivations beyond ``greed vs.\ altruism''
+  & Has not been applied to crypto influencers \\[6pt]
+Market-level influence \newline {\cite{LucchiniGamestopWSB2022,warkulat2024,pan2025,AnteMuskCrypto2023,Merkley2024}}
+  & Sentiment; attention; capital flows; price effects
+  & Online communities and influencers affect trading volumes and prices
+  & KOLs' endorsements can move markets and affect follower wealth
+  & Models influencers as signals, not as workers \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\section{LLM Prompts and Outputs}
+
+This appendix provides the LLM prompt used for thematic analysis as well as an exemplary excerpt of LLM output.
+
+\begin{figure}[H]
+\caption{LLM prompt used for thematic assistance.}\label{lst:ai-prompts}
+\Description{A framed code listing showing the system prompt and user prompt used for LLM-assisted thematic analysis, instructing the model to suggest candidate themes mapped to self-determination theory needs (autonomy, competence, relatedness) and return results as a JSON array with theme, description, and SDT category fields.}
+\centering
+\begin{minipage}{0.82\columnwidth}
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+system_prompt = """You are a qualitative
+researcher assisting with thematic analysis
+of interview transcripts about crypto-
+influencers' motivations. Your task is to:
+
+1. Suggest candidate themes (labels) that
+   capture emerging patterns in the text
+2. Provide a brief description of each theme
+3. Map each theme to one of the three Self-
+   Determination Theory (SDT) needs:
+   - Autonomy: The need to feel volitional
+     and self-directed in one's actions
+   - Competence: The need to feel effective
+     and capable of achieving desired outcomes
+   - Relatedness: The need to feel connected
+     to others and experience belongingness
+
+Focus on identifying motivations, behaviours,
+and psychological needs expressed by the
+participants.
+
+Return your analysis as a JSON array of
+objects with these fields:
+- "theme": the candidate thematic label
+- "description": what the theme means in
+  this context
+- "sdt_category": one of "Autonomy",
+  "Competence", or "Relatedness"
+
+Example format:
+[
+  {
+    "theme": "Financial Independence Seeking",
+    "description": "Desire to achieve financial
+      freedom through crypto investments and
+      avoid traditional employment constraints",
+    "sdt_category": "Autonomy"
+  }
+]
+"""
+
+user_prompt = f"""Analyze this interview
+transcript excerpt and suggest candidate themes:
+
+Context: Interview transcript from {filename},
+chunk {chunk_index + 1}
+
+Text to analyze:
+{text_chunk}
+
+Generate 3-7 candidate themes that capture the
+key motivations, practices, and needs expressed
+in this text segment."""
+\end{Verbatim}
+\end{minipage}
+\end{figure}
+
+\paragraph{LLM transparency note.}
+We used the best available GPT-4 model (June 2025) with temperature~$=0.2$ and top\_p~$=1.0$. All excerpts were fully anonymised prior to processing; no raw data or identifiers were transferred externally. Outputs were reviewed and verified by human coders.
+
+For completeness, an example excerpt of the model's JSON output structure is shown in \Cref{lst:ai-output}.
+
+\paragraph{Code curation summary.}\label{app:code-curation}
+Table~\ref{tab:code-curation} summarises the code reduction pipeline. The overall rejection rate of LLM-suggested codes (47\%) reflects a conservative curation strategy in which human judgement remained the final arbiter.
+
+\vspace{-2pt}
+\begin{table}[H]
+\centering
+\small
+\caption{Code curation pipeline: counts and rejection rates at each stage.}
+\label{tab:code-curation}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Stage} & \makecell{\textbf{Codes}\\\textbf{in}} & \textbf{Retained} & \textbf{Rejected} & \makecell{\textbf{Rej.}\\\textbf{Rate}} \\
+\midrule
+LLM first pass    & 60  & 32 & 28 & 47\% \\
+Human codes added  & +19 & 19 & 0  & ---  \\
+Combined pool      & 51  & 36 & 15 & 29\% \\
+Final codebook     & 36  & 36 & --- & ---  \\
+\bottomrule
+\end{tabular}
+\end{table}
+\vspace{-4pt}
+
+\noindent LLM-suggested codes were rejected for: \textbf{platform-specificity} (4 codes, e.\,g., ``LinkedIn for Professional Use''); \textbf{conceptual conflation} (6 codes, e.\,g., ``Critical Evaluation of Influencers''); \textbf{insufficient grounding} (9 codes, e.\,g., ``Global Connectivity through Gaming''); and \textbf{redundancy with human codes} (9 codes, e.\,g., ``Commitment to Transparency''). Each rejection was logged with a rationale to maintain an auditable curation trail.
+
+\begin{figure}[H]
+\caption{Example model output (excerpt).}\label{lst:ai-output}
+\Description{A framed code listing showing an example JSON output excerpt from the LLM, containing four candidate themes (Educational Mission, Autonomy in Content Choices, Mastery Through Continuous Learning, Reputation and Recognition) each with a description and mapped SDT category.}
+\centering
+\begin{minipage}{0.82\columnwidth}
+\begin{Verbatim}[frame=single,fontsize=\scriptsize]
+[
+  {
+    "theme": "Educational Mission",
+    "description": "Motivation to translate
+      complex crypto concepts and help
+      newcomers avoid mistakes",
+    "sdt_category": "Relatedness"
+  },
+  {
+    "theme": "Autonomy in Content Choices",
+    "description": "Emphasis on independence
+      from sponsors and freedom to express
+      critical views",
+    "sdt_category": "Autonomy"
+  },
+  {
+    "theme": "Mastery Through Continuous
+      Learning",
+    "description": "Drive to keep up with
+      fast-moving protocols and improve
+      analytical skills",
+    "sdt_category": "Competence"
+  },
+  {
+    "theme": "Reputation and Recognition",
+    "description": "Seeking status and
+      credibility as a knowledgeable KOL
+      within the ecosystem",
+    "sdt_category": "Competence"
+  }
+]
+\end{Verbatim}
+\end{minipage}
+\end{figure}
+
+\vfill
+
+\section{Interview Questions}\label{app:interview-questions}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=8mm, nosep]
+  \item \textbf{Background and Role in the Ecosystem}
+  \begin{enumerate}[label=Q\arabic*., leftmargin=8mm, start=1, nosep]
+    \item Can you briefly describe your professional background and how you got involved in the crypto assets industry? \hfill{(RQ2)}
+    \item What led you to become an influential figure in the crypto space, and how would you define your role within it? \hfill{(RQ2)}
+  \end{enumerate}
+  \item \textbf{Motivations and Goals}
+  \begin{enumerate}[label=Q\arabic*., leftmargin=8mm, start=3, nosep]
+    \item What motivates your active participation in decentralized ledger–related discussions and project endorsements? \hfill{(RQ1)}
+    \item Based on your role as a [self-defined ROLE from Q2], what drives you to engage with the crypto space in this particular way? \hfill{(RQ1)}
+  \end{enumerate}
+  \item \textbf{Influence Mechanisms and Engagement}
+  \begin{enumerate}[label=Q\arabic*., leftmargin=8mm, start=5, nosep]
+    \item Through what channels do you believe you achieve the most influence (e.\,g., X, YouTube, podcasts, conferences, direct investments), and why? \hfill{(RQ2)}
+    \item How do you engage with your audience, and what type of content do you believe generates the most engagement and resonance? \hfill{(RQ2)}
+  \end{enumerate}
+  \item \textbf{Community and Industry Dynamics}
+  \begin{enumerate}[label=Q\arabic*., leftmargin=8mm, start=7, nosep]
+    \item How do you interact with other opinion leaders in the decentralized ledger sphere? Would you describe your relationships as collaborative, competitive, or neutral?\hfill
+    \item Have you ever engaged in public debates or controversies within the digital ledger space? How do you navigate such interactions? \hfill{(RQ2, RQ3)}
+  \end{enumerate}
+  \item \textbf{Influence on Investment, Adoption \& Ethics}
+  \begin{enumerate}[label=Q\arabic*., leftmargin=8mm, start=9, nosep]
+    \item Have you observed cases where your recommendations significantly impacted market trends or investment behaviour? How do you view this responsibility? \hfill{(RQ3)}
+    \item How do you ensure transparency and credibility in your public statements, particularly regarding financial incentives and endorsements? \hfill{(RQ1, RQ3)}
+  \end{enumerate}
+\end{enumerate}
+
+% \begin{table}[t]
+% \centering
+% \caption{RQ1 mapping: Motivations for KOL positioning. Research Question (RQ1): ``What extrinsic and intrinsic factors motivate individuals to position themselves as key opinion leaders in the blockchain ecosystem?''}
+% \label{tab:rq1-mapping}
+% \input{tables/rq1-mapping}
+% \end{table}
+
+% \begin{table}[t]
+% \centering
+% \caption{RQ2 mapping: Defining characteristics of crypto KOLs. Research Question (RQ2): ``What defining characteristics set crypto KOLs apart from other influencers and members of the crypto community?''}
+% \label{tab:rq2-mapping}
+% \input{tables/rq2-mapping}
+% \end{table}
+
+% \begin{table}[t]
+% \centering
+% \caption{RQ3 mapping: Ethics, social responsibility, and norms. Research Question (RQ3): ``How do blockchain influencers perceive and navigate ethics, social responsibility, and community norms in shaping their content and communication strategies?''}
+% \label{tab:rq3-mapping}
+% \input{tables/rq3-mapping}
+% \end{table}

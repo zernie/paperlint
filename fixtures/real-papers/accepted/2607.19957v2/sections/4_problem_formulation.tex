@@ -1,0 +1,94 @@
+\section{Problem Formulation}
+In this section, we give the problem formulation, including threat model (\S~\ref{sec:threat_model}) and new attack surface (\S~\ref{sec:attack_surface}).
+
+\subsection{Threat Model}~\label{sec:threat_model}
+We formally define the threat model guiding our analysis, including the system model, the attacker's goal, capability, and knowledge.
+
+\paragraph{System Model.}
+We consider a realistic deployment scenario where the LLM inference infrastructure integrates two optimization components to improve system throughput and reduce computational cost: 
+\begin{icompact}
+    \item \emph{Position-Independent KV Cache}. LLM inference systems adopt this novel mechanism to decouple memory retrieval from strict positional constraints, thereby maximizing cache reuse and reducing inference latency.
+    \item \emph{Multi-Tenant Cache Sharing}. The system adopts a multi-tenant architecture in which the KV cache pool is globally shared across users and sessions. This setting is common in organizational or cloud-hosted LLM services, where users frequently draw from common knowledge sources, such as internal documentation, shared RAG corpora, or publicly available materials (\eg, Wikipedia).
+\end{icompact}
+
+\paragraph{Attacker's Goal.}
+The attacker aims to persistently influence model outputs for future users by causing adversarially conditioned KV cache states to be stored and later reused. By submitting inputs derived from widely shared knowledge content, the attacker ensures their cache states are likely to match future benign queries. When reused, these states hijacked generation toward attacker-controlled behavior rather than solely the victim's prompt, resulting in a cross-user integrity attack. \emph{\textbf{Unlike prompt injection}, this influence occurs without any adversarial text appearing in the victim's input.} We describe how such infected chunks can be constructed without directly modifying the cache in Section~\ref{sec:hijack_kv}.
+
+\paragraph{Attacker's Capabilities.}
+The attacker has \textit{no} direct access to the shared KV cache and \textit{cannot} read, modify, or tamper with cached states, model weights, or system configurations. The attacker also \textit{cannot} inject or alter the text of a victim's query, either directly or indirectly (\eg, via prompt injection or retrieval poisoning). 
+
+The attacker can submit inputs to the LLM service and observe the model's feedback. We consider two settings:
+
+\begin{icompact}
+    \item \emph{White-box setting.} The attacker has access to a local surrogate model that is identical to the target model, including model-internal signals such as gradients. The attacker uses this surrogate to optimize adversarial prefixes that condition hijacked KV states.
+    \item \emph{Black-box setting.} The attacker has no access to the target model's internal states or gradients and can only observe its outputs. In this case, adversarial prefixes are optimized on a locally accessible substitute model and then transferred to the target system.
+\end{icompact}
+
+In both settings, prefix optimization is performed only on a local surrogate model and never touches the victim cache. During local optimization, the surrogate KV cache is cleared between iterations to avoid unintended cache carryover. Inputs submitted by attacker may have their KV states stored in the shared cache pool, enabling cross-user reuse under the system's cache-matching policy.
+
+\paragraph{Attacker's Knowledge.}
+The attacker must know that the target system uses a position-independent KV cache with cross-user reuse. Other assumptions can be relaxed (see detailed analysis in Section~\ref{sec:trans} and Section~\ref{sec: ablation}). The attacker does \textit{not} need to know other users’ query prompts, current cache contents (which may originate from common shared knowledge sources such as internal documents, shared code files, or public corpora), prompt histories, or the internal configuration of the LLM server, including the exact model, recomputation strategy, or the precise cache chunk size and boundary (since sliding-window matching can identify reusable cached chunks within a sufficiently long context).
+
+\paragraph{Generality and Practicality.}
+The attack applies broadly to systems that enable position-independent KV-cache reuse across sessions, regardless of specific model architectures. It requires no privileged access and can be executed via normal user queries, making it feasible in real-world deployments that use cross-user cache sharing for efficiency.
+
+
+\subsection{New Attack Surface}~\label{sec:attack_surface}
+
+We now explain why the position-independent KV cache reuse introduces a new attack surface within our threat model, in contrast to prefix cache reuse. First, we provide the formal definition of prefix KV cache hit. 
+
+\begin{definition}[Prefix KV Cache Hit]
+\label{def:prefix_cache_hit}
+Let $X = [x_1, \ldots, x_L]$ be a newly arrived prompt and $\tilde{X} = [\tilde{x}_1, \ldots, \tilde{x}_{\tilde{L}}]$ be an unauthenticated token sequence in the shared cache pool, with associated key and value matrices $\tilde{\mK}$ and $\tilde{\mV}$. A prefix cache hit \textbf{occurs} if there exists:
+\begin{align}\label{eq:prefix_match}
+    X_{1:S} = \tilde{X}_{1:S}.
+\end{align}
+where $X_{1:S} = [x_1, \ldots, x_S]$ and $\tilde{X}_{1:S} = [\tilde{x}_1, \ldots, \tilde{x}_S]$ denote contiguous segments of $X$ and $\tilde{X}$, respectively. And $S$ is the length of the longest common prefix between $X$ and $\tilde{X}$.
+\end{definition}
+
+Let $(\tilde{\mK}, \tilde{\mV})$ denote the hit KV cache, and $(\mK, \mV)$ denote the ground-truth KV states computed on-the-fly without KV cache. Suppose a prefix cache hit \textbf{occurs} between $X$ and $\tilde{X}$ with prefix length $S$. According to Definition~\ref{def:prefix_cache_hit}, $X$ and $\tilde{X}$ are strictly identical over their prefix of length $S$. Given the deterministic and causal nature of standard decoder-only transformers~\cite{vaswani2017attention}, identical input prefixes strictly yield identical internal representations. Therefore, the hit KV cache states must be numerically identical to the ground-truth states:
+\begin{align}\label{eq:kv_eq}
+    \tilde{\mK}_{1:S} = \mK_{1:S}, \quad \tilde{\mV}_{1:S} = \mV_{1:S}.
+\end{align}
+
+This demonstrates that under the prefix KV cache reuse mechanism, the hit KV cache during the prefill phase is strictly governed by the user's inputs. Consequently, an attacker \textit{cannot} manipulate the LLM's output without system-level privileges to directly modify the KV cache. Therefore, we conclude that the prefix KV cache is \textbf{secure}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{assets/Analysis.pdf}
+    \caption{Empirical analysis of KV Cache deviation. \textbf{(a) Prefix $\rightarrow$ KV deviation:} We prepend different prefixes to the input text and measure the KV deviation relative to a prefix-free baseline. \textbf{(b) KV deviation $\rightarrow$ output change:} We inject varying levels of noise into the KV cache to investigate the impact of numerical deviations on the final output. We observe that the deviations inherent in the position-independent KV cache are sufficient (\ie, when $\geq$ 20\%) to alter model outputs, potentially enabling adversarial exploitation.
+    }
+    \label{fig:analysis}
+    \vspace{-0.1in}
+\end{figure}
+
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{assets/HijackKV_pipeline.pdf}
+    \caption{\sys consists of two phases: (1) constructs an adversarial prefix $p$ and submits a malicious query $p \oplus \tilde{X}$ to the LLM service; (2) the service processes $p \oplus \tilde{X}$ into KV states and stores them in the shared cache pool $\mathcal{P}_\text{chunk}$. When a user sends a query $X \oplus q$, if a cache hit occurs between $\tilde{X}$ and $X$ as Definition~\ref{def:position_independent_cache_hit}, the user receives the malicious response $\tilde{r}$.}
+    \label{fig:pipline}
+    \vspace{-0.1in}
+\end{figure*}
+
+Then we formalize the definition of a position-independent KV cache hit for a more detailed comparison. 
+
+\begin{definition}[Position-Independent KV Cache Hit]
+\label{def:position_independent_cache_hit}
+Let $X = [x_1, \ldots, x_L]$ be a newly arrived prompt and $\tilde{X} = [\tilde{x}_1, \ldots, \tilde{x}_{\tilde{L}}]$ be an unauthenticated token sequence in the shared cache pool, with associated key and value matrices $\tilde{\mK}$ and $\tilde{\mV}$. A position-independent cache hit \textbf{occurs} if there exists:
+\begin{align}\label{eq:any_match}
+    X_{a:b} = \tilde{X}_{m:n}.
+\end{align}
+where $X_{a:b} = [x_a, \ldots, x_b]$ and $\tilde{X}_{m:n} = [\tilde{x}_m, \ldots, \tilde{x}_n]$ denote contiguous segments of $X$ and $\tilde{X}$, respectively.
+\end{definition}
+
+Suppose a position-independent cache hit occurs between $X_{a:b}$ and $\tilde{X}_{m:n}$. By comparing Definition~\ref{def:prefix_cache_hit} and Definition~\ref{def:position_independent_cache_hit}, we observe that Equation~\ref{eq:prefix_match} is a special case of Equation~\ref{eq:any_match} where $m = a = 1$ and $b = n = S$. However, the conclusion in Equation~\ref{eq:kv_eq} does not extend to position-independent case. Considering the deterministic and causal nature of LLMs, the generation of KV states is strictly conditioned on the preceding tokens. In general position-independent reuse scenarios, the preceding contexts are distinct ($X_{1:a-1} \neq \tilde{X}_{1:m-1}$). Assuming the injectivity of LLMs~\cite{nikolaou2025language}, this history mismatch implies a divergence in the internal states. Consequently, even though the token sequences within the matching span are strictly identical, it inevitably leads to:
+\begin{align}
+    \tilde{\mK}_{m:n} \neq \mK_{a:b}, \quad \tilde{\mV}_{m:n} \neq \mV_{a:b}.
+\end{align}
+
+We investigate the security implications of this KV deviation in Figure~\ref{fig:analysis}. In Figure~\ref{fig:analysis}(a), we visualize the KV deviation caused by cache reuse by pairing a text segment with various prefixes and calculating the average deviation compared to a prefix-free baseline. Complementing this, Figure~\ref{fig:analysis}(b) examines the impact of such deviation on model outputs by injecting varying levels of noise into the KV cache and measuring the Total Variation Distance of the next-token logits. 
+% 
+Our results highlight a critical vulnerability: while a mere 20\% numerical deviation in KV states is sufficient to alter the LLM's output, position-independent KV caches typically exhibit much higher deviations--approximately 50\% in keys and 25\% in values. This substantial discrepancy creates a wide attack surface for adversaries to hijack model generations. 
+% 
+Therefore, we conclude that the position-independent KV cache is inherently \textbf{insecure}.

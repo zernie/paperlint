@@ -1,0 +1,152 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "macro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/f.01.authors.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/00.abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01.intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/01.1.definitions.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/02.overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/cecilia_overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/03.static.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/injection_point_exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/nested_loop_delay.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/edge-type-summary.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/04.test-alloc.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/05.chaining.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/compatibility-illust.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/06.guided_search.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/beam-algo.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/07.implementation_details.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/08.eval.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/static-result.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/bugs-detected.tex",
+      "role": "body"
+    },
+    {
+      "path": "figure/motivating_exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "table/cluster-result.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/09.discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/10.related.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/11.conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/f.02.ack.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/a.01.appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "eaf228f3d66ecb791a2245e230a6514dd5afcad202b960aa1bfa96125f231c90",
+    "macro.tex": "a470d5d0cdd5afca20e0c4cae0354a39d774891fb056396745f13b720f034df4",
+    "sections/f.01.authors.tex": "98ba3438676c8bb8a04c2489aa79cfa73d3f968b5be06d9481e8e954efa01946",
+    "sections/00.abstract.tex": "b4c33fc793967a5d4cf3cde9e101f0d5953eea9f8b7d050cba2e681eda34ee44",
+    "sections/01.intro.tex": "8d5635ebbc0a53abea9de88b6c9bb1053b90319c078d7c2fa196143558f5290c",
+    "sections/01.1.definitions.tex": "68e4c7b529256a69a2df537ae8b63bf683c4ab1e2787d83f9fb8285f46623cf0",
+    "sections/02.overview.tex": "8ee5d53e741fa5b8267f03f2fb5b61f83bd5be91d6d546fb5a543b39d65e930b",
+    "figure/cecilia_overview.tex": "7eddcfdecdfc8b8957335ad1de55b1204eb7500c08b71abf562f968379bc3afb",
+    "sections/03.static.tex": "d961ef7cf4c0814c4dd469347734f792dac939c2f4f04a0f950a31bdfb9fd948",
+    "figure/injection_point_exp.tex": "84af4c926269e2ec64e360e1728afb035cfb305803f9249e3e9218451a7b9500",
+    "figure/nested_loop_delay.tex": "08a0142e8b8a0f8fedadded1d6b077cfba8175612dc2a13e9cb69301b880b759",
+    "table/edge-type-summary.tex": "240077b2f53c3baa37780337ece1dffd46e3c177e5b45631ea8193a76ac452a7",
+    "sections/04.test-alloc.tex": "b7188db67cd38662a6db66c422aca548f65b8f4b15c3b800de8e30699c6d8020",
+    "sections/05.chaining.tex": "c29b2431fa8e8687881a01d28357ad328b92767c241d7db5351cefa144abc1d7",
+    "figure/compatibility-illust.tex": "50d9c1659ee482e6fe679f1cc4c5b4da75a7602e2dc5d4c39c8de580f1df8a87",
+    "sections/06.guided_search.tex": "beb2b2944c782364abc329b80a2bc0f86ed2a1f0e28f456a084a667018a5e519",
+    "figure/beam-algo.tex": "77046f40d43d6aa83846dcc18dbee1624ec6a1cf06cd47688ec9a15346795eff",
+    "sections/07.implementation_details.tex": "e1e45877b5fef88811ab8ce6bb1099715666480e0a8c0bb545bf374a3ff78ac5",
+    "sections/08.eval.tex": "81611e09ee8d868bcc032f029bfc3c2ca292bac938a564e1ab528c27532debc6",
+    "table/static-result.tex": "9cb5e6a4a2bd180297656982e206729ea89be9c22d2a9473173a5a7188ea1d79",
+    "table/bugs-detected.tex": "09dae03050c2239c1e91ec1bf075bf7077015be608d2ab4a8c5d2ec10d3ab333",
+    "figure/motivating_exp.tex": "bc0ab9eaf91e69db3bc3bd0bc85f0d0552dee6d4fea3ec9adedae7a94fdcd5b4",
+    "table/cluster-result.tex": "12dda61c5841c9d10e787d2f73a2e3f08d1cc69f7686b6d8e10f0c39f64f1953",
+    "sections/09.discussion.tex": "f6a13e22a117df18dc9b6f6a285de965bbec305eacb9be21b8c35816b220a5f1",
+    "sections/10.related.tex": "e8a722f838da37b1ab3cdb4e1160e6eea480852bcb29bcac405a385120c08f69",
+    "sections/11.conclusion.tex": "1f090b221c82d10b53f5a8bc6c350f67b135a50d0de238f29827a25d994dc30a",
+    "sections/f.02.ack.tex": "5368261ad68c66ec23057fb86b13df1a829088227c2d92799f31e43a56e57ce9",
+    "sections/a.01.appendix.tex": "6815ac4991639df94f6d7f933351e8b78627fccc6204615b62c953f2b8afd513"
+  }
+}

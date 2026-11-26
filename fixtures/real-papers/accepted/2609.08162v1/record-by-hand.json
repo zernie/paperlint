@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "aaai2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "natbib.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "math_commands.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section1_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section3_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section4_experiments_and_analysis.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section2_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section5_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix_body.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/section6_appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "3882be1450839f6fae836eb5e27dbd5d222a609681cb301cb6586e7a50c9e790",
+    "aaai2026.sty": "8fe2d826fd79e24ea1eed995f9f8c0404645463916914bce42f7d7a46b3dd1aa",
+    "natbib.sty": "88bc70c0e48461934cab5b2accef06b74a8b3ac45ad03ccd3f2a6b7e0d6d530d",
+    "math_commands.tex": "90473c4d0542070db244cea73ef962d6cddc5b2a746757e6a40ddf5fdfb90ba9",
+    "sections/section0_abstract.tex": "ff5fe10ddc51858fc6dfa1f3eb162b93057292577a30d1fa64098b7701c586d4",
+    "sections/section1_introduction.tex": "908c23ceffe6a3dcf41bcbc6339e7a78faecfbb96bbe8564f5b7873d25ba5dc7",
+    "sections/section3_method.tex": "475618ada0f41a8796e514223c516bcb43ff66c3b9de2957b887e491a274e321",
+    "sections/section4_experiments_and_analysis.tex": "0e7099667c008add651f513abbd6768d18c3bf8210e33d50799bba8e3d1e984d",
+    "sections/section2_related_work.tex": "348cd041efc4317b481020afc60e0d7de56026412d47a8791620ff81ee408d5b",
+    "sections/section5_conclusion.tex": "0c7268594c066d89904eea13420f48808538d27375afa71bd26b897a111c79fb",
+    "appendix_body.tex": "0efbeff8fd1e847a07d14bde88c54e86b3313ed34128c8ed50941c538868426e",
+    "sections/section6_appendix.tex": "fa5497886a983999fbc0a7b081df07b8455b6b3d1274d9160973fba20d142918"
+  }
+}

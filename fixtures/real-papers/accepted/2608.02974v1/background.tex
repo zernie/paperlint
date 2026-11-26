@@ -1,0 +1,21 @@
+\section{BACKGROUND AND RELATED WORK}
+
+\subsection{Fault Localization}
+Traditional fault localization (FL) techniques, such as spectrum-based~\cite{sp1,sp2} and mutation-based~\cite{m1, m2} approaches, rely on dynamic information from test executions. While effective in certain domains, these methods are impractical for concurrent bugs, since constructing reliable and deterministic test cases is notoriously difficult.
+
+To mitigate this dependency, IR-based methods~\cite{yu2008empirical,jones2005empirical,chilimbi2009holmes,santelices2009lightweight, shao2023information} treat bug reports as natural language queries and retrieve candidate source files based on textual similarity. However, these approaches heavily depend on the quality of bug reports. Prior studies have shown that IR-based methods perform poorly at the method level, and are thus typically restricted to file-level localization.
+
+More recently, learning-based approaches~\cite{dl1,dl2} have been proposed. Some methods, such as DeepFL and Grace, still require dynamic coverage or test-case information, while others depend on large-scale training data. Both requirements are unrealistic in the context of concurrency bugs, where labeled data is sparse and projects vary widely in structure. In practice, it remains highly challenging to directly map bug reports to faulty methods.
+
+The emergence of large language models (LLMs) has inspired a new line of research in FL. Systems such as AutoFL~\cite{autofl} and AgentFL~\cite{agentfl} employ interactive prompting to reason over bug reports and test cases, while FlexFL~\cite{flexfl} combines bug report information with test executions. Despite promising results, these methods struggle with fundamental limitations: the lack of comprehensive project understanding, reliance on context-limited interactions, and vulnerability to hallucinations when bug reports are incomplete or misleading.
+
+
+\subsection{Localizing Concurrency Bugs}
+
+Concurrency bugs are notoriously difficult to localize due to nondeterministic thread scheduling and complex synchronization behavior. Research on concurrency-specific fault localization remains limited. The most closely related work is BLCoiR~\cite{shao2023information}, an IR-based approach that augments bug-report queries with concurrency-related term weighting for file-level retrieval. Unlike ConFL, BLCoiR relies primarily on lexical similarity rather than structured concurrency reasoning.
+
+Another line of work localizes concurrency bugs using dynamic analysis. Approaches such as Falcon~\cite{cf1}, ConSeq~\cite{cf2}, Unicorn~\cite{cf3}, and Codead~\cite{cf4} analyze runtime traces, suspicious interleavings, or memory-access patterns to identify concurrency faults. While effective when failing executions are available, these methods require runtime instrumentation or reproducible executions, which are often difficult to obtain for real-world concurrency bugs.
+
+More broadly, static analyzers such as Chord~\cite{naik2006effective} and RacerD~\cite{blackshear2018racerd} focus on concurrency bug detection rather than fault localization. Although they can identify potential races or deadlocks, they often generate many false positives and do not directly leverage bug reports for localization. In contrast, ConFL localizes concurrency bugs directly from bug reports through hierarchy-guided retrieval and structured interaction reasoning, without requiring execution traces or exhaustive concurrency analysis.
+
+These limitations motivate the need for a lightweight bug-report–driven approach that explicitly models concurrency interactions for fault localization.

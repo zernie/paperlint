@@ -1,0 +1,18 @@
+{
+  "cycles": [
+    {
+      "id": "siggraph-2025",
+      "venue": {
+        "kind": "named",
+        "name": "SIGGRAPH 2025",
+        "url": "https://arxiv.org/abs/2502.09608v2"
+      },
+      "opened": "2025-05-06",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-05-06",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "ijcai24.sty",
+      "role": "preamble"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "4cf9a889f2ce1cadacaf1eb9fdb059b40d3c45adff5df653e653de4eb23b18ac",
+    "ijcai24.sty": "d20f41989137e2a2948a0334d8dbf6ef47db3c4d60ee345942c2be952db0897b"
+  }
+}

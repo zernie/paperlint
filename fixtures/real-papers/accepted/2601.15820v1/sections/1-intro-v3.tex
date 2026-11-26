@@ -1,0 +1,38 @@
+\section{Introduction}
+The rapid spread of social media has dramatically accelerated the spread of fake news~\cite{shu2017fake}, especially in multimodal formats combining text and images. Compared to traditional text-based misinformation, multimodal fake news leverages the stronger emotional appeal and vividness of visual content to achieve faster dissemination and broader societal impact. Detecting multimodal fake news has thus emerged as a critical and urgent challenge in the field of information security.
+
+Recent Multimodal Fake News Detection (MFND) studies mainly rely on the combination of multiple language and vision models, designing complex and structured architectures to extract and align features from textual and visual modalities~\cite{dong2024unveiling, tong2024mmdfnd}, facing challenges in cross-modal feature fusion and requiring aligned multimodal training data.
+Large Vision-Language Models (LVLMs), with their unified image-text embedding space and rich world knowledge, demonstrate strong adaptability to multimodal tasks~\cite{liu2024fka}. 
+However, the reliance on internal memory accumulated during training reduces its effectiveness in addressing newly emerging knowledge or long-tail instances, often resulting in hallucinations.
+
+Dynamic Retrieval-Augmented Generation (RAG) offers a promising alternative by triggering keyword-based retrieval and incorporating external information retrieval instead of over-relying on the model’s inherent reasoning capabilities~\cite{abootorabi2025ask,mei2025survey}. This contrasts with static RAG~\cite{sohn2025rationale,wu2025sitembv15improvedcontextawaredense,li2025mindscapeawareretrievalaugmentedgeneration} pipelines that retrieve for every input regardless of necessity. With a decoupled retriever that can be updated independently of the model, dynamic RAG is well-suited for LVLMs to handle evolving knowledge and long-tail cases.
+However, naive application of dynamic RAG introduces three key issues. 
+First, for straightforward or commonsense-based fake news, LVLMs often already possess sufficient knowledge. Blindly triggering retrieval without considering sample difficulty leads to unnecessary noise and computational overhead~\cite{su2024dragin,jeong2024adaptive}.
+Second, most existing retrieval strategies focus on sample-level similarity while neglecting finer-grained internal cues~\cite{tang2024leveraging,mei2025survey}, which are often critical for accurately identifying deceptive content.
+Finally, retrieved results tend to include only the most similar samples, which often lack deception-specific signals and may introduce useless or misleading evidence, ultimately impairing fake news detection accuracy~\cite{tang2024leveraging}.
+
+To address these challenges, we propose a novel framework named \textbf{ExDR}: \textbf{Ex}planation-driven \textbf{D}ynamic \textbf{R}etrieval, specifically designed for Multimodal Fake News Detection.
+Our framework consists of two main modules: the retrieval triggering and the evidence retrieval, both of which leverage an explanation-driven RAG paradigm to better adapt to the requirements of MFND. ExDR places model-generated explanations at the center of the retrieval process and systematically investigates three key questions: when to trigger retrieval, how to construct effective retrieval queries, and what types of deceptive samples to retrieve. Each of these aspects targets a distinct challenge inherent in RAG-based methods, enabling more accurate and efficient detection of multimodal deception.
+
+
+\textbf{For retrieval triggering}, we design a dynamic triggering strategy tailored for MFND. This strategy constructs three confidence dimensions derived from the model-generated explanation, enabling a comprehensive assessment of whether retrieval is necessary for each prediction.  To determine the optimal triggering thresholds for these indicators, we develop a two-stage hybrid search strategy that efficiently explores the threshold space. Notably, prior dynamic RAG methods typically iterate retrieval to refine the retrieval target, whereas we adopt a one-shot scheme: a single trigger decision followed by at most one retrieval step per instance, with the retrieved evidence directly used for the final prediction for efficiency.
+
+
+\textbf{For evidence retrieval}, we build an entity-enriched multimodal hybrid indexing strategy and perform contrastive evidence retrieval guided by model-generated
+explanations. This process integrates visual, textual, and explanation-derived entity information into the index, enabling more deception-relevant and semantically aligned retrieval. Subsequently, based on the inferred fine-grained deception labels, we retrieve both positive and negative evidence to provide the model with more targeted guidance for model decision-making.
+
+To comprehensively evaluate dynamic retrieval strategies in our task, we further introduce two metrics: \textbf{Retrieval Identification Rate}, which measures the accuracy of recognizing when retrieval is needed, and \textbf{Retrieval Efficiency}, which quantifies the performance gains attributable to retrieval triggering.
+
+
+We conduct systematic evaluations of the proposed framework on two widely used MFND datasets, AMG and MR2. Experimental results demonstrate that our method significantly outperforms existing approaches in retrieval triggering accuracy, retrieval quality, and final detection performance, highlighting its strong practicality and generalization capabilities. 
+
+In summary, our main contributions are as follows:
+
+\begin{itemize}
+     
+
+\item We make the first attempt to apply the dynamic Retrieval-Augmented Generation framework to Multimodal Fake News Detection. Differing from prior supervised methods, our approach enables efficient detection without the need for task-specific training.
+\item We propose ExDR, an explanation-driven framework that innovates on retrieval triggering and contrastive evidence retrieval, achieving more efficient and deception-targeted retrieval.
+
+\item We design two new metrics to assess the accuracy and necessity of retrieval triggering. Extensive experiments on both in-domain and out-of-domain datasets demonstrate that ExDR achieves state-of-the-art detection performance, while our new metrics confirm its superiority in retrieval precision and necessity.
+\end{itemize}

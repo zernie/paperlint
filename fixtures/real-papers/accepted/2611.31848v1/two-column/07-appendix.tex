@@ -1,0 +1,532 @@
+
+\section{Checklist}
+\subsection{Large Language Model Usage Disclosure}
+In accordance with the ACL 2026 policy, we disclose the use of large language models in the preparation of this paper. We used LLMs (e.g., ChatGPT) solely for grammar checking and minor language polishing. No part of the research design, experiments, analysis, or substantive writing relied on LLMs.
+
+
+\subsection{Ethics Statement}\label{Ethics}
+All datasets used in this research are publicly available and were sourced from previous studies that have undergone appropriate ethical review. Our work did not involve the collection of any new data from human subjects. We have adhered to all data usage agreements and licenses associated with these pre-existing datasets.
+
+
+
+\subsection{Reprodicibility Statement}\label{Reprodicibility_statement}
+We are committed to making our research reproducible. All datasets used in this study are publicly available, and we provide detailed descriptions and sources in our experimental setup section. Our anonymized code is available at \url{https://anonymous.4open.science/r/QuirkyMind-2695/README.md}.
+
+
+
+
+\section{Error Analysis}\label{sec:error_analysis}
+
+As illustrated in Figure~\ref{fig:error}, we taxonomize observed failures into four distinct modes based on their structural mechanisms. This analysis draws upon a corpus of approximately 400 error cases aggregated across experimental iterations. 
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/error_categories_pie.png}
+    \caption{\textbf{Error Mode Distribution.} Breakdown of existing failure cases showing \textit{Contextual Drift} as the dominant failure mode (36.25\%), followed by \textit{Representation Bottleneck} (26.5\%), \textit{Semantic-Generative Misalignment} (23.75\%), and \textit{Mode Collapse} (12.5\%).}
+  \label{fig:error}
+\end{figure}
+
+
+\subsection{Semantic-Generative Misalignment}
+This error manifests when the encoder successfully extracts persona attributes, yet the decoder fails to condition upon them during generation. Despite a high-fidelity latent state $\mathbf{z}$, the fusion module struggles to project these constraints into the LLM's token space, resulting in responses that align with the context question but decouple from the persona.
+
+\paragraph{\textbf{Projection Noise:}} The dimension transformation from the sentence encoder (e.g., 384D) to the model dimension (e.g., 512D) introduces noise, diluting critical identity features.
+
+\paragraph{\textbf{Scale Sensitivity:}} Low soft-prompt scaling factors (e.g., $\alpha < 0.2$) often fail to overcome the magnitude of the model's internal embeddings, causing the persona signal to be ignored.
+
+
+
+
+
+\subsection{Contextual Drift}
+In multi-turn settings, the model exhibits gradual \textit{context drift}, where the persona signal attenuates as the dialogue history expands. Responses increasingly revert to the generic priors of the base model, overriding the specific backstory constraints established in the first turn.
+
+\paragraph{\textbf{Static Anchoring:}} The initial persona embeddings are static; they do not dynamically update to re-weight influence as the context window grows.
+\paragraph{\textbf{Prior Dominance:}} Without explicit recurrence or re-anchoring (as mitigated by our Stage 2), the autoregressive likelihood maximization naturally favors recent tokens over distant prompt instructions.
+
+
+
+
+
+
+\subsection{Representation Bottleneck}
+Complex personas, such as those combining an extremely conservative backstory with nuanced, liberal stances on specific outliers, suffer from information loss. A single low-dimensional vector proves insufficient to encode the full high-entropy distribution of a multifaceted identity.
+
+\paragraph{\textbf{Compression Loss:}} Compressing a lengthy backstory (approx. 200 tokens) into a fixed dense vector (384D) creates an information bottleneck, filtering out secondary or subtle traits.
+\paragraph{\textbf{Feature Collapse:}} Fusion modules tend to capture dominant principal components (e.g., broad political orientation) while discarding orthogonal secondary features (e.g., specific economic pressures).
+
+
+
+
+
+
+
+
+\subsection{Mode Collapse under Incongruity}
+When a persona holds inherently conflicting viewpoints (e.g., ``supports military spending'' yet identifies as ``socially liberal''), the model often fails to model this complexity, collapsing to a single, consistent mode. This error highlights the tension between the training objective's push for logical consistency and the reality of human contradiction.
+
+\paragraph{\textbf{Over-Regularization:}} The consistency objectives in Stage 2 may aggressively penalize contradiction, forcing the model to resolve authentic incongruities into artificial consistency.
+\paragraph{\textbf{Data Bias:}} Training data dominated by ideologically aligned archetypes biases the model against representing ``quirky'' or heterodox trait combinations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/MT278.pdf}
+  \caption{\textbf{Case Study MT--278.} Narrative inference in the \textsc{Method} domain, highlighting the emergence of nuanced detachment in the Multi-Turn setting.}
+  \label{fig:MT278}
+\end{figure}
+
+
+\section{Qualitative Study of Stance Transfer}\label{sec:quality}
+
+\paragraph{Case Study: Persona MT-278 (Method).}
+Figure~\ref{fig:MT278} examines Persona MT-278 (high-income Liberal) on college affordability. Baselines succumb to spuriousness: \textit{No-Turn} reverts to a generic caricature (``system is rigged''), ignoring socioeconomic context, while \textit{Single-Turn} drifts into unanchored genericism (``getting in is easier''). Conversely, \textbf{QuirkyMind} maintains ``constrained diversity'' by synthesizing the incongruity; its response balances ideological awareness of structural barriers with personal privilege (``with the right resources...''), resolving the tension between belief and privilege that baselines fail to capture.
+
+
+
+\paragraph{Case Study: Persona SC-2 (Science).}
+As shown in Figure~\ref{fig:SC2}, Persona SC-2 reveals clear drift in the baseline. The \textit{No-Turn} response is terse and contradicts the explicit stance taken in MCQ1, indicative of hallucination. While \textit{Single-Turn} answers align with the choice, they often dilute specific backstory details. \textit{Multi-Turn} refinement successfully synthesizes both the stable backstory and the transient stance, offering the most balanced and faithful portrayal of the persona.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/SC2.pdf}
+  \caption{\textbf{Case Study SC--2.} Narrative inference in the \textsc{Science} domain, showing the correction of stance contradiction.}
+  \label{fig:SC2}
+\end{figure}
+
+\paragraph{Case Study: Persona SO-72 (Social).}
+Figure~\ref{fig:SO72} depicts the handling of stereotype in Persona SO-72. The \textit{No-Turn} output reverts to generic caricatures that fail to reflect the specific multiple-choice selection. \textit{Single-Turn} steering captures the immediate stance on gender issues but lacks depth. Crucially, \textit{Multi-Turn} narratives consolidate the descriptive attributes with the specific opinion, fusing them into a lucid, distinct perspective that transcends generic Liberal tropes.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/SO72.pdf}
+  \caption{\textbf{Case Study SO-72.} Narrative inference in the \textsc{Social} domain, demonstrating the mitigation of stereotype-driven generation.}
+  \label{fig:SO72}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+\section{Additional Experimental Results}
+
+\subsection{Full Dataset Distribution}
+Figure~\ref{fig:persona_congruence} details the distribution of persona congruence across the full dataset (9,106 instances). We observe a significant class imbalance: incongruous personas, where the individual's stance defies the group mode, comprise 60.72\% of the data, while congruous personas account for 39.28\%. This approximate 3:2 ratio mirrors the complexity of real-world opinion, where individuals frequently hold views divergent from their demographic priors. This imbalance underscores the necessity for robust evaluation strategies that account for both high-probability (congruous) and low-probability (incongruous) alignment scenarios.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figure/pie_chart.png}
+    \caption{\textbf{Persona Congruence Distribution.} The breakdown of congruous versus incongruous personas across the seven topical domains of the ATP dataset.}
+    \label{fig:persona_congruence}
+\end{figure}
+
+
+
+
+
+
+
+
+
+\begin{table*}[t]
+\centering
+\footnotesize %
+\setlength{\tabcolsep}{3.5pt} %
+\renewcommand{\arraystretch}{1.0}
+
+\begin{tabular}{c l ccc ccc ccc}
+\toprule
+& & \multicolumn{3}{c}{\textbf{No-Turn}} & \multicolumn{3}{c}{\textbf{Single-Turn}} & \multicolumn{3}{c}{\textbf{Multi-Turn (Ours)}} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+\textbf{Split} & \textbf{Topic} & \textbf{Llama} & \textbf{Qwen} & \textbf{Mistral} & \textbf{Llama} & \textbf{Qwen} & \textbf{Mistral} & \textbf{Llama} & \textbf{Qwen} & \textbf{Mistral} \\
+\midrule
+
+\multirow{9}{*}{\rotatebox{90}{\textsc{Congruous}}} 
+& \textsc{Social} & 14.8$_{\pm 0.0}$ & 21.1$_{\pm 0.0}$ & 28.9$_{\pm 0.0}$ & 23.9$_{\pm 6.0}$ & 23.2$_{\pm 4.0}$ & 23.9$_{\pm 0.0}$ & 32.7$_{\pm 0.5}$ & \textbf{37.0$_{\pm 4.5}$} & \underline{36.6$_{\pm 0.0}$} \\
+& \textsc{Science} & 34.6$_{\pm 0.6}$ & 33.3$_{\pm 1.2}$ & 29.2$_{\pm 0.0}$ & 33.3$_{\pm 0.0}$ & 35.8$_{\pm 0.0}$ & \textbf{41.7$_{\pm 0.0}$} & 33.3$_{\pm 3.5}$ & 35.4$_{\pm 0.6}$ & \underline{36.7$_{\pm 0.0}$} \\
+& \textsc{Religion} & \textbf{18.9$_{\pm 0.0}$} & 14.1$_{\pm 0.0}$ & 14.8$_{\pm 0.0}$ & 15.2$_{\pm 0.5}$ & 17.0$_{\pm 0.2}$ & \underline{17.5$_{\pm 0.0}$} & 17.2$_{\pm 0.0}$ & 17.2$_{\pm 0.0}$ & 17.2$_{\pm 0.0}$ \\
+& \textsc{Politics} & 17.9$_{\pm 0.0}$ & 17.9$_{\pm 0.0}$ & 17.9$_{\pm 0.0}$ & 34.5$_{\pm 23.6}$ & 34.5$_{\pm 23.6}$ & 17.9$_{\pm 0.0}$ & 17.9$_{\pm 0.0}$ & \underline{34.8$_{\pm 23.1}$} & \textbf{51.2$_{\pm 0.0}$} \\
+& \textsc{Method.} & 25.0$_{\pm 0.0}$ & 51.9$_{\pm 0.0}$ & 19.4$_{\pm 0.0}$ & 25.6$_{\pm 0.9}$ & \underline{52.2$_{\pm 1.3}$} & 20.0$_{\pm 0.0}$ & 48.4$_{\pm 4.9}$ & \textbf{52.2$_{\pm 0.0}$} & 44.4$_{\pm 0.0}$ \\
+& \textsc{Journ.} & 29.7$_{\pm 0.0}$ & 29.7$_{\pm 0.0}$ & 29.7$_{\pm 0.0}$ & 23.4$_{\pm 0.0}$ & 32.6$_{\pm 0.4}$ & 31.2$_{\pm 0.0}$ & 36.2$_{\pm 3.3}$ & \textbf{39.8$_{\pm 0.4}$} & \underline{38.5$_{\pm 0.0}$} \\
+& \textsc{Global} & 59.7$_{\pm 0.0}$ & 37.1$_{\pm 0.0}$ & 59.7$_{\pm 0.0}$ & \underline{62.6$_{\pm 0.4}$} & 62.3$_{\pm 0.1}$ & 59.7$_{\pm 0.0}$ & \textbf{62.6$_{\pm 0.2}$} & 62.3$_{\pm 1.4}$ & 59.7$_{\pm 0.0}$ \\
+& \textbf{MacroAcc (\%)} & 28.6$_{\pm 0.1}$ & 29.3$_{\pm 0.2}$ & 28.5$_{\pm 0.0}$ & 31.2$_{\pm 4.2}$ & 36.8$_{\pm 4.1}$ & 30.3$_{\pm 0.0}$ & 35.4$_{\pm 1.7}$ & 39.8$_{\pm 2.5}$ & 40.6$_{\pm 0.0}$ \\
+& \textbf{MicroAcc (\%)} & 28.6$_{\pm 0.1}$ & 29.3$_{\pm 0.2}$ & 28.5$_{\pm 0.0}$ & 31.2$_{\pm 4.2}$ & 36.8$_{\pm 4.1}$ & 30.3$_{\pm 0.0}$ & 35.4$_{\pm 1.7}$ & 39.8$_{\pm 2.5}$ & 40.6$_{\pm 0.0}$ \\
+\rowcolor{gray!10} & \textbf{Rel. Gain (\%)} & \textit{--} & \textit{--} & \textit{--} & \textit{+9.1} & \textit{+25.6} & \textit{+6.3} & \textit{+23.8} & \textit{+35.8} & \textit{+42.5} \\
+
+\midrule
+\multirow{9}{*}{\rotatebox{90}{\textsc{Incongruous}}} 
+& \textsc{Social} & 28.1$_{\pm 0.0}$ & 29.8$_{\pm 0.0}$ & 32.4$_{\pm 0.0}$ & 28.5$_{\pm 1.4}$ & 30.0$_{\pm 1.4}$ & 32.5$_{\pm 0.0}$ & 34.1$_{\pm 4.8}$ & \textbf{36.2$_{\pm 2.7}$} & \underline{35.1$_{\pm 0.0}$} \\
+& \textsc{Science} & 30.6$_{\pm 0.9}$ & 30.6$_{\pm 0.3}$ & 31.7$_{\pm 0.0}$ & 33.0$_{\pm 0.7}$ & 34.7$_{\pm 0.7}$ & \textbf{37.5$_{\pm 0.0}$} & 30.8$_{\pm 4.1}$ & 34.2$_{\pm 0.9}$ & \underline{35.0$_{\pm 0.0}$} \\
+& \textsc{Religion} & \textbf{19.5$_{\pm 0.0}$} & 10.6$_{\pm 0.0}$ & 14.5$_{\pm 0.0}$ & 12.0$_{\pm 3.0}$ & 12.0$_{\pm 1.6}$ & 17.2$_{\pm 0.0}$ & \underline{18.5$_{\pm 0.0}$} & 18.5$_{\pm 0.0}$ & 18.5$_{\pm 0.0}$ \\
+& \textsc{Politics} & 12.3$_{\pm 0.0}$ & 12.3$_{\pm 0.0}$ & 12.3$_{\pm 0.0}$ & 28.9$_{\pm 23.6}$ & 28.9$_{\pm 23.6}$ & 12.3$_{\pm 0.0}$ & 12.3$_{\pm 0.0}$ & \underline{29.2$_{\pm 23.2}$} & \textbf{45.6$_{\pm 0.0}$} \\
+& \textsc{Method.} & 28.0$_{\pm 0.0}$ & \textbf{48.4$_{\pm 0.0}$} & 16.1$_{\pm 0.0}$ & 28.0$_{\pm 0.1}$ & 42.2$_{\pm 5.3}$ & 15.6$_{\pm 0.0}$ & \underline{44.1$_{\pm 6.2}$} & 42.2$_{\pm 1.0}$ & 32.3$_{\pm 0.0}$ \\
+& \textsc{Journ.} & 22.9$_{\pm 0.0}$ & 22.9$_{\pm 0.0}$ & 22.9$_{\pm 0.0}$ & 14.6$_{\pm 0.0}$ & 24.8$_{\pm 2.2}$ & 27.6$_{\pm 0.0}$ & \underline{41.2$_{\pm 2.9}$} & 37.0$_{\pm 2.3}$ & \textbf{43.3$_{\pm 0.0}$} \\
+& \textsc{Global} & 57.5$_{\pm 0.0}$ & 40.0$_{\pm 0.0}$ & 57.5$_{\pm 0.0}$ & 56.7$_{\pm 2.4}$ & \textbf{58.3$_{\pm 0.0}$} & 57.5$_{\pm 0.0}$ & 56.7$_{\pm 1.2}$ & \underline{58.3$_{\pm 2.4}$} & 57.5$_{\pm 0.0}$ \\
+& \textbf{MacroAcc (\%)} & 28.4$_{\pm 0.1}$ & 27.8$_{\pm 0.0}$ & 26.8$_{\pm 0.0}$ & 28.8$_{\pm 3.4}$ & 33.0$_{\pm 4.3}$ & 28.6$_{\pm 0.0}$ & 33.9$_{\pm 2.7}$ & 36.5$_{\pm 3.6}$ & 38.2$_{\pm 0.0}$ \\
+& \textbf{MicroAcc (\%)} & 28.4$_{\pm 0.1}$ & 27.8$_{\pm 0.0}$ & 26.8$_{\pm 0.0}$ & 28.8$_{\pm 3.4}$ & 33.0$_{\pm 4.3}$ & 28.6$_{\pm 0.0}$ & 33.9$_{\pm 2.7}$ & 36.5$_{\pm 3.6}$ & 38.2$_{\pm 0.0}$ \\
+\rowcolor{gray!10} & \textbf{Rel. Gain (\%)} & \textit{--} & \textit{--} & \textit{--} & \textit{+1.4} & \textit{+18.7} & \textit{+6.7} & \textit{+19.4} & \textit{+31.3} & \textit{+42.5} \\
+
+\bottomrule
+\end{tabular}
+\caption{\textbf{Assessment of Resistance to Drift in Persona-Steered QA (PQA).} Evaluation of Accuracy (\%) on Congruence and Incongruence splits. \colorbox{gray!10}{\textbf{Rel. Gain}} indicates the percentage improvement over the No-Turn baseline. The best results are \textbf{bolded}, and the second best are \underline{underlined}.}
+\label{tab:pqa_combined}
+\end{table*}
+
+
+
+
+
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{0.98}
+\begin{tabular}{l ccc ccc ccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Llama}} & \multicolumn{3}{c}{\textbf{Qwen}} & \multicolumn{3}{c}{\textbf{Mistral}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+\textbf{Topic} & BL & DI1 & DI2 & BL & DI1 & DI2 & BL & DI1 & DI2 \\
+\midrule
+\multicolumn{10}{c}{\textbf{Setting: No-Turn}} \\
+\midrule
+\textsc{Social} & 0.03$_{\pm 0.00}$ & 96.4$_{\pm 0.4}$ & 97.8$_{\pm 0.7}$ & 0.03$_{\pm 0.00}$ & 96.7$_{\pm 0.4}$ & 99.4$_{\pm 0.3}$ & 0.05$_{\pm 0.00}$ & 99.1$_{\pm 0.0}$ & 99.7$_{\pm 0.0}$ \\
+\textsc{Science} & 0.06$_{\pm 0.00}$ & 95.1$_{\pm 0.0}$ & 98.7$_{\pm 0.3}$ & 0.05$_{\pm 0.00}$ & 98.0$_{\pm 0.2}$ & 99.7$_{\pm 0.3}$ & 0.07$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 99.8$_{\pm 0.0}$ \\
+\textsc{Religion} & 0.06$_{\pm 0.00}$ & 95.8$_{\pm 0.6}$ & 97.3$_{\pm 1.2}$ & 0.04$_{\pm 0.00}$ & 98.9$_{\pm 0.1}$ & 99.8$_{\pm 0.1}$ & 0.09$_{\pm 0.00}$ & 98.4$_{\pm 0.0}$ & 94.1$_{\pm 0.0}$ \\
+\textsc{Politics} & 0.06$_{\pm 0.00}$ & 96.7$_{\pm 0.0}$ & 99.4$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 98.2$_{\pm 0.3}$ & 99.8$_{\pm 0.0}$ & 0.07$_{\pm 0.00}$ & 99.3$_{\pm 0.0}$ & 99.8$_{\pm 0.0}$ \\
+\textsc{Method.} & 0.07$_{\pm 0.01}$ & 96.2$_{\pm 0.1}$ & 99.5$_{\pm 0.0}$ & 0.07$_{\pm 0.00}$ & 98.9$_{\pm 0.0}$ & 99.4$_{\pm 0.2}$ & 0.07$_{\pm 0.00}$ & 98.6$_{\pm 0.0}$ & 99.7$_{\pm 0.0}$ \\
+\textsc{Journ.} & 0.07$_{\pm 0.00}$ & 96.2$_{\pm 0.4}$ & 98.3$_{\pm 0.2}$ & 0.00$_{\pm 0.00}$ & 97.1$_{\pm 0.3}$ & 99.9$_{\pm 0.1}$ & 0.08$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 94.5$_{\pm 0.0}$ \\
+\textsc{Global} & 0.06$_{\pm 0.00}$ & 95.2$_{\pm 0.2}$ & 98.4$_{\pm 0.5}$ & 0.06$_{\pm 0.00}$ & 96.2$_{\pm 0.2}$ & 99.6$_{\pm 0.0}$ & 0.18$_{\pm 0.00}$ & 98.7$_{\pm 0.0}$ & 99.5$_{\pm 0.0}$ \\
+\cmidrule{1-10}
+\rowcolor{gray!10}{\textbf{Avg}.} & 0.06$_{\pm 0.01}$ & 95.9$_{\pm 0.6}$ & 98.5$_{\pm 0.8}$ & 0.05$_{\pm 0.03}$ & 97.7$_{\pm 1.1}$ & 99.6$_{\pm 0.2}$ & 0.09$_{\pm 0.04}$ & 99.1$_{\pm 0.5}$ & 98.1$_{\pm 2.6}$ \\
+\midrule[\heavyrulewidth]
+\multicolumn{10}{c}{\textbf{Setting: Single-Turn}} \\
+\midrule
+\textsc{Social} & 0.04$_{\pm 0.00}$ & 93.2$_{\pm 3.7}$ & 92.7$_{\pm 9.6}$ & 0.02$_{\pm 0.00}$ & 99.9$_{\pm 0.1}$ & 65.2$_{\pm 7.2}$ & 0.03$_{\pm 0.00}$ & 90.1$_{\pm 0.0}$ & 87.4$_{\pm 0.0}$ \\
+\textsc{Science} & 0.07$_{\pm 0.03}$ & 94.0$_{\pm 4.9}$ & 99.0$_{\pm 1.3}$ & 0.16$_{\pm 0.15}$ & 98.8$_{\pm 1.4}$ & 54.4$_{\pm 24.9}$ & 0.10$_{\pm 0.00}$ & 99.7$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+\textsc{Religion} & 0.04$_{\pm 0.05}$ & 98.7$_{\pm 0.5}$ & 91.9$_{\pm 2.3}$ & 0.17$_{\pm 0.06}$ & 98.1$_{\pm 0.5}$ & 59.4$_{\pm 15.4}$ & 0.01$_{\pm 0.00}$ & 99.5$_{\pm 0.0}$ & 92.3$_{\pm 0.0}$ \\
+\textsc{Politics} & 0.03$_{\pm 0.02}$ & 98.3$_{\pm 0.2}$ & 100.0$_{\pm 0.0}$ & 0.26$_{\pm 0.02}$ & 100.0$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ & 0.05$_{\pm 0.00}$ & 98.3$_{\pm 0.0}$ & 78.0$_{\pm 0.0}$ \\
+\textsc{Method.} & 0.04$_{\pm 0.01}$ & 97.5$_{\pm 0.2}$ & 77.2$_{\pm 16.7}$ & 0.13$_{\pm 0.02}$ & 100.0$_{\pm 0.0}$ & 54.6$_{\pm 8.9}$ & 0.16$_{\pm 0.00}$ & 99.9$_{\pm 0.0}$ & 100.0$_{\pm 0.0}$ \\
+\textsc{Journ.} & 0.07$_{\pm 0.04}$ & 91.3$_{\pm 10.7}$ & 88.8$_{\pm 15.3}$ & 0.01$_{\pm 0.01}$ & 48.3$_{\pm 67.9}$ & 49.5$_{\pm 70.0}$ & 0.00$_{\pm 0.00}$ & 100.0$_{\pm 0.0}$ & 95.8$_{\pm 0.0}$ \\
+\textsc{Global} & 0.08$_{\pm 0.00}$ & 90.8$_{\pm 0.3}$ & 83.7$_{\pm 0.2}$ & 0.15$_{\pm 0.02}$ & 99.5$_{\pm 0.5}$ & 99.0$_{\pm 1.3}$ & 0.23$_{\pm 0.00}$ & 97.0$_{\pm 0.0}$ & 99.2$_{\pm 0.0}$ \\
+\cmidrule{1-10}
+\textbf{Avg.} & 0.05$_{\pm 0.02}$ & 94.8$_{\pm 3.3}$ & 90.5$_{\pm 8.1}$ & 0.13$_{\pm 0.09}$ & 92.1$_{\pm 19.3}$ & 68.9$_{\pm 21.5}$ & 0.08$_{\pm 0.08}$ & 97.8$_{\pm 3.6}$ & 93.2$_{\pm 8.2}$ \\
+\rowcolor{gray!10} \textbf{Rel.\ Gain} 
+& -16.7 & -1.1 & -8.1
+& +160.0 & -5.7 & -30.8
+& -11.1 & -1.3 & -4.9 \\
+\midrule[\heavyrulewidth]
+\multicolumn{10}{c}{\textbf{Setting: Multi-Turn}} \\
+\midrule
+\textsc{Social} & 0.04$_{\pm 0.00}$ & 93.7$_{\pm 0.6}$ & 91.3$_{\pm 5.3}$ & 0.02$_{\pm 0.00}$ & 99.9$_{\pm 0.0}$ & 69.8$_{\pm 6.6}$ & 0.03$_{\pm 0.00}$ & 90.7$_{\pm 0.0}$ & 90.8$_{\pm 0.0}$ \\
+\textsc{Science} & 0.06$_{\pm 0.04}$ & 94.0$_{\pm 2.2}$ & 96.1$_{\pm 0.9}$ & 0.12$_{\pm 0.10}$ & 98.4$_{\pm 0.8}$ & 53.1$_{\pm 32.3}$ & 0.09$_{\pm 0.00}$ & 93.5$_{\pm 0.0}$ & 73.8$_{\pm 0.0}$ \\
+\textsc{Religion} & 0.04$_{\pm 0.02}$ & 93.0$_{\pm 2.7}$ & 81.2$_{\pm 7.2}$ & 0.05$_{\pm 0.02}$ & 99.7$_{\pm 0.4}$ & 55.7$_{\pm 17.4}$ & 0.04$_{\pm 0.00}$ & 96.9$_{\pm 0.0}$ & 85.8$_{\pm 0.0}$ \\
+\textsc{Politics} & 0.03$_{\pm 0.01}$ & 97.1$_{\pm 0.3}$ & 98.6$_{\pm 0.2}$ & 0.16$_{\pm 0.02}$ & 99.2$_{\pm 1.1}$ & 89.2$_{\pm 3.2}$ & 0.04$_{\pm 0.00}$ & 95.7$_{\pm 0.0}$ & 83.1$_{\pm 0.0}$ \\
+\textsc{Method.} & 0.05$_{\pm 0.01}$ & 94.3$_{\pm 1.6}$ & 86.3$_{\pm 1.0}$ & 0.13$_{\pm 0.01}$ & 99.8$_{\pm 0.3}$ & 52.3$_{\pm 7.3}$ & 0.11$_{\pm 0.00}$ & 98.9$_{\pm 0.0}$ & 83.2$_{\pm 0.0}$ \\
+\textsc{Journ.} & 0.06$_{\pm 0.02}$ & 95.1$_{\pm 1.4}$ & 96.5$_{\pm 0.0}$ & 0.01$_{\pm 0.01}$ & 47.6$_{\pm 66.9}$ & 48.5$_{\pm 68.5}$ & 0.00$_{\pm 0.00}$ & 99.3$_{\pm 0.0}$ & 89.6$_{\pm 0.0}$ \\
+\textsc{Global} & 0.05$_{\pm 0.02}$ & 92.5$_{\pm 1.6}$ & 88.9$_{\pm 1.9}$ & 0.10$_{\pm 0.04}$ & 97.9$_{\pm 0.4}$ & 97.8$_{\pm 0.6}$ & 0.19$_{\pm 0.00}$ & 96.1$_{\pm 0.0}$ & 97.2$_{\pm 0.0}$ \\
+\cmidrule{1-10}
+\textbf{Avg.} & 0.05$_{\pm 0.01}$ & 94.3$_{\pm 1.5}$ & 91.3$_{\pm 6.3}$ & 0.08$_{\pm 0.06}$ & 91.8$_{\pm 19.5}$ & 66.6$_{\pm 19.7}$ & 0.07$_{\pm 0.06}$ & 95.9$_{\pm 3.0}$ & 86.2$_{\pm 7.4}$ \\
+\rowcolor{gray!10} \textbf{Rel.\ Gain} 
+& -16.7 & -1.6 & -7.2
+& +60.0 & -5.9 & -33.1
+& -22.2 & -3.2 & -12.1\\
+
+\bottomrule
+\end{tabular}
+\caption{\textbf{Assessment of Narrative Stability and Diversity (PNI).} We evaluate semantic faithfulness (BLEU) and lexical diversity (Distinct) to measure resistance to context drift. Rel. Gain (\%) indicates improvements over the No-Turn baseline.}
+\label{tab:pni_overall}
+\end{table*}
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Extended Experimental Analysis}\label{sec:eexp}
+
+\subsubsection{Stratified PQA Performance}
+Tables~\ref{tab:pni_overall} stratify PQA accuracy by persona congruence to assess resistance to drift.
+As shown, across both splits, the alignment between MacroAcc and MicroAcc improvements confirms that \textbf{QuirkyMind} uniformly enhances robustness, rather than overfitting to specific easy examples.
+
+
+\paragraph{Congruence Split.} \textit{Multi-Turn} refinement consistently outperforms baselines. Mistral achieves a peak MacroAcc of 40.6\% (+12.1pp over No-Turn), with significant gains in the \textsc{Social}, \textsc{Politics}, and \textsc{Journalism} domains. This confirms that even when the persona aligns with priors, context refinement sharpens adherence.
+
+\paragraph{Incongruence Split.} Although absolute performance dips due to the increased difficulty of modeling atypical stances, the \textit{Multi-Turn} strategy remains superior. The substantial relative gains (e.g., +11.4pp for Mistral) demonstrate that iterative refinement effectively counters the strong "pull" of the generic prior, allowing the model to maintain nuanced, incongruous stances against drift.
+
+
+
+
+
+
+
+
+
+\subsubsection{Narrative Stability and Diversity}
+Table~\ref{tab:pni_overall} evaluates narrative stability (BLEU) and lexical diversity (Distinct-1/2) across inference settings. The low BLEU scores (0.03--0.26) across all configurations indicate that \textbf{QuirkyMind} generates substantive, diverse responses rather than merely reproducing reference texts. High Distinct-1/2 scores ($>90\%$) confirm strong lexical variety. Crucially, while the \textit{No-Turn} baseline maximizes raw diversity (Avg. Distinct-2: 98.5\% for Llama), \textit{Multi-Turn} refinement introduces a necessary constraint, slightly reducing diversity to enforce semantic alignment with the persona. This trade-off validates that iterative refinement steers the model from unconstrained randomness toward persona-coherent generation. For a qualitative analysis contrasting the \textit{spurious diversity} of baselines (No-Turn, Single-Turn) with the \textit{constrained diversity} of \textsc{QuirkyMind} (Multi-Turn), refer to Appendix~\ref{sec:quality}.
+
+
+
+
+
+
+
+\begin{algorithm}[t]
+\small %
+\caption{QuirkyMind}%
+\label{alg:quirkymind}
+\begin{algorithmic}[1]
+\State \textbf{Inputs:} Backstory $\mathcal{B}$; Questions $Q_{\mathcal{B}}$; Turns $\{(q_t,r_t)\}_{t=1}^{m}$
+\State \textbf{Models:} LLM backbone $\Psi$ (frozen); Sentence encoder $E_{\text{sent}}$ (frozen)
+\State \textbf{Trainable:} Fusion head $f_{\theta}$; Soft prompt $g_{\phi}$; LoRA $\Phi=\{A,B\}$
+
+\vspace{0.3em}
+\Statex \textbf{Stage 1: Traits Anchoring}
+\State $X \gets E_{\text{tok}}([\mathcal{B};q_1])$; \quad $\mathbf{s}\gets E_{\text{sent}}([\mathcal{B};q_1])$
+\State $\tilde X \gets g_{\phi}(\mathbf{s})$; \quad $\mathbf{z}^{(0)} \gets [X;\tilde X]$
+
+\vspace{0.3em}
+\Statex \textbf{Stage 2: In-Context Narrative Refinement}
+\For{$t=1$ to $m$}
+  \State $\mathbf{s}^{(t)} \gets E_{\text{sent}}([\mathcal{B};q_t])$; \quad $\tilde X^{(t)} \gets g_{\phi}(\mathbf{s}^{(t)})$
+  \State $\mathbf{h}^{(t)} \gets \Psi(\tilde X^{(t)} \,\Vert\, E_{\text{tok}}([\mathcal{B};q_t]))$
+  \State $\mathbf{z}^{(t)} \gets f_{\theta}(\mathbf{h}^{(t)})$
+  \State Update $\theta$ via $\nabla \mathcal{L}_{\text{InfoNCE}}(t,\theta)$ \Comment{Eq. \ref{eq:disc-infonce}}
+  \State Update $\phi$ via $\nabla \mathcal{L}_{\text{CE}}(t;\phi)$ \Comment{Eq. \ref{eq:disc-ce}}
+\EndFor
+\State $\mathbf{z}^{(\star)} \gets \text{Aggregate}(\{\mathbf{z}^{(t)}\}_{t=1}^{m})$
+\State Freeze $\theta, \phi$; Initialize $\Phi$ (LoRA)
+\State Optimize $\Phi$ via task-specific loss %
+\vspace{0.3em}
+\Statex \textbf{Stage 3: Persona-Steered Generalization}
+
+\State \textbf{Return} Adapted model for PQA / PNI
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\section{Algorithmic and Derivative Details}\label{sec: gradient}
+
+\subsection{Algorithmic Details} \label{sec:algo}
+Algorithm~\ref{alg:quirkymind} summarizes the procedure. Note that the per-layer update cost is $\mathcal{O}(LH)$, where $L$ is the sequence length and $H$ is the hidden dimension, preserving linear scaling.
+
+
+\subsection{Derivative Details} \label{sec:derivation}
+Furthermore, we partition the learnable parameters into three sets: the Fusion MLP parameters $\theta$, the SoftPrompt MLP parameters $\phi$, and the LoRA low-rank matrices $\Phi=\{A,B\}$. Stage~1 employs InfoNCE for discriminative alignment, while Stage~2 utilizes Cross-Entropy (CE) for generative refinement. All backbone weights remain frozen. We detail the gradient derivations below.
+
+
+\subsubsection{Discriminative Alignment Phase}
+The parameter update for the Fusion head follows standard stochastic gradient descent:
+\begin{equation}
+    \theta^{(t+1)} = \theta^{(t)} - \eta_{\theta}\,\nabla_{\theta}\,\mathcal{L}_{\mathrm{InfoNCE}}(\theta^{(t)}).
+    \label{eq:12}
+\end{equation}
+To compute $\nabla_{\theta}$, we first derive the gradient with respect to the predicted persona state $\mathbf{z}_{\text{pred}}$. Let $s(\mathbf{u}, \mathbf{v}) = \cos(\mathbf{u}, \mathbf{v})$. The gradient is:
+\begin{equation}
+\label{eq:13}
+\begin{split}
+    \frac{\partial \mathcal{L}_{\mathrm{InfoNCE}}}{\partial \mathbf{z}_{\text{pred}}} = \frac{1}{\tau} \Bigg( \sum_{j \in \mathcal{A}} p_j \, &\frac{\partial s(\mathbf{z}_{\text{pred}}, \mathbf{z}_j)}{\partial \mathbf{z}_{\text{pred}}} \\
+    &- \frac{\partial s(\mathbf{z}_{\text{pred}}, \mathbf{z}_+)}{\partial \mathbf{z}_{\text{pred}}} \Bigg),
+\end{split}
+\end{equation}
+where $p_j$ is the softmax probability of candidate $j$. By the chain rule, the parameter gradient is:
+\begin{equation}
+    \nabla_{\theta}\,\mathcal{L}_{\mathrm{InfoNCE}} = \frac{\partial \mathcal{L}_{\mathrm{InfoNCE}}}{\partial \mathbf{z}_{\text{pred}}} \cdot \frac{\partial f_{\theta}(\mathbf{h}_{\text{last}})}{\partial \theta}.
+    \label{eq:14}
+\end{equation}
+
+
+
+
+
+
+\subsubsection{Generative Refinement Phase}  
+We define the generative loss $\mathcal{L}_{\mathrm{CE}}$ over the target sequence $x$, conditioned on the soft prompt $g_\phi(\mathbf{z}_0)$ and the LoRA-adapted backbone parameterized by $\Phi$. The gradients propagate via two distinct paths.
+
+\noindent \textbf{Soft Prompt Update.} 
+The gradients flow through the input embeddings:
+\begin{equation}
+    \nabla_{\phi}\,\mathcal{L}_{\mathrm{CE}} = \frac{\partial \mathcal{L}_{\mathrm{CE}}}{\partial g_{\phi}(\mathbf{z}_0)} \cdot \frac{\partial g_{\phi}(\mathbf{z}_0)}{\partial \phi}.
+    \label{eq:17}
+\end{equation}
+The update rule is $\phi^{(t+1)} = \phi^{(t)} - \eta_{\phi}\nabla_{\phi}\mathcal{L}_{\mathrm{CE}}$.
+
+\noindent \textbf{LoRA Backbone Update.} 
+For the attention weights, let the effective weight be $W = W_0 + \frac{\alpha}{r}AB$. The gradient with respect to the low-rank matrices $\Phi$ is derived via the chain rule through $W$:
+\begin{equation}
+    \nabla_{\Phi}\,\mathcal{L}_{\mathrm{CE}} = \frac{\partial \mathcal{L}_{\mathrm{CE}}}{\partial W} \cdot \frac{\partial W}{\partial \Phi}.
+    \label{eq:18}
+\end{equation}
+The parameters are updated as $\Phi^{(t+1)} = \Phi^{(t)} - \eta_{\Phi}\nabla_{\Phi}\mathcal{L}_{\mathrm{CE}}$.
+
+\subsubsection{Multi-Turn Optimization}  
+At iteration $t$, we first compute $\mathcal{L}_{\mathrm{InfoNCE}}$ to update $\theta$ (Eq.~\ref{eq:12}), ensuring geometric alignment. We then compute the token-level $\mathcal{L}_{\mathrm{CE}}$. Gradients flow simultaneously through the prefix adapter $\phi$ (Eq.~\ref{eq:17}) and the adapter weights $\Phi$ (Eq.~\ref{eq:18}). This alternating optimization decouples semantic anchoring from expressive generation while keeping the LLM backbone frozen.
+
+
+
+
+
+
+
+
+\section{Prompt Template}\label{sec: prompt}
+
+\subsection{In-Context Prompt Template}
+Figure~\ref{fig:B1} illustrates the standardized in-context prompt structure. The prompt initializes with the persona backstory $\mathcal{B}$ to establish foundational identity constraints, followed by a sequence of Multiple-Choice Questions (MCQs) that exemplify the persona's historical stances.
+
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/B1.pdf}
+  \caption{\textbf{In-Context Prompt Template (MT-156).} The structure integrates static backstory attributes with dynamic interaction history.}
+  \label{fig:B1}
+\end{figure}
+
+\paragraph{Instantiation Example (SO-72).}
+To demonstrate the concrete application of our design, Figure~\ref{fig:Example_prompt} presents an instantiation using the \textsc{Social} (SO-72) dataset. The prompt explicitly conditions generation on both the persona background and the specific query constraints. This format enforces ideological alignment, mitigating the model's tendency to revert to generic or persona-agnostic outputs.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/Example_prompt.pdf}
+  \caption{\textbf{Prompt Instantiation Example (SO-72).} A concrete example showing how the persona background and MCQ are formatted into a unified input.}
+  \label{fig:Example_prompt}
+\end{figure}
+\noindent
+
+\subsection{Progressive In-Context Prompt Template}
+Figure~\ref{fig:B2} depicts the Progressive In-Context Prompt used during the refinement phase. At training turn $t$, the context window concatenates the persona background $\mathcal{B}$, the cumulative interaction history $\{(q_i, r_i)\}_{i=1}^{t-1}$, and the current query $q_t$. This accumulation strategy encourages the model to internalize stance consistency and reproduce persona-specific patterns across the dialogue trajectory.
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/B2.pdf}
+  \caption{\textbf{Progressive In-Context Template.} The prompt grows dynamically to include history, reinforcing persona consistency over time.}
+  \label{fig:B2}
+\end{figure}
+
+
+
+\subsection{PQA Inference Template}
+Figure~\ref{fig:B3} outlines the inference template for Persona-Steered Question Answering (PQA). Following the refinement phase, the model, conditioned on the stabilized persona state, receives a novel MCQ and predicts the response distribution based on the aligned latent representation.
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/B3.pdf}
+  \caption{\textbf{PQA Inference Template.} Used for evaluating predictive accuracy on multiple-choice questions.}
+  \label{fig:B3}
+\end{figure}
+
+\subsection{PNI Inference Template}
+Figure~\ref{fig:B4} presents the template for Persona-Steered Narrative Inference (PNI). Unlike the constrained PQA setting, PNI requires open-ended generation. The prompt solicits a free-text response based on the refined persona, which is subsequently evaluated for semantic fidelity and stylistic consistency.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\columnwidth]{figure/B4.pdf}
+  \caption{\textbf{PNI Inference Template.} Used for generating and evaluating open-ended narratives.}
+  \label{fig:B4}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Reproducibility Details}\label{sec: data}
+
+
+
+\subsection{Hyperparameter Configuration}\label{subsec:hyperparameters}
+We implement QuirkyMind using PyTorch and the Hugging Face Transformers library. Table~\ref{tab:hyperparameters} details the complete configuration. Our training pipeline operates in two distinct phases with differential optimization strategies:
+
+\paragraph{\textbf{Stage 1 (Discriminative Alignment).}} We utilize a higher learning rate ($\eta_\theta = 3 \times 10^{-5}$) to rapidly anchor the persona state in the sentence embedding space via InfoNCE.
+
+\paragraph{\textbf{Stage 2 (Generative Refinement).}} We lower the learning rate ($\eta_\phi = 1 \times 10^{-5}$) to fine-tune the soft prompt adapter and LoRA modules, minimizing the risk of catastrophic forgetting in the backbone.
+The multi-objective loss in Stage 2 balances five components. We determine the optimal weighting via grid search on the validation set, setting $\lambda_{\text{KL}} = 0.05$, $\lambda_{\text{Contrast}} = 0.1$, $\lambda_{\text{Anchor}} = 0.1$, and $\lambda_{\text{SoftPrompt}} = 5 \times 10^{-4}$ to manage the trade-off between generation quality and persona consistency.
+
+
+
+
+\begin{table}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lr | lr}
+\toprule
+\multicolumn{2}{c|}{\textbf{Architecture \& Optimization}} & \multicolumn{2}{c}{\textbf{Loss Weights \& Inference}} \\
+\midrule
+\rowcolor{gray!10}\multicolumn{2}{l|}{\textit{Model Architecture}} & \multicolumn{2}{l}{\textit{Stage 2 Loss ($\lambda$)}} \\
+Soft Prompt Tokens ($S$) & 32 & Cross-Entropy (Gen) & 1.0 \\
+Soft Prompt Scale ($\alpha$) & 0.5 & Label Smoothing & 0.1 \\
+LoRA Rank ($r$) & 4 & KL Divergence & 0.05 \\
+LoRA Alpha & 8 & Contrastive (InfoNCE) & 0.1 \\
+LoRA Dropout & 0.1 & Anchor Regularization & 0.1 \\
+& & Soft Prompt Reg. & 5e-4 \\
+\midrule
+\rowcolor{gray!10}\multicolumn{2}{l|}{\textit{Optimization (AdamW)}} & \multicolumn{2}{l}{\textit{Inference (Generation)}} \\
+Batch Size & 8 & Temperature & 0.7 \\
+Weight Decay & 1e-3 & Top-$p$ Sampling & 0.9 \\
+LR Stage 1 ($\eta_\theta$) & 3e-5 & Repetition Penalty & 1.1 \\
+LR Stage 2 ($\eta_\phi$) & 1e-5 & Max New Tokens & 16 \\
+Epochs (Stage 1) & 10 & & \\
+Epochs (Stage 2) & 5 & & \\
+\bottomrule
+\end{tabular}%
+}
+\caption{\textbf{Hyperparameter Configuration.} We organize the settings into a compact two-pane layout. The left pane details model structure and optimization schedules; the right pane details the multi-objective loss balancing and inference decoding parameters.}
+\label{tab:hyperparameters}
+\end{table}
+
+
+
+
+
+
+\subsection{Evaluation Metrics Details}\label{subsec:evaluation}
+For the PNI task, we report three metrics to quantify the trade-off between semantic adherence and lexical variation.
+
+\paragraph{Semantic Faithfulness (BLEU-1).}
+To measure how accurately the generated text reflects the ground-truth stance, we calculate sentence-level BLEU-1 with smoothing \cite{papineni-2002-bleu,chen-2014-smoothing}. This metric assesses unigram overlap while penalizing brevity, ensuring the model generates substantive content rather than short, generic acknowledgments.
+
+\paragraph{Lexical Diversity (Distinct-$n$).}
+We evaluate the stylistic richness of the generated narratives using Distinct-$1$ (unigrams) and Distinct-$2$ (bigrams) \cite{li-2016-diversity}. These metrics calculate the ratio of unique $n$-grams to the total number of generated tokens:
+\begin{equation}
+    \text{Distinct-}n = \frac{|\mathcal{U}_n|}{\sum_{i=1}^{N} |h_i|},
+\end{equation}
+where $\mathcal{U}_n$ represents the set of unique $n$-grams across the entire corpus, and $|h_i|$ denotes the token count of hypothesis $i$. Higher values indicate greater vocabulary usage and less repetitive generation. To ensure comparability, we normalize all generated responses to a fixed maximum length before calculation.
+
+
+
+
+\subsection{Data Pre-processing}  
+All experiments read a preprocessed CSV (the repository release will include these CSVs and a short README documenting provenance and mapping). The training script expects each CSV row to already contain the canonical columns used by the pipeline: \texttt{backstory} (long-term persona context), \texttt{MCQ} (question/prompt), \texttt{options} (a list or JSON-encoded list of candidate answers), \texttt{label} (0-based integer index into \texttt{options}), and \texttt{persona\_id} when available. At runtime, the script simply reads the CSV, parses \texttt{options} if it is a string (via \texttt{ast.literal\_eval}), and optionally restricts the dataset to the first \texttt{max\_personas} unique \texttt{persona\_id}s; no additional data-cleaning module is required.
+
+
+\subsection{Github Repository}
+Our anonymized code is available at \url{https://github.com/Chu1004/QuirkyMind}.

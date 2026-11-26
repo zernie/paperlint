@@ -1,0 +1,193 @@
+\section{Study 1: Online Survey}
+
+To understand when and why people hide their use of LLMs, we first conducted an online survey with \surveyallusernumber{} LLM users, asking them to reflect on their past experiences of secret use of LLMs, list the secret use scenarios, and explain the reasons.
+\surveyconcernedusernumber{} participants (62\%) reported they had LLM secret use experience while others not. 
+Finally, we collected \surveycasenumber{} unique and valid secret use cases with rationales (noting that some submitted multiple cases).
+We qualitatively analyzed the data and derived a taxonomy summarizing eight common reasons that lead to the secret use.
+
+
+\subsection{Survey Design}
+The main task in the questionnaire was to share the secret use experience of LLMs.
+At the beginning of the survey, there were screening questions to determine whether participants had relevant experiences with LLMs and any secret usage.
+Given that users may not be familiar with jargon like ``Large Language Models (LLMs)'' or ``LLM-based conversational agents''~\cite{zhang2024s}, we first explained the qualitifications in the screening process by showing example LLM applications such as ChatGPT, OpenAI API Playground, Bard, Pi.ai, and Claude.ai.
+We then refer to them throughout the survey using a term more friendly to lay users, ``AI chatbot''.
+Responses from those without LLM experiences were excluded in our results.
+
+For respondents who reported no secret use of experience or intention on the secret use, we asked the follow-up questions about their reasons.
+Respondents with secret usage experience were prompted to share up to three stories one by one detailing their scenarios, reasons for secrecy, and coping strategies.
+To ensure that the users provide precise and comprehensive information to describe the scenario, we used fill-in-the-blank questions.
+These questions guided them to reflect and report on each case in various aspects, including the name of the LLM service, the specific task, the entities they want to keep the AI use secret from, and their feelings.
+This was followed by three questions on reasons for secrecy, feelings about secret usage despite negative feelings, and any measures taken to maintain secrecy (\autoref{fig:survey-blank-filling-example}).
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{sections/figures/survey-blank-filling-example.png}
+    \caption{Fill-in-the-blank questions for participants to share their experiences of secret use of LLMs}
+    \label{fig:survey-blank-filling-example}
+\end{figure}
+
+
+The survey questionnaire was built on Jotform\footnote{\href{https://www.jotform.com/}{Jotform} is a website for building online survey forms.} and distributed through Prolific\footnote{\href{https://www.prolific.co}{Prolific} is a website for recruiting research study participants.}.
+Our pilot study indicated it took about 4 minutes to complete the survey if the participant sharing only one secret use case.
+Therefore, basic compensation was set at \$0.4, with an additional \$0.2 for each extra case shared.
+To ensure a diverse sample, we released the survey at different times across weekdays and weekends, and controlled for a balanced gender distribution between female and male participants.
+
+    
+\subsection{Qualitative Analysis Methods}
+We conducted open coding to analyze the scenarios of the secret use of AI reported by the participants, as well as the self-reported feelings and rationales.
+
+\subsubsection{Reason of Secret Use Analysis}
+Our main goal was to establish a typology of reasons why participants wanted to hide their usage of LLMs.
+To this end, two researchers iteratively coded the self-reported feelings and rationales for each case reported by the participants.
+The two researchers first collectively reviewed a subset of the valid cases to establish an initial coding scheme.
+Next, they carried out several rounds of independent relabeling, each time with a small subset of the dataset, in order to refine the typology and align the two coders' interpretations of the categories.
+At the end of each round, they calculated the inter-rater reliability (IRR) and discussed resolving discrepancies and adjusting the coding scheme when needed.
+This process was repeated iteratively until a high IRR (\(> 0.8\)) was reached. 
+The coding scheme was finalized after five rounds of coding and revisions.
+To validate the coding scheme, we collected a new dataset using the same protocol.
+The same two coders independently coded the new dataset.
+The inter-rater reliability (IRR) score on the validation set was 0.834, as measured by Krippendorff's alpha. 
+This measurement is a standard for inter-rater reliability measure for codes that are not mutually exclusive~\cite{hayes2007answering}.
+We selected this measure because each case may be associated with multiple reasons.
+
+Our final coding scheme comprised nine categories, eight for specific reasons and one category ``Other or unclear reason'' for labeling short or ambiguous responses that did not provide enough information for analysis.
+
+
+\subsubsection{Scenario of Secret Use Analysis}
+
+We conducted a thematic analysis to analyze the scenarios reported by the participants.
+Two researchers independently reviewed all the valid cases, and each identified some themes around the scenarios.
+They then discussed together to combine the two sets of themes and synthesize them into a list of themes characterizing the tasks that engendered the secret use behavior.
+Six themes about the scenarios were identified in the final coding scheme.
+We did not use IRR because the primary goal is to yield themes of scenarios rather than seeking agreement~\cite{mcdonald2019reliability}.
+
+
+\subsection{Methodological Limitations}
+Our method has certain limitations that should be taken into account when evaluating the results.
+Firstly, the information in the participants' responses is often limited, which may not fully capture their reasoning.
+To facilitate data collection, we asked participants to describe their feelings by filling in the blanks in a questionnaire, as shown in \autoref{fig:survey-blank-filling-example}.
+Participants tended to use only one or two sentences to explain their feelings.
+Consequently, when coding the data, we noticed that a single response could be interpreted in multiple ways.
+To address this, we chose to interpret the response in a conservative way, and conducted several rounds of iteration to carefully define our coding scheme and strive for as much consensus as possible. 
+Secondly, the scenarios identified from our sample are not exhaustive.
+The cases reported by users should be considered common cases, but they may not cover all the secret use of LLMs in real life.
+More uncommon yet critical cases might remain to be explored by future research using other research methods.
+
+
+
+\subsection{Survey Results}
+
+\subsubsection{An Overview of the Contexts of Secret Use of LLMs}
+\label{sec: survey-context-results}
+Based on participants' reports, we identified the following types of scenarios that have led to a tendency to conceal the use of LLMs, including \textit{creative writing} (11\%), \textit{academic writing} (3\%), \textit{school works} (10\%), \textit{work tasks} (15\%), \textit{social connections} (14\%), \textit{sensitive topics} (36\%), and other miscellaneous cases\footnote{We did not notice these cases showing a recurring pattern, so decided to group them together.} (including entertainment, brainstorming, etc).
+We introduce each scenario in depth below.
+
+\paragraph{Creative writing}
+This category referred to scenarios where participants used LLMs for creative writing and prefer to keep the LLM usage secret from other people.
+For example, SP15 (P15 in survey study) and SP25 used ChatGPT for writing fiction and fanfiction, and chose to keep their use of AI tools a secret.
+Similar secretive behavior was obeserved in SP36, who used NovelAI for writing stories, and SP56, who used ChatGPT for YouTube video scripts creation.
+This category was specifically created to explore how people feel when they combine AI-powered tools with their own creativity.
+
+
+\paragraph{Academic writing}
+Several participants expressed a desire to conceal their use of LLMs in academic writing, such as writing papers or articles and generating research ideas. 
+For example, SP8 used ChatGPT for paragraph writing in academic works and chose to keep the usage secret from everyone, believing that the ideas generated were not originally his.
+We designated this category to gain insights into how people employ LLMs in conjunction with their expertise in academic fields.
+
+
+
+\paragraph{School works}
+Participants also indicated a desire to conceal their use of LLMs in school-related tasks, such as completing an essay or homework assignments.
+Comparing with ``academic writing'', the ``school works'' category places a greater emphasis on the educational environment.
+
+
+\paragraph{Work tasks}
+Many participants mentioned using LLMs for various work-related tasks, preferring to keep this usage confidential.
+Examples including coding, data analysis, and other general job responsibilities.
+The types of tasks are closely related to participants' work domains and job positions.
+For example, SP16 used ChatGPT for policy writing but was concerned about being discovered by his employer.
+SP13 used ChatGPT to develop marketing plans and preferred to keep this use a secret within his industry.
+
+\paragraph{Social connection}
+A large portions of reported secret use experiences involved using LLMs to maintain social connection including personal and professional relationships.
+For example, SP17 and SP40 used ChatGPT to generate love messages to their partners and kept the use of LLM tool secret.
+SP94 chose to hide their use of Bard in writing work emails from colleagues.
+
+
+\paragraph{Sensitive topics}
+Tasks under this category are mostly related to sensitive interaction content, such as sex or erotica, health, medical topics, personal advice or therapy.
+For example, SP54 used Character.ai for sex roleplay and was afraid of being found out.
+SP84 turned to Bing chat for medical advice and thought that his medical details were not free to other. 
+This category often associates with the reason \revision{``Content sensitivity concerns''} in \autoref{sec: survey-cause-results}, where people are more worried about the sensitive content they interact with using LLMs, rather than the mere usage of AI itself.
+
+
+
+\subsubsection{A Typology of Causes to Secret Use of LLMs}
+\label{sec: survey-cause-results}
+We then introduce the results about the reasons behind the secret use of LLMs, synthesized from the self-reported reasons.
+
+We first want to introduce a special category, \revision{``Content sensitivity concerns''}, which emphasizes concerns related to the task itself or the content shared via the interaction with LLMs being discovered, rather than the fact of using LLMs. 
+For instance, SP107 consulted ChatGPT for health advice and wanted to keep the interaction private: ~\blockquote{My health and health record are private things. When I go online in search of information on my condition or a potential condition it's important to keep that confidential.}
+Since this category diverges from our research focus on the concealment of LLM usage, we have excluded it from our detailed analysis.
+
+After excluding the categories of ``Other and unclear reasons'' (11 cases) and ``Content sensitivity concerns'' (37 cases), we identified seven categories encompassing 77 valid instances directly related to concealing LLM usage. 
+These categories are grouped into two themes: \textbf{Internal Judgment} and \textbf{Perceived External Judgment}.
+
+Internal judgment encompasses reasons related to the participants' self-assessment of using AI. This includes \textit{``Questioning their own competence''}, \textit{``Not a wise choice to use LLMs''}, and \textit{``Moral doubts on using LLMs''}.
+
+
+\paragraph{Questioning their own competence (8/77, 10\%)} 
+When using LLMs for completing tasks, some individuals experienced feelings of incompetence, inadequacy, or unprofessionalism.
+For instance, SP3 felt incompetent when using ChatGPT for coding assistance, stating,~\blockquote{It's not the best feeling to know you need help from an AI bot.}
+Similarly, SP7, who used ChatGPT for creating an essay outline, felt ashamed and preferred to keep her use of LLMs a secret.
+She expressed,~\blockquote{I think it would make me feel inadequate because I used an outline.}
+
+\paragraph{Not a wise choice to use LLMs (9/77, 12\%)} 
+Some individuals frequently questioned whether using LLMs was the effective or optimal choice for completing tasks.
+In these cases, participants often implied a doubt on the effectiveness of the LLM-based CAs.
+For example, SP37 used ChatGPT for family advice while she felt ashamed and preferred keep this usage secret as she said~\blockquote{I know that the AI doesn't understand family matters and how to respond in a way that a human would.}
+SP31 kept her usage of ChatgGPT in health consulting a secret and she said~\blockquote{It's stuff I should of went to a doctor for and not been asking a chatbot.}
+
+\paragraph{Moral doubts on using LLMs (26/77, 34\%)} 
+While using LLMs, some individuals believed that employing these tools for certain tasks might be immoral.
+For example, SP66, who utilized ChatGPT to help draft a recommendation letter for a National Interest Waiver, felt like a fraud towards the people she worked with.
+Similarly, SP7 felt he was cheating by writing with the assistance of ChatGPT, stating,~\blockquote{It felt like I was cheating. I used it (ChatGPT) to write when I should be able to do that on my own.}
+
+A different category of reasons, perceived external judgment, covers reasons where one conceals their use of LLMs due to apprehension about external criticism.
+This might have stem from the general societal ambivalence towards emerging, potent technologies like LLMs.
+This category included four reasons, \textit{``Fear of capabilities being critiqued''}, \textit{``Fear of personality/attitudes being judged''}, \textit{``Sincerity concerns in personal relationships''} and \textit{``Using AI for certain tasks is considered unethical/inappropriate by others''}.
+
+
+\paragraph{Fear of capabilities being critiqued (8/77, 10\%)} 
+Some individuals chose to conceal their use of AI due to fears that their abilities would be judged by others. 
+For instance, SP85, who used ChatGPT for resume writing, mentioned that,~\blockquote{If I am using an AI chatbot for help with writing my resume, some people might think I am inadequate.}
+Similarly, SP88 employed ChatGPT for email writing and kept it hidden from her boss, feeling uncomfortable with her method.
+She stated,~\blockquote{I didn't want them to think that I was too dumb to write an email myself.}
+
+\paragraph{Fear of personality/attitudes being judged (15/77, 20\%)} 
+Some users are concerned about potential judgment of their personality and attitude.
+For example, SP3 used ChatGPT to ask for personal advice and chose to keep it secret.
+She described that~\blockquote{People could look at me oddly for using the bot or maybe taking it's advice.}
+
+
+We specifically identified \textit{Sincerity concerns in personal relationships (7/77, 9\%)} as a special case of this category, where individuals were concerned that using AI for personal interactions, such as writing a love message, might be perceived as insincere and could negatively impact their relationships.
+These cases are noteworthy because they highlight the delicate balance between technological convenience and the authenticity of human emotions in personal communications.
+P75, for example, used ChatGPT to write emails but preferred to keep this fact hidden from the receiver.
+He explained,~\blockquote{I felt that they would think I don't care about the answer. People are sensitive when they realize an AI replied to their emails and think the person that sent the email doesn't care to write their own email.}
+
+
+\paragraph{Fear of AI use being considered unethical/inappropriate by others (6/77, 8\%)} 
+Another reason deterring people from disclosing their use of LLMs is the belief that ``Using AI for certain tasks is considered unethical/inappropriate by others.''
+This is distinct from the category where individuals have ``Moral doubts on using LLMs,'' which relates to users' own internal judgment.
+The concern about ethical judgments is rooted in the anticipation of others' moral standards, rather than one's own.
+For instance, SP96 used LLaMA for creative content generation and kept the usage secret to his potential audiences because he felt the usage would be disapproved.
+He stated,~\blockquote{People in the audience I was targeting at the time are predisposed to mistrust technology, particularly AI.}
+
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "emnlp-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acl-latex"
+      },
+      "opened": "2025-11-14",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-11-14",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

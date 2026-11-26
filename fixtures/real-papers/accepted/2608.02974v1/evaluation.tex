@@ -1,0 +1,83 @@
+\section{Evaluation}
+
+We will answer the following research questions.  
+
+\vspace*{3pt}
+\noindent
+{\bf RQ1: How effective is our approach in localizing concurrent bugs?}
+
+\vspace*{3pt}
+\noindent
+{\bf RQ2: How does ConFL compare with state-of-the-art across different bug-report conditions?}
+
+\vspace*{3pt}
+\noindent
+{\bf RQ3: What is the contribution of each component in our approach?}
+
+\vspace*{3pt}
+\noindent
+{\bf RQ4:  How well does our approach generalize to unseen data and different LLMs?}
+
+\subsection{Experimental Setup}
+
+
+\subsubsection{Dataset}
+
+The first dataset is derived from projects used in prior concurrent fault localization~\cite{shao2023information} and bug report classification studies~\cite{shao2026identifying}. As shown in Table~\ref{table:git1}, Dataset$_{Git}$ contains eight large-scale open-source systems, including druid, grpc-java, presto, pulsar, redisson, rocketmq, trino, and vert.x, with 4--100 concurrency bug reports per project. The projects range from roughly 9K to over 700K methods and cover diverse concurrency styles, including lock-based synchronization, executor-based concurrency, asynchronous callbacks, and mixed interaction patterns. Ground-truth faulty methods are identified from bug-fixing commits.
+
+
+
+To evaluate generalization beyond potential training-data exposure, we additionally construct a post-cutoff dataset containing concurrency bugs reported after the LLM training cutoff date. We follow the same collection procedure as Dataset$_{Git}$ and retain only bugs with concurrency-related descriptions, associated fix commits, and verifiable faulty methods. Since several Dataset$_{Git}$ projects yielded few eligible bugs, we further include widely used Java systems frequently used in concurrency-related research, including Camel, Cassandra, Hadoop, and HBase~\cite{shao2023information, shao2026identifying}. As shown in Table~\ref{table:git2}, the resulting dataset contains 32 bugs in total.
+
+
+
+\input{tables/results/dataset}
+
+
+\subsubsection{Baseline Selection.}
+
+Our framework operates strictly in a bug-report–only setting. Therefore, we select baselines that can be executed under the same constraint and that represent the strongest available techniques in their respective categories.
+
+\noindent
+\textbf{IR-Based Baselines.}
+Most IR-based FL techniques work at the file level and are not directly applicable to method-level localization. We include two representative methods: \textbf{BRTracer} \cite{BTrace} — shown in prior studies \cite{shao2024enhancing, lee2018bench4bl} to be one of the strongest IRFL baselines. We adapt it to method-level by treating each method as an independent document. \textbf{BoostNSift} \cite{razzaq2021boostnsift} — a recent IR-based method designed specifically for method-level FL, providing a competitive IR baseline for our evaluation. These baselines represent the upper bound of lexical-similarity approaches under bug-report–only conditions. We additionally include \textbf{BLCoiR}~\cite{shao2023information}, the only prior bug-report–based fault localization technique specifically designed for concurrent bugs. Since BLCoiR originally operates at file-level granularity, we similarly adapt it to method-level retrieval by treating each method as an independent document. For file-level comparison, we aggregate \Name{}'s method-level outputs using a max-score rule, where the score of a file is defined as the maximum score among its methods. Together, these baselines represent strong lexical-similarity approaches under bug-report–only settings.
+
+
+\noindent
+\textbf{LLM-Based Baselines.}
+Many recent LLM-based approaches (e.g., AutoFL, AgentFL) rely on test-case execution and cannot run without dynamic information. As discussed in our motivation, concurrent bugs rarely have reliable test cases, making these methods incompatible with our evaluation setting.
+We therefore select: \textbf{FlexFL} — a recent LLM-based FL framework that supports bug-report–only mode and thus can be fairly compared with ours.
+
+\noindent
+\textbf{Other Baselines.}
+Supervised FL techniques such as DreamLoc~\cite{dreamloc} and rLocator~\cite{locator} require thousands of labeled bugs per project, while our projects contain only 4–40 real-world concurrent bugs, making such training infeasible.
+Other learning-based methods like DeepFL depend on mutation-based synthetic bugs and large test suites, which are unavailable for concurrent bug scenarios. Thus, these approaches cannot serve as practical baselines.
+
+Recent LLM  methods for Python (e.g., CoSIL) rely on building full program graphs and performing LLM-guided exploration. These techniques do not scale to Java due to: call graphs with hundreds of thousands to millions of nodes,	extensive virtual dispatch, and lack of existing Java adaptations.
+
+Spectrum-based and hybrid techniques (e.g., Tarantula~\cite{Tarantula}, Ochiai~\cite{abreu2009practical}, DStar~\cite{dst}, DeepFL~\cite{dl1}, Grace~\cite{dl2}) rely on failing/passing tests and coverage information, which are difficult to obtain reliably for concurrency bugs due to nondeterministic scheduling. A concurrency test may pass or fail across runs without code changes, weakening coverage-based statistical correlation. Supervised learning-based methods also require large amounts of labeled training data, which is impractical given the limited number of concurrency bugs available per project in our benchmark (4--100 bugs/project).
+
+\subsubsection{Performance Metrics.}
+
+We evaluate \Name{} using three standard metrics widely adopted in prior fault localization studies~\cite{flexfl, autofl,yu2008empirical,jones2005empirical,chilimbi2009holmes,santelices2009lightweight}.
+
+\textbf{Top@K} measures the proportion of bug reports whose faulty method appears within the top-$k$ results ($k\!\in\!\{1,5,10\}$), defined as
+$Top@K = |R_k| / n$, where $|R_k|$ is the number of reports with at least one correct faulty method ranked in the top-$k$, and $n$ is the total number of bug reports.
+
+\textbf{MRR} (Mean Reciprocal Rank) captures how early the first faulty method appears:
+$MRR = \frac{1}{n}\sum_{j=1}^{n} \frac{1}{rank_j}$,
+where $rank_j$ is the rank of the first relevant faulty method for the $j$-th report.
+
+\textbf{MAP} (Mean Average Precision) evaluates the overall ranking quality of all faulty methods:
+$MAP = \frac{1}{n}\sum_{j=1}^{n} AvgP_j$,
+where $AvgP_j = \frac{1}{|K_j|}\sum_{k\in K_j} Prec@k$ and
+$Prec@k = \frac{1}{k}\sum_{i=1}^{k} IsRelevant(i)$.
+Here, $K_j$ denotes the set of true faulty methods for report $j$, and $IsRelevant(i)=1$ if the $i$-th ranked method is faulty. Higher values indicate better localization performance.
+
+
+\subsection{Results Analysis}
+
+\input{RQs/RQ1}
+\input{RQs/RQ2}
+\input{RQs/RQ3}
+\input{RQs/RQ4}

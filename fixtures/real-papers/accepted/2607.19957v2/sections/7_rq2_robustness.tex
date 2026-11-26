@@ -1,0 +1,34 @@
+\subsection{RQ2: Robustness}
+
+\paragraph{Setup.} RQ2 conducts experiments to analyze the impact of the \textit{chunk size} $L_{\mathrm{chunk}}$, \textit{cache ratio} $\delta$, and \textit{recomputation ratio} $\rho$ of the position-independent cache system on \sys.
+% 
+All experiments are performed on the HotpotQA dataset with Llama-3.1-8B. We vary the hyperparameters by selecting $L_{\mathrm{chunk}}$ from the set $\{32, 64, 128, 256, 512\}$ while exploring both $\delta$ and $\rho$ within the values of $\{0.1, 0.2, 0.3, 0.4, 0.5\}$. We use white-box setting and report Acc for model performance, and U-ASR and T-ASR for the effectiveness of \sys.
+
+\input{tables/rq2_asr_vs_chunk_size}
+\input{tables/rq2_asr_vs_cache_ratio}
+\input{tables/rq2_asr_vs_recomp_ratio}
+\input{tables/rq3_asr_vs_context_length}
+
+\paragraph{Impact of Chunk Size $L_{\mathrm{chunk}}$.} 
+Table~\ref{tab:rq2_asr_vs_chunk_size} presents the experimental results regarding the impact of chunk size $L_{\mathrm{chunk}}$ on the effectiveness of \sys. This parameter determines the minimum granularity for storage, matching, and reuse in the position-independent KV cache.
+
+As $L_{\text{chunk}}$ increases from 32 to 512, we observe that both the main task Acc and the ASR of \sys remain stable. Although the ASR decreases slightly when $L_{\text{chunk}}$ is large, we attribute this to partial cache misses at the head and tail of the hijacked KV cache, \ie, incomplete cache reuse caused by coarse cache granularity. Overall, these results demonstrate that \sys is robust to variations in chunk size.
+
+\paragraph{Impact of Cache Ratio $\delta$.} Table~\ref{tab:rq2_asr_vs_cache_ratio} illustrates the experimental results regarding the impact of cache ratio $\delta$ on the effectiveness of \sys. This parameter determines the proportion of the user's prefilled KV cache occupied by the hijacked KV cache.
+% 
+Since existing position-independent KV cache methods typically achieve cache hit rates of up to 60\%~\cite{yang2025kvshare}, we vary the cache ratio from 10\% to 50\% to evaluate the robustness of \sys.
+
+We find that \sys maintains a high ASR even at low cache hit rate, where only a small proportion of the user's KV cache is affected. For example, at $\delta=0.1$ and $\rho=0.3$, where the malicious cache occupies only 7\% of the user's KV context, the average T-ASR remains at 67\%. 
+% 
+As cache ratio increases, ASR of \sys rises rapidly, approaching 100\% at $\delta=0.5$. Additionally, we observe that the recomputation method EPIC becomes more effective as the low cache ratio. We attribute this to its recomputation of the first $k$ tokens in each cache chunk, which better preserves benign context coherence at lower cache ratios, thereby enhancing resistance against \sys. In summary, even at lower cache ratios, \sys still mounts effective attacks, demonstrating its robustness to such reductions.
+
+\paragraph{Impact of Recomputation Ratio $\rho$.} 
+Table~\ref{tab:rq2_asr_vs_cache_ratio} demonstrates the experimental results regarding the impact of recomputation ratio $\rho$ on the effectiveness of \sys. This parameter determines the recomputation ratio for the reused KV cache. While existing methods claim that a recomputation ratio from 10\% to 15\% is sufficient to prevent performance degradation on the main task, we vary the recomputation ratio from 10\% to 50\% to evaluate the robustness of \sys.
+
+We observe that increasing the recomputation ratio brings significant computational overhead but does not eliminate the malicious impact of \sys. Specifically, the average T-ASR remains high at 70\% when the recomputation ratio is tripled to $\rho=0.3$ and persists at 39\% even when the ratio is raised to $\rho=0.5$, which is 5$\times$ the baseline. \sys shows robustness to an increase in the recomputation ratio.
+
+Furthermore, we find that increasing $\rho$ is a more effective defense than reducing $\delta$. We compare two settings where the attacker controls a similar proportion of effective tokens: (1) $\delta=0.3, \rho=0.5$ (15\% hijacked KV cache) and (2) $\delta=0.2, \rho=0.3$ (14\% hijacked KV cache). Despite the similar proportions of hijacked KV cache, the T-ASR is 39\% lower in the first case. This is because recomputation refreshes more high-influence (including malicious) KV cache entries, whereas a reduced cache hit ratio still preserves many of them.
+
+\paragraph{Conclusion.} 
+Extensive experiments validate the robustness of \sys across varying system configurations. Whether subjected to low cache ratios, high recomputation penalties, or varying chunk sizes, \sys maintains strong attack effectiveness. 
+This consistency demonstrates that \sys poses a widespread threat that cannot be easily mitigated. 

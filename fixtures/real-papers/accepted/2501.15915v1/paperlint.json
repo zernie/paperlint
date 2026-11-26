@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "sigir-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-sigconf"
+      },
+      "opened": "2025-01-27",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-01-27",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

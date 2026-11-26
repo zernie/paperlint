@@ -1,0 +1,403 @@
+\begin{thebibliography}{10}
+
+\bibitem{bojchevski2020efficient}
+Aleksandar Bojchevski, Johannes Gasteiger, and Stephan G{\"u}nnemann.
+\newblock Efficient robustness certificates for discrete data: Sparsity-aware randomized smoothing for graphs, images and more.
+\newblock In {\em ICML}, 2020.
+
+\bibitem{Borgwardt2005}
+K.M. Borgwardt, C.S. Ong, S.~Sch{\"o}nauer, SVN Vishwanathan, A.J. Smola, and H.~Kriegel.
+\newblock Protein function prediction via graph kernels.
+\newblock {\em Bioinformatics}, 2005.
+
+\bibitem{chenunderstanding}
+Yongqiang Chen, Han Yang, Yonggang Zhang, MA~KAILI, Tongliang Liu, Bo~Han, and James Cheng.
+\newblock Understanding and improving graph injection attack by promoting unnoticeability.
+\newblock In {\em ICLR}, 2022.
+
+\bibitem{cheng2020graph}
+Dawei Cheng, Xiaoyang Wang, Ying Zhang, and Liqing Zhang.
+\newblock Graph neural network for fraud detection via spatial-temporal attention.
+\newblock {\em IEEE TKDE}, 2020.
+
+\bibitem{cheng2021deepwukong}
+Xiao Cheng, Haoyu Wang, Jiayi Hua, Guoai Xu, and Yulei Sui.
+\newblock Deepwukong: Statically detecting software vulnerabilities using deep graph neural network.
+\newblock {\em ACM TOSEM}, 2021.
+
+\bibitem{clusterGCN}
+Wei-Lin Chiang, Xuanqing Liu, Si~Si, Yang Li, Samy Bengio, and Cho-Jui Hsieh.
+\newblock Cluster-gcn: An efficient algorithm for training deep and large graph convolutional networks.
+\newblock In {\em KDD}, 2019.
+
+\bibitem{chu2024graph}
+Zhaoyang Chu, Yao Wan, Qian Li, Yang Wu, Hongyu Zhang, Yulei Sui, Guandong Xu, and Hai Jin.
+\newblock Graph neural networks for vulnerability detection: A counterfactual explanation.
+\newblock In {\em ISTTA}, 2024.
+
+\bibitem{cohen2019certified}
+Jeremy~M Cohen, Elan Rosenfeld, and J~Zico Kolter.
+\newblock Certified adversarial robustness via randomized smoothing.
+\newblock In {\em ICML}, 2019.
+
+\bibitem{dai2018adversarial}
+Hanjun Dai, Hui Li, Tian Tian, Xin Huang, Lin Wang, Jun Zhu, and Le~Song.
+\newblock Adversarial attack on graph structured data.
+\newblock In {\em ICML}, 2018.
+
+\bibitem{debnath1991structure}
+A.K. Debnath, R.L.~Lopez de~Compadre, G.~Debnath, A.J. Shusterman, and C.~Hansch.
+\newblock Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. correlation with molecular orbital energies and hydrophobicity.
+\newblock {\em Journal of medicinal chemistry}, 34(2):786--797, 1991.
+
+\bibitem{dietterich2000ensemble}
+Thomas~G Dietterich.
+\newblock Ensemble methods in machine learning.
+\newblock In {\em International workshop on multiple classifier systems}, pages 1--15. Springer, 2000.
+
+\bibitem{Dobson2003}
+P.D. Dobson and A.J. Doig.
+\newblock Distinguishing enzyme structures from non-enzymes without alignments.
+\newblock {\em J. of Mol. Bio.}, 330(4):771--783, 2003.
+
+\bibitem{dou2020enhancing}
+Yingtong Dou, Zhiwei Liu, Li~Sun, et~al.
+\newblock Enhancing graph neural network-based fraud detectors against camouflaged fraudsters.
+\newblock In {\em CIKM}, 2020.
+
+\bibitem{entezari2020all}
+Negin Entezari, Saba Al-Sayouri, Amirali Darvishzadeh, and Evangelos Papalexakis.
+\newblock All you need is low (rank) defending against adversarial attacks on graphs.
+\newblock In {\em WSDM}, 2020.
+
+\bibitem{big_vul}
+Jiahao Fan, Yi~Li, Shaohua Wang, and Tien~N. Nguyen.
+\newblock A c/c++ code vulnerability dataset with code changes and cve summaries.
+\newblock In {\em ICMSR}, 2020.
+
+\bibitem{gao2024sigmadiff}
+Lian Gao, Yu~Qu, Sheng Yu, Yue Duan, and Heng Yin.
+\newblock Sigmadiff: Semantics-aware deep graph matching for pseudocode diffing.
+\newblock In {\em NDSS}, 2024.
+
+\bibitem{gao2018sybilfuse}
+Peng Gao, Binghui Wang, Neil~Zhenqiang Gong, Sanjeev~R Kulkarni, Kurt Thomas, and Prateek Mittal.
+\newblock Sybilfuse: Combining local attributes with global structure to perform robust sybil detection.
+\newblock In {\em CNS}, 2018.
+
+\bibitem{gilmer2017neural}
+Justin Gilmer, Samuel~S Schoenholz, Patrick~F Riley, Oriol Vinyals, and George~E Dahl.
+\newblock Neural message passing for quantum chemistry.
+\newblock In {\em ICML}, 2017.
+
+\bibitem{guo2020graphcodebert}
+Daya Guo, Shuo Ren, Shuai Lu, Zhangyin Feng, Duyu Tang, et~al.
+\newblock Graphcodebert: Pre-training code representations with data flow.
+\newblock In {\em ICLR}, 2021.
+
+\bibitem{hamilton2017inductive}
+Will Hamilton, Zhitao Ying, and Jure Leskovec.
+\newblock Inductive representation learning on large graphs.
+\newblock In {\em NIPS}, 2017.
+
+\bibitem{he2022illuminati}
+Haoyu He, Yuede Ji, and H~Howie Huang.
+\newblock Illuminati: Towards explaining graph neural networks for cybersecurity analysis.
+\newblock In {\em EuroS\&P}. IEEE, 2022.
+
+\bibitem{hong2022unicr}
+Hanbin Hong, Binghui Wang, and Yuan Hong.
+\newblock Unicr: Universally approximated certified robustness via randomized smoothing.
+\newblock In {\em ECCV}, 2022.
+
+\bibitem{jia2021intrinsic}
+Jinyuan Jia, Xiaoyu Cao, and Neil~Zhenqiang Gong.
+\newblock Intrinsic certified robustness of bagging against data poisoning attacks.
+\newblock In {\em AAAI}, 2021.
+
+\bibitem{jia2022certified}
+Jinyuan Jia, Yupei Liu, Xiaoyu Cao, and Neil~Zhenqiang Gong.
+\newblock Certified robustness of nearest neighbors against data poisoning and backdoor attacks.
+\newblock In {\em AAAI}, 2022.
+
+\bibitem{jia2020certified}
+Jinyuan Jia, Binghui Wang, Xiaoyu Cao, and Neil~Zhenqiang Gong.
+\newblock Certified robustness of community detection against adversarial structural perturbation via randomized smoothing.
+\newblock In {\em WWW}, 2020.
+
+\bibitem{jin2020certified}
+Hongwei Jin, Zhan Shi, Venkata Jaya Shankar~Ashish Peruri, and Xinhua Zhang.
+\newblock Certified robustness of graph convolution networks for graph classification under topological attacks.
+\newblock In {\em NeurIPS}, 2020.
+
+\bibitem{ju2023let}
+Mingxuan Ju, Yujie Fan, Chuxu Zhang, and Yanfang Ye.
+\newblock Let graph be the go board: gradient-free node injection attack for graph neural networks via reinforcement learning.
+\newblock In {\em AAAI}, 2023.
+
+\bibitem{kim2022revisiting}
+Dongkwan Kim, Eunsoo Kim, Sang~Kil Cha, Sooel Son, and Yongdae Kim.
+\newblock Revisiting binary code similarity analysis using interpretable feature engineering and lessons learned.
+\newblock {\em IEEE TSE}, 2022.
+
+\bibitem{kipf2017semi}
+Thomas~N Kipf and Max Welling.
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock In {\em ICLR}, 2017.
+
+\bibitem{lai2023nodeawarebismoothingcertifiedrobustness}
+Yuni Lai, Yulin Zhu, Bailin Pan, and Kai Zhou.
+\newblock Node-aware bi-smoothing: Certified robustness against graph injection attacks.
+\newblock In {\em IEEE SP}, 2024.
+
+\bibitem{lecuyer2019certified}
+Mathias Lecuyer, Vaggelis Atlidakis, Roxana Geambasu, Daniel Hsu, and Suman Jana.
+\newblock Certified robustness to adversarial examples with differential privacy.
+\newblock In {\em IEEE SP}, 2019.
+
+\bibitem{levine2020randomized}
+Alexander Levine and Soheil Feizi.
+\newblock (de) randomized smoothing for certifiable defense against patch attacks.
+\newblock In {\em NeurIPS}, 2020.
+
+\bibitem{levine2020deep}
+Alexander Levine and Soheil Feizi.
+\newblock Deep partition aggregation: Provable defenses against general poisoning attacks.
+\newblock In {\em ICLR}, 2020.
+
+\bibitem{levine2020robustness}
+Alexander Levine and Soheil Feizi.
+\newblock Robustness certificates for sparse adversarial attacks by randomized ablation.
+\newblock In {\em AAAI}, 2020.
+
+\bibitem{li2019deepgcns}
+Guohao Li, Matthias Müller, Ali Thabet, and Bernard Ghanem.
+\newblock Deepgcns: Can gcns go as deep as cnns?
+\newblock In {\em ICCV}, 2019.
+
+\bibitem{li2025provably}
+Jiate Li, Meng Pang, Yun Dong, Jinyuan Jia, and Binghui Wang.
+\newblock Provably robust explainable graph neural networks against graph perturbation attacks.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{li2019graph}
+Yujia Li, Chenjie Gu, Thomas Dullien, Oriol Vinyals, and Pushmeet Kohli.
+\newblock Graph matching networks for learning the similarity of graph structured objects.
+\newblock In {\em ICML}, 2019.
+
+\bibitem{liu2023learning}
+Jiahao Liu, Jun Zeng, Xiang Wang, and Zhenkai Liang.
+\newblock Learning graph-based code representations for source-level functional similarity detection.
+\newblock In {\em ICSE}, 2023.
+
+\bibitem{ma2020towards}
+Jiaqi Ma, Shuangrui Ding, and Qiaozhu Mei.
+\newblock Towards more practical adversarial attacks on graph neural networks.
+\newblock In {\em NeurIPS}, 2020.
+
+\bibitem{marcelli2022machine}
+Andrea Marcelli, Mariano Graziano, Xabier Ugarte-Pedrero, et~al.
+\newblock How machine learning is solving the binary function similarity problem.
+\newblock In {\em Security}, 2022.
+
+\bibitem{mccallum2000automating}
+Andrew~Kachites McCallum, Kamal Nigam, Jason Rennie, and Kristie Seymore.
+\newblock Automating the construction of internet portals with machine learning.
+\newblock {\em Information Retrieval}, 3:127--163, 2000.
+
+\bibitem{mu2021a}
+Jiaming Mu, Binghui Wang, Qi~Li, Kun Sun, Mingwei Xu, and Zhuotao Liu.
+\newblock A hard label black-box adversarial attack against graph neural networks.
+\newblock In {\em CCS}, 2021.
+
+\bibitem{mujkanovic2022defenses}
+Felix Mujkanovic, Simon Geisler, Stephan G{\"u}nnemann, and Aleksandar Bojchevski.
+\newblock Are defenses for graph neural networks robust?
+\newblock In {\em NeurIPS}, 2022.
+
+\bibitem{pei2023textguard}
+Hengzhi Pei, Jinyuan Jia, Wenbo Guo, Bo~Li, and Dawn Song.
+\newblock Textguard: Provable defense against backdoor attacks on text classification.
+\newblock In {\em NDSS}, 2023.
+
+\bibitem{riesen2008iam}
+Kaspar Riesen and Horst Bunke.
+\newblock Iam graph database repository for graph based pattern recognition and machine learning.
+\newblock In {\em Structural, Syntactic, and Statistical Pattern Recognition}, pages 287--297. Springer, 2008.
+
+\bibitem{scarselli2008graph}
+Franco Scarselli, Marco Gori, Ah~Chung Tsoi, Markus Hagenbuchner, and Gabriele Monfardini.
+\newblock The graph neural network model.
+\newblock {\em IEEE TNN}, 2008.
+
+\bibitem{sen2008collective}
+Prithviraj Sen, Galileo Namata, Mustafa Bilgic, Lise Getoor, Brian Galligher, and Tina Rad.
+\newblock Collective classification in network data.
+\newblock {\em AI magazine}, 2008.
+
+\bibitem{sun2020adversarial}
+Yiwei Sun, Suhang Wang, Xianfeng Tang, Tsung-Yu Hsieh, and Vasant Honavar.
+\newblock Adversarial attacks on graph neural networks via node injections: A hierarchical reinforcement learning approach.
+\newblock In {\em WWW}, 2020.
+
+\bibitem{tao2021adversarial}
+Shuchang Tao, Huawei Shen, Qi~Cao, Liang Hou, and Xueqi Cheng.
+\newblock Adversarial immunization for certifiable robustness on graphs.
+\newblock In {\em WSDM}, 2021.
+
+\bibitem{velivckovic2018graph}
+Petar Veli{\v{c}}kovi{\'c}, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro Lio, and Yoshua Bengio.
+\newblock Graph attention networks.
+\newblock In {\em ICLR}, 2018.
+
+\bibitem{wan2021adversarial}
+Xingchen Wan, Henry Kenlay, Robin Ru, Arno Blaas, Michael~A Osborne, and Xiaowen Dong.
+\newblock Adversarial attacks on graph classifiers via bayesian optimisation.
+\newblock In {\em NeurIPS}, 2021.
+
+\bibitem{wang2019attacking}
+Binghui Wang and Neil~Zhenqiang Gong.
+\newblock Attacking graph-based classification via manipulating the graph structure.
+\newblock In {\em CCS}, 2019.
+
+\bibitem{wang2017gang}
+Binghui Wang, Neil~Zhenqiang Gong, and Hao Fu.
+\newblock Gang: Detecting fraudulent users in online social networks via guilt-by-association on directed graphs.
+\newblock In {\em ICDM}, 2017.
+
+\bibitem{wang2021certified}
+Binghui Wang, Jinyuan Jia, Xiaoyu Cao, and Neil Gong.
+\newblock Certified robustness of graph neural networks against adversarial structural perturbation.
+\newblock In {\em KDD}, 2021.
+
+\bibitem{wang2019graph}
+Binghui Wang, Jinyuan Jia, and Neil~Zhenqiang Gong.
+\newblock Graph-based security and privacy analytics via collective classification with joint weight learning and propagation.
+\newblock In {\em NDSS}, 2019.
+
+\bibitem{wang2022bandits}
+Binghui Wang, Youqi Li, and Pan Zhou.
+\newblock Bandits for structure perturbation-based black-box attacks to graph neural networks with theoretical guarantees.
+\newblock In {\em CVPR}, 2022.
+
+\bibitem{wang2024efficient}
+Binghui Wang, Minhua Lin, Tianxiang Zhou, and more.
+\newblock Efficient, direct, and restricted black-box graph evasion attacks to any-layer graph neural networks via influence function.
+\newblock In {\em WSDM}, 2024.
+
+\bibitem{wang2023turning}
+Binghui Wang, Meng Pang, and Yun Dong.
+\newblock Turning strengths into weaknesses: A certified robustness inspired attack framework against graph neural networks.
+\newblock In {\em CVPR}, 2023.
+
+\bibitem{wang2017sybilscar}
+Binghui Wang, Le~Zhang, and Neil~Zhenqiang Gong.
+\newblock Sybilscar: Sybil detection in online social networks via local rule based propagation.
+\newblock In {\em INFOCOM}, 2017.
+
+\bibitem{wang2018sybilblind}
+Binghui Wang, Le~Zhang, and Neil~Zhenqiang Gong.
+\newblock Sybilblind: Detecting fake users in online social networks without manual labels.
+\newblock In {\em RAID}, 2018.
+
+\bibitem{weber2018scalable}
+Mark Weber, Jie Chen, Toyotaro Suzumura, Aldo Pareja, Tengfei Ma, et~al.
+\newblock Scalable graph learning for anti-money laundering: A first look.
+\newblock In {\em NIPSW}, 2018.
+
+\bibitem{wu2019adversarial}
+Huijun Wu, Chen Wang, Yuriy Tyshetskiy, and more.
+\newblock Adversarial examples on graph data: Deep insights into attack and defense.
+\newblock In {\em IJCAI}, 2019.
+
+\bibitem{xi2021graph}
+Zhaohan Xi, Ren Pang, Shouling Ji, and Ting Wang.
+\newblock Graph backdoor.
+\newblock In {\em USENIX Security)}, 2021.
+
+\bibitem{xia2024gnncert}
+Zaishuo Xia, Han Yang, Binghui Wang, and Jinyuan Jia.
+\newblock Deterministic certification of graph neural networks against adversarial perturbations.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{xiang2021patchguard}
+Chong Xiang, Arjun~Nitin Bhagoji, Vikash Sehwag, and Prateek Mittal.
+\newblock $\{$PatchGuard$\}$: A provably robust defense against adversarial patches via small receptive fields and masking.
+\newblock In {\em USENIX Security}, 2021.
+
+\bibitem{xu2019topology}
+Kaidi Xu, Hongge Chen, Sijia Liu, and more.
+\newblock Topology attack and defense for graph neural networks: An optimization perspective.
+\newblock In {\em IJCAI}, 2019.
+
+\bibitem{xu2019powerful}
+Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka.
+\newblock How powerful are graph neural networks?
+\newblock In {\em ICLR}, 2019.
+
+\bibitem{xu2022evidence}
+Weizhi Xu, Junfei Wu, Qiang Liu, Shu Wu, and Liang Wang.
+\newblock Evidence-aware fake news detection with graph neural networks.
+\newblock In {\em WWW}, 2022.
+
+\bibitem{yang2021extract}
+Cheng Yang, Jiawei Liu, and Chuan Shi.
+\newblock Extract the knowledge of graph neural networks and go beyond it: An effective knowledge distillation framework.
+\newblock In {\em WWW}, 2021.
+
+\bibitem{yang2024distributed}
+Yuxin Yang, Qiang Li, Jinyuan Jia, Yuan Hong, and Binghui Wang.
+\newblock Distributed backdoor attacks on federated graph learning and certified defenses.
+\newblock In {\em CCS}, 2024.
+
+\bibitem{zhang2022efraudcom}
+Ge~Zhang, Zhao Li, Jiaming Huang, Jia Wu, Chuan Zhou, Jian Yang, and Jianliang Gao.
+\newblock efraudcom: An e-commerce fraud detection system via competitive graph neural networks.
+\newblock {\em ACM TOIS}, 2022.
+
+\bibitem{zhang2022projective}
+He~Zhang, Xingliang Yuan, Chuan Zhou, and Shirui Pan.
+\newblock Projective ranking-based gnn evasion attacks.
+\newblock {\em IEEE TKDE}, 2022.
+
+\bibitem{zhang2023detecting}
+Jian Zhang, Xu~Wang, Hongyu Zhang, Hailong Sun, Xudong Liu, Chunming Hu, and Yang Liu.
+\newblock Detecting condition-related bugs with control flow graph neural network.
+\newblock In {\em ISSTA}, 2023.
+
+\bibitem{zhang2024text}
+Xinyu Zhang, Hanbin Hong, Yuan Hong, Peng Huang, Binghui Wang, Zhongjie Ba, and Kui Ren.
+\newblock Text-crs: A generalized certified robustness framework against textual adversarial attacks.
+\newblock In {\em IEEE SP}, 2024.
+
+\bibitem{zhang2021backdoor}
+Zaixi Zhang, Jinyuan Jia, Binghui Wang, and Neil~Zhenqiang Gong.
+\newblock Backdoor attacks to graph neural networks.
+\newblock In {\em SACMAT}, 2021.
+
+\bibitem{zhao2021expressive}
+Xin Zhao, Zeru Zhang, Zijie Zhang, Lingfei Wu, Jiayin Jin, Yang Zhou, Dejing Dou, and Da~Yan.
+\newblock Expressive 1-lipschitz neural networks for robust multiple graph learning against adversarial attacks.
+\newblock In {\em ICML}, 2021.
+
+\bibitem{zhong2024survey}
+Meihui Zhong, Mingwei Lin, Chao Zhang, and Zeshui Xu.
+\newblock A survey on graph neural networks for intrusion detection systems: Methods, trends and challenges.
+\newblock {\em Computers \& Security}, 2024.
+
+\bibitem{zhou2019devign}
+Yaqin Zhou, Shangqing Liu, Jingkai Siow, Xiaoning Du, and Yang Liu.
+\newblock Devign: Effective vulnerability identification by learning comprehensive program semantics via graph neural networks.
+\newblock In {\em NeurIPS}, 2019.
+
+\bibitem{zhu2019robust}
+Dingyuan Zhu, Ziwei Zhang, Peng Cui, and Wenwu Zhu.
+\newblock Robust graph convolutional networks against adversarial attacks.
+\newblock In {\em KDD}, 2019.
+
+\bibitem{zugner2018adversarial}
+Daniel Z{\"u}gner, Amir Akbarnejad, and Stephan G{\"u}nnemann.
+\newblock Adversarial attacks on neural networks for graph data.
+\newblock In {\em KDD}, 2018.
+
+\end{thebibliography}

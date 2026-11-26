@@ -1,0 +1,315 @@
+\begin{thebibliography}{61}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Acharya et~al.(2022)Acharya, Roy, Koneripalli, Jha, Kanan, and Divakaran]{acharya2022detecting}
+Manoj Acharya, Anirban Roy, Kaushik Koneripalli, Susmit Jha, Christopher Kanan, and Ajay Divakaran.
+\newblock Detecting out-of-context objects using graph contextual reasoning network.
+\newblock In \emph{IJCAI}, 2022.
+
+\bibitem[Ahn et~al.(2026)Ahn, Lee, Kim, Shim, Wee, and Choi]{ahn2026can}
+Geo Ahn, Inwoong Lee, Taeoh Kim, Minho Shim, Dongyoon Wee, and Jinwoo Choi.
+\newblock Why can't i open my drawer? mitigating object-driven shortcuts in zero-shot compositional action recognition.
+\newblock In \emph{ECCV}, 2026.
+
+\bibitem[Beery et~al.(2018)Beery, Van~Horn, and Perona]{beery2018recognition}
+Sara Beery, Grant Van~Horn, and Pietro Perona.
+\newblock Recognition in terra incognita.
+\newblock In \emph{ECCV}, 2018.
+
+\bibitem[Betker et~al.(2023)Betker, Goh, Jing, Brooks, Wang, Li, Ouyang, Zhuang, Lee, Guo, Manassra, Dhariwal, Chu, Jiao, and Ramesh]{betker2023dalle3}
+James Betker, Gabriel Goh, Li~Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, Wesam Manassra, Prafulla Dhariwal, Casey Chu, Yunxin Jiao, and Aditya Ramesh.
+\newblock Improving image generation with better captions.
+\newblock Technical report, OpenAI, 2023.
+
+\bibitem[{Black Forest Labs}(2024)]{flux2024}
+{Black Forest Labs}.
+\newblock {FLUX}.
+\newblock \url{https://github.com/black-forest-labs/flux}, 2024.
+
+\bibitem[Bochkovskiy et~al.(2020)Bochkovskiy, Wang, and Liao]{bochkovskiy2020yolov4}
+Alexey Bochkovskiy, Chien-Yao Wang, and Hong-Yuan~Mark Liao.
+\newblock Yolov4: Optimal speed and accuracy of object detection.
+\newblock \emph{arXiv preprint arXiv:2004.10934}, 2020.
+
+\bibitem[Bomatter et~al.(2021)Bomatter, Zhang, Karev, Madan, Tseng, and Kreiman]{bomatter2021pigs}
+Philipp Bomatter, Mengmi Zhang, Dimitar Karev, Spandan Madan, Claire Tseng, and Gabriel Kreiman.
+\newblock When pigs fly: Contextual reasoning in synthetic and natural scenes.
+\newblock In \emph{ICCV}, 2021.
+
+\bibitem[Caesar et~al.(2018)Caesar, Uijlings, and Ferrari]{caesar2018coco}
+Holger Caesar, Jasper Uijlings, and Vittorio Ferrari.
+\newblock Coco-stuff: Thing and stuff classes in context.
+\newblock In \emph{CVPR}, 2018.
+
+\bibitem[Carion et~al.(2020)Carion, Massa, Synnaeve, Usunier, Kirillov, and Zagoruyko]{carion2020end}
+Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko.
+\newblock End-to-end object detection with transformers.
+\newblock In \emph{ECCV}, 2020.
+
+\bibitem[Carion et~al.(2026)Carion, Gustafson, Hu, Debnath, Hu, Suris, Ryali, Alwala, Khedr, Huang, Lei, Ma, Guo, Kalla, Marks, Greer, Wang, Sun, R{\"a}dle, Afouras, Mavroudi, Xu, Wu, Zhou, Momeni, Hazra, Ding, Vaze, Porcher, Li, Li, Kamath, Cheng, Doll{\'a}r, Ravi, Saenko, Zhang, and Feichtenhofer]{carion2026sam3}
+Nicolas Carion, Laura Gustafson, Yuan-Ting Hu, Shoubhik Debnath, Ronghang Hu, Didac Suris, Chaitanya Ryali, Kalyan~Vasudev Alwala, Haitham Khedr, Andrew Huang, Jie Lei, Tengyu Ma, Baishan Guo, Arpit Kalla, Markus Marks, Joseph Greer, Meng Wang, Peize Sun, Roman R{\"a}dle, Triantafyllos Afouras, Effrosyni Mavroudi, Katherine Xu, Tsung-Han Wu, Yu~Zhou, Liliane Momeni, Rishi Hazra, Shuangrui Ding, Sagar Vaze, Francois Porcher, Feng Li, Siyuan Li, Aishwarya Kamath, Ho~Kei Cheng, Piotr Doll{\'a}r, Nikhila Ravi, Kate Saenko, Pengchuan Zhang, and Christoph Feichtenhofer.
+\newblock {SAM} 3: Segment anything with concepts.
+\newblock In \emph{ICLR}, 2026.
+
+\bibitem[Caron et~al.(2021)Caron, Touvron, Misra, J\'egou, Mairal, Bojanowski, and Joulin]{caron2021emerging}
+Mathilde Caron, Hugo Touvron, Ishan Misra, Herv\'e J\'egou, Julien Mairal, Piotr Bojanowski, and Armand Joulin.
+\newblock {Emerging Properties in Self-Supervised Vision Transformers}.
+\newblock In \emph{ICCV}, 2021.
+
+\bibitem[Chakraborty et~al.(2024)Chakraborty, Wang, Gao, Zheng, Zhang, and De~la Torre]{chakraborty2024visual}
+Rwiddhi Chakraborty, Yinong Wang, Jialu Gao, Runkai Zheng, Cheng Zhang, and Fernando De~la Torre.
+\newblock Visual data diagnosis and debiasing with concept graphs.
+\newblock In \emph{NeurIPS}, 2024.
+
+\bibitem[Chen et~al.(2019)Chen, Wang, Pang, Cao, Xiong, Li, Sun, Feng, Liu, Xu, et~al.]{chen2019mmdetection}
+Kai Chen, Jiaqi Wang, Jiangmiao Pang, Yuhang Cao, Yu~Xiong, Xiaoxiao Li, Shuyang Sun, Wansen Feng, Ziwei Liu, Jiarui Xu, et~al.
+\newblock Mmdetection: Open mmlab detection toolbox and benchmark.
+\newblock \emph{arXiv preprint arXiv:1906.07155}, 2019.
+
+\bibitem[Cherti et~al.(2023)Cherti, Beaumont, Wightman, Wortsman, Ilharco, Gordon, Schuhmann, Schmidt, and Jitsev]{cherti2023reproducible}
+Mehdi Cherti, Romain Beaumont, Ross Wightman, Mitchell Wortsman, Gabriel Ilharco, Cade Gordon, Christoph Schuhmann, Ludwig Schmidt, and Jenia Jitsev.
+\newblock Reproducible scaling laws for contrastive language-image learning.
+\newblock In \emph{CVPR}, 2023.
+
+\bibitem[Cho et~al.(2023)Cho, Zala, and Bansal]{cho2023vpgen}
+Jaemin Cho, Abhay Zala, and Mohit Bansal.
+\newblock Visual programming for step-by-step text-to-image generation and evaluation.
+\newblock In \emph{NeurIPS}, 2023.
+
+\bibitem[Dreyer et~al.(2023)Dreyer, Achtibat, Wiegand, Samek, and Lapuschkin]{dreyer2023revealing}
+Maximilian Dreyer, Reduan Achtibat, Thomas Wiegand, Wojciech Samek, and Sebastian Lapuschkin.
+\newblock Revealing hidden context bias in segmentation and object detection through concept-specific explanations.
+\newblock In \emph{CVPRW}, 2023.
+
+\bibitem[D{\"u}nkel et~al.(2025)D{\"u}nkel, Jesslen, Xie, Theobalt, Rupprecht, and Kortylewski]{dunkel2025cns}
+Olaf D{\"u}nkel, Artur Jesslen, Jiahao Xie, Christian Theobalt, Christian Rupprecht, and Adam Kortylewski.
+\newblock {CNS-Bench}: Benchmarking image classifier robustness under continuous nuisance shifts.
+\newblock In \emph{ICCV}, 2025.
+
+\bibitem[Esser et~al.(2024)Esser, Kulal, Blattmann, Entezari, M{\"u}ller, Saini, Levi, Lorenz, Sauer, Boesel, Podell, Dockhorn, English, and Rombach]{esser2024scaling}
+Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas M{\"u}ller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, Dustin Podell, Tim Dockhorn, Zion English, and Robin Rombach.
+\newblock Scaling rectified flow transformers for high-resolution image synthesis.
+\newblock In \emph{ICML}, 2024.
+
+\bibitem[Feng et~al.(2023)Feng, Zhu, Fu, Jampani, Akula, He, Basu, Wang, and Wang]{feng2023layoutgpt}
+Weixi Feng, Wanrong Zhu, Tsu-Jui Fu, Varun Jampani, Arjun Akula, Xuehai He, Sugato Basu, Xin~Eric Wang, and William~Yang Wang.
+\newblock {LayoutGPT}: Compositional visual planning and generation with large language models.
+\newblock In \emph{NeurIPS}, 2023.
+
+\bibitem[Ge et~al.(2021)Ge, Liu, Wang, Li, and Sun]{ge2021yolox}
+Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun.
+\newblock {YOLOX}: Exceeding {YOLO} series in 2021.
+\newblock \emph{arXiv preprint arXiv:2107.08430}, 2021.
+
+\bibitem[Ghiasi et~al.(2021)Ghiasi, Cui, Srinivas, Qian, Lin, Cubuk, Le, and Zoph]{ghiasi2021simple}
+Golnaz Ghiasi, Yin Cui, Aravind Srinivas, Rui Qian, Tsung-Yi Lin, Ekin~D Cubuk, Quoc~V Le, and Barret Zoph.
+\newblock Simple copy-paste is a strong data augmentation method for instance segmentation.
+\newblock In \emph{CVPR}, 2021.
+
+\bibitem[Gupta et~al.(2019)Gupta, Dollar, and Girshick]{gupta2019lvis}
+Agrim Gupta, Piotr Dollar, and Ross Girshick.
+\newblock Lvis: A dataset for large vocabulary instance segmentation.
+\newblock In \emph{CVPR}, 2019.
+
+\bibitem[Hao et~al.(2023)Hao, Chi, Dong, and Wei]{hao2023promptist}
+Yaru Hao, Zewen Chi, Li~Dong, and Furu Wei.
+\newblock Optimizing prompts for text-to-image generation.
+\newblock In \emph{NeurIPS}, 2023.
+
+\bibitem[Kupyn and Rupprecht(2024)]{kupyn2024dataset}
+Orest Kupyn and Christian Rupprecht.
+\newblock Dataset enhancement with instance-level augmentations.
+\newblock In \emph{ECCV}, 2024.
+
+\bibitem[Li et~al.(2025)Li, Zhang, Guo, Zhang, Li, Zhang, Zhang, Zhang, Li, Liu, and Li]{li2024llava}
+Bo~Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan Zhang, Yanwei Li, Ziwei Liu, and Chunyuan Li.
+\newblock {LLaVA-OneVision}: Easy visual task transfer.
+\newblock \emph{TMLR}, 2025.
+
+\bibitem[Li et~al.(2022)Li, Zhang, Zhang, Yang, Li, Zhong, Wang, Yuan, Zhang, Hwang, et~al.]{li2022grounded}
+Liunian~Harold Li, Pengchuan Zhang, Haotian Zhang, Jianwei Yang, Chunyuan Li, Yiwu Zhong, Lijuan Wang, Lu~Yuan, Lei Zhang, Jenq-Neng Hwang, et~al.
+\newblock Grounded language-image pre-training.
+\newblock In \emph{CVPR}, 2022.
+
+\bibitem[Li et~al.(2023)Li, Evtimov, Gordo, Hazirbas, Hassner, Ferrer, Xu, and Ibrahim]{li2023whac}
+Zhiheng Li, Ivan Evtimov, Albert Gordo, Caner Hazirbas, Tal Hassner, Cristian~Canton Ferrer, Chenliang Xu, and Mark Ibrahim.
+\newblock A whac-a-mole dilemma: Shortcuts come in multiples where mitigating one amplifies others.
+\newblock In \emph{CVPR}, 2023.
+
+\bibitem[Lian et~al.(2024)Lian, Li, Yala, and Darrell]{lian2024lmd}
+Long Lian, Boyi Li, Adam Yala, and Trevor Darrell.
+\newblock {LLM}-grounded diffusion: Enhancing prompt understanding of text-to-image diffusion models with large language models.
+\newblock \emph{TMLR}, 2024.
+
+\bibitem[Lin et~al.(2014)Lin, Maire, Belongie, Hays, Perona, Ramanan, Doll{\'a}r, and Zitnick]{mscoco14}
+Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll{\'a}r, and C~Lawrence Zitnick.
+\newblock {Microsoft COCO: Common Objects in Context}.
+\newblock In \emph{ECCV}, 2014.
+
+\bibitem[Liu et~al.(2024)Liu, Zeng, Ren, Li, Zhang, Yang, Jiang, Li, Yang, Su, et~al.]{liu2024grounding}
+Shilong Liu, Zhaoyang Zeng, Tianhe Ren, Feng Li, Hao Zhang, Jie Yang, Qing Jiang, Chunyuan Li, Jianwei Yang, Hang Su, et~al.
+\newblock Grounding dino: Marrying dino with grounded pre-training for open-set object detection.
+\newblock In \emph{ECCV}, 2024.
+
+\bibitem[Liu et~al.(2015)Liu, Luo, Wang, and Tang]{liu2015deep}
+Ziwei Liu, Ping Luo, Xiaogang Wang, and Xiaoou Tang.
+\newblock Deep learning face attributes in the wild.
+\newblock In \emph{ICCV}, 2015.
+
+\bibitem[Merlo et~al.(2026)Merlo, Takmaz, Chen, and Gatt]{merlo2026cooco}
+Filippo Merlo, Ece Takmaz, Wenkai Chen, and Albert Gatt.
+\newblock Common objects out of context ({COOCo}): Investigating multimodal context and semantic scene violations in referential communication.
+\newblock \emph{TACL}, 14, 2026.
+
+\bibitem[Minderer et~al.(2022)Minderer, Gritsenko, Stone, Neumann, Weissenborn, Dosovitskiy, Mahendran, Arnab, Dehghani, Shen, et~al.]{minderer2022simple}
+Matthias Minderer, Alexey Gritsenko, Austin Stone, Maxim Neumann, Dirk Weissenborn, Alexey Dosovitskiy, Aravindh Mahendran, Anurag Arnab, Mostafa Dehghani, Zhuoran Shen, et~al.
+\newblock Simple open-vocabulary object detection with vision transformers.
+\newblock In \emph{ECCV}, 2022.
+
+\bibitem[Minderer et~al.(2023)Minderer, Gritsenko, and Houlsby]{minderer2023scaling}
+Matthias Minderer, Alexey Gritsenko, and Neil Houlsby.
+\newblock Scaling open-vocabulary object detection.
+\newblock In \emph{NeurIPS}, 2023.
+
+\bibitem[Oliva and Torralba(2007)]{oliva2007role}
+Aude Oliva and Antonio Torralba.
+\newblock The role of context in object recognition.
+\newblock \emph{Trends in cognitive sciences}, 11\penalty0 (12), 2007.
+
+\bibitem[Oquab et~al.(2024)Oquab, Darcet, Moutakanni, Vo, Szafraniec, Khalidov, Fernandez, HAZIZA, Massa, El-Nouby, Assran, Ballas, Galuba, Howes, Huang, Li, Misra, Rabbat, Sharma, Synnaeve, Xu, Jegou, Mairal, Labatut, Joulin, and Bojanowski]{oquab2024dinov}
+Maxime Oquab, Timoth{\'e}e Darcet, Th{\'e}o Moutakanni, Huy~V. Vo, Marc Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel HAZIZA, Francisco Massa, Alaaeldin El-Nouby, Mido Assran, Nicolas Ballas, Wojciech Galuba, Russell Howes, Po-Yao Huang, Shang-Wen Li, Ishan Misra, Michael Rabbat, Vasu Sharma, Gabriel Synnaeve, Hu~Xu, Herve Jegou, Julien Mairal, Patrick Labatut, Armand Joulin, and Piotr Bojanowski.
+\newblock {DINO}v2: Learning robust visual features without supervision.
+\newblock \emph{TMLR}, 2024.
+\newblock Featured Certification.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, et~al.]{radford2021learning}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et~al.
+\newblock {Learning Transferable Visual Models from Natural Language Supervision}.
+\newblock In \emph{ICML}, 2021.
+
+\bibitem[Sagawa* et~al.(2020)Sagawa*, Koh*, Hashimoto, and Liang]{sagawa2020distributionally}
+Shiori Sagawa*, Pang~Wei Koh*, Tatsunori~B. Hashimoto, and Percy Liang.
+\newblock Distributionally robust neural networks.
+\newblock In \emph{ICLR}, 2020.
+
+\bibitem[Saharia et~al.(2022)Saharia, Chan, Saxena, Li, Whang, Denton, Ghasemipour, Gontijo~Lopes, Karagol~Ayan, Salimans, et~al.]{saharia2022photorealistic}
+Chitwan Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily~L Denton, Kamyar Ghasemipour, Raphael Gontijo~Lopes, Burcu Karagol~Ayan, Tim Salimans, et~al.
+\newblock Photorealistic text-to-image diffusion models with deep language understanding.
+\newblock In \emph{NeurIPS}, 2022.
+
+\bibitem[Sarridis et~al.(2025)Sarridis, Koutlis, Papadopoulos, and Diou]{sarridis2025mavias}
+Ioannis Sarridis, Christos Koutlis, Symeon Papadopoulos, and Christos Diou.
+\newblock {MAVias}: Mitigate any visual bias.
+\newblock In \emph{ICCV}, 2025.
+
+\bibitem[Schuhmann et~al.(2022)Schuhmann, Beaumont, Vencu, Gordon, Wightman, Cherti, Coombes, Katta, Mullis, Wortsman, Schramowski, Kundurthy, Crowson, Schmidt, Kaczmarczyk, and Jitsev]{schuhmann2022laionb}
+Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade~W Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, Patrick Schramowski, Srivatsa~R Kundurthy, Katherine Crowson, Ludwig Schmidt, Robert Kaczmarczyk, and Jenia Jitsev.
+\newblock {LAION}-5b: An open large-scale dataset for training next generation image-text models.
+\newblock In \emph{NeurIPS Datasets and Benchmarks Track}, 2022.
+
+\bibitem[Shao et~al.(2019)Shao, Li, Zhang, Peng, Yu, Zhang, Li, and Sun]{shao2019objects365}
+Shuai Shao, Zeming Li, Tianyuan Zhang, Chao Peng, Gang Yu, Xiangyu Zhang, Jing Li, and Jian Sun.
+\newblock Objects365: A large-scale, high-quality dataset for object detection.
+\newblock In \emph{ICCV}, 2019.
+
+\bibitem[Shetty et~al.(2019)Shetty, Schiele, and Fritz]{shetty2019not}
+Rakshith Shetty, Bernt Schiele, and Mario Fritz.
+\newblock Not using the car to see the sidewalk--quantifying and controlling the effects of context in classification and segmentation.
+\newblock In \emph{CVPR}, 2019.
+
+\bibitem[Sim{\'e}oni et~al.(2025)Sim{\'e}oni, Vo, Seitzer, Baldassarre, Oquab, Jose, Khalidov, Szafraniec, Yi, Ramamonjisoa, et~al.]{simeoni2025dinov3}
+Oriane Sim{\'e}oni, Huy~V Vo, Maximilian Seitzer, Federico Baldassarre, Maxime Oquab, Cijo Jose, Vasil Khalidov, Marc Szafraniec, Seungeun Yi, Micha{\"e}l Ramamonjisoa, et~al.
+\newblock Dinov3.
+\newblock \emph{arXiv preprint arXiv:2508.10104}, 2025.
+
+\bibitem[Singh et~al.(2020)Singh, Mahajan, Grauman, Lee, Feiszli, and Ghadiyaram]{singh2020don}
+Krishna~Kumar Singh, Dhruv Mahajan, Kristen Grauman, Yong~Jae Lee, Matt Feiszli, and Deepti Ghadiyaram.
+\newblock Don't judge an object by its context: Learning to overcome contextual bias.
+\newblock In \emph{CVPR}, 2020.
+
+\bibitem[{Stability AI}(2024)]{stabilityai2024sd35}
+{Stability AI}.
+\newblock {Stable Diffusion 3.5 Large}.
+\newblock \url{https://huggingface.co/stabilityai/stable-diffusion-3.5-large}, 2024.
+\newblock Model release.
+
+\bibitem[Suvorov et~al.(2022)Suvorov, Logacheva, Mashikhin, Remizova, Ashukha, Silvestrov, Kong, Goka, Park, and Lempitsky]{suvorov2022resolution}
+Roman Suvorov, Elizaveta Logacheva, Anton Mashikhin, Anastasia Remizova, Arsenii Ashukha, Aleksei Silvestrov, Naejin Kong, Harshith Goka, Kiwoong Park, and Victor Lempitsky.
+\newblock Resolution-robust large mask inpainting with {Fourier} convolutions.
+\newblock In \emph{WACV}, 2022.
+
+\bibitem[Torralba(2003)]{torralba2003contextual}
+Antonio Torralba.
+\newblock Contextual priming for object detection.
+\newblock \emph{IJCV}, 53\penalty0 (2), 2003.
+
+\bibitem[Tschannen et~al.(2025)Tschannen, Gritsenko, Wang, Naeem, Alabdulmohsin, Parthasarathy, Evans, Beyer, Xia, Mustafa, et~al.]{tschannen2025siglip}
+Michael Tschannen, Alexey Gritsenko, Xiao Wang, Muhammad~Ferjad Naeem, Ibrahim Alabdulmohsin, Nikhil Parthasarathy, Talfan Evans, Lucas Beyer, Ye~Xia, Basil Mustafa, et~al.
+\newblock Siglip 2: Multilingual vision-language encoders with improved semantic understanding, localization, and dense features.
+\newblock \emph{arXiv preprint arXiv:2502.14786}, 2025.
+
+\bibitem[Wortsman et~al.(2022{\natexlab{a}})Wortsman, Ilharco, Gadre, Roelofs, Gontijo-Lopes, Morcos, Namkoong, Farhadi, Carmon, Kornblith, et~al.]{wortsman2022model}
+Mitchell Wortsman, Gabriel Ilharco, Samir~Ya Gadre, Rebecca Roelofs, Raphael Gontijo-Lopes, Ari~S Morcos, Hongseok Namkoong, Ali Farhadi, Yair Carmon, Simon Kornblith, et~al.
+\newblock Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time.
+\newblock In \emph{ICML}, 2022{\natexlab{a}}.
+
+\bibitem[Wortsman et~al.(2022{\natexlab{b}})Wortsman, Ilharco, Kim, Li, Kornblith, Roelofs, Lopes, Hajishirzi, Farhadi, Namkoong, et~al.]{wortsman2022robust}
+Mitchell Wortsman, Gabriel Ilharco, Jong~Wook Kim, Mike Li, Simon Kornblith, Rebecca Roelofs, Raphael~Gontijo Lopes, Hannaneh Hajishirzi, Ali Farhadi, Hongseok Namkoong, et~al.
+\newblock Robust fine-tuning of zero-shot models.
+\newblock In \emph{CVPR}, 2022{\natexlab{b}}.
+
+\bibitem[Xia et~al.(2022)Xia, Pan, Song, Li, and Huang]{xia2022vision}
+Zhuofan Xia, Xuran Pan, Shiji Song, Li~Erran Li, and Gao Huang.
+\newblock Vision transformer with deformable attention.
+\newblock In \emph{CVPR}, 2022.
+
+\bibitem[Xie et~al.(2025)Xie, Li, Li, Liu, Ong, and Loy]{xie2025mosaicfusion}
+Jiahao Xie, Wei Li, Xiangtai Li, Ziwei Liu, Yew~Soon Ong, and Chen~Change Loy.
+\newblock Mosaicfusion: Diffusion models as data augmenters for large vocabulary instance segmentation.
+\newblock \emph{IJCV}, 133\penalty0 (4), 2025.
+
+\bibitem[Yang et~al.(2024)Yang, Yang, Zhang, Hui, Zheng, Yu, Li, Liu, Huang, Wei, Lin, Yang, Tu, Zhang, Yang, Yang, Zhou, Lin, Dang, Lu, Bao, Yang, Yu, Li, Xue, Zhang, Zhu, Men, Lin, Li, Tang, Xia, Ren, Ren, Fan, Su, Zhang, Wan, Liu, Cui, Zhang, and Qiu]{qwen2024qwen25}
+An~Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo~Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan Lin, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jingren Zhou, Junyang Lin, Kai Dang, Keming Lu, Keqin Bao, Kexin Yang, Le~Yu, Mei Li, Mingfeng Xue, Pei Zhang, Qin Zhu, Rui Men, Runji Lin, Tianhao Li, Tianyi Tang, Tingyu Xia, Xingzhang Ren, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yu~Wan, Yuqiong Liu, Zeyu Cui, Zhenru Zhang, and Zihan Qiu.
+\newblock {Qwen2.5} technical report.
+\newblock \emph{arXiv preprint}, 2024.
+
+\bibitem[Zhai et~al.(2023)Zhai, Mustafa, Kolesnikov, and Beyer]{zhai2023sigmoid}
+Xiaohua Zhai, Basil Mustafa, Alexander Kolesnikov, and Lucas Beyer.
+\newblock {Sigmoid Loss for Language Image Pre-Training}.
+\newblock In \emph{ICCV}, 2023.
+
+\bibitem[Zhang et~al.(2023)Zhang, Li, Liu, Zhang, Su, Zhu, Ni, and Shum]{zhang2022dino}
+Hao Zhang, Feng Li, Shilong Liu, Lei Zhang, Hang Su, Jun Zhu, Lionel~M Ni, and Heung-Yeung Shum.
+\newblock Dino: Detr with improved denoising anchor boxes for end-to-end object detection.
+\newblock In \emph{ICLR}, 2023.
+
+\bibitem[Zhang et~al.(2018)Zhang, Cisse, Dauphin, and Lopez-Paz]{zhang2017mixup}
+Hongyi Zhang, Moustapha Cisse, Yann~N Dauphin, and David Lopez-Paz.
+\newblock mixup: Beyond empirical risk minimization.
+\newblock In \emph{ICLR}, 2018.
+
+\bibitem[Zhao et~al.(2022)Zhao, Yu, Ma, Yu, Mei, Wang, He, Yuille, and Kortylewski]{zhao2022ood}
+Bingchen Zhao, Shaozuo Yu, Wufei Ma, Mingxin Yu, Shenxiao Mei, Angtian Wang, Ju~He, Alan Yuille, and Adam Kortylewski.
+\newblock Ood-cv: A benchmark for robustness to out-of-distribution shifts of individual nuisances in natural images.
+\newblock In \emph{ECCV}. Springer, 2022.
+
+\bibitem[Zhao et~al.(2023)Zhao, Sheng, Bao, Chen, Chen, Wen, Yuan, Liu, Zhou, Chu, et~al.]{zhao2023x}
+Hanqing Zhao, Dianmo Sheng, Jianmin Bao, Dongdong Chen, Dong Chen, Fang Wen, Lu~Yuan, Ce~Liu, Wenbo Zhou, Qi~Chu, et~al.
+\newblock X-paste: Revisiting scalable copy-paste for instance segmentation using clip and stablediffusion.
+\newblock In \emph{ICML}, 2023.
+
+\bibitem[Zhu et~al.(2021)Zhu, Su, Lu, Li, Wang, and Dai]{zhu2021deformable}
+Xizhou Zhu, Weijie Su, Lewei Lu, Bin Li, Xiaogang Wang, and Jifeng Dai.
+\newblock Deformable {DETR}: Deformable transformers for end-to-end object detection.
+\newblock In \emph{ICLR}, 2021.
+
+\bibitem[Zong et~al.(2023)Zong, Song, and Liu]{zong2023detrs}
+Zhuofan Zong, Guanglu Song, and Yu~Liu.
+\newblock Detrs with collaborative hybrid assignments training.
+\newblock In \emph{ICCV}, 2023.
+
+\end{thebibliography}

@@ -1,0 +1,137 @@
+\begin{thebibliography}{18}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Acar et~al.(2021)Acar, Zhao, Navarro, Mattina, Whatmough, and
+  Saligrama]{feddyn}
+Acar, D. A.~E., Zhao, Y., Navarro, R.~M., Mattina, M., Whatmough, P.~N., and
+  Saligrama, V.
+\newblock Federated learning based on dynamic regularization.
+\newblock \emph{arXiv preprint arXiv:2111.04263}, 2021.
+
+\bibitem[An et~al.(2024)An, Shen, Hu, and Luo]{fedmrur}
+An, X., Shen, L., Hu, H., and Luo, Y.
+\newblock Federated learning with manifold regularization and normalized update
+  reaggregation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Andreux et~al.(2020)Andreux, du~Terrail, Beguier, and Tramel]{silobn}
+Andreux, M., du~Terrail, J.~O., Beguier, C., and Tramel, E.~W.
+\newblock Siloed federated learning for multi-centric histopathology datasets.
+\newblock In \emph{Domain Adaptation and Representation Transfer, and
+  Distributed and Collaborative Learning: Second MICCAI Workshop, DART 2020,
+  and First MICCAI Workshop, DCL 2020, Held in Conjunction with MICCAI 2020,
+  Lima, Peru, October 4--8, 2020, Proceedings 2}, pp.\  129--139. Springer,
+  2020.
+
+\bibitem[Karimireddy et~al.(2020)Karimireddy, Kale, Mohri, Reddi, Stich, and
+  Suresh]{scaffold}
+Karimireddy, S.~P., Kale, S., Mohri, M., Reddi, S., Stich, S., and Suresh,
+  A.~T.
+\newblock Scaffold: Stochastic controlled averaging for federated learning.
+\newblock In \emph{International conference on machine learning}, pp.\
+  5132--5143. PMLR, 2020.
+
+\bibitem[Krizhevsky et~al.(2009)Krizhevsky, Hinton, et~al.]{cifar}
+Krizhevsky, A., Hinton, G., et~al.
+\newblock Learning multiple layers of features from tiny images.
+\newblock 2009.
+
+\bibitem[Lee \& Yoon(2024)Lee and Yoon]{fedsamr}
+Lee, T. and Yoon, S.~W.
+\newblock Rethinking the flat minima searching in federated learning.
+\newblock In Salakhutdinov, R., Kolter, Z., Heller, K., Weller, A., Oliver, N.,
+  Scarlett, J., and Berkenkamp, F. (eds.), \emph{Proceedings of the 41st
+  International Conference on Machine Learning}, volume 235 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  27037--27071. PMLR,
+  21--27 Jul 2024.
+\newblock URL \url{https://proceedings.mlr.press/v235/lee24aa.html}.
+
+\bibitem[Li et~al.(2023)Li, Schmidt, Alstr{\o}m, and Stich]{diversity}
+Li, B., Schmidt, M.~N., Alstr{\o}m, T.~S., and Stich, S.~U.
+\newblock On the effectiveness of partial variance reduction in federated
+  learning with heterogeneous data.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, pp.\  3964--3973, 2023.
+
+\bibitem[Li et~al.(2021{\natexlab{a}})Li, He, and Song]{moon}
+Li, Q., He, B., and Song, D.
+\newblock Model-contrastive federated learning.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision
+  and pattern recognition}, pp.\  10713--10722, 2021{\natexlab{a}}.
+
+\bibitem[Li et~al.(2020)Li, Sahu, Zaheer, Sanjabi, Talwalkar, and
+  Smith]{fedprox}
+Li, T., Sahu, A.~K., Zaheer, M., Sanjabi, M., Talwalkar, A., and Smith, V.
+\newblock Federated optimization in heterogeneous networks.
+\newblock \emph{Proceedings of Machine learning and systems}, 2:\penalty0
+  429--450, 2020.
+
+\bibitem[Li et~al.(2021{\natexlab{b}})Li, Jiang, Zhang, Kamp, and Dou]{fedbn}
+Li, X., Jiang, M., Zhang, X., Kamp, M., and Dou, Q.
+\newblock Fedbn: Federated learning on non-iid features via local batch
+  normalization.
+\newblock \emph{arXiv preprint arXiv:2102.07623}, 2021{\natexlab{b}}.
+
+\bibitem[Liu et~al.()Liu, Bai, Jiang, Chen, and Wang]{understanding}
+Liu, J., Bai, Y., Jiang, G., Chen, T., and Wang, H.
+\newblock Understanding why neural networks generalize well through gsnr of
+  parameters.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[McMahan et~al.(2017)McMahan, Moore, Ramage, Hampson, and
+  y~Arcas]{fedfed}
+McMahan, B., Moore, E., Ramage, D., Hampson, S., and y~Arcas, B.~A.
+\newblock Communication-efficient learning of deep networks from decentralized
+  data.
+\newblock In \emph{Artificial intelligence and statistics}, pp.\  1273--1282.
+  PMLR, 2017.
+
+\bibitem[Mendieta et~al.(2022)Mendieta, Yang, Wang, Lee, Ding, and
+  Chen]{fedalign}
+Mendieta, M., Yang, T., Wang, P., Lee, M., Ding, Z., and Chen, C.
+\newblock Local learning matters: Rethinking data heterogeneity in federated
+  learning.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, pp.\  8397--8406, 2022.
+
+\bibitem[Michalkiewicz et~al.(2023)Michalkiewicz, Faraki, Yu, Chandraker, and
+  Baktashmotlagh]{adg}
+Michalkiewicz, M., Faraki, M., Yu, X., Chandraker, M., and Baktashmotlagh, M.
+\newblock Domain generalization guided by gradient signal to noise ratio of
+  parameters.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision}, pp.\  6177--6188, 2023.
+
+\bibitem[Qu et~al.(2022)Qu, Li, Duan, Liu, Tang, and Lu]{fedsam}
+Qu, Z., Li, X., Duan, R., Liu, Y., Tang, B., and Lu, Z.
+\newblock Generalized federated learning via sharpness aware minimization.
+\newblock In \emph{International conference on machine learning}, pp.\
+  18250--18280. PMLR, 2022.
+
+\bibitem[Rangwani et~al.(2022)Rangwani, Aithal, Mishra, et~al.]{saddle}
+Rangwani, H., Aithal, S.~K., Mishra, M., et~al.
+\newblock Escaping saddle points for effective generalization on
+  class-imbalanced data.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 22791--22805, 2022.
+
+\bibitem[Varno et~al.(2022)Varno, Saghayi, Rafiee~Sevyeri, Gupta, Matwin, and
+  Havaei]{adabest}
+Varno, F., Saghayi, M., Rafiee~Sevyeri, L., Gupta, S., Matwin, S., and Havaei,
+  M.
+\newblock Adabest: Minimizing client drift in federated learning via adaptive
+  bias estimation.
+\newblock In \emph{European Conference on Computer Vision}, pp.\  710--726.
+  Springer, 2022.
+
+\bibitem[Wang et~al.(2023)Wang, Shi, and Chang]{fedtan}
+Wang, Y., Shi, Q., and Chang, T.-H.
+\newblock Why batch normalization damage federated learning on non-iid data?
+\newblock \emph{IEEE Transactions on Neural Networks and Learning Systems},
+  2023.
+
+\end{thebibliography}

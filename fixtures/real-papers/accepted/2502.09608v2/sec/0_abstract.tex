@@ -1,0 +1,12 @@
+\begin{abstract}
+Sketch segmentation involves grouping pixels within a sketch that belong to the same object or instance. It serves as a valuable tool for sketch editing tasks, such as moving, scaling, or removing specific components. While image segmentation models have demonstrated remarkable capabilities in recent years, sketches present unique challenges for these models due to their sparse nature and wide variation in styles.
+We introduce \methodname{}, a method for instance segmentation of raster scene sketches. Our approach adapts state-of-the-art image segmentation and object detection models to the sketch domain by employing class-agnostic fine-tuning and refining segmentation masks using depth cues. Furthermore, our method organizes sketches into sorted layers, where occluded instances are inpainted, enabling advanced sketch editing applications.
+As existing datasets in this domain lack variation in sketch styles, we construct a synthetic scene sketch segmentation dataset, \datasetname{}, featuring sketches with diverse brush strokes and varying levels of detail. We use this dataset to demonstrate the robustness of our approach. \rev{Code and data for this paper are released at project page: \href{https://inklayer.github.io}{\texttt{\textcolor{magenta}{https://inklayer.github.io}}}}.
+
+
+% \maneesh{Contrib from slides: (1) We domain adapt object bounding box detection models from natural images to sketches using a relatively small set of class agnotic sketch data. -- can do this because domain adaptation is largely about shifting from full-color natural images to black pen strokes on white backgrounds. Exact style of sketches matters less -- but must cover some sylistic variation.}
+
+% \maneesh{Contrib from slides: (2): We show that existing natural image segmentation models grounded with domain adapted bounding boxes perform well on sketches, but leave some ambiguity aboout strokes in the overlap regions between bounding boxes. Likely because sketches do not include all the cues (e.g. depth, texture etc.) found in natural images. -- We use priors to better resolve this issue (Not sure I follow what we are doing here.)}
+
+% \maneesh{Should relate both of these to gestalt in the intro if possible.}
+\end{abstract}

@@ -1,0 +1,18 @@
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{COCO}} & \multicolumn{4}{c}{\textbf{STRANGE-Bench}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Augmentation & $\text{AP}^{\text{val}}$ $\uparrow$ & $\text{AP}^{\text{T}}$ $\uparrow$ & $\text{AP}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $T_{1\text{-}5}^{\text{T}}$ $\uparrow$ & $T_{1\text{-}5}^{\text{A}}$ $\uparrow$ & $\Delta_{1\text{-}5}$ $\downarrow$ & $T_{\text{never}}$ $\uparrow$ \\
+\midrule
+Zero Shot & 56.9 & 57.7 & 51.4 & 6.3 & 93.3 & 90.9 & 2.4 & 92.4 \\
+\midrule
+\multicolumn{9}{l}{\emph{Non-generative}} \\
+SCP & 58.5 & 59.6 & 53.4 & 6.2 & 93.3 & 92.4 & 0.9 & 93.3 \\
+\midrule
+\multicolumn{9}{l}{\emph{Generative}} \\
+XPaste & \underline{58.7} & \underline{59.7} & \textbf{54.1} & \textbf{5.6} & 93.9 & 93.6 & \textbf{0.3} & \underline{94.6} \\
+\midrule
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 58.6 & \textbf{59.8} & 53.6 & 6.2 & \underline{94.3} & \underline{93.7} & \underline{0.6} & 94.5 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{58.9} & \underline{59.7} & \underline{53.7} & \underline{6.0} & \textbf{95.0} & \textbf{94.7} & \textbf{0.3} & \textbf{95.2} \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,265 @@
+\section{Dual Model architecture details}\label{sec:dualmodeldetails}
+
+As shown in Fig.~\ref{fig:pipeline}, our architecture includes a fast streaming model and a slower conversation embedding model. The streaming model outputs audio with minimal latency, processing each chunk as it arrives. The slow model buffers $T$ seconds of audio to capture long-term conversational dynamics and generates a conversation embedding, which conditions the streaming model for the next $T$ seconds before being updated.
+
+The conversation embedding model also takes the wearer's self-speech as input, estimated using a neural beamformer. While the beamformer adds some latency, it is negligible compared to $T$ and does not affect streaming model latency. The self-speech is concatenated with the noisy audio along the channel dimension and passed to the conversation embedding model.
+
+
+Both the streaming and conversation embedding models are based on TF-GridNet~\cite{tfgridnet} and operate on audio in the time-frequency (TF) domain. We first convert time-domain audio signal $x \in \mathbf{R}^{C \times t}$, where $C$ is the number of channels and $t$ is the number of frames, using the short-time Fourier Transform (STFT) to obtain the TF-representation $X \in \mathbf{C}^{C \times F \times L}$, where $F$ is the number of frequency bins, and $L = \frac{t}{\tau}$ is the number of time steps after STFT. The real and imaginary components are concatenated along the channel dimension and the resulting tensor $X' \in \mathbf{R}^{2C \times F \times L}$ is provided as the input. 
+
+The conversation embedding model first maps $X'$ to a $D$-channel latent space using a $3\times3$ 2D causal convolutional layer to get $Z_e \in \mathbf{R}^{D \times F \times L}$. Then, the input is processed by a stack of six extraction blocks, each of which consists of a local module and a global module. The local module processes audio information within a $T$ second chunk. It uses bidirectional LSTMs to 1) model the spectral information within the same time step, and 2) model the temporal information within the same frequency bin over exactly $T$ second chunks. This latter process requires that the model wait for $T$ seconds before it can process the sequence of chunks. The global module models relationships across sequences of $T$ second chunks. Specifically, we average pool the information from every $T$ seconds to reduce the temporal resolution and use self-attention on this pooled representation. To ensure causality, attention weights are masked using a lower-triangular matrix, allowing each time step to attend only to previous steps. We use 4 attention heads and absolute positional encoding. Following the global module, we replicate every time step in the pooled representation to retrieve a tensor with the original number of timesteps before pooling. After the last extraction block, we simulate the slow model's algorithmic latency by shifting the result backwards in time by $T$ seconds, inserting zeros at the beginning. This time-varying conversation embedding $E \in \mathbf{R}^{D \times F \times L }$ is returned and can be used to condition the streaming model.
+
+The streaming model also maps $X'$ to a latent representation $Z_s \in \mathbf{R}^{D \times F \times L}$ using a $3\times3$ 2D causal convolutional layer and processes the resulting tensor through six extraction blocks. The model is conditioned on the conversation embedding by multiplying it, element-wise, with the feature map between the first and second extraction blocks. The extraction block uses a bidirectional LSTM to model sequences of frequencies within the same time frame, but replaces the bidirectional temporal LSTM with a unidirectional LSTM to reduce latency and discards the global module entirely. After the last extraction block, we use a deconvolution layer to convert the data back to the TF-domain $Y'\in \mathbf{R}^{2C \times T \times F}$. Finally, we use an inverse STFT and overlap-add to reconstruct the output time-domain signal $x \in \mathbf{R}^{1 \times T}$
+
+% Like the embedding model, it begins with an STFT using the same chunk size, look-back and lookahead. The resulting TF representation is passed through a \(3 \times 3\) convolutional layer. Prior to the first extraction block, the model conditions on the embedding \(\mathbf{e}\) by performing an element-wise multiplication with the input TF features.
+
+We adopt the dual-window method for time–frequency transformation from~\cite{low_latency_stft}. Using this framework, we use an STFT with a chunk size of 200 samples (12.5~ms) and a lookback and lookahead of 32 samples (2~ms). The output window size for the inverse STFT is 232 samples, i.e. we discard the first 32 samples of the inverse FFT output every STFT frame. We use rectangular synthesis and analysis windows. Both models use a latent dimension $D=32$, and an LSTM hidden dimension $H=32$. The local modules of the embedding module use unfolding to reduce the number of steps to process in the time and frequency sequences. This unfolding operation has a kernel size of 2 and a stride size of 2. The global modules project the tensor onto a smaller subspace with only 2 channels before applying self-attention.
+
+% Due to the quadratic memory complexity of self-attention with respect to sequence length, training on full 60-second sequences is computationally expensive \textcolor{red}{but now there's no attention in the streaming model, what's a good reason for training on 10s audio}. Therefore, during training, we randomly sample 10-second segments from the full input. The corresponding 10-second slice of the conversation embedding \(\mathbf{e}\) is extracted and provided to the streaming model. The loss is then computed only on the 10-second predicted output.
+The  conversation embedding model has 986K parameters and the streaming model has 491K parameters.
+
+\section{Beamformer model   details}\label{sec:beamformerdetails}
+
+Our beamformer model follows the architecture in~\cite{soundbubble}, excluding the frequency compression modules. To minimize algorithmic latency, we once again use the dual-window method for time–frequency transformation from~\cite{low_latency_stft}. We use a chunk size of 96 samples (6~ms), with a lookback of 96 samples (4~ms) and a lookahead of 64 samples (6~ms). The encoder consists of 3×3 2D causal convolution layers, producing a 32-dimensional latent representation. The model then processes the input with 6 GridNet blocks and LSTMs with a hidden dimension of 32. The inverse DFT uses a 160-sample output window, discarding the first 96 samples during overlap-add. The network outputs two channels, which are averaged to produce the final single-channel beamformer output.
+
+
+%We use a chunk size of 96 samples (6~ms), a lookback of 96 samples (4~ms), and a lookahead of 64 samples (6~ms). The network uses 3$\times$3 convolution layers for the encoder, an latent dimension of 32 after the encoder, 6 repetitions of GridNet blocks, and an LSTM hidden dimension of 32. The inverse DFT uses an output window size of 160 samples. The network outputs two channels, and we average them to obtain then final, single-channel beamformer output.
+
+
+
+\subsection{Beamformer datasets }\label{sec:beamformerdatasets}
+
+
+
+The beamformer is a neural network designed to extract the user's self-speech in the presence of surrounding speech and noise. It takes binaural audio recorded from a headset worn by the user as input. Because the network relies on spatial cues, such as inter-channel phase and level differences, it is especially sensitive to spatial features that are difficult to model accurately in simulated environments.
+
+To address this, we first pretrain the beamformer on a large dataset of synthetically generated binaural recordings, then finetune it on a smaller set of real-world binaural recordings. The final model is a lightweight beamformer with 174K parameters that generalizes well to real-world acoustic conditions, making it well-suited for use as a self-speech extractor for our real-time hearing assistant.
+
+
+%The beamformer is a neural network that is tasked with extracting the user's self-speech in the presence of interfering speech and noise sources around the user. The input to the network is a binaural audio signal recorded by a headset worn by the user.  We seek to train a beamformer that generalizes to real world multipath. However, since this network operates on binaural audio, it is particularly sensitive to spatial features such as inter-channel phase and level differences, which are tricky to capture accurately with spatial acoustic simulators. To alleviate this problem, we first pretrain our network on a large dataset of synthetically generated binaural recordings, and then finetune on a smaller dataset of binaural audio collected in the real world. The resulting network is a lightweight beamformer with 174~K parameters that generalizes well to the real world, making it suitable to use as a self-speech extractor to the proposed conversation extraction system.
+
+To train the beamformer on synthetic data, we create a dataset of 5-second audio mixtures. Each mixture includes speech from a user wearing a binaural headset and 1 to 5 interfering speakers, sampled with equal probability. All speech signals are drawn from LibriSpeech. If an audio clip exceeds 5 seconds, we randomly crop a 5-second segment; if it is shorter, we pad it with a random duration of silence. Simulated egocentric binaural signals are generated using the method described in~\xref{sec:spatialize}, and these signals are summed to form the final mixture. Interfering signals are scaled so that the mixture’s SNR is uniformly distributed between -5 and 20dB. Training and validation audio are sampled from LibriSpeech’s \verb+train-clean-360+ and \verb+dev-clean+ splits, respectively. The final synthetic dataset contains 20K training mixtures and 1K val mixtures.
+
+
+%We obtain simulated egocentric binaural signals using the process described in~\ref{sec:spatialize}, and sum the signals together to obtain the mixture. We scale the interfering signals so that the SNR of the mixtures is uniformly distributed in $[-5, 20]$. The audio for the train and validation splits is sampled from LibriSpeech's \verb+train-clean-360+ and \verb+dev-clean+ splits respectively. This synthetic dataset consisted of 20K training mixtures and 1k validation mixtures.
+
+We further train the beamformer using real-world data. For this, we collected 3 hours of self-speech from 9 participants across 15 different rooms, along with 4 hours of interfering speech from 4 participants in 3 rooms. To generate training examples, we create 5-second binaural mixtures by combining a 5-second self-speech clip with 0 to 5 interfering speech clips of the same length. Each 5-second clip is formed by extracting 2–5 seconds of active speech from a speaker and padding it with a random amount of silence.
+
+All audio clips are scaled so that their power (in dBFS) follows a normal distribution with a mean of -25 and a standard deviation of 5. Additionally, we include a 5-second binaural noise clip from the binaural WHAM! dataset. The WHAM! noise is randomly scaled by a factor in $[0,1]$ before being added to the mixture. Noise clips for training and validation are drawn from the \verb+tr+ and \verb+cv+ splits of the WHAM! dataset, respectively. The final mixture is obtained by summing the self-speech, interfering speech, and noise. Interfering speech and noise are scaled to produce an overall SNR uniformly distributed in $[-5,20]$~dB. These real-world mixtures are generated on the fly during training, and we use 1,000 mixtures for validation.
+
+% 315
+% 403
+% 422
+% 306
+% 324
+% 503
+% 305
+% 314
+% 303
+% hallway
+% evacuation stairs
+% 322
+% 318
+% Habib room
+% Noe room
+
+\subsection{Beamformer training }\label{sec:beamformertrainingdetails}
+
+The beamformer is trained in two stages: (1) on synthetic data, and (2) fine-tuned on real-world recordings. In both stages, we use a batch size of 8, apply gradient clipping with a max norm of 0.1, and optimize using AdamW \cite{adamw} with a weight decay of 0.01.
+
+
+The synthetic data training stage is trained for 200 epochs on  negative SNR Loss. We vary the learning rate based on a schedule. For the first 10 epochs, we linearly increase the learning rate from 0.0001 to 0.001. Then, we maintain this learning rate for 140 epochs. Finally, we further train for 50 epochs, halving the learning rate every 15 epochs.
+
+The real world data fine-tuning stage occurs over 300 epochs, with each epoch defined as 20K iterations. Here, we use the following composite loss function:  $L(\hat{x}, x) = 10 ||x-\hat{x}||_1 + L_{MR}(\hat{x}, x)$, where $x$ is the target signal, $\hat{x}$ is the beamformer output signal, $||\cdot||_1$ is the L1-norm, and $L_{MR}$ is the multiresolution STFT loss. The multiresolution STFT loss uses a weight of 1 for the spectral convergence loss term, a weight of 1 for the log magnitude loss term, a weight of 4 for the linear magnitude loss term. It also uses Hanning windows with FFT sizes $[1024, 2048, 512]$, hop sizes $[120, 240, 50]$, and window lengths $[600,1200,240]$. The learning rate is initially 0.001 and we halve it if the loss function does not improve after 8 epochs.
+
+\subsection{Beamformer real-world evaluation}\label{sec:beamformereval}
+We evaluate the beamformer on real world recorded data from 6 unseen human participants in 3 unseen rooms. We group participants in pairs, and record data for every pair of participants in a different room. Each participant wears a microphone around each ear to record a binaural recording. The pair of participants take turns speaking for 8-10 minutes, with both participants recording audio the entire time. We process the recordings to slice out sections of self-speech recordings (same recorder and speaker) and interfering speech recordings (different recorder and speaker). Then, we create 100 5-second mixtures per speaker by combining a 5-second crop of self-speech and with a 5-second crop of interfering speech recorded by the same participant. We scale the power of each segment in a similar fashion as described in  \xref{sec:beamformerdatasets}, and then further scale the interfering speech so the scaled SNR is now uniformly sampled from $[-5, 5]$~dB. We report the results on this out-of-distribution beamformer dataset in Table~\ref{tab:bf_eval}, clearly showing significant noise reduction and self-speech extraction.
+
+\begin{table}[t!]
+%\vskip -0.07in
+\caption{Beamformer evaluation on unseen real-world mixtures. DNSMOS BAK is the estimate of the ITU P.835 background noise quality using a  neural net.}
+\vskip -0.1in
+\centering
+{\footnotesize
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metrics} & SNR~(dB) & SI-SDR~(dB) & DNSMOS  \\
+ &  & & BAK  \\
+\midrule
+    Mixture & -0.13 & -0.13 & 1.94 \\
+    Beamformer & 8.36 & 7.78 & 3.96 \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:bf_eval}
+\vskip -0.15in
+\end{table}
+
+
+
+\section{Datasets}
+We detail the dataset generation and spatialization process. With the exception of the Libri (leaving) dataset, the interference conversation in all datasets is always composed of exactly 2 speakers, with the target and interference conversations never sharing a common speaker.
+
+% For the Candor dataset, we ensured no speaker appeared in more than one split. 
+
+\subsection{Dataset Generation}\label{sec:datasetgen}
+\textbf{Libri}. This is a combination of 5 datasets -- Libri (2 spk), Libri (3 spk), {Libri (4 spk), Libri (5 spk), and} Libri (leaving) -- each of which consists of 60-second conversation mixtures between a target conversation and an interference conversation. These conversations are synthesized by populating speaker timestamps from one conversation dataset (RAMC~\cite{ramc}), with audio from another dataset LibriTTS~\cite{zen2019libritts}. Libri has 16,000 training samples, 2,600 validation samples, and {1000} test samples. Among the 1000 test samples, there are 200 samples for Libri (2 spk), 200 samples for Libri (3 spk), 200 samples for Libri (4 spk), 200 samples for Libri (5 spk), and 200 samples for Libri (leaving). The input SNR for the target conversation is sampled uniformly from –10 to 10 dB.
+
+\textit{Libri (2 spk)}. The target conversations in this dataset have exactly 2 speakers. Since our model relies on self-speech to identify other speakers in the target conversation, we initially populate the timestamps with the self-speaker's audio for a minimum total duration of 5 seconds. Subsequently, for every remaining timestamp, we randomly populate it with speech from either the self speaker or the conversation partner. To prevent one speaker from dominating the conversation, we ensure the other target speaker meets a minimum utterance duration of 5 seconds. 
+
+\vskip 0.02in\noindent\textit{Libri (3 spk)}. The target conversations in this dataset have exactly 3 speakers. Similar to the generation procedure for Libri (2 spk), we begin by ensuring the self-speaker speaks for the first 5 seconds. For all subsequent utterances, we randomly pick one speaker from the target conversation and insert their corresponding Libri audio into the utterance. Finally, we verify that each of the two conversation partners has at least one utterance exceeding 5 seconds in duration. The interference conversation in this mixture has 2 speakers.
+
+\vskip 0.02in\noindent\textit{Libri (4 spk) and Libri (5 spk) (Evaluation only)}. {The target conversations in these two datasets contain exactly four and five speakers, respectively. The generation procedure is the same as in Libri (2 spk) and Libri (3 spk), except that for each utterance, we populate the audio with a randomly sampled speaker from a pool of 4 or 5 speakers. We ensure that the self-speaker speaks for the first 5 seconds, and that every other speaker has at least one utterance longer than 5 seconds to ensure their participation in the conversation.}
+
+\vskip 0.02in\noindent\textit{Libri (leaving)}. Since human conversations are highly dynamic, our model must adapt to both preserve target speakers and suppress them when they leave the conversation and join the interference. To model this behavior, we generate a dataset that initially consists of a 3-speaker target conversation and a 2-speaker interference, which then transitions into a 2-speaker target conversation and a 3-speaker interference. We first ensure the self speaker speaks consecutively for at least 5 seconds at the start of the conversation. %Additionally, at least one other target speaker must have a 5-second consecutive utterance within the first 40 seconds.
+
+Then, one of the two conversation partners is chosen at random to leave the target conversation and join the interference conversation. Specifically, we randomly select a timestamp from the interference conversation that starts after that chosen timestamp for the conversation partner and before the 40 second mark to use for their first utterance in the interference conversation. We also require the leaving speaker to have a consecutive 5-second utterance in the interference conversation to confirm their presence. After this transition, the target conversation becomes a two-speaker conversation, and the interference becomes a three-speaker conversation.
+
+
+\vskip 0.02in\noindent\textbf{Candor}. {This is a dataset consisting of 60-second conversation mixtures between a target and interference conversation from Candor. Since Candor dataset does not provide predefined splits, we created our own own by assigning 80\% of speakers to training, 10\% to validation, and 10\% to testing. Thus, we ensure there are no overlapping speakers across splits. When generating conversation mixture, we randomly select two recordings from the same split and ensure that they do not share any speakers. For the target conversation, we extract the 60-second segment where the self-speaker speaks continuously for at least 5 seconds at the beginning. In total, we generate 7000 training samples, 900 validation samples and 500 testing samples. Similar to the Libri datasets, the input SNR for the target conversation is sampled uniformly from –10 to 10~dB.}
+
+
+%\vskip 0.02in\noindent\textbf{Testsets.}  For each test set, we create XXX mixtures, where the interfering 2-speaker conversation is drawn from the same test set, with no overlapping speakers. The input SNR for the target conversation is sampled uniformly from –10 to 10~dB.
+
+
+\subsection{Dataset Spatialization}\label{sec:spatialize}
+
+We generate synthetic egocentric audio using PyRoomAcoustics, an open-source room acoustics simulator widely used in audio research. The simulator produces left- and right-channel room impulse responses (RIRs) from each speaker, including the wearer, to microphones placed at the wearer’s ears.
+
+Rooms have dimensions sampled uniformly: length and width from $[5, 10]$~m, and height from $[3, 4]$~m. The user is positioned at a distance uniformly sampled from $[0, 1]$m from the room center; other speakers are placed at distances from $[0.5, 1.5]$m. Person heights are sampled from $\mathcal{N}(175\text{cm}, 7\text{cm})$.
+
+Microphones are placed near the user’s ears, offset laterally from the head center by half the head width, sampled from $\mathcal{N}(15~\text{cm}, 2~\text{cm})$. Audio sources are placed near each speaker’s mouth: vertically offset along the negative z-axis by $\mathcal{N}(18~\text{cm}, 2~\text{cm})$, and horizontally offset from their center by $\mathcal{N}(10.75~\text{cm}, 2~\text{cm})$.
+
+Room reverberation time (RT60) is sampled uniformly from $[0.15, 1]$~s, capturing a range of acoustic environments.
+
+
+
+
+%We place a pair of microphones near the ears of the user, at an offset from the user's position by half the human head width, which is sampled from $\mathcal{N}(15~cm, 2~cm)$. We place audio sources near the mouths of each person, at an offset along the negative z-axis from that person's height sampled from $\mathcal{N}(18~cm, 2~cm)$, and an offset from the center of the person's position sampled from $\mathcal{N}(10.75~cm, 2~cm)$. The RT60 reverberation time, which is the time it takes for energy to decay in the room by 60~dB, is sampled uniformly from the range $[0.15, 1]~s$.
+
+\section{Training  details}\label{sec:trainingdetails}
+In the first stage, we pretrain on 2K Libri (2spk) mixtures, 7K Libri (3spk) mixtures, 7K Libri (leaving) mixtures, and 7K Candor mixtures. The fast streaming model and the slow conversation embedding model are trained jointly without any pre-training. The two models were jointly trained for 120 epochs, with an initial learning rate of 0.002, AdamW optimizer with a weight decay of 0.01, and clip gradient norms to 1. We halve the learning rate if the loss does not decrease after 8 epochs. We use the negative SNR loss function and a batch size of 16 on 8 L40s.
+
+{In the second stage, we jointly train the two models on the spatialized dataset (procedure outlined in Appendix~\ref{sec:spatialize}). The slow model is initialized with the pretrained weights from Stage 1, while the fast model is initialized from scratch. The models are jointly trained for 50 epochs with a with an initial learning rate of 0.002, AdamW optimizer with a weight decay of 0.01, and clip gradient norms to 1. We halve the learning rate if the loss does not decrease after 4 epochs. We use the negative SNR loss function and a batch size of 16 on 8 L40s.}
+
+In the final stage, we augment our datasets by changing the duration of silence between every successive conversation partner utterance by a random amount sampled from $\mathcal{N}(0, 0.5~s)$. To preserve the order of utterances from the same speaker, we clip all silent durations to at least 1 sample. Finally, to retain the same overall duration of silence in the clip, we then normalize the length of each silent duration by sum of all silent duration in the audio clip. As a result, the speaker utterances occur at slightly different (and random) times, often overlapping with the user's speech. Here, we use the AdamW optimizer with a weight decay of 0.01, clip gradient norms to 1, and an initial learning rate of 0.0005. We halve the learning rate if the loss does not decrease after 8 epochs. This stage was trained for 42 epochs with a batch size of 4 on 2 A100 GPUs and the negative SNR loss function.
+
+
+
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{figs/runtime.pdf}
+    \vskip -0.05in
+    \caption{Runtime of slow and fast model. A. The inference time of the fast model to process 12.5ms chunk on Orangpi 5B. B. The inference time of the slow model to process 1s chunk on Apple Silicon M2.}
+    \vskip -0.15in
+    \label{fig:runtime}
+\end{figure}
+
+
+\section{Runtime analysis}\label{sup:runtime}
+
+Fig.~\ref{fig:runtime} reports CDF plots for the inference time of both the fast and slow models on the OrangePi 5B and Apple M2 silicon, respectively. % for the slow model.
+
+%\textcolor{red}{\textbf{Need to double check reasoning here} Since the fast streaming model operates chunk-wise where each chunk is 12.5 ms (see Appendix~\ref{sec:dualmodeldetails}), this results in long sequence length that makes it computationally expensive to train due to the LSTM operating over the sequence dimension. To make training feasible, we randomly slice a 10-second mixture audio from the 60-second input before the audio is passed as input into the streaming model. The corresponding conversation embedding is also segmented by time and provided as a second input. The audio input for the conversational embedding model remains unchanged.}
+
+\section{Conversation waveform examples}\label{sec:waveform}
+{Fig. \ref{fig:waveform} shows an example from the spatialized Libri (2 spk) dataset. The mixture audio contains both the target and interference conversations. The beamformed self-speech is generated by applying our beamformer to this mixture. Due to spatialization, the self-speech is emitted closer to the wearer's ears, resulting in a higher amplitude compared to the other target speaker. However, our model was able to capture the low-amplitude speech of the other speaker. }
+
+
+\section{Details of Ablation studies}\label{seC:ablationdetails}
+
+\textit{Dual-model versus single model}. The fast only streaming model is trained on the same dataset as our dual model from stage 1, with a learning rate of 0.002, AdamW optimizer, a negative SNR loss function, and a batch size of 16 on 8 L40s. After training, we evaluate the model on the Libri 2-speaker testing dataset. 
+
+% Since the fast streaming model processes audio  with a chunk size of 12.5ms, this results in long sequence length in the self attention. Since the memory requirement of full self-attention increases quadratically with sequence length, we randomly slice a 10-second section of audio from the 60-second audio input \textcolor{red}{during training to reduce memory usage}. This is applied when training the fast-only and dual-model configurations. The loss is computed on the 10-second section. For the dual-model, we used the model we trained during stage 1. We trained a total of \textcolor{red}{120} epochs  with a learning rate of 0.002, AdamW optimizer \cite{loshchilov2017decoupled}, a negative SNR loss function \cite{ma2011snr}, and a batch size of 16 on 8 L40s. 
+
+\noindent\textit{Conversation embedding update rate}. The two dual-models are trained from scratch for 10 epochs using a learning rate of 0.001, the AdamW optimizer, a negative SNR loss, and a batch size of 8 on 8 RTX 6000 GPUs. After 10 epochs, the models show a consistent trend where the 1-second update rate outperforms the 4-second rate. Evaluation was conducted on 200 Libri 2-speaker test samples.
+
+
+\begin{figure}[t]
+    \centering
+  %  \vskip -0.1in
+    \includegraphics[width=\linewidth]{waveform_plot.png}
+    \vskip -0.1in
+    \caption{Visualized waveforms for conversation mixture, the beamformed self-speech, output of the model and the groundtruth target egocentric conversation.}
+    %\vskip -0.15in
+    \label{fig:waveform}
+\end{figure}
+
+
+\noindent\textit{Speaker embedding versus self-speech}. We trained two slow models on the {Libri 2-speaker} training dataset. One model uses speaker embeddings and the other uses self-speech. Both models were trained for 100 epochs with a learning rate of 0.001, the AdamW optimizer, a negative SNR loss on 4 L40s. Evaluation was performed on 200 {Libri 2 speaker} test samples. 
+
+\noindent\textit{Beamforming versus groundtruth self-speech}. For this ablation study, we used the model trained in stage 2  and evaluated it on 200 spatialized Libri 2-speaker test samples. During evaluation, the model was conditioned on either the original self-speech audio present in the mixture or the self-speech audio output by our beamformer.
+
+\noindent\textit{Impact of turn-taking disruption} {We changed the duration of silence between two consecutive utterances from every speaker by sampling a duration shift from a normal distribution with mean 0 and a standard deviation parameter SD. This duration shift is added to the original silence duration and clipped  to preserve the order of the utterances. The lengths of the new silent sections are normalized so that the overall silence duration remains the same. With this perturbation technique, the parameter SD controls the extent to which the turn-taking dynamics are changed. Larger values of the standard deviation correspond to larger distortions of the original turn-taking structure. This process maintains the overall speech content but disrupts the natural temporal flow of the conversation. We then evaluate the performance of our model trained in stage 1 on our Candor test set with different  perturbations.
+}
+
+\noindent\textit{Context length.}  {We trained 4 dual models with different context length configurations (1s, 5s, 10s, full context) for 20 epochs with a learning rate of 0.001, AdamW optimizer and negative SNR loss. We train the models on Libri 2-speaker training set and evaluate them on 200 Libri 2 speaker test samples.}
+
+
+
+\begin{table}[t!]
+%\vskip -0.07in
+\caption{Statistics for our real egocentric conversation recordings. }
+\vskip -0.1in
+% \begin{table*}[!t]
+\centering
+{\footnotesize
+\begin{tabular}{lr}
+\toprule
+ Statistic &  Mean (STD)\\
+\midrule
+Turn-change Frequency ($min^{-1}$) & 6.2 (4.6)  \\
+Turn Duration &  8.2s (8.8s)    \\
+Overlap Ratio &  1.3\% (2.5\%)    \\
+IPU Duration ($min^{-1}$) & 52.0s (3.54s) \\
+FTO & 0.18s (1.38s)  \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:realworldstats}
+% \end{table*}
+\vskip -0.15in
+\end{table}
+
+\section{{User Study Design}}\label{sec:user_study}
+{We ask each participant the following four questions after they listen to both the original audio mixture and our model's output. Each question used a 5-point scale.}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*, itemsep=0pt, topsep=0pt]
+  \item \textbf{Noise Suppression}: How INTRUSIVE/NOTICEABLE were the INTERFERING SPEAKERS? 5 - Not noticeable; 4 - Slightly noticeable; 3 - Noticeable, but not intrusive; 2 - Somewhat intrusive; 1- Very intrusive
+
+  \item \textbf{Conversation Comprehension}: How EASY was it to understand the target conversation in this audio sample? 5 - Very easy; 4 - Easy; 3 - Neutral or Neither easy nor hard; 2 - Hard; 1 - Very hard
+
+  \item \textbf{Effort}: How much EFFORT did it take to focus on the target conversation in this audio sample? 5 - Very little effort; 4 - Little effort; 3 - Moderate effort; 2 - High effort; 1 - Very high effort
+
+  \item \textbf{Overall MOS}: If the goal is to focus on this target conversation, how was your OVERALL experience? 5 - Excellent; 4 - Good; 3 - Fair; 2 - Poor; 1 - Bad
+\end{enumerate}
+
+\section{Egocentric evaluation participants}
+The study was approved by our institution's IRB. All participants provided informed consent and were recruited from our institution and nearby areas. They were offered a \$15 compensation. %Participants ranged from XXX to XXX years old, with XX\%  identifying as female and the rest as male.
+
+
+
+\section{Real-egocentric conversation analysis}
+
+We compute several conversational statistics from our collected real-world egocentric recordings:
+\squishlist
+\item {\it Turn-Change Frequency.} The number of speaker turn changes per minute.
+
+ \item {\it Turn Duration.} The length of each individual speaking turn.
+
+ \item  {\it Overlap Ratio.} The proportion of time during which multiple speakers talk simultaneously.
+
+ \item {\it  Interpausal Unit (IPU) Duration.} A continuous stretch of speech from a single speaker, bounded by silences longer than 200 ms on both sides, as detected by a voice activity detector.
+
+ \item  {\it  Floor-Transfer Offset (FTO).} The time gap between the end of one speaker’s turn and the start of the next, which is a combination of overlaps and gaps. Negative values indicate overlapping speech, while positive values indicate gaps between turns.
+
+\squishend
+
+
+
+
+    
+%We compute the several conversational statistic of our collected Real-egocentric conversation: (1) Turn-change Frequency: the frequency of turn-change events happen per minutes (2) Turn Duration: the duration of each turn (3) Overlap Ratio: it measures the overlap among speakers in the conversations (4) Pausal Units (IPUs) Duration: it is defined as the continuous stretch of speech in one speaker’s channel, delimited by a VAD silence of more than 200 ms on both side.  (5) Floor-Transfer Offset (FTO): FTO is the duration of between turn-transitions, which is a combination of overlaps and gaps – negative FTOs represent overlaps and positive FTOs represent gaps.
+
+

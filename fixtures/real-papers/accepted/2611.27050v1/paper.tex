@@ -1,0 +1,520 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2026_conference,times}
+
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amssymb}
+
+
+\title{Towards Text--Mask Consistency in Medical Image Segmentation}
+
+\author{
+Jie Gui$^{1,2}$,
+Hang Tu$^{1,2}$,
+Wen Sha$^{1,2}$\thanks{Corresponding author.},
+Xiuquan Du$^{1,3}$\footnotemark[1] \\
+$^{1}$\parbox[t]{0.94\linewidth}{Key Laboratory of Intelligent Computing and Signal Processing, Ministry of Education, Anhui University, Hefei, China} \\
+$^{2}$School of Artificial Intelligence, Anhui University, Hefei, China \\
+$^{3}$School of Computer Science and Technology, Anhui University, Hefei, China \\
+\texttt{\{w125111032,w125121009\}@stu.ahu.edu.cn} \\
+\texttt{\{04069,dxqllp\}@ahu.edu.cn}
+}
+
+\iclrfinalcopy
+\begin{document}
+
+\maketitle
+
+\fancyhead[L]{Preprint}
+
+\begin{abstract}
+Vision-language models for medical image segmentation often produce masks that conflict with the accompanying text, especially under multi-site/multi-lesion descriptions. We trace this failure to two factors: (i) highly templated and repetitive clinical language causes one-to-one hard contrastive learning to yield numerous false negatives, weakening cross-modal alignment; and (ii) predominantly vision-driven, one-way cross-attention lacks a language-dominant, spatially aware pathway, hindering effective injection of textual semantics into the spatial visual domain. To this end, we propose Consistency-enhanced Two-stage Segmentation (\textbf{C2Seg}). In the pretraining stage, Cluster-aware Contrastive Learning uses a frozen strong baseline to construct an intra-batch text similarity matrix as soft labels, thereby alleviating false negative conflicts and producing more discriminative visual representations. In the fusion stage, we introduce a Bidirectional Complementary Attention Module, where each modality dominates attention along its own path, fostering deep interaction and structural consistency between visual and textual representations. In order to enhance the expressive power of multimodal features, we further adopt KAN-based Attention Gating. Without updating the language encoder, our approach significantly improves text--mask consistency and segmentation accuracy on four public medical imaging datasets. The source code is available at https://github.com/JGuiidev/C2Seg.
+\end{abstract}
+
+\section{Introduction}
+
+Despite the remarkable progress of vision-language models (VLMs) in visual understanding through large-scale image-text alignment~\citep{ghosh2024exploring,li2025benchmark}, current medical VLMs still frequently produce masks that contradict the accompanying text on key semantic attributes, especially in multi-site/multi-lesion scenarios. As illustrated in Fig.~\ref{motivation}(a), even when the text explicitly specifies quantity and spatial cues such as ``Bilateral'', ``two'', or ``upper left'', the predicted masks may still fail to match the described number of lesions or their coarse locations. This phenomenon suggests that existing pipelines have not yet effectively transformed clinical language into pixel-level structural constraints, making it difficult to ensure text--mask consistency at the level of semantic attributes such as lesion count, laterality, and coarse spatial position.
+
+We trace this mismatch to two underlying factors, as illustrated in Fig.~\ref{motivation}(b). Firstly, clinical descriptions are highly templated and semantically repetitive, so the same short phrase can correspond to different imaging instances. In QaTa-COV19 dataset, for example, roughly 7{,}000 cases share only about 300 unique text templates, which means that the \emph{same} text is frequently reused within the same training mini-batch rather than being a rare coincidence. Under this distribution, mainstream InfoNCE-style contrastive learning~\citep{hu2024comprehensive} still enforces a strict one-to-one matching, treating each image–text pair $(I^{(i)}, T^{(i)})$ as the only positive and all unpaired combinations $(I^{(i)}, T^{(j)}), j \neq i$ as negatives. In medical settings, however, $T^{(i)}$ and some $T^{(j)}$ can be exactly the same template (e.g., ``unilateral pulmonary infection, one infected area''), so pairs like $(I^{(i)}, T^{(j)})$ are incorrectly pushed apart as strong negatives. This hard-coding of nearly identical semantics as negatives produces a large number of false negatives and contrastive conflicts, ultimately degrading cross-modal alignment quality. Secondly, most existing methods still rely on vision-centric, unidirectional cross-attention mechanisms~\citep{wang2024interactive,chen2025bi}. Although some works explore Dual-path attention (DualA) between vision and language in their fusion architectures~\citep{huang2024cross}, the textual features in these approaches typically only modulate visual features indirectly through attention weights, without forming an explicit, language-dominant spatial representation. As a result, such methods remain essentially vision-centric, and their exploitation and modeling of linguistic semantics are still insufficient.
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.74\textwidth]{Figs/motivation.pdf}
+\caption{Challenge and limitations of existing methods, and our solution.}
+\label{motivation}
+\end{center}
+\end{figure}
+
+To this end, we propose a Consistency-enhanced Two-stage Segmentation framework (\textbf{C2Seg}). As illustrated in Fig.~\ref{motivation}(c), Stage I employs Cluster-aware Contrastive Learning (CaCL), which leverages implicit batch-wise semantic neighborhoods in a frozen language space to construct soft label distributions. This allows the image--text contrastive loss to fit a continuous semantic similarity distribution rather than hard positives/negatives, thereby alleviating contrastive conflicts and producing more discriminative, robustly aligned visual representations. In Stage II, we design a Bidirectional Complementary Attention Module (BCAM) that augments the traditional vision-dominant cross-attention with a language-dominant path while preserving spatial structure: the vision path outputs ``each pixel enhanced by sentence-level semantics,'' whereas the language path captures ``the aggregated per-token influence at each pixel,'' enabling spatially aware, deep bidirectional interaction. Furthermore, we introduce a KAN-based Attention Gating (K--Gate) that adaptively weights spatial locations and modality-specific features for fine-grained feature selection; KANs are also applied in the visual encoder and BCAM to provide nonlinear modeling capacity with limited parameter overhead. The contributions of this work can be summarized as follows:
+
+\begin{itemize}
+    \item We propose CaCL that converts inter-text similarity into soft labels for contrastive learning, effectively suppressing false-negative conflicts, strengthening cross-modal alignment, and promoting semantic consistency.
+    \item We design BCAM, which consists of two parallel vision-dominant and language-dominant paths, enabling deep bidirectional interaction and complementary enhancement while preserving spatial structure.
+    \item We introduce K--Gate to perform nonlinear modeling of visual and language features separately through KANs, thereby achieving fine-grained selection of cross-modal information.
+    \item We present C2Seg and demonstrate its significant improvements on text--mask consistency and segmentation accuracy through extensive experiments on four public medical datasets.
+\end{itemize}
+
+\section{Related Work}
+
+\paragraph{Vision Language Models.}
+
+In recent years, the success of general vision-language pretraining models has driven multimodal research in the medical domain. For example, \citet{zhang2025biomedclip} performs image-text contrastive pretraining on large-scale biomedical figures and reports, learning generic medical image-text representations for retrieval and classification; \citet{li2023llava} extends instruction-following VLMs to medical visual question answering and dialogue scenarios. Meanwhile, \citet{cheng2023sammed2d} and \citet{ma2024segment} transfer the Segment Anything paradigm to medical imaging, achieving strong organ and lesion segmentation performance under prompts. Leveraging the rich multimodal semantic representations and scalable model interfaces offered by these foundation models, a number of vision-language guided segmentation methods have recently emerged\citep{tomar2022tganet,huemann2024contextual,li2023lvit,wang2025medlangvit,wang2025towards}. However, despite the diversity of fusion mechanisms, most existing multimodal segmentation models still rely on a unidirectional path where language guides vision, and lack explicit modeling of linguistic semantics. Although \citet{liu2023multi,cho2023cross,sultan2025bipvl} construct bidirectional interaction structures between vision and language, their so-called ``language-dominant'' attention branches typically output only updated text tokens, while the final segmentation prediction still depends on feature maps from the visual branch. In other words, text mainly modulates visual features indirectly through attention weights, without forming an explicit language-centric spatial representation, which limits the modeling of fine-grained, text-conditioned spatial details.
+
+\paragraph{Contrastive Learning.}
+
+Multimodal pretraining networks utilize large-scale image-text pairs for contrastive learning to achieve effective cross-modal alignment~\citep{mukhoti2023open,chng2024mask,sung2024contextrast}. In the context of medical image, the high cost of acquiring medical data and pixel-level annotations makes the incorporation of richly paired medical text and images a natural solution~\citep{wang2022medclip,hu2023beyond}. Contrastive learning methods can align medical text and images, providing crucial semantic guidance for the segmentation process~\citep{pan2025dusss}. However, contrastive objectives are known to suffer from false negatives and class collisions, and this issue is further exacerbated in clinical practice where medical reports are highly templated and heavily reused: the same or nearly identical wording can appear in many different cases, so traditional hard sampling often mislabels semantically similar pairs as negatives, compromising the stability and accuracy of the alignment. To mitigate such effects, ~\citet{PCL} introduce cluster prototypes to encode semantic structure, while ~\citet{dwibedi2021little} augments positives with nearest neighbors in the feature space. Nonetheless, even when the contrastive objective is relaxed from strictly one-to-one to one-to-many, these methods still rely on hard positive/negative assignments at the label level, making it difficult to explicitly model the continuous semantic similarity distribution between samples and thus preventing them from effectively mitigating the soft-positive problem associated with semantic neighbors.
+
+\paragraph{Kolmogorov-Arnold Networks.}
+
+The Kolmogorov-Arnold representation theorem states that any multivariate continuous function $f(x_1, x_2, \ldots, x_n)$ can be represented as a finite composition of univariate continuous functions. Inspired by this, \citet{liu2025kan} proposed the KAN, which replaces the linear weights in conventional MLPs with learnable univariate function units. This design enhances the model’s nonlinear modeling capacity with fewer parameters and improves interpretability. Building on this idea, recent studies have introduced KANs into various vision tasks and achieved promising results \citep{chen2025sckansformer,zhang2025mm,wang2025medkaformer,zhu2026kanseg}. Among them, \citet{li2025u} integrated Tok-KAN blocks into the U-Net framework to strengthen local feature modeling, providing higher accuracy, efficiency and interpretability for vision tasks. Despite the demonstrated success of KANs in unimodal scenarios, its potential for cross-modal alignment and fusion has yet to be systematically explored.
+
+\section{Method}
+
+\paragraph{Overview.}
+
+Our proposed C2Seg comprises two sequential stages, as illustrated in Fig.~\ref{C2Seg}. Given input $I$ and $T$, we first design CaCL in the pretraining stage, where pairwise cosine similarity between text embeddings is computed to generate soft labels $Y_{ij}$ that guide robust image-text contrastive learning. In the fusion stage, we introduce BCAM, consisting of two paths that simultaneously generate vision-dominant features $\mathbf F_{v}$ and language-dominant features $\mathbf F_{l}$, enabling comprehensive exploitation of language information while preserving spatial structural information. Subsequently, K--Gate is applied to perform attention-weighted fusion of the two feature streams, producing the final output $\mathbf F_{\text{out}}$. Finally, through skip connections and upsampling operations, the spatial resolution is progressively restored, yielding high-quality pixel-level segmentation predictions. Notably, we fine-tune the visual encoder with a small learning rate while keeping the language encoder frozen to preserve stable semantic anchors in the text space.
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.86\textwidth]{Figs/method.pdf}
+\caption{Overview of the proposed C2Seg. Given medical images and their corresponding textual descriptions, visual and language features are extracted using dedicated encoders.}
+\label{C2Seg}
+\end{center}
+\end{figure}
+
+\subsection{Feature Encoder}
+
+Based on the work of \citet{li2025u} and \citet{radford2021learning}, we build a dual-branch encoder. The visual branch employs three convolutional layers followed by two KAN layers, aiming to combine the feature capturing ability of CNN with the nonlinear modeling capabilities of KANs. Given an image $I\in\mathbb{R}^{C\times H\times W}$, the visual branch produces multi-scale features $\mathbf V=\{V_\ell\}_{\ell=0}^{4}$ with $V_\ell\in\mathbb{R}^{C_\ell\times H_\ell\times W_\ell}$ and progressively downsampled spatial sizes $(H_\ell,W_\ell)$. A global image vector is computed as $\mathbf v=W_v\,\mathrm{GAP}(V_4)\in\mathbb{R}^{d_v}$, where $\mathrm{GAP}(\cdot)$ denotes global average pooling and $W_v$ is a learnable projection. On the language branch, the frozen CLIP encoder processes text $T$ tokenized to length $N$, yielding position-aware token embeddings $\mathbf L\in\mathbb{R}^{N\times d_t}$ and a sentence embedding $\mathbf l\in\mathbb{R}^{d_t}$. To enable channel-aligned bidirectional interaction at each visual scale, tokens are projected by learnable per-scale linear projections as $L_\ell=\mathbf L W_\ell$ with $W_\ell\in\mathbb{R}^{d_t\times C_\ell}$, hence $L_\ell\in\mathbb{R}^{N\times C_\ell}$. The set $\{V_\ell\}$ preserves pixel-level spatial structure for subsequent fusion and decoding, while $\{L_\ell\}$ together with $\mathbf l$ provide token-level and sentence-level semantics that feed into BCAM for bidirectional complementary interaction and fusion.
+
+\subsection{Cluster-aware Contrastive Learning}
+
+Unlike standard InfoNCE with a single positive/negative pairing, CaCL reframes in-batch contrastive learning as batch-wise semantic distribution matching. We first estimate text-text similarities in the frozen language space and convert them into soft labels, which are then used to supervise the image-text similarity distribution. This neighborhood-wise probabilistic supervision systematically suppresses erroneous repulsive gradients induced by templated clinical phrasing. Throughout, image embeddings $\{\mathbf v_i\}_{i=1}^{B}$ and sentence embeddings $\{\mathbf l_i\}_{i=1}^{B}$ are L2-normalized.
+
+\paragraph{Soft Label Construction.}
+
+Given a batch of size $B$, we first compute the text–text cosine similarity matrix $M_{ij}=\cos(\mathbf l_i,\mathbf l_j)$. To attenuate the global similarity inflation induced by shared templates, we apply row-mean debiasing and non-negativity clipping to each row, obtaining $M'_{ij}=\max\{M_{ij}-\mu_i,0\}$, where $\mu_i=\tfrac{1}{B}\sum_{k}M_{ik}$. Here, $\mu_i$ can be viewed as a batch-level “template bias” whose removal helps suppress global template effects and yields a soft label distribution that focuses more on local semantic neighborhoods. Temperature $\tau$ is then used to produce semantic soft targets:
+\begin{equation}
+\hat{Y}_{ij}=\frac{\exp(M'_{ij}/\tau)}{\sum_{k}\exp(M'_{ik}/\tau)}.
+\end{equation}
+To retain the anchor identity, the final target distribution mixes the diagonal with these soft targets as $Y_{ij}=\rho\,\hat{Y}_{ij}+(1-\rho)\,\mathbf{1}[j=i]$, where $\rho\in[0,1]$ balances the self-positive and its semantic neighbors.
+
+\paragraph{Distribution-supervised Symmetric InfoNCE.}
+
+Let the cross-modal logit be $s_{ij}=\mathbf v_i^\top \mathbf l_j$, and define the directional probabilities $P^{v\to l}_{ij}=\mathrm{softmax}_j(s_{ij}/\tau)$ and $P^{l\to v}_{ij}=\mathrm{softmax}_i(s_{ij}/\tau)$. We match the predicted distributions to $Y$ in both directions with a single bidirectional objective:
+\begin{equation}
+\mathcal{L}_{\mathrm{CaCL}}
+=-\frac{1}{B}\sum_{i=1}^{B}\sum_{j=1}^{B}\!\left[
+Y_{ij}\log P^{v\to l}_{ij}
++Y_{ji}\log P^{l\to v}_{ij}
+\right].
+\end{equation}
+
+\paragraph{Theoretical Justification.}
+
+With the above definitions of $P^{v\to l}$ and $P^{l\to v}$, the gradient with respect to any logit $s_{ij}$ is
+\begin{equation}
+\frac{\partial \mathcal{L}_{\mathrm{CaCL}}}{\partial s_{ij}}
+=
+\frac{1}{B\tau}
+\left(
+P^{v\to l}_{ij}-Y_{ij}
++
+P^{l\to v}_{ij}-Y_{ji}
+\right).
+\end{equation}
+Semantically related but non-matching pairs thus receive nonzero target mass ($Y_{ij}>0$ and/or $Y_{ji}>0$), which attenuates or even reverses the repulsive gradient, mitigating false negatives and promoting neighborhood-consistent alignment. The additional computational cost is dominated by building $M$ in $O(B^2 C)$ time, which is negligible relative to the backbone.
+
+\subsection{Bidirectional Complementary Attention Module}
+
+Existing DualA-style bidirectional fusion methods typically update only the text tokens in their ``language-dominant” branch, without producing features that explicitly preserve image spatial information. The representative work M3Att \citep{liu2023multi}, although achieving bidirectional interaction between vision and language via multimodal cross-attention, uses a single fully connected projection to compress the spatial dimension $P$ into the channel dimension $C$ during fusion. This amounts to a non-structured mixing of all image patches for each text token, which weakens the original spatial inductive bias and tends to lose local details such as boundaries and textures. Therefore, we propose BCAM, which constructs two complementary attention paths in parallel during the fusion stage, one vision-dominant and one language-dominant, so that the two modalities can condition each other and produce spatially aligned multimodal features directly on the pixel grid. This alleviates modality imbalance and preserves more local information. The structures and differences of the three attention mechanisms are shown in Fig.~\ref{BCAM}.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.86\columnwidth]{Figs/BCAM.pdf}
+\caption{The architecture of (a) the generic attention mechanism, (b) the Multi-Modal Mutual Attention (M3Att), and (c) our proposed Bidirectional Complementary Attention Module (BCAM).}
+\label{BCAM}
+\end{center}
+\end{figure}
+
+\paragraph{Complementary Attention.}
+
+Given visual features $\mathbf V\in\mathbb{R}^{P\times C}$ ($P=H\times W$ denotes the number of spatial positions) and language features $\mathbf L\in\mathbb{R}^{N\times C}$, we use learnable KAN layers to obtain keys and values for cross-attention, defined as
+$\mathbf V_{\text{key}}=\mathrm{KAN}(\mathbf V)$,
+$\mathbf V_{\text{value}}=\mathrm{KAN}(\mathbf V)$,
+$\mathbf L_{\text{key}}=\mathrm{KAN}(\mathbf L)$,
+and
+$\mathbf L_{\text{value}}=\mathrm{KAN}(\mathbf L)$.
+We then construct the scaled dot-product attention scores $\mathbf A$:
+
+\begin{equation}
+\mathbf A \;=\; \frac{1}{\sqrt{d}}\;\mathbf V_{\text{key}}\,(\mathbf L_{\text{key}})^{\top}
+\;\in\; \mathbb{R}^{P\times N}.
+\end{equation}
+
+\paragraph{Vision-dominant Path.}
+
+We apply a softmax along the language axis $N$ and use it to aggregate language values, yielding a language-enhanced visual representation:
+
+\begin{equation}
+\mathbf F_{v} \;=\; \mathrm{Softmax}_{N}(\mathbf A) \cdot \mathbf L_{\text{value}}
+\;\in\; \mathbb{R}^{P\times C}.
+\end{equation}
+
+The resulting $\mathbf F_{v}$ is a sentence- and token-injected visual feature map that preserves the original spatial resolution $P$. Intuitively, each pixel position collects token semantics according to its relevance weights, providing rich, pixel-level semantic context.
+
+\paragraph{Language-dominant Path.}
+
+Directly applying $\mathbf A^{\top}\in\mathbb{R}^{N\times P}$ to $\mathbf V_{\text{value}}$ would produce a token-level representation of shape $\mathbb{R}^{N\times C}$, which lacks explicit pixel topology and thus hampers subsequent decoding. Therefore, we normalize the transpose $\mathbf A^{\top}$ along the spatial axis $P$, apply each token’s spatial weights to the visual values, and then aggregate across tokens to obtain a language-guided feature aligned with the image grid:
+
+\begin{equation}
+\mathbf F_{l} \;=\; \frac{1}{N}\sum_{n=1}^{N} \mathrm{Softmax}_{P}\!\big(\mathbf A^{\top}[n,:]\big)\;\odot\;\mathbf V_{\text{value}}
+\;\in\; \mathbb{R}^{P\times C},
+\end{equation}
+
+where $\odot$ denotes broadcasted element-wise multiplication over the channel dimension. The resulting $\mathbf F_{l}$ encodes each token’s collective attention over all spatial locations, forming a spatially coherent, language-guided feature map. Compared with a unidirectional, vision-only fusion scheme, the addition of this language-initiated path mitigates modality imbalance, improves cross-modal alignment, and provides spatially consistent signals to the decoder, thereby enhancing downstream segmentation performance.
+
+\subsection{KAN-based Attention Gating}
+
+After the BCAM, the visual and textual streams have exchanged information bidirectionally; however, modality-specific statistical biases and noise patterns (e.g., imaging artifacts and templated phrasing) may still propagate across modalities and be amplified, thereby diluting spatial detail or inducing semantic drift. To address this, we introduce a KAN-based nonlinear gating mechanism that performs selective suppression and enhancement within each modality before fusion, followed by data-dependent mixing. This design improves the expressiveness of features and alleviates modal imbalance from the source.
+
+For the two feature streams output by BCAM, the visual branch $\mathbf F_v\in\mathbb{R}^{P\times C}$ and the language branch $\mathbf F_l\in\mathbb{R}^{P\times C}$, we construct two independent KAN gating heads, each comprising two KAN layers with an intermediate ReLU and producing a gating tensor that matches the input shape. We adopt a $\tanh$ activation to normalize each branch output, bounding the learned gating weights to $[-1,1]$. Accordingly, the gating tensors are defined as:
+
+\begin{equation}
+\mathbf g_v=\tanh\!\big(\mathrm{KAN}^{(2)}_v(\mathrm{ReLU}(\mathrm{KAN}^{(1)}_v(\mathbf F_v)))\big),\quad
+\mathbf g_l=\tanh\!\big(\mathrm{KAN}^{(2)}_l(\mathrm{ReLU}(\mathrm{KAN}^{(1)}_l(\mathbf F_l)))\big).
+\end{equation}
+
+We then perform element-wise reweighting $\mathbf F_v^{g}=\mathbf F_v\odot\mathbf g_v$ and $\mathbf F_l^{g}=\mathbf F_l\odot\mathbf g_l$, where $\odot$ denotes element-wise multiplication. After this modality-internal refinement, we concatenate $[\mathbf F_v^{g}\Vert \mathbf F_l^{g}]$ along the channel dimension and apply a $1\times 1$ convolution for channel alignment and linear mixing to obtain the final fused representation $\mathbf F_{\text{out}}$. This process enhances the spatial perception ability of the model through feature selection, while providing a nonlinear and fine-grained selective path for cross-modal fusion.
+
+\section{Experiments}
+
+\subsection{Datasets and Implementation Details}
+
+\paragraph{Datasets.}
+
+We conduct experiments on four public medical image segmentation datasets: QaTa-COV19~\citep{degerli2022osegnet}, MosMedData+~\citep{morozov2020mosmeddata,hofmanninger2020automatic}, CVC-ClinicDB~\citep{bernal2015wm}, and Kvasir~\citep{jha2019kvasir}. QaTa-COV19 and MosMedData+ are lung datasets with paired textual annotations provided by~\citet{li2023lvit}, while CVC-ClinicDB and Kvasir are colon polyp datasets whose image-text pairs are constructed following~\citet{zhang2024madapter}. We adopt Dice, mean Intersection over Union (mIoU), the 95th percentile Hausdorff Distance (HD95), and the Average Symmetric Surface Distance (ASSD) as our primary evaluation metrics. Detailed descriptions of these datasets and the evaluation metrics are given in Appendix~\ref{sec:Datasets} and Appendix~\ref{sec:Metrics}, respectively.
+
+\paragraph{Implementation Details.}
+
+Our proposed method is implemented on a server with two NVIDIA GeForce RTX 5090 D (32 GB) GPUs. By default, the batch size is set to 256 for the pretraining stage and 32 for the segmentation stage, the temperature parameter $\tau$ is set to 0.07, and the soft-label weight parameter $\rho$ is set to 0.8. During the supervised segmentation stage, we adopt a combined BCE + Dice objective (BCEDice loss) as the training loss; a detailed formulation of this loss is provided in Appendix~\ref{sec:Loss}. The initial learning rate is set to $1 \times 10^{-3}$ for QaTa-COV19 and CVC-ClinicDB, and $3 \times 10^{-4}$ for MosMedData+ and Kvasir. We use the Adam optimizer together with a cosine annealing learning rate scheduler.
+
+\begin{table}[t]
+\caption{Quantitative comparison on QaTa-COV19 and MosMedData+ datasets.}
+\label{comparison_table1}
+\begin{center}              
+\resizebox{0.96\columnwidth}{!}{
+\begin{tabular}{lcc|cccc|cccc}
+\hline
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Params(M)}} & \multirow{2}{*}{\textbf{Text}} & \multicolumn{4}{c|}{\textbf{QaTa-COV19}} & \multicolumn{4}{c}{\textbf{MosMedData+}} \\
+\cline{4-11}
+& & & Dice(\%)↑ & mIoU(\%)↑ & HD95↓ & ASSD↓ & Dice(\%)↑ & mIoU(\%)↑ & HD95↓ & ASSD↓ \\
+\hline
+U-Net \citep{ronneberger2015u}        & 31.4  & ×          & 79.02 & 69.46 & 33.98 & 9.03 & 64.60 & 50.73 & 23.52 & 6.35 \\
+U-Net++ \citep{zhou2018unet++}        & 74.5  & ×          & 79.62 & 70.25 & 36.14 & 9.91 & 71.75 & 58.39 & 24.06 & 5.45 \\
+nnUNet \citep{isensee2021nnu}         & 19.1  & ×          & 80.42 & 70.81 & 28.14 & 9.86 & 72.59 & 60.36 & 22.75 & 5.56 \\
+Swin-Unet \citep{cao2023swin}         & 82.3  & ×          & 78.07 & 68.34 & 31.51 & 9.20 & 63.29 & 50.19 & 25.31 & 7.69 \\
+TransUNet \citep{chen2024transunet}   & 105.0 & ×          & 78.63 & 69.13 & 29.88 & 8.42 & 71.24 & 58.44 & 23.41 & 6.38 \\
+UKAN \citep{li2025u}                  & \textbf{9.4}   & ×          & 79.30 & 69.85 & 31.89 & 8.79 & 72.56 & 59.05 & 29.38 & 7.25 \\
+MM-UKAN++ \citep{zhang2025mm}         & 9.9   & × & 79.20 & 69.70 & 35.26 & 9.76 & 71.82 & 58.37 & 32.63 & 8.96 \\
+\hline
+CLIP \citep{radford2021learning}      & 87.0  & \checkmark & 79.81 & 70.66 & 23.25 & 5.54 & 71.97 & 59.64 & 26.24 & 6.58 \\
+GLoRIA \citep{huang2021gloria}        & 45.6  & \checkmark & 79.94 & 70.68 & 26.47 & 5.24 & 72.42 & 60.18 & 28.61 & 6.79 \\
+ViLT \citep{kim2021vilt}              & 87.4  & \checkmark & 79.63 & 70.12 & 25.32 & 5.96 & 72.36 & 60.15 & 24.85 & 5.69 \\
+TGANet \citep{tomar2022tganet}        & 19.8  & \checkmark & 77.17 & 64.39 & 29.54 & 7.83 & 69.48 & 55.81 & 26.39 & 6.12 \\
+ConVIRT \citep{zhang2022contrastive}  & 35.2  & \checkmark & 79.72 & 70.58 & 22.36 & 6.03 & 72.06 & 59.73 & 22.38 & 6.36 \\
+LAVT \citep{yang2022lavt}             & 118.6 & \checkmark & 80.48 & 67.01 & 15.70 & 4.87 & 68.51 & 55.32 & 17.28 & 4.18 \\
+SLViT \citep{ouyang2023slvit}         & 131.5 & \checkmark & 79.25 & 68.87 & 15.18 & 4.35 & 72.57 & 60.78 & 21.23 & 6.10 \\
+LViT \citep{li2023lvit}               & 29.7  & \checkmark & 81.52 & 68.63 & 18.62 & 5.32 & 72.10 & 57.35 & 18.94 & 4.82 \\
+UniLSeg \citep{liu2024universal}      & 28.7  & \checkmark & 72.88 & 59.58 & 15.15 & 4.11 & 65.89 & 52.01 & 19.98 & 4.96 \\
+RefSegformer \citep{wu2024toward}     & 195.0 & \checkmark & 81.63 & 69.71 & 20.22 & 5.29 & 70.25 & 57.31 & 19.70 & 4.78 \\
+MedLangViT \citep{wang2025medlangvit} & 27.7  & \checkmark & 84.27 & 75.93 & 14.51 & 3.97 & 75.95 & 63.17 & 18.29 & 4.12 \\
+ARSeg \citep{wang2025towards}         & 30.1  & \checkmark & 84.09 & 72.64 & 19.90 & 5.24 & 73.24 & 59.82 & 31.88 & 7.65 \\
+\hline
+\textbf{C2Seg (Ours)}                 & 18.92 & \checkmark & \textbf{85.25} & \textbf{76.97} & \textbf{12.71} & \textbf{3.38} & \textbf{77.81} & \textbf{65.17} & \textbf{15.02} & \textbf{3.76} \\
+\hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Quantitative comparison on CVC-ClinicDB and Kvasir datasets.}
+\label{comparison_table2}
+\begin{center}
+\resizebox{0.96\columnwidth}{!}{
+\begin{tabular}{lcc|cccc|cccc}
+\hline
+\multirow{2}{*}{\textbf{Method}} & \multirow{2}{*}{\textbf{Params(M)}} & \multirow{2}{*}{\textbf{Text}} & \multicolumn{4}{c|}{\textbf{CVC-ClinicDB}} & \multicolumn{4}{c}{\textbf{Kvasir}} \\
+\cline{4-11}
+& & & Dice(\%)↑ & mIoU(\%)↑ & HD95↓ & ASSD↓ & Dice(\%)↑ & mIoU(\%)↑ & HD95↓ & ASSD↓ \\
+\hline
+U-Net \citep{ronneberger2015u}        & 31.4  & ×          & 57.57 & 44.93 & 49.40 & 19.87 & 75.77 & 65.20 & 40.29 & 12.11 \\
+U-Net++ \citep{zhou2018unet++}        & 74.5  & ×          & 88.94 & 82.91 & 12.16 & 3.99  & 87.00 & 79.71 & 20.87 & 6.63  \\
+nnUNet \citep{isensee2021nnu}         & 19.1 & ×          & 85.69 & 77.72 & 13.48 & 5.84  & 86.95 & 79.19 & 20.39 & 5.81  \\
+Swin-Unet \citep{cao2023swin}         & 82.3  & ×          & 81.19 & 71.64 & 26.38 & 8.67  & 77.24 & 66.90 & 21.25 & 8.80  \\
+UKAN \citep{li2025u}                  & \textbf{9.4}   & ×          & 89.74 & 84.47 & 13.19 & 3.72  & 87.77 & 81.13 & 21.37 & 5.82  \\
+MM-UKAN++ \citep{zhang2025mm}         & 9.9   & × & 89.52 & 82.15 & 13.26 & 3.36  & 85.63 & 78.03 & 24.81 & 7.12  \\
+\hline
+LAVT \citep{yang2022lavt}             & 118.6 & \checkmark & 88.13 & 82.76 & 9.33  & 3.85  & 90.83 & 84.90 & 15.90 & 4.15  \\
+TGANet \citep{tomar2022tganet}        & 19.8  & \checkmark & 89.93 & 84.56 & 8.41  & \textbf{2.11}  & 90.44 & 84.19 & 17.18 & 4.33  \\
+SLViT \citep{ouyang2023slvit}         & 131.5 & \checkmark & 80.55 & 72.86 & 26.91 & 9.87  & 85.69 & 77.97 & 19.57 & 5.56  \\
+LViT \citep{li2023lvit}               & 29.7  & \checkmark & 88.27 & 80.81 & 15.18 & 4.15  & 87.36 & 79.85 & 24.18 & 6.40  \\
+RefSegformer \citep{wu2024toward}     & 195.0 & \checkmark & 80.73 & 71.94 & 23.10 & 7.28  & 86.87 & 78.77 & 25.30 & 6.46  \\
+MMIUNet \citep{bui2024visual}         & 56.2  & \checkmark & 89.96 & 84.14 & 11.55 & 4.02  & 90.27 & 84.29 & 15.13 & 4.35  \\
+RecLMIS \citep{huang2024cross}        & 23.7  & \checkmark & 81.31 & 73.04 & 38.44 & 12.13 & 90.63 & 84.35 & 17.93 & 4.43  \\
+MedLangViT \citep{wang2025medlangvit} & 27.7  & \checkmark & 88.35 & 81.92 & 10.66 & 4.50  & 90.57 & 84.21 & 14.12 & 4.09  \\
+ARSeg \citep{wang2025towards}         & 30.1  & \checkmark & 89.74 & 82.64 & 13.71 & 4.29  & 88.45 & 81.34 & 22.79 & 5.66  \\
+\hline
+\textbf{C2Seg (Ours)}                 & 18.92 & \checkmark & \textbf{91.82} & \textbf{86.81} & \textbf{6.53} & 2.23 & \textbf{91.92} & \textbf{85.27} & \textbf{13.62} & \textbf{3.98} \\
+\hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\subsection{Performance Comparison}
+
+We conduct a systematic comparison between C2Seg and other segmentation methods on four public medical image datasets, with quantitative results summarized in Tab.~\ref{comparison_table1} and Tab.~\ref{comparison_table2}. Overall, C2Seg achieves competitive or even state-of-the-art performance across all four benchmarks. Benefiting from the incorporation of textual modality, C2Seg significantly outperforms the strongest CNN-based model nnU-Net and the KAN-based model UKAN. Compared with other multimodal approaches, our method not only excels on region-overlap metrics (Dice and mIoU), but also shows clear advantages on distance-based metrics HD95 and ASSD, indicating that C2Seg provides more accurate delineation of lesion locations and boundaries and, from a geometric perspective, further corroborating the benefit of leveraging textual constraints for spatial localization.
+
+As illustrated in Fig.~\ref{comparison_fig}, we further analyze the behavior of different methods. In the first row, the text explicitly specifies “unilateral pulmonary infection, one infected area”, yet several methods still misclassify regions in the right lung as lesions, whereas C2Seg correctly restricts its prediction to a single lesion in the left lung. In the second row, the textual prompt “middle lower left lung” is given; some methods fail to properly capture positional information and produce over-segmentation in the upper left lung, while C2Seg more accurately focuses on the middle-lower region of the left lung, demonstrating finer text-guided localization. In the fifth row, the text includes a numerical cue “two infected areas”; some methods produce an incorrect number of lesions, whereas C2Seg matches both the spatial locations and the number of lesions described in the text. These qualitative observations are consistent with the quantitative gains and further confirm the advantage of C2Seg in adhering to textual constraints and improving text--mask consistency.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.86\columnwidth]{Figs/visualization.pdf}
+\caption{Visualization of different methods. Green, red, and blue represent true positive, false negative, and false positive pixels, respectively.}
+\label{comparison_fig}
+\end{center}
+\end{figure}
+
+\subsection{Ablation Studies}
+
+\paragraph{Effect of Proposed Components.}
+
+We conduct systematic ablation studies on the MosMedData+ and CVC-ClinicDB datasets, as summarized in Tab.~\ref{stage_ablation}. Case (a) keeps only the visual branch as a unimodal baseline; Case (b)-(f) all use CLIP as the text encoder, where (b) adopts DualA in Stage II, (c) replaces DualA with BCAM, (d) further adds K-Gate on top of BCAM, (e) introduces conventional hard-label contrastive learning (HardCL) in Stage I, and the final full model corresponds to Case (f). The results show a clear step-wise improvement as components are added, validating both the effectiveness and complementarity of the proposed modules.
+
+\begin{table}[htbp]
+\caption{Ablation study on MosMedData+ and CVC-ClinicDB datasets.}
+\label{stage_ablation}
+\begin{center}
+\resizebox{0.96\columnwidth}{!}{
+\begin{tabular}{c|c|cc|ccc|cc|cc}
+\hline
+\multirow{2}{*}{\textbf{Case}} & \multirow{2}{*}{\textbf{Text encoder}} &
+\multicolumn{2}{c|}{\textbf{Stage I}} &
+\multicolumn{3}{c|}{\textbf{Stage II}} &
+\multicolumn{2}{c|}{\textbf{MosMedData+}} &
+\multicolumn{2}{c}{\textbf{CVC-ClinicDB}} \\
+\cline{3-11}
+ & & HardCL & CaCL & DualA & BCAM & K-Gate &
+ Dice(\%)↑ & mIoU(\%)↑ & Dice(\%)↑ & mIoU(\%)↑ \\
+\hline
+(a) & $\times$ &  &  &  &  &  & 73.61 & 60.02 & 86.59 & 78.11 \\
+\hline
+(b) & \multirow{4}{*}{CLIP} &  &  & \checkmark &  &  & 75.59 & 62.35 & 89.56 & 83.14 \\
+(c)                        & &  &  & \checkmark & \checkmark &  & 76.50 & 63.77 & 90.31 & 84.45 \\
+(d) &           &  &  & \checkmark & \checkmark & \checkmark & 77.03 & 64.45 & 90.68 & 85.98 \\
+(e) & & \checkmark &  & \checkmark & \checkmark & \checkmark & 77.32 & 64.51 & 91.26 & 86.33 \\
+(f) & &  & \checkmark & \checkmark & \checkmark & \checkmark & \textbf{77.81} & \textbf{65.17} & \textbf{91.82} & \textbf{86.81} \\
+\hline
+(g) & BioBERT-Base   &  & \checkmark & \checkmark & \checkmark & \checkmark &
+76.22 & 64.18 & 90.60 & 86.08 \\
+(h) & PubMedBERT  &  & \checkmark & \checkmark & \checkmark & \checkmark &
+76.69 & 64.76 & 90.25 & 84.69 \\
+\hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\paragraph{Effect of Text Encoders.}
+
+Keeping the training framework fixed, we further replace the text encoder with domain-specific biomedical language models BioBERT-Base v1.1~\citep{lee2020biobert} and PubMedBERT~\citep{gu2021domain}. As shown in Tab.~\ref{stage_ablation}, even though CLIP text encoder is not pretrained on medical corpora, its performance remains slightly better than BioBERT and PubMedBERT. We speculate this is mainly because the CLIP is learned via contrastive training on large-scale image-text pairs, yielding an embedding space that is naturally aligned with visual features and better matched to the short, location- and quantity-oriented descriptions used in this work, whereas BioBERT/PubMedBERT are pretrained solely on pure-text biomedical corpora and are better suited for long clinical reports, lacking such cross-modal alignment and adaptation.
+
+\paragraph{Effect of Bidirectional Fusion Mechanism.}
+
+To verify the effectiveness of the proposed bidirectional complementary attention, we fix the backbone and decoder and only replace the Stage II fusion module, comparing DualA with the proposed BCAM. The visualization results on QaTa-COV19 and Kvasir datasets are shown in Fig.~\ref{ablation-BCAM}. Even when the prompt explicitly contains quantitative and positional cues such as “Unilateral,” “two,” and “lower left,” DualA still tends to produce results that deviate from the text, for example activating both lungs or merging multiple lesions into a single region. In contrast, with BCAM, the high-response regions are much better concentrated on the text-specified target areas. This indicates that the language-dominant path effectively strengthens the mapping from textual semantics to spatial representations and, when combined with the vision-dominant path, not only alleviates text--mask inconsistency but also leads to more accurate lesion localization and boundary delineation.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.86\columnwidth]{Figs/ablation-BCAM.pdf}
+\caption{Qualitative comparison of DualA and BCAM on QaTa-COV19 and Kvasir datasets.}
+\label{ablation-BCAM}
+\end{center}
+\end{figure}
+
+\paragraph{Effect of KAN Structure.}
+
+To assess the role of KAN in our framework, we design five structural variants on the MosMedData+ dataset: using a pure CNN as the visual encoder; adopting a hybrid encoder with the first three layers as CNN and the last two layers as KAN; replacing the visual encoder entirely with a pure KAN; replacing the KAN layers in BCAM with linear projections while keeping the encoder unchanged; and replacing the KAN layers in K--Gate with standard MLPs. As shown in Tab.~\ref{kan_hp_sensitivity}(a), the hybrid encoder yields consistent performance gains over the pure CNN encoder, whereas the pure KAN encoder even leads to degradation, indicating that the local receptive fields provided by CNNs remain crucial for low-level feature extraction and that KAN is more suitable as a high-level complement rather than a full replacement. In addition, substituting KAN with linear layers or MLPs in BCAM or K--Gate results in performance drops, suggesting that the nonlinear modeling capacity of KAN still offers advantages for higher-order cross-modal interactions.
+
+\begin{table}[htbp]
+\caption{Ablation of KAN and hyperparameters on MosMedData+ datasets.}
+\label{kan_hp_sensitivity}
+\begin{center}
+\resizebox{0.96\columnwidth}{!}{
+\begin{tabular}{c|cc|c|cc|c|cc|c|cc}
+\hline
+\multicolumn{3}{c|}{\textbf{(a) Ablations on KAN.}} & \multicolumn{9}{c}{\textbf{(b) Sensitivity of hyperparameters.}} \\
+\hline
+\multicolumn{1}{c|}{Settings} &
+\multicolumn{1}{c}{Dice(\%)↑} &
+\multicolumn{1}{c|}{mIoU(\%)↑} &
+\multicolumn{3}{c|}{Effect of $\rho$} &
+\multicolumn{3}{c|}{Effect of $\tau$} &
+\multicolumn{3}{c}{Effect of batch size} \\
+\cline{1-3}
+CNN encoder      & 77.29 & 64.51 & \multicolumn{3}{c|}{($\tau = 0.07$, batch size = 256)} & \multicolumn{3}{c|}{($\rho = 0.8$, batch size = 256)} & \multicolumn{3}{c}{($\rho = 0.8$, $\tau = 0.07$)} \\
+\cline{4-12}
+Hybrid encoder   & \textbf{77.81} & \textbf{65.17} & $\rho$ & Dice(\%)↑ & mIoU(\%)↑ & $\tau$ & Dice(\%)↑ & mIoU(\%)↑ & batch size & Dice(\%)↑ & mIoU(\%)↑ \\
+\cline{4-12}
+KAN encoder      & 76.21 & 63.27 & 0.6 & 77.64 & 65.05 & 0.05 & 77.59 & 65.12 & 128 & 76.52 & 63.93 \\
+BCAM (Linear)    & 77.26 & 64.42 & 0.8 & \textbf{77.81} & \textbf{65.17} & 0.07 & \textbf{77.81} & \textbf{65.17} & 256 & 77.81 & 65.17 \\
+K-Gate (MLP)     & 76.93 & 64.02 & 1.0 & 77.12 & 64.26 & 0.10 & 77.45 & 64.98 & 512 & \textbf{77.89} & \textbf{65.18} \\
+\hline
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\paragraph{Effect of Hyperparameters.}
+
+We conduct a hyperparameter sensitivity analysis on the MosMedData+ dataset, with the results summarized in Tab.~\ref{kan_hp_sensitivity}(b). For each experiment, all settings are fixed to the default configuration ($\rho{=}0.8$, $\tau{=}0.07$, batch size${=}256$) except for the hyperparameter under investigation. The results show that the model is only weakly sensitive to $\rho$ and $\tau$, and we therefore adopt the slightly better and more stable combination $\rho{=}0.8$ and $\tau{=}0.07$ as the default setting. In addition, as the batch size increases, the evaluation metrics exhibit a general upward trend, confirming the positive effect of larger batches on contrastive learning; however, the gain of 512 over 256 is marginal, so we choose batch size${=}256$ in the main experiments as a trade-off between performance and computational cost.
+
+\paragraph{Effect of Contrastive Learning Strategy.}
+
+We compare CaCL with two control settings (without contrastive learning and with generic contrastive learning) on the QaTa-COV19 and MosMedData+ datasets. For each dataset, we select the top 5 textual descriptions with the largest number of matched images and their corresponding image samples, and visualize the distributions of their image features in the latent space under different training strategies. As shown in Fig.~\ref{ablation-CaCL}, CaCL yields more compact and semantically better separated cross-modal features, confirming its effectiveness in improving cross-modal alignment.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.96\columnwidth]{Figs/ablation-CaCL.pdf}
+\caption{Visualization of image feature distribution on QaTa-COV19 and MosMedData+ datasets under three pretraining strategies (no contrast, general contrast, and CaCL). Each color represents all images corresponding to a textual description.}
+\label{ablation-CaCL}
+\end{center}
+\end{figure}
+
+\section{Conclusion}
+
+In this paper, we propose C2Seg, a two-stage medical image segmentation framework targeting text-mask consistency. In the pretraining stage, we first reformulate batch contrastive learning as cluster-level distribution matching, transforming text-to-text similarity into a soft target to suppress false negatives and stabilize cross-modal alignment. In the fusion stage, we establish a modality fusion path dominated by vision and language to more fully exploit textual information, while K--Gate provides fine-grained cross-modal information selection. Extensive experiments on four challenging datasets validate the superiority and effectiveness of C2Seg.
+
+\section{Limitations}
+
+In this work, we primarily rely on qualitative visualization to assess text–mask consistency and have not yet introduced a dedicated quantitative metric for this purpose. Moreover, the textual descriptions in our datasets are relatively clean and structured, so we have not systematically examined the model’s robustness to complex text noise, such as spelling errors, abbreviations, or missing findings. Both aspects are important directions that we plan to explore in future work.
+
+% \subsubsection*{Author Contributions}
+% If you'd like to, you may include  a section for author contributions as is done
+% in many journals. This is optional and at the discretion of the authors.
+
+\subsubsection*{Acknowledgments}
+
+This work was supported in part by the Hefei Municipal Natural Science Foundation (2022009) and the Jiangsu Provincial Association of Traditional Chinese Medicine Project (CYTF2024089). Also, the authors gratefully acknowledge the High-performance Computing Platform of Anhui University for providing computing resources.
+
+
+\bibliography{iclr2026}
+\bibliographystyle{iclr2026_conference}
+
+\newpage
+\appendix
+
+\section{Ethics Statement}
+We have ensured that all data used in this research comply with ethical guidelines and proper citations. The study follows responsible AI practices and avoids any data manipulation or misrepresentation.
+
+\section{Reproducibility Statement}
+The experiments in this work are fully reproducible. All datasets and code used for model training and evaluation are publicly available. Detailed information on the experimental setup, model configurations, and hyperparameters is provided to enable independent reproduction of results.
+
+\section{Use of LLMs}
+This work does not involve the use of any large language models (LLMs), such as GPT, DeepSeek, or similar models.
+
+\section{Datasets}
+\label{sec:Datasets}
+
+To comprehensively evaluate the effectiveness of our proposed C2Seg, we conduct experiments on four widely used public medical image segmentation datasets: QaTa-COV19, MosMedData+, CVC-ClinicDB, and Kvasir. QaTa-COV19 and MosMedData+ are chest imaging datasets, both augmented with textual descriptions curated by ~\cite{li2023lvit}, which provide descriptive information for each image. A notable challenge in these two datasets is the high degree of text reuse: for example, over 7{,}000 samples in QaTa-COV19 share only about 300 different textual descriptions, which poses additional difficulties for fine-grained vision--language alignment. In addition, we consider two colonoscopy polyp segmentation datasets, CVC-ClinicDB and Kvasir, where image--text pairs are constructed by ~\cite{zhang2024madapter} through clinically oriented descriptions of each image.
+
+The QaTa-COV19 dataset~\cite{degerli2022osegnet}, jointly released by Qatar University and Tampere University, comprises 9{,}258 chest X-ray images with pixel-level annotations for COVID-19 lesion segmentation. We follow the dataset partition protocol used in LViT~\cite{li2023lvit}, splitting the dataset into a training set (5{,}716 images), a validation set (1{,}429 images), and a test set (2{,}113 images).
+
+The MosMedData+ dataset~\cite{morozov2020mosmeddata,hofmanninger2020automatic} includes 2{,}729 chest CT slices labeled with infection masks for pulmonary lesions. Each image is also accompanied by textual descriptions that specify attributes such as infection laterality, anatomical location, and affected lung lobes, providing diverse spatial and semantic cues. We adopt the same data split as in LViT~\cite{li2023lvit}: 2{,}183 training images, 273 validation images, and 273 test images.
+
+The CVC-ClinicDB dataset~\cite{bernal2015wm} contains 612 colonoscopy images with pixel-level polyp masks collected from 29 colonoscopy video sequences. In this work, we use the text-augmented version released by ~\cite{zhang2024madapter}, where each image is associated with a concise clinical-style description. Following~\cite{zhang2024madapter}, we split CVC-ClinicDB into 550 training images and 62 test images.
+
+The Kvasir dataset~\cite{jha2019kvasir} consists of 1{,}000 colonoscopy images with expert-annotated polyp masks acquired under diverse clinical conditions. Similarly, we adopt the text annotations provided by ~\cite{zhang2024madapter} and follow its partition protocol, using 900 images for training and 100 images for testing.
+
+\section{Evaluation Metrics}
+\label{sec:Metrics}
+
+To quantitatively assess segmentation performance, we adopt four widely used evaluation metrics: Dice score, mean Intersection over Union (mIoU), the 95th percentile Hausdorff distance (HD95), and the Average Symmetric Surface Distance (ASSD). Dice and mIoU evaluate the region-wise overlap between the predicted segmentation and ground-truth annotations across all categories and spatial positions.
+
+The Dice score measures the harmonic mean of precision and recall, placing more emphasis on correctly segmented regions, and is defined as:
+
+\begin{equation}
+\mathrm{Dice} = \sum_{i=1}^{N} \sum_{j=1}^{C} \frac{1}{NC} \cdot \frac{2|p_{ij} \cap y_{ij}|}{|p_{ij}| + |y_{ij}|},
+\end{equation}
+
+where $p_{ij}$ and $y_{ij}$ denote the predicted and ground-truth pixel sets, respectively, for sample $i$ and class $j$.
+
+The mean Intersection over Union (mIoU) reflects the average segmentation accuracy by computing the ratio of intersection over union for each class and averaging over the dataset:
+
+\begin{equation}
+\mathrm{mIoU} = \sum_{i=1}^{N} \sum_{j=1}^{C} \frac{1}{NC} \cdot \frac{|p_{ij} \cap y_{ij}|}{|p_{ij} \cup y_{ij}|},
+\end{equation}
+
+where $N$ denotes the number of samples and $C$ the total number of semantic categories. The notation $|p_{ij} \cap y_{ij}|$ and $|p_{ij} \cup y_{ij}|$ indicate the number of overlapping and combined pixels, respectively, between prediction and ground truth for each sample–category pair.
+
+In addition to region-overlap metrics, we also report two boundary-based distance metrics, HD95 and ASSD, to assess the accuracy of lesion localization and contour delineation. Let $S_{\mathrm{pred}}$ and $S_{\mathrm{gt}}$ denote the sets of surface (boundary) points of the predicted and ground-truth segmentations, respectively, and $d(x,S)=\min_{y\in S}\|x-y\|$ be the shortest distance from a point $x$ to a surface $S$. We first compute all directed surface distances $\{d(x,S_{\mathrm{gt}})\mid x\in S_{\mathrm{pred}}\}$ and $\{d(y,S_{\mathrm{pred}})\mid y\in S_{\mathrm{gt}}\}$ and take their union. HD95 is then defined as the 95th percentile of this pooled distance distribution, i.e., the value below which 95\% of all surface distances lie. A lower HD95 indicates that even the worst-aligned boundary regions are relatively close to the ground truth.
+
+The Average Symmetric Surface Distance (ASSD) measures the mean bidirectional surface distance between prediction and ground truth:
+
+\begin{equation}
+\mathrm{ASSD}(S_{\mathrm{pred}}, S_{\mathrm{gt}}) =
+\frac{1}{2}\left(
+\frac{1}{|S_{\mathrm{pred}}|}\sum_{x\in S_{\mathrm{pred}}} d(x,S_{\mathrm{gt}})
++
+\frac{1}{|S_{\mathrm{gt}}|}\sum_{y\in S_{\mathrm{gt}}} d(y,S_{\mathrm{pred}})
+\right).
+\end{equation}
+
+Smaller ASSD values indicate that, on average, the predicted and ground-truth boundaries are closely aligned in space. Together with Dice and mIoU, HD95 and ASSD provide a more comprehensive evaluation of both region overlap and boundary geometry.
+
+\section{Training Objective in Stage II}
+\label{sec:Loss}
+
+In Stage II, the segmentation decoder is optimized with a hybrid Binary Cross-Entropy (BCE) and Dice loss, which combines stable pixel-wise supervision with region-overlap awareness. Let $p_i \in [0,1]$ denote the predicted foreground probability for pixel $i$ and $y_i \in \{0,1\}$ the corresponding ground-truth label (foreground or background), over all pixels indexed by $i=1,\dots,|\Omega|$ in the image domain $\Omega$.
+
+The BCE loss is defined as
+
+\begin{equation}
+\mathcal{L}_{\mathrm{BCE}}
+= - \frac{1}{|\Omega|}
+\sum_{i=1}^{|\Omega|}
+\left[
+y_i \log(p_i) + (1-y_i)\log(1-p_i)
+\right],
+\end{equation}
+
+which treats segmentation as a pixel-wise binary classification task and provides numerically stable gradients, especially in the early training phase.
+
+To explicitly encourage region-level overlap between the prediction and ground truth and alleviate class imbalance, we further adopt a soft Dice loss:
+
+\begin{equation}
+\mathcal{L}_{\mathrm{Dice}}
+= 1 - 
+\frac{2 \sum_{i=1}^{|\Omega|} p_i y_i}
+{\sum_{i=1}^{|\Omega|} p_i + \sum_{i=1}^{|\Omega|} y_i + \epsilon},
+\end{equation}
+
+where $\epsilon$ is a small constant to avoid division by zero. This term focuses on the agreement between predicted and ground-truth foreground regions and is particularly beneficial when the lesion occupies only a small portion of the image.
+
+The final segmentation loss in Stage~II is a weighted combination of the two terms:
+
+\begin{equation}
+\mathcal{L}_{\mathrm{seg}}
+= 0.5\,\mathcal{L}_{\mathrm{BCE}} + 0.5\,\mathcal{L}_{\mathrm{Dice}}.
+\end{equation}
+
+In practice, this simple 1:1 weighting leverages the complementary strengths of BCE and Dice: the former stabilizes optimization at the pixel level, while the latter improves the overlap quality of the predicted masks, which is crucial for accurate medical image segmentation.
+
+\end{document}
+

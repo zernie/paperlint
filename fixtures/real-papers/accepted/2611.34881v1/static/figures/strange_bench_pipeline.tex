@@ -1,0 +1,6 @@
+\begin{figure*}[t!]
+    \centering
+    \includegraphics[width=\linewidth]{static/images/strange_bench_pipeline_v2s.pdf}
+    \caption{\textbf{Overview of the STRANGE-Bench generation pipeline}, illustrated with outputs of the actual build. (1)~\emph{Typicality-based sampling}: partners are drawn by their COCO NPMI with the anchor, high for the typical arm and low or never co-occurring for the atypical arm. (2)~\emph{Layout and caption}: a planner places the categories in a layout and writes a caption from it; each category keeps its color in panels 2 and 3. (3)~\emph{Rendering and annotation}: SD 3.5 Large renders the caption up to three times until SAM3 finds every category, and the boxes of the SAM3 masks are the annotations. (4)~\emph{Audit}: Grounding DINO rejects scenes with unintended objects (here, a laptop), and SAM3 and OWLv2 turn the remaining ones into ignore regions or drop the scene. (5)~\emph{Assembly}: typical and atypical sub-tiers at each contextual load $k$, plus $T_{\text{never}}$, form STRANGE-Bench.}
+    \label{fig:pipeline_overview}
+\end{figure*}

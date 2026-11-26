@@ -1,0 +1,270 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{I/O API of libc}
+\label{sec:background:c}
+
+In libc, two different levels of I/O APIs exist:
+%
+a high-level one using streams of the \C{FILE*} type, and a low-level one using
+file descriptors, expressed as integers.
+%
+This work focuses on the former because it is more widely used due to its
+flexibility and convenience, while the latter is recommended for use only when
+specifically necessary~\cite{glibc}.
+
+The functions performing stream-based I/O operations are defined in the
+\C{stdio.h} header file.
+%
+The POSIX 2024 standard~\cite{posix2024} specifies 66 API functions to be
+declared in this file.
+%
+However, among them, 6 functions are pure string operations and unrelated to I/O
+(e.g., \C{sprintf}),
+%
+and 3 functions operate on file descriptors rather than streams (e.g.,
+\C{dprintf}).
+%
+For this reason, this work focuses on replacing the remaining 57 functions, such
+as \C{fopen}, \C{fread}, \C{fwrite}, and \C{fseek}.
+%
+The full list is provided in the supplementary material~\cite{supp}.
+%
+We now describe the types of streams and operations on them.
+
+\paragraph{Origins}
+
+While streams can have various origins, they all have the same type \C{FILE*}.
+%
+Possible origins include \emph{standard input/output/error}, \emph{files}
+(opened by \C{fopen}), and \emph{pipes} (created by \C{popen}).
+%
+A pipe represents standard input or output of a subprocess, where output is
+selected when the second argument to \C{popen} is \CT{"}\C{r}\CT{"}, and input
+when it is \CT{"}\C{w}\CT{"}.
+%
+The code below is well-typed, as streams have the same type:
+
+\begin{lstlisting}[language=C]
+FILE *f; f = stdin; f = stdout; f = stderr;
+f = fopen(..); f = popen(..);
+\end{lstlisting}
+
+\paragraph{Buffering}
+
+Each stream can be either buffered or unbuffered.
+%
+By default, standard input/output, files, and pipes are buffered, while standard
+error is unbuffered.
+
+\paragraph{Capabilities}
+
+Streams can also have various capabilities, but the type does not distinguish
+them either.
+%
+Capabilities include \emph{reading} data from the stream, \emph{writing} data to
+the stream, and \emph{seeking} positions in the stream.
+%
+The following C code is well-typed, although some operations may fail at run
+time because the stream does not have the capability:
+
+\begin{lstlisting}[language=C]
+FILE *f = ..;
+fread(.., f); fwrite(.., f); fseek(f, ..);
+\end{lstlisting}
+
+\paragraph{Closing Streams}
+
+Each stream can be closed by passing it to \C{fclose} (for non-pipes) or
+\C{pclose} (for pipes).
+%
+Using a closed stream causes the operation to fail at run time.
+
+\paragraph{Error Checking}
+
+For error checking, each stream internally maintains two indicators:
+%
+an \emph{end-of-file (EOF) indicator} and an \emph{error indicator}.
+%
+When an operation on a stream fails, it sets the EOF indicator if the failure
+was due to reaching the end of the stream; otherwise, it sets the error
+indicator.
+%
+Calling \C{feof} on a stream checks whether the EOF indicator is set, and
+\C{ferror} checks the error indicator.
+
+\subsection{I/O API of Rust std}
+\label{sec:background:rust}
+
+\paragraph{Origins}
+
+Rust std provides different types for streams of different origins:
+%
+\C{Stdin}, \C{Stdout}, and \C{Stderr} for standard input/output/error;
+%
+\C{File} for files;
+%
+and \C{ChildStdin} and \C{ChildStdout} for pipes.
+%
+Assigning a stream to a variable of a different origin results in a type error:
+
+\begin{lstlisting}[language=Rust]
+let f: Stdin = stdin(); // ok
+f = stdout(); // type error
+\end{lstlisting}
+
+\paragraph{Buffering}
+
+Rust std's streams can also be buffered or unbuffered.
+%
+As in libc, standard input and output are buffered, and standard error is
+unbuffered.
+%
+However, files and pipes are unbuffered.
+%
+Instead, Rust std provides the \C{BufReader} and \C{BufWriter} types, which wrap
+streams with buffers.
+%
+For example, \C{BufReader}\CT{<}\C{File}\CT{>} is a readable, buffered file.
+
+\paragraph{Capabilities}
+
+Different capabilities are represented with different \emph{traits}, each of
+which represents a set of types that provide certain functionalities.
+%
+Traits resemble type classes in Haskell and serve a similar role to abstract
+classes or interfaces in object-oriented languages.
+%
+In Rust terminology, a type \C{A} is said to \emph{implement} a trait \C{T} if
+\C{A} belongs to \C{T}.
+
+To represent capabilities, Rust std provides \C{Read} for reading, \C{Write} for
+writing, and \C{Seek} for seeking.
+%
+\C{Read} is implemented by \C{Stdin}, \C{File}, \C{ChildStdout}, and
+\C{BufReader};
+%
+\C{Write} is implemented by \C{Stdout}, \C{Stderr}, \C{File}, \C{ChildStdin},
+and \C{BufWriter}.
+%
+\C{Seek} is implemented by \C{File}, and also by \C{BufReader} and \C{BufWriter}
+if the underlying stream implements \C{Seek}.
+
+In addition to the aforementioned traits, Rust std also provides the \C{BufRead}
+trait for buffered reading.
+%
+It represents the capability of reading the contents of a buffer, which is
+useful for implementing operations where the number of bytes to read is
+determined by the data itself, e.g., when translating \C{fscanf}.
+%
+\C{BufRead} is implemented by \C{Stdin} and \C{BufReader}.
+%
+% \C{BufRead} is implemented by \C{StdinLock}, which can be obtained by locking
+% \C{Stdin}, and by \C{BufReader}.
+
+Since a trait is not a type per se, Rust provides two keywords to use a trait as
+a type: \C{impl} and \C{dyn}.
+%
+For a trait $T$, \C{impl} $T$ and \C{dyn} $T$ are types, and $T$ is called
+the \emph{bound} of these types.
+%
+While similar, \C{impl} and \C{dyn} are used for different purposes.
+
+First, \C{impl} can be used only as the type of a function parameter to accept a
+value of any type that satisfies the bound.
+%
+Passing an argument of an incorrect type results in a type error:
+
+\begin{lstlisting}[language=Rust]
+fn foo(f: impl Read) { f.read(..); }
+foo(stdin()); // ok
+foo(stdout()); // type error
+\end{lstlisting}
+
+\noindent
+%
+The use of \C{impl} does not incur any run-time overhead because functions with
+\C{impl} are monomorphized at compile time, emitting separate versions for each
+type into the binary.
+
+When using \C{impl}, it is also possible to specify multiple bounds for a single
+type using the \CT{+} symbol:
+
+\begin{lstlisting}[language=Rust]
+fn foo(f: impl Read+Seek) { f.read(..);f.seek(..); }
+\end{lstlisting}
+
+\noindent
+%
+This requires the argument to implement both traits.
+
+On the other hand, \C{dyn} can be used anywhere to define a variable that can
+store a value of any type that satisfies the bound.
+%
+It incurs run-time overhead because the value is associated with a virtual
+method table, and utilizing its capabilities (i.e., calling methods) requires
+virtual dispatch.
+%
+Furthermore, since values of different types may have different sizes, a \C{dyn}
+type must be wrapped in a pointer type, such as \C{Box}, which represents a
+pointer to a heap-allocated object:
+
+\begin{lstlisting}[language=Rust]
+let f: Box<dyn Read> = Box::new(stdin()); // ok
+f = Box::new(stdout()); // type error
+\end{lstlisting}
+
+While \C{dyn} does not allow specifying multiple bounds, we can define a
+\emph{subtrait} that has multiple \emph{supertraits} and use this new trait as a
+bound.
+%
+Only types that implement all the supertraits can implement the subtrait, and
+the subtrait inherits all the functionalities of the supertraits:
+
+\begin{lstlisting}[language=Rust]
+trait ReadSeek : Read + Seek {}
+let f:Box<dyn ReadSeek> = ..; f.read(..);f.seek(..);
+\end{lstlisting}
+
+\paragraph{Closing Streams}
+
+Rust std does not provide functions to close streams, and each stream is closed
+automatically by its destructor when it is \emph{dropped}, i.e., when it is
+passed to the \C{drop} function or goes out of scope.
+%
+Rust's ownership type system prohibits any use of dropped values, preventing the
+use of a closed stream at compile time:
+
+\begin{lstlisting}[language=Rust]
+let f: File = File::open(..); drop(f);
+f.read(..); // type error
+\end{lstlisting}
+
+Note that dropping a pointer to a stream, rather than the stream itself, does
+not necessarily close it.
+%
+Raw pointers (unsafe pointers) and references (safe pointers) merely
+\emph{borrow} the pointee, and dropping them does not close the stream.
+%
+However, a \C{Box} \emph{owns} the pointee, and dropping it closes the stream.
+%
+For this reason, if a variable is only intended to use a stream without closing
+it, it should be defined as a borrowing pointer to prevent unintended closure.
+%
+For example, \C{f1} is a reference in the following code:
+
+\begin{lstlisting}[language=Rust]
+let f: File = File::open(..);
+let f1: &mut File = &mut f; f1.read(..); drop(f1);
+f.read(..); // ok
+\end{lstlisting}
+
+\paragraph{Error Checking}
+
+Each operation on a stream returns a \C{Result} value, which is either \C{Ok}
+containing the operation's result or \C{Err} containing the reason for the
+failure.
+%
+The \C{Ok} and \C{Err} cases can be distinguished using \emph{pattern matching},
+and in the \C{Err} case, inspecting the reason reveals whether the failure was
+due to reaching the end of the stream or another issue.

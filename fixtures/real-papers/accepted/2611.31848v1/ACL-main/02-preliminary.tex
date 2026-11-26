@@ -1,0 +1,96 @@
+\section{Preliminaries}\label{sec:pre}
+
+
+
+
+\subsection{Background}
+
+\paragraph{Persona Definition.}
+A \textit{Persona} $P$ is a textual specification conditioning a language model toward the characteristics of a specific virtual agent. We instantiate a persona via a \textit{backstory} $\mathcal{B}$, a first-person narrative encoding attributes such as demographics, values, and beliefs. $\mathcal{B}$ serves as the foundational context to steer the model $M$.
+
+
+
+Let $Q$ be a set of dialogue questions, and let $Q_{\mathcal{B}} \subseteq Q$ be the subset of questions relevant to backstory $\mathcal{B}$. For a question $q \in Q_{\mathcal{B}}$ with a finite answer set $\mathcal{A}_q$, let $Y_q \in \mathcal{A}_q$ denote the human response. We define the empirical distribution of responses given the backstory as:
+\begin{equation}
+\label{eq:response-dist}
+    p_{\mathcal{B},q}(r) = \Pr(Y_q = r \mid \mathcal{B}, q), \quad r \in \mathcal{A}_q,
+\end{equation}
+where $r$ ranges over the finite answer set $\mathcal{A}_q$, and $Y_q$ denotes the human response to question $q$ given backstory $\mathcal{B}$
+
+
+
+\paragraph{Congruity and Incongruity.}
+We formally distinguish between expected and unexpected persona behaviors.From a causal perspective, persona incongruity can be viewed as a counterfactual intervention on latent belief variables \citep{pearl2009causality}. Given a backstory $\mathcal{B}$, \textit{Persona Congruity} over a question set $Q_{\mathcal{B}}$ is the rate at which the model aligns with high-probability human responses:
+\begin{equation}
+\label{eq:congruity}
+    \text{Congruity}(\mathcal{B}) = \frac{1}{|Q_{\mathcal{B}}|} \sum_{q \in Q_{\mathcal{B}}} \mathbb{1}(\hat{Y}_q \in \mathcal{C}_q),
+\end{equation}
+where $\mathcal{C}_q \subseteq \mathcal{A}_q$ denotes the set of high-probability (congruous) responses for question $q$, and $\hat{Y}_q$ is the model's predicted answer.
+Conversely, \textit{Persona Incongruity} refers to instances where valid stances defy the model's learned priors. A response is characterized as \textit{incongruous} if the ground truth $Y_q$ occupies a low-likelihood region of the prior empirical distribution yet remains the true stance of the persona.
+
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{figure/persona_congruence_chart.png}
+\caption{\textbf{Distribution of Persona Congruence.} We map the prevalence of congruous versus incongruous personas across seven topical domains in the American Trends Panel (ATP). The data reflects sociodemographic complexity, where authentic stances often diverge from stereotypical group attributes.}
+\label{fig:domain_distribution}
+\end{figure}
+
+
+
+\begin{figure*}[!htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figure/framework.pdf}
+    \caption{Architecture Overview of \textsc{QuirkyMind} Framework: In-context Persona Learning and Transfer. 
+    }
+    \label{fig:framework}
+\end{figure*}
+
+
+\noindent \textbf{Example:}
+Consider $\mathcal{B}$: ``I am a climate-focused activist who supports strong emissions policy.'' For a question $q$ on phasing out coal, the empirical majority typically favors ``Yes.'' However, if the specific persona prioritizes grid stability, the ground truth might be ``No.'' Here, $p_{\mathcal{B},q}(\text{No})$ is low, rendering the stance incongruous but accurate. Standard backbones frequently succumb to mode collapse here, defaulting to the generic, congruous response. Figure~\ref{fig:domain_distribution} details these types. Crucially, significant incongruity exists across both high- and low-resource domains, challenging models to generalize beyond simple pattern matching.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Problem Formulation}
+
+
+
+
+\paragraph{Persona Representation Learning.}
+Let $\mathcal{D} = \{(\mathcal{B}, q, r)\}$ be a corpus of triples containing a backstory, a question, and a target response. Our objective is to learn a parameterized encoder $\Gamma_\theta$ that maps the backstory and interaction history to a latent persona state $\mathbf{z}$. This state conditions a language model $M_\Phi$ to approximate the target response distribution. We evaluate the quality of $\mathbf{z}$ on two downstream tasks:
+
+\paragraph{Persona-Steered Question Answering (PQA).}
+For $q \in Q_{\mathcal{B}}$ with answer options $\mathcal{A}_q$, the model defines a distribution $P_\Phi(r \mid q, \mathcal{B}, \mathbf{z})$. The task is to predict the categorical response $\hat{Y}_q$:
+\begin{equation}
+\label{eq:pqa}
+    \hat{Y}_q = \operatorname{argmax}_{r \in \mathcal{A}_q} P_\Phi(r \mid q, \mathcal{B}, \mathbf{z}),
+\end{equation}
+where $P_\Phi$ is the conditional distribution of the LLM parameterized by $\Phi$, and $\mathbf{z}$ is the latent persona state. Our objective is to optimize $\Phi$ to maximize predictive accuracy, ensuring the model remains faithful to the persona’s specific stances even when they deviate from the base model's priors.
+
+\paragraph{Persona-Steered Narrative Inference (PNI).}
+Given $\mathcal{B}$, $\mathbf{z}$, and an open-ended prompt $q$, the model generates a free-text response $\mathbf{x}$ sampled via:
+\begin{equation}
+\label{eq:pni}
+    P_\Phi(\mathbf{x} \mid q, \mathcal{B}, \mathbf{z}),
+\end{equation}
+where $\mathbf{x} = (x_1, \ldots, x_N)$ is the generated token sequence, $q$ an open-ended prompt, and $\mathbf{z}$ the persona state. The model is optimized so that $\hat{\mathbf{x}}_q$ faithfully reflects both congruous and incongruous attributes in $\mathcal{B}$.
+The generated sequence $\hat{\mathbf{x}}_q$ must faithfully reflect the attributes in $\mathcal{B}$, including specific incongruous stances, while maintaining narrative coherence and responsiveness to $q$.
+
+
+
+
+
+

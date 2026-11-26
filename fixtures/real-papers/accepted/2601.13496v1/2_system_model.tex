@@ -1,0 +1,24 @@
+\section{System Model} % and Underlying IoT RPC}
+\label{sec:model}
+
+
+In today's deployments, devices communicate in one of five ways~\cite{HAdevicemodels}:
+{\it Cloud Pull, Cloud Push, Local Pull, Local Push, Assumed State}. Here, {\it Cloud} means via the cloud service (device vendor's cloud service), while {\it Local} means locally directly from the device via Wifi, Bluetooth, Zigbee, etc. {\it Push} means the device updates the cloud service whenever its local state changes, while {\it Pull} means the cloud service has to poll the device for any state changes. For very old devices that allow neither pull nor push, the cloud service has to assume a state based on the last action. While the push variant naturally leans into providing updates for start and complete (and also intermediate states along the way), it is mostly adopted by sensor devices. Pull variants are widely prevalent---a cloud service or home hub continuously polls the device to detect updates. In fact, during our experiments, we have observed that at least 30\% of sampled vendors supported by Home Assistant only offer pull options.
+
+The execution of a single action on an IoT device has three components: (1) a {\it network component} (transmission of request and response messages among the mobile, hub, cloud, device), (2) a {\it contextual component} (virtual and physical) comprising preconditions (either physical or safety-related) needed for the device to execute the action, and finally (3) a {\it physical component} (device executing the action). \abs{} basically argues that these three stages are spatially and conceptually distinct.
+{
+We assume IoT devices satisfy a few  properties: 
+
+\squishlist
+\item {\it IoT devices and their vendor services cannot be modified.} 
+
+\item \noindent\textit{Only one action executes on a device at a time. } 
+{This is typical for today's devices, some of which maintain a queue (e.g., HP printers~\cite{HP_PrintJobStuck_Queue}) 
+while others reject new requests when busy (e.g., Nuki locks~\cite{Nuki423Locked}).}
+
+
+\item \noindent\textit{Sufficient polling rate.} To query the state of a pull-based device, we assume arbitrarily frequent pulls are allowed, e.g., Philips Hue bulbs allow polling every second via Hue Bridge~\cite{HAHueRateLimit}. 
+
+\item \noindent {\it Failures/Speed: } IoT devices may be arbitrarily slow or fail to execute actions. The network may delay or drop packets, and IoT devices and their vendor services need not be synchronized. % {or modified, and neither do their web services}. %While IoT devices may fail, w
+We assume the reliability of devices beyond our purview (cloud services, hub, phones, etc.).
+\squishend

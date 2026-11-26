@@ -1,0 +1,229 @@
+\newpage
+
+\appendix
+\raggedbottom
+\section*{Appendix}
+
+
+\section{Implementation Details}
+\label{sec:imple}
+
+\subsection{Dataset Statistics}
+
+\begin{table}[H]
+\centering
+\footnotesize
+
+\resizebox{\columnwidth}{!}{%
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrl}
+\toprule
+Dataset & Total & Train & Val & Test & Freq. \\
+\midrule
+ETTh1/h2 & 17,420 & 12,194 & 1,742 & 3,484 & Hourly \\
+ETTm1/m2  & 69,680 & 48,776 & 6,968 & 11,042 & 15-min \\ 
+Weather & 52,696 & 36,887 & 5,269 & 10,540 & 10-min \\
+ECL & 26,304 & 18,412 & 2,631 & 5,261 & Hourly \\
+Exchange & 7,588 & 5,311 & 759 & 1,518 & Daily \\
+\bottomrule
+\end{tabular}
+}
+\caption{Dataset statistics and split configuration.}
+\label{tab:datasets}
+\end{table}
+
+\subsection{Hyperparameters}
+\begin{table}[H]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|ccc}
+\toprule
+Dataset & LR & Epochs  & STL (Seas., Trend) \\
+\midrule
+ETTh1 & 1e-4 & 40 & 24, 48 \\
+ETTh2 & 1e-4 & 40 & 24, 48 \\
+ETTm1 & 1e-4 & 40 & 24, 48 \\
+ETTm2 & 1e-4 & 40 & 24, 48 \\
+ECL & 5e-6 & 40 & 12, 24 \\
+Exchange & 1e-4 & 40 & 7, 24 \\
+Weather & 3e-5 & 40 & 7, 48 \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{-2mm}
+{\footnotesize $^\dagger$Weight decay=1e-7, LLM temp=0.3, top-$p$=0.8 for all.}
+\caption{Dataset-specific hyperparameters.$^\dagger$}
+\label{tab:hyperparams}
+\end{table}
+
+
+Table~\ref{tab:hyperparams} summarizes dataset-specific hyperparameters for decoder training, STL decomposition, and LLM sampling. The residual decoder is a 2-layer MLP with hidden dimension $L \times F$, scaling capacity with input complexity.
+The text projection dimension for the Irregular Agent embedding is set to 32.
+All experiments were executed on a system with an NVIDIA RTX 3080 GPU, Intel Xeon E5-2686 v4 CPU (2.30 GHz), and 128GB RAM. Code is available at \url{https://github.com/mfriendly/CTRL}.
+
+\subsection{STL Context for Control Signal Generation}
+\label{app:stl_context}
+For each sample, agents receive historical (input sequence) and prediction (backbone output) statistics:
+\begin{equation}
+    \mathcal{C} = \{(\mathcal{C}_\text{hist}, \mathcal{C}_\text{pred}) \mid \mu, \sigma, \text{slope}_T, \text{amp}_S, d_S\}
+\end{equation}
+where $\mu$ and $\sigma$ denote mean and standard deviation, $\text{slope}_T$ is the trend slope via linear regression, $\text{amp}_S$ is the seasonal amplitude (max $-$ min), and $d_S$ is seasonal dominance (ratio of seasonal variance to total variance). This dual-view enables diagnosis by comparing expected versus predicted temporal characteristics.
+
+\subsection{Shift Detection}
+\label{app:shift_detection}
+
+We quantify distribution shift separately for each STL component using z-score normalization against held-out training statistics.
+
+Trend shift captures slope changes:
+\begin{equation}
+s_\text{trend} = \frac{|\text{slope}_\text{test} - \bar{\text{slope}}_\text{val}|}{\sigma_{\text{slope,val}} + \epsilon}
+\end{equation}
+
+Seasonal shift measures dominance changes:
+\begin{equation}
+s_\text{seasonal} = \frac{|d_{S,\text{test}} - \bar{d}_{S,\text{val}}|}{\sigma_{d_S,\text{val}} + \epsilon}
+\end{equation}
+where seasonal dominance \textit{$d_S = \text{Var}(\text{seasonal}) / \text{Var}(\text{total})$}.
+
+Irregular shift tracks noise level:
+\begin{equation}
+s_\text{irregular} = \frac{|\sigma_\text{test} - \bar{\sigma}_\text{val}|}{\sigma_{\sigma,\text{val}} + \epsilon}
+\end{equation}
+
+Adaptation activates when $s > \tau$ (default $\tau=2.0$), corresponding to test statistics exceeding two standard deviations from the held-out training distribution. The component-wise formulation allows targeted adjustment: a trend reversal need not affect seasonal correction.
+
+
+\subsection{Hyperparameter Sensitivity}
+
+\begin{table}[H]
+
+\centering
+\small
+\begin{tabular}{lc}
+\toprule
+\textbf{Configuration} & $\Delta$\textbf{MSE (\%)} \\
+\midrule
+\multicolumn{2}{l}{\textit{LLM Sampling (Llama 3.3 70B)}} \\
+\quad temp=0.2, top-p=0.8 & +0.22 \\
+\quad \textbf{temp=0.3, top-p=0.8} & \textbf{--} \\
+\quad temp=0.5, top-p=0.8 & +0.26 \\
+\midrule
+\multicolumn{2}{l}{\textit{Adaptation Threshold ($\tau$)}} \\
+\quad $\tau$=OFF (no adaptation) & +1.03 \\
+\quad $\tau$=1.5 & +0.05 \\
+\quad $\boldsymbol{\tau}$\textbf{=2.0} & \textbf{--} \\
+\quad $\tau$=2.5 & +0.01 \\
+\bottomrule
+\end{tabular}
+
+\caption{Hyperparameter sensitivity on ETTh2 (384$\to$96). Bold indicates selected configuration. $\Delta$ shows degradation relative to selected setting.}
+\label{tab:hparam_sensitivity}
+\end{table}
+
+Table~\ref{tab:hparam_sensitivity} evaluates CTRL's sensitivity to key hyperparameters on ETTh2. LLM sampling parameters (temperature, top-p) have minimal impact across the tested range, indicating that control signal generation is stable across reasonable sampling configurations. The adaptation threshold $\tau$ shows an optimum at 1.5--2.5, corresponding to the z-score formulation where adaptation triggers for test statistics exceeding two standard deviations from held-out training. Disabling adaptation entirely degrades performance by 1.03\%. 
+
+
+\section{Efficiency Analysis}
+\label{app:efficiency}
+
+\subsection{LLM Call Analysis.}
+Test-time adaptation monitors distribution shifts at fixed intervals rather than per-sample, with total calls equal to $3 + 3K$ in the worst case where all $K$ checks trigger adaptation (Table~\ref{tab:llm_calls}). Per-sample policies yield only $<$1\% MSE improvement at 200$\times$ cost compared to shared policies, and varying the calibration interval from 5 to 100 batches changes MSE by under 0.15\% across all six datasets (identical on ETTh1). This confirms that Phase 1's initial control signal generation captures the primary distribution gap, while Phase 3 provides marginal refinement, allowing coarse-grained monitoring (default: 50 batches) to reduce LLM calls by 10--50$\times$ without accuracy loss.
+
+
+
+
+\subsection{Model Complexity Breakdown.}
+Table~\ref{tab:param_breakdown} provides detailed parameter counts.
+The frozen GPT-2 encoder (124M parameters) adds no training cost; 
+only the lightweight MLP projector (100K) and residual decoder (215K) are trained.
+
+\begin{table}[H]
+\centering
+
+\small
+\begin{tabular}{p{4.5cm}p{1.2cm}}
+\toprule
+\textbf{Component} & \textbf{Params} \\
+\midrule
+DLinear backbone (frozen) & 74K \\
+GPT-2 encoder (frozen) & 124M \\
+MLP projector (trained) & 100K \\
+Residual decoder wo proj. (trained) & 215K \\
+\midrule
+\textbf{Total trainable} & \textbf{$\sim$400K} \\
+\bottomrule
+\end{tabular}
+\caption{CTRL parameter breakdown (ETTh2, DLinear backbone).}
+\label{tab:param_breakdown}
+\end{table}
+
+
+
+
+
+
+
+\input{trace}
+
+\section{Control Signal Sensitivity Analysis}
+\label{app:sensitivity}
+
+To quantify the decoder's dependence on each control signal component, we perform a parameter sweep analysis on ETTh2 (DLinear, 384$\to$96). For each parameter, we vary its value across the full operational range while holding all other parameters fixed at their LLM-generated values, and measure the mean absolute change in decoder correction output:
+\begin{equation}
+    \Delta_c = \max_{v \in \mathcal{V}_c} \frac{1}{N} \sum_{i=1}^{N} \left| g_\phi(\hat{y}_i, z) - g_\phi(\hat{y}_i, z_{c \leftarrow v}) \right|
+\end{equation}
+where $z_{c \leftarrow v}$ denotes the control signal with component $c$ set to sweep value $v$, and $\mathcal{V}_c$ is the operational range for that component. For numeric parameters, we sweep: scale $\in [0.5, 1.5]$, bias $\in [-1.0, 1.0]$, gate $\in [0.0, 1.0]$, confidence $\in [0.0, 1.0]$. For the irregular text embedding, we measure the output change when replacing the LLM-generated text with an empty string, removing the 32-dimensional projected embedding entirely. We use $N = 100$ uniformly sampled test windows.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lc}
+\toprule
+\textbf{Component} & $\boldsymbol{\Delta}$ \textbf{(ETTh2)} \\
+\midrule
+\textbf{Irregular text emb.} & \textbf{0.032} \\
+Trend bias & 0.009 \\
+Trend confidence & 0.006 \\
+Trend scale & 0.005 \\
+Trend gate & 0.005 \\
+Seasonal confidence & 0.001 \\
+Seasonal scale & 0.001 \\
+Seasonal gate & 0.001 \\
+Seasonal bias & 0.000 \\
+\bottomrule
+\end{tabular}
+\caption{Control signal sensitivity on ETTh2 (384$\to$96, DLinear). The irregular text embedding is 3.4$\times$ more influential than the most responsive numeric parameter (trend bias).}
+\label{tab:sensitivity}
+\end{table}
+
+Table~\ref{tab:sensitivity} confirms that the decoder has learned to leverage the 32-dimensional GPT-2 projected text representation as its primary source of semantic context. We additionally test how different text inputs affect the decoder output (Table~\ref{tab:text_variants}), replacing the LLM-generated text with various alternatives.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lc}
+\toprule
+\textbf{Text Variant} & $\boldsymbol{\Delta}$ \\
+\midrule
+No text (zeroed embedding) & 0.0323 \\
+Random unrelated words & 0.0074 \\
+Technical jargon & 0.0045 \\
+Crisis/volatility description & 0.0010 \\
+Random characters & 0.0005 \\
+Calm/stable description & 0.0004 \\
+\bottomrule
+\end{tabular}
+\caption{Decoder output change when replacing LLM-generated irregular text with alternative inputs on ETTh2.}
+\label{tab:text_variants}
+\end{table}
+
+The large gap between removing the text entirely ($\Delta = 0.032$) and substituting alternative texts ($\Delta \leq 0.007$) indicates that the decoder distinguishes the \emph{presence} of the LLM text embedding from its \emph{absence}, while the variation among different text inputs confirms sensitivity to \emph{content}. Combined with the random control signal ablation (Table~\ref{tab:ablation}), which shows random text through the same GPT-2 pipeline performs at the zero-signal level, these results confirm that the decoder utilizes semantic content from the LLM rather than treating the embedding as a generic bias term. This text variant analysis serves as a functional probe of the irregular embedding space: 
+by systematically substituting inputs and measuring output divergence, we directly test 
+whether the decoder has learned to extract semantic content from the embedding rather 
+than relying on its statistical properties alone.
+
+
+\section{Prompts}
+\label{sec:appendix_prompts}
+
+\input{prompt}

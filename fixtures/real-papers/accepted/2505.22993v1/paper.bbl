@@ -1,0 +1,84 @@
+\begin{thebibliography}{16}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Aly et~al.(2021)Aly, Guo, Schlichtkrull, Thorne, Vlachos, Christodoulopoulos, Cocarascu, and Mittal}]{feverous_dataset}
+Rami Aly, Zhijiang Guo, Michael~Sejr Schlichtkrull, James Thorne, Andreas Vlachos, Christos Christodoulopoulos, Oana Cocarascu, and Arpit Mittal. 2021.
+\newblock \href {https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/68d30a9594728bc39aa24be94b319d21-Abstract-round1.html} {{FEVEROUS:} fact extraction and verification over unstructured and structured information}.
+\newblock In \emph{Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks 1, NeurIPS Datasets and Benchmarks 2021, December 2021, virtual}.
+
+\bibitem[{Chen et~al.(2024)Chen, Xiao, Zhang, Luo, Lian, and Liu}]{bge-m3}
+Jianlv Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu Lian, and Zheng Liu. 2024.
+\newblock \href {https://arxiv.org/abs/2402.03216} {Bge m3-embedding: Multi-lingual, multi-functionality, multi-granularity text embeddings through self-knowledge distillation}.
+\newblock \emph{Preprint}, arXiv:2402.03216.
+
+\bibitem[{Dmonte et~al.(2024)Dmonte, Oruche, Zampieri, Calyam, and Augenstein}]{abs-2408-14317}
+Alphaeus Dmonte, Roland Oruche, Marcos Zampieri, Prasad Calyam, and Isabelle Augenstein. 2024.
+\newblock \href {https://doi.org/10.48550/ARXIV.2408.14317} {Claim verification in the age of large language models: {A} survey}.
+\newblock \emph{CoRR}, abs/2408.14317.
+
+\bibitem[{Fader et~al.(2011)Fader, Soderland, and Etzioni}]{extract_relation}
+Anthony Fader, Stephen Soderland, and Oren Etzioni. 2011.
+\newblock \href {https://aclanthology.org/D11-1142/} {Identifying relations for open information extraction}.
+\newblock In \emph{Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing, {EMNLP} 2011, 27-31 July 2011, John McIntyre Conference Centre, Edinburgh, UK, {A} meeting of SIGDAT, a Special Interest Group of the {ACL}}, pages 1535--1545. {ACL}.
+
+\bibitem[{Guo et~al.(2022)Guo, Schlichtkrull, and Vlachos}]{fact_check_survey}
+Zhijiang Guo, Michael~Sejr Schlichtkrull, and Andreas Vlachos. 2022.
+\newblock \href {https://doi.org/10.1162/TACL\_A\_00454} {A survey on automated fact-checking}.
+\newblock \emph{Trans. Assoc. Comput. Linguistics}, 10:178--206.
+
+\bibitem[{Jiang et~al.(2020)Jiang, Bordia, Zhong, Dognin, Singh, and Bansal}]{hover_dataset}
+Yichen Jiang, Shikha Bordia, Zheng Zhong, Charles Dognin, Maneesh~Kumar Singh, and Mohit Bansal. 2020.
+\newblock \href {https://doi.org/10.18653/V1/2020.FINDINGS-EMNLP.309} {Hover: {A} dataset for many-hop fact extraction and claim verification}.
+\newblock In \emph{Findings of the Association for Computational Linguistics: {EMNLP} 2020, Online Event, 16-20 November 2020}, volume {EMNLP} 2020 of \emph{Findings of {ACL}}, pages 3441--3460. Association for Computational Linguistics.
+
+\bibitem[{Krishna et~al.(2022)Krishna, Riedel, and Vlachos}]{Krishna0022}
+Amrith Krishna, Sebastian Riedel, and Andreas Vlachos. 2022.
+\newblock \href {https://doi.org/10.1162/TACL\_A\_00503} {Proofver: Natural logic theorem proving for fact verification}.
+\newblock \emph{Trans. Assoc. Comput. Linguistics}, 10:1013--1030.
+
+\bibitem[{Li et~al.(2013)Li, Ji, and Huang}]{join_extract_1}
+Qi~Li, Heng Ji, and Liang Huang. 2013.
+\newblock \href {https://aclanthology.org/P13-1008/} {Joint event extraction via structured prediction with global features}.
+\newblock In \emph{Proceedings of the 51st Annual Meeting of the Association for Computational Linguistics, {ACL} 2013, 4-9 August 2013, Sofia, Bulgaria, Volume 1: Long Papers}, pages 73--82. The Association for Computer Linguistics.
+
+\bibitem[{Miwa and Bansal(2016)}]{join_extract_2}
+Makoto Miwa and Mohit Bansal. 2016.
+\newblock \href {https://doi.org/10.18653/V1/P16-1105} {End-to-end relation extraction using lstms on sequences and tree structures}.
+\newblock In \emph{Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics, {ACL} 2016, August 7-12, 2016, Berlin, Germany, Volume 1: Long Papers}. The Association for Computer Linguistics.
+
+\bibitem[{Pan et~al.(2023)Pan, Wu, Lu, Luu, Wang, Kan, and Nakov}]{program_fc}
+Liangming Pan, Xiaobao Wu, Xinyuan Lu, Anh~Tuan Luu, William~Yang Wang, Min{-}Yen Kan, and Preslav Nakov. 2023.
+\newblock \href {https://doi.org/10.18653/V1/2023.ACL-LONG.386} {Fact-checking complex claims with program-guided reasoning}.
+\newblock In \emph{Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), {ACL} 2023, Toronto, Canada, July 9-14, 2023}, pages 6981--7004. Association for Computational Linguistics.
+
+\bibitem[{Robertson et~al.(1994)Robertson, Walker, Jones, Hancock{-}Beaulieu, and Gatford}]{bm25}
+Stephen~E. Robertson, Steve Walker, Susan Jones, Micheline Hancock{-}Beaulieu, and Mike Gatford. 1994.
+\newblock \href {http://trec.nist.gov/pubs/trec3/papers/city.ps.gz} {Okapi at {TREC-3}}.
+\newblock In \emph{Proceedings of The Third Text REtrieval Conference, {TREC} 1994, Gaithersburg, Maryland, USA, November 2-4, 1994}, volume 500-225 of \emph{{NIST} Special Publication}, pages 109--126. National Institute of Standards and Technology {(NIST)}.
+
+\bibitem[{Sedova et~al.(2024)Sedova, Litschko, Frassinelli, Roth, and Plank}]{sedova2024knowknowanalyzingselfconsistency}
+Anastasiia Sedova, Robert Litschko, Diego Frassinelli, Benjamin Roth, and Barbara Plank. 2024.
+\newblock \href {https://arxiv.org/abs/2407.17125} {To know or not to know? analyzing self-consistency of large language models under ambiguity}.
+\newblock \emph{Preprint}, arXiv:2407.17125.
+
+\bibitem[{Wang and Shu(2023)}]{WangS23a}
+Haoran Wang and Kai Shu. 2023.
+\newblock \href {https://doi.org/10.18653/V1/2023.FINDINGS-EMNLP.416} {Explainable claim verification via knowledge-grounded reasoning with large language models}.
+\newblock In \emph{Findings of the Association for Computational Linguistics: {EMNLP} 2023, Singapore, December 6-10, 2023}, pages 6288--6304. Association for Computational Linguistics.
+
+\bibitem[{Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le, and Zhou}]{Wei0SBIXCLZ22}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed~H. Chi, Quoc~V. Le, and Denny Zhou. 2022.
+\newblock \href {http://papers.nips.cc/paper\_files/paper/2022/hash/9d5609613524ecf4f15af0f7b31abca4-Abstract-Conference.html} {Chain-of-thought prompting elicits reasoning in large language models}.
+\newblock In \emph{Advances in Neural Information Processing Systems 35: Annual Conference on Neural Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, November 28 - December 9, 2022}.
+
+\bibitem[{Zhang and Gao(2023)}]{ZhangG23}
+Xuan Zhang and Wei Gao. 2023.
+\newblock \href {https://doi.org/10.18653/V1/2023.IJCNLP-MAIN.64} {Towards llm-based fact verification on news claims with a hierarchical step-by-step prompting method}.
+\newblock In \emph{Proceedings of the 13th International Joint Conference on Natural Language Processing and the 3rd Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics, {IJCNLP} 2023 -Volume 1: Long Papers, Nusa Dua, Bali, November 1 - 4, 2023}, pages 996--1011. Association for Computational Linguistics.
+
+\bibitem[{Zhao et~al.(2024)Zhao, Wang, Wang, Cheng, Zhang, and Wong}]{ZhaoWWCZW24}
+Xiaoyan Zhao, Lingzhi Wang, Zhanghao Wang, Hong Cheng, Rui Zhang, and Kam{-}Fai Wong. 2024.
+\newblock \href {https://aclanthology.org/2024.lrec-main.1099} {{PACAR:} automated fact-checking with planning and customized action reasoning using large language models}.
+\newblock In \emph{Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation, {LREC/COLING} 2024, 20-25 May, 2024, Torino, Italy}, pages 12564--12573. {ELRA} and {ICCL}.
+
+\end{thebibliography}

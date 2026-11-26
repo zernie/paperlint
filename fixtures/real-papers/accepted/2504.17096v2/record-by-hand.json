@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/motivation.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/sailor_overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/components.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "content/acknowledgements.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "157a77422e1373bebc16388db33fca4f06a0d1625d74e3c38e728386a2780058",
+    "content/intro.tex": "73c7bf97772113e3cbfa489742ea6a6980348eaed66a3a2563bc7ac00d4ab357",
+    "content/background.tex": "5ca04a66fc2b3811c505ffbb3a9ce2568a8586e6401af717f567e7623c5b162a",
+    "content/motivation.tex": "a9df069d6c05c1273f70a2f78a119a3a2503fc918f3936ca41eb79d824e2e179",
+    "content/sailor_overview.tex": "1e1632a3ce2d2465c21ec19cec2bcba27b4abf7817d147ed1725e9e9b847e699",
+    "content/components.tex": "dac5cb7823b7d9b9d0783805fb6a3f411df6b5ff694467219c14e253e2cb5363",
+    "content/evaluation.tex": "1e4fea78631354872e2c225174a2bd51bf810538b8408613eaf6303e4477e71d",
+    "content/discussion.tex": "805edef66da7b35b1eaf0f7bff29df5ce472f9bb3d2e335579c43ae6f3874e62",
+    "content/related_work.tex": "d8c9c6913efa298c93265868d53b91e0017d9e7cca226c34c439e3c473f2d599",
+    "content/conclusion.tex": "1e48ca0e29978868aefc5978b406889edd7762ad5d8058ec61a9bebbcb7a4145",
+    "content/acknowledgements.tex": "a1545ddbe88632613c584cccefcffc1623fa3a6afa5563a6a62393034a361b20"
+  }
+}

@@ -1,0 +1,32 @@
+\subsection{DINOv3 ViT-B/16 Fine-Tuned: Full Results}
+\label{app:dinov3_full}
+
+Like the two detectors above, the fine-tuned DINOv3 ViT-B/16 results of Tab.~\ref{tab:dinov3_main} come with a cross-domain transfer table (Tab.~\ref{tab:dinov3_ft_cd}) and a per-tier STRANGE-Bench breakdown (Tab.~\ref{tab:dinov3_ft_strange}). The splits are again the quintile ones, and every number is F1\textsubscript{micro} (the natural metric for the multi-label classification head; see \S\ref{app:exp-recipes}). The augmentation suite mirrors that of the detection families.
+
+\noindent\textbf{In-domain typicality.}
+On COCO (Tab.~\ref{tab:dinov3_ft_cd}, left block), Std.\ aug yields a typicality gap of $\Delta^{\text{T-A}} = {}$$5.5$ at $\text{F1}^{\text{val}} = {}$$81.9$. Color jitter and MixUp shave the gap modestly (4.6 and 4.2) without hurting overall F1. Mosaic and YOLOX produce the smallest non-paste gaps ($4.0$ and $3.7$) but \emph{collapse} overall F1 to $69.6$ and $70.0$, the same uniform-degradation trap visible in the detection families (\S\ref{app:codino_full}). XPaste\,+\,AAS \emph{(ours)} attains the highest in-domain F1 ($82.5$) and a gap of $\Delta^{\text{T-A}} = 3.9$ ($1.6$ below Std.; SCP reaches $3.7$).
+
+\noindent\textbf{Cross-domain typicality.}
+On Objects365, for the right block (pairs ranked by NPMI recomputed on Objects365 train, \S\ref{app:exp-datasets}, i.e.\ by the co-occurrence statistics of the domain the images come from), the gap is $7.1$ to $8.0$~p.p.\@ for every row except Mosaic and YOLOX, against AP gaps of $3.8$ to $5.1$ for Co-DINO (Tab.~\ref{tab:codino_cd}) and $3.0$ to $3.5$ for GDINO (Tab.~\ref{tab:gdino_o365}) on the same split, so the typicality bias of the fine-tuned classifier carries over to real images of another dataset. Mosaic and YOLOX have smaller gaps ($4.8$ and $4.6$) only because both arms collapse (typical F1 $26.8$ and $27.3$ against $38.1$ to $41.2$ for the other rows), as on COCO. SCP and SCP\,+\,AAS \emph{(ours)} have the highest typical and atypical F1 ($41.2 / 33.7$ and $41.0 / 33.6$); against Std.\ ($40.1 / 32.2$) both raise the atypical arm more than the typical one ($+1.5$ vs.\ $+1.1$ and $+1.4$ vs.\ $+0.9$), so the gap narrows from $7.9$ to $7.5$ and $7.4$, the smallest apart from Mosaic, YOLOX and No aug ($7.1$, at lower F1 on both arms). XPaste and XPaste\,+\,AAS stay at the Std.\ level on both arms ($40.0 / 32.2$ and $40.0 / 32.3$), so the in-domain lead of XPaste\,+\,AAS does not carry into this transfer. With COCO NPMI (middle block), every Objects365 gap is $1.7$ to $1.8$ times larger ($12.6$ to $14.2$~p.p.\@; Mosaic and YOLOX $8.0$ and $8.1$), whereas the Co-DINO and GDINO gaps are smaller there ($2.0$ to $3.0$ and $2.1$ to $2.7$); SCP and SCP\,+\,AAS again have the highest atypical F1 ($31.4$ and $31.1$).
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{DINOv3 ViT-B/16 fine-tuned: in-domain (COCO) and
+cross-domain (Objects365) typicality.} On COCO, XPaste\,+\,AAS \emph{(ours)} has the highest F1$^{\text{val}}$, typical and atypical F1. Ranked by Objects365's own NPMI (right block), Objects365 shows a gap of $7.1$ to $8.0$~p.p.\@ for every row except Mosaic and YOLOX, whose arms collapse, and SCP and SCP\,+\,AAS \emph{(ours)} have the highest typical and atypical F1, raising the atypical arm more than the typical one over Std. Ranked by COCO NPMI (middle block), every Objects365 gap is $1.7$ to $1.8$ times larger. F1$_{\text{micro}}$ (\%) on the quintile paired splits of COCO val and Objects365 val, the latter split by COCO \texttt{train2017} NPMI or by NPMI recomputed on Objects365 train (App.~\ref{app:exp-datasets}); rows as in Tab.~\ref{tab:dinov3_main} without the linear probe. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:dinov3_ft_cd}
+\input{static/tables/generated/dinov3_ft_cd_tabular}
+\end{table*}
+
+\noindent\textbf{Per-tier STRANGE-Bench breakdown.} Tab.~\ref{tab:dinov3_ft_strange} reports the full per-tier STRANGE-Bench breakdown for DINOv3 ViT-B/16 FT. Three observations stand out. First, this family has the largest single-tier gap in the paper: the Std.\ baseline gap grows from $\Delta = -0.7$ at $T_1$ to $\Delta = {}$$40.6$ at $T_5$, i.e.\ a $41$ p.p.\@ swing as contextual load increases, with $T_{\text{never}}$ at only $62.6$. The mean gap $\Delta_{1\text{-}5} = {}$$22.2$ is roughly $3.5\times$ that of Co-DINO Std.\ ($6.3$) and about $9\times$ that of GDINO zero-shot ($2.4$), reflecting the strong typicality prior baked into a multi-label head trained on natural co-occurrences. Second, the paste-based interventions are correspondingly more dramatic: SCP alone reduces the mean gap to $4.3$ and lifts $T_{\text{never}}$ to $86.5$ (a $+24$ p.p.\@ absolute improvement over Std.). XPaste\,+\,AAS \emph{(ours)} pushes both numbers further to $\Delta_{1\text{-}5} = {}$$-0.8$ and $T_{\text{never}} = {}$$96.1$ (XPaste alone: $-0.7$ and $95.0$), the largest mitigation effect we observe in this paper. Third, the gap-closure profile is itself revealing: under XPaste\,+\,AAS the per-tier gap stays at or below $0.7$~p.p.\@ for every tier $T_1$ to $T_5$ (negative at $T_1$ to $T_3$, where atypical F1 is higher), including $T_5$ (gap $= {}$$0.7$, vs $40.6$ for Std.\ and $33.8$ for No-aug). This means the model's reliance on typical co-occurrence in the highest-load regime is essentially eliminated, while typical-tier F1 stays well above Std. ($\text{T}5^{\text{T}} = {}$$93.3$ vs Std.'s $88.6$). Mosaic and YOLOX, despite small mean gaps ($6.7$ and $6.0$), again pay for it with collapsed typical scores ($T^{\text{T}}_{1\text{-}5} = 74.7$ and $75.1$ vs.\ $89.7$ for Std.).
+
+\begin{table*}[!htp]%
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\caption{\textbf{DINOv3 ViT-B/16 fine-tuned: STRANGE-Bench per-tier breakdown.} The Std.\ gap grows from $-0.7$ at T1 to $40.6$ at T5 (mean $22.2$), the largest single-tier gap in the paper; SCP brings the mean down to $4.3$ and XPaste\,+\,AAS \emph{(ours)} to $-0.8$, with gaps between $-2.4$ and $0.7$ at every tier and the highest $T_{\text{never}}$ ($96.1$). F1$_{\text{micro}}$ (\%) of the typical (T) and atypical (A) arm of each tier and their gap $\Delta$; $T_{1\text{-}5}$ is the mean over T1 to T5, rows as in Tab.~\ref{tab:dinov3_main} without the linear probe. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:dinov3_ft_strange}
+\resizebox{\linewidth}{!}{%
+\input{static/tables/generated/dinov3_ft_strange_tabular}}
+\end{table*}

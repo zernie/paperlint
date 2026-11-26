@@ -1,0 +1,26 @@
+\subsection{Co-DINO ResNet-50: Full Results}
+\label{app:codino_full}
+
+We complement the main Co-DINO ResNet-50 results (Tab.~\ref{tab:codino_main}) with the cross-domain transfer table (Tab.~\ref{tab:codino_cd}) and the full per-tier STRANGE-Bench breakdown (Tab.~\ref{tab:codino_strange}). All numbers use the same quintile cut ($\alpha = 0.2$) as the main paper. The augmentation suite (No aug, Std., Color jitter, MixUp, Mosaic, YOLOX, SCP, InstAug, XPaste) is identical to that of Sec.~\ref{sec:experiments}, with SCP\,+\,AAS and XPaste\,+\,AAS as the two AAS variants under study. 
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Co-DINO ResNet-50: in-domain (COCO) and cross-domain
+(Objects365) typicality.} SCP\,+\,AAS \emph{(ours)} has the highest typical and atypical AP on all three splits. On Objects365 the gap hardly depends on the augmentation ($2.0$ to $3.0$~p.p.\@ with COCO NPMI) and is $1.6$ to $2.3$ times larger for every row when the pairs are ranked by Objects365's own NPMI ($3.8$ to $5.1$~p.p.\@). Full-annotation bbox mAP (\%) on the quintile paired splits of COCO val and Objects365 val, the latter split by COCO \texttt{train2017} NPMI or by NPMI recomputed on Objects365 train (App.~\ref{app:exp-datasets}); rows as in Tab.~\ref{tab:codino_main}. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:codino_cd}
+\input{static/tables/generated/codino_r50_o365_tabular}
+\end{table*}
+
+\noindent\textbf{In-domain and cross-domain typicality.} On COCO (Tab.~\ref{tab:codino_cd}, left block), Std.\ aug yields the largest typicality gap of all rows ($\Delta^{\text{T-A}} = 9.2$), which is consistent with the $\alpha$-sweep finding in \S\ref{app:splits-impl} that conventional augmentation does not close the gap. Mosaic and YOLOX attain the smallest COCO gaps ($6.4$ and $6.7$) but lower AP on both splits relative to Std.\ (typical AP by $7.1$ and $6.2$~p.p.\@). SCP\,+\,AAS \emph{(ours)} has the highest overall AP ($\text{AP}^{\text{val}} = 52.9$) and the highest typical and atypical AP, with $\Delta^{\text{T-A}} = 8.5$; XPaste\,+\,AAS has $\text{AP}^{\text{val}} = 51.4$ and $\Delta^{\text{T-A}} = 8.8$. On cross-domain Objects365 (right blocks), the gaps of all rows lie between $2.0$ and $3.0$ with COCO NPMI and between $3.8$ and $5.1$ with O365 NPMI, so no configuration stands out; SCP\,+\,AAS again has the highest typical and atypical AP in both blocks ($34.7 / 32.4$ and $36.4 / 32.1$), and each AAS row lowers the gap of the row it starts from by $0.1$ to $0.2$.
+
+\begin{table*}[!htp]%
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\caption{\textbf{Co-DINO ResNet-50: STRANGE-Bench per-tier breakdown.}
+For No aug, Std., Color jitter and MixUp the gap jumps once a scene holds two partners ($8$ to $11$~p.p.\@ at T3 to T5); the paste rows (SCP, XPaste and both AAS rows) keep it at $5.4$~p.p.\@ or below, and XPaste\,+\,AAS \emph{(ours)} has the smallest gap at T1 to T4 and the highest $T_{\text{never}}$. Full-annotation bbox mAP (\%) of the typical (T) and atypical (A) arm of each tier and their gap $\Delta$; $T_{1\text{-}5}$ is the mean over T1 to T5, rows as in Tab.~\ref{tab:codino_main}. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:codino_strange}
+\input{static/tables/generated/codino_r50_strange_bench_tabular}
+\end{table*}

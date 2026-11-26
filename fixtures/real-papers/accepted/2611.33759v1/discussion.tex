@@ -1,0 +1,37 @@
+% =====================================================================
+% CONCLUSION
+% =====================================================================
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We studied which component of the test loss is responsible for the
+double-descent peak. We gave an upper bound on the MLE excess test cross-entropy
+that decomposes into four interpretable terms: an approximation-and-shift
+term, a minimax batch regret, a prior cost, and an MLE-vs-Bayes gap.
+Under the posterior-sampling assumption, we also lower-bounded the
+MLE-vs-Bayes gap by the expected MLE-vs-ensemble loss difference in the
+well-specified setting. Through experiments under
+fully random labels, where the approximation-and-shift term is zero by
+construction, we found a large SGD-vs-ensemble gap near interpolation,
+supporting the MLE-vs-Bayes gap as a major contributor to the peak. For practitioners
+working in the interpolation regime, this picture suggests that the
+double-descent peak can depend strongly on the prediction rule, and that
+probability-averaged ensembles can attenuate it.
+
+\textbf{Limitations.} Our experimental sweeps are less extensive than
+prior empirical studies of double descent \citep{nakkiran2021deep}, do
+not include the largest modern architectures, and use eight SGLD chains
+per CNN width. The gap lower bound assumes an ideal posterior sampler.
+Our finite SGLD runs may retain mixing and discretization error;
+posterior consistency is assumed rather than proved for the CNNs studied here.
+The longer-run and smaller-step checks support robustness of the observed
+comparison, but do not certify the measured finite-test-set gap as a lower
+bound. The universal compression decomposition relies
+on a supremum over the model family in the batch-regret and MLE-vs-Bayes
+terms, resulting in an upper bound rather than an equality; this is the
+price for cleanly separating the batch regret from the MLE-vs-Bayes gap.
+We do not establish numerical tightness for deep networks or directly
+estimate (II), (II'), or the supremum in (III). Finally, while the
+random-labels experiment eliminates (I) and shows a large empirical gap,
+it does not establish that (III) dominates across all settings.

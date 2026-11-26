@@ -1,0 +1,24 @@
+\begin{tabular}{l cccc ccc ccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{COCO}} & \multicolumn{3}{c}{\textbf{Objects365, COCO NPMI}} & \multicolumn{3}{c}{\textbf{Objects365, O365 NPMI}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+Augmentation & $\text{F1}^{\text{val}}$ $\uparrow$ & $\text{F1}^{\text{T}}$ $\uparrow$ & $\text{F1}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $\text{F1}^{\text{T}}$ $\uparrow$ & $\text{F1}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $\text{F1}^{\text{T}}$ $\uparrow$ & $\text{F1}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ \\
+\midrule
+No aug & 78.9 & 77.8 & 70.1 & 7.7 & 42.0 & 29.3 & 12.6 & 38.1 & 30.9 & 7.1 \\
+\midrule
+\multicolumn{11}{l}{\emph{Non-generative}} \\
+Std. & 81.9 & 79.8 & 74.3 & 5.5 & 43.9 & 30.1 & 13.8 & 40.1 & 32.2 & 7.9 \\
+Color jitter & 81.8 & 79.7 & 75.1 & 4.6 & 43.8 & 30.1 & 13.7 & 40.2 & 32.2 & 8.0 \\
+MixUp & \underline{82.2} & 79.6 & 75.4 & 4.2 & 43.9 & 30.2 & 13.7 & 40.1 & 32.6 & 7.5 \\
+Mosaic & 69.6 & 71.0 & 67.0 & 4.0 & 28.6 & 20.5 & \textbf{8.0} & 26.8 & 22.0 & \underline{4.8} \\
+YOLOX & 70.0 & 71.2 & 67.4 & \textbf{3.7} & 28.9 & 20.8 & \underline{8.1} & 27.3 & 22.7 & \textbf{4.6} \\
+SCP & 81.6 & 78.8 & 75.1 & \textbf{3.7} & \textbf{44.2} & \textbf{31.4} & 12.8 & \textbf{41.2} & \textbf{33.7} & 7.5 \\
+\midrule
+\multicolumn{11}{l}{\emph{Generative}} \\
+InstAug & 81.9 & 79.5 & 74.4 & 5.2 & \underline{44.0} & 30.1 & 13.9 & 40.3 & 32.5 & 7.9 \\
+XPaste & 82.1 & \underline{80.2} & \underline{76.1} & 4.1 & 43.8 & 29.7 & 14.2 & 40.0 & 32.2 & 7.8 \\
+\midrule
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & 81.7 & 79.0 & 75.0 & 4.0 & \underline{44.0} & \underline{31.1} & 12.8 & \underline{41.0} & \underline{33.6} & 7.4 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{82.5} & \textbf{80.6} & \textbf{76.8} & \underline{3.9} & 43.6 & 29.7 & 13.9 & 40.0 & 32.3 & 7.7 \\
+\bottomrule
+\end{tabular}

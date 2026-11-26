@@ -1,0 +1,71 @@
+% =====================================================================
+% INTRODUCTION
+% =====================================================================
+
+\section{Introduction}
+\label{sec:intro}
+
+The test loss of a neural network, plotted against model size, does not behave
+the way classical bias--variance reasoning predicts. Near the interpolation
+threshold the test loss rises into a sharp peak and then descends a second
+time, a phenomenon known as \emph{double descent}
+\citep{belkin2019reconciling,nakkiran2021deep}. Despite extensive empirical
+study, it remains unclear which component of the test loss is responsible for
+the peak, and why that component then recovers as the model class grows
+further.
+
+The reason why double descent occurs is still not well understood in full
+generality. Several explanations have been proposed:
+\citet{belkin2019reconciling} attribute the phenomenon to an implicit bias of
+overparameterized models toward simpler interpolating solutions, and
+\citet{nakkiran2021deep} introduce \emph{effective model complexity} as a
+unifying scale and observe that the peak occurs when this complexity is
+roughly equal to the sample size. These accounts are intuitive but remain
+descriptive, and are difficult to rigorously prove or directly test.
+
+We approach the question through the lens of universal compression. We give
+an upper bound on the excess test cross-entropy of the trained model that decomposes
+into four interpretable terms: an \emph{approximation-and-shift term},
+comparing plug-in risk under the true distribution and its in-class projection;
+a \emph{minimax batch regret}, the unavoidable worst-case cost any predictor
+incurs to encode data drawn from the class without knowing its parameters;
+a \emph{prior cost}, measuring the
+excess worst-case risk of the chosen Bayes predictor over the minimax value;
+and an \emph{MLE-vs-Bayes gap}, the extra cost of using the trained
+maximum-likelihood model in place of the Bayes predictor.
+
+We test this picture on width-varied CNNs trained on CIFAR-10 with some or
+all of the training labels replaced by uniform noise. We approximate a
+Bayes predictor by averaging predictive class probabilities from
+$K$ independently initialized SGLD chains under an explicit Gaussian prior.
+Under 20\% label noise the per-seed test cross-entropy exhibits the canonical
+double-descent peak while the SGLD ensemble does not. To eliminate the
+approximation-and-shift term, we additionally run experiments under fully
+random labels, where this term is zero by construction; in this setting the
+SGD peak persists, empirically supporting the MLE-vs-Bayes gap as a major
+contributor to the peak.
+
+Our contributions can be summarized as follows: (1) We bound the MLE excess test
+cross-entropy by a sum of four terms, motivated by universal compression.
+(2) Under exact posterior sampling, we lower-bound the MLE-vs-Bayes gap
+by the expected MLE-vs-ensemble loss difference in the well-specified
+setting, and support this attribution experimentally under fully random
+labels and an explicit Gaussian prior.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/hero.pdf}
+  \caption{\textbf{Right:} 5-layer CNNs of varying width $k$ trained on
+  CIFAR-10 with 20\% label noise ($n=50{,}000$, SGD, $200$k steps). The
+  per-seed classification error (orange) exhibits the double-descent peak near
+  the interpolation threshold, while the probability average over 8 SGLD
+  chains (green, dashed) reduces the peak.
+  \textbf{Left:} A histogram model with $n=64$ uniform inputs on $[0,1]$,
+  adapted from Holzm\"uller (2021, Appendix~D). The class probabilities on
+  four equal intervals are $(.05,.95,.5,.5)$, and each fitted bin chooses
+  from $\{.05,.5,.95\}$, using $.5$ if empty. Finite sums give the MLE excess
+  loss and terms~(I)--(III). Once $d\ge4$, term~(I) is zero, batch
+  regret~(II) increases with $d$, and the MLE-vs-Bayes gap~(III) exhibits a peak.
+  Here the prior is least-favorable, so (II') is zero.}
+  \label{fig:ensemble-collapse}
+\end{figure}

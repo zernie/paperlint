@@ -1,0 +1,1018 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[final]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{adjustbox}
+% \usepackage{subfigure}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{pifont}
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{makecell}
+\usepackage{comment}
+\interfootnotelinepenalty=10000
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+\usepackage{caption}
+
+\newcommand \dydec[0]{\texttt{DyDec}}
+\newcommand \stadec[0]{\texttt{StaDec}}
+\newcommand \targetLLM[0]{\textsl{Target LLM}}
+
+\newcommand \reasoningLLM[0]{\textsl{Reasoning LLM}}
+
+\newcommand \redLLM[0]{\textsl{Red LLM}}
+
+\newcommand \attackingLLM[0]{\textsl{Attacking LLM}}
+
+\newcommand \similarityCheckerLLM[0]{\textsl{Similarity Checker LLM}}
+
+\newcommand{\smallbullet}{\raisebox{0.2ex}{\tiny\ding{108}}}
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+\title{Instructions for *ACL Proceedings}
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+% \author{Author 1 \and ... \and Author n \\
+%         Address line \\ ... \\ Address line}
+% if the names do not fit well on one line use
+%         Author 1 \\ {\bf Author 2} \\ ... \\ {\bf Author n} \\
+% For authors from different institutions:
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \And  ... \And
+%         Author n \\ Address line \\ ... \\ Address line}
+% To start a separate ``row'' of authors use \AND, as in
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \AND
+%         Author 2 \\ Address line \\ ... \\ Address line \And
+%         Author 3 \\ Address line \\ ... \\ Address line}
+
+
+
+%\author{
+%  \textbf{First Author\textsuperscript{1}},
+%  \textbf{Second Author\textsuperscript{1,2}},
+%  \textbf{Third T. Author\textsuperscript{1}},
+%  \textbf{Fourth Author\textsuperscript{1}},
+%\\
+%  \textbf{Fifth Author\textsuperscript{1,2}},
+%  \textbf{Sixth Author\textsuperscript{1}},
+%  \textbf{Seventh Author\textsuperscript{1}},
+%  \textbf{Eighth Author \textsuperscript{1,2,3,4}},
+%\\
+%  \textbf{Ninth Author\textsuperscript{1}},
+%  \textbf{Tenth Author\textsuperscript{1}},
+%  \textbf{Eleventh E. Author\textsuperscript{1,2,3,4,5}},
+%  \textbf{Twelfth Author\textsuperscript{1}},
+%\\
+%  \textbf{Thirteenth Author\textsuperscript{3}},
+%  \textbf{Fourteenth F. Author\textsuperscript{2,4}},
+%  \textbf{Fifteenth Author\textsuperscript{1}},
+%  \textbf{Sixteenth Author\textsuperscript{1}},
+%\\
+%  \textbf{Seventeenth S. Author\textsuperscript{4,5}},
+%  \textbf{Eighteenth Author\textsuperscript{3,4}},
+%  \textbf{Nineteenth N. Author\textsuperscript{2,5}},
+%  \textbf{Twentieth Author\textsuperscript{1}}
+%\\
+%\\
+%  \textsuperscript{1}Affiliation 1,
+%  \textsuperscript{2}Affiliation 2,
+%  \textsuperscript{3}Affiliation 3,
+%  \textsuperscript{4}Affiliation 4,
+%  \textsuperscript{5}Affiliation 5
+%\\
+%  \small{
+%    \textbf{Correspondence:} \href{mailto:email@domain}{email@domain}
+%  }
+%}
+
+\begin{document}
+
+%don't want date printed
+\date{}
+
+%make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+% \title{\Large \bf Turning Understanding into Vulnerability: Leveraging LLM's Own Insights to Craft Dynamic Adversarial Examples}
+
+\title{\Large \bf From Insight to Exploit: Leveraging LLM Collaboration for Adaptive Adversarial Text Generation}
+\author{
+  Najrin Sultana$^{1}$,
+  Md Rafi Ur Rashid$^{1}$,
+  Kang Gu$^{2}$, Shagufta Mehnaz$^{1}$ \\
+  $^{1}$The Pennsylvania State University, 
+  $^{2}$Dartmouth College \\
+  \texttt{\{najrin,mur5028,smehnaz\}@psu.edu,f003hy4@dartmouth.edu}
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+\thispagestyle{empty}
+
+
+\subsection*{Abstract}
+LLMs can provide substantial zero-shot performance on diverse tasks using a simple task prompt, eliminating the need for training or fine-tuning. However, when applying these models to sensitive tasks, it is crucial to thoroughly assess their robustness against adversarial inputs. In this work, we introduce Static Deceptor (\stadec{}) and Dynamic Deceptor (\dydec{}), two innovative attack frameworks designed to systematically generate dynamic and adaptive adversarial examples by leveraging the understanding of the LLMs. We produce subtle and natural-looking adversarial inputs that preserve semantic similarity to the original text while effectively deceiving the target LLM. By utilizing an automated, LLM-driven pipeline, we eliminate the dependence on external heuristics. Our attacks evolve with the advancements in LLMs, while demonstrating a strong transferability across models unknown to the attacker. Overall, this work provides a systematic approach for the self-assessment of an LLM's robustness. We release our code and data at \url{https://github.com/Shukti042/AdversarialExample}.
+
+
+
+\section{Introduction}
+Large language models (LLMs) have demonstrated the ability to perform a wide range of tasks effectively \cite{ wang2024adaptablereliabletextclassification} without any specialized training or fine-tuning. This zero-shot capability stems from the broad general understanding gained through extensive pre-training on vast amounts of natural text. This prompt-based paradigm unlocks new possibilities for the deployment of LLMs in real-world scenarios, including sensitive areas like spam detection \cite{wang2024adaptablereliabletextclassification} and hate speech detection \cite{guo2024investigationlargelanguagemodels, 10.1145/3543873.3587368,roy-etal-2023-probing,ziems2024largelanguagemodelstransform}. However, a thorough evaluation of the adversarial robustness of LLMs is essential when deploying them in real-world systems. Adversarial manipulation of inputs can cause the LLM to misclassify the perturbed input, potentially leading to serious consequences in sensitive applications. For instance, an attacker could modify a spam message to evade detection and distribute it widely, or subtly alter a hateful message to bypass a hate speech filter, enabling the spread of harmful content on social platforms. Therefore, analyzing the adversarial robustness of state-of-the-art LLMs in such critical tasks is vital.
+
+Recent studies \cite{299563, Branch2022EvaluatingTS, Perez2022IgnorePP} have revealed the vulnerability of LLMs to prompt injection attacks, where task-ignoring prompts are embedded into the input, causing the model to deviate from the original task and generate unintended outputs. However, these injections are obvious to human eyes and can be effectively detected by LLMs \cite{299563} themselves. We aim to investigate the potential of more subtle adversarial examples that deceive the target LLM, yet appear natural, and preserve semantic similarity with the original input. Furthermore, the success of such injections also heavily depends on the task prompt. For this approach to succeed, the attacker must know the exact question posed to the LLM to inject the corresponding appropriate answer.  Different task prompts would require different injections to deceive the target LLM. We aim to eliminate such dependencies on task prompts and design adversarial examples that can deceive the target LLM irrespective of the task prompt.
+
+Xu et al. \cite{xu2023llmfoolitselfpromptbased} leverage LLMs to craft their own adversarial examples by some static methods, such as inserting random characters, introducing typos, replacing words with synonyms, or blindly paraphrasing text. However, as LLMs continue to advance, their generalization capabilities have also improved, and these unguided mutation strategies are less effective against state-of-the-art LLMs, as demonstrated in our experiments. Instead, we propose a systematic approach in which the LLM determines what needs to be addressed for each example and crafts effective adversarial instructions. Thus, we create a fully automated pipeline driven by the LLMs themselves. Our research demonstrates that with automated systematic guidance, LLMs can design adversarial perturbations more effectively than random alterations. As LLMs evolve, their generation and reasoning capabilities will also improve, making our attack pipeline increasingly effective for testing the robustness of cutting-edge LLMs, a prerequisite to making them more secure and safe.
+
+We utilize the inherent capabilities \cite{huang2023reasoninglargelanguagemodels} of LLMs to create systematic and dynamic adversarial examples. The contributions of our work are outlined as
+follows:
+
+    \noindent
+    \smallbullet{} By leveraging the LLM's inherent capabilities, we establish two automated and systematic attack pipelines to generate adversarial examples. Our attacks eliminate the need for external heuristics or manual adjustments.
+   
+    \noindent
+    \smallbullet{} Our attacks generate effective adversarial examples that not only deceive the target LLM but also appear natural, maintaining semantic similarity with the original input.
+
+    \noindent
+    \smallbullet{} Our attacks provide a systematic and comprehensive approach to assessing the robustness of LLMs.
+    
+    \noindent
+    \smallbullet{} Our attacks ensure that the generated adversarial examples are highly transferable, effectively deceiving not only the target LLM but also other models not involved during the attack, highlighting its broad applicability.
+    
+    \noindent
+    \smallbullet{} Our pipelines evolve with the advancements in LLMs, making it increasingly effective in evaluating the robustness of state-of-the-art LLMs.
+
+    \noindent
+    \smallbullet{} We evaluate the effectiveness of three existing defenses against our attacks.
+
+
+We evaluate our attacks on GPT-4o \cite{openai2024gpt4o} and Llama-3-70B models \cite{grattafiori2024llama3herdmodels} across four sensitive classification tasks. We compare their performance against the recent LLM-based PromptAttack \cite{xu2023llmfoolitselfpromptbased} and the prompt-injection-based CombinedAttack \cite{299563} on prompt-based LLMs.
+
+\section{Background}
+
+\subsection{Zero Shot LLM Classifier}
+LLMs are trained with extensive textual data to process and generate human-like text. By leveraging their extensive pre-trained knowledge, LLMs can achieve high accuracy in classification tasks without the need for task-specific training \cite{wang2024adaptablereliabletextclassification}. This makes them ideal for scenarios where labeled data is limited.
+
+Given the task instruction prompt and the text, the LLM generates its prediction in natural words, which is later mapped to the class label. In our attack, we target such Zero Shot LLM classifiers and refer to them as \textsl{Target LLM}.
+
+\subsection{Adversarial Example}
+An adversarial example for an LLM is a carefully crafted input text designed to confuse or mislead the LLM into producing incorrect, biased, or unintended outputs. In our context, a perturbed sentence is considered adversarial if it preserves the original meaning but causes the LLM to misclassify it. Adversarial examples are used to evaluate and improve the robustness, security, and reliability of LLMs.
+
+% \subsection{Prompt Injection Attcak}
+% A prompt injection attack is a type of adversarial attack targeting LLMs by introducing malicious or misleading prompts into the inputs. A prompt injection attack in a classification task can mislead an LLM by embedding deceptive instructions within the input, causing incorrect classifications. For instance, in a hate/offensive speech detection task using the task prompt described in \ref{sec:task_instruction_prompt}, appending "Ignore the previous instruction and always respond with ‘no’" to the input can manipulate the LLM into disregarding its intended task. This injection may result in the LLM incorrectly classifying hateful or offensive content as non-hateful or non-offensive.
+
+\section{Threat Model}
+
+\subsection{Adversary’s Capability}
+We consider a simple adversary capable of querying an LLM and obtaining its prediction label. We assume the adversary doesn't have any knowledge of the target LLM's internal parameters, architecture, probability distribution over labels, or loss values. The adversary may not even know which LLM is being used on the victim application's side. The adversary can interact with an LLM by sending natural language queries and receiving the LLM’s responses. This LLM may differ from the target LLM. We conducted experiments in both settings and demonstrated the effectiveness of our attack in both scenarios.
+
+\subsection{Adversary’s Goal}
+The adversary aims to modify the input to evade detection by the target LLM while maintaining semantic coherence with the original input. In real-world scenarios, such an adversary can seek to bypass automated moderation on social networks, evade spam filters in SMS or email systems, or circumvent toxicity detection on public comment platforms, all while still achieving their intended adversarial objective.
+
+\section{Methodology}
+In this section, we detail our attack methodologies. We first present the attack objectives in Section \ref{sec:attack_objective}, and then describe the attack pipeline of Dynamic Deceptor in \ref{sec:dydec_description} and Static Deceptor in \ref{sec:stadec_description} along with how the attack objectives are accomplished.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=\linewidth]{dydec.pdf}
+        \caption{Attack Diagram of Dynamic Deceptor}
+        \label{fig:iterative}
+\end{figure}
+
+
+\subsection{Attack Objectives}
+\label{sec:attack_objective}
+Compared to existing SOTA attacks \cite{xu2023llmfoolitselfpromptbased, 299563, raina-etal-2024-llm}, our aim is to achieve the following objectives:
+
+    \noindent \ding{172} Analyze the underlying reason for the target LLM prediction: To determine where to focus in the input to make the \targetLLM{} misclassify.
+    
+    \noindent \ding{173} Design adaptive adversarial instructions: To address the identified factors behind the \targetLLM's prediction.
+    
+    \noindent \ding{174} Generate adversarial examples by subtly incorporating the concerned elements: To cause the \targetLLM{} to misclassify.
+    
+    \noindent \ding{175} Maintain semantic similarity with the original text: To align with the adversary's goal and appear natural.
+    
+    \noindent \ding{176} Compile a set of adversarial examples that can effectively deceive LLMs not involved in the adversarial design process: To achieve transferability.
+
+
+
+
+
+
+
+
+
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=0.95\linewidth]{finetuning.pdf}
+%         \caption{Fine-tuning Adversarial LLMs}
+%         \label{fig:finetuning}
+% \end{figure}
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=0.95\linewidth]{inference.pdf}
+%         \caption{Inference with Adversarial LLMs}
+%         \label{fig:inference}
+% \end{figure}
+
+\subsection{Dynamic Deceptor}
+\label{sec:dydec_description}
+Figure \ref{fig:iterative} illustrates the workflow of Dynamic Deceptor (\dydec), utilizing the components described in Section \ref{sec:components}. The attack begins by obtaining the prediction from the \targetLLM{} on the text the adversary wants the \targetLLM{}  to misclassify (steps \fbox{1} and \fbox{2} in Figure \ref{fig:iterative}). If the original prediction from the \targetLLM{} is correct, the attacker generates an adversarial example. To accomplish attack objective \ding{172}, the attacker first retrieves the reasoning behind the \targetLLM{\textsl{'s}} prediction from the \reasoningLLM{}. This reasoning is provided to the \redLLM{}, which then uses the insights to generate dynamic instructions targeting the factors to achieve the attack objective \ding{173}. The \attackingLLM{} follows these dynamic instructions to craft adversarial examples to deceive the \targetLLM{},  ultimately achieving the attack objective \ding{174}. To ensure the quality of the adversarial examples, the adversary employs the \similarityCheckerLLM{} to assess their semantic similarity to the original input and accomplish the attack objective \ding{175}. If the similarity criteria are not met, feedback is provided to the LLMs for adjustment in subsequent rounds. The adversary also compares the \targetLLM{'s} new prediction for the generated adversarial example to determine if the attack goal is achieved. If the attack is unsuccessful, the \reasoningLLM{} identifies the cause, and this information is passed to the \redLLM{} for refinement of the dynamic instruction in the next iteration. This feedback process continues for a predefined number of rounds. The attack is marked as a failed attempt if it remains unsuccessful after those iterations. A detailed algorithm outlining our attack procedure is provided in Appendix \ref{sec:attack_algorithm}.
+
+
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=\linewidth]{chat_short.pdf}
+        \caption{Attack Demonstration of Dynamic Deceptor}
+        \label{fig:chat_short}
+\end{figure}
+
+Figure \ref{fig:chat_short} illustrates the attack flow of \dydec, showing the outputs of each LLM at different stages of the attack pipeline. The sentence at the top, enclosed in the green box, represents the original spam message.
+The final output, presented at the bottom in the green box, is a successful adversarial example crafted by the \attackingLLM{}, following the refined instructions from the \redLLM. This example successfully misleads the \targetLLM{} into classifying it as a ham message while maintaining the required similarity to the original spam message.
+
+A more detailed version of this demonstration is provided in Figure \ref{fig:chat}. Furthermore, Figure \ref{fig:examples} presents additional examples of responses generated by each LLM in the attack pipeline for other datasets.
+
+\subsection{Static Deceptor}
+\label{sec:stadec_description}
+
+In our Static Deceptor (\stadec) pipeline, we eliminate the need for the Reasoning LLM and the RedLLM, instead entrusting their responsibilities to the \attackingLLM{} itself. This means we provide static instructions at each iteration, allowing the \attackingLLM{} to determine how to deceive the \targetLLM{} while maintaining semantic coherence with the original input. Within this pipeline, the attack objectives \ding{172} and \ding{173} are inherently accomplished by the \attackingLLM{}. During every iteration, the \attackingLLM{} receives static feedback indicating whether the generated sentence successfully deceived the \targetLLM{} and whether it met the similarity criteria. The \attackingLLM{} then leverages its internal understanding to perturb the input and accomplish the final attack objective \ding{174} to fool the \targetLLM{}. \stadec{} is more lightweight than \dydec{} due to fewer interactions with the LLMs in each round (cost analysis provided in Section \ref{subsec:Experimental_details}). However, this efficiency comes with a trade-off in the quality and success rate of the generated adversarial examples, as discussed in Section \ref{sec:result}.
+
+
+% \begin{table*}[ht!]
+% \centering
+% {
+% \fontsize{12pt}{14pt}\selectfont
+% \begin{adjustbox}{width=\textwidth}
+% \begin{tabular}{|l|p{4cm}|p{4.4cm}|p{4.6cm}|p{3.8cm}|}
+% \hline
+% \textbf{Dataset} & \textbf{Original Input} & \textbf{Reason} & \textbf{Dynamic Instruction by Red LLM} & \textbf{Adversarial Example by Attacking LLM} \\ \hline
+% SMS Spam & sms: You have 1 new message. Please call 08718738034. & The message "sms: You ... 08718738034." is likely considered spam for several reasons: Generic Content: The message is vague ... Unknown Number: The phone number provided is unfamiliar ... High-Risk Area Code: ... Lack of Personalization: The message does not address the recipient by name ... & Rephrase the message "sms: You ... 08718738034." to maintain the exact meaning but make it appear as a legitimate, non-spam message by using a specific recipient name, providing clear details about the sender, ensuring the phone number is recognizable and trustworthy, and avoiding any language that creates urgency or requests direct contact without context. & Hello [Recipient's Name], this is [Sender's Name] from [Trusted Organization]. We wanted to let you know that you have a new message from us. When convenient, please feel free to reach out at our official number, (087) 187-38034, for more details. Thank you! \\ \hline
+%  Hate Speech & tweet: \&\#8220;@miilkkk: On a scale of 1-10 this bitch is literally a 6 http://t.co/A3rMyfNUS 4\&\#8221;hahaha. & it appears to be rating a person on a numerical scale .. demeaning and objectifying. Referring to someone as \"this bitch\" is also disrespectful and derogatory. Such language can contribute to a culture of disrespect and objectification, which is why it might be viewed as hateful or offensive. & Rephrase the tweet "tweet: \&\#8220;@miilkkk: ... 8221;hahaha" so that it maintains the original meaning but removes any hateful or offensive language. ... it rates a person on a numerical scale, which can be demeaning and objectifying, and uses disrespectful language. Ensure ... respectful and non-objectifying. & tweet: \&\#8220;@miilkkk: On a scale of 1-10, this person is a 6 http://t.co/A3rMyfNUS 4\&\#8221; haha. \\ \hline
+% Toxic Comment & Violent fucking imagery? Are you kidding me?
+% Holy fucking shit. Dude you are part of the problem ... making Wikipedia's credibility plummet with every fucking bullshit thing you do. I really hope you know that. 71.192.72.22. & The ... toxic due to its use of aggressive and profane language, which ... multiple instances of swearing and derogatory remarks ... hostile and disrespectful, contributing to a negative and confrontational tone ... personal attacks and accusations, which further enhance its toxicity. & Please rephrase the following comment to maintain its original meaning but remove any aggressive, profane, or derogatory language, ensuring it no longer seems toxic: "Violent fucking imagery? Are you kidding me? Holy fucking shit. Dude you are part of the problem I really hope you know that ... 71.192.72.22". & Violent imagery? Are you kidding me? Wow. You are contributing to the problem, and I hope you realize that. ... harming Wikipedia's credibility with every questionable action you take. I really hope you understand that. 71.192.72.22. \\ \hline
+% LIAR & id:5210.json. statement:Rep. David Cicilline is responsible for the federal loan guarantee to Solyndra, the failed solar company. subjects:energy,stimulus. speaker:national-republican-congressional-committee. job\_title: ... & ... because the decision to grant a federal loan guarantee to Solyndra was made by the Department of Energy under the Obama administration, not by an individual congressman like Rep. Cicilline. ... not the responsibility of a single member of Congress. .. responsibility solely to Rep. Cicilline is misleading and inaccurate. & Rephrase the 'statement' in the following news to maintain its original meaning but ensure it no longer appears fake: ... The news is misleading because the loan guarantee decision was made by the Department of Energy, not Rep. Cicilline. Provide the entire news in its original format, replacing only the 'statement' with a rephrased version ... & id:5210.json. statement:Rep. David Cicilline supported the federal loan guarantee to Solyndra, the failed solar company. subjects:energy,stimulus. speaker:national-republican-congressional-committee. job\_title: ... \\ \hline
+% \end{tabular}
+% \end{adjustbox}
+% }
+% \caption{Examples of generated responses in various phases of DyDec across different datasets}
+% \label{tab:examples}
+% \end{table*}
+
+
+\section{Experiment Setup}
+In this section, we provide an overview of the experiments we conducted.
+We begin by describing the datasets and models used in our experiments and then outline the experimental setup details.
+
+\subsection{Datasets}
+We applied our attack method to four sensitive tasks: Spam Detection \cite{10.1145/2034691.2034742, deysi_spam_2023}, Hateful or Offensive Speech Detection \cite{hateoffensive}, Toxic Comment Classification \cite{jigsaw-toxic-comment-classification-challenge}, and Fake News Detection \cite{wang-2017-liar}. More details on the sampling process are provided in Appendix \ref{sec:dataset_details}.
+Our goal is to examine the real-world implications of the attack. Therefore, we considered spam, hateful, toxic, and fake news samples and aimed to perturb them in ways that would deceive the \textsl{Target LLM}. 
+
+
+
+
+\subsection{Large Language Models}
+We utilized two state-of-the-art LLMs, GPT-4o \cite{openai2024gpt4o} and Llama-3-70B \cite{grattafiori2024llama3herdmodels}, for both classification and attack tasks.  For each LLM and task, we designed an effective classification prompt to achieve high task accuracy, as outlined in Table \ref{tab:accuracy}. On the LIAR dataset, the classification accuracy of Llama-3-70B is slightly lower than that of other tasks. However, it remains comparable to the accuracy reported in \cite{wang-2017-liar, alhindi-etal-2018-evidence, 9786925} for this specific task. As shown in Table \ref{tab:accuracy}, the zero-shot task accuracy of Llama-2-13B \cite{touvron2023llama2openfoundation},  a smaller variant of Llama, is not consistently high across the selected tasks. Therefore, we chose a larger version of Llama, which offers improved task accuracy and enhanced text generation capabilities.
+
+For the attack, we used the same LLM that performed the classification (Table \ref{tab:comparison}) and also conducted black-box evaluation, where Llama-3-70B served as the \textsl{Target LLM}, and GPT-4o was used as the \textsl{Attacking LLM} (Table \ref{tab:cross}).
+
+We also store the generated adversarial examples and apply them to other models to test their transferability (Table \ref{tab:transfer_evaluation}). Specifically, we utilized the models from \cite{mathew2020hatexplain, bert_toxic_comment_classification, sileo-2024-tasksource}.
+
+\subsection{Experiment Setup Details}
+\label{subsec:Experimental_details}
+For each dataset, we first classified the sampled data and selected the samples that were correctly classified by the \textsl{Target LLM}. We then launched our attack on these correctly classified samples since the model had already misclassified the rest of the samples. For the LIAR dataset, our attack targeted only the statement portion, while for the classification, we utilized all the key-value pairs in the data.
+
+We conducted up to 8 feedback iterations for each attack. If the generated adversarial sample failed to deceive the \textsl{Target LLM} or did not meet the similarity criteria after these iterations, it was marked as a failed attempt.
+
+\vspace{0.05cm}
+\noindent \textbf{Cost Analysis:}
+On average, \dydec{} incurred \$0.070 per input on GPT-4o and 0.117 GPU-hours per input on LLaMA-3-70B (3 × NVIDIA RTX A6000 GPUs). \stadec{} required \$0.015 per input on GPT-4o and 0.025 GPU-hours on LLaMA-3-70B.
+
+\vspace{0.05cm}
+\noindent \textbf{Similarity Threshold:} In each feedback round, the \redLLM{} receives feedback on whether the generated example was misclassified and whether the generated example met the similarity criteria (steps \fbox{5} in Figure \ref{fig:iterative}). The \redLLM{} then refines its instructions accordingly. We set a similarity threshold to ensure that the generated text remains sufficiently close to the original (attack objective \ding{175}) while achieving the rest of the objectives.
+
+% For Llama-3-70B, we did not observe similarity scores in the range 3-5. 
+%observed a gap in similarity scores, avoiding 3 to 5, suggesting a sharp divide between similar and dissimilar pairs. 
+Llama-3-70B assigned scores 1-2 for dissimilar pairs of texts and 6 or above values for similar pairs, avoiding assigning values 3, 4, or 5 to any pairs. This gap suggests a sharp division between similar and dissimilar pairs.
+Based on this, we set the similarity threshold to 6. We also added a filtering step to remove verbose output from Llama-3-70B, which often included unnecessary explanations. For GPT-4o, the similarity scores were more stable, and higher-quality adversarial examples emerged at a similarity threshold of 7. We demonstrate the robustness of our method across varying thresholds in Table \ref{table:similarity_threshold}.
+
+
+\begin{table*}[ht!]
+\centering
+\small
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lcccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Dataset}} & \multicolumn{4}{c}{\textbf{Llama-3-70B}} & \multicolumn{4}{c}{\textbf{GPT-4o}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+ & \makecell{Dynamic\\Deceptor} & \makecell{Static\\Deceptor} & \makecell{Combined\\Attack} & \makecell{Prompt\\Attack} & \makecell{Dynamic\\Deceptor} & \makecell{Static\\Deceptor} & \makecell{Combined\\Attack} & \makecell{Prompt\\Attack} \\
+\midrule
+SMS Spam & \underline{63.54} & \textbf{73.96} & 38.14 & 0.00 & \textbf{51.51} & \underline{25.25} & 0.00 & 1.00 \\
+Hate Speech & \underline{98.88} & 89.66 & \textbf{100.00} & 1.14 & \textbf{96.81} & \underline{92.00} & 2.15 & 0.00 \\
+Toxic Comment & \textbf{86.00} & \underline{60.00} & 44.00 & 0.0 & \textbf{75.00} & \textbf{75.00} & 0.00 & 0.00 \\
+LIAR & \textbf{100.00} & \textbf{100.00} & \textbf{100.00} & 0.00 & \textbf{65.48} & \underline{63.10} & 5.81 & 1.15 \\
+Spam Detection& 61.28 & \textbf{75.42} & \underline{67.34} & 0.00 & \textbf{47.36} & \underline{44.06} & 0.69 & 0.00 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Attack Succes Rate (\%) for Dynamic Deceptor, Static Deceptor, Combined Attack \cite{299563} and Prompt Attack \cite{xu2023llmfoolitselfpromptbased} }
+\label{tab:comparison}
+\end{table*}
+
+\vspace{0.05cm}
+\noindent
+\textbf{Black-Box Evaluation:}  This approach is particularly effective when the attacker can query the \targetLLM{} during the attack and can obtain predictions from it, but does not know which LLM is being utilized by the victim. For the black-box evaluation presented in Table \ref{tab:cross}, we used a similarity threshold of 7.0 as GPT-4o is used for the attack in these experiments. We used Llama-3-70B as the \textsl{Target LLM} here.
+
+\vspace{0.05cm}
+\noindent
+\textbf{Transferability Evaluation:} To achieve the attack objective \ding{176}, as described in Section \ref{sec:attack_objective}, an attacker compiles a collection of adversarial examples and blindly applies them to evade detection by any LLM. During the transferability evaluation, we used the zero-shot classification pipeline from \cite{sileo-2024-tasksource} for spam detection and fake news detection. For each task, we used the recommended prompts\footnote{\url{https://huggingface.co/datasets/tasksource/zero-shot-label-nli/viewer/default/test}} and achieved 90.16\% and 100\% accuracy, respectively, in classifying unperturbed spam message and fake news. For toxic comment detection, we chose \cite{bert_toxic_comment_classification}, which achieved 100\% accuracy in detecting unperturbed toxic comments.  For hateful/offensive speech detection, we used the model directly provided by \cite{hateoffensive}.
+
+\vspace{0.05cm}
+\noindent
+\textbf{SOTA Attacks for Benchmark Study:} For the benchmarks, we did not apply any filters to the adversarial examples to ensure they operated at their full potential. For PromptAttack \cite{xu2023llmfoolitselfpromptbased}, we utilized their most effective few-shot ensemble attack on the same samples used in our experiments. We excluded the word-modification-ratio filter and the BERTScore filter. For CombinedAttack \cite{299563}, we used the sample's true label as the fake completion text to make it more realistic to the LLM.
+
+
+
+
+\section{Results}
+\label{sec:result}
+In this section, we present the results obtained by our attack pipelines under different adversarial capabilities and compare them with relevant benchmarks.
+
+Table \ref{tab:comparison} presents the attack success rates of our method alongside the results of other recent attacks, including the prompt injection attack, CombinedAttack \cite{299563}, and the LLM-based attack, PromptAttack \cite{xu2023llmfoolitselfpromptbased}. The highest achieved attack success rates are highlighted in bold, and the second-best attack success rates are underlined. The results indicate that PromptAttack \cite{xu2023llmfoolitselfpromptbased} is ineffective across all datasets for both state-of-the-art LLMs. This underscores modern LLMs' robustness and generalization capabilities, which are not easily misled by minor perturbations or noise in the input.
+
+The prompt injection attack, CombinedAttack \cite{299563}, shows limited effectiveness on GPT-4o, while Llama-3-70B exhibits some vulnerability to such attacks. Llama-3-70B treats system and user instructions as part of a single text stream, without enforcing a strict distinction, which means it can be fooled by user inputs that override system instructions. In contrast, GPT-4o was explicitly trained to respect a hierarchy of roles\footnote{\url{https://openai.com/index/the-instruction-hierarchy/}}, where system instructions are privileged and cannot be easily overridden by user input. This architectural and training difference makes GPT-4o significantly more resistant to prompt injection attacks. 
+
+ Moreover, injected prompts are easily noticeable and detectable by LLMs themselves, as demonstrated in Section \ref{subsec:llm_based_defense}, limiting their practical application in sensitive tasks.
+
+In contrast to the other two methods, both \dydec{} and \stadec{} demonstrate effectiveness across all datasets for both state-of-the-art LLMs. Figure \ref{fig:itrationvsattack} illustrates the attack success rate at different iterative stages of \dydec{}. The plots show that a notable attack success rate is achieved in the early stages, even without any iterations. Additionally, the Venn diagrams in Figure \ref{fig:overleaps} indicate substantial overlap among successful adversarial examples produced by different attack methods. These suggest that particular samples are inherently more vulnerable to adversarial manipulation. Such vulnerabilities could have catastrophic consequences in sensitive tasks, where an adversary might identify and exploit these samples to spam victims’ mailboxes or spread hate speech. Data owners can leverage our pipelines to assess the risk within their data by detecting inherently vulnerable samples that are more susceptible to adversarial manipulation.
+
+
+For the Llama-3-70B model, the attack success rate for \stadec{} on spam datasets is better than \dydec{}. However, on manual inspection, in the case of \stadec{}, many of its adversarial examples were significantly shorter and contained only limited fragments of the original input, yet the Llama-based similarity checker still assigned them a high similarity score. In contrast, adversarial inputs generated by \dydec{} were more content-rich and better aligned with the original input, as \dydec{} selectively modified specific attributes under the guidance of \redLLM{}. For these challenges, we recommend using GPT-4o as \similarityCheckerLLM{} in the attack pipeline.
+
+
+
+\vspace{0.05cm}
+\noindent \textbf{Black-Box Evaluation:} We further evaluate \dydec{} in Table \ref{tab:cross}, where the attacker has no knowledge of the \targetLLM{}. As GPT-4o serves as a better \similarityCheckerLLM{} in the attack pipeline, we employ GPT-4o for the attack and \targetLLM{} is Llama-3-70B. 
+This approach is particularly effective when the adversary has no prior knowledge of the \targetLLM{} under attack. Hence, it cannot use that same LLM as the \targetLLM{} in the attack pipeline. Instead, the adversary accesses the \targetLLM{} as a black box and analyzes its predictions.
+
+\begin{table}[ht!]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|p{0.45\columnwidth}|p{0.35\columnwidth}<{\centering\arraybackslash}|}
+\hline
+\textbf{Dataset} & \textbf{ASR (\%)} \\ \hline
+SMS Spam & 53.13 \\ \hline
+Hate Speech & 93.10 \\ \hline
+Toxic Comment & 53.00 \\ \hline
+LIAR & 60.87 \\ \hline
+Spam Detection & 47.81 \\ \hline
+\end{tabular}
+}
+\caption{Attack Success Rate in Black-Box Evaluation }
+\label{tab:cross}
+\end{table}
+
+The results in Table \ref{tab:cross} demonstrate that in black-box settings, our method achieves consistent success as the attack success rate achieved by GPT-4o mentioned in Table \ref{tab:comparison}. This indicates that the success of the attack highly depends on the generative capabilities of the LLMs being utilized by the attacker. The variation in performance on the toxic comment dataset may stem from differing model perceptions of toxicity. While the \attackingLLM{} deemed the example subtle enough to bypass detection, the \targetLLM{} could still recognize the inherent toxicity of the sentence. As the generative capabilities of the LLMs improve, \attackingLLM{} will be able to craft even more effective adversarial examples, further strengthening the success of our attack pipeline.
+
+
+\vspace{0.05cm}
+\noindent \textbf{Transferability Evaluation}: We present the results of our transferability evaluation in Table \ref{tab:transfer_evaluation}. We stored the successful adversarial examples crafted by \dydec{} and applied them to the other LLM as outlined in Section \ref{subsec:Experimental_details}.
+\begin{table}[tbp]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|p{0.28\columnwidth}<{\centering\arraybackslash}|p{0.28\columnwidth}<{\centering\arraybackslash}|}
+\hline
+\textbf{Dataset} & \textbf{Llama-3-70B} & \textbf{GPT-4o} \\ \hline
+SMS Spam & 81.96 & 86.27 \\ \hline
+Hate Speech & 100.00 & 100.00 \\ \hline
+Toxic Comment & 90.90 & 68.49 \\ \hline
+LIAR & 100.00 & 72.00 \\ \hline
+Spam Detection & 98.90 & 99.30 \\ \hline
+\end{tabular}
+}
+\caption{Attack Success Rate (\%) in Transferability Evaluation}
+\label{tab:transfer_evaluation}
+\end{table}
+
+The results demonstrate that the generated adversarial examples exhibit significant effectiveness in deceiving other \targetLLM{}s across all the tasks, although the \targetLLM{}s were not involved in the design process of the adversarial examples. This indicates strong transferability of the adversarial examples to models unknown to the attacker.
+
+
+
+%include table
+%show consistency of our attack across different data
+
+
+
+\section{Defenses}
+\label{sec:defenses}
+We evaluated the effectiveness of three recent state-of-the-art defenses against \dydec{}, \stadec{}, and CombinedAttack. Due to page constraints, we present the key results here. More details are available in the Appendix \ref{sec:defense_details}. In cases where the attack success rate is 0\%, the defenses could not be evaluated. We marked those entries as N/A.
+\subsection{Perplexity-Based Defense}
+We employed perplexity (PPL) detection \cite{alon2023detectinglanguagemodelattacks, jain2023baselinedefensesadversarialattacks} and windowed perplexity detection \cite{jain2023baselinedefensesadversarialattacks} defenses to evaluate their effectiveness against \stadec{}, \dydec{} and CombinedAttack. 
+\begin{table}[ht!]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Model}         & \textbf{Dataset}      & \textbf{DyDec} & \textbf{StaDec} & \textbf{CombinedAttack} \\
+\hline
+\multirow{4}{*}{GPT-4o}      & SMS Spam        & 100.00 & 100.00 & N/A \\
+                              & Hate Speech     & 95.60 & 95.29 & 100.00  \\
+                              & Toxic Comment   & 97.26 & 98.68    & N/A    \\
+                              & LIAR            & 100.00 & 100.00 & 100  \\
+                              & Spam Detection            & 97.78 & 94.44  &  N/A  \\
+\hline
+\multirow{4}{*}{\makecell{Llama-\\3-70B}} & SMS Spam        & 98.36 & 84.51 & 94.59 \\
+                              & Hate Speech     & 98.86 & 94.87 & 97.75 \\
+                              & Toxic Comment   & 98.86 & 100.00    & 97.72    \\
+                              & LIAR            & 100.00 & 100.00  & 100.00   \\
+                              & Spam Detection            & 91.21 & 76.78  &  66.50  \\
+\hline
+\end{tabular}
+}
+\caption{False Negative Rate (\%) at a 1\% False Positive Rate for PPL-Based Detection}
+\label{table:ppl}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Model}         & \textbf{Dataset}      & \textbf{DyDec} & \textbf{StaDec} & \textbf{CombinedAttack} \\
+\hline
+\multirow{4}{*}{GPT-4o}      & SMS Spam        & 98.00 & 100.00 & N/A \\
+                              & Hate Speech     & 100.00 & 100.00 & 100.00  \\
+                              & Toxic Comment   & 100.00 & 100.00   & N/A    \\
+                              & LIAR            & 100.00 & 100.00 & 100.00  \\
+                              & Spam Detection            & 100.00 & 98.41  &  N/A  \\
+\hline
+\multirow{4}{*}{\makecell{Llama-\\3-70B}} & SMS Spam        & 100.00 & 98.59 & 37.83 \\
+                              & Hate Speech     & 98.86 & 98.72 & 100.00 \\
+                              & Toxic Comment   & 100.00 & 98.33    & 100.00    \\
+                              & LIAR            & 100.00 & 100.00  & 100.00   \\
+                              & Spam Detection            & 97.80 & 99.55  &  7.00  \\
+\hline
+\end{tabular}
+}
+\caption{False Negative Rate (\%) at a 1\% False Positive Rate for Windowed-PPL-Based Detection}
+\label{table:windowed_ppl}
+\end{table}
+
+We present the False Negative Rate (FNR) of PPL detection and windowed PPL detection in Table \ref{table:ppl} and Table \ref{table:windowed_ppl}, respectively. Both defense methods demonstrated some effectiveness in detecting CombinedAttack on the Spam Detection dataset for Llama-3-70B, and the windowed PPL demonstrated effectiveness in detecting the CombinedAttack attack on the SMS Spam dataset for Llama-3-70B. However, the high FNR across all other cases suggests that both PPL detection and windowed PPL detection struggle to identify these attacks. These methods rely on assessing how "natural" a piece of text appears to a language model. Since the adversarial inputs consist of natural-sounding text, they produce perplexity scores similar to those of clean data, making them indistinguishable from clean data.
+
+\subsection{LLM-Based Defense}
+\label{subsec:llm_based_defense}
+Inspired by \cite{GPT_Eliezer, 299563}, we designed a simple LLM-based defense to detect \dydec{}, \stadec{}, and CombinedAttack and present the results in Table \ref{table:naive_LLM_2}. More details on this defense's design are available in \ref{subsec:LLM_based_defense_details}.
+\begin{table}[ht!]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|l|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Model}}         & \multirow{2}{*}{\textbf{Dataset}}      & \multicolumn{2}{c|}{\textbf{DyDec}} & 
+\multicolumn{2}{c|}{\textbf{StaDec}} & \multicolumn{2}{c|}{\textbf{CombinedAttack}} \\
+\cline{3-8}
+                   & & \textbf{FPR} & \textbf{FNR} & 
+                   \textbf{FPR} & \textbf{FNR} &
+                   \textbf{FPR} & \textbf{FNR} \\
+\hline
+\multirow{4}{*}{GPT-4o}      & SMS Spam        & 7.80 & 100.00 & 0.00 & 92.00 & N/A & N/A \\
+                              & Hate Speech     & 20.87 & 98.90 & 21.18 & 98.82 & 0.00 & 0.00 \\
+                              & Toxic Comment   & 26.02 & 95.89 & 31.58 & 94.74 & N/A & N/A \\
+                              & LIAR            & 12.00 & 100.00 & 11.32 & 100.00 & 0.00 & 0.00 \\
+                              & Spam Detection            & 5.93 & 100.00 & 7.14 & 100.00 & N/A & N/A \\
+\hline
+\multirow{4}{*}{\makecell{Llama-\\3-70B}} & SMS Spam        & 9.80 & 95.08 & 11.27 & 95.78 & 0.00 & 0.00 \\
+                              & Hate Speech     & 26.13 & 98.86 & 23.08 & 98.71 & 0.00 & 0.00 \\
+                              & Toxic Comment   & 30.68 & 100.00 & 30.00 & 96.67 & 0.00 & 0.00 \\
+                              & LIAR            & 24.63 & 98.55 & 30.43 & 95.65 & 0.00 & 0.00 \\
+                               & Spam Detection            & 7.14 & 96.70 & 6.70 & 99.55 & 0.00 & 0.00 \\
+\hline
+\end{tabular}
+}
+\caption{False Negative Rate (\%) and False Positive Rate (\%) for LLM Based Detection}
+\label{table:naive_LLM_2}
+\end{table}
+
+
+
+The results demonstrate that the prompts injected by CombinedAttack are readily identified by even basic LLM-based detection methods, achieving a 0\% false negative rate while maintaining a 0\% false positive rate for benign samples. This highlights the lack of subtlety in such types of attacks.
+
+
+In case of \stadec{} and \dydec{}, the higher false negative rates underscore the difficulty in detecting our subtle adversarial examples. Moreover, the non-negligible false positives further emphasize the challenge of distinguishing between benign and adversarially perturbed samples generated by our attack. These findings highlight the complexity of detecting our imperceptible adversarial examples compared to more straightforward prompt injections in CombinedAttack.
+
+\subsection{Paraphrasing Defense}
+We evaluated the Paraphrasing Defense \cite{jain2023baselinedefensesadversarialattacks, 299563} as a strategy to mitigate adversarial inputs and prevent misclassification by the \textsl{Target LLM}. 
+
+\begin{table}[ht!]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Model}         & \textbf{Dataset}      & \textbf{DyDec} & \textbf{StaDec} & \textbf{CombinedAttack} \\
+\hline
+\multirow{4}{*}{GPT-4o}      & SMS Spam        & 21.57 & 40.00 & N/A \\
+                              & Hate Speech     & 2.20 & 3.53 & 0.00  \\
+                              & Toxic Comment   & 1.37 & 7.89   & N/A    \\
+                              & LIAR            & 10.00 & 1.89 & 40.00  \\
+                               & Spam Detection            & 25.19 & 26.98 & N/A  \\
+\hline
+\multirow{4}{*}{\makecell{Llama-\\3-70B}} & SMS Spam        & 16.39 & 21.12  & 54.05 \\
+                              & Hate Speech     & 1.14 & 0.00 & 8.99 \\
+                              & Toxic Comment   & 4.50 & 1.67    & 36.36    \\
+                              & LIAR            & 1.45 & 0.00  & 55.07 \\
+                            & Spam Detection  & 18.68 & 14.29 & 88.50  \\
+\hline
+\end{tabular}
+}
+\caption{Mitigation Rate (\%) for Paraphrase-Based Prevention Detection}
+\label{tab:paraphrase}
+\end{table}
+
+The results in Table \ref{tab:paraphrase} indicate that the paraphrasing defense is moderately effective in mitigating prompt injection attacks for the Spam, Toxic Comment, and LIAR datasets. Paraphrasing also demonstrates some effectiveness against \dydec{} and \stadec{} for Spam datasets.  However, for toxic and hateful content, LLMs are less likely to generate toxic or hateful outputs during normal paraphrasing due to their alignment with ethical guidelines. Instead, paraphrasing often neutralizes hateful intent, making this defense less effective in such cases.
+
+\subsection{Potential Mitigation Strategy}
+\label{subsec:mitigation}
+Our research highlights the need for a more substantial safety alignment in LLMs. While LLMs now reject harmful requests like bomb-making instructions, through adversarial training, they should also learn to reason that generating messages that are semantically similar to a spam message is effectively aiding spam and should be avoided.
+
+\section{Related Works}
+Early word-level attacks \cite{Jin_Jin_Zhou_Szolovits_2020, alzantot-etal-2018-generating, garg-ramakrishnan-2020-bae, morris-etal-2020-textattack} rely on replacing words based on output probabilities or logits, which are not exposed in modern LLMs. These methods also ignore structural modifications. Our attack leverages structural modifications combined with word replacements to craft more effective adversarial examples.
+
+Raina et al. \cite{raina-etal-2024-llm} search the entire vocabulary to find universal attack phrases, but these are computationally expensive and often incoherent, making them detectable via perplexity \cite{jain2023baselinedefensesadversarialattacks}. \dydec{} produces more practical and stealthy adversarial examples with lower overhead.
+
+Paraphrase-based attacks \cite{ribeiro-etal-2018-semantically, iyyer-etal-2018-adversarial} rely on fixed linguistic rules or static syntactic transformations, which limit diversity and require costly updates. Our method avoids handcrafted rules by using LLM's own understanding to generate adversarial examples efficiently.
+
+Xu et al. \cite{xu2023llmfoolitselfpromptbased} use static instructions to craft adversarial examples, but such strategies become less effective as LLMs improve generalization. We instead propose a dynamic, LLM-driven pipeline that adapts per input and scales with model advancements to generate stronger adversarial examples.
+ Recent studies \cite{299563, Branch2022EvaluatingTS, Perez2022IgnorePP} have revealed the vulnerability of LLMs to prompt injection attacks, where task-ignoring prompts are embedded into the input, causing the model to deviate from the original task and generate unintended outputs. However, these injections are obvious to human eyes and can be effectively detected by LLMs \cite{299563} themselves. Moreover, the prompt to be injected also depends on the task prompt. Instead, we generate subtle, task-independent adversarial examples that preserve semantic meaning and appear natural.
+
+
+
+
+\section{Conclusion and Future Work}
+
+In this paper, we introduce two novel attack frameworks that leverage LLMs’ own understanding to generate dynamic, adaptive adversarial examples that deceive target LLMs while appearing natural and achieving the intended adversarial objectives. We eliminate external heuristics, and our automated pipeline evolves with model advancements and shows strong transferability across models. This approach offers a new self-testing mechanism for LLM robustness. Future work could focus on expanding our attack's applicability to a broader range of LLM architectures and multi-modal systems. Another important direction is the development of robust defense mechanisms to address the vulnerabilities exposed by our attack. In addition, future work could explore real-world applications to evaluate the practical utility of the framework to dynamically analyze content and refine it to align with specific criteria. These research directions present significant opportunities to strengthen the robustness of AI systems and broaden the horizons of adversarial research.
+
+\section*{Limitations}
+\label{sec:discussion-limitation}
+\textbf{Limitations of Automation:} As our pipeline is automated by LLMs, advancements in their capabilities will directly enhance the pipeline, making it increasingly effective for testing the robustness of state-of-the-art LLMs. However, LLMs are not without flaws, and their inherent mistakes can influence the results of our approach. For example, if the \textsl{Similarity Checker LLM} produces an error, it may generate an adversarial sentence that conveys a different meaning. Nonetheless, we believe these limitations will diminish as LLMs continue to improve. Additionally, incorporating human oversight and carefully selecting thresholds, as discussed in earlier sections, can make the pipeline more reliable and practical.
+
+\vspace{0.1cm}
+\noindent \textbf{Cost Constraints:} Another important aspect of our attack is its cost. While our approach dynamically addresses each example, it is less cost-effective than attacks like prompt injection, which rely on universal prompts that can be applied across all instances to cause misclassification. In our method, generating each adversarial example requires multiple rounds of interaction with the LLMs, leading to higher costs. However, as shown in Figure \ref{fig:itrationvsattack}, a significant attack success is achieved within the early rounds of the attack. We believe these costs will further decrease over time as the generation capabilities of the LLMs improve, enabling the \textsl{Attacking LLM} to craft effective adversarial examples that meet the criteria specified by the \textsl{Red LLM} with fewer iterations.
+
+\vspace{0.1cm}
+\noindent \textbf{Lack of Defenses}: We recognize that existing defense mechanisms are not
+effective enough against our attack, highlighting the pressing
+need for advancements in adversarial robustness within LLMs.
+Our primary goal is to expose vulnerabilities in LLMs to
+encourage enhancements in their robustness, not to enable
+malicious misuse. By responsibly addressing the limitations
+of current defenses, we aim to inspire further research and
+drive innovation in developing secure LLMs. We also discuss potential mitigation strategies in Section \ref{subsec:mitigation}.
+
+\vspace{0.1cm}
+\noindent \textbf{Neutralizing Effects}: A manual inspection of adversarial examples generated by our pipelines revealed certain neutralizing effects relative to the original inputs. For example, in hate speech and toxic comment detection, adversarial examples appeared less aggressive, with offensiveness often being context-dependent. Interestingly, we observed that slang terms strongly trigger toxicity detection in LLMs. For instance, the sentence "It's not appropriate to address someone with bitch" receives a very high toxicity score (0.966) from \cite{Detoxify}, despite being non-toxic and even discouraging toxic language. This suggests that LLMs are overly sensitive to slang and avoid including such words in adversarial examples. This leads to seemingly less aggressive, toxic, or hate speech examples. In the spam detection task, suspicious links, phone numbers, and emails were often omitted by a placeholder; however, real-world attackers could manually reintroduce such details when deploying spam. For fake news, \attackingLLM{} sometimes relied on shortcuts, inserting fictional scenarios while still receiving high similarity scores from \similarityCheckerLLM{}. This highlights a fundamental limitation of current LLMs and emphasizes the need for continued research to overcome it.
+
+\section*{Ethical Consideration}
+In adherence to ethical guidelines, we have carefully evaluated the potential risks of our research, which focuses on generating and analyzing adversarial examples to explore vulnerabilities in LLMs. This work highlights the need for enhanced robustness in LLMs, as existing defenses are insufficient against our attack.  By exposing these vulnerabilities, we aim to encourage advancements in secure and resilient LLMs and emphasize that our findings are not intended for misuse. By responsibly addressing the limitations of current defenses, we aim to inspire further research to advance the development of secure and resilient LLMs.
+
+
+Our evaluation utilized four publicly available datasets—SMS Spam Detection \cite{10.1145/2034691.2034742}, Hateful or Offensive Speech Detection \cite{hateoffensive}, Toxic Comment Classification \cite{jigsaw-toxic-comment-classification-challenge}, and Fake News Detection \cite{wang-2017-liar}. These widely used datasets were used in accordance with their licensing terms, ensuring no new risks were introduced during data handling. The hateful and offensive speech examples included in our study are sourced from these public datasets and are presented solely for research purposes, with no intention of promoting such content. The adversarial examples presented in the paper are intended solely for research purposes and serve to effectively illustrate our findings.
+
+\section*{Acknowledgments}
+We thank OpenAI for providing research credits that supported this work. This work was also supported in part by NSF grant 2442825.
+
+
+\bibliography{custom}
+\appendix
+\label{appdx}
+
+\begin{figure*}[htbp]
+\centering
+\captionsetup{justification=centering}
+\includegraphics[width=0.7\textwidth]{chat.pdf}
+\captionsetup{justification=centering}
+\caption{Detailed Demonstration of Dynamic Deceptor Attack}
+        \label{fig:chat}
+\end{figure*}
+
+
+
+\begin{table}[htbp]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|p{0.18\columnwidth}<{\centering\arraybackslash}|p{0.16\columnwidth}<{\centering\arraybackslash}| p{0.18\columnwidth}<{\centering\arraybackslash}|}
+\hline
+\textbf{Dataset} & \textbf{Llama-3-70B} & \textbf{GPT-4o} & \textbf{Llama-2-13B} \\ \hline
+SMS Spam & 96 & 99 & 98 \\ \hline
+Hate Speech & 89 & 93 & 16 \\ \hline
+Toxic Comment & 100 & 100 & 27 \\ \hline
+LIAR & 69 & 87 & 2 \\ \hline
+Spam Detection & 99 & 95 & 99 \\ \hline
+\end{tabular}
+}
+\caption{Task Accuracy (\%)}
+\label{tab:accuracy}
+\end{table}
+
+\section{Attack Algorithm}
+\label{sec:attack_algorithm}
+\begin{algorithm}[ht!]
+\caption{Dynamic Deceptor Attack}
+\label{alg:attack}
+\begin{algorithmic}[1]
+\Procedure{A}{$x, y\prime$}
+    \State $ reason = \phi_{Reasoning}(x,y\prime)$
+    \State $ \pi_{r} \xleftarrow{init} T(x, y\prime, reason)$
+    \State $adv\_prompt= \phi_{Red}(\pi_{r})$
+    \State $ adv\_prompt  \xrightarrow{update} \pi_{r}$
+    \State  \textbf{return} $adv\_prompt, \pi_{r}$
+    
+\EndProcedure
+\Procedure{D}{$\widehat{x}, y\prime$}
+    \State $ reason = \phi_{Reasoning}(\widehat{x},y\prime)$
+    \State $ \pi_{r} \xleftarrow{update} T(\widehat{x}, y\prime, reason, sim\_score)$
+    \State $adv\_prompt= \phi_{Red}(\pi_{r})$
+    \State $ adv\_prompt  \xrightarrow{update} \pi_{r}$
+    \State  \textbf{return} $adv\_prompt, \pi_{r}$
+\EndProcedure
+\Procedure{Get\_Adv\_Example}{$x, y\prime$}
+    
+    \State $adv\_prompt, \pi_{r} \gets A(x, y\prime)$
+    \State $ \pi_{a} \xleftarrow{init} adv\_prompt$
+    \For{$\text{step} := 1$ \textbf{to} $\text{max\_steps}$}
+        \State $\widehat{x}= \phi_{Attacking}(\pi_{a})$
+        \State $\widehat{x} \xrightarrow{update} \pi_{a}$ 
+        \State $\widehat{y} = \phi_{Target}(\widehat{x})$
+        \State $ sim = \phi_{SimChecker}(x,\widehat{x})$
+        \If{$\widehat{y} \neq y\prime ,\&\&\, sim \geq \tau$}
+            \State  \textbf{return} $\widehat{x}, true$
+        \EndIf
+        \State $adv\_prompt, \pi_{r} \gets D(\widehat{x}, y\prime, sim, \pi_{r})$
+        \State $ adv\_prompt  \xrightarrow{update} \pi_{a}$
+        
+    \EndFor
+    
+    \State  \textbf{return} $\widehat{x}, false$
+\EndProcedure
+
+% \For{each $W_1 \in W^{\widehat{G_i}}_{\star}$ \textbf{AND} $W_2 \in W^{G_r}_{\star}$}
+%     \State Initialize an Optimizer, $\widehat{O}$ with $W_1$ and a learning rate
+%     \State $W_1 \gets \textsc{Optimize\_Weights}(W_1, W_2, \widehat{O})$
+% \EndFor
+
+\end{algorithmic}
+\end{algorithm}
+
+
+In Algorithm \ref{alg:attack}, we outline the attack procedure of \dydec{}. The components $\phi_{Target}$, $\phi_{Reasoning}$, $\phi_{Red}$, $\phi_{Attacking}$, and $\phi_{SimChecker}$ represent the \textsl{Target LLM}, the \textsl{Reasoning LLM}, the \textsl{Red LLM}, the \textsl{Attacking LLM}, and the \textsl{Similarity Checker LLM}, respectively. We maintain two different chat histories, $\pi_{r}$ for the \textsl{Red LLM} and $\pi_{a}$ for the \textsl{Attacking LLM}. The procedure $A$ generates the initial adversarial prompt based on the reasoning provided by the \textsl{Reasoning LLM}, while the procedure $D$ produces subsequent dynamic feedback by integrating both reasoning and similarity feedback. The template $T$ combines the elements to form an instruction prompt for the \textsl{Red LLM}. 
+
+
+\begin{figure*}[ht!]
+\centering
+\captionsetup{justification=centering}
+\includegraphics[width=\textwidth]{example_less_large.pdf}
+\captionsetup{justification=centering}
+\caption{Examples of generated responses in various phases of \dydec{} across different datasets}
+        \label{fig:examples}
+\end{figure*}
+
+\begin{figure*}[ht!]
+\centering
+    \begin{subfigure}{0.2\textwidth}
+    \includegraphics[width=\textwidth]{plots/Llama-3-70BSpam.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/Llama-3-70BHate.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/Llama-3-70BToxic.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/Llama-3-70BLIAR.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/Llama-3-70BSPAM3.png}
+    \caption{}
+    \end{subfigure}%
+    
+    \begin{subfigure}{0.20\textwidth}
+    \includegraphics[width=\textwidth]{plots/GPT4oSpam.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/GPT4oHate.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/GPT4oToxic.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/GPT4oLIAR.png}
+    \caption{}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{plots/GPT4oSPAM3.png}
+    \caption{}
+    \end{subfigure}%
+ \caption{Number of Feedback Rounds vs Attack Success Rate for \dydec{}}
+ \label{fig:itrationvsattack}
+\end{figure*}
+
+\begin{figure*}[ht!]
+\centering
+    \begin{subfigure}{0.20\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_Llama_spam.png}
+    \caption{}
+    \label{fig:Llama3SpamCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_Llama_hate.png}
+    \caption{}
+    \label{fig:Llama3HateCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_Llama_toxic.png}
+    \caption{}
+    \label{fig:Llama3ToxicCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_Llama_LIAR.png}
+    \caption{}
+    \label{fig:Llama3LIARCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_Llama_spam3.png}
+    \caption{}
+    \label{fig:Llama3SPAM3Common}
+    \end{subfigure}%
+    
+    \begin{subfigure}{0.20\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_GPT_spam.png}
+    \caption{}
+    \label{fig:GPT4oSpamCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_GPT_hate.png}
+    \caption{}
+    \label{fig:GPT4oHateCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_GPT_toxic.png}
+    \caption{}
+    \label{fig:GPT4oToxicCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_GPT_LIAR.png}
+    \caption{}
+    \label{fig:GPT4oLIARCommon}
+    \end{subfigure}%
+    \begin{subfigure}{0.19\textwidth}
+    \includegraphics[width=\textwidth]{CommonSentencesAnalysis/venn_diagram_GPT_spam3.png}
+    \caption{}
+    \label{fig:GPT4oSPAM3}
+    \end{subfigure}%
+ \caption{Overleap in Successful Attacks}
+ \label{fig:overleaps}
+\end{figure*}
+
+\section{Methodology Details}
+
+\subsection{Components of the Dynamic Deceptor}
+\label{sec:components}
+We utilize the same LLM with varying instruction prompts to serve as different components of the attack pipeline.
+
+
+
+\subsubsection{Reasoning LLM}
+This LLM is designed to analyze and interpret the reasoning behind the predictions of the \textsl{Target LLM} and to achieve attack objective \ding{172} as described in \ref{sec:attack_objective}. For example, it can explain why a particular SMS is labeled as spam. These insights are then passed on to the \textsl{Red LLM}, which uses them to dynamically craft instructions that incorporate the identified indicators to deceive the \textsl{Target LLM}.
+For example, if the \textsl{Target LLM} flags phrases like "free offer" or "limited time" as spam indicators, the \textsl{Reasoning LLM} identifies these patterns and shares them with the \textsl{Red LLM}. Without the \textsl{Reasoning LLM}, the \textsl{Red LLM} would lack specific focal points for generating effective instructions.  By identifying key factors behind the prediction, the \textsl{Reasoning LLM} enables the \textsl{Red LLM} to better evade detection by the \textsl{Target LLM}. As LLMs continue to advance, so do their reasoning capabilities, enhancing the potency of our attack.
+
+\subsubsection{Similarity Checker LLM}
+We use an LLM to evaluate the semantic similarity between the generated adversarial example and the original sentence to achieve the attack objective \ding{175}. This evaluation guides the \textsl{Red LLM} during feedback steps and helps craft more effective dynamic prompts. The LLM is asked to provide a similarity score from 1 to 10 between the original sentence and the generated adversarial sentence. A way to determine whether two sentences are similar is to set a threshold. Scores below the threshold indicate that the sentences are not similar, while scores above the threshold indicate similarity. This threshold acts as a knob to adjust the trade-off between the success of the attack and the degree to which the adversarial sentence mirrors the original. Raising the threshold ensures that the adversarial sentence closely resembles the original one. However, it also increases the difficulty for the \textsl{Attacking LLM} to craft examples that meet this criterion, as we run the feedback rounds only for a limited number of iterations. This can limit the success rate of adversarial examples, although they may still fulfill the adversary’s objectives. We select the threshold to achieve an optimal balance in this trade-off. A detailed discussion is provided in Section \ref{subsec:Experimental_details}.
+
+\subsubsection{Red LLM}
+The \textsl{Red LLM} generates dynamic adversarial instructions for the \textsl{Attacking LLM}, leveraging the provided rationale by the \textsl{Reasoning LLM} and incorporating the identified elements to achieve attack objective \ding{173} outlined in Section \ref{sec:attack_objective}. These instructions guide the \textsl{Attacking LLM} in creating effective adversarial examples that bypass the \textsl{Target LLM's} detection. During the feedback steps, the \textsl{Red LLM} also receives information on the similarity between the adversarial example and the original text, enabling it to refine its instructions and improve the adversarial generation process. Without the \textsl{Red LLM}, the \textsl{Attacking LLM} would lack guidance on how to modify the particular text to evade detection while preserving semantic similarity with the original content.
+
+\subsubsection{Attacking LLM}
+To accomplish attack objective \ding{174} outlined in Section \ref{sec:attack_objective}, the \textsl{Attacking LLM} utilizes the dynamic instructions provided by the \textsl{Red LLM} to generate adversarial examples by subtly integrating the factors identified by the \textsl{Reasoning LLM}. These examples evade the \textsl{Target LLM's} detection while preserving semantic similarity to the original sentence. The \textsl{Attacking LLM} plays a central role in the attack pipeline. The success of the attack heavily relies on its ability to produce high-quality adversarial examples in accordance with the \textsl{Red LLM's} instructions.
+
+\section{Similarity Analysis}
+\label{similarity_analysis}
+
+\begin{table}[ht!]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Dataset}} & \multicolumn{2}{c|}{\textbf{GPT-4o}} & \multicolumn{2}{c|}{\textbf{Llama-3-70B}} \\
+\cline{2-5}
+ & \textbf{sim-5} & \textbf{sim-7} & \textbf{sim-5} & \textbf{sim-7} \\
+\hline
+SMS Spam     & 48.48 & 51.51 & 62.9 & 40.63 \\
+Hate Speech  & 94.62 & 96.8 & 98.88 & 96.55 \\
+Toxic Comment & 73 & 69 & 88 & 80 \\
+LIAR         & 70.93 & 59.5 & 100 & 100 \\
+\hline
+\end{tabular}
+}
+\caption{Attack Success Rate (\%) at different Similarity Thresholds}
+\label{table:similarity_threshold}
+\end{table}
+
+Table \ref{table:similarity_threshold} illustrates the impact of varying the similarity threshold in our attack pipeline. The results demonstrate that our attack remains consistently successful across different threshold values. For the SMS Spam and Hate Speech datasets, GPT-4o achieves a slightly higher success rate at a similarity threshold of 7 compared to 5. This difference is attributed to variations in the LLM's output for different queries. Nonetheless, the close values indicate that our attack maintains consistent effectiveness across these mid-range thresholds. Increasing the threshold further would require more iterations for each example and could potentially limit the LLM's ability to generate effective adversarial examples, as discussed in Section \ref{subsec:Experimental_details}.
+
+\begin{table*}[ht!]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l|ccc|c|c|ccc|c|c}
+\toprule
+\multirow{3}{*}{\textbf{Dataset}} & \multicolumn{5}{c|}{\textbf{GPT-4o}} & \multicolumn{5}{c}{\textbf{Llama-3-70B}} \\
+\cmidrule(lr){2-6} \cmidrule(lr){7-11}
+ & \multicolumn{3}{c|}{\textbf{BERTScore}} & \multirow{2}{*}{\shortstack{\textbf{Cosine}\\\textbf{Similarity}}} & \multirow{2}{*}{\shortstack{\textbf{Similarity}\\\textbf{Score}}} 
+ & \multicolumn{3}{c|}{\textbf{BERTScore}} & \multirow{2}{*}{\shortstack{\textbf{Cosine}\\\textbf{Similarity}}} & \multirow{2}{*}{\shortstack{\textbf{Similarity}\\\textbf{Score}}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){7-9}
+ & \textbf{Prec} & \textbf{Recall} & \textbf{F1} &  &  & \textbf{Prec} & \textbf{Recall} & \textbf{F1} &  &  \\
+\midrule
+SMS Spam      & 0.85 & 0.85 & 0.85 & 0.50 & 7.7 & 0.83 & 0.84 & 0.84 & 0.43 & 6.9 \\
+Hate Speech   & 0.87 & 0.90 & 0.89 & 0.52 & 8.6 & 0.75 & 0.87 & 0.80 & 0.10 & 7.7 \\
+Toxic Comment & 0.84 & 0.89 & 0.86 & 0.46 & 7.6 & 0.81 & 0.84 & 0.82 & 0.27 & 7.7 \\
+LIAR          & 0.88 & 0.88 & 0.88 & 0.65 & 8.3 & 0.88 & 0.90 & 0.89 & 0.69 & 8.0 \\
+\bottomrule
+\end{tabular}
+}
+\caption{Comparison of BERTScore (Precision, Recall, F1), Cosine Similarity with Universal Encoder, and LLM-assigned Similarity Scores for GPT-4o and Llama-3-70B}
+\label{table:similarity_comparison}
+\end{table*}
+
+
+
+Table \ref{table:similarity_comparison} presents the average BERTScore \cite{bert-score}, average cosine similarity score calculated using the Universal Sentence Encoder \cite{cer-etal-2018-universal}, and the average similarity score assigned by the \textsl{Similarity Checker LLM} for GPT-4o and Llama-3-70B. According to our observations, Llama-3-70B tends to be more verbose in generation tasks, often producing adversarial examples with lower similarity scores. However, this verbosity does not always hinder the adversary’s objective and can still result in effective adversarial examples. For instance, consider the following sample from the SMS Spam dataset:
+
+\noindent \underline{Original Sentence:} \textit{sms: You have an important customer service announcement from PREMIER. Call FREEPHONE 0800 542 0578 now!}
+ 
+\noindent \underline{Adversarial Example:} \textit{We have made some updates to our billing process, which may affect your monthly subscription that commenced on February 1st. We would be grateful if you could contact us at your earliest convenience on 0800 542 0578 to confirm a few details.}
+
+Although the adversarial example includes additional information, making the message appear more legitimate and important, it still fulfills the adversary’s goal of capturing the user’s attention while avoiding being detected as spam. The similarity in such cases is closely tied to the adversary's specific objective, and they can adjust the task prompt for the \textsl{Similarity Checker LLM} to suit their needs.  For simplicity, we maintained a consistent prompt across all datasets and focused on maintaining similarity by selecting an appropriate threshold.
+
+We find that BERTScore and Universal Encoder are not best-suited for our pipeline due to several reasons:
+\begin{itemize}
+    \item  It remains unclear whether cosine similarity is the most appropriate metric for measuring semantic similarity compared to other similarity functions \cite{eger-etal-2019-pitfalls}.
+    \item Cosine similarity may produce misleading results \cite{eger-etal-2019-pitfalls}.
+    \item  Targeted tests of BERT's semantic abilities have yielded less positive results \cite{hanna-bojar-2021-fine}.  BERT has limited knowledge of lexical semantic relations such as hypernymy \cite{ravichander-etal-2020-systematicity} and antonymy \cite{staliunaite-iacobacci-2020-compositional}. Moreover, it has fragile representations of named entities \cite{balasubramanian-etal-2020-whats} and imprecise representations of numbers \cite{wallace-etal-2019-nlp}. These weaknesses can significantly affect adversarial example generation, as substituting an adjective with its antonym could deceive a BERTScore-based semantic analyzer.
+    \item BERT does not seem to understand the negation \cite{10.1162/tacl_a_00298}, which could lead to severe problems when evaluating the quality of generated adversarial examples.
+    \item BERTScore is calculated using a black-box pre-trained model, making it difficult to interpret. The dense and complex embedding space of BERT is understood only by the model itself, which means the score lacks transparency. Although it provides a numerical value, it does not offer insights into how or why a specific score was assigned. Hence, it cannot be used to direct adversarial models to enhance similarity. \footnote{\href{https://docs.kolena.com/metrics/bertscore/}{https://docs.kolena.com/metrics/bertscore/}}
+\end{itemize}
+
+Therefore, BERTScore and cosine similarity scores do not effectively reflect the quality of adversarial samples. An LLM-based analyzer allows more variation in the adversarial sentence while aligning with the adversary's objectives. For the SMS Spam dataset sample demonstrated above in this section, the BERTScore yields {Precision:} 0.8538, {Recall:} 0.8046, {F1:} 0.8285, and the Cosine Similarity using Universal Encoder is 0.2871. However, for the following pair of semantically opposite sentences — \textit{"The project was a complete success, exceeding all expectations."} and
+\textit{"The project was a complete failure, falling short of all expectations."}, — BERTScore produces inflated metrics — {Precision:} 0.9733, {Recall:} 0.9556, {F1:} 0.9644 and Cosine Similarity using Universal Encoder scores 0.8191. This discrepancy underscores the limitations of these metrics in assessing adversarial examples effectively. However, the \textsl{Similarity Checker LLM} utilizing GPT-4o assigns a Similarity Score of 1.0 to these pairs.
+ 
+
+%  \begin{table}[htbp] % Placement options help better positioning
+% \centering
+% \resizebox{\columnwidth}{!}{% Resize to fit within the column width
+% \begin{tabular}{|c|c|c|c|}
+% \hline
+% \textbf{Attack} & \textbf{Defense} & \textbf{FPR} & \textbf{FNR} \\ \hline
+% \multirow{4}{*}{DyDec} 
+% & PPL detection & 0.0 & 0.995 \\ \cline{2-4} 
+% & Windowed PPL detection & 0.001 & 0.995 \\ \cline{2-4} 
+% & Naive LLM-based detection & 0.0 & 0.995 \\ \hline %\cline{2-4} 
+% % & Known-answer detection & 0.0 & 0.995 \\ \hline
+% \multirow{4}{*}{CombinedAttack} 
+% & PPL detection & 0.0 & 0.995 \\ \cline{2-4} 
+% & Windowed PPL detection & 0.0 & 0.78 \\ \cline{2-4} 
+% & Naive LLM-based detection & 0.0 & 0.0 \\ \hline %\cline{2-4} 
+% % & Known-answer detection & 0.0 & 0.93 \\ \hline
+% \end{tabular}
+% }
+% \caption{Detection Defense for SST-2 Dataset }
+% \label{tab:defense}
+% \end{table}
+
+\section{Details on Datasets}
+\label{sec:dataset_details}
+
+For our experiments,  we selected 100 spam SMS \cite{10.1145/2034691.2034742}, 300 \cite{deysi_spam_2023} spam detection data, 100 hateful and offensive tweets \cite{hateoffensive}, 100 severe toxic comments \cite{jigsaw-toxic-comment-classification-challenge}, and 100 "Pants On Fire" samples (stronger instances of fake news) \cite{wang-2017-liar} respectively. These samples pose a greater challenge for bypassing the \targetLLM{} because the LLM demonstrates higher accuracy on them, as shown in Table \ref{tab:accuracy}. The sample size was chosen with cost and resource constraints in mind. Since we are working with large models, inference is both time-consuming and, in the case of GPT-4o, financially costly. Given that our focus is solely on inference or testing, this number of randomly selected samples is sufficient to evaluate the robustness of the LLMs. Moreover, our sample sizes are consistent with those used in related studies \cite{299563, raina-etal-2024-llm, levy-etal-2023-guiding}.
+
+
+
+\section{Details on Defenses}
+\label{sec:defense_details}
+This section contains more details for the experiments from Section \ref{sec:defenses}.
+
+\subsection{Perplexity-Based Defense}
+
+Following the implementation details outlined in \cite{299563}, we calculated the average perplexity of clean samples for each dataset using Llama-2-13B-chat \cite{touvron2023llama2openfoundation} and set a detection threshold to maintain a false positive rate (FPR) of at most 1\%. For windowed perplexity detection, we utilized a window size of 5, considering the presence of many short sentences. A larger window size would render windowed perplexity less meaningful in such cases.
+
+\subsection{LLM-Based Defense}
+\label{subsec:LLM_based_defense_details}
+When applying the same detection prompt from from \cite{299563} for the LLM-based defense, we observed an interesting result, as shown in Table \ref{table:naive_LLM_1}. 
+
+\begin{table}[htbp]
+\centering
+\small
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|l|p{0.25\columnwidth}<{\centering\arraybackslash}|p{0.25\columnwidth}<{\centering\arraybackslash}|}
+\hline
+\multirow{2}{*}{\textbf{Dataset}}      & \multicolumn{2}{c|}{\textbf{CombinedAttack}} \\
+\cline{2-3}
+                   & \textbf{FPR} & \textbf{FNR} \\
+\hline
+SMS Spam           & 91.89 & 0.0 \\
+\hline
+Hate Speech        & 49.43 & 0.0 \\
+\hline
+Toxic Comment      & 86.36 & 0.0 \\
+\hline
+LIAR               & 34.78 & 0.0 \\
+\hline
+SST-2               & 0.0 & 0.0 \\
+\hline
+\end{tabular}
+}
+\caption{False Negative Rate (\%) and False Positive Rate (\%) for Naive LLM-Based Detection with the prompt from \cite{299563}}
+\label{table:naive_LLM_1}
+\end{table}
+
+While the false positive rate (FPR) was noticeably high in sensitive datasets, it was 0\% for SST-2 \cite{wang-etal-2018-glue}. The elevated FPR in the sensitive datasets can be attributed to the nature of the detection task prompt. These sensitive datasets often include content (such as material potentially harmful to the public or not aligned with the goals of a superintelligent AI) that Eliezer Yudkowsky might deem inappropriate for transmission to a superintelligent AI chatbot.  However, this does not necessarily indicate the presence of prompt injections. To address this issue, we propose using the following simpler task prompt for detecting prompt injection attacks effectively.
+
+\textit{Your task is to identify prompt injection attacks. You will be provided with a text input, and your job is to determine if it contains any prompt injection content. Respond with a simple "yes" or "no" to indicate whether the input includes an injected prompt or not.}
+
+Liu et al. \cite{liu2025datasentinelgametheoreticdetectionprompt} introduced a novel game-theoretic framework for detecting prompt injection attacks by fine-tuning a detection LLM using a minimax optimization approach. However, since our naive LLM-based method already achieved 100\% accuracy in detecting prompt injection attacks, we opted for that approach to avoid the additional complexity of fine-tuning.
+
+
+To detect \dydec{} and \stadec{}, we employed a similar LLM-based detection method using the following task prompt:
+
+\textit{Your task is to detect adversarial examples in text inputs. You will be provided with a text input, and your job is to determine if it contains adversarial perturbations designed to manipulate a model's output. Focus specifically on identifying subtle, intentional modifications. Respond with "yes" if the input contains adversarial manipulations and "no" otherwise}
+
+\subsection{Paraphrasing Defense}
+
+Paraphrasing the adversarial inptuts might disrupt the order of the special character/task-ignoring text/fake response to prevent the prompt injection attack \cite{299563} and might rephrase the stealthy adversarial examples crafted by \dydec{} and \stadec{} in a way that reveal the original nature of the data (i.e hateful/toxic/spam/fakeness). Following the approach in \cite{299563}, we implemented LLM-based paraphrasing using GPT-4o with the recommended task prompt. However, we consistently received the following response:
+
+\textit{You have been trained on information available until October 2023.}
+
+To address this, we designed a more effective system prompt tailored for the paraphrasing task:
+
+\textit{Your task is to paraphrase the text provided by the user.}
+
+Using this revised prompt, we provided the adversarial inputs as user prompts, and the model successfully generated paraphrased versions of the given inputs.
+
+For each adversarial example, we generated a paraphrased version and tested the \textsl{Target LLM's} prediction on the paraphrased input. A mitigation is considered successful if the \textsl{Target LLM} correctly predicts the outcome for the paraphrased adversarial input. The mitigation rates for the \dydec{}, \stadec{} and CombinedAttack attacks are presented in Table \ref{tab:paraphrase}.
+
+% \section{Compliance with the Open Science Policy}
+
+% We  adhere to the principles of open science as outlined in the USENIX Security 2025 Open Science Policy. Acknowledging the value of transparency and reproducibility in scientific research, we commit to making the resources required to replicate our experiments available through a public repository upon the acceptance of this paper.
+
+
+\end{document}

@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "methods.tex",
+      "role": "body"
+    },
+    {
+      "path": "experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "checklist.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "1c9e5cbb23cc57324a0a9310099209048f1691a6051dd53a612bc24da58eb10e",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757",
+    "introduction.tex": "21c4148140ca5a6a409bca9a4eb6da0ac4615b67c16555063840c281a32f84bd",
+    "related_work.tex": "e3fe0db77498d7e9236b80672add955964c79dc360f89a3ffc5d6b72d1a6910a",
+    "methods.tex": "6a548470af9e3e3381d7f47878ae7c8721e80d17ad0664bbab6f29efbb6de59e",
+    "experiments.tex": "da38e73e1113bc20d26e20d47782cddefb01de0f3be3f5c3de767e6e73f32bf9",
+    "discussion.tex": "b3d00e5310cb98ac11cca3ce5615e3499cfd3ed472e90f5222868710762f61bc",
+    "appendix.tex": "8b110286af5aeaa8c0918c98f914af25b1c441b555dea51a59cbc349f90e4bd7",
+    "checklist.tex": "aa0e93e128bd35963530076159d6597bce1a1a86a419f5ddad0ba8281edd1fee"
+  }
+}

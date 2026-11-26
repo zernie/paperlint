@@ -1,0 +1,136 @@
+
+
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+
+We evaluate on standard multivariate benchmarks summarized in Table~\ref{tab:datasets}: ETT variants (ETTh1, ETTh2, ETTm1, ETTm2), Electricity (ECL), Weather, and Exchange. We use prediction horizons $H \in \{48, 96, 192, 336, 720\}$ with input length 384, and $H \in \{24, 48, 96, 192, 336\}$ for the daily frequency Exchange dataset. We evaluate CTRL with two backbone architectures: DLinear~\cite{Zeng2023DLinear} and PatchTST~\cite{Nie2023PatchTST}. The residual decoder is a 2-layer MLP with STL-augmented features, and we use Llama 3.3 70B for control signal generation. All results are averaged over 3 seeds. Full hyperparameter settings are provided in Table~\ref{tab:hyperparams}.
+
+
+\subsection{Main Results}
+\label{sec:main_results}
+Table~\ref{tab:main_results} compares CTRL against backbone baselines and LLM-based methods across seven multivariate benchmarks. CTRL achieves best or competitive performance on most dataset-horizon combinations, with improvement magnitude correlating with train-test distribution gap.
+
+ETTh2 and ETTm2 exhibit the strongest improvements, with CTRL achieving up to 12\% MSE reduction. Both datasets show substantial train-test divergence, where LLM-guided control signals effectively identify correction strategies for non-stationary dynamics.
+On Exchange, CTRL improves over the backbones across all horizons, though gains vary with horizon length due to predictable trend patterns. For high-dimensional ECL, CTRL with PatchTST achieves best results at horizons 96--336, demonstrating that shared control signal mode scales effectively. On ETTh1 and ETTm1, CTRL improves backbones by up to 2.5\%, consistent with their lower distribution shift.
+On Weather, the most stationary dataset, CALF outperforms CTRL at mid-range horizons. This is expected: when distributional shift is minimal, adaptive reasoning provides limited benefit over fine-tuned alignment.
+
+\begin{table}[h!]
+\centering
+\small
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{lccccccc}
+\toprule
+& Exch. & \multicolumn{4}{c}{ETT} & ECL & Weather \\
+\cmidrule(lr){3-6}
+&      & h2   & m2   & h1   & m1   &     &     \\
+\midrule
+ADF   & -1.9  & -4.1 & -5.7 & -5.9 & -15.0 & -8.5 & -26.7 \\
+Shift & 2.33  & 1.48 & 1.49 & 0.50 & 0.50  & 0.62 & 0.71 \\
+\bottomrule
+\end{tabular}
+\caption{Dataset stationarity. Lower ADF indicates stronger stationarity; Shift measures train-test distribution divergence via normalized mean difference.}
+\label{tab:stationarity}
+\end{table}
+
+Table~\ref{tab:stationarity} confirms that CTRL's improvements correlate with distribution shift severity. CTRL consistently outperforms TEMPO while requiring no LLM fine-tuning. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{fig/pred2.png}
+    \caption{Backbone prediction vs CTRL-refined prediction on ETTm2}
+    \label{fig:pred}
+\end{figure}
+
+Figure~\ref{fig:pred} shows CTRL correcting backbone errors during 
+a distribution shift (timestep 60--80), where the backbone undershoots 
+while CTRL adapts via LLM-guided control signals.
+
+\paragraph{Comparison with direct LLM prediction.}
+Table~\ref{tab:llmtime} compares CTRL against LLMTime~\cite{gruver2023llmtime}, run with GPT-4 as a direct numerical predictor through per-sample prompt-only generation. CTRL outperforms LLMTime by 19.6--44.3\% MSE, validating our core hypothesis that LLMs excel as strategic controllers rather than numerical predictors. While LLMTime requires $N$ LLM calls for $N$ test samples, CTRL achieves superior accuracy with only 3--24 calls through control signal caching.
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.9pt}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{\textbf{ETTm2}} & \multicolumn{2}{c}{\textbf{Weather}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & MSE & MAE & MSE & MAE \\
+\midrule
+LLMTime & .245 & .151 & .237 & .150 \\
+\textbf{CTRL} & \textbf{.197} & \textbf{.070} & \textbf{.132} & \textbf{.039} \\
+\midrule
+\textit{Improv.} & \textit{19.6\%} & \textit{53.2\%} & \textit{44.3\%} & \textit{74.2\%} \\
+\bottomrule
+\end{tabular}
+\caption{Comparison with LLMTime. CTRL uses DLinear backbone.}
+\label{tab:llmtime}
+\end{table}
+
+\subsection{Ablation Studies}
+\label{sec:ablation}
+
+
+
+\input{abltable}
+Table~\ref{tab:ablation} presents comprehensive ablations on ETTh2 and ETTm2 (384$\rightarrow$96) to validate each design choice.
+The learned baseline directly maps STL features to control signals via MLP, yet underperforms LLM-generated signals, confirming that semantic reasoning provides value beyond pattern matching. Critically, we construct two random baselines: numeric vectors sampled uniformly within operational ranges, and random text fed through the same GPT-2 pipeline used by the Irregular Agent. Both degrade to the zero-signal level (+5.84\%/+4.54\% vs +5.70\%/+5.18\%), directly refuting the hypothesis that embeddings serve as generic learnable bias terms. This rules out the alternative explanation that CTRL's gains stem from increased model capacity.
+
+\paragraph{Semantic content drives correction.} To verify the decoder exploits semantic content rather than surface features, we measure how decoder output changes when each control signal component is perturbed across its operational range (full methodology in Appendix~\ref{app:sensitivity}). The irregular text embedding yields $\Delta = 0.032$, while the most responsive numeric parameter (trend bias) yields $\Delta = 0.009$, a $3.4\times$ gap. Substituting the LLM-generated text with random words, technical jargon, or random characters produces $\Delta \leq 0.007$, an order of magnitude below the ``no text'' condition ($\Delta = 0.032$). The decoder thus distinguishes presence from absence of semantic content and responds selectively to LLM-generated descriptions, not to arbitrary text conditioning.
+
+STL-decomposed multi-agent reasoning proves essential. Removing STL context consistently degrades performance, confirming that structured temporal decomposition enables more precise control signal generation. Agent ablations reveal dataset-dependent contributions: on ETTh2, the Seasonal Agent contributes most significantly, while ETTm2 shows more balanced contributions across agents. Converting the Irregular Agent from text-based to numerical output degrades performance, validating natural language for capturing nuanced noise characteristics.
+
+For few-shot selection, TypiClust outperforms both random sampling and no few-shot baselines. By clustering held-out training errors and selecting representative examples, TypiClust provides diverse failure patterns that ground LLM reasoning in concrete error magnitudes.
+
+Test-time adaptation provides consistent improvement by detecting distribution shifts and triggering control signal refinement when input statistics diverge. The aggregate effect (+1.03\% MSE) understates its selective impact: on the hardest quartile of ETTh2 samples (Q4 by backbone MSE), the system without adaptation improves by only +1.4\%, while full CTRL reaches +5.7\% (Appendix~\ref{app:case_studies}). Table~\ref{tab:ablation} further confirms each parameter contributes: removing any single dimension degrades performance by 0.48--0.52\%, indicating the decoder utilizes control signal semantics for correction.
+
+LLM choice shows robustness: GPT-4o provides marginal improvement, while smaller models like Qwen 2.5 72B show modest degradation, indicating CTRL is not brittle to LLM selection within capable model families.
+\subsection{Computational Efficiency}
+\label{sec:efficiency}
+
+CTRL achieves efficiency through lightweight training and minimal LLM inference.
+Table~\ref{tab:complexity} compares computational requirements: 
+CTRL requires only $\sim$400K trainable parameters (45$\times$ fewer than CALF) 
+and trains in under 2 minutes, while the frozen GPT-2 encoder incurs no training cost.
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+& \textbf{Ours} & \textbf{LLMTim} & \textbf{GPT4TS} & \textbf{CALF} & \textbf{TEMPO} \\
+\midrule
+Params & 400K & 0 & 4.4M & 18.2M & 12.4M \\
+Train & 1.8m & 0 & 2.1m & 62m & 106m \\
+LLM & 3--24 & $N$ & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Model complexity on ETTh2 (384$\rightarrow$96).}
+\label{tab:complexity}
+\end{table}
+
+The maximum LLM call count is deterministic given dataset size and calibration interval $K$. CTRL requires 3 initial calls (one per agent) for control signal generation. Test-time adaptation checks every $K{=}50$ batches, adding at most 3 calls per check when distribution shift is detected. Table~\ref{tab:llm_calls} reports the per-dataset breakdown: smaller datasets such as Exchange require only 6 calls, while larger datasets such as ETTm2 require up to 24, yielding over 1,000$\times$ reduction compared to per-sample methods. Sensitivity analysis (Table~\ref{tab:hparam_sensitivity}) confirms that MSE varies less than 0.15\% across calibration intervals from 5 to 100 batches.
+
+\begin{table}[h!]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & Test Samples & Checks & Max Calls \\
+\midrule
+ETTh1/h2 & 2,402 & 2 & 9 \\
+ETTm1/m2 & 11,042 & 7 & 24 \\
+Weather & 10,060 & 7 & 24 \\
+ECL & 4,781 & 3 & 12 \\
+Exchange & 1,038 & 1 & 6 \\
+\bottomrule
+\end{tabular}
+\caption{LLM calls per dataset (calibration interval $K{=}50$, $H{=}96$). Total calls $= 3 + 3 \times \text{Checks}$ in the worst case.}
+\label{tab:llm_calls}
+\end{table}

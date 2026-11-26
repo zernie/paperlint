@@ -1,0 +1,26 @@
+\label{sec:thoughts_consistency}
+\begin{figure}[!t]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/evaluation/self_consistency_alpha.pdf}
+        \caption{Balance between thoughts and answer consistency}
+        \label{subfig:self_consistency_weight}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/evaluation/self_consistency_times.pdf}
+        \caption{Trade-offs using different self-consistency times}
+        \label{subfig:self_consistency_times}
+    \end{subfigure}
+    \vspace{-1mm}
+    \caption{Performance of \sysname{} under varying consistency evaluation settings on a subset of LVBench.}
+    \vspace{-2mm}
+    \label{fig:overall_performance}
+\end{figure}
+\section{Conclusion}
+
+This paper presents \sysname, an advanced L4 video analytics system powered by VLMs. \sysname enables comprehensive understanding and open-ended query analysis of large-scale, long-duration video data, overcoming the constraints of existing video analytics systems that are predominantly tailored to specific, pre-defined tasks. The system introduces novel designs, including near-real-time Event Knowledge Graph index construction and an agentic retrieval and generation mechanism, facilitating efficient organization and analysis of extended video content to address complex queries. We demonstrate \sysname's superior performance on public video understanding benchmarks, as well as on our newly proposed benchmark, \sysname-100, specifically designed to evaluate video analytics tasks.
+
+

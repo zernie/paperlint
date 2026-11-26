@@ -1,0 +1,60 @@
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figs/adaptiveguard_overview.pdf}
+    \caption{Overview of building the OOD-aware \ourapp~(Step 1 to 5) and continuous updates via OOD detection using Mahalanobis Distance and LoRA (Step 6 and 7).}
+    \label{fig:overview}
+\end{figure*}
+
+\section{Approach}
+\label{sec:approach}
+\textbf{Design Rationale.}
+To address the rapidly evolving landscape of jailbreak attacks, we leverage OOD detection. This allows us to identify unseen prompts that fall outside the distribution of typical unsafe inputs. These inputs are usually written in natural language and English—the data most runtime guardrails are trained on \cite{markov2023holistic, inan2023llama}.
+We adopt a lightweight GPT-2 model (137M parameters), significantly smaller than the standard LLaMA Guard (8B), to enable efficient continual learning with detected OOD jailbreaks. For continual learning, we use LoRA to update only a small subset of parameters, preserving in-distribution knowledge and mitigating catastrophic forgetting—a common challenge in continual learning \cite{kirkpatrick2017overcoming}—while reducing the cost compared to full fine-tuning.
+Fig. \ref{fig:overview} provides an overview of our framework, which we describe step by step below.
+
+\subsection{Building OOD-Aware \ourapp}
+\label{sec:build_ood}
+In Step \circled{1} of Fig.~\ref{fig:overview}, we start with a prompt-label pair $(x, y) \in \mathcal{D}_{\text{train}}^{ID}$, where x is a natural language input and $y \in \{\texttt{safe}, \texttt{unsafe}\}$.
+In our context, $\mathcal{D}_{\text{train}}^{ID}$ represents in-distribution (ID) data.
+In Step \circled{2}, x is tokenized into subword units $(t_1, \dots, t_n)$ via byte-pair encoding (BPE) \cite{sennrich2015neural}, with each token mapped to an embedding $e_i \in \mathbb{R}^d$.
+In Step \circled{3}, the embeddings $(e_1, \dots, e_n)$ are processed by a 12-layer GPT-2 model, producing hidden states $(h_1, \dots, h_n)$; the final state $h_n$ is passed through a linear layer to produce a classification score $\hat{y}$. In Step \circled{4}, we compute the cross-entropy loss $\mathcal{L}_{\text{CE}} = -\log \hat{y}_y$ where $\hat{y}_y$ is the predicted probability for the true class $y$, and update model weights via backpropagation and gradient descent.
+
+To enable out-of-distribution (OOD) awareness, we extend the GPT-2 classifier with an auxiliary training objective that encourages separation between in-distribution and OOD inputs.
+We use an auxiliary dataset $\mathcal{D}_{\text{train}}^{\text{OOD}}$ containing jailbreak prompts that represent out-of-distribution inputs.
+Specifically, we compute a scalar confidence score using an energy function:
+$s(x) = -T \cdot \log \sum_{i} \exp\left(\frac{z_i}{T}\right)$,
+where $z_i$ are the logits from the model and $T$ is a temperature hyperparameter. We then apply a margin-based regularization loss that penalizes in-distribution inputs with confidence below a lower threshold $m_{\text{in}}$ and OOD inputs exceeding an upper threshold $m_{\text{out}}$, denoted by $\mathcal{L}_{\text{OOD}} = \mathbb{E}_{x \sim \mathcal{D}_{\text{train}}} \left[\left(\max(0, s(x) - m_{\text{in}})\right)^2\right] + \mathbb{E}_{x' \sim \mathcal{D}_{\text{train}}^{\text{OOD}}} \left[\left(\max(0, m_{\text{out}} - s(x'))\right)^2\right]$.
+This loss is combined with the cross-entropy objective and encourages the model to learn more discriminative boundaries between in-distribution and OOD inputs.
+The whole process fine-tunes the GPT-2 model with an auxiliary OOD module, resulting in our OOD-aware guardrail classifier, \ourapp~(see Step \circled{5}).
+
+Once trained, \ourapp~can be integrated into LLM-powered systems as a safety alignment layer. It classifies user inputs as safe or unsafe, where unsafe inputs are blocked and safe inputs are allowed to enter the LLM-powered system.
+At the same time, it detects out-of-distribution (OOD) prompts and leverages continual learning to handle evolving threats.
+Below, we explain how OOD detection and continual learning are implemented.
+
+\subsection{OOD Detection Using Mahalanobis Distance}
+\label{sec:ood_detection}
+As shown in the bottom-right of Fig.~\ref{fig:overview}, our model extracts a penultimate-layer representation $f(x) \in \mathbb{R}^d$ for each input $x$ by averaging the token embeddings from the second-to-last transformer layer. To model the in-distribution feature space, we compute class-conditional means $\mu_{\texttt{safe}}, \mu_{\texttt{unsafe}} \in \mathbb{R}^d$ and a shared covariance matrix $\Sigma \in \mathbb{R}^{d \times d}$ using features from the original guardrail training set $\mathcal{D}_{\text{train}}^{ID}$. During inference, we measure how far a new input deviates from the known class distributions by computing its Mahalanobis distance to each class: $d_c(x) = \sqrt{(f(x) - \mu_c)^T \Sigma^{-1} (f(x) - \mu_c)}$
+where $c \in {\texttt{safe}, \texttt{unsafe}}$ denotes the class label,
+$d_c(x)$ denotes the distance from input $x$ to class $c$,
+and $\Sigma^{-1}$ is the inverse of the shared covariance matrix.
+In Step~\circled{6}, we then take the minimum of the two class distances: $d_{\text{min}}(x) = \min(d_{\texttt{safe}}(x), d_{\texttt{unsafe}}(x))$.
+Inputs with $d_{\text{min}}(x)$ exceeding a predefined threshold $\tau_{\text{OOD}}$ are flagged as out-of-distribution (OOD), formally:
+$$
+\text{OOD}(x) = 
+\begin{cases}
+1 & \text{if } d_{\text{min}}(x) > \tau_{\text{OOD}} \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+
+%we introduce an OOD module that computes the Mahalanobis distance \cite{} between the model’s logit vector and class-conditional feature statistics. Specifically, let $\mathbf{z} \in \mathbb{R}^d$ be the logit vector (i.e., the output of the final hidden layer before classification), and let $\boldsymbol{\mu}_c \in \mathbb{R}^d$ denote the empirical mean of logits for class $c$, computed from $\mathcal{D}{\text{train}}$. Let $\boldsymbol{\Sigma} \in \mathbb{R}^{d \times d}$ be the shared covariance matrix across the two classes. Then the Mahalanobis distance from $\mathbf{z}$ to the closest class center is:
+%$$
+%d_{\text{Maha}}(\mathbf{z}) = \min_{c} \left( \mathbf{z} - \boldsymbol{\mu}_c \right)^\top \boldsymbol{\Sigma}^{-1} \left( \mathbf{z} - \boldsymbol{\mu}_c \right).
+%$$
+%A lower $d_{\text{Maha}}(\mathbf{z})$ suggests the input is closer to in-distribution class features, while a higher distance indicates potential OOD behavior. This OOD module is designed to flag emerging jailbreak attacks that were not seen during guardrail training (e.g., in $\mathcal{D}_{\text{train}}$), enabling the system to identify them as out-of-distribution for subsequent continual updates.
+
+\subsection{Continual Defence with OOD Samples and LoRA}
+In Step~\circled{7}, once the model identifies an input as out-of-distribution (OOD) via the Mahalanobis distance, it triggers a continual learning update; no updates are performed for in-distribution input.
+To efficiently adapt the model while preserving prior knowledge, we employ Low-Rank Adaptation (LoRA)~\cite{hu2022lora} to fine-tune only a small subset of parameters.
+Specifically, we target three key layers in \ourapp: the word embedding layer, the masked self-attention layer, and the feed-forward neural network (FFNN) layer.

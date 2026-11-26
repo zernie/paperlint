@@ -1,0 +1,223 @@
+
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-sigconf-authordraft.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[final]{acl} 
+%\usepackage[preprint]{acl}
+
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{amssymb}% http://ctan.org/pkg/amssymb
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+% tables
+\usepackage{booktabs}%
+
+% reverse order list
+\usepackage{etaremune}
+\usepackage[normalem]{ulem}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+
+\usepackage{enumitem}
+
+\usepackage{tabu}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{arydshln}
+\usepackage{xspace}
+\usepackage{amsmath}
+%%
+
+
+% Additional packagaes by us that are not in the original source
+\usepackage{soul}     % for \st
+\usepackage{xcolor}   % for colors
+\setstcolor{red}      % strike line color
+
+
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+
+\author{
+  Guilin Hu\textsuperscript{*} \quad
+  Malek Itani\textsuperscript{*} \quad
+  Tuochao Chen \quad
+  Shyamnath Gollakota \\
+  \textsuperscript{*}Co-primary student authors\\
+  \textsuperscript{1}Paul G. Allen School of Computer Science \& Engineering, University of Washington \\
+  \texttt{\{guilinhu,malek,tuochao,gshyam\}@cs.washington.edu}
+}
+
+
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Proactive Hearing Assistants that Isolate Egocentric Conversations}
+
+
+
+%\title{{Conversation Filters:  Hearables that Learn Who to Hear}}
+
+
+
+%\title{{Conversation Filters: AI Hearables that Learn  Who to Hear}}
+
+
+
+%-\title{{Target Conversation Hearing: Learning Who to Hear  on Hearables}}
+
+
+
+\newcommand{\squishlist}{%
+  \begin{itemize}[itemsep=1pt,parsep=2pt,topsep=3pt,partopsep=0pt,
+                  leftmargin=0em,itemindent=1em,labelwidth=1em,labelsep=0.5em]%
+}
+\newcommand{\squishend}{%
+  \end{itemize}%
+}
+
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+
+
+\makeatletter
+\renewcommand{\sectionautorefname}{\S\@gobble}
+\renewcommand{\subsectionautorefname}{\S\@gobble}
+\renewcommand{\subsubsectionautorefname}{\S\@gobble}
+\renewcommand{\appendixautorefname}{Appendix \@gobble}
+\makeatother
+
+
+
+\pagenumbering{gobble}
+
+\newcommand{\xref}[1]{\S\ref{#1}}
+
+
+
+
+\maketitle
+
+\input{abstract-5}
+
+
+\input{intro-4}
+
+\input{related-3}
+
+
+
+\input{design-2}
+
+\input{eval-1}
+
+
+
+
+\input{conclude-3}
+
+
+\input{discuss-2}
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+%\bibliographystyle{ACM-Reference-Format}
+% \bibliographystyle{acl_natbib}
+\bibliography{paper}
+
+
+\appendix
+
+\input{appendix}
+
+\end{document}
+\endinput
+%%
+%% End of file `sample-sigconf-authordraft.tex'.

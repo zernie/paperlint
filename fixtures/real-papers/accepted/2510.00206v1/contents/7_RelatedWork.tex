@@ -1,0 +1,31 @@
+\section{Related Work}
+\label{sec:related-work}
+
+\sloppy
+
+\myparagraph{System-level Optimizations on LoRA}
+While there has been extensive work at the algorithmic level to make fine-tuning more stable and efficient, system-level optimizations for LoRA are mostly for inference and serving. 
+PetS~\cite{zhou2022pets} is the first work that proposes multi-task parameter-efficient fine-tuned transformers serving and introduces a scheduling algorithm to coordinate different requests. Punica~\cite{chen2024punica}, S-LoRA~\cite{sheng2023s-lora}, and dLoRA~\cite{wu2024dlora} propose serving multiple LoRA adapters together to increase system throughput.
+For LoRA fine-tuning, research interest is more focused on privacy preserving.
+Offsite-tuning~\cite{xiao2023offsite} and DLoRA~\cite{gao2024Dlora-privacy} propose to decouple the large model owner and the data owner and connect them with lightweight adapters to enhance privacy.
+In concurrent work, LobRA~\cite{lin2025lobra}, explored addressing multi-tenant fine-tuning over heterogeneous data. Its scheduling approach is complementary to our contributions. Our kernel fusion provides an orthogonal optimization that can directly enhance LobRA's performance, while our pipeline-aware scheduler could further reduce pipeline bubbles within LobRA as an additional improvement.
+
+\myparagraph{Model Batching in Training}
+Model batching improves hardware utilization by co-scheduling multiple training jobs on shared hardware. 
+AutoML frameworks~\cite{feurer-neurips15a,feurer-arxiv20a} and TUPAQ~\cite{sparks2015automating} train numerous candidate models in parallel for architecture search, while Ease.ml~\cite{li2018easeml} focuses on multi-tenant model-selection. 
+HFTA~\cite{wang2021hfta} proposes to horizontally fuse models from repetitive jobs at the operator level for better hardware utilization.
+Multi-tenancy has also been applied to federated learning~\cite{zhuang2022smart-multi-tenant-federated-learning}. 
+Unlike these general approaches, which are not model-aware, \Name is tailored for multi-tenant LoRA fine-tuning. 
+It exploits the shared base model to reduce memory usage and address distributed training bottlenecks like pipeline bubbles and load imbalance.
+
+
+\myparagraph{Kernel Fusion}
+Kernel fusion is widely used to reduce redundant memory access and improve performance.
+Compiler-based approaches such as TVM~\cite{tvm}, XLA~\cite{xla}, Ansor~\cite{zheng2020ansor}, TensorIR~\cite{feng2023tensorir}, torch.compile~\cite{ansel2024pytorch}, and Hidet~\cite{ding2023hidet} focus on automatic fusion via scheduling or tuning. Graph-level optimization frameworks like TASO~\cite{jia2019taso}, PET~\cite{wang2021pet}, and Automatic Horizontal Fusion~\cite{li2022automatic} perform rule- or cost-based transformations to eliminate redundant computation and improve fusion opportunities. Inference-oriented systems such as DNNFusion~\cite{niu2021dnnfusion}, ASPEN~\cite{park2023aspen}, AStitch~\cite{zheng2022astitch}, TensorRT~\cite{tensorrt}, ONNXRuntime~\cite{onnxruntime}, Rammer~\cite{ma2020rammer}, and Roller~\cite{zhu2022roller} use various fusion strategies to optimize runtime performance. Manual approaches like Triton~\cite{tillet2019triton} let developers implement custom fused kernels with fine-grained control.
+Recently, Mirage~\cite{wu2024mirage} introduces a multi-level superoptimizer that automatically fuses complex tensor program blocks and shows its benefits for LoRA serving. However, it does not yet address LoRA fine-tuning scenarios with a sufficient number of tokens, dropout, backward computation, or fusion challenges from multi-LoRA kernel execution.
+
+
+\myparagraph{Parallelism and Distributed Training}
+A lot of work has been done on parallelizing the training of large models, such as Data Parallelism~\cite{pytorch-distributed,tensorflow}, Sharded Data Parallelism~\cite{pytorch-fsdp,zero,zero-offload,zero-infinity}, Tensor Parallelism~\cite{megatron-1}, and Pipeline Parallelism~\cite{pipedream,gpipe,dapple}.
+Hybrid parallelism is usually used to combine multiple parallelism strategies to achieve better performance~\cite{megatron-1,zheng2022alpa,boehm2014hybrid}.
+To effectively find the optimal parallelization strategies, systems~\cite{zheng2022alpa,flexflow,unger2022unity,liu2024aceso,lin2024nnscaler,miao2023galvatron,zhu2025mist} are proposed to automatically find the best combination of parallelism. These automatic planners are orthogonal to our work because any parallelization strategy they produce can directly benefit from our fused kernels.

@@ -1,0 +1,66 @@
+\section{\tool Overview}
+\label{sec:overview}
+
+
+\input{figure/cecilia_overview}
+
+\tool operates by identifying causal relationships between faults in distributed systems and linking them to form potential cycles. It simulates 
+chains of fault propagations 
+in complex workloads quasi-statically by combining the causal relationships derived from fault injections on simpler workloads.
+
+At the core of \tool is a counterfactual causality analysis. 
+Counterfactual causality analysis involves conducting two experiments: 
+one with a fault injected to observe its impact on the system execution (referred to as the \textit{interference}), 
+and the other without the fault injected to observe the system's execution (referred to as the counterfactual -- i.e., what would the system execution be had the fault not been injected). 
+Specifically, we compare the execution trace of a fault injection run with its corresponding profile run 
+(i.e., running the same test without the injection) 
+and identify any additional faults triggered, 
+which are considered to have a counterfactual causal relationship 
+with the injected fault.
+
+\textbf{Workflow}. 
+\Cref{fig:tool-overview} illustrates the workflow of \tool.
+(\circledtext{1}) Given the Java bytecode of the target system, 
+\tool's \textit{static analyzer} identifies 
+system-specific fault injection points, 
+and instruments fault injection and monitoring hooks. 
+At runtime, 
+\tool's \textit{runtime agent} 
+performs fault injection and monitoring 
+when a hook is encountered. 
+
+
+During fault injection experiments (\circledtext{2}), 
+a \textit{workload driver} selects combinations of faults and workloads 
+(integration tests shipped with the target system) 
+to execute both the fault injection run 
+and the corresponding fault-free profile run (counterfactual experiment).
+Note that, 
+for each fault, 
+\tool only uses the set of tests that 
+can reach the fault during execution 
+in fault injection runs. 
+
+
+Next, the \textit{fault causality analysis} module (\circledtext{3}) compares the execution traces from the profile and injection runs 
+to identify counterfactual causal relationships 
+-- i.e., \textit{fault propagations}. 
+These causal relationships are used by the 
+\textit{three-phase allocation (3PA) protocol} 
+to guide future workload and fault selection 
+via feedback to the workload driver.
+
+The discovered causal relationships are also forwarded to \tool's \textit{bug detector} (\circledtext{4}), 
+which connects \textit{compatible} relationships and 
+performs a \textit{beam search} for cycle detection 
+to identify \vcs (\circledtext{5}).
+
+
+In the following sections, 
+we first explain 
+(\Cref{sec:fia}) 
+how to instrument faults 
+and perform the core counterfactual causality analysis, 
+and then (\Cref{sec:alloc}) how to efficiently allocate testing resources, 
+and finally (\Cref{sec:vc-detection}) how to connect compatible causal relationships and detect cycles. 
+

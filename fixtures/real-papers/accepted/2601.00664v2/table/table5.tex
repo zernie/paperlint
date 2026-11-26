@@ -1,0 +1,31 @@
+\begin{figure}[t]
+\vspace{-0.1in}
+\captionof{table}{
+\textbf{Ablation study} on user motion and preference optimization. 
+``w/ $\mathbf{m}_u$'' indicates whether the user motion latent $\mathbf{m}_u$ is provided as input to the model during both training and inference.
+} \label{tab:ablation_realtalk}
+\vspace{-0.0in}
+\centering
+\begin{minipage}{1\linewidth}
+    \vspace*{-2mm}
+    \resizebox{1.0\textwidth}{!}{
+        \renewcommand{\arraystretch}{1.0}
+        \renewcommand{\tabcolsep}{6pt}
+        \begin{tabular}{c c c c c c}
+        \toprule
+         \multicolumn{2}{c}{Method} & \multicolumn{2}{c}{Reactiveness} & \multicolumn{2}{c}{Motion Richness} \\
+         \cmidrule(l{2pt}r{2pt}){1-2}
+        \cmidrule(l{2pt}r{2pt}){3-4}
+        \cmidrule(l{2pt}r{2pt}){5-6}
+        w/ $\mathbf{m}_u$ & DPO & rPCC-Exp $\downarrow$ & rPCC-Pose $\downarrow$ & SID $\uparrow$ & Var $\uparrow$\\
+        \midrule        
+        \redx & \redx       & 0.052 & 0.175 & 2.165 & 1.586\\
+        \greencheck & \redx               & 0.042 & 0.146 & 2.236 & 1.408\\
+        \midrule        
+        \greencheck & \greencheck                & \textbf{0.003} & \textbf{0.036} & \textbf{2.442} & \textbf{1.734}\\
+        \bottomrule
+        \end{tabular}
+        }
+\end{minipage}
+\vspace{-0.15in}
+\end{figure}

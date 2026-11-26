@@ -1,0 +1,17 @@
+\section{Related Work}\label{sec:work}
+
+\par\noindent \textbf{Persona Modeling.}
+Early personalization research formalized identity as static profile sentences \citep{zhang2018personachat} or attribute-value pairs injected into context \citep{personaRAG}. While effective in constrained domains, these methods are brittle under temporal drift and struggle with cross-session continuity \citep{personaRAG}. Subsequent approaches utilized memory graphs and Retrieval-Augmented Generation (RAG) to externalize persona knowledge \citep{crafting-2024}. However, RAG-based methods often prioritize factual retrieval over vocal consistency, leading to ``context smoothing.'' In this regime, idiosyncratic traits are averaged out by generic pre-training priors, diluting persona specificity. 
+Recent sociolinguistic work emphasizes that identity is not a flat list of traits but a multilayered, often contradictory construct \citep{DevGTDP23,DavaniDBP24}. Identities are culturally situated and frequently defy demographic stereotypes; yet, current models often treat such \textit{incongruous personas} as noise, defaulting to stereotype-driven responses \citep{wan2023are,fan-etal-2024-biasalert,cao-etal-2025-multilingual}. This suppression risks amplifying algorithmic bias \citep{lin-etal-2023-counterfactual,tu-etal-2023-training}. Unlike prior work that forces consistency to resolve these conflicts, our proposal treats incongruity as a first-class signal, preserving the inherent tension between stable backstories and atypical stances.
+
+
+
+
+
+\noindent \textbf{Persona Steering.}
+Personalization has largely bifurcated into In-Context Learning (ICL) and Parameter-Efficient Fine-Tuning (PEFT). ICL approaches, which treat persona elicitation as Bayesian inference or latent variable selection \citep{Dathathri2020Plug,cho2025saeicl,choi2024picle}, remain susceptible to ``context override,'' where pre-trained priors marginalize the prompt over long contexts, despite recent analyses of internal task vectors \citep{han2025emergence} and adapter convergence \citep{kim2025lora_training}. Conversely, PEFT methods like LoRA \citep{hu2022lora} and QLoRA \citep{dettmers2023qlora} prioritize distributional stability via low-rank adapters. While personalized extensions \citep{tan2024democratizing} utilize soft prompts, they often rely on cluster-level representations that sacrifice granular, within-persona diversity. Recent innovations have further explored VAE-based memory \citep{liu2025palace}, federated aggregation \citep{singhal2025fedexlora}, dense adaptation \citep{mu2025denselora}, rank-awareness \citep{gu2025beamlora}, and mobile efficiency \citep{li2025mobilora}. However, these primarily optimize for stability and struggle to adapt when a persona's trajectory shifts atypically. Our framework bridges this gap by synthesizing the geometric stability of PEFT with the expressive flexibility of ICL, enabling robust steering even under high persona-prior dissonance.
+
+
+
+
+

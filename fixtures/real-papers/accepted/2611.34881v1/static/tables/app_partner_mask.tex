@@ -1,0 +1,12 @@
+\subsection{Partner Masking}
+\label{app:partner_mask}
+
+\noindent Instead of changing which objects appear together, a mitigation can remove the objects around a target. On COCO \texttt{train2017} images with exactly two classes ($35{,}858$ of $117{,}266$), partner masking picks one class as the anchor, removes the other with a precomputed LaMa~\cite{suvorov2022resolution} inpainting and keeps only the anchor label; other images are unchanged. We fine-tune DINOv3 ViT-B/16 with it for 20 epochs, the recipe of the submitted runs, and compare it with the Std.\ run of the same recipe (Tab.~\ref{tab:app_partner_mask}). Partner masking narrows the STRANGE-Bench gap only from $20.0$ to $18.2$, while the COCO gap widens from $4.8$ to $5.2$ and both $T_{\text{never}}$ ($67.2 \rightarrow 65.8$) and COCO val ($80.9 \rightarrow 80.1$) drop. A model learns the partners it is shown with each anchor. Partner masking shrinks that set, since the anchor is now often seen alone, so an anchor among atypical partners at test time remains unlike the training images; paste-based augmentation (Sec.~\ref{sec:results_mitigation}) widens the set instead. The invariance to context comes from varying the context, not from deleting it.
+
+\begin{table}[!htp]%
+\centering
+\small
+\caption{\textbf{Partner masking against the matched Std.\ run.} Removing the partner narrows the STRANGE-Bench gap slightly but widens the COCO gap and lowers $T_{\text{never}}$ and COCO accuracy. DINOv3 ViT-B/16 fine-tuned for 20 epochs (the submission recipe), F1$_{\text{micro}}$. Better value per column in bold.}
+\label{tab:app_partner_mask}
+\input{static/tables/generated/app_partner_mask_tabular}
+\end{table}

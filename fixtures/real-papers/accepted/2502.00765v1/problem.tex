@@ -1,0 +1,25 @@
+\subsection{Problem Statement}
+\label{sec:problem}
+
+{\bf Threat model:} Given a GNN node/graph classifier $f$ and a graph $G$, the adversary can \emph{arbitrarily} manipulate a number of the edges, nodes, and node features in $G$ such that $f$ misclassifies target graphs in graph classification or target nodes in node classification. 
+{For instance, when a social network platform deploys a GNN detector to detect fake users (the adversary) \cite{wang2017gang,xu2022evidence}, the fake users is motivated to evade them \cite{wang2019attacking}: they can modify their profiles,
+their connections with some users, and create new fake accounts and connections to bypass detection.}
+Since we focus on certified defenses, we consider the strongest attack where the adversary has white-box access to $G$ and $f$, i.e., it knows all the edges, nodes, and node features in $G$, and all the model parameters about $f$.
+
+
+\vspace{+0.05in}
+\noindent {\bf Defense goal:}
+We aim to build a certifiably robust GNN that: 
+\begin{itemize}[leftmargin=*]
+\vspace{-2mm}
+\item  has a deterministic robustness guarantee; 
+\vspace{-2mm}
+\item is suitable for both node and graph classification tasks; 
+\vspace{-2mm}
+\item provably predicts the same label against the arbitrary perturbation when the \emph{perturbation size}, i.e., the total number of manipulated nodes, nodes with feature perturbation, and edges, is bounded by a threshold, which we call the \emph{certified perturbation size}. 
+\vspace{-2mm}
+\end{itemize}
+
+Our ultimate goal is to obtain the largest-possible certified perturbation size that satisfies all the above conditions.
+
+

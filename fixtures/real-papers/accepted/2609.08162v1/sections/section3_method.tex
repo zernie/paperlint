@@ -1,0 +1,190 @@
+\section{Method}
+
+\subsection{Task Formulation}
+\label{sec:task-formulation}
+
+We frame our task as a Partially Observable Markov Decision Process (POMDP). Each rollout trajectory is divided into a sequence of trajectory units indexed by $i$. A trajectory unit is defined as 
+$U_i = (G_i, O_i, S_i, A_i, A_p, O_p)$, 
+where $G_i$ denotes the task instruction, and $O_i$, $S_i$, and $A_i$ denote the observation, robot state, and action chunks, respectively, accompanied by an action placeholder $A_p$ and an observation placeholder $O_p$.
+
+Each chunk (i.e., $O_i$, $S_i$, and $A_i$) consists of a sequence of time-indexed elements, including observations, states, or actions extracted from the raw trajectory $\tau$. Each element (i.e., $o_t$, $s_t$, $a_t$) is further tokenized into a sequence of tokens that serves as the actual model input.
+
+In unit~$i$, the model first predicts an action chunk $\hat{A}_i$
+conditioned on the instruction $G_i$, the observation chunk $O_i$, 
+and the state chunk $S_i$.
+It then predicts the next observation chunk conditioned on 
+$(O_i, S_i, A_i)$ during training or $(O_i, S_i, \hat{A}_i)$ during inference\footnote{A history buffer $h$ is also included in the conditioning; detailed formulation is provided in a later section.}.
+Executing the predicted actions advances the environment and produces 
+the next unit $U_{i+1}$.
+A summary of the key notations used in the WorldAgen framework is 
+provided in Table~\ref{tab:notation} in the Appendix.
+\subsection{Joint State--Action Prediction}
+\label{sec:join-action}
+
+WorldAgen contains two predictive components: a task-conditioned agent model and a task-agnostic world model. Both models share a single Transformer backbone, enabling a unified representation across tasks, as illustrated in Figure~\ref{fig:worldagen_overview}(a).
+
+We maintain two types of histories:
+
+\textbf{Agent history:}
+\[
+h^a_i = (G_i, O_x, S_x, \hat{A}_x)_{x=i-k}^{i-1},
+\]
+which contains the task instruction $G_i$ along with the observation, robot state, and predicted action chunks from the previous $k$ segments. This history is used by the agent model for task-aware action prediction.
+
+\textbf{World history:}
+\[
+h^w_i = (O_x, S_x, \hat{A}_x)_{x=i-k}^{i-1},
+\]
+which includes the observation, robot state, and predicted action chunks from the previous $k$ segments, and is used by the world model to predict task-agnostic environment dynamics.
+
+We define the two models at trajectory segment $U_i$ as follows:
+
+\textbf{Agent Model.}
+The agent model predicts the next action chunk $\hat{A}_i$ conditioned on the current observation chunk $O_i$, robot state chunk $S_i$, task instruction $G_i$, and agent history $h^a_i$:
+\[
+p_a\!\left(
+  \hat{A}_i
+  \,\big\vert\,
+  G_i, O_i, S_i, h^a_i
+\right).
+\]
+
+\textbf{World Model.}
+The world model predicts the next observation chunk $\hat{O}_i$ conditioned on the current observation chunk $O_i$, robot state chunk $S_i$, predicted action chunk $\hat{A}_i$, and world history $h^w_i$:
+\[
+p_w\!\left(
+  \hat{O}_i
+  \,\big\vert\,
+  O_i, S_i, \hat{A}_i, h^w_i
+\right).
+\]
+
+During training, we adopt teacher forcing and replace all predicted actions $\hat{A}_i$ with the ground-truth actions $A_i$.
+
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[scale=0.55]{figures/figure2.pdf}
+    \caption{
+\textbf{Trajectory Splitting, Chunking, and Two-Step Inference.}
+Example with observation chunk length $n=2$ and action chunk length $m=3$.
+(a) \textit{Trajectory Splitting and Chunking:}
+a raw trajectory is divided into trajectory units $U_i$, where each unit
+contains an observation chunk $O_i$ and a robot state chunk $S_i$ obtained
+via uniform subsampling from $m$ consecutive observations and states, and an
+action chunk $A_i$ obtained by grouping $m$ actions.
+(b) \textit{Two-Step Inference:}
+the agent model first initializes a zero action placeholder $A_p$ and then
+replaces it with the predicted action chunk $\hat{A}_i$.
+The world model subsequently predicts the next observation chunk
+$\hat{O}_i$, conditioned on the updated trajectory unit.
+}
+    \label{fig:worldagen}
+\end{figure*}
+
+
+
+\subsection{Trajectory Splitting and Action Chunking}
+\label{traj_split}
+Predicting multiple actions at once has been shown to
+improve the execution efficiency of real-world robots \cite{intelligence2025pi_}. However, consecutive
+observation frames often contain highly redundant visual information, and predicting long observation sequences slows down both training and deployment. To balance these factors, WorldAgen supports different action chunk lengths $m$ and observations chunk length $n$.
+We further propose a robust trajectory splitting and action chunking scheme that flexibly adapts to different experimental configurations.
+
+Concretely, given a rollout $\tau = \{(o_t, s_t, a_t)\}_{t=0}^{T-1}$ with $T$ timesteps, we
+transform it into a sequence of trajectory units $\{U_i\}_{i=0}^{I-1}$ with $I$ units.
+The initial unit $U_0$ aggregates the first $n$ timesteps of the rollout and is paired
+with the first action chunk $A_0 = A_{0 \rightarrow n-1} = [a_0, a_1, \ldots, a_{n-1}]$.
+For units $U_i$ with $i>0$, we uniformly sample $n$ timesteps to construct the current
+observation chunk $O_i$, state chunk $S_i$, and associated action chunk $A_i$:
+\begin{align*}
+O_i &= O^{n}_{n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+             o_{\,n+(i-1)m},\,
+             o_{\,n+(i-1)m + \lfloor \tfrac{1}{n} m \rfloor},\,
+             \ldots,\,
+             o_{\,n+(i-1)m + \lfloor \tfrac{n-1}{n} m \rfloor}
+       \big], \\
+S_i &= S^{n}_{n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+          s_{\,n+(i-1)m},\,
+          s_{\,n+(i-1)m + \big\lfloor \tfrac{1}{n} m \big\rfloor},\,
+\\
+    &\quad
+          \ldots,\,
+          s_{\,n+(i-1)m + \big\lfloor \tfrac{n-1}{n} m \big\rfloor}
+       \big], \\
+A_i &= A_{n+(i-1)m \rightarrow n+im-1} \\
+    &= \big[
+             a_{\,n+(i-1)m},\,
+             a_{\,n+(i-1)m+1},\,
+             \ldots,\,
+             a_{\,n+im-1}
+       \big].
+\end{align*}
+This procedure keeps each observation chunk fixed to length $n$, reducing redundant
+visual information and improving runtime efficiency.
+
+
+Figure~\ref{fig:worldagen} (a) illustrates an example with $n=2$ and $m=3$. Algorithm of trajectory splitting and action chunking for variable length of action, observation and robot state chunk is shown in Algorithm~\ref{alg:traj-splitting} in the Appendix, where $\textsc{UniformSubsample}(a,b,n)$ uniformly samples $n$ distinct indices from the integer interval $\{a,\ldots,b\}$ without replacement and returns them in ascending order, which we then use to construct the
+observation and state chunks.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.5]{figures/attn_mask.pdf}
+    \caption{
+Proposed Mixed Unidirectional Attention Mask: combines local and global masking. For each trajectory unit, WorldAgen applies a local mask that prevents the action chunk $A_p$ from attending to the corresponding action placeholder $A_i$. A global mask is further used to construct a task-agnostic world model head, so that the observation placeholder $O_p$ will not attend to the task instruction $G_i$. General structure conforms to strictly causal prediction.
+}
+    \label{fig:attn_mask}
+\end{figure}
+
+\subsection{Mixed Unidirectional Attention Mask}
+To ensure that the world modeling and agent policy tasks are trained jointly without information leakage, we introduce a mixed unidirectional attention masking mechanism as shown in Figure \ref{fig:attn_mask}. 
+This mechanism integrates two complementary components:
+
+\textbf{Local mask:} ensures that the current observation chunk $O_i$, the robot proprioception chunk $S_i$, the task instruction $G_i$, and the action placeholder $A_p$ cannot access the action chunk $A_i$. This prevents information leakage within a single timestep.
+
+\textbf{Global mask:} guarantees that the world model head remains invisible to the task instruction $G_i$ across all time steps. Additionally, the global mask enforces mutual invisibility among the task instruction and observations to avoid cross-modal leakage. 
+
+Meanwhile, the general structure conforms to strictly causal prediction, such that both the world model and policy heads cannot access any future tokens.
+
+\subsection{Pretraining}
+We pretrain WorldAgen using large-scale trajectory data collected from robot demonstrations. We split trajectories using our proposed robust splitting method.
+During pretraining, we jointly optimize the agent model and world model using teacher forcing:
+
+\[
+\mathcal{L} = \mathcal{L}_a + \lambda \mathcal{L}_o,
+\]
+where $\mathcal{L}_a$ is the cross-entropy loss for predicting future action chunks, $\mathcal{L}_o$ is the reconstruction loss for predicting future observation chunks, and $\lambda$ is a weighting factor balancing the two objectives.
+
+It is worth noting that during training, we feed the ground-truth action chunk (teacher forcing), whereas during testing, the model performs autoregressive prediction by feeding the previously predicted action chunk at each timestep.
+
+\subsection{Two-Step Inference}
+
+At test time, WorldAgen runs in a two-step inference loop over trajectory units as shown in Figure \ref{fig:worldagen} (b). For unit $i$, we first perform the agent model step. We construct
+the input sequence with a zero-initialized action placeholder $A_p$ and feed it to the agent model, which predicts the current action chunk $\hat{A}_i$. The predicted actions then overwrite the placeholder $A_p$.
+
+Next, we perform the world model step. Conditioned on the task instruction $G_i$, the current observation chunk
+$O_i$ and the updated action chunk $A_i$ (same as $\hat{A}_i$), the world model predicts the next observation chunk $\hat{O}_i$. During testing, these two steps are applied alternately to roll out the whole trajectory.
+
+\subsection{Test-Time Training}
+While joint pretraining improves world understanding, distribution shifts in novel environments can still degrade performance.
+To address this, we introduce a two-stage Test-Time Training strategy that adapts the world model online, refining its understanding of environment dynamics and indirectly improving downstream action prediction. The whole pipeline is given in Figure~\ref{fig:worldagen_overview} (b).
+
+\paragraph{Stage 1: Random Exploration and Data Collection.}
+At deployment, the agent first performs free exploratory rollouts in the target environment.
+During this phase, it records trajectories of $(O_i, S_i, A_i)$.
+To ensure that adaptation focuses on environment dynamics rather than task-specific instructions, all collected trajectories are relabeled with a generic ``no-lang'' token in place of language instructions.
+
+\paragraph{Stage 2: World Model Adaptation.}
+Using the collected trajectories, we adapt only the shared backbone with LoRA-based parameter-efficient fine-tuning, while keeping the policy head frozen.  
+The update rule is:
+\[
+\theta^\prime_w \leftarrow \theta_w - \eta \nabla_{\theta_w} \mathcal{L}_o,
+\]
+where $\theta_w$ are the parameters of the world model head and $\eta$ is the learning rate.
+
+This targeted update improves world understanding ability and enhances the shared representations, which are in turn leveraged by the agent model for action prediction.
+
+By decoupling adaptation from the task goal and restricting it to the world model, \textbf{our TTT procedure enables robust scene adaptation without requiring additional task-specific annotations, paving the way for scalable test-time adaptation in VLA models.}

@@ -1,0 +1,25 @@
+\title{\abstraction{}: Enhancing observability \& programmability\\in smart spaces}
+
+% %% NSDI %%
+\author{
+{\rm Anna Karanika, Kai-Siang Wang, Han-Ting Liang, Shalni Sundram, Indranil Gupta}\\
+{\tt\{annak8,kw37,htliang2,shalnis2,indy\}@illinois.edu}\\
+University of Illinois Urbana-Champaign\\
+} % end author
+
+\maketitle
+
+
+\begin{abstract}
+
+While RPCs form the bedrock of systems stacks, we posit that IoT device collections in smart spaces like homes, warehouses, and office buildings---which are all ``user-facing''---
+require a more expressive abstraction.
+{Orthogonal to prior work, which improved the {reliability} of IoT communication, our work focuses on improving the {\it observability} and {\it programmability} of IoT actions.}
+We present the \abstraction{} (Request-Acknowledge-Start-Complete) abstraction, which provides acknowledgments at critical points after an IoT device action is initiated. \abstraction{}   is a better fit for %attuned to 
+IoT actions, which naturally vary in length {\it spatially} (across devices) and {\it temporally} (across time, for a given device).
+\abs{} also enables the design of several new features: predicting action completion times accurately, detecting failures of actions faster, allowing fine-grained dependencies in programming, and scheduling.
+\abs{} is intended to be implemented atop today's available RPC mechanisms, rather than as a replacement. We integrated \abs{} into a popular and open-source IoT framework called Home Assistant.
+Our trace-driven evaluation finds that \abstraction{} meets latency SLOs,
+especially for long actions that last  O(mins), which are common in smart spaces.
+Our scheduling policies for home automations (e.g., routines) outperform state-of-the-art counterparts by $10\%$-$55\%$.
+\end{abstract}

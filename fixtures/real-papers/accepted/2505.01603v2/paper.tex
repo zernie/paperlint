@@ -1,0 +1,210 @@
+\DocumentMetadata{}
+\documentclass[sigplan,10pt]{acmart}
+\pagestyle{plain}
+
+% make references clickable 
+\usepackage[]{hyperref}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian, english]{babel}
+\usepackage[normalem]{ulem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{xurl}
+\raggedbottom
+% package for code snippet
+\usepackage{listings}
+\usepackage{epigraph}
+
+\lstdefinestyle{codestyle}{
+    %backgroundcolor=\color{backcolour},   
+    commentstyle=\color{green},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{purple},
+    basicstyle=\fontsize{7.5}{8.5}\ttfamily,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,  
+    xleftmargin=1em,
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=none,
+    escapechar={|}
+}
+
+\definecolor{communication}{RGB}{86, 81, 126}
+\definecolor{computation}{RGB}{174, 65, 50}
+
+\newif\ifanonymous
+\newif\ifsubmit    % Flag for distinguishing submission commands
+% \submittrue
+\submitfalse       % Comment out before submitting
+% \anonymoustrues
+\anonymousfalse    % Comment to de-anonymize
+
+\ifsubmit
+\newcommand{\fixme}[1]{}
+\newcommand{\ana}[1]{}
+\newcommand{\tom}[1]{}
+\newcommand{\andrea}[1]{}
+\newcommand{\leon}[1]{}
+\newcommand{\pinghe}[1]{}
+\newcommand{\lazar}[1]{}
+\newcommand{\todo}[1]{}
+\newcommand{\suggedit}[2]{#2}
+\newcommand{\cut}[1]{}
+\else
+\newcommand{\fixme}[1]{{\textcolor{red}{[~FIXME:~#1~]}}}
+\newcommand{\ana}[1]{{\textcolor{orange}{[~ANA:~#1~]}}}
+\newcommand{\tom}[1]{{\textcolor{purple}{[~TOM:~#1~]}}}
+\newcommand{\yazhuo}[1]{{\textcolor{teal}{[~YAZHUO:~#1~]}}}
+\newcommand{\andrea}[1]{{\textcolor{blue}{[~ANDREA:~#1~]}}}
+\newcommand{\leon}[1]{{\textcolor{cyan}{[~LEON:~#1~]}}}
+\newcommand{\pinghe}[1]{{\textcolor{pink}{[~PINGHE:~#1~]}}}
+\newcommand{\lazar}[1]{{\textcolor{brown}{[~LAZAR:~#1~]}}}
+\newcommand{\todo}[1]{{\textcolor{red}{[~TODO:~#1~]}}}
+\newcommand{\suggedit}[2]{{\textcolor{red}{\sout{#1}}\textcolor{olive}
+{#2}}}
+\newcommand{\cut}[1]{\sout{#1}}
+\fi
+
+\ifanonymous
+\newcommand{\dandelion}{{Hummingbird}\xspace}
+\newcommand{\hybrid}{HB-hybrid\xspace}
+\else
+\newcommand{\dandelion}{{Dandelion}\xspace}
+\newcommand{\hybrid}{D-hybrid\xspace}
+\fi
+\newcommand{\compute}{{compute}\xspace}
+\newcommand{\dlibc}{{\texttt{dlibc}}\xspace}
+\newcommand{\dlibcpp}{{\texttt{dlibc++}}\xspace}
+\newcommand{\io}{{I/O}\xspace}
+\newcommand{\uvm}{MicroVM\xspace}
+\newcommand{\uvms}{MicroVMs\xspace}
+\newcommand{\server}{server\xspace}
+
+\ifanonymous
+\newcommand{\deanonimizehb}{}
+\else
+\newcommand{\deanonimizehb}{\textcolor{blue}{HB = Dandelion.}\xspace}
+\fi
+
+% commands added by yazhuo
+\newcommand{\fakepara}[1]{\noindent\textbf{#1}\hspace{2mm}}
+
+\newcommand{\change}[2]{{\color{blue}#1} {}}
+
+\copyrightyear{2025}
+\acmYear{2025}
+\setcopyright{cc}
+\setcctype{by}
+\acmConference[SOSP '25]{ACM SIGOPS 31st Symposium on Operating Systems Principles}{October 13--16, 2025}{Seoul, Republic of Korea}
+\acmBooktitle{ACM SIGOPS 31st Symposium on Operating Systems Principles (SOSP '25), October 13--16, 2025, Seoul, Republic of Korea}
+\acmDOI{10.1145/3731569.3764803}
+\acmISBN{979-8-4007-1870-0/2025/10}
+\acmPrice{}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+        <concept_id>10010520.10010521.10010537.10003100</concept_id>
+       <concept_desc>Computer systems organization~Cloud computing</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computer systems organization~Cloud computing}
+
+\title{Unlocking True Elasticity for the Cloud-Native Era with Dandelion}
+
+\begin{document}
+
+\settopmatter{authorsperrow=4}
+
+\ifanonymous
+\else
+\author{Tom Kuchler}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Pinghe Li}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Yazhuo Zhang}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Lazar Cvetković}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Boris Goranov}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Tobias Stocker}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Leon Thomm}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Simone Kalbermatter}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Tim Notter}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+\author{Andrea Lattuada}
+\affiliation{\institution{MPI-SWS}\country{Germany}}
+
+\author{Ana Klimovic}
+\affiliation{\institution{ETH Zurich}\country{Switzerland}}
+
+
+
+\begin{abstract}
+
+Elasticity is fundamental to cloud computing. An elastic platform can quickly allocate resources to match the demand of each workload as it arrives, rather than pre-provisioning resources to meet performance objectives. However, even serverless platforms --- which boot sandboxes in 10s to 100s of milliseconds --- are not sufficiently elastic to avoid pre-provisioning expensive resources. Today's FaaS platforms provision many extra, idle sandboxes in memory to reduce the occurrence of slow, cold starts. Initializing securely isolated sandboxes with a POSIX-like computing environment that today's cloud users expect is slow as it requires booting a guest OS and configuring networking.
+
+Our key insight is that the rise of cloud-native application development provides an opportunity to rethink the application interface to the cloud and co-design a much more efficient, elastic computing platform under the hood.
+We propose \dandelion, an elastic cloud platform with a declarative cloud-native programming model that replaces POSIX-based network interfaces with higher-level (e.g., HTTP-based) interfaces for applications to interact with remote services like cloud storage, databases, and AI inference services. \dandelion executes applications expressed as DAGs of pure compute functions and communication functions.
+
+This enables \dandelion to securely execute compute functions in lightweight sandboxes that cold start in \textit{100s of microseconds}, since pure functions do not rely on software environments such as a guest OS.
+\dandelion makes it practical to boot sandboxes on-demand per request, decreasing performance variability by two to three orders of magnitude compared to Firecracker and reducing committed memory by 96\% on average when running the Azure Functions trace.
+
+\end{abstract}
+
+\maketitle
+
+\renewcommand{\shortauthors}{Kuchler et al.}
+
+\pagenumbering{gobble}
+
+\input{sections/intro.tex}
+\input{sections/background.tex}
+\input{sections/approach}
+\input{sections/applications}
+\input{sections/design_v2}
+\input{sections/impl.tex}
+\input{sections/eval.tex}
+\input{sections/security.tex}
+\input{sections/relatedwork.tex}
+\input{sections/conclusion.tex}
+
+\section{Acknowledgements}
+
+We would like to thank Gustavo Alonso, Timothy Roscoe, Xiaozhe Yao, and Maximilian Böther for their helpful insights during discussions. We would also like to acknowledge
+Roberto Starc, Lorenzo Rosa, Georgijs Vilums, and Josef Schönberger, and Alessio Russo for their contributions to the project. Thank you to Eric Van Hensbergen for his inputs in the early stages of the project and his support with the Arm Morello setup.
+We also thank our anonymous reviewers from ASPLOS'25 and OSDI'25 for their feedback and suggestions. Tom Kuchler, Pinghe Li, and Yazhuo Zhang are supported by the Swiss National Science Foundation (project TMSGI2\_218019).
+\bibliographystyle{plain}
+\bibliography{references}
+
+
+\end{document}
+

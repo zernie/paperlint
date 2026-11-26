@@ -1,0 +1,114 @@
+% !TeX root = ../main.tex
+
+\section{Methodology}\label{sec:methodology}
+
+We employed a qualitative design comprising semi-structured interviews with thirteen crypto KOLs and a hybrid thematic analysis guided by self-determination theory (SDT). Two trained researchers conducted and coded the interviews, and we used a large language model in a human-in-the-loop workflow to propose additional candidate codes that were subsequently curated and verified by humans. We assessed inter-annotator reliability between the two human coders and integrated the resulting themes into an SDT-aligned framework. Detailed procedures follow.
+\subsection{Ethical Considerations}
+\label{subsec:ethics}
+The study protocol was reviewed and approved by the TU Wien Research Ethics Committee (TUW REC, Case No.\ 080/27062025). All participants were adults ($\geq$18 years) and provided informed consent. Safeguards included strict pseudonymization (e.\,g., ``KOL01''), removal of direct identifiers in transcripts and publications, and GDPR-compliant retention limits (audio deleted after one year; anonymized transcripts after three). Participants could skip questions, pause, or withdraw until October 31, 2025. Quotations were anonymized and cleaned prior to publication, research materials were stored securely, and protocols governed the handling of sensitive disclosures to ensure confidentiality unless imminent harm was reported. For language editing, large language models were used only with fully anonymized excerpts containing no identifiers; no raw data were transferred externally, and all core processing occurred within the controlled research environment.
+
+\paragraph{Model use and additional safeguards.}
+We used OpenAI GPT-4 as a supplementary assistant for candidate theme suggestion (temperature~=~0.2; top\_p~=~1.0). Before any model input, all processed excerpts were fully anonymized. Only short, de-identified segments were processed; no raw datasets or identifiers left the research environment. All model outputs were reviewed by human coders and accepted, revised, or discarded.
+
+\subsection{Qualitative Interviews}
+
+We conducted 13 semi-structured interviews with Key Opinion Leaders (KOLs) within the blockchain ecosystem. Participants were recruited through targeted sampling of individuals who met specific criteria: (1) active presence on social media platforms with crypto-focused content, (2) demonstrated influence within the crypto community through follower engagement or industry recognition, and (3) consistent content creation related to blockchain technology, cryptocurrency, or decentralized finance. Initial participants were identified through systematic searches of prominent social media accounts, and additional participants were recruited through snowball sampling based on referrals from initial interviewees.
+
+Each interview lasted between 30 and 60 minutes and was conducted via video conferencing platforms to accommodate participants' global distribution. Interview questions were organised around three main areas: (1) motivations for becoming a crypto KOL, (2) strategies for building and maintaining influence, and (3) perspectives on ethics and responsibility within the crypto community. All interviews were recorded with participant consent and transcribed verbatim for thematic analysis.
+
+Building on this design, we implemented an interview protocol explicitly aligned with our research questions (RQs) to elicit rich narratives while preserving comparability across the interviews. The interview questions are provided in \Cref{app:interview-questions}. Each question also includes an identifier mapping it to the associated RQ(s).%For traceability, per-RQ mappings of interview prompts are summarized in \Cref{tab:rq1-mapping,tab:rq2-mapping,tab:rq3-mapping}; each table reproduces the full RQ and lists the associated prompts.
+
+% Requires in preamble: \usepackage{tabularx,booktabs,array,float}
+% (optional but nice): \usepackage{caption}
+
+\subsection{Participant Profile}
+\label{subsec:participant-profile}
+
+The study examined a heterogeneous cohort of key opinion leaders (KOLs), ranging from early crypto adopters to post-2020 entrants shaped by DeFi and Web3 infrastructures. Participants occupy hybrid roles: educator, builder, researcher, and entrepreneur, combining academic training with market practice. This hybridity positions KOLs as intermediary nodes that translate between technical discourse, retail education, and regulatory concerns. Geographically, participants were based in Europe, the United States, and Asia.
+
+Platform repertoires are multi-sited. Core channels include X (formerly Twitter), LinkedIn, YouTube, and Telegram, often complemented by Instagram, TikTok, and specialized academic or DAO channels. Content formats span short-form explainers, livestreams, research threads, technical updates, and policy commentary. %Influence is thus not only reach-based but also epistemic: shaping definitions of credible knowledge, its circulation, and sites of community cohesion.
+
+Table~\ref{tab:kols} synthesises entry timing, roles, content orientation, platform portfolios, professional backgrounds, and topical foci. The distribution reveals three overlapping archetypes: (i) \emph{educator-curators} standardising retail-facing knowledge; (ii) \emph{researcher-practitioners} linking academic and technical insights to market narratives; and (iii) \emph{builder-entrepreneurs} embedding communication within product and ecosystem development. These archetypes recur across platforms, indicating that influence is less channel-specific than orchestrated across multiple venues.
+
+\begin{table*}[t] % Force placement here
+\centering
+\caption{Anonymized overview of KOLs: entry timing, self-defined role, content style, platforms, background, and focus. \newline Abbrev.: YT=YouTube, TG=Telegram, X=X (formerly Twitter), IG=Instagram, TT=TikTok, LI=LinkedIn.}
+\label{tab:kols}
+\footnotesize
+\setlength{\tabcolsep}{3pt} % reduce column spacing
+\renewcommand{\arraystretch}{1.2} % row spacing
+% \captionsetup{skip=6pt} % uncomment if using caption package and you want tighter spacing
+
+\input{tables/kol-overview}
+\end{table*}
+
+All participants were adults. To reduce re-identification risks in this relatively small and specialised population, we do not report more granular demographic breakdowns (e.\,g., precise age ranges or gender identities) beyond the regional and role information summarised in Table~\ref{tab:kols}. Participants first engaged with cryptocurrencies between 2015 and 2021 (Table~\ref{tab:kols}), meaning that at the time of interview they spanned early adopters with nearly a decade of experience and more recent entrants who became active during the expansion of DeFi and Web3 infrastructures.
+
+To balance both depth and diversity while remaining feasible within our resources, we aimed for a sample of approximately a dozen KOLs. Recruitment and analysis proceeded iteratively; after the thirteenth interview, new accounts primarily reinforced existing patterns in motivations, practices, and ethical reflections, and we therefore judged that we had reached theoretical saturation for our focal population. This sampling strategy, however, introduces several limitations. Participants were drawn from Europe, the United States, and Asia, and produced content on major global platforms (e.\,g., X, YouTube, LinkedIn, Telegram), which under-represents KOLs from other regions, language communities, or platforms. Moreover, most interviewees already had substantial audiences and multi-platform presences, so our findings may overstate the perspectives of relatively established and successful KOLs compared to smaller or emerging creators. These biases constrain the generalisability of our findings to the broader population of crypto content creators; we return to these limitations in Section~\ref{sec:discussion}.
+
+
+
+\subsection{LLM-Assisted Thematic Analysis}
+
+\paragraph{Rationale for LLM assistance.}
+We introduced LLM support to explore on a small interview corpus whether model-suggested candidate themes could broaden the space of codes considered in standard qualitative analysis without reducing interpretive quality. The aims were to (i) broaden multi-label coverage, (ii) improve consistency and auditability of the working codebook, and (iii) accelerate SDT-oriented theory linkage. In line with our ethics protocol, the LLM was strictly supplementary: all suggestions were treated as hypotheses, reviewed by human coders against the raw text, and retained only when clearly grounded in participant accounts.
+
+Our analysis employed a hybrid thematic analysis that combined traditional human-led analysis with LLM-suggested candidate themes to systematically identify and refine patterns across the interview transcripts. This approach leveraged the analytical expertise of trained qualitative researchers while using the pattern-recognition capabilities of large language models to surface additional codes for human consideration. We used OpenAI GPT-4 (June 2025) with low-temperature settings (temperature~=~0.2, top\_p~=~1.0); prompts and example outputs are documented in Appendix~\ref{app1}, Section~2 (\Cref{lst:ai-prompts,lst:ai-output}).
+
+\begin{figure*}[!t]
+  \centering
+\input{figures/ai-coding-flow}
+  \caption{LLM-assisted thematic analysis workflow combining human analysis and LLM-suggested candidate themes.}
+  \Description{A flowchart showing the iterative coding workflow with three main phases: initial human coding of interview transcripts, LLM-assisted code generation and refinement, and final verification and consolidation by human researchers. The diagram shows feedback loops between phases to ensure comprehensive thematic coverage.}
+  \label{fig:ai-coding-flow}
+\end{figure*}
+
+The coding process followed a multi-stage approach (as illustrated in Fig.~\ref{fig:ai-coding-flow}):
+
+\textbf{Stage 1: Transcript Segmentation.} Interview transcripts were divided into segments of ca. 200--300 words. Segment boundaries were aligned with natural conversational pauses and thematic shifts to preserve coherence. This approach provided sufficient detail for fine-grained analysis while retaining the broader context of participants' narratives.
+
+\textbf{Stage 2: Dual Human Descriptive Coding.} Two trained qualitative researchers independently annotated all transcript segments using descriptive coding techniques. Both analysts had experience in qualitative methodology and were familiar with self-determination theory and influencer marketing literature. They worked independently to identify key concepts, motivations, behaviours, and attitudes expressed within each segment, generating candidate thematic labels that remained close to participants' language.
+
+\textbf{Stage 3: LLM-Suggested Candidate Themes.} In parallel to human analysis, each transcript chunk was processed with a large language model (OpenAI GPT-4) using prompts designed to suggest additional candidate themes and potential SDT mappings that might capture patterns not immediately apparent to human analysts. In the first pass, the LLM suggested approximately 60 \emph{unique} labels. The research team then inspected this list, removed obvious duplicates, collapsed near-synonyms, and discarded labels that moralised participants' accounts, introduced speculative psychological diagnoses, or were insufficiently grounded in the underlying text. This process yielded 32 candidate labels for further consideration. The exemplary prompt as well as an excerpt of the model's JSON output structure are provided in Appendix~\ref{app1}, Section~2 (see \Cref{lst:ai-prompts,lst:ai-output}).
+
+\textbf{Stage 4: Theme Integration and Reconciliation.}
+The research team systematically compared human-generated labels with the filtered set of LLM-suggested candidates and incorporated those that added analytical depth or coverage. This process resulted in a combined set of 51 labels in total. Of these, 32 originated from LLM suggestions that survived human curation, while 19 were generated independently by the two human coders. Discrepancies between human analysts were resolved through discussion rounds and consensus, with LLM suggestions serving solely as supplementary inputs during reconciliation. This process yielded a comprehensive pool that blended human interpretive expertise with machine-assisted pattern recognition while keeping humans in full control of coding decisions.
+
+\textbf{Stage 5: Iterative Refinement and Validation.}
+Through iterative reduction, the pool of 51 labels was distilled into five \emph{overarching themes} and sixteen \emph{subthemes}. The integrated set underwent multiple rounds of refinement: (1) labels were analysed for patterns and redundancies, (2) similar labels were consolidated for conceptual clarity and distinctiveness, (3) the refined thematic framework was reapplied to transcript segments to test consistency and coverage, and (4) final validation was achieved through manual review of supporting quotations to confirm accuracy. Throughout this process, only human-generated and human-curated labels entered the final framework; LLM outputs functioned exclusively as inputs to early coding discussions. This procedure produced a stable and transparent thematic framework, grounded in both systematic procedure and qualitative standards.
+
+\paragraph{Bias and hallucination mitigation.}
+At each stage, we treated LLM outputs as tentative hypotheses rather than authoritative analyses. Candidate labels that could not be substantiated by multiple excerpts, that relied on speculative attributions of intent, or that introduced moralising language were removed. We also monitored for systematic differences in how the model described participants from different regions or roles, revising or discarding labels that appeared to reflect such biases. For instance, we rejected codes such as ``LinkedIn for Professional Use'' (too platform-specific to generalise), ``Critical Evaluation of Influencers'' (conflated self-reflection with external critique), and ``Industry Credibility and Expertise'' (attributed domain-level authority without textual grounding). Each rejection was logged with a brief rationale to maintain an auditable curation trail; the complete code curation pipeline, including rejection categories and counts, is documented in Appendix~\ref{app:code-curation}. Final themes and interpretations were based solely on human review of the transcripts and the curated codebook.
+%
+%\paragraph{\textcolor{red}{Model and safeguards.}}
+%We used the best available GPT-4 model (June 2025) with temperature~$=0.2$ and top\_p~$=1.0$ for supplementary code generation. Prior to any model input, all excerpts were fully anonymized to remove potentially identifying information. Processing occurred in a data-protective environment; no raw datasets or identifiers were transferred externally. Only short, de-identified text segments were used, and all outputs were verified by human coders.
+
+%\subsubsection{AI Assistance Prompts and Iterative Process}
+
+%To operationalize the LLM-assisted component, we used prompts to elicit candidate themes, short definitions, and SDT mappings (see \Cref{lst:ai-prompts}).
+
+%Figure~\ref{fig:ai-coding-flow} illustrates the iterative workflow integrating human analysis and LLM-suggested candidate themes.
+
+
+
+%For transparency, we report an example excerpt of the model's JSON output structure in the appendix (see \Cref{lst:ai-output}).
+
+\subsection{Inter-Annotator Reliability}
+
+We assessed inter-annotator reliability for the two human coders on a stratified random sample of 120 transcript segments drawn across all interviews. Annotation was \emph{multi-label}: each segment could receive zero, one, or multiple candidate themes from the working label set. Reliability was computed as label\,$\times$\,segment binary decisions (presence/absence) per annotator, and we report agreement using Krippendorff's alpha (nominal metric), which is appropriate for multi-label categorical annotation.
+
+Pairwise agreement metrics for the two human coders are reported in \Cref{tab:agreement}. Across the working set of 36 candidate themes and 120 segments, Krippendorff's $\alpha = 0.78$, indicating substantial reliability for the final codebook. The LLM was not treated as an annotator; its suggestions were used only upstream to expand the candidate label set before human coding.
+
+\begin{table}[H]
+\centering
+\caption{Pairwise inter-annotator agreement under multi-label annotation across 36 candidate themes for the two human coders. Agreement percentage and Krippendorff's alpha (nominal) are reported for the annotator pair.}
+\label{tab:agreement}
+\input{tables/agreement}
+\end{table}
+
+\subsection{Theme Construction and SDT Integration}
+
+Following the coding stages described above, the human research team conducted thematic analysis guided by self-determination theory (SDT) to organise labels into coherent themes addressing our research questions. The analysis proceeded through three phases: (1) \textbf{descriptive review} to identify surface-level patterns and explicit motivations, (2) \textbf{interpretive synthesis} to uncover deeper psychological needs and implicit drivers, and (3) \textbf{theoretical integration} to connect emergent themes with SDT's core constructs of motivation, autonomy, competence, and relatedness. Throughout these phases, we engaged in iterative memo writing and team discussions to challenge early interpretations and to clarify how themes mapped onto RQ1--RQ3 and the SDT needs.
+
+For an overview of the synthesis, see Appendix~\ref{app1} (Table~\ref{tab:thematic-tree}), which links overarching themes and subthemes to the research questions and provides concise definitions and representative quotations.
+

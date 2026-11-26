@@ -1,0 +1,24 @@
+\begin{tabular}{l ccc ccc ccc ccc ccc ccc c}
+\toprule
+& \multicolumn{3}{c}{\textbf{Tier 1}} & \multicolumn{3}{c}{\textbf{Tier 2}} & \multicolumn{3}{c}{\textbf{Tier 3}} & \multicolumn{3}{c}{\textbf{Tier 4}} & \multicolumn{3}{c}{\textbf{Tier 5}} & \multicolumn{3}{c}{\textbf{Mean T1--T5}} & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-13} \cmidrule(lr){14-16} \cmidrule(lr){17-19}
+Aug & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & T$\uparrow$ & A$\uparrow$ & $\Delta\downarrow$ & $T_{\text{never}}\uparrow$ \\
+\midrule
+No aug & 87.5 & 89.2 & $-1.7$ & 87.2 & 75.6 & 11.6 & 85.5 & 63.2 & 22.3 & 84.4 & 54.4 & 30.1 & 82.8 & 49.1 & 33.8 & 85.5 & 66.3 & 19.2 & 61.5 \\
+\midrule
+\multicolumn{20}{l}{\emph{Non-generative}} \\
+Std. & 91.3 & 92.0 & $-0.7$ & 91.0 & 79.2 & 11.7 & 89.2 & 64.2 & 25.0 & 88.3 & 54.0 & 34.3 & 88.6 & 48.0 & 40.6 & 89.7 & 67.5 & 22.2 & 62.6 \\
+Color jitter & 91.6 & 91.5 & 0.1 & 90.6 & 79.6 & 11.0 & 89.2 & 64.3 & 24.8 & 88.3 & 52.4 & 35.9 & 86.5 & 46.0 & 40.6 & 89.2 & 66.7 & 22.5 & 62.7 \\
+MixUp & 91.4 & 93.5 & $-2.2$ & 91.0 & 85.6 & 5.4 & 90.2 & 70.8 & 19.4 & 89.1 & 60.5 & 28.5 & 88.0 & 51.6 & 36.4 & 89.9 & 72.4 & 17.5 & 69.9 \\
+Mosaic & 57.8 & 51.5 & 6.3 & 71.7 & 70.2 & 1.5 & 76.9 & 73.3 & 3.6 & 83.1 & 73.0 & 10.1 & 84.2 & 72.1 & 12.1 & 74.7 & 68.0 & 6.7 & 70.6 \\
+YOLOX & 59.2 & 55.0 & 4.2 & 71.9 & 71.7 & 0.1 & 78.2 & 73.4 & 4.9 & 82.4 & 73.3 & 9.1 & 84.0 & 72.1 & 11.9 & 75.1 & 69.1 & 6.0 & 70.7 \\
+SCP & 92.3 & 94.0 & $-1.7$ & 92.4 & 92.5 & $-0.1$ & 91.5 & 89.0 & 2.5 & 91.6 & 83.4 & 8.1 & 89.4 & 76.7 & 12.7 & 91.4 & 87.1 & 4.3 & 86.5 \\
+\midrule
+\multicolumn{20}{l}{\emph{Generative}} \\
+InstAug & 91.4 & 93.6 & $-2.2$ & 91.3 & 79.1 & 12.2 & 89.1 & 64.2 & 24.9 & 88.6 & 53.1 & 35.5 & 87.2 & 48.4 & 38.7 & 89.5 & 67.7 & 21.8 & 63.3 \\
+XPaste & 93.5 & \underline{96.7} & \textbf{\boldmath $-3.1$} & \underline{93.8} & \underline{96.4} & \textbf{\boldmath $-2.6$} & \underline{93.9} & \underline{94.0} & \underline{$-0.1$} & \underline{94.1} & \underline{93.6} & \underline{0.5} & \textbf{93.4} & \underline{91.4} & \underline{1.9} & \underline{93.8} & \underline{94.4} & \underline{$-0.7$} & \underline{95.0} \\
+\midrule
+\rowcolor{oursrow} SCP + AAS \emph{(ours)} & \underline{94.2} & 96.3 & $-2.1$ & 92.9 & 94.7 & \underline{$-1.8$} & 92.2 & 91.6 & 0.6 & 92.3 & 88.8 & 3.5 & 90.8 & 84.8 & 6.0 & 92.5 & 91.2 & 1.2 & 89.5 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS \emph{(ours)}} & \textbf{94.9} & \textbf{97.3} & \underline{$-2.4$} & \textbf{95.4} & \textbf{97.2} & \underline{$-1.8$} & \textbf{94.7} & \textbf{95.5} & \textbf{\boldmath $-0.9$} & \textbf{94.9} & \textbf{94.6} & \textbf{0.3} & \underline{93.3} & \textbf{92.6} & \textbf{0.7} & \textbf{94.6} & \textbf{95.5} & \textbf{\boldmath $-0.8$} & \textbf{96.1} \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+
+
+\small
+\begin{tabular}{cccc|ccc}
+\toprule
+\boldmath$\mathcal{L}_{\text{clu}}$ & \boldmath$\mathcal{L}_{\text{cor}}$ & \boldmath$\mathcal{L}_{\text{ZINB}}$ & \boldmath$\mathcal{L}_{\text{rec}}$ & \textbf{ACC} & \textbf{NMI} & \textbf{ARI} \\
+\midrule
+$\checkmark$ & $\checkmark$ & $\checkmark$ & $\times$      & 84.57 & 78.93 & 76.08 \\
+$\checkmark$ & $\checkmark$ & $\times$      & $\checkmark$ & 84.18 & 78.36 & 75.62 \\
+$\checkmark$ & $\times$      & $\checkmark$ & $\checkmark$ & 83.47 & 77.58 & 74.36 \\
+$\times$      & $\checkmark$ & $\checkmark$ & $\checkmark$ & 81.24 & 74.79 & 70.68 \\
+\midrule
+$\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{96.02} & \textbf{89.15} & \textbf{93.10} \\
+\bottomrule
+\end{tabular}
+\caption{Ablation experiment results of major loss terms}
+\label{tab:main_ablation}
+\end{table}

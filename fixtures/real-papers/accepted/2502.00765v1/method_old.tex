@@ -1,0 +1,380 @@
+\section{Our Voting based Certified Defense}
+\label{sec:overview}
+
+1. First introduce the overall idea of our voting based defense 
+
+{\color{red} 2. Talk about edge-based and node-based strategies at a high level.  Next use two sections for certifying node classification and graph classification, especially the challenges, and our design is necessary.} 
+
+
+\section{Our Defense Strategy: {\name}}
+In this section we will introduce our defense strategy, a voting classifier based on subgraph generations, which is briefly illustrated in Figure~\ref{fig:overview}. We will first give a short overview of the voting classification framework in Section~\ref{Sec:VotingClass}, and then introduce the various subgraph generation approaches in detail in Section~\ref{Sec:Subgraph}. Afterwards, in Section~\ref{Sec:Certification} we will illustrate their similarity properties against different kind of attack actions, and show the certified bound and corresponding effect function with proof eventually.
+\begin{figure*}[t]
+%\vspace{-4mm}
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \includegraphics[width=\linewidth]{NodeFramework.jpg}
+    %\vspace{-4mm}
+    \caption{Overview of our proposed certifiably general-robust GNN framework (taking node classification for instance). (a) Given a graph, the voting classifier assembles prediction results on generated subgraphs as votes, and take the majority class as final prediction and gives a deterministic robust bound; (b) Given an arbitrary attack with size features, we evaluate it by a linear effect function with fixed weight; (c) If the evaluated effect is lower than the bound, the attacked prediction is guaranteed to be correct. 
+    %The three-step explanation process of our certifiably robust XGNN. 
+    %Given a testing graph $G$,  a GNN classifier $f$, and a GNN explainer $g$. 
+    }
+    \label{fig:overview}
+    %%\vspace{-4mm}
+\end{figure*}
+
+
+\subsection{Voting Framework Overview}
+Given a graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$, a classification task with classes $\mathcal{Y}$ and a target node $v\in\mathcal{V}$ if the task is node classification. Our voting framework consists of three steps below:  
+
+\vspace{+0.05in}
+\noindent {\bf Step I:} We generate a set of $T$ subgraphs $\mathcal{G}_T=\{G_{1},G_{2},\dots,G_{T}\}$ for the given graph $G$ under a subgraph generation method (details in Section~\ref{Sec:Subgraph}). $T$ is a hyperparameter controlling the number of subgraphs. 
+
+\vspace{+0.05in}
+\noindent {\bf Step II:} We apply a based GNN classifier $f$ 
+%or $f_{v}$ defined in eqn(\ref{eqn:GCNMessage}-\ref{eqn:classification}) and test 
+to make predictions for all the $T$ subgraphs. We then count the votes $\mathbf{V}\in \mathbb{N}^{|\mathcal{Y}|}$ for every class $y$ in $\mathcal{Y}$. 
+% For instance, for node classification, we have 
+%subgraphs on it. For the test results, we assemble them as "votes" $\mathbf{V}\in \mathbb{N}^{|\mathcal{Y}|}$ for every class in $\mathcal{Y}$:
+\begin{align}
+\small
+%\label{eqn:vote}
+& \textbf{Node classification: } \mathbf{V}_y = \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v=y), \forall y \in \mathcal{Y} \label{eqn:vote_NC} \\
+& \textbf{Graph classification: } \mathbf{V}_y = \sum_{i=1}^{T}\mathbb{I}(f(G_{i})=y), \forall y \in \mathcal{Y} \label{eqn:vote_GC} 
+\end{align}
+
+\vspace{+0.05in}
+\noindent {\bf Step III:} We define our \emph{voting node/graph classifier} $\bar{f}$ as returning the class with the most vote:  
+%as the final predicted label $\bar{f}/\bar{f}(G)_v$:
+\begin{align}
+& \textbf{Node classification: } \bar{f}(G)_v = \underset{y \in \mathcal{Y}}{{\arg\max}} \,  \mathbf{V}_y \label{eqn:vc_NC} \\
+& \textbf{Graph classification: } \bar{f}(G) = \underset{y \in \mathcal{Y}}{{\arg\max}} \,  \mathbf{V}_y \label{eqn:vc_GC} 
+%\vspace{-2mm}
+\end{align}
+
+
+\paragraph{Sufficient Condition for Certified Robustness} We denote $y_a$ as the class with the most vote and  $y_b$ with the second-most vote.\endnote{We pick the class with a smaller index if there exist ties.}  
+Let $\mathcal{G}_T'$ be the set of $T$ subgraphs generated for the perturbed graph $G'$ under arbitrary perturbation. Then we have the following sufficient condition for certified robustness against arbitrary attacks on GNNs.  
+
+% We denote the class with the most vote as $y_a \in \mathcal{Y}$ and the class with the second-most vote as $y_b \in \mathcal{Y} \setminus y_a$ (or with the most votes but the second smallest indexes):
+
+
+
+\begin{theorem}[Sufficient Condition for Certified Robustness]
+%[Bounded Number of Different Subgraphs]
+\label{thm:Tolerance}
+%Then, 
+The voting classifier $\bar{f}$ guarantees a same prediction on both $G'$ and $G$, if the number of subgraphs' predictions altered is bounded by:
+\begin{equation}
+    \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) \leq \frac{\lfloor \mathbf{V}_{y_a}-\mathbf{V}_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor}{2}
+\end{equation}
+%\vspace{-2mm} 
+\end{theorem}
+
+
+
+% \begin{theorem}%[Subgraphs Similarity]
+% %[Bounded Number of Different Subgraphs]
+% \label{thm:Tolerance}
+% Assume $\mathcal{G}_T'$ are the subgraphs generated on the perturbed graph $G'$ under arbitrary, the vote prediction $\bar{f}/\bar{f}_{v}(G')$ is the same with $\bar{f}/\bar{f}(G)_v$ if there are no more than a certifiable amount of subgraph predictions change:
+% \begin{equation}
+%     \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) \leq \frac{\lfloor \mathbf{V}_{y_a}-\mathbf{V}_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor}{2}
+% \end{equation}
+% %\vspace{-2mm} 
+% \end{theorem}
+
+
+
+The above theorem motivates us to design the subgraph generation method such that: 1) the  different subgraph predictions on $\mathcal{G}_T$ and $\mathcal{G}'_T$ is as small as possible; and 2) the difference between the most vote and second-most vote is as large as possible.   
+
+
+Next, we will design our two subgraph generation methods in detail. One is edge-based and the other one is node-based.  
+
+
+{\color{red} BW: Section 4.2 for edge-based subgraphs and Section 4.3 for node-based subgraphs. Edge-based is similar to existing works like GNNCert? Node-based produces better results? }
+
+
+
+
+\begin{figure*}[t]
+%\vspace{-4mm}
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \subfloat[(a)Edge-based Subgraphs]{
+    \includegraphics[width=0.44\linewidth]{edge_division_node.jpg}}
+    \hspace{+10mm}
+    \subfloat[(b)Node-based Subgraphs]{
+    \includegraphics[width=0.44\linewidth]{node_division_node.jpg}}
+    \caption{Our proposed two approaches to divide a subgraph into a set of subgraphs. 
+    %The three-step explanation process of our certifiably robust XGNN. 
+    %Given a testing graph $G$,  a GNN classifier $f$, and a GNN explainer $g$. 
+    }
+    %\vspace{-4mm}
+    \label{fig:subgraphs}
+    %%\vspace{-4mm}
+\end{figure*}
+\label{Sec:Subgraph}
+
+
+
+\subsection{Edge-based Graph Division}
+
+\paragraph{Generating Edge-based Subgraphs via Hash Mapping:} We use the hash function (e.g., MD5) to generate the subgraphs indexes. A hash function takes input as a bit string and outputs an integer (e.g., within a range $[0,2^{128}-1]$). Here, we propose to use the string of edge index as the input to the hash function. For instance, for an edge $e=(u,v)$, we denote its string as $\textrm{str}(u)+\textrm{str}(v)$, where ``+" means the string concatenation, while the function "str" turns the node index into a string and adds “0” prefix to align it into a fixed length $L$:
+\begin{equation}
+    \textrm{str}(u) = (L-\textrm{len}(‘‘u"))\times‘‘0"+‘‘u"
+\end{equation}
+Then we can map each edge using the hash function to an index.
+Specifically, we denote the hash function as $h$ and assume $T$ subgraphs %$\mathcal{T}=\{1,2,\cdots, T\}$ 
+in total. Then for every edge $e=(u,v)$, we compute its subgraph index $i_e$ as\footnote{In the undirected case, we put the node with a smaller index (say  $u$) first and let 
+$h[\mathrm{str}(v) + \mathrm{str}(u)]=h[\mathrm{str}(u) + \mathrm{str}(v)]$.}. 
+\begin{align}
+\label{eqn:edgehash}
+i_e = h[\mathrm{str}(u) + \mathrm{str}(v)] \, \, \mathrm{mod} \, \, T+1. 
+\end{align}
+For an input graph $G=(\mathcal{V},\mathcal{E})$, we use $\mathcal{E}_i$ to denote the set of edges whose subgraph index is $i$, i.e., $\mathcal{E}_i = \{\forall e \in \mathcal{E}: i_e= i \}.$ 
+Then, we can construct $T$ subgraphs for $G$ as $\mathcal{G}_T = \{ {G}_i = (\mathcal{V},{\bf X}, \mathcal{E}_i): i=1,2,\cdots, T\}$. 
+
+
+\paragraph{Subgraphs for Node Classification:}
+
+
+\paragraph{Subgraphs for Graph Classification}
+To expand our defense strategy to graph classification task, we make some adaptions to the edge-based and node-based subgraphs: (1) For every edge-based subgraph, we delete the isolated nodes with no edge connected; (2) For every node-based subgraph with the index $I$, we only keep the nodes mapped to index $I$ and the edges between them.
+
+
+\begin{theorem}[Bounded Number of Edge-based Subgraphs with Altered Predictions under Arbitrary Perturbation]
+\label{thm:edgediff} 
+Given a GNN $f$ for node classification, a graph $G$ with any target node $v$, and $T$ edge-based subgraphs $\mathcal{G}_T$ for $G$. 
+If, i) arbitrary edges $\mathcal{E}_+$ are added to and arbitrary edges $\mathcal{E}_-$ are deleted from $G$, ii) arbitrary nodes $\mathcal{V}_+$ are added to with injected edges $\mathcal{E}_{\mathcal{V}_+}$ and arbitrary nodes $\mathcal{V}_-$ are removed with the associated edges $\mathcal{E}_{\mathcal{V}_-}$, and iii) arbitrary nodes $\mathcal{V}_{r}$ whose features ${\bf X}_{\mathcal{V}_{r}}$ are arbitrarily perturbed and have $\mathcal{E}_{\mathcal{V}_r}$ connected edges, then at most $|\mathcal{E}_+|+|\mathcal{E}_-| + |\mathcal{E}_{\mathcal{V}_+}| + |\mathcal{E}_{\mathcal{V}_-}| + |\mathcal{E}_{\mathcal{V}_r}|$ subgraphs generated from the perturbed graph $G'$ (caused by $\mathcal{E}_+, \mathcal{E}_-, \mathcal{E}_{\mathcal{V}_+}, \mathcal{E}_{\mathcal{V}_-}$ and $\mathcal{V}_r$) would cause $f$'s prediction on $v$ be different from the respective subgraphs $\mathcal{G}_T$ for $G$.  
+% Further, 
+%  \item If arbitrary nodes $\mathcal{V}_+$ are injected with injected edges $\mathcal{E}_{\mathcal{V}_+}$, arbitrary nodes $\mathcal{V}_+$ with connected edges $\mathcal{E}_{\mathcal{V}_-}$ are removed, and arbitrary nodes $\mathcal{V}_{r}$ occupying $\mathcal{E}_{\mathcal{V}_r}$ connected edges are polluted on features, at most $|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|+|\mathcal{E}_{\mathcal{V}_r}|$ subgraphs would give different node classifications from original ones.
+%%\vspace{-2mm} 
+\end{theorem}
+\begin{proof}
+See Appendix xx.  
+\end{proof}
+
+
+
+
+
+
+\subsection{Node-based Graph Division}
+
+%\subsection{Certified Defense On Node classification}
+
+
+
+
+
+
+\paragraph{Generating Node-based Subgraphs via Hash Mapping} In this generation method, we applied a different node-based subgraphs strategy for $\mathcal{E}$. To be specific, for every directed edge $e=(u,v)\in \mathcal{E}$, we compute its subgraph index $\hat{i}_{e}$ only by hashing its {\bf source node} u:
+\begin{align}
+\label{eqn:edgehash}
+\hat{i}_e = h[\mathrm{str}(u)] \, \, \mathrm{mod} \, \, T+1. 
+\end{align}
+
+We use $\hat{\mathcal{E}}_i$ to denote the set of edges whose subgraph index is $i$, i.e., $\hat{\mathcal{E}}_i = \{\forall e \in \hat{\mathcal{E}}: \hat{i}_e= i \}.$ 
+Then, we can construct $T$ directed subgraphs for $G$ as $\mathcal{G}_T = \{ \hat{G}_i = (\mathcal{V},{\bf X}, \hat{\mathcal{E}}_i): i=1,2,\cdots, T\}$.
+
+{\color{red} BW: Is "directed edge" the "outgoing edge"?}
+
+%We observe that our node-based subgraphs have the 
+\begin{theorem}%[Subgraphs Similarity]
+%[Bounded Number of Different Subgraphs]
+\label{thm:embUnchange}
+For a message passing GNN, given a directed graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$, assume a node $u\in \mathcal{V}$ with node feature ${\bf X}_{u}$ only having directed edges targeting $u$ in $\mathcal{E}$. If:
+\begin{enumerate}
+\item $u$ is deleted from $\mathcal{E}$ with its connected edges; 
+%\vspace{-2mm} 
+\item $u$ gets polluted on features $X_{u}$; 
+%\vspace{-2mm} 
+\item a new node $u'$ is injected into $\mathcal{V}$ with arbitrary directed edges targeting $u'$ injected into $\mathcal{E}$;
+\end{enumerate}
+the node embedding on original nodes $\{h^{\circ}_{v},\forall v\in \mathcal{V}\setminus\{u\}\}$ will always stay the same  in any above case.
+%\vspace{-2mm} 
+\end{theorem}
+\emph{Proof.} According to the definition of neighborhood we made in eqn(\ref{eqn:neighborhood}), the neighborhoods of other nodes in $\mathcal{V}\setminus\{u\}$ remain the same after above cases:
+$$\mathcal{N}'(v) = \mathcal{N}(v), \forall v \in \mathcal{V}\setminus\{u\}$$
+Then under the message passing functions described in eqn(\ref{eqn:GCNMessage}-\ref{eqn:GATMessage}) with trained weights, since $u$ (or $u'$) never appears in any other nodes' neighborhood, the hidden features in every layer are calculated the same:
+$$\mathbf{h}_{v}^{l}{}' = \mathbf{h}_{v}^{l}, \forall v \in \mathcal{V}\setminus\{u\}, l \in [1,L]$$
+and the final node embeddings stay the same as well. 
+
+{\color{red} Need to show the theoretical bound for arbitary attack first and then show some instances that treat existing defenses as our special cases.}
+
+\paragraph{Certified Robust Bound Against Various Attack}
+Applying the above divided subgraphs into the voting framework, we could achieve robust defense with certified bound against edge manipulation, node manipulation and feature manipulation attacks:
+
+
+
+% \emph{Proof.} See 
+
+% \begin{theorem}[Bounded Number of Edge-based Subgraphs with Altered Predictions under Arbitrary Perturbation]
+% \label{thm:edgediff} 
+% With 
+%  %For $T$ generated edge-based subgraphs $\mathcal{G}_T$:
+%  \item If arbitrary edges $\mathcal{E}_+$ are added and arbitrary edges $\mathcal{E}_-$ are deleted, at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones; 
+%  \item If arbitrary nodes $\mathcal{V}_+$ are injected with injected edges $\mathcal{E}_{\mathcal{V}_+}$, arbitrary nodes $\mathcal{V}_+$ with connected edges $\mathcal{E}_{\mathcal{V}_-}$ are removed, and arbitrary nodes $\mathcal{V}_{r}$ occupying $\mathcal{E}_{\mathcal{V}_r}$ connected edges are polluted on features, at most $|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|+|\mathcal{E}_{\mathcal{V}_r}|$ subgraphs would give different node classifications from original ones.
+% %\vspace{-2mm} 
+% \end{theorem}
+% \emph{Proof.} See 
+
+
+\begin{theorem}[Bounded Number of Node-based Subgraphs with Altered Predictions under Arbitrary Perturbation]
+\label{thm:nodediff}
+Let $f, v, G, \mathcal{G}_T, \mathcal{E}_+, \mathcal{E}_-, {\mathcal{V}_+}, {\mathcal{V}_-}, \mathcal{V}_{r}$ be defined in Theorem~\ref{thm:edgediff}.
+Then, at most $|\mathcal{E}_+|+|\mathcal{E}_-| + |{\mathcal{V}_+}| + |{\mathcal{V}_-}| + |{\mathcal{V}_r}|$ subgraphs generated from the perturbed graph $G'$ would cause $f$'s prediction on $v$ be different from the subgraphs $\mathcal{G}_T$ for $G$.  
+
+% For $T$ generated node-based subgraphs $\mathcal{G}'_T$:
+%  \item If arbitrary edges $\mathcal{E}_+$ are added and arbitrary edges $\mathcal{E}_-$ are deleted, at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones; 
+%  \item If arbitrary nodes $\mathcal{V}_+$ are injected with arbitrary injected edges, arbitrary nodes $\mathcal{V}_+$ are removed with connected edges, and arbitrary nodes $\mathcal{V}_{r}$ are polluted on features, at most $|\mathcal{V}_+|+|\mathcal{V}_-|+|\mathcal{V}_{r}|$ subgraphs would give different node classifications from original ones.
+%\vspace{-2mm} 
+\end{theorem}
+\begin{proof}
+See Appendix xx.  
+\end{proof}
+
+% \emph{Proof.} See 
+
+
+
+% \begin{theorem}[Bounded Number of Node-based Subgraphs with Altered Predictions]
+% \label{thm:nodediff}
+%  For $T$ generated node-based subgraphs $\mathcal{G}'_T$:
+%  \item If arbitrary edges $\mathcal{E}_+$ are added and arbitrary edges $\mathcal{E}_-$ are deleted, at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones; 
+%  \item If arbitrary nodes $\mathcal{V}_+$ are injected with arbitrary injected edges, arbitrary nodes $\mathcal{V}_+$ are removed with connected edges, and arbitrary nodes $\mathcal{V}_{r}$ are polluted on features, at most $|\mathcal{V}_+|+|\mathcal{V}_-|+|\mathcal{V}_{r}|$ subgraphs would give different node classifications from original ones.
+% %\vspace{-2mm} 
+% \end{theorem}
+% \emph{Proof.} See 
+
+Utilizing the above theories, we define a robust bound as the tolerance of changed subgraph predictions in Theorem.\ref{thm:Tolerance}:
+\begin{equation}
+M = \frac{\lfloor \mathbf{V}_{y_a}-\mathbf{V}_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor}{2}
+\end{equation}
+
+\paragraph{Remark:} Under above theorems, existing certified defenses can be treated as special cases. 
+Under this bound, our voting classifier is certified robust against various types of attacks:
+\begin{enumerate}
+    \item For an edge manipulation attack with $\{\mathcal{E}_+,\mathcal{E}_-\}$, the voting classifier is certified to be robust if:
+    \begin{equation}
+    |\mathcal{E}_+|+|\mathcal{E}_-|\leq M
+    \end{equation}
+    \item For a node manipulation attack with $\{\mathcal{V}_+, \mathcal{V}_+,$ $\mathcal{E}_{\mathcal{V}_+},\mathcal{E}_{\mathcal{V}_-}\}$, the voting classifier with edge-based subgraphs is certified to be robust if:
+    \begin{equation}
+        |\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|\leq M
+    \end{equation}
+    and with node-based subgraphs certified to be robust if:
+    \begin{equation}
+        |\mathcal{V}_+|+|\mathcal{V}_-|\leq M
+    \end{equation}
+    \item For a feature perturbation attack with $\{\mathcal{V}_{r},\mathcal{E}_{\mathcal{V}_r}\}$, the voting classifier with edge-based subgraphs is certified to be robust if:
+    \begin{equation}
+        |\mathcal{E}_{\mathcal{V}_r}|\leq M
+    \end{equation}
+    and with node-based subgraphs certified to be robust if:
+    \begin{equation}
+        |\mathcal{V}_{r}| \leq M
+    \end{equation}
+\end{enumerate}
+
+
+
+\paragraph{Certified bound against arbitrary attack}
+We note that for all these attacks, their influences on the our voting classifier are all evaluated as the amount of subgraphs whose predictions are possibly changed, and this amount is directly addable if various attacks are combined. Therefore, our voting classifier is directly adaptable to an arbitrary adversarial attack defined in Section \ref{}. Summarizing the robust certification under above attacks, our classifier satisfies the fully robustness defined in Eqn(\ref{eqn:fullyrobust}) with the effect function as a linear function with weight $w_{e}\in\mathbb{R}^{8}$:
+\begin{equation}
+    e(\mathbf{S})=\mathbf{w}_{e}\cdot \mathbf{S}=[1,1,0,0,1,1,0,1] \cdot \mathbf{S}
+\end{equation}
+for edge-based classifier, and:
+\begin{equation}
+    e(\mathbf{S})=\mathbf{w}_{e}\cdot \mathbf{S}=[1,1,1,1,0,0,1,0] \cdot \mathbf{S}
+\end{equation}
+
+\subsection{Certified Defense On Graph classification}
+
+
+
+\subsection{Bounded Certification Against  Attacks}
+\label{Sec:Certification}
+\paragraph{Subgraph Prediction Similarity} Our generated subgraphs hold well similarities on prediction results against perturbation actions. For an arbitrary graph $G=\{\mathcal{V}, \mathcal{E}, {\bf X}\}$, we assume a deterministic message passing node classifier $f_{v}$ on a node $v$ and a deterministic message passing graph classifier $f$ are given.
+\begin{theorem}%[Subgraphs Similarity]
+%[Bounded Number of Different Subgraphs]
+\label{thm:edgediff}
+ For $T$ generated edge-based subgraphs $\mathcal{G}_T$ and purified ones $\mathcal{G}_T^{*}$:
+ \item If arbitrary edges $\mathcal{E}_+$ are added and arbitrary edges $\mathcal{E}_-$ are deleted, at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones, and at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ purified subgraphs would give different graph classifications from original ones; 
+ \item If arbitrary nodes $\mathcal{V}_+$ are injected with injected edges $\mathcal{E}_{\mathcal{V}_+}$, arbitrary nodes $\mathcal{V}_+$ with connected edges $\mathcal{E}_{\mathcal{V}_-}$ are removed, and arbitrary nodes $\mathcal{V}_{r}$ occupying $\mathcal{E}_{\mathcal{V}_r}$ connected edges are polluted on features, at most $|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|+|\mathcal{E}_{\mathcal{V}_r}|$ subgraphs would give different node classifications from original ones, and at most $|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|+|\mathcal{E}_{\mathcal{V}_r}|$ purified subgraphs would give different graph classifications from original ones.
+%\vspace{-2mm} 
+\end{theorem}
+\emph{Proof.} See 
+\begin{theorem}%[Subgraphs Similarity]
+%[Bounded Number of Different Subgraphs]
+\label{thm:nodediff}
+ For $T$ generated node-based subgraphs $\mathcal{G}'_T$ and purified ones $\mathcal{G}_T^{'*}$:
+ \item If arbitrary directed edges $\mathcal{E}_+$ are added and arbitrary directed edges $\mathcal{E}_-$ are deleted, at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones, and at most $|\mathcal{E}_+|+|\mathcal{E}_-|$ purified subgraphs would give different graph classifications from original ones; 
+  \item If arbitrary undirected edges $\mathcal{E}_+$ are added and arbitrary undirected edges $\mathcal{E}_-$ are deleted, at most $2|\mathcal{E}_+|+2|\mathcal{E}_-|$ subgraphs would give different node classifications from original ones, and at most $2|\mathcal{E}_+|+2|\mathcal{E}_-|$ purified subgraphs would give different graph classifications from original ones; 
+ \item If arbitrary nodes $\mathcal{V}_+$ are injected with arbitrary injected edges, arbitrary nodes $\mathcal{V}_+$ are removed with connected edges, and arbitrary nodes $\mathcal{V}_{r}$ are polluted on features, at most $|\mathcal{V}_+|+|\mathcal{V}_+|+|\mathcal{V}_{r}|$ subgraphs would give different node classifications from original ones, and at most $|\mathcal{V}_+|+|\mathcal{V}_+|+|\mathcal{V}_{r}|$ purified subgraphs would give different graph classifications from original ones.
+%\vspace{-2mm} 
+\end{theorem}
+\emph{Proof.} See 
+\paragraph{Certified Bound Against Node Injection}
+\paragraph{Certified Bound Against Node Injection}
+
+\paragraph{Effect Function and Certified Bound} Utilizing the prediction similarity properties above, we define the certified bound $M$ as the amount tolerance of the subgraphs with classification changed, similarly to ICLR24. To be specific, assume $y_{a}$ is the class with the most votes $\mathbf{V}_{y_a}$ under the classification task $f$, and $y_{b}$ is the class with the second most votes $\mathbf{I}_{y_b}$, then the certified bound $M$ is:
+\begin{align}
+\label{eqn:bound}
+    M = \frac{\mathbf{V}_{y_{a}}-\mathbf{V}_{y_b}-\mathbb{I}(y_a>y_b)}{2}
+\end{align}
+According to Theorem \ref{thm:edgediff},\ref{thm:nodediff}, we define our cost constant function $e$ as a linear function with a constant weight $\mathbf{w}_{e}\in\mathbb{R}^{8}$:
+\begin{align}
+\label{eqn:effect}
+    e(\mathbf{S}) = \mathbf{S}\cdot \mathbf{w}_{e}
+\end{align}
+
+\begin{theorem}
+\label{Bounded}
+Given a graph $G=\{\mathcal{V},\mathcal{E},{\bf X}\}$ and a target node $v\in\mathcal{V}$, for our voting node classifier $\overline{f}_{v}$ based on the edge-based and node-based subgraphs $\mathcal{G}_T$ and $\mathcal{G}'_T$, and for our voting graph classifier $\overline{f}$ based on purified edge-based and node-based subgraphs $\mathcal{G}_T^*$ and $\mathcal{G}_T^{'*}$:
+
+The bound defined in eqn(\ref{eqn:bound}) and the linear function defined in eqn(\ref{eqn:effect}) with the effect weights $w_{e}$ in Table~\ref{tab:effect} satisfies the general-robust property we defined in eqn(\ref{eqn:fullyrobust}).
+%\vspace{-2mm} 
+\end{theorem}
+\emph{Proof.} See 
+\begin{table}[!t]
+%\begin{wraptable}{r}{0.6\textwidth}
+    %\vspace{-2mm}
+    %\footnotesize
+        %\centering 
+    \scriptsize
+    %\tiny
+    \renewcommand\arraystretch{1.3}
+    %\renewcommand{\arraystretch}{0.7}
+    \begin{tabular}{c|c|c|c}
+     \toprule
+       \multirow{2}{*}{\makecell{\bf Division \\ \bf Method}} 
+       &\multirow{2}{*}{\makecell{\bf Edge \\ \bf Perturbation}}
+       &\multirow{2}{*}{\makecell{\bf Node \\ \bf Manipulation}}
+       &\multirow{2}{*}{\makecell{\bf Effect \\ \bf Weights $\mathbf{w}_{e}$}} \\
+        {}&{}&{}&{}\\
+         \cline{1-4} 
+         Edge-based&{$|\mathcal{E}_+|+|\mathcal{E}_-|$}&$|\mathcal{E}_{\mathcal{V}_+}|+|\mathcal{E}_{\mathcal{V}_-}|+|\mathcal{E}_{\mathcal{V}_r}|$&{\tiny$[1,1,0,0,1,1,0,1]$}\\
+         
+         \cline{1-4} 
+         Node-based (Dir.)&$|\mathcal{E}_+|+|\mathcal{E}_-|$&$|\mathcal{V}_+|+|\mathcal{V}_+|+|\mathcal{V}_{r}|$&{\tiny$[1,1,1,1,0,0,1,0]$}\\
+        \cline{1-4} 
+         Node-based (Und.)&$2|\mathcal{E}_+|+2|\mathcal{E}_-|$&$|\mathcal{V}_+|+|\mathcal{V}_+|+|\mathcal{V}_{r}|$&{\tiny$[2,2,1,1,0,0,1,0]$}\\
+         %\cline{1-16}
+         
+         %\cline{1-6}
+    %MUTAG&0.703&0.793&0.698&0.703&0.703\\
+       \bottomrule
+    \end{tabular}
+    
+    \caption{The maximum subgraphs change on different attack actions and summarized effect weights, under different division methods. Note the edge manipulation effect under the node-based division depends on whether the dataset is directed.}
+    \label{tab:effect}
+%\end{wraptable}
+\end{table}
+\subsection{Certified Defense Against Arbitary Attack}
+We observe that 
+\subsection{Extensional Tricks}
+\paragraph{Data Augmentation}
+\paragraph{Noise Edge Injection}
+

@@ -1,0 +1,370 @@
+\section{Experimental Setup and Design}
+\label{app:exp-setup}
+
+This section first gathers all reproducibility-relevant setup information (evaluation datasets, the eleven reference models, checkpoints, training and evaluation recipes with the AAS sampler of Alg.~\ref{alg:aas}, and compute; \S\ref{app:experimental-details}) and then revisits a design choice that underpins the entire diagnostic: the quantile cut $\alpha$ that defines typical and atypical partner sets (\S\ref{app:splits-impl}). The latter subsection also reports a small $\alpha$-sweep on Co-DINO R-50 and closes with a discussion of why natural-image evaluation alone is structurally insufficient, motivating the synthetic STRANGE-Bench evaluation in~\S\ref{app:strange-pipeline}.%
+
+\subsection{Experimental Details and Study}\label{app:experimental-details}
+
+This subsection collects all information needed to reproduce our diagnostic and ablation results: the evaluation datasets (\S\ref{app:exp-datasets}), the eleven reference models we benchmark (\S\ref{app:exp-models}), the pretrained / fine-tuned checkpoints we load (\S\ref{app:exp-ckpts}), one canonical training and evaluation recipe per model family (\S\ref{app:exp-recipes}), and the compute spent (\S\ref{app:exp-compute}).
+
+\subsubsection{Evaluation Datasets}\label{app:exp-datasets}
+
+The eval suite combines one full-COCO baseline~\cite{mscoco14}, four COCO/Objects365~\cite{shao2019objects365} paired splits, and STRANGE-Bench (Tab.~\ref{tab:app-eval-datasets}). The four paired splits are constructed as in \S\ref{app:splits-impl}: per-anchor ranking by COCO \texttt{train2017} NPMI, applied to val images, quintile cut for the headline ($\alpha = 0.2$) and decile for an additional ablation ($\alpha = 0.1$); the typical side is down-sampled per-anchor to approximately match the atypical-side image count. O365 splits apply the same construction, with the same COCO \texttt{train2017} NPMI matrix, to Objects365~v2 val images whose 365 classes are mapped onto the 80 COCO classes ($69$ direct name matches, $11$ approximate). The cross-domain tables (Tabs.~\ref{tab:codino_cd}, \ref{tab:gdino_o365} and~\ref{tab:dinov3_ft_cd}) add a fifth paired split, a third one on O365: the quintile construction on the same val images with the NPMI matrix recomputed on O365~train ($1{,}699{,}452$ images) and the partner vocabulary restricted to the COCO/O365 overlap, i.e.\ the same $80$ mapped classes ($4{,}349 / 3{,}834$ typical-matched / atypical images, $76$ anchors). Its partner sets overlap those of the COCO-NPMI split with a mean per-anchor Jaccard index of $0.64$ (typical) and $0.44$ (atypical). Detection runs against full annotations on every split. STRANGE-Bench is reported in the balanced variant (typical and atypical sub-tiers of a tier cut to the same size; $5{,}523$ images across 17 sub-tiers, 11 of them in the main tables); per-tier composition, generation pipeline, and audit are in \S\ref{app:strange-pipeline}.
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Evaluation suite.} Paired splits contain a typicality
+contrast (matched typical / atypical sub-splits). Per-tier
+STRANGE-Bench composition is reported in \S\ref{app:strange:tiers}.}
+\label{tab:app-eval-datasets}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Dataset & Split & \#imgs & Pairing \\
+\midrule
+COCO val2017~\cite{mscoco14} & --                                  & $5{,}000$ & none (baseline) \\
+COCO paired (quintile)  & typ.-matched / atyp.     & $465 / 389$  & paired \\
+COCO paired (decile)    & typ.-matched / atyp.     & $300 / 259$  & paired \\
+O365 paired (quintile)  & typ.-matched / atyp.     & $4{,}298 / 4{,}258$ & paired \\
+O365 paired (decile)    & typ.-matched / atyp.     & $2{,}495 / 2{,}428$ & paired \\
+O365 paired (quintile, O365 NPMI) & typ.-matched / atyp. & $4{,}349 / 3{,}834$ & paired \\
+\midrule
+STRANGE-Bench & 17 sub-tiers           & $5{,}523$    & tiered (\S\ref{app:strange-pipeline}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Models}\label{app:exp-models}
+
+We benchmark eleven reference models spanning five task families (specialist detection, open-vocab detection, probed classification, VL zero-shot, instruction-tuned LMM); see Tab.~\ref{tab:app-models}. The five families correspond to the five rows of the diagnostic survey in Sec.~\ref{sec:results_diagnostic}.
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Reference models.} Reported metric reflects what each model natively emits (mAP for detectors and ranking-based classifiers, F1 for binary-membership outputs). LP = linear probe; FT = fine-tuned; ZS~=~zero-shot.}%
+\label{tab:app-models}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Model & Backbone & Schedule / setting & Task family & Reported metric \\
+\midrule
+\codino{} R-50~\cite{zhang2022dino}            & ResNet-50      & \begin{tabular}[t]{@{}l@{}}12 epochs at the base LR and\\one fine-tuning epoch at $0.1\times$ LR\end{tabular}        & specialist det.   & mAP \\
+\codino{} Swin-L~\cite{zhang2022dino}          & Swin-L         & 12-epoch ($1\times$)        & specialist det.   & mAP \\
+\codino{} Swin-L~\cite{zhang2022dino}          & Swin-L         & 36-epoch ($3\times$)        & specialist det.   & mAP \\
+\codino{} Swin-L~\cite{zhang2022dino}          & Swin-L         & Objects365 $\rightarrow$ COCO & specialist det.   & mAP \\
+\gdino{} Swin-B~\cite{liu2024grounding}           & Swin-B         & released ZS                  & open-vocab det.   & mAP \\
+\dinov{} ViT-B/16 (LP)~\cite{simeoni2025dinov3}    & ViT-B/16       & linear probe                 & probed cls.       & F1\textsubscript{micro} \\
+\dinov{} ViT-B/16 (FT)~\cite{simeoni2025dinov3}    & ViT-B/16       & fine-tuned                   & probed cls.       & F1\textsubscript{micro} \\
+CLIP ViT-B/16~\cite{radford2021learning}             & ViT-B/16       & released ZS                  & VL ZS cls.        & mAP \\
+\openclip{} ViT-B/16~\cite{cherti2023reproducible}      & ViT-B/16       & LAION-2B~\cite{schuhmann2022laionb}, ZS                 & VL ZS cls.        & mAP \\
+\llava{} 0.5b~\cite{li2024llava}             & Qwen2-0.5B~\cite{qwen2024qwen25}     & instruction-tuned            & LMM (gen.)        & F1\textsubscript{macro} \\
+\llava{} 7b~\cite{li2024llava}               & Qwen2-7B~\cite{qwen2024qwen25}       & instruction-tuned            & LMM (gen.)        & F1\textsubscript{macro} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Checkpoints}\label{app:exp-ckpts}
+
+Detection checkpoints come from the public Co-DETR~\cite{zong2023detrs} 
+and Grounding DINO~\cite{liu2024grounding} releases, loaded via MMDetection~\cite{chen2019mmdetection}; classification probes (\dinov{}~\cite{simeoni2025dinov3}, both LP and FT variants) and the fine-tuned Co-DINO R-50 and Grounding DINO models are trained in-house from the corresponding \href{https://huggingface.co/}{HuggingFace (HF)} / public backbones; CLIP~\cite{radford2021learning} and \openclip{}~\cite{cherti2023reproducible} are loaded via \href{https://github.com/mlfoundations/open_clip}{\texttt{open\_clip}}; \llava{}~\cite{li2024llava} is loaded via HF. Table~\ref{tab:app-ckpts} lists the exact files. 
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Checkpoints used in the diagnostic and ablation studies.}}
+\label{tab:app-ckpts}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.44\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Model & Source \\
+\midrule
+\codino{} R-50                                          & self-fine-tuned \\
+\codino{} Swin-L $1\times$~\cite{zong2023detrs}         & MMDetection~\cite{chen2019mmdetection} \\
+\codino{} Swin-L $3\times$~\cite{zong2023detrs}         & MMDetection~\cite{chen2019mmdetection} \\
+\codino{} Swin-L (Objects365 $\rightarrow$ COCO)~\cite{zong2023detrs}   & MMDetection~\cite{chen2019mmdetection} \\
+\gdino{} Swin-B~\cite{liu2024grounding}                 & MMDetection~\cite{chen2019mmdetection} (+ self-fine-tuned) \\
+\dinov{} ViT-B/16 (LP)~\cite{simeoni2025dinov3}         & \texttt{timm} (\nolinkurl{vit_base_patch16_dinov3.lvd1689m}) \\
+\dinov{} ViT-B/16 (FT)~\cite{simeoni2025dinov3}         & \texttt{timm} (\nolinkurl{vit_base_patch16_dinov3.lvd1689m}) \\ & + self-fine-tuned \\
+CLIP ViT-B/16~\cite{radford2021learning}                & \texttt{open\_clip} \\
+\openclip{} ViT-B/16~\cite{cherti2023reproducible}      & \texttt{open\_clip} (LAION-2B) \\
+\llava{} 0.5b~\cite{li2024llava}                        & HF Hub \\
+\llava{} 7b~\cite{li2024llava}                          & HF Hub \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Training and Evaluation Recipes}\label{app:exp-recipes}
+
+We give one canonical recipe per model family. 
+
+\noindent\textbf{AAS sampler.}
+The AAS sampler of the AAS rows is shared
+across all model families and is summarized in
+Alg.~\ref{alg:aas}.
+It takes the class of the largest ground-truth object of each training image as anchor and then samples paste classes from
+an anchor-conditioned, atypicality-tilted distribution
+$P(j \mid a) \propto \pi(j)\exp(\beta A(a, j))$ with
+$A(a, j) = (1 - \text{NPMI}(a, j))/2$, $A = 1$ for pairs that never co-occur, and uniform $\pi$. Pasted instances are scaled per-class (DINOv3: uniformly at $0.1$ to $0.4$ of the image short side) and composited with occlusion-aware mask updates; the resulting augmented image and updated ground-truth annotations are passed to the recipe-specific training loop below. The hyperparameters $\beta = 3.5$, never-pair weight $1$, and up to $19$ pastes per image (DINOv3: $1$ to $20$) are held fixed across families; \S\ref{app:beta_sweep} ablates $\beta$.
+
+\begin{algorithm}[h]
+\caption{Anchor-Atypicality Sampling (AAS)}
+\label{alg:aas}
+\small
+\begin{algorithmic}[1]
+\Require Image $I$ with present classes $\mathcal{P}$ and ground-truth annotations $\text{gt}(I)$
+\Require Instance pool $\mathcal{C}_{\text{pool}}$, atypicality function $A(a,j) =$ $(1 - \text{NPMI}(a,j))/2$
+\Require Max pastes $M$, tilt $\beta$, class prior $\pi$, per-class scale stats $\{(\mu_c, \sigma_c^2)\}$
+\State $a \gets$ class of the largest box in $\text{gt}(I)$ \Comment{anchor: largest object}
+\State $n \sim \mathcal{U}\{0, \ldots, M-1\}$ \Comment{number of pastes}
+\For{$k = 1, \ldots, n$}
+  \State $j \sim P(\cdot \mid a) \propto$ $\pi(\cdot) \exp(\beta A(a, \cdot))$ \Comment{anchor-conditioned, atypicality-tilted}
+  \State $\text{inst} \sim \mathcal{C}_{\text{pool}}[j]$ \Comment{sample an instance of class $j$}
+  \State $s \sim \mathcal{N}(\mu_j, \sigma_j^2);\; (x, y) \sim \mathcal{U}$ \Comment{per-class scale, random position}
+  \State $(I, \text{gt}(I)) \gets \textsc{PasteOcclAware}(I, \text{gt}(I), \text{inst}, s, (x, y))$
+\EndFor
+\State \Return augmented image $I$ and updated annotations $\text{gt}(I)$
+\end{algorithmic}
+\end{algorithm}
+
+\noindent\textbf{Specialist detector training (\codino{}).} Backbone: ResNet-50, ImageNet-pretrained. Optimizer: AdamW, base LR $2{\times}10^{-4}$, weight decay $1{\times}10^{-4}$. Schedule: 12 epochs at the base LR and one fine-tuning epoch at $0.1\times$ LR. Augmentation: standard MMDetection train pipeline: resize to short side $\in [480, 800]$ (32-step) or a random-crop branch (resize, crop to $384$ to $600$, resize), random horizontal flip, normalization. Loss: standard Co-DETR collaborative hybrid-assignment loss (one-to-one DETR + one-to-many auxiliary heads). Batch size 16 (the fine-tuning epoch of the A0 to A6 rows: 8). Mixed-precision is \emph{not} used.
+
+\noindent\textbf{Augmentation pipelines for the Co-DINO sweep.}
+The No aug baseline (A0) and the eight augmentation variants share the optimizer, schedule, loss,
+and batch settings of the \codino training,  and differ only in the
+train-time data pipeline (Tab.~\ref{tab:aug_pipelines}). All variants emit fixed $1024{\times}1024$ inputs, terminate in \texttt{PackDetInputs}, and use the identical test-time pipeline (Resize $(1333, 800)$, pad, no augmentation). The two AAS rows (SCP\,+\,AAS, XPaste\,+\,AAS) continue A5 and A8 with the late stage below.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Train-time augmentation pipelines for the Co-DINO R-50 sweep.} All recipes share the optimizer, schedule, loss, and test-time pipeline; only the train-time data-processing pipeline differs. Source images = images blended into one training sample; LSJ = Large-Scale Jitter ($r \sim \mathcal{U}(0.1, 2.0)$ + $1024{\times}1024$ crop +  flip + pad); PMD = \texttt{PhotoMetricDistortion}; HSV = YOLOX HSV ($\pm 5^\circ / \pm 50\% / \pm 50\%$); 4-tile = YOLOX $2{\times}2$ mosaic + \texttt{RandomAffine} crop back to $1024{\times}1024$. IDs are the config-file prefixes of the released code (\texttt{configs/codino\_r50\_augsweep/a<ID>\_*.py}); rows in the order of Tab.~\ref{tab:codino_main}.}
+\label{tab:aug_pipelines}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}llllll@{}}
+\toprule
+ID & Aug & Geometric & Photometric & Paste source & Ref. \\
+\midrule
+A0 & No aug & resize to $1024$ + pad (no flip) & -- & -- & -- \\
+A1  & Std.\          & DETR 2-branch resize + flip          & --   & --                          & \cite{zong2023detrs} \\
+A4  & Color jitter   & A1 geometry, fixed $1024{\times}1024$ & PMD & --                          & -- \\
+A3  & MixUp          & single image, $\mathcal{U}(0.8, 1.6)$ blend & HSV & --                    & \cite{zhang2017mixup} \\
+A2  & Mosaic         & 4-tile + \texttt{RandomAffine}       & HSV  & --                          & \cite{bochkovskiy2020yolov4} \\
+A15 & YOLOX full     & 4-tile + Affine + $5^{\text{th}}$-img MixUp & HSV & --                  & \cite{ge2021yolox} \\
+A5  & LSJ + SCP      & LSJ                                  & --   & 2nd-img all masks (real)    & \cite{ghiasi2021simple} \\
+A6  & InstAug        & LSJ                                  & --   & curated cutout pool         & \cite{kupyn2024dataset} \\
+A8  & XPaste-base    & LSJ                                  & --   & SD-3.5m~\cite{stabilityai2024sd35} + real, class-balanced ($\leq 19$/img) & \cite{zhao2023x} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\noindent\textbf{Late stage (AAS rows of Tabs.~\ref{tab:codino_main}, \ref{tab:grounding_dino_main}, \ref{tab:dinov3_main}).} Each AAS row continues a paste-trained run (SCP or XPaste) from its checkpoint after epoch 8 (\codino{}, \gdino{}) or epoch 5 (\dinov{}) for the remaining epochs of the same schedule (\codino{}: 9 to 13, \gdino{}: 9 to 12, \dinov{}: 6 to 10). The training set is COCO \texttt{train2017} plus $7{,}805$ scenes rendered by the STRANGE-Bench pipeline (Sec.~\ref{sec:strange}) from atypical anchor-partner specifications over 40 of the 80 COCO classes. AAS samples the pasted classes (detectors: pastes onto the generated scenes; \dinov{}: every image). The reported weights are the 1:1 average of the late-stage weights and the final weights of the run it continues (\dinov{}: the best validation checkpoints of both),
+\begin{equation}
+\theta_{\text{AAS}} = \tfrac{1}{2}\left(\theta_{\text{late}} + \theta_{\text{base}}\right),
+\label{eq:late_avg}
+\end{equation}
+where $\theta_{\text{base}}$ are the final weights of the SCP or XPaste run and $\theta_{\text{late}}$ the weights after its late stage. Both share every update up to the branch point (epoch 8; \dinov{}: epoch 5), as in weight averaging of models fine-tuned from a common start~\cite{wortsman2022model,wortsman2022robust}.
+
+\noindent\textbf{Grounding DINO fine-tuning.} The SCP, XPaste, and AAS rows of Tab.~\ref{tab:grounding_dino_main} fine-tune the released Swin-B checkpoint on COCO \texttt{train2017}: 12 epochs with an LR drop at epoch 11, AdamW, LR $1{\times}10^{-4}$ ($0.1\times$ for the backbone), weight decay $1{\times}10^{-4}$, gradient clipping $0.1$, batch 32 (8 GPUs $\times$ 4), multi-scale resize and crop plus the paste of the row.
+
+\noindent\textbf{Detector inference (Co-DETR Swin-L variants, \gdino{}
+Swin-B).} Loaded from the public checkpoints listed in Table~\ref{tab:app-ckpts} (survey rows). Batch size~1, no test-time augmentation.
+
+\noindent\textbf{Probed classifier training (\dinov{} ViT-B LP).} 
+Frozen DINOv3 ViT-B/16 features, single linear classification head over
+$80$ COCO classes, multi-label BCE-with-logits loss. Optimizer: AdamW, 
+LR $1{\times}10^{-3}$, weight decay $0$. Schedule: 20 epochs, cosine decay. Train data: COCO \texttt{train2017} (image-level multi-hot labels from instance annotations). No backbone fine-tuning, no augmentation beyond resize+normalize (paste rows of App.~\ref{app:dinov3_lp}: plus the paste). F1 uses a fixed threshold of $0.5$ (F1\textsubscript{micro}). 
+
+\noindent\textbf{Fine-tuned classifier training (\dinov{} ViT-B/16 FT).}
+Same architecture as the LP recipe (DINOv3 ViT-B/16 backbone + single linear head over $80$ COCO classes, multi-label BCE-with-logits) but with the backbone unfrozen. Optimizer: AdamW, head LR $5{\times}10^{-4}$ with layer-wise decay $0.75$ over the backbone, weight decay $0.05$, batch 128, $224$\,px inputs. Schedule: 10 epochs, cosine decay with one warmup epoch. Train data: COCO \texttt{train2017}. Augmentation matches the recipe under study (Std., Color jitter, MixUp, Mosaic, YOLOX (Mosaic with strong color jitter and no MixUp, which on a four-image Mosaic adds multi-label noise), SCP, XPaste, InstAug, SCP+AAS,
+XPaste+AAS); see Sec.~\ref{sec:experiments} for the full suite. F1 uses the fixed threshold $0.5$ (F1\textsubscript{micro}). 
+
+\noindent\textbf{Zero-shot VL inference (CLIP / \openclip{} ViT-B/16).}
+Each class name is wrapped in the standard 80-template ensemble from
+\citep{radford2021learning} (templates such as ``a photo of a
+\{class\}.''). Per-class text embeddings are mean-pooled across
+templates and L2-normalized. Per-image embeddings come from the CLIP /
+\openclip{} image encoder, also L2-normalized. The score for class
+$c$ on image $i$ is the cosine similarity, used directly as the
+ranking score for per-class mAP. No threshold sweep is needed for
+mAP; for F1 we use a fixed threshold (which is why F1 is uninformative
+for the zero-shot models and is omitted from the headline tables).
+
+\noindent\textbf{LMM inference (\llava{} 0.5b / 7b).}
+Two-pass ``gated'' prompting. Both prompts are issued as
+chat-template \texttt{user} turns with the image attached:
+(i) a \emph{main-objects} prompt asks the model to list up to $12$
+unique visible object categories as a JSON array;
+(ii) a \emph{small-objects} prompt then asks for up to $8$
+small handheld items (utensils, containers, etc.).
+
+\begin{quote}\small
+\textbf{Pass 1 (main objects).} \emph{List the object categories
+that are actually visible in the image. Return ONLY a JSON array
+of at most $12$ UNIQUE short nouns ($1$--$2$ words). If you are
+unsure, omit the object. No explanations. No extra text.}
+
+\medskip
+\textbf{Pass 2 (small objects).} \emph{List ONLY small objects
+that are CLEARLY visible (utensils / containers / handheld items).
+Return ONLY a JSON array of at most $8$ UNIQUE short nouns ($1$--$2$
+words). If you are not $100\%$ sure an object is present, DO NOT
+include it. Do NOT guess utensils. No explanations. No extra
+text.}
+\end{quote}
+
+The text output of each pass is regex-parsed (multiple JSON arrays
+/ dicts / quoted strings, plus a comma-split fallback), normalized
+(lower-cased, basic plural$\to$singular), and aliased onto the
+COCO-80 vocabulary (\eg ``sofa''$\to$``couch'', ``mobile phone''$\to$``cell phone''). The resulting predicted class labels are converted to a binary multi-hot vector over the $80$ COCO classes and compared against per-image GT. Greedy decoding (\texttt{do\_sample=False}), repetition penalty
+$1.2$, \texttt{max\_new\_tokens}$=96$ (main pass) / $64$ (small
+pass).
+
+\noindent\emph{Note}: this hand-crafted pipeline only estimates which everyday classes an LMM names in a scene. It is applied identically to the typical and atypical sets, so the gap compares the two sets under the same~pipeline. 
+
+\subsubsection{Compute}\label{app:exp-compute}
+
+All experiments run on shared SLURM clusters; we use three partitions
+(\texttt{1}: NVIDIA L40 48\,GB; \texttt{2}: H100 80\,GB; \texttt{3}: A40 48\,GB) as well as local A100 and RTX\,8000 GPUs and H200, MI300A, and A100 GPUs at the MPCDF. All numbers below are wall-clock for one launch, parallel across the array. Table~\ref{tab:app-compute} summarizes.
+
+\begin{table}[h]
+\centering
+\tiny
+\caption{\textbf{Approximate compute per experiment.} Training rows give
+\#GPUs\,$\times$\,per-GPU batch, wall-clock, and total GPU-hours
+($=$~\#GPUs $\times$ wall-clock). Inference rows are 1 GPU per array task,
+all tasks running in~parallel. Two wall-clock values: base run and late stage; rows that list several GPU types sum the GPU-hours of all their runs.}%
+\label{tab:app-compute}
+\newsavebox{\crcomputebox}%
+\sbox{\crcomputebox}{%
+\begin{tabular}{@{}llllr@{}}
+\toprule
+Job & Partition & GPUs $\times$ BS & Wall-clock & GPU-h \\
+\midrule
+\multicolumn{5}{l}{\emph{Training}} \\
+\begin{tabular}[t]{@{}l@{}}\codino{} R-50, full COCO (per recipe A$i$; 12 epochs at the base LR\\and one fine-tuning epoch at $0.1\times$ LR)\end{tabular}
+    & \texttt{2}: (H100) & 4 $\times$ 4 & $\approx$~42~h & $\approx$~170 \\
+\codino{} R-50 aug-sweep (7 recipes A0 to A4, A6, A15)
+    & \texttt{2}: (H100) & 4 $\times$ 4 & 7\,$\times$\,42~h & $\approx$~1{,}190 \\
+\dinov{} ViT-B linear probe, COCO train (20 epochs)
+    & \texttt{1}: (L40)  & 1 $\times$ 256 & $\approx$~1.5~h & $\approx$~1.5 \\
+\dinov{} ViT-B fine-tuning, COCO train (20 epochs)
+    & \texttt{2}: (H100) & 2 $\times$ 64 & $\approx$~12~h & $\approx$~24 \\
+AAS $\beta$ sweep (App.~\ref{app:beta_sweep}), 3 values per model & \texttt{2}: (H100) & 4 $\times$ 4, 2 $\times$ 64 & $\approx$~10~h, $\approx$~12~h & $\approx$~200 \\
+\codino{} R-50 full COCO, bases + late stages (Tab.~\ref{tab:codino_main}) & MI300A, H100, H200 & 4 $\times$ 4, 8 $\times$ 2 & $\approx$~44~h; $\approx$~12--21~h & $\approx$~790 \\
+\gdino{} Swin-B full COCO, bases + late stages (Tab.~\ref{tab:grounding_dino_main}) & H100, H200 & 8 $\times$ 4 & $\approx$~20~h; $\approx$~6~h & $\approx$~510 \\
+\dinov{} ViT-B FT + late stages (Tab.~\ref{tab:dinov3_main}, App.~\ref{app:circularity}, \ref{app:aas_draws}) & L40, A40, A100, RTX\,8000 & 2--3 $\times$ 42--64 & $\approx$~1--5~h; $\approx$~1--3~h & $\approx$~190 \\
+\dinov{} ViT-B LP, paste rows (App.~\ref{app:dinov3_lp}) & L40, A100 & 1 $\times$ 256 & $\approx$~7--11~h & $\approx$~30 \\
+Mini-COCO rows of App.~\ref{app:circularity} (\codino{}, \gdino{}) & A100, H200, MI300A, L40 & 2--4 $\times$ 3--10 & $\approx$~15--38~h; $\approx$~6--9~h & $\approx$~700 \\
+Linear probes (App.~\ref{app:scale_ladder}), partner masking (App.~\ref{app:partner_mask}) & A40, RTX\,8000 & 2 $\times$ 32--128 & $\approx$~1--4~h & $\approx$~20 \\
+\midrule
+\multicolumn{5}{l}{\emph{Data generation}} \\
+STRANGE-Bench generation ($12{,}375$ specs, $20{,}324$ renders) & L40, A40 & 1 per task & -- & $\approx$~220 \\
+Training scenes (App.~\ref{app:exp-recipes}, \ref{app:circularity}), SD~3.5M re-render & A100, L40 & 1 per task & -- & $\approx$~180 \\
+\midrule
+\multicolumn{5}{l}{\emph{Inference: canonical 5-dataset suite, per model}} \\
+COCO val2017 baseline                          & \texttt{1}: (L40) & 1 $\times$ $-$ & $\approx$~10~min & $\approx$~0.17 \\
+STRANGE-Bench (17 sub-tiers)                   & \texttt{1}: (L40) & 1 $\times$ $-$ & $\approx$~1.5~min & $\approx$~0.4 \\
+Paired real (8 splits)                         & \texttt{1}: (L40) & 1 $\times$ $-$ & $\approx$~15~min & $\approx$~2.0 \\
+CLIP / \openclip{} ZS, STRANGE-Bench           & \texttt{1}: (L40) & 1 $\times$ $-$ & $\approx$~1~min  & $\approx$~0.18 \\
+\llava{} 0.5b / 7b, STRANGE-Bench + paired     & \texttt{1}: (L40) & 1 $\times$ $-$ & $\approx$~10~min & $\approx$~2.5 \\
+\midrule
+Evaluation of all reported models & L40, RTX\,8000, H200 & 1 per task & $\approx$~1.5~min / task & $\approx$~190 \\
+Total (training, data generation, evaluation) & & & & $\approx$~4{,}200 \\
+\bottomrule
+\end{tabular}}%
+\ifdim\wd\crcomputebox>\linewidth\resizebox{\linewidth}{!}{\usebox{\crcomputebox}}\else\usebox{\crcomputebox}\fi
+\end{table}
+
+\noindent\textbf{Total compute footprint.}
+Adding the training and inference lines:
+\textbf{$\approx$~4{,}200 GPU-hours}, of which $\approx$~3{,}650 for training (the seven \codino{} R-50 augmentation baselines $\approx$~1{,}190, the paste and AAS runs of Tabs.~\ref{tab:codino_main} and~\ref{tab:grounding_dino_main} $\approx$~1{,}300, the mini-COCO rows of App.~\ref{app:circularity} $\approx$~700, the $\beta$ sweep $\approx$~200, and the classification runs $\approx$~270), $\approx$~400 to generate STRANGE-Bench and the training scenes, and $\approx$~190 to evaluate all reported models. Stock Co-DETR Swin-L ($1\times$,
+$3\times$, Objects365 $\rightarrow$ COCO) checkpoints and the zero-shot \gdino{} Swin-B
+are loaded as released and contribute zero training compute.
+CLIP / \openclip{} / \llava{} are zero-shot / off-the-shelf and
+contribute zero training compute.
+Generating STRANGE-Bench takes $\approx$~220 GPU-hours: $\approx$~155 to render and segment the scenes ($1.6$ SD~3.5L renders per spec), $\approx$~50 for the SAM~3 and OWLv2 passes of the strict filter, and $\approx$~15 for layouts, the first audit, and masks.
+
+The \codino{} R-50 training time is the bottleneck: each run is
+12 epochs at the base LR and one fine-tuning epoch at $0.1\times$ LR on full COCO ($\approx$~118k images) at effective batch
+$4{\times}4{=}16$ on 4$\times$H100, which clocks in at roughly
+3.5~h per epoch.
+A \gdino{} Swin-B base run costs about as many GPU-hours ($\approx$~160) but finishes in $\approx$~20~h on eight GPUs (BS=32).
+
+\FloatBarrier
+\subsection{Quantile Choices for the Paired Diagnostic}
+\label{app:splits-impl}
+
+The paired splits in Sec.~\ref{sec:diagnostic} are parameterized by a
+single quantile $\alpha \in (0, 0.5)$: for each anchor $c$, typical
+partners are the top-$\alpha$ NPMI quantile of $c$'s row and atypical
+partners are the bottom-$\alpha$ quantile. The headline numbers
+reported in Sec.~\ref{sec:experiments} use the \textbf{quintile} cut
+($\alpha = 0.2$). In this subsection we describe the split
+construction (partner-eligibility floors, image-balancing protocol),
+report split-quality statistics across five candidate cuts, justify
+the quintile choice, and present the full $\alpha$-sweep across the
+augmentation suite of Sec.~\ref{sec:experiments}.
+
+\noindent\textbf{Trade-off.}
+The choice of $\alpha$ trades partner-set sharpness against split
+sample size. Smaller $\alpha$ yields a sharper typical/atypical
+contrast but smaller per-anchor partner pools and consequently
+smaller per-anchor splits; larger $\alpha$ yields larger and more
+stable splits at the cost of admitting partners closer to the
+neutral region.
+
+\noindent\textbf{Implementation floors.}
+All quantile settings share the same partner-eligibility constraints: 
+train-support floors ($N_{ij}^{\text{typ}} \geq 5$, $N_{ij}^{\text{aty}} \geq 1$) prevent wide quantile cuts on noisy long-tail anchor rows from drifting into the neutral region; and a val-observability filter keeps only atypical partners that co-occur with the anchor in at least one val image, so anchors with an empty atypical split are dropped ($16$ of $80$ at the quintile cut). No sign constraint is applied: at the quintile cut $54$ of $850$ typical partner slots have NPMI $\leq 0$ and $3$ of $670$ atypical slots have NPMI $\geq 0$, while the pooled means remain $+0.21$ vs.\ $-0.23$.
+
+\noindent\textbf{Image balancing.}
+After the partner-eligibility filters above, the typical and atypical sides of each cut are highly imbalanced in the natural distribution: typical pairs are roughly an order of magnitude more common than atypical ones, so the unfiltered typical-side image pool is much larger than the atypical-side pool (e.g., $3{,}501$ vs.\ $389$ at the quintile cut). To prevent this asymmetry from biasing per-anchor AP estimates, we keep the atypical side intact (it is already the bottleneck) and \emph{down-sample the typical side per-anchor} so that, for each anchor class, the number of typical-matched images is approximately equal to the number of atypical images for that anchor. The resulting post-balancing counts are reported in Table~\ref{tab:alpha_split_quality} and feed directly into the eval suite of \S\ref{app:exp-datasets}. 
+
+\noindent\textbf{Split-quality summary.}
+Table~\ref{tab:alpha_split_quality} summarizes the per-cut split quality on COCO val: the partner-set NPMI separation ($\mu^{\text{typ}} - \mu^{\text{aty}}$), the post-balancing typical-matched / atypical image counts, and the number of anchor classes that survive both the implementation floors and the balancing step. Three observations support the quintile choice. First, the quintile cut achieves the highest anchor coverage of any cut ($64/80$, vs.\ $56$ for $\alpha=0.5$ and $61$ for the decile), which is the relevant quantity for stable per-anchor AP estimates.
+Second, its pooled NPMI means lie on opposite sides of zero ($+0.21$ vs.\ $-0.23$, a gap of $0.44$), while the wider cuts admit partners closer to zero (gap $0.24$ at $\alpha = 0.5$). Third, it keeps about $1.5\times$ the images of the decile ($465 / 389$ vs.\ $300 / 259$); the decile separates the partner sets more sharply (gap $0.55$) but keeps fewer anchors and images. The quintile cut therefore balances anchor coverage, NPMI separation, and sample size.
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Split-quality summary across $\alpha$ cuts on COCO val.} The quintile cut keeps the most anchors ($64/80$), about $1.5\times$ the images of the decile, and pooled NPMI means of opposite sign. The atypical side is preserved as-is; the typical side is down-sampled per-anchor to approximately match the atypical-side image count (see ``Image balancing''). NPMI means are pooled over all (anchor, partner) pairs of the $80$ anchors.}
+\label{tab:alpha_split_quality}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l c cc cc c}
+\toprule
+& & \multicolumn{2}{c}{\textbf{NPMI ($\mu$)}} & \multicolumn{2}{c}{\textbf{Images (post-bal.)}} & \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+Cut & $\alpha$ & typ. & atyp. & typ. & atyp. & Anchors \\
+\midrule
+$50/50$  & $0.5$ & $+0.09$ & $-0.15$ & 491 & 419 & $56/80$ \\
+$60/40$  & $0.4$ & $+0.12$ & $-0.17$ & 614 & 536 & $63/80$ \\
+$70/30$  & $0.3$ & $+0.16$ & $-0.20$ & 554 & 490 & $63/80$ \\
+\textbf{quintile $80/20$} & $\boldsymbol{0.2}$ & $\boldsymbol{+0.21}$ & $\boldsymbol{-0.23}$ & $\boldsymbol{465}$ & $\boldsymbol{389}$ & $\boldsymbol{64/80}$ \\
+decile $90/10$    & $0.1$ & $+0.29$ & $-0.26$ & 300 & 259 & $61/80$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{static/figures/nmpi_train_vs_val}%
+
+\noindent\textbf{Robustness of the gap across cuts.}
+We additionally verify that the typicality gap is not an artifact of the quintile cut by sweeping $\alpha$ across the augmentation suite of Sec.~\ref{sec:experiments} on Co-DINO R-50 (12 epochs at the base LR and one fine-tuning epoch at $0.1\times$ LR). Tab.~\ref{tab:alpha_sweep_codino} reports the per-cut gap $\Delta^{\text{T-A}} = M^{\text{T}} - M^{\text{A}}$ on COCO val paired-real (full-annotation mAP, $\%$) for eight configurations covering no augmentation, standard augmentation, and six of the seven non-AAS augmentation baselines of the main paper (all but XPaste). Two patterns emerge. First, a non-trivial typicality gap is present under \emph{every} configuration at \emph{every} cut: the per-configuration mean across cuts $\overline{\Delta}$ ranges from $4.5$ (Mosaic, which lowers AP on both splits; see \S\ref{app:codino_full}) to $6.5$ (Std.). The gap is not a quirk of the quintile cut. Second, standard augmentation does \emph{not} reduce $\Delta^{\text{T-A}}$ relative to no-aug ($\overline{\Delta}_{\text{Std.}} = 6.5$ vs.\ $\overline{\Delta}_{\text{No aug}} = 6.0$), and at the quintile cut itself it slightly \emph{widens} the gap ($9.2$ vs.\ $8.7$). This is the diagnostic signature that motivates Sec.~\ref{sec:aas}: a typicality intervention has to be designed for the bias rather than inherited as a side effect of conventional augmentation.
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{$\alpha$-sweep on Co-DINO R-50 on COCO val
+paired-real, full-annotation mAP gap (\%).} Per-cut typicality gap
+$\Delta^{\text{T-A}}$ across five $\alpha$ cuts and the per-row mean
+$\overline{\Delta}$ for each augmentation. The gap is non-zero
+under every configuration at every cut; standard augmentation does
+not reduce the gap relative to no-aug. Co-DINO R-50 trained for 12 epochs at the base LR and one fine-tuning epoch at $0.1\times$ LR. The SCP row is the submission's SCP run, not the SCP row of Tab.~\ref{tab:codino_main}; re-evaluating these checkpoints changes the quintile and decile gaps by at most 0.2.}
+\label{tab:alpha_sweep_codino}
+\setlength{\tabcolsep}{4pt}
+\input{static/tables/generated/alpha_sweep_codino_tabular}
+\end{table}
+
+\FloatBarrier
+\noindent\textbf{Why is natural data not enough?}
+Even at the standard cuts we use, the COCO paired-real splits comprise only $465 / 389$ typical-matched / atypical images at the quintile cut ($\alpha = 0.2$) and $300 / 259$ at the decile ($\alpha = 0.1$) (Tab.~\ref{tab:alpha_split_quality} and Tab.~\ref{tab:app-eval-datasets}), spread across $64$ and $61$ anchor classes. Per-anchor coverage is therefore modest in absolute terms and very uneven across the long tail; anchors whose atypical partners never appear with them in val are dropped ($16$ of $80$ at the quintile cut), and $28$ of the remaining $64$ anchors have fewer than three atypical images. More fundamentally, no natural cut can reach the regime where partners \emph{never} co-occur with the anchor. As Fig.~\ref{fig:npmi_train_vs_val} shows, on \texttt{train2017} the never-co-occur cells form a small minority of the $80 \times 80$ NPMI matrix ($982$ of the $6{,}320$ off-diagonal cells, $15.5\%$), but on \texttt{val2017} the empty fraction jumps to $49.1\%$: nearly half of all category pairs that we might want to probe simply have no images in val. The empty-cell rate is highest in the long-tail $\times$ long-tail quadrant ($78.5\%$ vs.\ $39.5\%$ elsewhere), exactly where typicality bias should be most pronounced and stress-tests are most informative. By construction, no quantile cut on val can recover these cells, and the never-co-occur regime ($T_{\text{never}}$) is inaccessible from natural data altogether. This is the gap STRANGE-Bench (\S\ref{app:strange-pipeline}) is designed to close: rendering scenes from sampled category sets lets us produce paired typical / atypical scenes \emph{and} a clean $T_{\text{never}}$ tier with balanced per-anchor coverage that natural validation sets structurally cannot offer. 

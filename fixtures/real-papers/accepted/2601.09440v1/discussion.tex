@@ -1,0 +1,45 @@
+\section{Discussion}
+\label{sec:discussion}
+
+% \subsection{On Baselines for Comparison}
+% While we compare \appname against a strong LLM-based baseline (FlatLLM) in both defect modeling and impact analysis, we acknowledge that broader comparisons with existing tools are limited.
+% This is primarily due to the lack of directly comparable systems tailored for the same problem setting.
+% Existing PR analysis tools (e.g., commit summarizers, vulnerability scanners, or static detectors like Bandit, Semgrep) either focus on general-purpose bug summarization without downstream reasoning, or target traditional languages like Java with coarse-grained dependency analysis.
+% To the best of our knowledge, no existing tool jointly models defect semantics and performs client-side impact analysis over DL libraries.
+% We thus position FlatLLM as a strong representative of the LLM-first, non-agentic strategy that developers  naturally adopt.
+
+
+
+
+% \subsection{On Client Dataset Size and Dynamic Validation}
+% Our downstream impact analysis is conducted on 57 PR–client and 6 commit–client pairs. 
+% While this may appear limited in scale, each sample requires substantial effort to prepare and evaluate.
+% For every (defect, client) pair, we manually locate relevant open-source projects and validate trigger condition satisfaction via static and dynamic analysis.
+% Dynamic reproduction, in particular, involves downloading models, configuring environments, and crafting test inputs that align with defect semantics—requiring hours per case in many instances.
+% Despite the moderate size, our results reveal meaningful patterns and support actionable insights, including identifying two real-world clients silently affected by internal library defects.
+% We believe this level of depth, while costly, provides strong evidence of \appname's practical value and correctness.
+
+
+\subsection{Generalizability, Adoption, and Extension}
+\textbf{Generalizability.}
+While our evaluation focuses on two popular DL libraries—Transformers and \textit{Megatron}, the modular architecture of \appname is broadly applicable to other Python-based libraries that expose public APIs and have structured commits or PRs.
+We observe that \appname performs consistently across a range of defect types (e.g., configuration misuse, semantic errors, performance issues), suggesting good generalization. Extending the system to non-Python libraries (e.g., TensorFlow C++) would require adapting AST parsing and static analysis routines.
+
+\noindent \textbf{Developer Adoption.}
+Case studies in \textit{Megatron} show that users may prefer to locally backport patches instead of upgrading the entire library version, due to compatibility or dependency constraints. 
+In such scenarios, \appname’s ability to surface concrete trigger conditions and risk factors can assist developers in writing minimal fixes. 
+This highlights its potential utility as a defect-awareness tool in long-lived or production-grade codebases.
+
+\noindent\textbf{Extension Directions.}
+One promising extension is to integrate dynamic tracing or execution logs to better infer runtime-specific defects (e.g., those triggered by hardware mismatch or environment settings).
+Another direction is model-agnostic tuning, where different LLMs (e.g., GPT-4, DeepSeek, Claude) are compared in terms of consistency, robustness, and hallucination rates under the same agent roles.
+We also plan to explore IDE integration to offer actionable defect awareness during development or CI workflows.
+
+
+\subsection{Threats to Validity}
+\textbf{Threats to Internal Validity.} Some of our annotations—such as defect presence or client impact—rely on expert judgment, though we observe substantial inter-annotator agreement.
+Certain trigger conditions may also depend on runtime paths not visible in static code.
+Although \appname performs consistency checks and retry rounds, occasional hallucinations from LLMs cannot be fully ruled out.
+\textbf{Threats to External Validity.} Our evaluation is limited to two actively maintained DL libraries.
+Libraries with less structured development workflows or sparse metadata may degrade the effectiveness of agent-based reasoning.
+In addition, the current system is designed for Python-based ecosystems; applying it to other languages requires further adaptation.

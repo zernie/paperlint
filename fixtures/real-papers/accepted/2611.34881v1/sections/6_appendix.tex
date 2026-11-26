@@ -1,0 +1,69 @@
+\section*{Appendix}
+\addcontentsline{toc}{section}{Appendix}
+\setlength{\intextsep}{4pt plus 1pt minus 1pt}
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\raggedbottom
+\makeatletter\setlength{\@fptop}{0pt}\setlength{\@fpsep}{6pt plus 2pt minus 2pt}\setlength{\@fpbot}{0pt plus 1fil}\makeatother
+\captionsetup{font=small}
+
+This appendix supplements the main paper with: per-family detailed result breakdowns and the AAS pseudocode (\S\ref{app:additional_results}); a complete description of the experimental setup, including datasets, models, training and evaluation recipes, and compute (\S\ref{app:exp-setup}); the STRANGE-Bench generation pipeline, statistics, and qualitative samples (\S\ref{app:strange-pipeline}); and a discussion of limitations and broader impacts (\S\ref{app:discussion}).
+
+\noindent\textbf{Table of Contents}
+\begin{itemize}[leftmargin=*,itemsep=8pt,topsep=6pt,parsep=0pt]
+  \item[\textbf{A}] \textbf{\hyperref[app:additional_results]{Additional Quantitative Results}} \dotfill\pageref{app:additional_results}
+    \begin{itemize}[leftmargin=2em,itemsep=2pt,topsep=3pt,parsep=0pt,label={}]
+      \item[A.1] \hyperref[app:codino_full]{Co-DINO ResNet-50: Full Results} \dotfill\pageref{app:codino_full}
+      \item[A.2] \hyperref[app:gdino_full]{Grounding DINO Swin-B: Full Results} \dotfill\pageref{app:gdino_full}
+      \item[A.3] \hyperref[app:dinov3_full]{DINOv3 ViT-B/16 Fine-Tuned: Full Results} \dotfill\pageref{app:dinov3_full}
+      \item[A.4] \hyperref[app:dinov3_lp]{DINOv3 ViT-B/16 Linear Probe: Full Results} \dotfill\pageref{app:dinov3_lp}
+      \item[A.5] \hyperref[app:beta_sweep]{Selecting the AAS Atypicality Temperature $\beta$} \dotfill\pageref{app:beta_sweep}
+      \item[A.6] \hyperref[app:circularity]{Circularity Checks} \dotfill\pageref{app:circularity}%
+      \item[A.7] \hyperref[app:scale_ladder]{Pretraining Data and Model Capacity} \dotfill\pageref{app:scale_ladder}%
+      \item[A.8] \hyperref[app:spatial-arrangement]{Spatial Arrangement as a Typicality Axis} \dotfill\pageref{app:spatial-arrangement}%
+      \item[A.9] \hyperref[app:partner_mask]{Partner Masking} \dotfill\pageref{app:partner_mask}%
+      \item[A.10] \hyperref[app:aas_draws]{Variability of the AAS Rows over Training Runs} \dotfill\pageref{app:aas_draws}%
+    \end{itemize}
+
+  \item[\textbf{B}] \textbf{\hyperref[app:exp-setup]{Experimental Setup and Design}} \dotfill\pageref{app:exp-setup}
+    \begin{itemize}[leftmargin=2em,itemsep=2pt,topsep=3pt,parsep=0pt,label={}]
+      \item[B.1] \hyperref[app:experimental-details]{Experimental Details and Study} \dotfill\pageref{app:experimental-details}
+        \begin{itemize}[leftmargin=2em,itemsep=1pt,topsep=2pt,parsep=0pt,label={}]
+          \item[B.1.1] \hyperref[app:exp-datasets]{Evaluation Datasets} \dotfill\pageref{app:exp-datasets}
+          \item[B.1.2] \hyperref[app:exp-models]{Models} \dotfill\pageref{app:exp-models}
+          \item[B.1.3] \hyperref[app:exp-ckpts]{Checkpoints} \dotfill\pageref{app:exp-ckpts}
+          \item[B.1.4] \hyperref[app:exp-recipes]{Training and Evaluation Recipes} \dotfill\pageref{app:exp-recipes}
+          \item[B.1.5] \hyperref[app:exp-compute]{Compute} \dotfill\pageref{app:exp-compute}
+        \end{itemize}
+      \item[B.2] \hyperref[app:splits-impl]{Quantile Choices for the Paired Diagnostic} \dotfill\pageref{app:splits-impl}
+    \end{itemize}
+
+  \item[\textbf{C}] \textbf{\hyperref[app:strange-pipeline]{STRANGE-Bench: Pipeline Details and Statistics}} \dotfill\pageref{app:strange-pipeline}
+    \begin{itemize}[leftmargin=2em,itemsep=2pt,topsep=3pt,parsep=0pt,label={}]
+      \item[C.1] \hyperref[app:strange:release]{Dataset Release} \dotfill\pageref{app:strange:release}
+      \item[C.2] \hyperref[app:strange:samples]{Qualitative Samples} \dotfill\pageref{app:strange:samples}
+      \item[C.3] \hyperref[app:strange:tiers]{Sub-Tier Composition} \dotfill\pageref{app:strange:tiers}
+      \item[C.4] \hyperref[app:strange:diag]{Sanity Diagnostics} \dotfill\pageref{app:strange:diag}
+      \item[C.5] \hyperref[app:strange:pipeline]{Generation Pipeline} \dotfill\pageref{app:strange:pipeline}
+      \item[C.6] \hyperref[app:strange:impl]{Implementation Details} \dotfill\pageref{app:strange:impl}
+      \item[C.7] \hyperref[app:strange:user-study]{User Study} \dotfill\pageref{app:strange:user-study}%
+    \end{itemize}
+
+  \item[\textbf{D}] \textbf{\hyperref[app:discussion]{Limitations and Broader Impacts}} \dotfill\pageref{app:discussion}
+\end{itemize}
+
+\clearpage
+
+\input{sections/6_appendix_1}
+
+\clearpage
+
+\input{sections/6_appendix_2}
+
+\clearpage
+
+\input{sections/6_appendix_0}
+
+\FloatBarrier
+
+\input{sections/6_appendix_3}

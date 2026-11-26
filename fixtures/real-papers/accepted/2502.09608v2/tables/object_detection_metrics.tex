@@ -1,0 +1,79 @@
+% \multirow{2}{*}{\diagbox[height=5\line]{\raisebox{2ex}{Spalte}}{ & & \\Zeile}}
+\begin{table*}
+\small
+\setlength{\tabcolsep}{3pt}
+\addtolength{\belowcaptionskip}{-5pt}
+\centering
+\caption{\textbf{Quantitative Comparisons for Object Detection}. We report IoU, AR, and AP metrics across seven datasets, along with the mean and standard deviation for each method. $\text{All}^1$ includes all datasets, while $\text{All}^2$ excludes InstantStyle. Our method consistently outperforms baselines across all metrics and datasets, demonstrating significant improvements in detecting sketch objects with  precision.} 
+\label{tb:bbox}
+
+% \begin{tabular}{l | c c c | c c c | c c c | c c c | c c c} 
+%     \toprule
+%     % \multirow{2}{*}{\diagbox{Dataset}{Metric}} &
+%     &
+%     \multicolumn{3}{c|}{IoU $\uparrow$} & \multicolumn{3}{c|}{AR@[50:95] $\uparrow$} & \multicolumn{3}{c|}{AP@[50:95] $\uparrow$} & \multicolumn{3}{c|}{AP@50 $\uparrow$} & \multicolumn{3}{c}{AP@75 $\uparrow$} \\
+%     &  SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} \\
+%     \midrule
+%     SketchyScene & $0.555$ & $ 0.272 $ & $0.725$ & $0.423$ & $0.277$ & $0.868$ & $0.361$ & $0.242$ & $0.837$ & $0.795$ & $0.312$ & $0.933$ & $0.176$ & $0.271$ & \textbf{$0.880$} \\
+%     SketchAgent & $0.273$ & $0.168$ & $0.731$ & $0.196$ & $0.163$ & $0.793$ & $0.158$ & $0.129$ & $0.759$  & $0.394$ & $0.183$ & $0.874$ & $0.056$ & $0.139$ & \textbf{$0.789$} \\
+%     C-Base & $0.485$ & $0.314$ & $0.800$ & $0.358$ & $0.309$ & $0.859$ & $0.296$ & $0.269$ & $0.831$ & $0.704$ & $0.379$ & $0.938$ & $0.119$ & $0.309$ & \textbf{$0.871$} \\
+%     C-Pen & $0.486$ & $0.288$ & $0.722$ & $0.355$ & $0.280$ & $0.846$ & $0.294$ & $0.244$ & $0.813$ & $0.713$ & $0.349$ & $0.936$ & $0.110$ & $0.278$ & $0.867$ \\
+%     C-Pencil & $0.405$ & $0.278$ & $0.769$ & $0.293$ & $0.275$ & $0.839$ & $0.247$ & $0.241$ & $0.798$ & $0.599$ & $0.331$ & $0.947$ & $0.087$ & $0.273$ & $0.882$ \\
+%     C-Ink & $0.410$ & $0.277$ & $0.756$ & $0.301$ & $0.275$ & $0.819$ & $0.252$ & $0.235$ & $0.790$ & $0.600$ & $0.333$ & $0.907$ & $0.105$ & $0.264$ & $0.827$ \\
+%     InstantStyle & $0.101$ & $0.202$ & $0.229$ & $0.082$ & $0.153$ & $0.226$ & $0.054$ & $0.201$ & $0.323$ & $0.134$ & $0.240$ & $0.340$ & $0.031$ & $0.152$ & $0.224$ \\
+%     \midrule
+%     $\text{All}^1$ & $	0.388\pm 0.150 $ & $0.257 \pm 0.052$ & $0.676\pm 0.199$ & $0.285 \pm 0.115$ & $0.247 \pm 0.062$ & $0.750 \pm 0.232$ & $0.237 \pm 0.103$ & $0.233 \pm 0.046$ & $0.736 \pm 0.184$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
+%     $\text{All}^2$ & $	0.436\pm 0.097$ & $0.266 \pm 0.050$ & $0.750\pm 0.031$ & $0.321 \pm 0.077$ & $0.263 \pm 0.051$ & $0.837 \pm 0.028$ & $0.223 \pm 0.046$ & $0.227 \pm 0.049$ & $0.805 \pm 0.029$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
+%     \bottomrule
+% \end{tabular}
+% \end{table*}
+
+\begin{tabular}{l | c c c | c c c | c c c | c c c | c c c} 
+    \toprule
+    % \multirow{2}{*}{\diagbox{Dataset}{Metric}} &
+    &
+    \multicolumn{3}{c|}{IoU $\uparrow$} & \multicolumn{3}{c|}{AR@[50:95] $\uparrow$} & \multicolumn{3}{c|}{AP@[50:95] $\uparrow$} \\
+    &  SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours} \\
+    \midrule
+    SketchyScene & $0.555$ & $ 0.272 $ & $0.725$ & $0.423$ & $0.277$ & $0.868$ & $0.361$ & $0.242$ & $0.837$  \\
+    SketchAgent & $0.273$ & $0.168$ & $0.731$ & $0.196$ & $0.163$ & $0.793$ & $0.158$ & $0.129$ & $0.759$  \\
+    C-Base & $0.485$ & $0.314$ & $0.800$ & $0.358$ & $0.309$ & $0.859$ & $0.296$ & $0.269$ & $0.831$  \\
+    C-Pen & $0.486$ & $0.288$ & $0.722$ & $0.355$ & $0.280$ & $0.846$ & $0.294$ & $0.244$ & $0.813$  \\
+    C-Pencil & $0.405$ & $0.278$ & $0.769$ & $0.293$ & $0.275$ & $0.839$ & $0.247$ & $0.241$ & $0.798$  \\
+    C-Ink & $0.410$ & $0.277$ & $0.756$ & $0.301$ & $0.275$ & $0.819$ & $0.252$ & $0.235$ & $0.790$  \\
+    InstantStyle & $0.101$ & $0.202$ & $0.229$ & $0.082$ & $0.153$ & $0.226$ & $0.054$ & $0.201$ & $0.323$ \\
+    \midrule
+    $\text{All}^1$ & $	0.388\pm 0.150 $ & $0.257 \pm 0.052$ & $0.676\pm 0.199$ & $0.285 \pm 0.115$ & $0.247 \pm 0.062$ & $0.750 \pm 0.232$ & $0.237 \pm 0.103$ & $0.233 \pm 0.046$ & $0.736 \pm 0.184$  \\
+    $\text{All}^2$ & $	0.436\pm 0.097$ & $0.266 \pm 0.050$ & $0.750\pm 0.031$ & $0.321 \pm 0.077$ & $0.263 \pm 0.051$ & $0.837 \pm 0.028$ & $0.223 \pm 0.046$ & $0.227 \pm 0.049$ & $0.805 \pm 0.029$  \\
+    \bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}
+\small
+\setlength{\tabcolsep}{3pt}
+\addtolength{\belowcaptionskip}{-5pt}
+\centering
+\caption{\textbf{Detailed Quantitative Comparisons for Object Detection}.} 
+\label{tb:bbox}
+
+\begin{tabular}{l | c c c | c c c } 
+    \toprule
+    % \multirow{2}{*}{\diagbox{Dataset}{Metric}} &
+    &
+     \multicolumn{3}{c|}{AP@50 $\uparrow$} & \multicolumn{3}{c}{AP@75 $\uparrow$} \\
+    &  SketchyS & G-DINO & \textbf{Ours} & SketchyS & G-DINO & \textbf{Ours}  \\
+    \midrule
+    SketchyScene & $0.795$ & $0.312$ & $0.933$ & $0.176$ & $0.271$ & \textbf{$0.880$} \\
+    SketchAgent & $0.394$ & $0.183$ & $0.874$ & $0.056$ & $0.139$ & $0.789$ \\
+    C-Base & $0.704$ & $0.379$ & $0.938$ & $0.119$ & $0.309$ & $0.871$ \\
+    C-Pen & $0.713$ & $0.349$ & $0.936$ & $0.110$ & $0.278$ & $0.867$ \\
+    C-Pencil & $0.599$ & $0.331$ & $0.947$ & $0.087$ & $0.273$ & $0.882$ \\
+    C-Ink  & $0.600$ & $0.333$ & $0.907$ & $0.105$ & $0.264$ & $0.827$ \\
+    InstantStyle & $0.134$ & $0.240$ & $0.340$ & $0.031$ & $0.152$ & $0.224$ \\
+    \midrule
+    $\text{All}^1$ & $0.563 \pm 0.228$ & $0.304 \pm 0.068$ & $0.839 \pm 0.222$ & $0.0098 \pm 0.048$ & $0.241 \pm 0.067$ & $0.750 \pm 0.236$ \\
+    $\text{All}^2$ & $0.268 \pm 0.068$ & $0.227 \pm 0.049$ & $0.805 \pm 0.029$ & $ 0.109 \pm 0.040$ & $0.256 \pm 0.059$ & $0.838 \pm 0.045$ \\
+    \bottomrule
+\end{tabular}
+\end{table*}

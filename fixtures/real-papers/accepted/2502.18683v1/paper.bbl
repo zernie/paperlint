@@ -1,0 +1,817 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{68}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Amershi et~al\mbox{.}(2019)]%
+        {amershi19}
+\bibfield{author}{\bibinfo{person}{Saleema Amershi}, \bibinfo{person}{Dan Weld}, \bibinfo{person}{Mihaela Vorvoreanu}, \bibinfo{person}{Adam Fourney}, \bibinfo{person}{Besmira Nushi}, \bibinfo{person}{Penny Collisson}, \bibinfo{person}{Jina Suh}, \bibinfo{person}{Shamsi Iqbal}, \bibinfo{person}{Paul~N. Bennett}, \bibinfo{person}{Kori Inkpen}, \bibinfo{person}{Jaime Teevan}, \bibinfo{person}{Ruth Kikin-Gil}, {and} \bibinfo{person}{Eric Horvitz}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Guidelines for Human-AI Interaction}. In \bibinfo{booktitle}{\emph{Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems}} (Glasgow, Scotland Uk) \emph{(\bibinfo{series}{CHI '19})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1–13}.
+\newblock
+\showISBNx{9781450359702}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3290605.3300233}
+\showDOI{\tempurl}
+
+
+\bibitem[Anthis et~al\mbox{.}(2024)]%
+        {anthis24a}
+\bibfield{author}{\bibinfo{person}{Jacy~Reese Anthis}, \bibinfo{person}{Janet V.~T. Pauketat}, \bibinfo{person}{Ali Ladak}, {and} \bibinfo{person}{Aikaterina Manoli}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{What {{Do People Think}} about {{Sentient AI}}?}
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.48550/arXiv.2407.08867}
+\showDOI{\tempurl}
+\showeprint[arxiv]{2407.08867}~[cs]
+
+
+\bibitem[Au and Ng(2021)]%
+        {au_mind_2021}
+\bibfield{author}{\bibinfo{person}{Rachel Hoi~Yan Au} {and} \bibinfo{person}{Gary Ting~Tat Ng}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Mind perception and stereotype attribution of corporations and charities}.
+\newblock \bibinfo{journal}{\emph{British Journal of Social Psychology}} \bibinfo{volume}{60}, \bibinfo{number}{1} (\bibinfo{year}{2021}), \bibinfo{pages}{271--293}.
+\newblock
+\showISSN{2044-8309}
+\urldef\tempurl%
+\url{https://doi.org/10.1111/bjso.12377}
+\showDOI{\tempurl}
+
+
+\bibitem[Banks(2019)]%
+        {banks19}
+\bibfield{author}{\bibinfo{person}{Jaime Banks}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{A {{Perceived Moral Agency Scale}}: {{Development}} and {{Validation}} of a {{Metric}} for {{Humans}} and {{Social Machines}}}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior}}  \bibinfo{volume}{90} (\bibinfo{date}{January} \bibinfo{year}{2019}), \bibinfo{pages}{363--371}.
+\newblock
+\showISSN{0747-5632}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chb.2018.08.028}
+\showDOI{\tempurl}
+
+
+\bibitem[Banks and Bowman(2023)]%
+        {banks23}
+\bibfield{author}{\bibinfo{person}{Jaime Banks} {and} \bibinfo{person}{Nicholas~David Bowman}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Perceived {{Moral Patiency}} of {{Social Robots}}: {{Explication}} and {{Scale Development}}}.
+\newblock \bibinfo{journal}{\emph{International Journal of Social Robotics}} \bibinfo{volume}{15}, \bibinfo{number}{1} (\bibinfo{date}{January} \bibinfo{year}{2023}), \bibinfo{pages}{101--113}.
+\newblock
+\showISSN{1875-4805}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s12369-022-00950-6}
+\showDOI{\tempurl}
+
+
+\bibitem[Benjamini and Hochberg(1995)]%
+        {benjamini_controlling_1995}
+\bibfield{author}{\bibinfo{person}{Yoav Benjamini} {and} \bibinfo{person}{Yosef Hochberg}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Controlling the {False} {Discovery} {Rate}: {A} {Practical} and {Powerful} {Approach} to {Multiple} {Testing}}.
+\newblock \bibinfo{journal}{\emph{Journal of the Royal Statistical Society: Series B (Methodological)}} \bibinfo{volume}{57}, \bibinfo{number}{1} (\bibinfo{year}{1995}), \bibinfo{pages}{289--300}.
+\newblock
+\showISSN{2517-6161}
+\urldef\tempurl%
+\url{https://doi.org/10.1111/j.2517-6161.1995.tb02031.x}
+\showDOI{\tempurl}
+
+
+\bibitem[Bigman and Gray(2018)]%
+        {bigman18}
+\bibfield{author}{\bibinfo{person}{Yochanan~E. Bigman} {and} \bibinfo{person}{Kurt Gray}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{People Are Averse to Machines Making Moral Decisions}.
+\newblock \bibinfo{journal}{\emph{Cognition}}  \bibinfo{volume}{181} (\bibinfo{date}{December} \bibinfo{year}{2018}), \bibinfo{pages}{21--34}.
+\newblock
+\showISSN{0010-0277}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.cognition.2018.08.003}
+\showDOI{\tempurl}
+
+
+\bibitem[Bonnefon et~al\mbox{.}(2024)]%
+        {bonnefon24}
+\bibfield{author}{\bibinfo{person}{Jean-Fran{\c c}ois Bonnefon}, \bibinfo{person}{Iyad Rahwan}, {and} \bibinfo{person}{Azim Shariff}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{The {{Moral Psychology}} of {{Artificial Intelligence}}}.
+\newblock \bibinfo{journal}{\emph{Annual Review of Psychology}} \bibinfo{volume}{75}, \bibinfo{number}{1} (\bibinfo{year}{2024}), \bibinfo{pages}{653--675}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1146/annurev-psych-030123-113559}
+\showDOI{\tempurl}
+
+
+\bibitem[Broadbent et~al\mbox{.}(2013)]%
+        {broadbent13}
+\bibfield{author}{\bibinfo{person}{Elizabeth Broadbent}, \bibinfo{person}{Vinayak Kumar}, \bibinfo{person}{Xingyan Li}, \bibinfo{person}{John Sollers~3rd}, \bibinfo{person}{Rebecca~Q. Stafford}, \bibinfo{person}{Bruce~A. MacDonald}, {and} \bibinfo{person}{Daniel~M. Wegner}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Robots with {{Display Screens}}: {{A Robot}} with a {{More Humanlike Face Display Is Perceived To Have More Mind}} and a {{Better Personality}}}.
+\newblock \bibinfo{journal}{\emph{PLOS ONE}} \bibinfo{volume}{8}, \bibinfo{number}{8} (\bibinfo{date}{August} \bibinfo{year}{2013}), \bibinfo{pages}{e72589}.
+\newblock
+\showISSN{1932-6203}
+\urldef\tempurl%
+\url{https://doi.org/10.1371/journal.pone.0072589}
+\showDOI{\tempurl}
+
+
+\bibitem[Cohen(2016)]%
+        {cohen_power_2016}
+\bibfield{author}{\bibinfo{person}{Jacob Cohen}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{A power primer}}.
+\newblock \bibinfo{publisher}{American Psychological Association}, \bibinfo{address}{Washington, DC, US}.
+\newblock
+\showISBNx{978-1-4338-2091-5 978-1-4338-2140-0 978-1-4338-2092-2}
+\urldef\tempurl%
+\url{https://doi.org/10.1037/14805-018}
+\showDOI{\tempurl}
+\newblock
+\shownote{Pages: 284}.
+
+
+\bibitem[Cost(2023)]%
+        {cost23}
+\bibfield{author}{\bibinfo{person}{Ben Cost}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Married Father Commits Suicide after Encouragement by {{AI}} Chatbot: Widow}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://nypost.com/2023/03/30/married-father-commits-suicide-after-encouragement-by-ai-chatbot-widow/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Dang and Liu(2021)]%
+        {dang21}
+\bibfield{author}{\bibinfo{person}{Jianning Dang} {and} \bibinfo{person}{Li Liu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Robots Are Friends as Well as Foes: {{Ambivalent}} Attitudes toward Mindful and Mindless {{AI}} Robots in the {{United States}} and {{China}}}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior}}  \bibinfo{volume}{115} (\bibinfo{date}{February} \bibinfo{year}{2021}), \bibinfo{pages}{106612}.
+\newblock
+\showISSN{0747-5632}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chb.2020.106612}
+\showDOI{\tempurl}
+
+
+\bibitem[Eisinga et~al\mbox{.}(2013)]%
+        {eisinga13}
+\bibfield{author}{\bibinfo{person}{Rob Eisinga}, \bibinfo{person}{Manfred Grotenhuis}, {and} \bibinfo{person}{Ben Pelzer}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{The Reliability of a Two-Item Scale: {{Pearson}}, {{Cronbach}}, or {{Spearman-Brown}}?}
+\newblock \bibinfo{journal}{\emph{International Journal of Public Health}} \bibinfo{volume}{58}, \bibinfo{number}{4} (\bibinfo{date}{August} \bibinfo{year}{2013}), \bibinfo{pages}{637--642}.
+\newblock
+\showISSN{1661-8564}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s00038-012-0416-3}
+\showDOI{\tempurl}
+
+
+\bibitem[El~Atillah(2023)]%
+        {elatillah23}
+\bibfield{author}{\bibinfo{person}{Imane El~Atillah}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{{{AI}} Chatbot Blamed for 'encouraging' Young Father to Take His Own Life}.
+\newblock \bibinfo{howpublished}{https://www.euronews.com/next/2023/03/31/man-ends-his-life-after-an-ai-chatbot-encouraged-him-to-sacrifice-himself-to-stop-climate-}.
+\newblock
+
+
+\bibitem[Engelmann and Waldmann(2022)]%
+        {engelmann_how_2022}
+\bibfield{author}{\bibinfo{person}{Neele Engelmann} {and} \bibinfo{person}{Michael~R. Waldmann}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{How causal structure, causal strength, and foreseeability affect moral judgments}.
+\newblock \bibinfo{journal}{\emph{Cognition}}  \bibinfo{volume}{226} (\bibinfo{date}{Sept.} \bibinfo{year}{2022}), \bibinfo{pages}{105167}.
+\newblock
+\showISSN{0010-0277}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.cognition.2022.105167}
+\showDOI{\tempurl}
+
+
+\bibitem[Gray et~al\mbox{.}(2007)]%
+        {gray07}
+\bibfield{author}{\bibinfo{person}{Heather~M. Gray}, \bibinfo{person}{Kurt Gray}, {and} \bibinfo{person}{Daniel~M. Wegner}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Dimensions of {{Mind Perception}}}.
+\newblock \bibinfo{journal}{\emph{Science}} \bibinfo{volume}{315}, \bibinfo{number}{5812} (\bibinfo{date}{February} \bibinfo{year}{2007}), \bibinfo{pages}{619--619}.
+\newblock
+\showISSN{0036-8075, 1095-9203}
+\urldef\tempurl%
+\url{https://doi.org/10.1126/science.1134475}
+\showDOI{\tempurl}
+
+
+\bibitem[Gray and Wegner(2012a)]%
+        {gray12a}
+\bibfield{author}{\bibinfo{person}{Kurt Gray} {and} \bibinfo{person}{Daniel~M. Wegner}.} \bibinfo{year}{2012}\natexlab{a}.
+\newblock \showarticletitle{Feeling Robots and Human Zombies: {{Mind}} Perception and the Uncanny Valley}.
+\newblock \bibinfo{journal}{\emph{Cognition}} \bibinfo{volume}{125}, \bibinfo{number}{1} (\bibinfo{date}{October} \bibinfo{year}{2012}), \bibinfo{pages}{125--130}.
+\newblock
+\showISSN{00100277}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.cognition.2012.06.007}
+\showDOI{\tempurl}
+
+
+\bibitem[Gray and Wegner(2012b)]%
+        {gray12b}
+\bibfield{author}{\bibinfo{person}{Kurt Gray} {and} \bibinfo{person}{Daniel~M. Wegner}.} \bibinfo{year}{2012}\natexlab{b}.
+\newblock \showarticletitle{Morality Takes Two: {{Dyadic}} Morality and Mind Perception}.
+\newblock In \bibinfo{booktitle}{\emph{The Social Psychology of Morality: {{Exploring}} the Causes of Good and Evil}}. \bibinfo{publisher}{American Psychological Association}, \bibinfo{address}{Washington, DC, US}, \bibinfo{pages}{109--127}.
+\newblock
+\showISBNx{978-1-4338-1011-4}
+
+
+\bibitem[Gray et~al\mbox{.}(2012)]%
+        {gray12}
+\bibfield{author}{\bibinfo{person}{Kurt Gray}, \bibinfo{person}{Liane Young}, {and} \bibinfo{person}{Adam Waytz}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Mind {{Perception Is}} the {{Essence}} of {{Morality}}}.
+\newblock \bibinfo{journal}{\emph{Psychological Inquiry}} \bibinfo{volume}{23}, \bibinfo{number}{2} (\bibinfo{date}{April} \bibinfo{year}{2012}), \bibinfo{pages}{101--124}.
+\newblock
+\showISSN{1047-840X, 1532-7965}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/1047840X.2012.651387}
+\showDOI{\tempurl}
+
+
+\bibitem[Guglielmo(2015)]%
+        {guglielmo15}
+\bibfield{author}{\bibinfo{person}{Steve Guglielmo}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Moral Judgment as Information Processing: An Integrative Review}.
+\newblock \bibinfo{journal}{\emph{Frontiers in Psychology}}  \bibinfo{volume}{6} (\bibinfo{year}{2015}).
+\newblock
+\showISSN{1664-1078}
+
+
+\bibitem[Harris and Anthis(2021)]%
+        {harris21}
+\bibfield{author}{\bibinfo{person}{Jamie Harris} {and} \bibinfo{person}{Jacy~Reese Anthis}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{The {{Moral Consideration}} of {{Artificial Entities}}: {{A Literature Review}}}.
+\newblock \bibinfo{journal}{\emph{Science and Engineering Ethics}} \bibinfo{volume}{27}, \bibinfo{number}{4} (\bibinfo{date}{August} \bibinfo{year}{2021}), \bibinfo{pages}{53}.
+\newblock
+\showISSN{1353-3452, 1471-5546}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s11948-021-00331-8}
+\showDOI{\tempurl}
+
+
+\bibitem[Himma(2009)]%
+        {himma_artificial_2009}
+\bibfield{author}{\bibinfo{person}{Kenneth~Einar Himma}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Artificial agency, consciousness, and the criteria for moral agency: what properties must an artificial agent have to be a moral agent?}
+\newblock \bibinfo{journal}{\emph{Ethics and Information Technology}} \bibinfo{volume}{11}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2009}), \bibinfo{pages}{19--29}.
+\newblock
+\showISSN{1572-8439}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s10676-008-9167-5}
+\showDOI{\tempurl}
+
+
+\bibitem[Hong and Williams(2019)]%
+        {hong19}
+\bibfield{author}{\bibinfo{person}{Joo-Wha Hong} {and} \bibinfo{person}{Dmitri Williams}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Racism, Responsibility and Autonomy in {{HCI}}: {{Testing}} Perceptions of an {{AI}} Agent}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior}}  \bibinfo{volume}{100} (\bibinfo{date}{November} \bibinfo{year}{2019}), \bibinfo{pages}{79--84}.
+\newblock
+\showISSN{0747-5632}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chb.2019.06.012}
+\showDOI{\tempurl}
+
+
+\bibitem[Hwang and Won(2022)]%
+        {hwang22}
+\bibfield{author}{\bibinfo{person}{Angel Hsing-Chi Hwang} {and} \bibinfo{person}{Andrea~Stevenson Won}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{{AI}} in {{Your Mind}}: {{Counterbalancing Perceived Agency}} and {{Experience}} in {{Human-AI Interaction}}}. In \bibinfo{booktitle}{\emph{{{CHI Conference}} on {{Human Factors}} in {{Computing Systems Extended Abstracts}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{New Orleans LA USA}, \bibinfo{pages}{1--10}.
+\newblock
+\showISBNx{978-1-4503-9156-6}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3491101.3519833}
+\showDOI{\tempurl}
+
+
+\bibitem[Jacobs et~al\mbox{.}(2022)]%
+        {jacobs22}
+\bibfield{author}{\bibinfo{person}{Oliver~L. Jacobs}, \bibinfo{person}{Kamel Gazzaz}, {and} \bibinfo{person}{Alan Kingstone}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Mind the {{Robot}}! {{Variation}} in {{Attributions}} of {{Mind}} to a {{Wide Set}} of {{Real}} and {{Fictional Robots}}}.
+\newblock \bibinfo{journal}{\emph{International Journal of Social Robotics}} \bibinfo{volume}{14}, \bibinfo{number}{2} (\bibinfo{date}{March} \bibinfo{year}{2022}), \bibinfo{pages}{529--537}.
+\newblock
+\showISSN{1875-4805}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s12369-021-00807-4}
+\showDOI{\tempurl}
+
+
+\bibitem[Jacobs et~al\mbox{.}(2023)]%
+        {jacobs23}
+\bibfield{author}{\bibinfo{person}{Oliver~L. Jacobs}, \bibinfo{person}{Farid Pazhoohi}, {and} \bibinfo{person}{Alan Kingstone}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Brief Exposure Increases Mind Perception to {{ChatGPT}} and Is Moderated by the Individual Propensity to Anthropomorphize}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.31234/osf.io/pn29d}
+\showDOI{\tempurl}
+
+
+\bibitem[Jaeger and Wilks(2023)]%
+        {jaeger23}
+\bibfield{author}{\bibinfo{person}{Bastian Jaeger} {and} \bibinfo{person}{Matti Wilks}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{The {{Relative Importance}} of {{Target}} and {{Judge Characteristics}} in {{Shaping}} the {{Moral Circle}}}.
+\newblock \bibinfo{journal}{\emph{Cognitive Science}} \bibinfo{volume}{47}, \bibinfo{number}{10} (\bibinfo{year}{2023}), \bibinfo{pages}{e13362}.
+\newblock
+\showISSN{1551-6709}
+\urldef\tempurl%
+\url{https://doi.org/10.1111/cogs.13362}
+\showDOI{\tempurl}
+
+
+\bibitem[Kahn et~al\mbox{.}(2011)]%
+        {kahn_new_2011}
+\bibfield{author}{\bibinfo{person}{Peter~H. Kahn}, \bibinfo{person}{Aimee~L. Reichert}, \bibinfo{person}{Heather~E. Gary}, \bibinfo{person}{Takayuki Kanda}, \bibinfo{person}{Hiroshi Ishiguro}, \bibinfo{person}{Solace Shen}, \bibinfo{person}{Jolina~H. Ruckert}, {and} \bibinfo{person}{Brian Gill}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{The new ontological category hypothesis in human-robot interaction}. In \bibinfo{booktitle}{\emph{Proceedings of the 6th international conference on {Human}-robot interaction}} \emph{(\bibinfo{series}{{HRI} '11})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{159--160}.
+\newblock
+\showISBNx{978-1-4503-0561-7}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1957656.1957710}
+\showDOI{\tempurl}
+
+
+\bibitem[Kamide et~al\mbox{.}(2013)]%
+        {kamide13}
+\bibfield{author}{\bibinfo{person}{Hiroko Kamide}, \bibinfo{person}{Friederike Eyssel}, {and} \bibinfo{person}{Tatsuo Arai}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Psychological {{Anthropomorphism}} of {{Robots}}}. In \bibinfo{booktitle}{\emph{Social {{Robotics}}}}, \bibfield{editor}{\bibinfo{person}{Guido Herrmann}, \bibinfo{person}{Martin~J. Pearson}, \bibinfo{person}{Alexander Lenz}, \bibinfo{person}{Paul Bremner}, \bibinfo{person}{Adam Spiers}, {and} \bibinfo{person}{Ute Leonards}} (Eds.). \bibinfo{publisher}{Springer International Publishing}, \bibinfo{address}{Cham}, \bibinfo{pages}{199--208}.
+\newblock
+\showISBNx{978-3-319-02675-6}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-02675-6_20}
+\showDOI{\tempurl}
+
+
+\bibitem[Kim et~al\mbox{.}(2023)]%
+        {kim23}
+\bibfield{author}{\bibinfo{person}{Taenyun Kim}, \bibinfo{person}{Maria~D. Molina}, \bibinfo{person}{Minjin~(Mj) Rheu}, \bibinfo{person}{Emily~S. Zhan}, {and} \bibinfo{person}{Wei Peng}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{One {{AI Does Not Fit All}}: {{A Cluster Analysis}} of the {{Laypeople}}'s {{Perception}} of {{AI Roles}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Hamburg Germany}, \bibinfo{pages}{1--20}.
+\newblock
+\showISBNx{978-1-4503-9421-5}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3544548.3581340}
+\showDOI{\tempurl}
+
+
+\bibitem[Ladak et~al\mbox{.}(2024a)]%
+        {ladak24}
+\bibfield{author}{\bibinfo{person}{Ali Ladak}, \bibinfo{person}{Jamie Harris}, {and} \bibinfo{person}{Jacy~Reese Anthis}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Which {{Artificial Intelligences}} Do {{People Care Most About}}? {{A Conjoint Analysis}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2024 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Honolulu USA}, \bibinfo{pages}{1--15}.
+\newblock
+
+
+\bibitem[Ladak et~al\mbox{.}(2024b)]%
+        {ladak23a}
+\bibfield{author}{\bibinfo{person}{Ali Ladak}, \bibinfo{person}{Steve Loughnan}, {and} \bibinfo{person}{Matti Wilks}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{The Moral Psychology of Artificial Intelligence}.
+\newblock \bibinfo{journal}{\emph{Current Directions in Psychological Science}} \bibinfo{volume}{33}, \bibinfo{number}{1} (\bibinfo{date}{September} \bibinfo{year}{2024}), \bibinfo{pages}{27--34}.
+\newblock
+\showISSN{0963-7214}
+
+
+\bibitem[Lee et~al\mbox{.}(2024)]%
+        {lee24}
+\bibfield{author}{\bibinfo{person}{Mina Lee}, \bibinfo{person}{Katy~Ilonka Gero}, \bibinfo{person}{John Joon~Young Chung}, \bibinfo{person}{Simon~Buckingham Shum}, \bibinfo{person}{Vipul Raheja}, \bibinfo{person}{Hua Shen}, \bibinfo{person}{Subhashini Venugopalan}, \bibinfo{person}{Thiemo Wambsganss}, \bibinfo{person}{David Zhou}, \bibinfo{person}{Emad~A. Alghamdi}, \bibinfo{person}{Tal August}, \bibinfo{person}{Avinash Bhat}, \bibinfo{person}{Madiha~Zahrah Choksi}, \bibinfo{person}{Senjuti Dutta}, \bibinfo{person}{Jin~L.C. Guo}, \bibinfo{person}{Md~Naimul Hoque}, \bibinfo{person}{Yewon Kim}, \bibinfo{person}{Simon Knight}, \bibinfo{person}{Seyed~Parsa Neshaei}, \bibinfo{person}{Antonette Shibani}, \bibinfo{person}{Disha Shrivastava}, \bibinfo{person}{Lila Shroff}, \bibinfo{person}{Agnia Sergeyuk}, \bibinfo{person}{Jessi Stark}, \bibinfo{person}{Sarah Sterman}, \bibinfo{person}{Sitong Wang}, \bibinfo{person}{Antoine Bosselut}, \bibinfo{person}{Daniel Buschek}, \bibinfo{person}{Joseph~Chee Chang},
+  \bibinfo{person}{Sherol Chen}, \bibinfo{person}{Max Kreminski}, \bibinfo{person}{Joonsuk Park}, \bibinfo{person}{Roy Pea}, \bibinfo{person}{Eugenia Ha~Rim Rho}, \bibinfo{person}{Zejiang Shen}, {and} \bibinfo{person}{Pao Siangliulue}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{A {{Design Space}} for {{Intelligent}} and {{Interactive Writing Assistants}}}. In \bibinfo{booktitle}{\emph{Proceedings of the {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Honolulu HI USA}, \bibinfo{pages}{1--35}.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642697}
+\showDOI{\tempurl}
+
+
+\bibitem[Lima et~al\mbox{.}(2021)]%
+        {lima21}
+\bibfield{author}{\bibinfo{person}{Gabriel Lima}, \bibinfo{person}{Nina {Grgi{\'c}-Hla{\v c}a}}, {and} \bibinfo{person}{Meeyoung Cha}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Human {{Perceptions}} on {{Moral Responsibility}} of {{AI}}: {{A Case Study}} in {{AI-Assisted Bail Decision-Making}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Yokohama Japan}, \bibinfo{pages}{1--17}.
+\newblock
+\showISBNx{978-1-4503-8096-6}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445260}
+\showDOI{\tempurl}
+
+
+\bibitem[Lima et~al\mbox{.}(2020)]%
+        {lima20}
+\bibfield{author}{\bibinfo{person}{Gabriel Lima}, \bibinfo{person}{Changyeon Kim}, \bibinfo{person}{Seungho Ryu}, \bibinfo{person}{Chihyung Jeon}, {and} \bibinfo{person}{Meeyoung Cha}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Collecting the {{Public Perception}} of {{AI}} and {{Robot Rights}}}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Human-Computer Interaction}} \bibinfo{volume}{4}, \bibinfo{number}{CSCW2} (\bibinfo{date}{October} \bibinfo{year}{2020}), \bibinfo{pages}{1--24}.
+\newblock
+\showISSN{2573-0142}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3415206}
+\showDOI{\tempurl}
+
+
+\bibitem[L{\"o}ffler et~al\mbox{.}(2020)]%
+        {loffler20}
+\bibfield{author}{\bibinfo{person}{Diana L{\"o}ffler}, \bibinfo{person}{Judith D{\"o}rrenb{\"a}cher}, {and} \bibinfo{person}{Marc Hassenzahl}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{The {{Uncanny Valley Effect}} in {{Zoomorphic Robots}}: {{The U-Shaped Relation Between Animal Likeness}} and {{Likeability}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 {{ACM}}/{{IEEE International Conference}} on {{Human-Robot Interaction}}}} \emph{(\bibinfo{series}{{{HRI}} '20})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{261--270}.
+\newblock
+\showISBNx{978-1-4503-6746-2}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3319502.3374788}
+\showDOI{\tempurl}
+
+
+\bibitem[Malle(2019)]%
+        {malle19a}
+\bibfield{author}{\bibinfo{person}{Bertram~F. Malle}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{How {{Many Dimensions}} of {{Mind Perception Really Are There}}?}
+\newblock \bibinfo{journal}{\emph{Proceedings of the 41st Annual Meeting of the Cognitive Science Society}} (\bibinfo{year}{2019}), \bibinfo{pages}{2268--2274}.
+\newblock
+
+
+\bibitem[Malle et~al\mbox{.}(2014)]%
+        {malle14}
+\bibfield{author}{\bibinfo{person}{Bertram~F. Malle}, \bibinfo{person}{Steve Guglielmo}, {and} \bibinfo{person}{Andrew~E. Monroe}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{A {{Theory}} of {{Blame}}}.
+\newblock \bibinfo{journal}{\emph{Psychological Inquiry}} \bibinfo{volume}{25}, \bibinfo{number}{2} (\bibinfo{date}{April} \bibinfo{year}{2014}), \bibinfo{pages}{147--186}.
+\newblock
+\showISSN{1047-840X}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/1047840X.2014.877340}
+\showDOI{\tempurl}
+
+
+\bibitem[Maninger and Shank(2022)]%
+        {maninger22}
+\bibfield{author}{\bibinfo{person}{Timothy Maninger} {and} \bibinfo{person}{Daniel~B. Shank}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Perceptions of Violations by Artificial and Human Actors across Moral Foundations}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior Reports}}  \bibinfo{volume}{5} (\bibinfo{date}{March} \bibinfo{year}{2022}), \bibinfo{pages}{100154}.
+\newblock
+\showISSN{2451-9588}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chbr.2021.100154}
+\showDOI{\tempurl}
+
+
+\bibitem[Matthias(2004)]%
+        {matthias_responsibility_2004}
+\bibfield{author}{\bibinfo{person}{Andreas Matthias}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{The responsibility gap: {Ascribing} responsibility for the actions of learning automata}.
+\newblock \bibinfo{journal}{\emph{Ethics and Information Technology}} \bibinfo{volume}{6}, \bibinfo{number}{3} (\bibinfo{date}{Sept.} \bibinfo{year}{2004}), \bibinfo{pages}{175--183}.
+\newblock
+\showISSN{1572-8439}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s10676-004-3422-1}
+\showDOI{\tempurl}
+
+
+\bibitem[Monroe et~al\mbox{.}(2014)]%
+        {monroe14}
+\bibfield{author}{\bibinfo{person}{Andrew~E. Monroe}, \bibinfo{person}{Kyle~D. Dillon}, {and} \bibinfo{person}{Bertram~F. Malle}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Bringing Free Will down to {{Earth}}: {{People}}'s Psychological Concept of Free Will and Its Role in Moral Judgment}.
+\newblock \bibinfo{journal}{\emph{Consciousness and Cognition}}  \bibinfo{volume}{27} (\bibinfo{date}{July} \bibinfo{year}{2014}), \bibinfo{pages}{100--108}.
+\newblock
+\showISSN{1053-8100}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.concog.2014.04.011}
+\showDOI{\tempurl}
+
+
+\bibitem[Nijssen et~al\mbox{.}(2022)]%
+        {nijssen22}
+\bibfield{author}{\bibinfo{person}{Sari~R.R. Nijssen}, \bibinfo{person}{Barbara C.~N. M{\"u}ller}, \bibinfo{person}{Tibor Bosse}, {and} \bibinfo{person}{Markus Paulus}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Can You Count on a Calculator? {{The}} Role of Agency and Affect in Judgments of Robots as Moral Agents}.
+\newblock \bibinfo{journal}{\emph{Human--Computer Interaction}} \bibinfo{volume}{0}, \bibinfo{number}{0} (\bibinfo{date}{June} \bibinfo{year}{2022}), \bibinfo{pages}{1--17}.
+\newblock
+\showISSN{0737-0024}
+\urldef\tempurl%
+\url{https://doi.org/10.1080/07370024.2022.2080552}
+\showDOI{\tempurl}
+
+
+\bibitem[Nijssen et~al\mbox{.}(2019)]%
+        {nijssen19}
+\bibfield{author}{\bibinfo{person}{Sari R.~R. Nijssen}, \bibinfo{person}{Barbara C.~N. M{\"u}ller}, \bibinfo{person}{Rick B.~Van Baaren}, {and} \bibinfo{person}{Markus Paulus}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Saving the {{Robot}} or the {{Human}}? {{Robots Who Feel Deserve Moral Care}}}.
+\newblock \bibinfo{journal}{\emph{Social Cognition}} \bibinfo{volume}{37}, \bibinfo{number}{1} (\bibinfo{date}{February} \bibinfo{year}{2019}), \bibinfo{pages}{41--S2}.
+\newblock
+\showISSN{0278-016X}
+\urldef\tempurl%
+\url{https://doi.org/10.1521/soco.2019.37.1.41}
+\showDOI{\tempurl}
+
+
+\bibitem[Pauketat and Anthis(2022)]%
+        {pauketat22}
+\bibfield{author}{\bibinfo{person}{Janet~V.T. Pauketat} {and} \bibinfo{person}{Jacy~Reese Anthis}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Predicting the Moral Consideration of Artificial Intelligences}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior}}  \bibinfo{volume}{136} (\bibinfo{date}{November} \bibinfo{year}{2022}), \bibinfo{pages}{107372}.
+\newblock
+\showISSN{07475632}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chb.2022.107372}
+\showDOI{\tempurl}
+
+
+\bibitem[Placani(2024)]%
+        {placani_anthropomorphism_2024}
+\bibfield{author}{\bibinfo{person}{Adriana Placani}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Anthropomorphism in {AI}: hype and fallacy}.
+\newblock \bibinfo{journal}{\emph{AI and Ethics}} \bibinfo{volume}{4}, \bibinfo{number}{3} (\bibinfo{date}{Aug.} \bibinfo{year}{2024}), \bibinfo{pages}{691--698}.
+\newblock
+\showISSN{2730-5961}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s43681-024-00419-4}
+\showDOI{\tempurl}
+
+
+\bibitem[Riddoch and Cross(2021)]%
+        {riddoch21}
+\bibfield{author}{\bibinfo{person}{Katie~A. Riddoch} {and} \bibinfo{person}{Emily~S. Cross}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{``{{Hit}} the {{Robot}} on the {{Head With This Mallet}}'' -- {{Making}} a {{Case}} for {{Including More Open Questions}} in {{HRI Research}}}.
+\newblock \bibinfo{journal}{\emph{Frontiers in Robotics and AI}}  \bibinfo{volume}{8} (\bibinfo{date}{February} \bibinfo{year}{2021}).
+\newblock
+\showISSN{2296-9144}
+\urldef\tempurl%
+\url{https://doi.org/10.3389/frobt.2021.603510}
+\showDOI{\tempurl}
+
+
+\bibitem[Rottman et~al\mbox{.}(2021)]%
+        {rottman21}
+\bibfield{author}{\bibinfo{person}{Joshua Rottman}, \bibinfo{person}{Charlie~R. Crimston}, {and} \bibinfo{person}{Stylianos Syropoulos}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Tree-{{Huggers Versus Human-Lovers}}: {{Anthropomorphism}} and {{Dehumanization Predict Valuing Nature Over Outgroups}}}.
+\newblock \bibinfo{journal}{\emph{Cognitive Science}} \bibinfo{volume}{45}, \bibinfo{number}{4} (\bibinfo{year}{2021}), \bibinfo{pages}{e12967}.
+\newblock
+\showISSN{1551-6709}
+\urldef\tempurl%
+\url{https://doi.org/10.1111/cogs.12967}
+\showDOI{\tempurl}
+
+
+\bibitem[Schoenherr and Thomson(2024)]%
+        {schoenherr24}
+\bibfield{author}{\bibinfo{person}{Jordan~Richard Schoenherr} {and} \bibinfo{person}{Robert Thomson}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{When {{AI Fails}}, {{Who Do We Blame}}? {{Attributing Responsibility}} in {{Human}}--{{AI Interactions}}}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Technology and Society}} \bibinfo{volume}{5}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2024}), \bibinfo{pages}{61--70}.
+\newblock
+\showISSN{2637-6415}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/TTS.2024.3370095}
+\showDOI{\tempurl}
+
+
+\bibitem[Schwitzgebel and Garza(2015)]%
+        {schwitzgebel15}
+\bibfield{author}{\bibinfo{person}{Eric Schwitzgebel} {and} \bibinfo{person}{Mara Garza}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{A {{Defense}} of the {{Rights}} of {{Artificial Intelligences}}: {{Defense}} of the {{Rights}} of {{Artificial Intelligences}}}.
+\newblock \bibinfo{journal}{\emph{Midwest Studies In Philosophy}} \bibinfo{volume}{39}, \bibinfo{number}{1} (\bibinfo{date}{September} \bibinfo{year}{2015}), \bibinfo{pages}{98--119}.
+\newblock
+\showISSN{03636550}
+\urldef\tempurl%
+\url{https://doi.org/10.1111/misp.12032}
+\showDOI{\tempurl}
+
+
+\bibitem[Scott et~al\mbox{.}(2023)]%
+        {scott23}
+\bibfield{author}{\bibinfo{person}{Ava~Elizabeth Scott}, \bibinfo{person}{Daniel Neumann}, \bibinfo{person}{Jasmin Niess}, {and} \bibinfo{person}{Pawe{\l}~W. Wo{\'z}niak}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Do {{You Mind}}? {{User Perceptions}} of {{Machine Consciousness}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Hamburg Germany}, \bibinfo{pages}{1--19}.
+\newblock
+\showISBNx{978-1-4503-9421-5}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3544548.3581296}
+\showDOI{\tempurl}
+
+
+\bibitem[Shank and DeSanti(2018)]%
+        {shank18}
+\bibfield{author}{\bibinfo{person}{Daniel~B. Shank} {and} \bibinfo{person}{Alyssa DeSanti}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Attributions of Morality and Mind to Artificial Intelligence after Real-World Moral Violations}.
+\newblock \bibinfo{journal}{\emph{Computers in Human Behavior}}  \bibinfo{volume}{86} (\bibinfo{date}{September} \bibinfo{year}{2018}), \bibinfo{pages}{401--411}.
+\newblock
+\showISSN{0747-5632}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.chb.2018.05.014}
+\showDOI{\tempurl}
+
+
+\bibitem[Stafford et~al\mbox{.}(2014)]%
+        {stafford14}
+\bibfield{author}{\bibinfo{person}{Rebecca~Q. Stafford}, \bibinfo{person}{Bruce~A. MacDonald}, \bibinfo{person}{Chandimal Jayawardena}, \bibinfo{person}{Daniel~M. Wegner}, {and} \bibinfo{person}{Elizabeth Broadbent}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Does the {{Robot Have}} a {{Mind}}? {{Mind Perception}} and {{Attitudes Towards Robots Predict Use}} of an {{Eldercare Robot}}}.
+\newblock \bibinfo{journal}{\emph{International Journal of Social Robotics}} \bibinfo{volume}{6}, \bibinfo{number}{1} (\bibinfo{date}{January} \bibinfo{year}{2014}), \bibinfo{pages}{17--32}.
+\newblock
+\showISSN{1875-4805}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/s12369-013-0186-y}
+\showDOI{\tempurl}
+
+
+\bibitem[Stojilović et~al\mbox{.}(2024)]%
+        {stojilovic24}
+\bibfield{author}{\bibinfo{person}{Darko Stojilović}, \bibinfo{person}{Matija Franklin}, \bibinfo{person}{Bertram~F. Malle}, \bibinfo{person}{Carlos Fernandez-Basso}, \bibinfo{person}{Edmond Awad}, {and} \bibinfo{person}{David Lagnado}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Are autonomous vehicles blamed differently?}
+\newblock \bibinfo{journal}{\emph{Proceedings of the Annual Meeting of the Cognitive Science Society}}  \bibinfo{volume}{46} (\bibinfo{year}{2024}).
+\newblock
+\urldef\tempurl%
+\url{https://escholarship.org/uc/item/7q35p9b7}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Strohminger and Jordan(2022)]%
+        {strohminger_corporate_2022}
+\bibfield{author}{\bibinfo{person}{Nina Strohminger} {and} \bibinfo{person}{Matthew~R. Jordan}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Corporate insecthood}.
+\newblock \bibinfo{journal}{\emph{Cognition}}  \bibinfo{volume}{224} (\bibinfo{date}{July} \bibinfo{year}{2022}), \bibinfo{pages}{105068}.
+\newblock
+\showISSN{0010-0277}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.cognition.2022.105068}
+\showDOI{\tempurl}
+
+
+\bibitem[Stuart and Kneer(2021)]%
+        {stuart21}
+\bibfield{author}{\bibinfo{person}{Michael~T. Stuart} {and} \bibinfo{person}{Markus Kneer}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Guilty {{Artificial Minds}}: {{Folk Attributions}} of {{Mens Rea}} and {{Culpability}} to {{Artificially Intelligent Agents}}}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Human-Computer Interaction}} \bibinfo{volume}{5}, \bibinfo{number}{CSCW2} (\bibinfo{date}{October} \bibinfo{year}{2021}), \bibinfo{pages}{1--27}.
+\newblock
+\showISSN{2573-0142}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3479507}
+\showDOI{\tempurl}
+
+
+\bibitem[Tanibe et~al\mbox{.}(2017)]%
+        {tanibe17}
+\bibfield{author}{\bibinfo{person}{Tetsushi Tanibe}, \bibinfo{person}{Takaaki Hashimoto}, {and} \bibinfo{person}{Kaori Karasawa}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{We Perceive a Mind in a Robot When We Help It}.
+\newblock \bibinfo{journal}{\emph{PLOS ONE}} \bibinfo{volume}{12}, \bibinfo{number}{7} (\bibinfo{date}{July} \bibinfo{year}{2017}), \bibinfo{pages}{e0180952}.
+\newblock
+\showISSN{1932-6203}
+\urldef\tempurl%
+\url{https://doi.org/10.1371/journal.pone.0180952}
+\showDOI{\tempurl}
+
+
+\bibitem[Tzelios et~al\mbox{.}(2022)]%
+        {tzelios22}
+\bibfield{author}{\bibinfo{person}{Kallie Tzelios}, \bibinfo{person}{Lisa~A. Williams}, \bibinfo{person}{John Omerod}, {and} \bibinfo{person}{Eliza {Bliss-Moreau}}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Evidence of the Unidimensional Structure of Mind Perception}.
+\newblock \bibinfo{journal}{\emph{Scientific Reports}} \bibinfo{volume}{12}, \bibinfo{number}{1} (\bibinfo{date}{November} \bibinfo{year}{2022}), \bibinfo{pages}{18978}.
+\newblock
+\showISSN{2045-2322}
+\urldef\tempurl%
+\url{https://doi.org/10.1038/s41598-022-23047-6}
+\showDOI{\tempurl}
+
+
+\bibitem[Vanneste and Puranam(2024)]%
+        {vanneste24}
+\bibfield{author}{\bibinfo{person}{Bart~S. Vanneste} {and} \bibinfo{person}{Phanish Puranam}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Artificial {{Intelligence}}, {{Trust}}, and {{Perceptions}}~of {{Agency}}}.
+\newblock \bibinfo{journal}{\emph{Academy of Management Review}} (\bibinfo{date}{March} \bibinfo{year}{2024}), \bibinfo{pages}{amr.2022.0041}.
+\newblock
+\showISSN{0363-7425}
+\urldef\tempurl%
+\url{https://doi.org/10.5465/amr.2022.0041}
+\showDOI{\tempurl}
+
+
+\bibitem[Vaswani et~al\mbox{.}(2017)]%
+        {vaswani17}
+\bibfield{author}{\bibinfo{person}{Ashish Vaswani}, \bibinfo{person}{Noam Shazeer}, \bibinfo{person}{Niki Parmar}, \bibinfo{person}{Jakob Uszkoreit}, \bibinfo{person}{Llion Jones}, \bibinfo{person}{Aidan~N Gomez}, \bibinfo{person}{{\L} Kaiser}, {and} \bibinfo{person}{Illia Polosukhin}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Attention Is {{All}} You {{Need}}}. In \bibinfo{booktitle}{\emph{Advances in {{Neural Information Processing Systems}}}}, Vol.~\bibinfo{volume}{30}. \bibinfo{publisher}{Curran Associates, Inc.}
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2018)]%
+        {wang18}
+\bibfield{author}{\bibinfo{person}{Dan Wang}, \bibinfo{person}{Alessandro Piazza}, {and} \bibinfo{person}{Sarah~A. Soule}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Boundary-{{Spanning}} in {{Social Movements}}: {{Antecedents}} and {{Outcomes}}}.
+\newblock \bibinfo{journal}{\emph{Annual Review of Sociology}} \bibinfo{volume}{44}, \bibinfo{number}{1} (\bibinfo{date}{July} \bibinfo{year}{2018}), \bibinfo{pages}{167--187}.
+\newblock
+\showISSN{0360-0572}
+\urldef\tempurl%
+\url{https://doi.org/10.1146/annurev-soc-073117-041258}
+\showDOI{\tempurl}
+
+
+\bibitem[Weisman(2022)]%
+        {weisman_extraordinary_2022}
+\bibfield{author}{\bibinfo{person}{Kara Weisman}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Extraordinary entities: {Insights} into folk ontology from studies of lay people’s beliefs about robots}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the Annual Meeting of the Cognitive Science Society}} \bibinfo{volume}{44}, \bibinfo{number}{44} (\bibinfo{year}{2022}).
+\newblock
+\urldef\tempurl%
+\url{https://escholarship.org/uc/item/23p9h07t}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Weisman et~al\mbox{.}(2017)]%
+        {weisman17}
+\bibfield{author}{\bibinfo{person}{Kara Weisman}, \bibinfo{person}{Carol~S. Dweck}, {and} \bibinfo{person}{Ellen~M. Markman}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Rethinking People's Conceptions of Mental Life}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the National Academy of Sciences}} \bibinfo{volume}{114}, \bibinfo{number}{43} (\bibinfo{date}{October} \bibinfo{year}{2017}), \bibinfo{pages}{11374--11379}.
+\newblock
+\showISSN{0027-8424, 1091-6490}
+\urldef\tempurl%
+\url{https://doi.org/10.1073/pnas.1704347114}
+\showDOI{\tempurl}
+
+
+\bibitem[Wester et~al\mbox{.}(2024)]%
+        {wester24}
+\bibfield{author}{\bibinfo{person}{Joel Wester}, \bibinfo{person}{Tim Schrills}, \bibinfo{person}{Henning Pohl}, {and} \bibinfo{person}{Niels Van~Berkel}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{``{{As}} an {{AI}} Language Model, {{I}} Cannot'': {{Investigating LLM Denials}} of {{User Requests}}}. In \bibinfo{booktitle}{\emph{Proceedings of the {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Honolulu HI USA}, \bibinfo{pages}{1--14}.
+\newblock
+\showISBNx{9798400703300}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3613904.3642135}
+\showDOI{\tempurl}
+
+
+\bibitem[Yam et~al\mbox{.}(2021)]%
+        {yam21}
+\bibfield{author}{\bibinfo{person}{Kai~Chi Yam}, \bibinfo{person}{Yochanan~E. Bigman}, \bibinfo{person}{Pok~Man Tang}, \bibinfo{person}{Remus Ilies}, \bibinfo{person}{David De~Cremer}, \bibinfo{person}{Harold Soh}, {and} \bibinfo{person}{Kurt Gray}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Robots at Work: {{People}} Prefer---and Forgive---Service Robots with Perceived Feelings}.
+\newblock \bibinfo{journal}{\emph{Journal of Applied Psychology}} \bibinfo{volume}{106}, \bibinfo{number}{10} (\bibinfo{year}{2021}), \bibinfo{pages}{1557--1572}.
+\newblock
+\showISSN{1939-1854}
+\urldef\tempurl%
+\url{https://doi.org/10.1037/apl0000834}
+\showDOI{\tempurl}
+
+
+\bibitem[Yam et~al\mbox{.}(2022)]%
+        {yam22}
+\bibfield{author}{\bibinfo{person}{Kai~Chi Yam}, \bibinfo{person}{E-Yang Goh}, \bibinfo{person}{Ryan Fehr}, \bibinfo{person}{Randy Lee}, \bibinfo{person}{Harold Soh}, {and} \bibinfo{person}{Kurt Gray}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{When Your Boss Is a Robot: {{Workers}} Are More Spiteful to Robot Supervisors That Seem More Human}.
+\newblock \bibinfo{journal}{\emph{Journal of Experimental Social Psychology}}  \bibinfo{volume}{102} (\bibinfo{date}{September} \bibinfo{year}{2022}), \bibinfo{pages}{104360}.
+\newblock
+\showISSN{0022-1031}
+\urldef\tempurl%
+\url{https://doi.org/10.1016/j.jesp.2022.104360}
+\showDOI{\tempurl}
+
+
+\bibitem[Yang et~al\mbox{.}(2020)]%
+        {yang_re-examining_2020}
+\bibfield{author}{\bibinfo{person}{Qian Yang}, \bibinfo{person}{Aaron Steinfeld}, \bibinfo{person}{Carolyn Rosé}, {and} \bibinfo{person}{John Zimmerman}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Re-examining {Whether}, {Why}, and {How} {Human}-{AI} {Interaction} {Is} {Uniquely} {Difficult} to {Design}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 {CHI} {Conference} on {Human} {Factors} in {Computing} {Systems}}} \emph{(\bibinfo{series}{{CHI} '20})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--13}.
+\newblock
+\showISBNx{978-1-4503-6708-0}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3313831.3376301}
+\showDOI{\tempurl}
+
+
+\bibitem[Zhang et~al\mbox{.}(2021)]%
+        {zhang21a}
+\bibfield{author}{\bibinfo{person}{Qiyuan Zhang}, \bibinfo{person}{Christopher~D. Wallbridge}, \bibinfo{person}{Dylan~M. Jones}, {and} \bibinfo{person}{Phil Morgan}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{The {{Blame Game}}: {{Double Standards Apply}} to {{Autonomous Vehicle Accidents}}}. In \bibinfo{booktitle}{\emph{Advances in {{Human Aspects}} of {{Transportation}}}}, \bibfield{editor}{\bibinfo{person}{Neville Stanton}} (Ed.). \bibinfo{publisher}{Springer International Publishing}, \bibinfo{address}{Cham}, \bibinfo{pages}{308--314}.
+\newblock
+\showISBNx{978-3-030-80012-3}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-80012-3_36}
+\showDOI{\tempurl}
+
+
+\bibitem[Zoshak and Dew(2021)]%
+        {zoshak21}
+\bibfield{author}{\bibinfo{person}{John Zoshak} {and} \bibinfo{person}{Kristin Dew}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Beyond {{Kant}} and {{Bentham}}: {{How Ethical Theories}} Are Being Used in {{Artificial Moral Agents}}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 {{CHI Conference}} on {{Human Factors}} in {{Computing Systems}}}}. \bibinfo{publisher}{ACM}, \bibinfo{address}{Yokohama Japan}, \bibinfo{pages}{1--15}.
+\newblock
+\showISBNx{978-1-4503-8096-6}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3411764.3445102}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

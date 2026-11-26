@@ -1,0 +1,6 @@
+\section{Conclusion}
+
+We introduced \textbf{WorldAgen}, a unified vision–language–action framework that jointly learns world modeling and action prediction through a shared Transformer backbone. WorldAgen integrates a world model head that predicts future states and a policy head that predicts task-conditioned actions. At test time, the model performs lightweight Test-Time Training (TTT) using short exploratory rollouts, turning world modeling into an online adaptation signal. This enables the agent to quickly adjust to new environments and leads to consistent performance gains on CALVIN and LIBERO, demonstrating that adaptive VLA systems can benefit substantially from continual test-time interaction.
+
+\section{Limitations and Future Work}
+Our study evaluates only a single model size and architecture, and focuses test-time training exclusively on the world-model component. Future work includes exploring larger and more diverse model architectures, as well as developing joint test-time-training methods that improve both action prediction and world modeling.

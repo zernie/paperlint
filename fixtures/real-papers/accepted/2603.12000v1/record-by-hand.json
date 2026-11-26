@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/methodology.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/kol-overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "figures/ai-coding-flow.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/agreement.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "tables/thematic_tree.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "dbbac075885ea6d140353a8234e3e1d8ef3d68fadf9d553067bf5f7ac0271d41",
+    "sections/introduction.tex": "c4d719bbd0e1314e52e2e1c5e3c42eac4372d88f87e29b4fc09c552d833ce2fa",
+    "sections/background.tex": "2a7f356dca7a3cc28b9eef9026e4521a8daf3cfc59a3d1262b44606e05aabbfe",
+    "sections/methodology.tex": "c69a0268ece0b9a463538a249b55c7baa663f6920a19c4c33d93c441d0f8a751",
+    "tables/kol-overview.tex": "f59ea170293254b12a1aaa4a8a36541da1a27649f257512f0155f1a88ffc9fbd",
+    "figures/ai-coding-flow.tex": "4df35278a34011c087b2e278e19399f200efaa15f1294b32088793035e500f49",
+    "tables/agreement.tex": "80f75087b45f8fe7340cebcbc84f2244fdd273009d027c2f89f82b07d367e336",
+    "sections/results.tex": "3b5ec0832c9de87fc3ac513de4f4f1d74fee8a054f93f36b29774b0e255c4bec",
+    "sections/discussion.tex": "2252ed4068ec431663e2850800eaba4e24358cfcb0cb43e76377d9816850020b",
+    "sections/conclusion.tex": "0a44d8660f0ac84683487e0ec11519893a798949bfd4f40fb0a5396a6fcfbac1",
+    "sections/appendix.tex": "f665ee1f873ca65c44a269fff12cd65d40f794bf31617ac66b536ffbe73890d8",
+    "tables/thematic_tree.tex": "dca0712e38e16a2c741fc5ac237c2a7e9d8e97c2a3f97afa181bee792073579f"
+  }
+}

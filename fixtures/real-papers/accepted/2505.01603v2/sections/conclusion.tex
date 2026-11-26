@@ -1,0 +1,19 @@
+\section{Conclusion}\label{sec:conclusion}
+
+The cloud has evolved in the past decade to offer a variety of serverless compute, storage, and AI/analytics services, but the performance and efficiency of these services is limited by the legacy software that they retrofit. Today's infrastructure is still based on the older, more traditional model of cloud computing, in which users rent long-running VMs, each with a guest OS exposing a POSIX-like interface. Initializing this system stack is slow. Furthermore, having applications interact with the platform on the level of files and sockets does not provide the platform with useful information about application characteristics, like compute vs. I/O intensity, to optimize resource allocation and scheduling.
+
+\dandelion co-designs a declarative cloud-native programming model and execution system for truly elastic computing while maintaining secure isolation. % and high resource efficiency. 
+%The \dandelion programming model 
+Developers specify their applications as DAGs of pure compute functions and communication functions.
+This enables \dandelion to isolate pure compute functions with lightweight sandboxes that boot in 100s of microseconds, enabling true elasticity (i.e., fast cold start for every request). \dandelion improves elastic query processing latency by 40\% compared to AWS Athena and reduces committed memory by 96\% on average compared to Knative autoscaling for the Azure Functions trace.
+
+%\dandelion shows separating communication from computation can improve sandbox creation latency and throughput, and affect memory footprint.
+%While communication function and data passing performance can still be improved, data dependencies are now visible, which platforms can leverage for locality optimizations at higher levels. % We have also shown how the compute function interface enables easy implementation of different isolation backends with their own security trade-offs and the small size could even enable formal verification of the code reading context contents.
+
+
+%% Coudl potentially incorporate discussion topics in a "future work" sentencelike:
+    %\item Adoption of a new programming model: Whereas backward compatibility to run legacy apps in the cloud was critical in early days of cloud to ease adoption and migration of workloads from on-premise to the cloud, today many apps are designed cloud-native. Serverless computing has already shown that users are willing to re-architect applications with new abstractions that go beyond legacy POSIX interfaces if they can get benefits like avoid the burden of resource management and get fine-grain resource billing. The jury is still out on what the right programming model for serverless is; this is still fresh and malleable. 
+    
+    %\item Additional memory efficiency opportunities: securely share code, zero-copy data passing \cite{ORC-cheri-osdi23}. e.g., CHERI context does not necessarily need to be contiguous; can build it around where the original copy of the inputs lies in memory?
+   
+    %\item Formal verification of the \dandelion trusted code base (in particular the dispatcher, memory domain manager, and driver) is feasible as this consists of XX LOC in Rust. \dandelion takes an alternative approach to the  defense in depth approach of the current VM-based stack. 

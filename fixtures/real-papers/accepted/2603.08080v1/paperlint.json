@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "chi-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-sigconf"
+      },
+      "opened": "2026-03-09",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-03-09",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

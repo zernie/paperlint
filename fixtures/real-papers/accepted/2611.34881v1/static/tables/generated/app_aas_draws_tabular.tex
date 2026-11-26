@@ -1,0 +1,15 @@
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{COCO}} & \multicolumn{4}{c}{\textbf{STRANGE-Bench}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Method & val & T & A & $\Delta^{\text{T-A}}$ & $T_{1\text{-}5}^{\text{T}}$ & $T_{1\text{-}5}^{\text{A}}$ & $\Delta_{1\text{-}5}$ & $T_{\text{never}}$ \\
+\midrule
+\multicolumn{9}{l}{\textbf{Grounding DINO Swin-B (AP, Tab.~\ref{tab:grounding_dino_main})}, 2 late-stage draws} \\
+SCP + AAS & $58.6{\pm}0.0$ & $59.7{\pm}0.1$ & $53.6{\pm}0.0$ & $6.1{\pm}0.1$ & $94.3{\pm}0.0$ & $93.5{\pm}0.3$ & $0.8{\pm}0.3$ & $94.4{\pm}0.1$ \\
+XPaste + AAS & $58.9{\pm}0.1$ & $59.7{\pm}0.1$ & $53.8{\pm}0.1$ & $5.9{\pm}0.1$ & $94.9{\pm}0.0$ & $94.7{\pm}0.0$ & $0.3{\pm}0.0$ & $95.2{\pm}0.1$ \\
+\midrule
+\multicolumn{9}{l}{\textbf{DINOv3 ViT-B/16 fine-tuned (F1$_{\text{micro}}$, Tab.~\ref{tab:dinov3_main})}, 4 seeds} \\
+SCP + AAS & $81.6{\pm}0.1$ & $79.0{\pm}0.2$ & $74.9{\pm}0.2$ & $4.1{\pm}0.2$ & $92.4{\pm}0.2$ & $90.6{\pm}0.5$ & $1.8{\pm}0.4$ & $89.3{\pm}0.2$ \\
+XPaste + AAS & $82.5{\pm}0.1$ & $80.5{\pm}0.2$ & $76.4{\pm}0.3$ & $4.1{\pm}0.2$ & $94.8{\pm}0.2$ & $95.6{\pm}0.1$ & $-0.8{\pm}0.2$ & $96.1{\pm}0.2$ \\
+\bottomrule
+\end{tabular}

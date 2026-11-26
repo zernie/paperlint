@@ -1,0 +1,32 @@
+\subsection{Grounding DINO Swin-B: Full Results}
+\label{app:gdino_full}
+
+As done for Co-DINO, we extend the main Grounding DINO Swin-B results (Tab.~\ref{tab:grounding_dino_main}) with Objects365 transfer (Tab.~\ref{tab:gdino_o365}) and a per-tier STRANGE-Bench breakdown (Tab.~\ref{tab:gdino_strange_full}), on the same quintile splits. The \emph{Zero Shot} row reports the released Grounding DINO Swin-B checkpoint, pretrained on a multi-dataset blend~\cite{liu2024grounding}, evaluated zero-shot on COCO and Objects365; SCP and XPaste fine-tune that checkpoint on COCO \texttt{train2017} for 12 epochs with pasted real, or real and generated, cutouts, and the AAS rows start from them (Sec.~\ref{sec:aas}).
+
+\begin{table*}[!htp]%
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{\textbf{Grounding DINO Swin-B: in-domain (COCO) and
+cross-domain (Objects365) typicality.}
+Fine-tuning on COCO trades Objects365 AP for COCO AP: every fine-tuned row gains $1.6$ to $2.0$~p.p.\@ on COCO val and loses $0.9$ to $2.0$~p.p.\@ on the Objects365 splits, where the Zero Shot checkpoint stays best; AAS \emph{(ours)} wins back $0.1$ to $0.4$~p.p.\@ of that loss over the row it starts from. The gap stays small on all three splits ($5.6$ to $6.3$, $2.1$ to $2.7$ and $3.0$ to $3.5$~p.p.\@). Full-annotation bbox mAP (\%) on the quintile paired splits, Objects365 val split by COCO \texttt{train2017} NPMI or by NPMI recomputed on Objects365 train (App.~\ref{app:exp-datasets}); rows as in Tab.~\ref{tab:grounding_dino_main}. Best per column in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:gdino_o365}
+\input{static/tables/generated/gdino_swinb_o365_tabular}
+\end{table*}
+
+\noindent\textbf{In-domain and cross-domain typicality.} On COCO (Tab.~\ref{tab:gdino_o365}, left block), fine-tuning raises $\text{AP}^{\text{val}}$ from $56.9$ (Zero Shot) to between $58.5$ and $58.9$, while the gap stays between $5.6$ and $6.3$ for every row. XPaste has the smallest gap ($5.6$) and the highest atypical AP ($54.1$), XPaste\,+\,AAS the highest $\text{AP}^{\text{val}}$ ($58.9$) and SCP\,+\,AAS the highest typical AP ($59.8$); AAS leaves the SCP gap at $6.2$ and raises the XPaste gap to $6.0$. On Objects365 (right blocks), the Zero Shot checkpoint is best on every typical and atypical column: fine-tuning on COCO costs every row $0.9$ to $2.0$~p.p.\@, and AAS wins back $0.1$ to $0.4$~p.p.\@ over the row it starts from. The Objects365 gaps are small and close together ($2.1$ to $2.7$ with COCO NPMI, $3.0$ to $3.5$ with O365 NPMI); as with Co-DINO, ranking the pairs by Objects365 NPMI widens the gap of every row, here by $0.6$ to $0.9$~p.p.\@
+
+\noindent\textbf{Per-tier STRANGE-Bench breakdown.}
+\label{app:gdino_strange_full}
+Per tier (Tab.~\ref{tab:gdino_strange_full}), every fine-tuned row lowers the zero-shot gap at T3 to T5, and the mean gap over T1 to T5 drops from $2.4$ (Zero Shot) to between $0.3$ (XPaste and XPaste\,+\,AAS) and $0.9$ (SCP). XPaste\,+\,AAS \emph{(ours)} has the highest typical and atypical AP at every tier and the smallest gap at T4 and T5 ($1.2$, $-0.3$). At T1 both AAS rows have a larger gap than the row they start from ($0.5$ vs.\ $-0.3$ and $0.9$ vs.\ $-0.1$), because typical AP rises more than atypical AP there.
+
+\begin{table*}[!htp]%
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.8pt}%
+\caption{\textbf{Grounding DINO Swin-B: STRANGE-Bench per-tier breakdown.} The zero-shot gap appears once a scene holds two partners ($3.6$ to $4.2$~p.p.\@ at T3 to T5, against $-0.1$ and $0.6$ at T1 and T2); after paste fine-tuning it stays below $3$~p.p.\@ at every tier, and XPaste\,+\,AAS \emph{(ours)} has the highest typical and atypical AP at every tier and the highest $T_{\text{never}}$. Full-annotation bbox mAP (\%) of the typical (T) and atypical (A) arm of each tier and their gap $\Delta$; $T_{1\text{-}5}$ is the mean over T1 to T5, rows as in Tab.~\ref{tab:grounding_dino_main}. Best per column in \textbf{bold}, second-best~\underline{underlined}.}
+\label{tab:gdino_strange_full}
+\resizebox{\linewidth}{!}{%
+\input{static/tables/generated/gdino_swinb_strange_bench_tabular}
+}
+\end{table*}

@@ -1,0 +1,24 @@
+\mysection{Background}
+\label{sec:background}
+
+\MyPara{SLOs of Online LLM Serving.}
+In online LLM serving, unlike offline batch processing, the system must interact with users or downstream applications in real-time. 
+Consequently, providers enforce strict SLOs to guarantee the quality of experience. 
+Two key latency metrics define these objectives. 
+First, \textit{Time-To-First-Token} (TTFT) measures the latency to process the input prompt and generate the first token, which is a crucial metric for interactive applications, such as chatbots. 
+Second, \textit{Time-Per-Output-Token} (TPOT) measures the average inter-token latency during the autoregressive generation, which is essential to ensure that text generation is fluid and matches human reading speeds.
+
+\MyPara{Memory footprint of LLM serving.}
+LLM inference is inherently memory-bound, with GPU memory dominated by model weights and KV cache.
+
+\noindent \textbf{\textit{Model weights.}}
+LLM weights are massive; for example, a 70B-parameter model requires roughly 140~GB of GPU memory in FP16. 
+Under long-tail workloads~\cite{aegaeon}, idle models waste GPU memory; prior work~\cite{aegaeon,fu2024serverlessllm} mitigates this with model eviction and accelerated weight loading.
+
+\noindent \textbf{\textit{KV cache and PagedAttention}.}
+The KV cache stores intermediate Key (K) and Value (V) tensors for attention layers to avoid redundant computation. 
+Unlike weights, the KV cache is dynamic, growing with sequence length and batch size. 
+
+To improve GPU memory efficiency, mainstream LLM serving systems adopt PagedAttention~\cite{kwon2023efficient}, which splits each request’s KV cache into fixed-size blocks that can be stored non-contiguously and reused across requests.
+Frameworks such as SGLang~\cite{sglang@arxiv23} and vLLM~\cite{kwon2023efficient} implement this design by reserving large PyTorch tensors as a KV block pool and mapping each request’s logical blocks to physical offsets in the pool. For each of the $L$ attention layers, a K tensor and a V tensor of shape $(B, T, H, D)$ are allocated, where $B$ is the number of blocks, $T$ is the tokens per block, $H$ is the number of attention heads, and $D$ is the head dimension. The values of $L$, $H$, and $D$ vary across model architectures (\eg, Llama-3-8B ($32, 8, 128$) vs. GPT-OSS-120B ($36, 8, 64$)), resulting in different KV block sizes.
+

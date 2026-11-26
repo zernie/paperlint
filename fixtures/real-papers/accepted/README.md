@@ -9,8 +9,9 @@ answers which question.
 
 The folder holds two groups, run together by `fixtures/real-papers.test.ts` and told apart below:
 
-- **Camera-ready papers, each linted against the venue that accepted it** (92, arXiv ids as
-  directory names: 12 chosen on 2026-11-19, 80 sampled by a script on 2026-11-20). They measure
+- **Camera-ready papers, each linted against the venue that accepted it** (165, arXiv ids as
+  directory names: 12 chosen on 2026-11-19, 80 sampled by a script on 2026-11-20, 73 more on
+  2026-11-27). They measure
   precision on the venue's own rules. [`sampling/`](sampling/) holds the record of the sample:
   the script, its queries and quotas, and every candidate it looked at.
 - **The six older accepted papers** (five ACSAC papers and one AgenticDev paper, named
@@ -96,6 +97,30 @@ the Semantic Scholar listing), 28 venue series. No rule 2–4 was loosened.
 Over all fields the most frequent reasons: the arXiv non-exclusive licence 321, no acceptance
 statement 203, «Workshop» in the comment 197 (and «workshop» 34), over 300 KB 188, CC BY-NC-ND 58,
 CC BY-NC-SA 51, class `article` where `acmart` is required 50.
+
+#### The third batch (2026-11-27): 73 papers, the same script with higher quotas
+
+The quotas in `sampling/queries.json` were raised and committed before the run: ml 30, nlp 24,
+ai 16, security 20, se 16, hci 16, systems 20, other 12 (154; they were 80). The rules, sources and
+editions are those of the second batch. The run resumed from the log, so no candidate of the
+second batch was judged again. It judged 522 new candidates (80 from the Semantic Scholar listing)
+and kept 73, in 40 minutes. No rule was loosened.
+
+| field | kept this run | total / quota | probed this run | yield |
+| --- | ---: | --- | ---: | ---: |
+| ml | 12 | 30 / 30 | 83 | 14.5% |
+| nlp | 12 | 24 / 24 | 55 | 21.8% |
+| ai | 8 | 16 / 16 | 50 | 16.0% |
+| security | 9 | 19 / 20 | 31 | 29.0% |
+| se | 8 | 16 / 16 | 66 | 12.1% |
+| hci | 8 | 16 / 16 | 157 | 5.1% |
+| systems | 10 | 20 / 20 | 48 | 20.8% |
+| other | 6 | 12 / 12 | 32 | 18.8% |
+
+**security is one short:** each of its editions ended full (5 papers) or exhausted (no candidate
+left that passes), so 19 is what the editions hold today, not a stopped run. One `other` walk
+(ICCV 2025) ended on a Semantic Scholar 429; `other` was full without it. `node
+scripts/grow-real-papers/main.ts --summary` prints the whole log's table, every edition included.
 
 ### Growing this set without bias
 
@@ -311,6 +336,84 @@ The 80 sampled on 2026-11-20, generated from `venue-manifest.json` and `sampling
 | [2501.17311v2](2501.17311v2/README.md) | other | ICRA 2025, S2 listing | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 66 KB |
 | [2502.00626v2](2502.00626v2/README.md) | other | SIGGRAPH 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 175 KB |
 | [2501.10143v1](2501.10143v1/README.md) | other | SIGIR 2025, S2 listing | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 103 KB |
+
+The 73 sampled on 2026-11-27, generated the same way:
+
+| paper | field | accepted at | linted as | class | licence | text |
+| --- | --- | --- | --- | --- | --- | ---: |
+| [2509.18627v1](2509.18627v1/README.md) | ml | ICLR 2025 | named, no preset | `article` + `iclr2025_conference` | CC BY 4.0 | 286 KB |
+| [2604.01709v1](2604.01709v1/README.md) | ml | ICLR 2025 | named, no preset | `article` + `iclr2025_conference` | CC BY 4.0 | 204 KB |
+| [2606.20112v1](2606.20112v1/README.md) | ml | ICLR 2026 | named, no preset | `article` + `iclr2026_conference` | CC BY 4.0 | 216 KB |
+| [2611.27050v1](2611.27050v1/README.md) | ml | ICLR 2026 | named, no preset | `article` + `iclr2026_conference` | CC BY 4.0 | 211 KB |
+| [2606.14416v1](2606.14416v1/README.md) | ml | ICML 2025 | `paperlint:icml-style` | `article` + `icml2025[accepted]` | CC BY 4.0 | 197 KB |
+| [2611.27511v1](2611.27511v1/README.md) | ml | ICML 2025 | `paperlint:icml-style` | `article` + `icml2025[accepted]` | CC BY 4.0 | 259 KB |
+| [2611.27253v1](2611.27253v1/README.md) | ml | ICML 2026 | `paperlint:icml-style` | `article` + `icml2026[accepted]` | CC BY 4.0 | 289 KB |
+| [2611.30168v1](2611.30168v1/README.md) | ml | ICML 2026 | `paperlint:icml-style` | `article` + `icml2026[accepted]` | CC BY 4.0 | 256 KB |
+| [2604.11223v1](2604.11223v1/README.md) | ml | NeurIPS 2025 | `paperlint:neurips-style` | `article` + `neurips_2025[final]` | CC BY 4.0 | 283 KB |
+| [2611.33759v1](2611.33759v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[main,final]` | CC BY 4.0 | 108 KB |
+| [2611.34825v1](2611.34825v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[eandd,final]` | CC BY 4.0 | 127 KB |
+| [2611.34881v1](2611.34881v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[eandd, final]` | CC BY 4.0 | 267 KB |
+| [2508.18740v1](2508.18740v1/README.md) | nlp | ACL 2025 (Findings) | `paperlint:acl-latex` | `article` + `acl` | CC BY 4.0 | 231 KB |
+| [2509.18719v1](2509.18719v1/README.md) | nlp | ACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 138 KB |
+| [2609.23257v2](2609.23257v2/README.md) | nlp | ACL 2026 (Findings) | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 143 KB |
+| [2611.31848v1](2611.31848v1/README.md) | nlp | ACL 2026 (Findings) | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 111 KB |
+| [2603.14525v1](2603.14525v1/README.md) | nlp | EACL 2026 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY-SA 4.0 | 225 KB |
+| [2603.20851v1](2603.20851v1/README.md) | nlp | EACL 2026 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 207 KB |
+| [2511.03128v1](2511.03128v1/README.md) | nlp | EMNLP 2025 (Findings) | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 195 KB |
+| [2511.11473v1](2511.11473v1/README.md) | nlp | EMNLP 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 218 KB |
+| [2611.17107v1](2611.17107v1/README.md) | nlp | EMNLP 2026 | `paperlint:emnlp-2026` | `article` + `acl` | CC BY 4.0 | 183 KB |
+| [2611.30052v1](2611.30052v1/README.md) | nlp | EMNLP 2026 | `paperlint:emnlp-2026` | `article` + `acl[final]` | CC BY 4.0 | 211 KB |
+| [2505.22993v1](2505.22993v1/README.md) | nlp | NAACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 128 KB |
+| [2506.11076v1](2506.11076v1/README.md) | nlp | NAACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 141 KB |
+| [2511.10837v1](2511.10837v1/README.md) | ai | AAAI 2025 | `paperlint:aaai-press` | `article` + `aaai25` | CC BY-SA 4.0 | 114 KB |
+| [2601.06406v1](2601.06406v1/README.md) | ai | AAAI 2025 | `paperlint:aaai-press` | `article` + `aaai25` | CC BY 4.0 | 183 KB |
+| [2609.08162v1](2609.08162v1/README.md) | ai | AAAI 2026 | `paperlint:aaai-press` | `article` + `aaai2026` | CC BY 4.0 | 175 KB |
+| [2610.02517v1](2610.02517v1/README.md) | ai | AAAI 2026 | `paperlint:aaai-press` | `article` + `aaai2026` | CC BY 4.0 | 66 KB |
+| [2509.02276v1](2509.02276v1/README.md) | ai | IJCAI 2025 | named, no preset | `article` + `ijcai24` | CC BY 4.0 | 114 KB |
+| [2602.00718v1](2602.00718v1/README.md) | ai | IJCAI 2025 | named, no preset | `article` + `ijcai25` | CC BY 4.0 | 97 KB |
+| [2606.18672v1](2606.18672v1/README.md) | ai | IJCAI 2026 | named, no preset | `article` + `ijcai26` | CC BY 4.0 | 170 KB |
+| [2606.26487v1](2606.26487v1/README.md) | ai | IJCAI 2026 | named, no preset | `article` + `ijcai26` | CC BY 4.0 | 204 KB |
+| [2509.00662v2](2509.00662v2/README.md) | security | ACM CCS 2025 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 281 KB |
+| [2509.03821v2](2509.03821v2/README.md) | security | ACM CCS 2025 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 259 KB |
+| [2410.10128v2](2410.10128v2/README.md) | security | IEEE S&P 2025 | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 160 KB |
+| [2502.00765v1](2502.00765v1/README.md) | security | USENIX Security 2025 | named, no preset | `article` + `usenix-2020-09` | CC BY 4.0 | 281 KB |
+| [2606.02797v2](2606.02797v2/README.md) | security | USENIX Security 2026 | named, no preset | `article` + `usenix` | CC BY 4.0 | 137 KB |
+| [2607.06371v1](2607.06371v1/README.md) | security | USENIX Security 2026 | named, no preset | `article` + `usenix` | CC BY 4.0 | 233 KB |
+| [2607.10315v2](2607.10315v2/README.md) | security | USENIX Security 2026 | named, no preset | `article` + `usenix` | CC BY 4.0 | 122 KB |
+| [2607.19957v2](2607.19957v2/README.md) | security | USENIX Security 2026 | named, no preset | `article` + `usenix` | CC BY 4.0 | 137 KB |
+| [2608.00543v1](2608.00543v1/README.md) | security | USENIX Security 2026 | named, no preset | `article` + `usenix` | CC BY 4.0 | 156 KB |
+| [2506.01427v3](2506.01427v3/README.md) | se | ASE 2025 | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 95 KB |
+| [2506.18824v2](2506.18824v2/README.md) | se | ASE 2025 | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 78 KB |
+| [2509.16861v1](2509.16861v1/README.md) | se | ASE 2025 | `paperlint:ieee-conference` | `IEEEtran` | CC BY 4.0 | 102 KB |
+| [2601.09440v1](2601.09440v1/README.md) | se | ICSE 2026 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 109 KB |
+| [2601.14132v2](2601.14132v2/README.md) | se | ICSE 2026 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 252 KB |
+| [2607.22883v1](2607.22883v1/README.md) | se | ISSTA 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 293 KB |
+| [2608.02974v1](2608.02974v1/README.md) | se | ISSTA 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 210 KB |
+| [2608.12144v1](2608.12144v1/README.md) | se | ISSTA 2026 | named, no preset | `acmart` | CC BY 4.0 | 258 KB |
+| [2502.18683v1](2502.18683v1/README.md) | hci | CHI 2025 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 237 KB |
+| [2603.08080v1](2603.08080v1/README.md) | hci | CHI 2026 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 249 KB |
+| [2603.12000v1](2603.12000v1/README.md) | hci | CHI 2026 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 245 KB |
+| [2409.19450v2](2409.19450v2/README.md) | hci | CSCW 2025 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 201 KB |
+| [2608.11442v1](2608.11442v1/README.md) | hci | CSCW 2026 | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 147 KB |
+| [2608.22146v1](2608.22146v1/README.md) | hci | CSCW 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 153 KB |
+| [2609.00808v1](2609.00808v1/README.md) | hci | CSCW 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 196 KB |
+| [2609.12070v1](2609.12070v1/README.md) | hci | CSCW 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 138 KB |
+| [2509.23324v1](2509.23324v1/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 268 KB |
+| [2509.26529v2](2509.26529v2/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY-SA 4.0 | 273 KB |
+| [2510.00206v1](2510.00206v1/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 168 KB |
+| [2505.00254v5](2505.00254v5/README.md) | systems | NSDI 2025, S2 listing | named, no preset | `article` + `usenix` | CC BY 4.0 | 194 KB |
+| [2505.01616v3](2505.01616v3/README.md) | systems | NSDI 2025, S2 listing | named, no preset | `article` + `usenix` | CC BY 4.0 | 81 KB |
+| [2601.13496v1](2601.13496v1/README.md) | systems | NSDI 2026, S2 listing | named, no preset | `article` + `usenix_2020_09` | CC BY 4.0 | 129 KB |
+| [2505.04021v3](2505.04021v3/README.md) | systems | OSDI 2025, S2 listing | named, no preset | `article` + `usenix2020` | CC BY 4.0 | 185 KB |
+| [2506.03437v2](2506.03437v2/README.md) | systems | OSDI 2025, S2 listing | named, no preset | `article` + `usenix2019_v3` | CC BY 4.0 | 227 KB |
+| [2504.17096v2](2504.17096v2/README.md) | systems | SOSP 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 198 KB |
+| [2505.01603v2](2505.01603v2/README.md) | systems | SOSP 2025, S2 listing | named, no preset | `acmart` | CC BY-SA 4.0 | 229 KB |
+| [2601.00664v2](2601.00664v2/README.md) | other | CVPR 2026, S2 listing | named, no preset | `article` + `cvpr[pagenumbers]` | CC BY 4.0 | 178 KB |
+| [2501.16684v1](2501.16684v1/README.md) | other | ICRA 2025, S2 listing | named, no preset | `ieeeconf` | CC BY 4.0 | 274 KB |
+| [2601.04356v2](2601.04356v2/README.md) | other | ICRA 2026, S2 listing | named, no preset | `ieeeconf` | CC BY 4.0 | 247 KB |
+| [2502.09608v2](2502.09608v2/README.md) | other | SIGGRAPH 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 289 KB |
+| [2501.15915v1](2501.15915v1/README.md) | other | SIGIR 2025, S2 listing | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 265 KB |
+| [2601.15820v1](2601.15820v1/README.md) | other | SIGIR 2026, S2 listing | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 120 KB |
 
 ### The venue rules' findings, counted
 

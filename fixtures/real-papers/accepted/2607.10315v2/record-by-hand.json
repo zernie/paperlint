@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenixbadges.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/0.abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1.introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2.background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3.weakness.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4.agent.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5.evaluation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6.measurement.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7.discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/8.related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/9.conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/acknowledgements.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/open_policy.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/ethics.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "0590b87cf13a41f88494f493e26ccfc6e0304884b1b19bfeab28c3ef84cbf5d0",
+    "usenix.sty": "20afc960e0275fd1842ae95a019e3749092eed5f535037dabd5b092f93f56a6c",
+    "usenixbadges.sty": "dfc6ee9f414bb0c8f6b082394f92cb1b0170149b9471bf03f3688c1a53f9ad49",
+    "sections/0.abstract.tex": "cf6cc294213d8f7b8bd697f8ea06ced04a358e1d18e4a82e7da0f8465ff88a50",
+    "sections/1.introduction.tex": "db0bdc11da12cc495b24b8f4d8f83604455e1cb416e8b9f0da8109897b5fe0d7",
+    "sections/2.background.tex": "e8be8ccbf538df55b21121168a25fcb2511e9eb9a38afa8f6d555977b19b7338",
+    "sections/3.weakness.tex": "28002f79934c35ae2e7a59b7a51947e51262d5d3f00d4ad59ae7d98d6b557582",
+    "sections/4.agent.tex": "906e19eae5e9aab394c77ecf44028d05143573a08a668f92db46c243849a797b",
+    "sections/5.evaluation.tex": "3fb0cad6645a54c60b45375d4de22e7996f4e8cdd03a39c47c0de6a85c89fcf3",
+    "sections/6.measurement.tex": "8afdf945d87f00a15c92fe2b51e18b6a0b134b1dea81ca07430df60d1002f27b",
+    "sections/7.discussion.tex": "0334d4fbe0be2695a1fdbd0be73fcbf095a8ff6493be148fcf2dcb83b77c3d5c",
+    "sections/8.related_work.tex": "bf0d38a1acdea7b9845aa03b3091e20ce99b4dd295d5b400fecc892550ac5e7f",
+    "sections/9.conclusion.tex": "f4add69ea2205c564ae84b0d61cad61faaaab7a8463c1f18465d95aef34ad58e",
+    "sections/acknowledgements.tex": "f81aa9c58c103ba5667f72c25450c7f8667ebf334126de8a7613137c971d0495",
+    "sections/open_policy.tex": "444e4c05293065f7c319a3d400834b92716c96876bc6af705f28ceff035f03f8",
+    "sections/ethics.tex": "f14b3a5edd60438a86382d81a0a03dacdd4999ed4b9ddf7000d866ee288c0e81"
+  }
+}

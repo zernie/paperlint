@@ -1,0 +1,385 @@
+\section{Methodology}
+\label{sec::method}
+% In this section, we first give the notations and the formal problem definition, then we introduce the motivation and overall framework of our proposed \method{} and present the details of each component below.
+\input{figs/framework}
+\subsection{Problem Definition}
+Let $\bm{X}=(x_{ij})\in\mathbb{R}^{N\times D}$ denote the single-cell gene expression matrix, where each row $\bm{x}_i\in\mathbb{R}^D$ denotes the gene expression of the $i$-th cell, $N$ and $D$ denote the number of cells and gene respectively. Based on $\bm{X}$, we construct an undirected cell graph $G = (\mathcal{V}, \mathcal{E})$, where each node represents an individual cell and edges are established via a $k$-nearest neighbor ($k$NN) strategy to capture intercellular similarities quantified by the Pearson correlation coefficient~\cite{benesty2009pearson}. The adjacency matrix of the constructed graph can be $\bm{A}=(a_{ij})\in\mathbb{R}^{N\times N}$, where entry $a_{ij}=1$ if $(v_i, v_j)\in\mathcal{E}$ for cell $v_i$ and $v_j$, otherwise $a_{ij}=0$. We associate the degree matrix of the graph as $\bm{D} = \operatorname{diag}(d_1, d_2, \ldots, d_N)\in\mathbb{R}^{N\times N}$, where $d_i = \sum_{j=1}^{N} a_{ij}$ is the degree of node $v_i$. The goal of scRNA-seq clustering is to partition the cells within the graph $\mathcal{G}$ into $C$ disjoint clusters, with each node $v_i$ belonging to a unique cluster according to its gene expression features and intercellular connectivity.
+
+% such that cells within the same cluster exhibit similar gene expression while cells from distinct clusters are well separated in the learned representation space. 
+
+\subsection{Framework Overview}
+In this work, we focus on scRNA-seq data clustering and propose a Siamese graph transformer network for the task. As shown in Figure~\ref{fig:framework}, our \method{} consists of three modules: (1) \textit{Dual Augmentation Module for scRNA-seq Data}, which jointly perturbs the gene expression features and the underlying cell graph structure to generate two complementary views, thereby facilitating robust representation learning; (2) \textit{Siamese Graph Transformer Network Fusion Module}, which employs two weight-sharing Siamese encoders to process the augmented views while explicitly incorporating structural information of the cell graph; (3) \textit{Optimal Transport Clustering Module}, which formulates clustering as a distribution alignment problem and employs optimal transport to guide the learning of cluster-consistent representations.
+
+% enhances the gene expression matrix and the cell graph relationships for  
+
+\subsection{Dual Augmentation for scRNA-seq Data} 
+To mitigate the effects of inherent sparsity and noise in scRNA-seq data, we introduce biologically reasonable augmentations by adding controlled noise to the gene expression profiles, generating two complementary views that improve the robustness of the learned representations. 
+
+\smallskip\noindent\textbf{Gene Expression Perturbation.} Given the single-cell gene expression matrix $\bm{X}$, we employ Gaussian noise to perturb the gene expression profiles, which can simulate the natural variability of the gene expression profile as augmentation for the clustering task. The perturbation can be formulated as:
+\begin{equation}
+    \tilde{\bm{X}} = \{\bm{x}_1\odot\bm{m},\dots,\bm{x}_{N}\odot\bm{m}\},
+\end{equation}
+where $\bm{m}$ denotes the random mask drawn from a Gaussian distribution. In practice, we set the distribution as $\mathcal{N}(1,0.1)$ following the previous work~\cite{xu2025scsiameseclu}. The two augmented gene matrices can be generated as $\tilde{\bm{X}}^1$ and $\tilde{\bm{X}}^2$.
+
+\smallskip\noindent\textbf{Intercellular Graph Structure Augmentation.} In addition to perturbing the gene expression profiles, enhancing the intercellular structure is essential for improving the model's ability to capture the relationships between cells. Specifically, given the constructed cell graph, we remove spurious edges to refine the graph structure and preserve the most biologically relevant connections between cells as one view:
+\begin{equation}
+    \tilde{\bm{A}}^1=\bm{D}^{-\frac{1}{2}}(\bm{A}\odot\bm{M}+\bm{I})\bm{D}^{-\frac{1}{2}},
+\end{equation}
+where $\bm{M}$ denotes the mask matrix based on pairwise cosine similarity. In practice, we identify and remove 10\% of edges with the lowest similarity values using this mask. For another view, we enhance the intercellular structure by considering graph diffusion, which propagates information across the graph to strengthen meaningful cell connections:
+\begin{equation}
+    \tilde{\bm{A}}^2=\eta(\bm{I}-(1-\eta)\bm{D}^{-\frac{1}{2}}\bm{A}\bm{D}^{-\frac{1}{2}})^{-1},
+\end{equation}
+where $\eta$ denotes the diffusion coefficient to control the information propagation within the cell graph.
+
+
+% simulate nature variability in gene expression
+
+% Given the inherent sparsity and noise present in scRNA-seq data, di
+
+
+\subsection{Siamese Graph Transformer Network Fusion}
+To further utilize the richer structural information from the intercellular graph, we introduce a Siamese graph transformer network~\cite{wang2025deep} for the two augmented views and adaptively fuse the encoded feature to learn discriminative cell representations.
+
+\smallskip\noindent\textbf{Gene Expression Embedding.}
+Since cells with similar gene expression profiles are assumed to be connected in the graph, we leverage the gene expression profiles of connected cells to enhance the learning of discriminative gene expression embeddings. In particular, we employ two Siamese graph encoders to produce the cell embedding as:
+\begin{equation}
+     \bm{Z}^*=\mathcal{G}(\tilde{A}^*,\tilde{X}^*), *\in\{1,2\},
+\end{equation}
+where $\mathcal{G}(\cdot,\cdot)$ denotes the Siamese graph encoder, which is shared across the two augmented views. The resulting encoded gene expression matrix $\bm{Z}^*\in\mathbb{R}^{N\times d}$ represents the learned feature embeddings for each cell, where $d$ indicates the dimensionality of the feature space. Then, for each cell node with feature $\bm{z}_i^*$, we select the top-$t$ neighbors with the most similar features and concatenate them into a sequence $\bm{S}_i^*\in\mathbb{R}^{(t+1)\times D}$. The sequence is then encoded as:
+\begin{equation}
+    \bm{E}_i^*=\mathcal{F}_{ge}(\bm{S}_i^*)\in\mathbb{R}^{(t+1)\times d},
+\end{equation}
+where $\mathcal{F}_{ge}(\cdot)$ denotes the gene expression encoding function.
+
+% \noindent\textbf{Explicit Graph Embedding.}
+
+\smallskip\noindent\textbf{Explicit Intercellular Structure Embedding.}
+To explicitly capture the intercellular structure within scRNA-seq data, we incorporate both the position embedding and shortest path embedding of the central node and its neighbors. Specifically, we define the relative positions of the central node as $\operatorname{Pos}(\bm{z}_i^*)=0$ and assign position values to its neighbors based on their intimacy to the central node, with nodes that are more similar to 
+the central node receiving position values closer to 0. The position embedding is formulated as:
+\begin{equation}
+    \bm{P}_i^*=\mathcal{F}_{pos}(\operatorname{Pos}(\bm{z}_i^*))\in\mathbb{R}^{(t+1)\times d},
+\end{equation}
+where $\mathcal{F}_{pos}(\cdot)$ denotes the position mapping function. In addition to the intimacy between two nodes, the shortest path characterizes the connection structure between them and explicitly the crucial intercellular structure. Specifically, the shortest path between two nodes within the constructed cell graph can be defined as $\operatorname{Sp}(\bm{z}_i^*,\bm{z}_j^*)$. Based on this, we formulate the shortest path embedding as:
+\begin{equation}
+    \bm{H}_i^*=\mathcal{F}_{sp}(\operatorname{Sp}(\bm{z}_i^*,\bm{z}_j^*))\in\mathbb{R}^{(t+1)\times d},
+\end{equation}
+where $\mathcal{F}_{sp}(\cdot)$ denote the shortest path mapping function.
+
+
+% Additionally, beyond the intimacy between nodes, the shortest paths between any pair of nodes in the graph provide crucial structural information.
+
+% Furthermore, In addition to the intimacy between nodes, the shortest paths between every pair of nodes on the graph provide valuable structural information. Specifically, the shortest path captures the most direct con- nection between two nodes in the graph, which can en- hance the representation of their relationships.
+
+% ensures that nodes with higher intimacy values relative to $\bm{x}_i$ are assigned position values closer to 0
+
+% its neighbors and encode them as position embedding  
+
+\smallskip\noindent\textbf{Siamese Graph Transformer Refinement.}
+We integrate the gene expression and intercellular structure embedding as:
+\begin{equation}
+    \bm{Y}_i^* = \bm{E}_i^* + \bm{P}_i^* + \bm{H}_i^*\in\mathbb{R}^{(t+1)\times d}.
+\end{equation}
+Then we leverage the attention mechanism to encode the integrated embedding, which can be formulated as:
+\begin{equation}
+    \!\!\!\!\operatorname{Attention}(\bm{Y}_i)=\operatorname{Softmax}\left(\frac{\bm{W}_Q\bm{Y}_i(\bm{W}_K\bm{Y}_i)^\top}{\sqrt{d}}\right)\bm{W}_V\bm{Y}_i
+\end{equation}
+where $\bm{W}_Q,\bm{W}_K,\bm{W}_V\in\mathbb{R}^{d\times d}$ denote the query, key and value matrices respectively. We employ the multi-attention mechanism with feed-forward networks (FFN) and residual connections as a transformer layer. Through stacking $L$-layers, the output feature can be $\bm{Y}_i^{L,*}\in\mathbb{R}^{(t+1)\times d}$. The final cell node embedding can be refined as:
+\begin{equation}
+    \hat{\bm{z}}_i^*=\frac{1}{t+1}\sum\nolimits_{t=0}^t\bm{Y}_i^{L,*}[t,:]\in\mathbb{R}^d.
+\end{equation}
+We further introduce the correlation loss to prevent feature collapse and redundancy between two views, defined as:
+\begin{equation}
+\begin{aligned}
+    \bm{R}_{ij}&=\frac{\hat{\bm{z}}_i^1(\hat{\bm{z}}_j^2)^\top}{\|\hat{\bm{z}}_i^1\|\|\hat{\bm{z}}_j^2)\|},\\
+    \mathcal{L}_{\text{cor}}=\sum\nolimits_{i}(1&-\bm{R}_{ii})^2+\sum\nolimits_i\sum\nolimits_{j\neq i}\bm{R}_{ij}^2.
+\end{aligned}
+\end{equation}
+The final cell embedding $\hat{\bm{Z}}$ can be fused from two views as: 
+\begin{equation}
+    \hat{\bm{Z}}=\frac{1}{2}(\hat{\bm{Z}}^1+\hat{\bm{Z}}^2).
+\end{equation}
+
+% \noindent\textbf{Interview Correlation Refinement.}
+
+
+\subsection{Clustering with Optimal Transport} Given the refined cell embedding, we adopt a self-supervised strategy for the scRNA-seq data clustering. Specifically, we measure the similarity between cell embedding $\hat{\bm{z}}_i$ and the clustering center $\bm{\mu}_c$ as the Student's $t$-distribution~\cite{maaten2008visualizing}, formulated as:
+\begin{equation}
+    q_{ic}=\frac{(1+\|\hat{\bm{z}}_i-\bm{\mu}_c\|/\theta)^{-\frac{1+\theta}{2}}}{\sum_{c'}(1+\|\hat{\bm{z}}_i-\bm{\mu}_{c'}\|/\theta)^{-\frac{1+\theta}{2}}},
+\end{equation}
+where $\bm{Q}=[q_{ic}]\in\mathbb{R}_{+}^{N\times C}$ denotes the cluster assignment of the cell and $\theta$ is the degrees of freedom in the Student’s $t$-distribution. Following the previous work~\cite{bo2020structural}, we sharpen the cluster assignment as the target distribution $\bm{P}=[p_{ic}]\in\mathbb{R}_{+}^{N\times C}$, which can be calculated as:
+\begin{equation}
+    p_{ic}=\frac{q_{ic}^2/f_c}{\sum q_{ic'}^2/f_{c'}},
+\end{equation}
+where $f_c=\sum_iq_{ic}$ denotes the soft cluster frequency. We further introduce the optimal transport strategy to align the cluster distribution with the mixing proportions, which ensures the robust clustering and prevents the degenerate solution that all cells allocate to a single label:
+\begin{equation}
+\begin{aligned}
+    &\min_{\bm{P}}-\bm{P}*(\log\bm{Q})\\
+    &\operatorname{s.t.} \bm{P}\bm{1}_C = \bm{1}_N \ \text{ and } \ P^\top\bm{1}_N = N\bm{\pi},
+\end{aligned}
+\end{equation}
+where $\bm{P}$ and $-\log\bm{Q}$ denote the transport plan and cost matrix, respectively. Here $\bm{\pi}$ in the constraints represents the proportion of cells assigned to each cluster, which can be derived from the intermediate clustering results. In practice, we utilize the Sinkhorn distance method~\cite{sinkhorn1967diagonal} for the optimization by introducing entropy constraint $H(\cdot)$ with a Lagrange multiplier $\lambda$ as:
+\begin{equation}
+\begin{aligned}
+    &\min_{\bm{P}}-\bm{P}*(\log\bm{Q})-\frac{1}{\lambda}H(\bm{P})\\
+    &\operatorname{s.t.} \bm{P}\bm{1}_C = \bm{1}_N \ \text{ and } \ P^\top\bm{1}_N = N\bm{\pi}.
+\end{aligned}
+\end{equation}
+Therefore, we can iteratively optimize the $\bm{P}$ as:
+\begin{equation}
+    \hat{\bm{P}}^{(t)}=\operatorname{diag}(\bm{u}^{(t)}) \bm{Q}^\lambda \operatorname{diag}(\bm{v}^{(t)}),
+\end{equation}
+where we iteratively update  $\bm{u}^{(t)}$ and $\bm{v}$ as $\bm{1}_N / (\bm{Q}^{\lambda}\bm{v}^{(t-1)})$ and $N_\pi / (\bm{Q}^{\lambda}\bm{u}^{(t)})$ at iteration $t$ with $N_\pi$ representing the the total mass of the target distribution and the initial value setting as $\bm{v}^{(0)}=\bm{1}_N$. During the training process, we fixed $\hat{\bm{P}}$ and align $\bm{Q}$ with the $\hat{\bm{P}}$ as the clustering loss:
+\begin{equation}
+    \mathcal{L}_{\text{clu}}=\operatorname{KL}(\hat{\bm{P}}\|\bm{Q})=\sum\nolimits_{i=1}^N\sum\nolimits_{c=1}^C\hat{p}_{ic}\log\frac{\hat{p}_{ic}}{q_{ic}},
+\end{equation}
+
+
+% In particular, we construct the target probability  
+
+
+\subsection{Overall Optimization}
+To preserve the intercellular structure information for cell clustering, we reconstruct the cell graph with the learned cell embedding and the Mean Squared Error (MSE) loss can be:
+\begin{equation}
+    \mathcal{L}_{\text{rec}}=\|\bm{A}-\bm{M}\|_F^2,\ \bm{M}_{ij}=\frac{1}{2}\left(\frac{\hat{\bm{z}}_i\cdot\hat{\bm{z}}_j}{\|\hat{\bm{z}}_i\|\|\hat{\bm{z}}_j\|}+1\right).
+\end{equation}
+Since scRNA-seq data exhibits sparsity and overdispersion, we further incorporate the Zero-Inflated Negative Binomial (ZINB) loss~\cite{eraslan2019single,xu2025scsiameseclu} to model the excess zeros and variability. Finally, the overall objective of our \method{} can be defined as:
+\begin{equation}
+    \mathcal{L}=\mathcal{L}_{\text{clu}}+\alpha\mathcal{L}_{\text{cor}}+\beta\mathcal{L}_{\text{rec}}+\gamma\mathcal{L}_{\text{ZINB}},
+\end{equation}
+where $\alpha,\beta$ and $\gamma$ denote the trade-off parameter to balance the contribution of each component.
+
+% We further used to handle the sparsity and overdispersion of scRNA-seq data by modeling excess zeros and variability
+
+% \begin{figure*}[t!]
+% \centering
+% \includegraphics[width=1\textwidth]{IJCAI_stGTN/figs/framework.png}
+% \caption{Illustration of the proposed framework \method{}.}
+% \label{fig:framework}
+% \end{figure*}
+
+% \subsection{Problem Definition}
+
+% %Domain identification in spatially resolved transcriptomics (SRT) data aims to combine gene expression profiles of spots with spatial coordinates to identify cellular heterogeneity, thereby revealing the distribution, interactions, and contributions of different cell types to the overall tissue function. The classic barcode-based spatial transcriptomics sequencing platform (e.g. 10x Genomics Visium) adds Unique Molecular Identifier (UMI) tag to each transcript, removes PCR amplification duplicates, and then calculates expression levels. Finally, a gene expression matrix is generated based on UMI counts, reflecting the expression of different genes in various spots.
+
+% SRT sequencing provides a gene expression matrix and a spatial coordinate matrix. We retain genes expressed in at least 100 cells and select the top 3,000 highly variable genes (HVGs) using Seurat\_v3~\cite{satija2015spatial}. Gene expression values in each spot are normalized by dividing each gene’s UMI count by the total UMI count in that spot, multiplying by 10,000, and applying a natural log transformation using SCANPY~\cite{wolf2018scanpy}. The preprocessed gene expression matrix $\mathbf{X} \in \mathbb{R}^{N \times {D}}$. The spatial coordinate matrix $\mathbf{S} = \{(x_i, y_i)\}_{i=1}^N$. We aim to learn a low-dimensional representation $\mathbf{H} \in \mathbb{R}^{N \times d}$ (with $d \ll {D}_{obs}$), and conduct self-supervised clustering strategy to identify spatial domains. An overview of our framework is described in Figure~\ref{fig:framework}.
+
+
+% %\subsection{Data Preprocessing}
+
+% %Due to limitations of sequencing technology and unavoidable errors during sample preparation, the gene expression matrix based on UMI counts contains noise. To mitigate technical noise in SRT data, we preprocess the raw gene expression matrix $\mathbf{F}_{obs} \in \mathbb{R}^{N \times D_{obs}}$. First, we retain genes that are expressed in at least 100 cells to ensure that remaining genes have sufficient detection rates. Next, we use Seurat\_v3~\cite{satija2015spatial} to select the top 3000 highly variable genes (HVGs). HVGs are often associated with key biological features such as cell identity, function and state, focusing on HVGs allows us to ignore irrelevant background and directly analyze the core biological structure of the data. Finally, to eliminate differences in sequencing depth between cells, we perform the following normalization:
+% %\[
+% %\mathbf{X}_{ij} = \frac{\mathbf{F}_{ij}}{\sum_{j=1}^{D} \mathbf{F}_{ij}} \times 10000,
+% %\]
+% %where $\mathbf{X} \in \mathbb{R}^{N \times D}$ is the gene expression matrix used for further analysis and $\mathbf{F}$ is $\mathbf{F}_{obs}$ after aforementioned cell filtering and HVGs selection.
+
+% \subsection{Dual Hypergraph Enhanced Representation Learning}
+
+% %In order to learn semantically rich representations from SRT data, graph structures are commonly utilized to capture the dependencies between spots. Subsequently, graph neural networks are employed as encoders to extract low-dimensional embeddings, as they are capable of leveraging the message-passing mechanism to simultaneously learn the embedding of both the topological structure and node features. 
+
+% As the theory of cellular homogeneity asserts, if two cells are in similar states or types, their gene expression profiles tend to exhibit high similarity. Existing methods primarily utilize $k$-nearest neighbor graph to capture the expression similarity between spots~\cite{xu2022deepst,long2023spatially,oh2025global}. However, given that the fundamental property of the $k$-nearest neighbor graph is each edge connects two nodes, the aforementioned method implicitly introduces an assumption that interactions between spots are represented as simple pairwise relationships. This unreliable assumption could lead to information loss, as cellular networks are typically characterized by interactions involving more than two participants and relationships between spots are often governed by the co-regulation of multiple genes~\cite{klamt2009hypergraphs}. To model higher-order dependencies based on gene expression profiles, we introduce hypergraph, which allows edges to connect more than two nodes, offering greater expressiveness in cellular networks. Specifically, we derive the incidence matrix of the feature-view hypergraph by the following formula:
+% \begin{equation} \label{incidence_f}
+% \textbf{A}^{(\text{f})}_{v,e} = 
+% \begin{cases} 
+% 1 & \text{if } v \in \mathcal{N}^{(\text{f})}_{e}, \\
+% 0 & \text{otherwise},
+% \end{cases}
+% \end{equation}
+% where \( \textbf{A}^{(\text{f})}_{v,e} \) indicates whether node \( v \) is incident to hyperedge \( e \) in the feature-view hypergraph. \( \mathcal{N}^{(\text{f})}_{i} \) denotes the set of neighbors for node \( i \) selected based on the cosine similarity between gene expression profiles:
+% \begin{equation*}
+% \begin{split}
+% \mathcal{N}^{(\text{f})}_{i} &= \text{Top$k$}_{j \in \{1,2,\dots,N\}}\big((\mathbf{X} \mathbf{X}^\top)_{ij}\big), \\
+% &\quad \forall~ i \in \{1, 2, \ldots, N\}.
+% \end{split}
+% \end{equation*}
+% %Specifically, if node \( v \) is among the top \( k \) nearest neighbors of hyperedge \( e \), the corresponding element in the incidence matrix is assigned a value of 1; otherwise, it is assigned a value of 0.
+
+% As a complement, spatial locations of spots are crucial for identifying cellular homogeneity. This could be primarily reflected in two aspects: On the one hand, the spatial locations of spots determines the microenvironment in which they reside~\cite{browaeys2020nichenet}. Cells within this microenvironment are regulated by both direct contact signals from neighboring cells and soluble diffusion signals within the tissue, which often results in similar phenotypic characteristics. On the other hand, functionally related cells (such as muscle cells, epithelial cells, etc.) exist in spatial clusters within the tissue, and cells that are spatially proximate are more likely to belong to the same cell type or functional subtype. This intrinsic correlation between spatial proximity and cellular state makes spatial coordinates an effective constraint for inferring cellular homogeneity. To capture the contextual and hierarchical details of cellular microenvironments, we construct a spatial-view hypergraph based on spatial coordinates by defining a critical distance \(r\),
+% %Specifically, we define the spatial hypergraph using a Euclidean distance-based approach, where we employ a radius neighbors algorithm. To construct the incidence matrix of the spatial hypergraph, we first calculate the neighborhood relationships based on radius-based nearest neighbors from the coordinate matrix \(\mathbf{S}\). Specifically, for each node, we identify all the neighbors located within the critical distance \(r\), 
+% as shown in the following equation:
+% \begin{equation*}
+% \begin{split}
+% \mathcal{N}^{(\text{s})}_{i} 
+% &= \{j \in \{1, 2, \dots, N\} \mid \|\mathbf{s}_i - \mathbf{s}_j\|_2 \leq r\}, \\
+% &\qquad \forall\, i \in \{1, 2, \dots, N\},
+% \end{split}
+% \end{equation*}
+% where \(\mathcal{N}^{(\text{s})}_{i}\) represents the set of neighbors of node \(i\) within the specified radius \(r\). The hyperedge corresponding to each node is then defined as:
+% \begin{equation*}
+% E^{(\text{s})}_{i} = 
+% \begin{cases} 
+% \mathcal{N}^{(\text{s})}_{i}& \text{if } \mathcal{N}^{(\text{s})}_{i} \neq \emptyset, \\
+% i & \text{otherwise}.
+% \end{cases}
+% \end{equation*}
+% The elements of the incidence matrix \(\mathbf{A}^{(\text{s})}\) are determined based on whether node \(v\) is part of the hyperedge \(e\), which can be expressed as:
+% \begin{equation} \label{incidence_s}
+% \textbf{A}^{(\text{s})}_{v,e} = 
+% \begin{cases} 
+% 1 & \text{if } v \in E^{(\text{s})}_{e}, \\
+% 0 & \text{otherwise}.
+% \end{cases}
+% \end{equation}
+% %Here, \(\textbf{A}^{(\text{s})}_{v,e}\) indicates the incidence of node \(v\) in the hyperedge \(e\). If node \(v\) is a member of the spatial neighborhood of the center node of \(e\) or is itself the center node, the corresponding matrix entry is set to 1; otherwise, it is 0.
+
+% %In SRT data analysis, Graph Convolutional Network (GCN)~\cite{kipf2017semi} provides a pivotal technical pathway for addressing the core challenge of modeling the associations between gene expression and cellular relationships. GCN regards the cellular network as a topological adjacency matrix, while concurrently performing nonlinear transformations on high-dimensional gene expression features. Ultimately, this process enables the collaborative representation of spatial proximity and transcriptomic similarity within a unified embedding space. Methods based on GCN~\cite{hu2021spagcn,long2023spatially} have been successfully applied in a variety of significant research areas, including the identification of spatial functional domains, the analysis of intercellular signal transduction pathways, and the reconstruction of developmental trajectories. 
+% In order to extend the Graph Convolutional Network (GCN)~\cite{kipf2017semi}, which has been widely applied in SRT data analysis~\cite{hu2021spagcn,long2023spatially}, to hypergraph structure, we adopt Hypergraph Neural Networks (HGNN)~\cite{feng2019hypergraph} for representation learning. We employ two independent hypergraph convolutional networks to encode the feature graph $\mathcal{G}^{(\text{f})} = (\mathbf{A}^{(\text{f})}, \mathbf{X})$ and the spatial graph $\mathcal{G}^{(\text{s})} = (\mathbf{A}^{(\text{s})}, \mathbf{X})$, respectively. Specifically, the forward propagation rule of a single layer of HGNN can be defined as:
+% \begin{equation} \label{HGNNs}
+% \mathbf{H}^{(l+1)} = \sigma\left(\mathbf{D}_v^{-1/2} \mathbf{A} \mathbf{D}_e^{-1} \mathbf{A}^\top \mathbf{D}_v^{-1/2} \mathbf{H}^{(l)} \mathbf{W}^{(l)}\right),
+% \end{equation}
+% where $\mathbf{H}^{(l)}$ is the input node feature matrix at the $l$-th layer and $\mathbf{H}^{(0)} = \mathbf{X}$, $\mathbf{H}^{(l+1)}$ denotes the node representation matrix at the $(l+1)$-th layer, $\sigma$ is a non-linear activation function (e.g., ReLU), $\mathbf{D}_v$ is the diagonal node degree matrix and $\mathbf{D}_e$ is the diagonal hyperedge degree matrix, $\mathbf{A}$ is the incidence matrix and $\mathbf{A} = \{ \mathbf{A}^{(\text{f})}, \mathbf{A}^{(\text{s})} \}$, $\mathbf{W}^{(l)}$ is the layer-specific trainable weight matrix. The output representations of two HGNNs are denoted as $\mathbf{H}^{(\text{f})} = (\mathbf{h}_1^{(\text{f})}, \ldots, \mathbf{h}_N^{(\text{f})})^\top$ and $\mathbf{H}^{(\text{s})} = (\mathbf{h}_1^{(\text{s})}, \ldots, \mathbf{h}_N^{(\text{s})})^\top$, respectively.
+
+
+% \subsection{Cross-View Knowledge Transfer}
+
+% %We have obtained the feature-view representation $\mathbf{H}^{(\text{f})}$ and the spatial-view representation $\mathbf{H}^{(\text{s})}$ through aforementioned representation learning. 
+% %Here, $\mathbf{H}^{(\text{f})}$ is based on the insight that cells of the same type or subtype typically exhibit similar gene expression, while $\mathbf{H}^{(\text{s})}$ is based on the insight that cells of the same type or subtype are often spatially adjacent.
+% %However, 
+% The feature- and spatial-view representation inevitably suffer from noise. Even though two spots have similar gene expression profiles, local similarities are still more reliable than remote ones~\cite{wang2014similarity}. Furthermore, if a spot is located at the boundary of the domain, spots adjacent to it are not always belong to the same type or subtype. To address this issue, we design the cross-view knowledge transfer module to obtain a reliable representation.
+
+% \textbf{Cross-Attention Fusion}. To address the issue where representation learned from a single view are affected by noise, we fuse the representations from the feature-view and the spatial-view. For spots located at the boundary of a domain, $\mathbf{H}^{(\text{s})}$ may become ambiguous due to the mixture of heterogeneous information from neighboring cells. In this case, it needs to seek confirmation from the most similar cells in terms of gene expression (which exist in $\mathbf{H}^{(\text{f})}$ and may be spatially distant). At the same time, if a cell appears outlier in terms of gene expression, $\mathbf{H}^{(\text{f})}$ may be unreliable. In this case, it can obtain correction from the most spatially adjacent cells, whose representations have been reliably characterized (which exist in $\mathbf{H}^{(\text{s})}$). Multi-view cross-attention mechanism allows each cell to query information from one view and retrieve the most relevant, confirming, or complementary information from the other view, achieving bidirectional verification and complementarity between two views, which results in a more robust representation. Specifically, we use $\mathbf{H}^{(\text{f})}$ as the query and retrieve relevant information from $\mathbf{H}^{(\text{s})}$, which can be expressed mathematically as:
+% \begin{align*}
+% \mathbf{Q}^{(\text{f})} &= \text{LayerNorm}(\mathbf{H}^{(\text{f})}), \\
+% \mathbf{K}^{(\text{s})} &= \mathbf{V}^{(\text{s})} = \text{LayerNorm}(\mathbf{H}^{(\text{s})}), \\
+% \mathbf{M}^{(\text{f})} &= \text{MultiHeadAttention}(\mathbf{Q}^{(\text{f})}, \mathbf{K}^{(\text{s})}, \mathbf{V}^{(\text{s})}), \\
+% \mathbf{Y}^{(\text{f})} &= \mathbf{H}^{(\text{f})} + \mathbf{M}^{(\text{f})},
+% \end{align*}
+% where $\mathbf{Q}^{(\text{f})}$ denotes the query matrix, $\mathbf{K}^{(\text{s})}$ represents the key matrix and $\mathbf{V}^{(\text{s})}$ represents the corresponding value matrix. The multi-head attention output is denoted as $\mathbf{M}^{(\text{f})}$. $\mathbf{Y}^{(\text{f})}$ is the output of the feature view. Similarly, $\mathbf{H}^{(\text{s})}$ is used as the query to retrieve relevant information from $\mathbf{H}^{(\text{f})}$, as expressed by the equations:
+% \begin{align*}
+% \mathbf{Q}^{(\text{s})} &= \text{LayerNorm}(\mathbf{H}^{(\text{s})}), \\
+% \mathbf{K}^{(\text{f})} &= \mathbf{V}^{(\text{f})} = \text{LayerNorm}(\mathbf{H}^{(\text{f})}), \\
+% \mathbf{M}^{(\text{s})} &= \text{MultiHeadAttention}(\mathbf{Q}^{(\text{s})}, \mathbf{K}^{(\text{f})}, \mathbf{V}^{(\text{f})}), \\
+% \mathbf{Y}^{(\text{s})} &= \mathbf{H}^{(\text{s})} + \mathbf{M}^{(\text{s})}.
+% \end{align*}
+% We average the outputs of two interactive views and apply a feed-forward network (FFN)~\cite{vaswani2017attention} for a nonlinear transformation, which is expressed as:
+% \begin{equation} \label{preliminary_fused_representation}
+% \begin{split}
+% \mathbf{Z}_{0} &= \text{LayerNorm}\big(\mathbf{Y} + \text{FFN}(\mathbf{Y})\big), \\
+% \mathbf{Y} &= \tfrac{1}{2} \big( \mathbf{Y}^{(\text{f})} + \mathbf{Y}^{(\text{s})} \big),
+% \end{split}
+% \end{equation}
+% $\mathbf{Z}_{0}$ is the preliminary fused representation.
+
+% \textbf{Global Self-Correlation Reorganization}. Although the preliminary fused representation $\mathbf{Z}_{0}$ has already incorporated cross-view information, it also contains redundancies, making further representation enhancement necessary. We aim to capture truly highly similar cells across the global context and enable mutual reinforcement of their features. This is crucial for identifying cell populations that are scattered across different spatial locations but share the same function (e.g., the same immune cell subtype infiltrating distinct regions of a tissue). We introduce a global self-correlation module to capture global dependencies among cells, enabling the reorganization and enhancement of features. Specifically, we first compute the self-correlation matrix $\mathbf{C}$ according to the fused representation $\mathbf{Z}_{0}$ and utilize it to obtain the soft selection and weighted aggregation of features at all positions, which is defined as:
+% \[
+% \mathbf{Z}_{1} = \mathbf{C} \cdot \mathbf{Z}_{0}, \quad \mathbf{C} = \text{softmax}(\mathbf{Z}_{0} \mathbf{Z}_{0}^{\top}).
+% \]
+% Finally, we perform an adaptive weighted fusion using learnable parameters $\alpha$ to obtain the globally enhanced representation, which can be mathematically defined as:
+% \begin{equation} \label{fine_grained_representation}
+% \mathbf{H} = \mathbf{Z}_{0} + \alpha \cdot \mathbf{Z}_{1}.
+% \end{equation}
+% %Here, $\mathbf{H}$ is the robust representation used for downsteam analysis.
+
+% \subsection{ZINB-based Reconstruction and Clustering}
+
+% Having obtained a robust representation $\mathbf{H}$, we design a series of loss functions to constrain the model's learning, ensuring that the representation is consistent with biological priors and is well-suited for identifying spatial domains. %Specifically, we first generate a target distribution using the triplet self-supervised clustering strategy to learn better representation. Then, we perform local feature smoothing based on the cell dependencies captured by hypergraphs. Finally, we employ a decoder to reconstruct the representation and self-supervise the model through ZINB-based reconstruction loss~\cite{eraslan2019single}.
+
+% \textbf{Multi-View Self-Supervised Clustering}. Spatial domain identification in ST data can be viewed as a node clustering task constrained by biological priors. Inspired by SDCN~\cite{bo2020structural} and DFCN~\cite{tu2021deep}, we adopt a self-supervised clustering strategy to generate more reliable guidance, precisely adapted to the clustering task. In the previous section, our model generates three sets of embeddings that describe the cell dependencies from different perspectives: feature embedding $\mathbf{H}^{(\text{f})}$, spatial embedding $\mathbf{H}^{(\text{s})}$, and fused embedding $\mathbf{H}$. We aim to mine the clustering structures from these three embeddings simultaneously, encouraging them to evolve collectively, which constrains the model to ensure that both the original views (feature view and spatial view) and the fused view are driven towards forming clear and consistent cell clusters. Specifically, we first compute the soft assignment based on the existing representations using Student’s $t$-distribution as kernel, which can be expressed by the following formula:
+% \[ 
+% q_{ij}^{(b)}=\frac{(1+D_{ij}^{(b)}/\nu)^{-\frac{\nu+1}{2}}}{\sum_{j^{\prime}}(1+D_{ij^{\prime}}^{(b)}/\nu)^{-\frac{\nu+1}{2}}}
+% , \quad D_{ij}^{(b)}=\|\mathbf{h}_{i}^{(b)}-\mathbf{c}_{j}^{(b)}\|^{2},
+% \]
+% where $b \in \{f, s, h\}$ denotes the embedding branch (feature view, spatial view, or fused view), $q_{ij}^{(b)}$ is the soft assignment probability of cell $i$ belonging to pre-calculated clustering center $j$ (initialized by K-means on representations) in branch $b$, $D_{ij}^{(b)}$ is the squared Euclidean distance between the feature of cell $i$ ($\mathbf{h}_i^{(b)}$) and the centroid vector of cluster $j$ ($\mathbf{c}_j^{(b)}$) in the corresponding branch's latent space, and $\nu$ is the degrees of freedom parameter for the Student's t-distribution, with the denominator performing the normalization over all clusters $j'$ to ensure $\sum_{j} q_{ij}^{(b)}=1$. Subsequently, we sharpen the soft assignment distribution and emphasize high-confidence assignments to construct the target distribution, which can be expressed as:
+% \[
+% p_{ij}^{(b)}=\frac{(q_{ij}^{(b)})^{2}/\sum_{i}q_{ij}^{(b)}}{\sum_{j^{\prime}}\big((q_{ij^{\prime}}^{(b)})^{2}/\sum_{i}q_{ij^{\prime}}^{(b)}\big)},
+% \]
+% where $p_{ij}^{(b)}$ is the target distribution probability serving as an auxiliary distribution to guide the clustering process, the denominator performs normalization over all clusters $j'$ to ensure that $\sum_{j} p_{ij}^{(b)} = 1$ for each cell $i$. We then adopt multi-view self-supervised clustering loss by adapting the KL-divergence as:
+% \begin{equation} \label{loss_cluster}
+% \mathcal{L}_{\text{Cluster}} = \sum_i \sum_j p_{ij}^{(h)} \log \frac{p_{ij}^{(h)}}{(\sum_{(b)} q_{ij}^{(b)})/3}.
+% \end{equation}
+
+% \textbf{Hypergraph Smoothing Constraint}. Cellular networks typically divide naturally into communities or modules~\cite{girvan2002community}, which reflects the inherent principle by which cells spontaneously aggregate to form functional units. This modular structure holds significant importance in various biological processes: during embryonic development, cells with similar developmental potentials spontaneously aggregate through mechanisms such as cell adhesion, forming specific tissue primordia; in mature tissues, functionally related cells precisely arrange themselves in space to form stable functional units, such as the metabolic units in liver lobules and the endocrine units in pancreatic islets, collectively maintaining tissue homeostasis. Smoothing local features based on cellular dependencies helps to identify these functional communities, enhancing the domain identification capability. Graph laplacian regularization has been used for local feature smoothing and has shown effective results~\cite{6822e56f163c01c8509e4407,belkin2001laplacian}. Here, we extend this graph regularization constraint to hypergraphs. Specifically, we first perform Clique expansion on the incident matrix of the spatial hypergraph $\mathbf{A}^{(\text{s})}$, which is expressed as:
+% \begin{equation*}
+% \mathbf{\hat{A}} = \mathbf{A}^{(\text{s})} \cdot \mathbf{A}^{(\text{s})^{\top}},
+% \end{equation*}
+% this operation connects every pair of nodes contained in each hyperedge of the hypergraph, forming a complete clique. Then, we construct the hypergraph smoothing loss as:
+% \begin{equation} \label{loss_Smooth}
+% \mathcal{L}_{\text{Smooth}} = 
+% \frac{2\sum_{i,j}\hat{A}_{ij}(\|\mathbf{h}_{i}\|_{2}^{2} - \mathbf{h}_{i}^{\top}\mathbf{h}_{j})}{\sum_{i,j}\hat{A}_{ij}},
+% \end{equation}
+% where $\mathrm{deg}_{i} = \sum_{j}\hat{A}_{ij}$ is the degree of node $i$. In the initial few epochs, the model has not yet learned reliable node representations $\mathbf{h}$. Therefore, we set a loss weight $\beta$ and adopt a linear warm-up strategy to stabilize the model during the early stages of training, expressed as:
+% \[
+% \beta(t) = \beta \cdot \min(1, t/30),
+% \]
+% where $t$ is the current epoch.
+
+% \textbf{ZINB-based Reconstruction}. SRT data contains substantial noise due to various technical factors, including amplification bias, cell cycle effects, differences in library size and so on, which can potentially obscure the underlying biological signal and hinder subsequent analysis. Among these, the low RNA capture rate and relatively shallow sequencing depth result in the SRT data exhibiting overdispersed, particularly sparse characteristics, with a substantial number of zero values. These zero values can be classified into two types: some represent true zeros, where gene expression is genuinely absent, while others are pseudo zeros, where gene expression exists but fails to be captured by sequencing (dropouts). To mitigate the zero-inflated, high sparsity and over-dispersion inherent in SRT data, we follow DCA~\cite{eraslan2019single} to adopt a Zero-Inflated Negative Binomial (ZINB) decoder to reconstruct the original expression patterns. Specifically, the ZINB distribution is mathematically represented as:
+% \begin{align*}
+% \operatorname{ZINB}(\mathbf{f} \mid \boldsymbol{\mu}, \boldsymbol{\theta}, \boldsymbol{\pi}) = \boldsymbol{\pi} \delta_0(\mathbf{f})+(1-\boldsymbol{\pi}) \operatorname{NB}(\mathbf{f}), 
+% \end{align*}
+% with NB distribution is expressed as:
+% \begin{equation*}
+% \operatorname{NB}(\mathbf{f} \mid \boldsymbol{\mu}, \boldsymbol{\theta})={\Gamma(\mathbf{f} + \boldsymbol{\theta})}\left(\frac{\boldsymbol{\theta}}{(\boldsymbol{\theta} + \boldsymbol{\mu})}\right)^{\boldsymbol{\theta}}
+% \left(\frac{\boldsymbol{\mu}}{(\boldsymbol{\theta} + \boldsymbol{\mu})}\right)^{\mathbf{f}}  \frac{1}{\mathbf{f}!\Gamma(\boldsymbol{\theta})}.
+% \end{equation*}
+% In ZINB distribution, $\boldsymbol{\pi}$ is the zero-inflation coefficient, modeling the probability that observed value comes from inevitable zero component; $\boldsymbol{\mu}$ is regarded as the expected gene expression matrix after implicitly imputing pseudo zeros; $\boldsymbol{\theta}$ is the dispersion parameter, fitting the case where the variance exceeds the mean. We employ three fully connected networks to estimate these parameters based on the representation vector $\mathbf{h}_i$, which can be expressed as:
+% \begin{equation*}
+% \begin{gathered}
+%     \hat{\boldsymbol{\pi}}_{i} = \operatorname{Sigmoid} (\text{MLP}^1 (\mathbf{h}_i) ),\\
+%     \hat{\boldsymbol{\mu}}_{i} = \exp (\text{MLP}^2 (\mathbf{h}_i) ), \\
+%     \hat{\boldsymbol{\theta}}_{i} = \ln\left(1 + \exp\left(\text{MLP}^3 (\mathbf{h}_i) \right) \right), i \in [1:N].
+% \end{gathered}
+% \end{equation*}
+% With the estimators, the reconstruction loss is designed by the negative log-likelihood of the ZINB distribution: 
+% \begin{equation} \label{loss_ZINB}
+%     \mathcal{L}_{\text{ZINB}} = - \sum\nolimits_{i=1}^N \log \operatorname{ZINB}(\mathbf{x}_i \mid \hat{\boldsymbol{\mu}}_i, \hat{\boldsymbol{\theta}}_i, \hat{\boldsymbol{\pi}}_i), 
+% \end{equation}
+% where $\mathbf{x}_i$ is the gene expression profile of spot $i$.
+
+
+% \subsection{Joint Optimization}
+
+% Building upon the preceding discussions, we propose a unified framework \method{}, which jointly optimizes three losses. The total loss of \method{} can be summarized as:
+% \begin{equation} \label{totalloss}
+%   \mathcal{L}_{\text{Total}} =  \mathcal{L}_{\text{Cluster}} + \beta(t) \cdot \mathcal{L}_{\text{Smooth}} + \mathcal{L}_{\text{ZINB}}. 
+% \end{equation}
+% The overall optimization process of our proposed \method{} is summarized in Algorithm~\ref{alg:method}. 
+
+
+% \let\oldnl\nl
+% \newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}
+
+% \begin{algorithm2e}[t]
+% % \LinesNotNumbered
+% \SetAlgoLined
+% \caption{Optimization Algorithm of \method{}}
+% \KwIn{gene expression matrix $\mathbf{X}$; spatial coordinates $\mathbf{S}$.}
+
+% Initialize model parameters.
+
+% % \nonl\textbf{//\emph{Dual-view Hypergraph Construction}} \\
+% Compute incident matrix $\mathbf{A}^{(\text{f})}, \mathbf{A}^{(\text{s})}$ as Eq.~\eqref{incidence_f} and Eq.~\eqref{incidence_s};\\
+
+% \While{not converged}{
+
+%     \nonl\textbf{//\emph{Dual Hypergraph Enhanced Representation Learning}} \\
+%     Learn $\mathbf{H}^{(\text{f})}$ and $\mathbf{H}^{(\text{s})}$ via HGNN as Eq.~\eqref{HGNNs};
+
+%     \nonl\textbf{//\emph{Information Fusion and Representation Enhancement}} \\
+%     Compute cross-attention fused representation $\mathbf{Z}_0$ as Eq.~\eqref{preliminary_fused_representation}; \\
+%     % Compute self-correlation matrix $\mathbf{C}$; \\
+%     % Compute $\mathbf{Z}_1 = \mathbf{C} \cdot \mathbf{Z}_0$; \\
+%     Compute self-correlation reorganized representation $\mathbf{H}$ as Eq.~\eqref{fine_grained_representation};
+
+%     \nonl\textbf{//\emph{ZINB-based Reconstruction and Clustering}} \\
+%     Compute soft assignments $q^{(b)}, b \in \{f, s, h\}$; \\
+%     Construct sharpened target $p^{(b)}$ from $q^{(b)}$; \\
+%     Compute clustering loss $\mathcal{L}_{\text{Cluster}}$ as Eq.~\eqref{loss_cluster};
+
+%     % \textbf{//\emph{Hypergraph Smoothing Constraint}} \\
+%     Compute hypergraph smoothing loss $\mathcal{L}_{\text{Smooth}}$ as Eq.~\eqref{loss_Smooth}; 
+%     % Warm-up the weight $\beta(t) = \beta \cdot \min(1, t/30)$;
+
+%     % \textbf{//\emph{ZINB-based Reconstruction}} \\
+%     Estimate $\hat{\boldsymbol{\pi}}_i, \hat{\boldsymbol{\mu}}_i, \hat{\boldsymbol{\theta}}_i$ using three different MLPs; \\
+%     Compute $\mathcal{L}_{\text{ZINB}}$ as Eq.~\eqref{loss_ZINB};
+
+%     \nonl\textbf{//\emph{Joint Optimization}} \\
+%     Update parameters by minimizing
+%     \[
+%     \mathcal{L}_{\text{Total}} = \mathcal{L}_{\text{Cluster}} + \beta(t) \cdot \mathcal{L}_{\text{Smooth}} + \mathcal{L}_{\text{ZINB}}.
+%     \]\\
+%     Update latent representation $\mathbf{H}$;
+% }
+% \KwOut{The learned latent representation $\mathbf{H}$ and clustering result.}
+% \label{alg:method}
+% \end{algorithm2e}

@@ -1,0 +1,25 @@
+
+\section{Experiment}
+
+We conduct a comprehensive evaluation to demonstrate the severe security threat \sys poses to position-independent KV cache reuse systems. Crucially, we highlight that this threat cannot be mitigated by existing text-level defenses, sanitizers, or alignment mechanisms, as \sys fundamentally manipulates the internal KV representations rather than the textual input. To systematically analyze the impact of this vulnerability, our evaluation is guided by the following research questions:
+\begin{icompact}
+    \item \textbf{RQ1 (Effectiveness):} Can \sys exploit the identified vulnerability to manipulate model outputs?
+    \item \textbf{RQ2 (Robustness):} Can \sys maintain its effectiveness across diverse KV cache system configurations?
+    \item \textbf{RQ3 (Persistence):} Can \sys sustain its malicious impact throughout multi-turn interactions?
+    \item \textbf{RQ4 (Transferability):} Can \sys successfully manipulate model outputs under black-box settings?
+\end{icompact}
+Unless otherwise specified, RQ1-RQ3 are evaluated under the white-box setting, while RQ4 evaluates the black-box setting.
+Furthermore, we conduct comprehensive ablation studies to evaluate the impact of attack hyperparameters on \sys. Finally, we study adaptive attacks against recomputation-based defenses and examine whether existing defense mechanisms and cache compression methods can mitigate the negative impact introduced by \sys.
+
+
+\input{sections/7_rq1_effectiveness}
+
+\input{sections/7_rq2_robustness}
+
+\input{sections/7_rq3_persistence}
+
+\input{sections/7_rq4_transferability}
+
+\input{sections/7_rq5_ablation}
+
+\input{sections/7_rq6_mitigability}

@@ -1,0 +1,217 @@
+\section{Test Budget Allocation}
+\label{sec:alloc}
+
+
+
+A challenge faced by the approach of \textbf{causal stitching} 
+is the vast number of combinations of faults and workloads. 
+For example, HDFS has about 3,000 source code locations 
+where exceptions can be thrown 
+and 2,000 loops where delays can be injected 
+and thousands of integration tests. 
+Combining injected faults 
+with different workloads can result in
+tens of millions of possible fault injection scenarios. 
+In this section, 
+we explain \tool's \textbf{three-phase allocation (3PA) protocol} of test budget, 
+which maximizes the discovery of causal relationships 
+within a fixed test budget. 
+\footnote{A formal definition of the 3PA protocol is in \Cref{app:3pa}.}
+
+\subsection{Principles of Test Allocation}
+
+The 3PA protocol 
+leverages two principles  
+to prioritize faults based on 
+the uniqueness and diversity of their causal impact: 
+1) injecting \textit{causally equivalent} faults to diverse workloads, 
+and 2) extending \textit{conditional} causal relationships. 
+
+
+\textbf{Causally Equivalent Fault}. 
+Since 
+different faults (e.g., $f_1$ and $f_2$) 
+may trigger similar interferences (i.e., additional faults), 
+we consider such faults ($f_1$ and $f_2$) \textit{causally equivalent} with respect to their consequences. 
+For example, in a try-catch block, 
+multiple exceptions in the try block 
+might be handled by the same catch block, 
+in which triggers an additional fault. 
+In such cases, 
+it is redundant to inject \textit{causally equivalent} faults 
+into the same workload. 
+Instead, 
+\tool prioritizes to inject them in different workloads 
+in order to maximize the discovery of diverse fault propagations. 
+
+\textbf{Conditional Causal Relationship}. 
+Because
+\vcs 
+are often formed by 
+fault propagations activated by specific conditions, 
+\tool 
+allocates test budget 
+to increase the probability 
+to extend \textit{conditional} causal relationships between faults. 
+\tool detects 
+such \textit{conditional} causal relationships 
+by checking if a fault causes different faults in different workloads. 
+For example, 
+if $f_1$ always causes $f_2$ in different workloads, $f_1 \rightarrow f_2$ is considered \textit{unconditional}, 
+while if $f_1$ causes $f_2$ in one workload but $f_3$ in another, 
+then $f_1 \rightarrow f_2$ and $f_1 \rightarrow f_3$ are considered 
+\textit{conditional}. 
+\tool prioritizes to allocate test budgets 
+to trigger the resulting faults ($f_2$ and $f_3$) 
+of such conditional causal relationships. 
+
+
+\subsection{Three-Phase Allocation Protocol}
+\label{sec:alloc:3pa}
+
+Following the above principles, 
+\tool allocates the test budget in three phases. 
+In phase one (\textbf{causally equivalent fault detection}), 
+\tool conducts a preliminary exploration 
+by running each fault injection against one test workload, 
+and clusters faults causing similar interferences 
+in order to detect \textit{causally equivalent} faults. 
+In phase two (\textbf{causality exploration}), 
+\tool picks a fault from each set of \textit{causally equivalent} faults 
+and injects it into diverse workloads 
+to explore its causal relationships with other faults. 
+In phase three (\textbf{conditional-causality-guided causality extension}),  
+\tool uses the result from phase two to detect 
+\textit{conditional} causal relationships, 
+and prioritizes to inject faults that 
+can extend such \textit{conditional} causal relationships. 
+The total test budget is calculated 
+using the number of fault locations in each system, 
+currently as $4 \times |\mathbb{F}|$, 
+where $\mathbb{F}$ is the set of faults.
+Phase one makes up the first 25\% of the budget. Phase two  gets 50\% of the budget, while phase three uses the remaining 25\%.
+
+
+
+\textbf{Phase One: Causally Equivalent Fault Detection}. 
+In this phase, 
+for each fault $f_i$, 
+\tool picks the workload $t_{i_1}$ that reaches $f_i$'s program location 
+and has the highest code coverage. 
+The rationale is that 
+such a test is more likely to 
+reveal the most diverse interferences of $f_i$. 
+Different faults may be injected into different workloads since a single test may not cover all fault locations. 
+\tool then performs the fault causality analysis 
+to obtain all additional faults triggered. 
+We use $I(f_i, t_j)$ to represent a list of additional faults triggered by injecting $f_i$ to $t_j$. 
+
+
+Injections that do not affect system execution 
+will be deprioritized automatically.
+These non-impactful injections will be clustered together, and assigned the lowest allocation weight in the remaining phases. 
+This complements our conservative static filtering of the injection points (\Cref{sec:fia:faults-to-inject}).  
+
+
+\tool uses an IDF-based
+(inverse document frequency \cite{schutze2008introduction}, more details in \Cref{app:3pa:idf}) 
+clustering algorithm 
+to detect \textit{causally equivalent} faults.  
+IDF is commonly used in text mining tasks 
+for applying weights to the words~\cite{beel2016paper}. 
+It excels at reducing noises induced by common words such as ``a'' and ``the''. 
+\tool uses IDF to assign a weight to each fault $f$ in the fault corpus $\mathbb F$. 
+The intuition is that, similar to common words in text mining, 
+if a fault is frequently triggered by various other faults (e.g., inside a utility function), it is less useful for determining the similarity of interferences $I(f_i, t_j)$ from different injections. 
+\tool uses such weights to determine the similarity of the interferences caused by different injections. 
+
+Specifically, 
+\tool vectorizes each 
+$I(f_i, t_{i_1})$ as 
+$V(f_i, t_{i_1})=\mathrm{IDF_v}(I(f_i, t_{i_1}), \mathbb{F})$, 
+resulting in a real vector of length $n$, with each element ranging from 0 to 1 (i.e., $V \in [0,1]^n$).
+\tool then performs 
+a hierarchical clustering~\cite{kaufman2009finding} of the faults 
+in $\mathbb F$ using the cosine distance~\cite{schutze2008introduction} between all vectorized interferences $V(f_i, t_{i_1})$. 
+We select hierarchical clustering due to their explainable nature, 
+as required in biology~\cite{krause2005large} and medical~\cite{zhang2017hierarchical} researches. 
+We use cosine distance instead of euclidean distance due to their insensitive to vector length (i.e., the number of additional faults triggered in this case). The cosine distance here ranges from 0 to 1 because all IDF vectors are positive.
+
+By the end of phase one, each fault $f_i$ is clustered in to a group $G_j$ with other faults having similar interferences on the system once injected.
+This phase 
+makes up 25\% of the test budget, 
+providing an initial understanding of each fault's interference.
+
+
+
+\textbf{Phase Two: Causality Exploration.} 
+In phase two, 
+\tool distributes test budgets among 
+fault clusters $G_i$ in a round-robin manner 
+to perform injection and explore their inteferences.  
+This approach allocates equal test budgets to fault clusters, 
+not individual faults, 
+avoiding redundant injections that yield similar interferences. 
+
+In both phase two and three, 
+each time a cluster receives a test quota, 
+\tool \textbf{randomly} selects one fault from that cluster 
+and injects it into a new workload. 
+This is to compensate for potential inaccuracies in phase one 
+due to limited test budget. 
+For example, 
+injecting $f_1$ and $f_2$ both causes $f_3$ in phase one, 
+but $f_1$ can cause $f_4$ in 
+another workload 
+which is unfortunately not used in phase one. 
+Using random selection, every fault within a cluster have a chance be injected into a new workload.
+
+After completing all the injection runs, \tool performs fault causality analysis again to identify additional faults $I(f_i, t_j)$. 
+A second IDF vectorizer is trained with the data from both phases to convert $I(f_i, t_j)$ to $V(f_i, t_j)$, 
+which is used in prioritization in the next phase. 
+
+\tool prioritizes to 
+inject faults that can cause conditional interferences 
+to more workloads, 
+in order to extend conditional causal relationships. 
+It measures the 
+\textit{diversity} 
+of the causal consequences (interferences) 
+of faults in a cluster 
+using 
+an intra-cluster 
+interference similarity score ($\mathrm{SimScore}(G_i)$). 
+\tool prioritizes to 
+inject faults from clusters with a lower score, 
+which increases the chance for the injection to trigger conditional interferences. 
+The score is the average pairwise cosine distance between all vectorized interference results $V(f_i, t_j)$ obtained from the injection experiments conducted in cluster $G_i$ during phase one and two. 
+$\mathrm{SimScore}(G_i)$ ranges from 0 to 1. 
+A value of 1 indicates that all faults in cluster $G_i$ trigger the same set of additional faults among all injection runs.
+The score is then used in phase three. 
+
+
+
+\textbf{Phase Three: Conditional-Causality-Guided Causality Extension.}
+Using the $\mathrm{SimScore}(G_i)$ calculated in phase two, 
+\tool performs a weighted random allocation favoring clusters 
+with more conditional causal consequences. 
+Lower similarity indicates 
+more conditional causal consequences 
+and thus a higher allocation weight.
+The allocation weight for cluster $G_i$ is defined as 
+$\max{(\epsilon, 1-\mathrm{SimScore}(G_i))}$.
+Each cluster has a minimum weight $\epsilon$ of 0.01, ensuring every cluster receives some budget, even with perfectly matched intra-group interference results.
+
+
+\textbf{Test Budget Transfer.} 
+In phase two and three, 
+test quotas are \textit{transferable} between clusters. 
+In phase two, 
+if a cluster exhausts its (fault, test) combinations before using up its quota, the remaining quota is randomly transferred to a larger cluster for more thorough exploration.
+In phase three, any unused budget will be transferred to clusters with a smaller allocation weight.
+
+\textbf{Text Budget Selection.}
+We recommend running a minimum of $4 \times |\mathbb{F}|$ tests under the 3PA protocol.
+In phase one, each fault needs one test to explore the potential interferences of the injection on the system.
+In phase two, each fault is on average injected into two additional test cases, which enables the intra-group similarity calculation. We set a number of 2 instead of 1 in this phase just in case one fault is injected into a similar test workload as phase one. 
+In phase three, we naturally allocate each fault one additional test. 

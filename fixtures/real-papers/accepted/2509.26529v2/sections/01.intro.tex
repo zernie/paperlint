@@ -1,0 +1,189 @@
+\section{Introduction}
+\label{sec:intro}
+
+Distributed systems are designed to tolerate component failures~\cite{chandra1996unreliable}. 
+However, 
+recent research has revealed 
+\vcs~\cite{li2018pcatch,huang2022metastable,qian2023vicious,guo2013failure}, 
+wherein a fault 
+propagates across components 
+and replicates itself 
+through a self-reinforcing loop~\cite{huang2022metastable,qian2023vicious}. 
+These failures 
+undermine the intended fault tolerance, 
+resulting in widespread outages 
+with severe consequences. 
+For example, 
+a \vc happened in Amazon AWS~\cite{AWSOutage2024} 
+on July 30th, 2024, 
+significantly disrupting core AWS services, 
+including AWS Lambda, EC2, and S3. 
+The incident also brought down many dependent services, 
+such as Whole Foods Supermarket, Amazon Alexa, and Goodreads~\cite{AWSOutage2024Report}. 
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\columnwidth]{figure/aws-2024-multifault.pdf}
+    \caption{A real-world \vc from Amazon AWS. The Cell (Cluster) Manager manages a cluster of hosts (servers), each storing a set of data shards.}
+    \label{fig:aws-exp}
+\end{figure}
+
+Such failures often require intricate combinations of conditions 
+to manifest~\cite{qian2023vicious}, 
+as they typically involve a sequence of fault propagations, 
+each activated by distinct conditions. 
+For instance, 
+as shown in \Cref{fig:aws-exp}, 
+the Amazon AWS incident~\cite{AWSOutage2024} 
+occurred in a cluster of servers (hosts) 
+managed by a cluster (cell) manager, 
+with each server hosting a set of data shards. 
+During a routine system upgrade, 
+the cell manager (\circledtext{1}) restarted some hosts (e.g., Host 1), 
+and (\circledtext{2}) redistributed 
+their shards to other hosts (e.g., Host 2). 
+Due to a latent bug in the load balancer, 
+the cell manager mistakenly redistributed 
+all \textit{low-throughput shards} 
+to a small number of hosts (Host 2). 
+Consequently, 
+these hosts started 
+(\circledtext{3}) sending abnormally large status reports 
+that include metadata for all hosted shards. 
+The increased size of these reports caused delays 
+in both transmission and processing (\circledtext{4}), 
+causing the management system to misclassify these servers as unhealthy. 
+The management system consequently 
+removed these servers from the cluster, 
+and (\circledtext{5}) redistributed their shards to other servers, 
+which causes the receiving servers (e.g., Host 3) to send large-sized reports (\circledtext{6})
+and subsequently be removed from the cluster (\circledtext{7}). 
+This failure involves two fault propagations, 
+each requiring distinct conditions.
+First, for a server removal to propagate and trigger incorrect redistribution 
+(\circledtext{1} $\rightarrow$ \circledtext{2} and \circledtext{4} $\rightarrow$ \circledtext{5}), the redistributed shards must have low throughput. 
+Second, for incorrect redistribution to induce report delay and subsequent server removal
+(\circledtext{2} $\rightarrow$ \circledtext{4} and \circledtext{5} $\rightarrow$ \circledtext{7}), 
+the report size (or, the number of affected shards) must be sufficiently large. 
+
+
+
+
+
+Existing fault injection techniques 
+\cite{wu2024efficient,li2018pcatch,crashfuzz, joshi2011prefail,natella2016assessing,
+marinescu2009lfi,
+alquraan2018analysis,
+alvaro2015lineage,
+chen2020cofi,
+gunawi2011fate,
+ju2013fault,
+lu2019crashtuner,
+mohan2018finding,
+li2019efficient,
+sun2022automatic,
+meiklejohn2021service,
+zhang20213milebeach,
+chen2023push,
+jepsenio} 
+fall short of 
+exposing such \vcs before deployment, 
+because they 
+only inject faults into 
+a limited set of manually selected (e.g., stress tests) 
+or synthetically crafted workloads (e.g., benchmark workloads), 
+which often \textbf{lack the required combination of conditions}. 
+Conversely, 
+if a workload satisfying both of the previously described conditions 
+had been exercised, 
+a traditional fault commonly used in existing fault injection frameworks 
+-- a server crash -- 
+would have exposed the AWS \vc before deployment. 
+Missing triggering conditions is a known challenge to effective fault injection testing~\cite{li2021challenges, chen2023push}. 
+Without prior knowledge of the targeted bug, it is exceptionally hard for the developers to manually create test workloads or rules for workload generators~\cite{kiskis1996synthetic, han1995doctor, marinescu2009lfi, joshi2011prefail} that meet all necessary conditions. 
+
+
+To tackle 
+this challenge, 
+we propose \textbf{Causal Stitching} to simulate complex fault propagation under complex conditions by \textbf{causally linking multiple single-fault injections in different workloads}. 
+Each injection uncovers one step in the fault propagation chain. 
+Our insight is that
+triggering one step in the chain requires less stringent conditions than triggering the whole chain, increasing the likelihood of achieving this through fault injection into existing workloads, such as the integration tests shipped with the system. 
+
+
+
+To illustrate, consider the two faults involved in the Amazon AWS \vc: 
+node loss ($f_1$) and imbalanced shard redistribution ($f_2$). 
+Their causal relationships can be identified through separate fault injection runs. 
+Specifically, in a test case $t_1$ with low-throughput shards (condition $c_1$), 
+injecting $f_1$ results in the triggering of an additional fault $f_2$, establishing the causal relationship $f_1 \rightarrow f_2$. 
+Conversely, in a test case $t_2$ with a large number of shards hosted on individual nodes (condition $c_2$) , 
+injecting $f_2$ (simulated via induced delay) 
+leads to the manifestation of $f_1$, 
+indicating a reverse causal relationship  $f_2 \rightarrow f_1$. 
+The \vc can be reconstructed by linking the causal relationship among the two faults 
+as long as the workload and conditions in tests $t_1$ and $t_2$ are \textit{compatible}, resulting in a causal cycle of $f_1 \rightarrow f_2 \rightarrow f_1$. 
+
+
+We could not apply this idea to the AWS incident due to the lack of access to the source code and test suite. 
+However, our tool -- \tool -- demonstrated its capability to detect a similar, previously unknown \vcs in HBase~\cite{apache-hbase}, an open-source distributed database (\Cref{sec:eval:case-study}). 
+Notably, HBase's test suite does not contain a single workload that satisfies all the necessary triggering conditions; 
+instead, \tool identified and connected causal relationships across multiple test cases to reveal the failure.
+
+
+To obtain the causal relationships between faults inside the system, we propose a \textit{counterfactual} causality analysis of fault propagations -- \textbf{fault causality analysis (FCA)}.
+FCA compares the execution trace of a fault injection run with its corresponding profile run (i.e., running the same test without the injection) and identifies any additional faults triggered, which are considered to have a causal relationship with the injected fault. 
+
+
+
+A major challenge faced by \textbf{Causal Stitching} 
+is the vast number of combinations of faults and workloads. 
+To efficiently explore the causal relationship between faults 
+in such a massive search space, 
+\tool uses a \textbf{three-phase allocation (3PA) protocol} during test execution to maximize the number of causal relationships discovered under a fixed test budget. 
+Intuitively, 
+3PA prioritizes injecting faults with unique and diverse causal consequences. 
+This prioritization is guided by 
+an \textit{adaptive weighting algorithm}, 
+which leverages runtime feedback from prior fault injection runs 
+to estimate the potential of each fault to 
+uncover new causal relationships, particularly conditional propagations.
+In addition, 
+in the subsequent cycle detection phase, 
+\tool utilizes a \textbf{parallel beam search} 
+to construct propagation chains, 
+also applying this prioritization principle 
+to favor faults with unique and diverse causal consequences. 
+
+
+Another challenge is the risk of linking causal relationships 
+discovered in workloads with incompatible conditions. 
+For example, 
+suppose the causal relation 
+$f_1 \rightarrow f_2$ is observed in test $t_1$ under a condition $c_1$, 
+while $f_2 \rightarrow f_1$ in test $t_2$ happens under the negation of $c_1$, 
+linking $f_1 \rightarrow f_2$ and $f_2 \rightarrow f_1$ into a single causal cycle is unsound, as the conditions required for each step are mutually exclusive. 
+To reduce the risk while minimize the overhead, \tool approximates such symbolic constraints with the fault's local program trace, including branch evaluation results and the call stack.
+\tool performs a \textbf{local compatibility check} with such approximated constraints 
+before linking causal relationships, 
+and assumes that if the traces leading to the same fault are similar in different tests (e.g., traces leading to $f_2$ in $t_1$ and $t_2$), the compatibility between tests exists. 
+
+
+
+
+In summary, this paper makes the following contributions:
+
+\begin{itemize}[leftmargin=3ex, noitemsep, topsep=0pt]
+\item We propose \textbf{Causal Stitching}, a fault injection technique 
+that detects complex fault propagations by causally linking multiple single-fault injections across workloads. 
+\item To overcome the challenge of a massive search space, 
+we propose a test budget allocation protocol (\textbf{3PA}) and a \textbf{parallel beam search} cycle detection algorithm, both of which prioritize faults with unique and diverse causal consequences. 
+\item To reduce the risk of invalid linking of causal relationships, 
+we implement a \textbf{local compatibility check} to eliminate incompatible conditions. 
+\item We implement the fault injection and analysis framework, \tool. 
+% and evaluate it on real-world distributed systems. 
+We evaluate \tool on the latest versions of \NumOfSysTested popular open-source distributed systems, i.e., HDFS 2.10.2~\cite{apache-hdfs}, HDFS 3.4.1~\cite{apache-hdfs3}, HBase 2.6.0~\cite{apache-hbase}, OZone 1.4.0~\cite{apache-ozone}, and Flink 1.20.0~\cite{apache-flink}, where \tool detects \NumOfNewVC new \vcs, \NumOfConfirmedVC of which have been confirmed with \NumOfFixedVC fixed by developers. 
+\tool's source code is available at \url{https://github.com/Purdue-PFL/CSnake}.
+\end{itemize}
+

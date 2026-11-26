@@ -1,0 +1,17 @@
+\begin{tabular}{l c cc cc cc}
+\toprule
+& & \multicolumn{2}{c}{COCO} & \multicolumn{2}{c}{STRANGE-Bench} & \multicolumn{2}{c}{Held-out classes} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+Augmentation & $n$ & val\,$\uparrow$ & $\Delta^{\text{T-A}}\downarrow$ & $\Delta_{1\text{-}5}\downarrow$ & $T_{\text{never}}\uparrow$ & $\Delta_{1\text{-}5}\downarrow$ & $T_{\text{never}}\uparrow$ \\
+\midrule
+\multicolumn{8}{l}{\emph{Co-DINO R-50, mini-COCO late-stage protocol (AP)}} \\
+XPaste & 6 & \textbf{43.3} & \underline{8.0} & 1.0 & \underline{87.3} & \underline{1.4} & 87.7 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS, COCO NPMI \emph{(ours)}} & 4 & \underline{43.2} & \textbf{7.8} & \underline{0.2} & \textbf{89.3} & \textbf{0.5} & \underline{89.6} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS, Objects365 NPMI \emph{(ours)}} & 2 & \underline{43.2} & 8.1 & \textbf{0.1} & \textbf{89.3} & \textbf{0.5} & \textbf{89.9} \\
+\midrule
+\multicolumn{8}{l}{\emph{DINOv3 ViT-B/16 (F1$_{\text{micro}}$)}} \\
+XPaste & 4 & 82.3 & \underline{4.2} & \underline{$-0.6$} & 95.1 & $-0.9$ & 95.2 \\
+\rowcolor{oursrow} \textbf{XPaste + AAS, COCO NPMI \emph{(ours)}} & 4 & \textbf{82.5} & \textbf{4.1} & \textbf{\boldmath $-0.8$} & \textbf{96.1} & \textbf{\boldmath $-1.2$} & \textbf{96.0} \\
+\rowcolor{oursrow} \textbf{XPaste + AAS, Objects365 NPMI \emph{(ours)}} & 4 & \underline{82.4} & \underline{4.2} & \textbf{\boldmath $-0.8$} & \underline{95.9} & \underline{$-1.1$} & \underline{95.7} \\
+\bottomrule
+\end{tabular}

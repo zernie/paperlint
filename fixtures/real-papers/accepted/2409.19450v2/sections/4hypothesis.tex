@@ -1,0 +1,82 @@
+\section{Study 2 Experiment: Hypotheses}
+
+Our first survey yielded qualitative insights around the scenarios in which users hide their use of LLMs and the underlying reasons for such behavior.
+Based on the survey results, we conduct a controlled experiment to quantitatively investigate the effect of task types and individual differences on the propensity for covert LLM usage, and the mediation effects of users' internal and perceived external judgments.
+We formally introduce the hypotheses below.
+
+\subsection{Intentions of Secret Use of LLMs}
+Previous research has identified two primary forms of secrecy behaviors: concealment by an act of omission (withholding information) and concealment by an act of commission (actively deceiving or providing false information)~\cite{pennebaker1989confession, lane1995cognitive, kelly2002psychology, bok2011secrets}. 
+In our context, the secret use of LLMs may also be exhibited in these two forms.
+Therefore, to provide a more comprehensive understanding about factors that affect the intentions of secret use of LLMs, we measure two variables representing different levels of concealment behavior in our experiment: passive non-disclosure and active concealment.
+In our study, we defined \textbf{passive non-disclosure} as not actively disclosing the use of LLMs while being honest about it when asked.
+And \textbf{active concealment} refers to the behavior of actively hiding the use of LLMs, even when directly inquired about it.
+
+
+\subsection{Effects of Task Types on the Intentions of Secret Use of LLMs}
+Our qualitative results about the scenarios of secret use of LLMs (see \ref{sec: survey-context-results}) suggest that certain types of tasks are associated with individual users' secret use of LLMs.
+This observation leads to the hypothesis that the intention to conceal the use of LLMs may be influenced by the nature of the tasks users are engaged in.
+Furthermore, related studies and theories emphasize the basic role of context in shaping people's intention to perform certain behaviors~\cite{bommer1987behavioral, leonard2004influences, kreie2002copyright, hoffman1998women}.
+For example, the ethical decision-making model introduced by~\citet{bommer1987behavioral} highlights context as a fundamental element influencing intentions to perform ethical behaviors, and even modulate the impact of other variables in diverse ways~\cite{leonard2004influences, kreie2002copyright, hoffman1998women}.
+Similarly, Goffman's theory of self-presentation considers the task people perform as foundational elements when discussing people's ``frontstage'' and ``backstage'' behavior~\cite{goffman2016presentation}.
+The psychology of secrecy and contextual privacy further states that people decide how to perform self-disclosure behaviors depending on the situation~\cite{slepian2022process, nissenbaum2004privacy}.
+Drawing upon these related theoretical frameworks and our survey findings, we hypothesize that:
+
+\textbf{H1} Different task types cause different levels of intentions to hide the use of LLMs.
+
+
+\subsection{Effects of Individual Differences on the Intentions of Secret Use of LLMs}
+Prior studies have indicated the potential influence of individual differences on the intention of secrecy~\cite{slepian2022process, leonard2004influences}.
+In our experiment, we build upon the findings from the first survey and prior literature to establish hypotheses about how individual differences influence individual users' intentions of secret use of LLMs.
+
+\paragraph{Self-esteem}
+Survey results about causes of secret use of LLMs introduced two main categories of self-reported reasons: internal judgment and perceived external judgment (see \ref{sec: survey-cause-results}). 
+The way individuals construct these judgments and their response to them, which in turn influences their behavior, can be potentially affected by their level of self-esteem~\cite{leary2000nature}. 
+For example, individuals with high self-esteem may feel more confident and less concerned about external judgments, potentially making them more open to disclosing their use of LLMs. 
+Therefore, we hypothesize that:
+
+\textbf{H2.1} Users' level of self-esteem affects their intentions to hide the use of LLMs.
+
+\paragraph{Self-efficacy}
+Judgments about users' capabilities are featured in the self-reported reasons for concealing the use of LLMs (see \ref{sec: survey-cause-results}), encompassing both internal (questioning users' own competence because of the need of AI) and external perspectives (fear of being critiqued by others for using AI assistance).
+These types of judgments are intrinsically linked to an individual's self-efficacy~\cite{bandura1977analysis}. 
+For instance, individuals with higher self-efficacy might feel confident in their abilities, reducing the need for concealment of AI usage. 
+Therefore, we hypothesize that:
+
+\textbf{H2.2} Users' level of self-efficacy affects their intentions to hide the use of LLMs.
+
+\paragraph{Prosocialness}
+Prosocial users, who are more inclined towards societal welfare~\cite{caprara2005new}, may view the disclosure of their LLM usage as a contribution to the ``greater good'' in promoting responsible AI usage. 
+However, they might also balance this against potential ethical judgments from others. 
+This interplay suggests that one's level of prosocialness could be a potential factor influencing their decision-making process regarding the disclosure of AI usage.
+To explore this, we hypothesize that:
+
+\textbf{H2.3} Users' level of prosocialness affects their intentions to hide the use of LLMs.
+
+\paragraph{General privacy concern}
+General privacy concerns often revolve around the control and unauthorized use of personal data~\cite{malhotra2004internet}.
+While the concerns about being discovered using LLMs do not directly pertain to data privacy, it relates to the revelation of the fact that AI is being used. 
+Recognizing this nuanced aspect of privacy, we are interested in exploring how general privacy concerns impact the intention to hide the use of LLMs. 
+Hence, we hypothesize that:
+
+\textbf{H2.4} Users' level of general privacy concern affects their intentions to hide the use of LLMs.
+
+\paragraph{Demographics}
+A large body of research has identified the influence of demographic factors on people's intentions to perform secrecy behaviors~\cite{slepian2022process}, ethical technology use behaviors~\cite{leonard2004influences}, and technology adoption in the context of tensions between ``the greater good'' and ``individual privacy''~\cite{li2021makes, nissenbaum2020privacy}.
+For example, gender and age have been shown as predictors of ethical or unethical behavioral intention~\cite{dawson1997ethical}. 
+Exploring the effects of demographics on the intentions of LLM secret use can help propose targeted interventions for specific population groups. 
+Therefore, we form the following hypothesis to investigate this possibility:
+
+\textbf{H2.5} Users' demographic factors (gender, age, LLM use frequency, and education) affect their intentions to hide the use of LLMs.
+
+\subsection{Mediation Effects of Users' Internal Judgement and Perceived External Judgement about the LLM Usage}
+The reasons users self-reported for concealing their use of LLMs fundamentally reflect their perceptions regarding the secret usage behavior (internal judgement and perceived external judgement), as discussed in \autoref{sec: survey-cause-results}.
+According to the Self-Discrepancy Theory, when there are discrepancies between a person’s actual self (e.g., using LLMs for a task) and their ideal or ought self (e.g., their negative internal judgment or perceived external judgement), negative emotions are elicited.
+This can significantly influence people’s behaviors~\cite{orellana2000decisional, mandel2017compensatory}.
+Following the investigation of the impact of each independent variable, we want to further understand the causal mechanisms behind the relationship between the independent variables and the outcome variable - the secrecy behavior.
+Specifically, we focus on the mediation effect of the internal judgement and perceived external judgement, to examine how task types and individual differences influence individuals' intentions to hide the use of LLMs through these two categories of internal beliefs. 
+More formally, we propose the following hypothesis:
+
+\textbf{H3.1} Internal judgement mediates the relationship between the independent variables (i.e., task types and individual differences) and the intentions to hide the use of LLMs.
+
+\textbf{H3.2} Perceived external judgement mediates the relationship between the independent variables (i.e., task types and individual differences) and the intentions to hide the use of LLMs.
+

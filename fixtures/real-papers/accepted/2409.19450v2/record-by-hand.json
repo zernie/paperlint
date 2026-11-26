@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3survey.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4hypothesis.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5experiment.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/8conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/9ack.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/10appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "7a69770d9b0f89eaa128c067a83e686bebbea69c9fb20ff7dd2445c7fb591d7a",
+    "sections/1introduction.tex": "a56892f5dddecc3c95f1ff1cd5a188ce874dc6f372847fb26637354a3258a263",
+    "sections/2background.tex": "218f22d4c4ea755479e7360b3a372b16628f62e77279c251770b76a34214377f",
+    "sections/3survey.tex": "acacca9d66f35bffff4454fdc3e39341147964ade2a8f945a7f18637439fbb89",
+    "sections/4hypothesis.tex": "d9f68fa35dba3627bc20ac9efdee1e90041e1bac9761def258a0a9ce6b34bafd",
+    "sections/5experiment.tex": "fd565c656f460f9ed11780826c533c53435ab1efedc0ec1eb7f6f614d4da48f0",
+    "sections/6results.tex": "11101ea3e03ea9d257566cd6b692fc8ba23966bdbb92cbe4e5ec282a4382ea73",
+    "sections/7discussion.tex": "383b21f3a2c70df962a35690c92b51c55d09c551aff5fd3890c7d8efeb5dfd08",
+    "sections/8conclusion.tex": "8d2b4895e1c2e918d53f95d5b5060eddb79bb1d6624c9956964778926c127cd9",
+    "sections/9ack.tex": "53f35a09b25ed2b30ce91f4dbc604a13cda07b5b52a6686b9451ab195baa4dd3",
+    "sections/10appendix.tex": "f155fec03465000492fb6020ce8c69776c0c3c167560e23560e0efd1787e9d45"
+  }
+}

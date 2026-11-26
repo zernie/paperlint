@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "usenix2019_v3.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "usenixbadges.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "sections/s1_intro.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s2_background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s3_overview.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s4_adaptive_maintenance.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s5_adaptive_partition_selection.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s6_implementation.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s7_experiments.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s8_discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/s9_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/osdi25_ae_appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "714725eddc2490ed90dc5f61d080d7960521d99970b130d2f8cf8c44cd73c01d",
+    "usenix2019_v3.sty": "2278c83173e084a00fcf76d3227acb971f5137ecea993a5b4e13a9b2bd67b45e",
+    "usenixbadges.sty": "ee1c088881f9d293c4583ace5287d4ae9d6fe7a284ed26a0e11cfd8bc2e1dbd8",
+    "sections/s1_intro.tex": "140c7750ed753d005db9e6af8fc235a735281eb64ef5df07e02e9b57ed924395",
+    "sections/s2_background.tex": "91e81a179fee6885b0228ea1440dd6dee3c65d0d8342b061811974d02bfc01a3",
+    "sections/s3_overview.tex": "780f93abe40b4efb2ebec811055ecb6a6dde7212b408d7619b3b7303042edc7e",
+    "sections/s4_adaptive_maintenance.tex": "ceefd5a6bc4b41112b0423a758a5e657d6c0f3f22abe556f493f9a1c46f83ca1",
+    "sections/s5_adaptive_partition_selection.tex": "ea8cd2409a2c45932d351317627528eb5d76f1e6d9ed2f2d6197910d3c6e4219",
+    "sections/s6_implementation.tex": "971d33cc9f16538e92d30e8b8e107ee73ecbfb7a02516dc0b74f06defbaa8be2",
+    "sections/s7_experiments.tex": "f2e0a2126e12501abe7b8cfd4b26fd3e66b2d24554683013b8cd6eb27817503a",
+    "sections/s8_discussion.tex": "7d578d161dbc23f61dd14684440df08605868072e5d32d85ac5fd574e4fecebd",
+    "sections/s9_conclusion.tex": "6e03444b0ae67e7a0b7185e585dca6ff8486053f907437b322807b16fcf3c0f4",
+    "sections/osdi25_ae_appendix.tex": "233b451e221aea3aad88d47f50bb243475a4630acb921c3ce712a902172cd25b"
+  }
+}

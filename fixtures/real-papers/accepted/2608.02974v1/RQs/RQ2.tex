@@ -1,0 +1,50 @@
+\subsubsection{RQ2: How does ConFL compare with state-of-the-art across different bug-report conditions?}
+
+While RQ1 establishes that ConFL outperforms both IR-based baselines (BRTracer, BoostNSift) and the LLM-based baseline FlexFL on aggregate metrics, it does not reveal where this improvement comes from or under what conditions each technique succeeds or fails. To identify the source of ConFL's gains, we stratify the evaluation by bug-report quality, comparing all techniques under three reporting conditions that reflect different levels of structural guidance, following prior fault-localization studies~\cite{shao2024enhancing, blizzard, shao2023information}.
+Specifically, we consider: (i) PE reports that include explicit identifiers aligned with the ground truth (PE with hint),
+(ii) PE reports that contain misleading or irrelevant identifiers (PE without hint), and
+(iii) NL-only reports that provide only natural-language descriptions without code identifiers.
+
+
+Table~\ref{tab:db} summarizes the results.
+When strong structural hints are present (PE with hint), all LLM-based approaches benefit substantially.
+In this setting, ConFL achieves the best performance (MRR = 0.756, MAP = 0.724), outperforming FlexFL by +0.15 MRR and +0.13 MAP, and significantly surpassing IR-based baselines.
+This result indicates that even with accurate identifiers, concurrency-aware static context provides complementary signals beyond surface-level matching.
+
+The \emph{PE without hint} setting is the most challenging, as misleading program-entity mentions can actively steer LLM reasoning toward incorrect code regions.
+Under this condition, FlexFL suffers a severe performance collapse (MRR = 0.021, MAP = 0.021), performing comparably to or worse than IR-based methods.
+In contrast, ConFL degrades more gracefully, retaining substantially higher performance (MRR = 0.189, MAP = 0.189).
+Although noisy identifiers may still introduce false positives, hierarchy-based retrieval prevents the LLM from overfitting to individual symbols and enables more stable localization by grounding reasoning in concurrency-relevant structure.
+
+Interestingly, NL-only reports are often easier to handle than \emph{PE without hint} reports.
+While NL-only reports provide less explicit information, they do not actively mislead the reasoning process.
+As a result, ConFL achieves higher performance on NL-only reports (MRR = 0.320, MAP = 0.321) than on PE without hint reports (MRR = 0.189, MAP = 0.189), as hierarchy-based retrieval can explore concurrency-relevant components and thread entries in a more unbiased manner.
+
+\vspace{-8pt}
+\input{tables/results/results_by_types}
+\vspace{-8pt}
+
+Overall, these results show that although LLM-based techniques can perform well when guided by accurate program-entity hints, they are highly sensitive to noise and misleading information.
+By explicitly modeling concurrency interactions and decoupling localization from unreliable lexical signals, ConFL achieves both superior accuracy and improved robustness under realistic and noisy bug-report conditions.
+
+\noindent
+\textbf{Case Study.} We revisit the motivating example druid-1360, to briefly illustrate how our framework performs hierarchical fault localization and produces explainable results in practice.
+Starting from the bug report, the framework first identifies the \texttt{indexing-service} component and further narrows the search space to the package \texttt{io.druid.indexing.overlord.autoscaling}.
+Within this scope, \texttt{SimpleResourceManagement} is identified as a key thread entry point involved in autoscaling decisions, which interacts with other concurrent execution contexts such as the \texttt{RemoteTaskRunner}.
+
+By constructing interaction-level DSL representations for these thread entries, the framework exposes concurrent accesses to shared task and worker state.
+Based on this interaction-level context, the LLM identifies a race between task provisioning and termination, localizing the fault to \texttt{doProvision} and \texttt{doTerminate} in \texttt{SimpleResourceManagement}.
+This example demonstrates how hierarchical retrieval and interaction-level modeling guide the LLM to focus on a small set of concurrency-critical methods, enabling concise and concurrency-aware explanations without exploring the entire codebase.
+
+\vspace{-0.5em}
+\vspace*{3pt}
+\begin{tcolorbox}
+\stepcounter{findingsCounter}
+{\bf RQ\thefindingsCounter{} summary:} {
+Across all bug-report conditions, ConFL consistently outperforms both IR-based and LLM-based baselines.
+While LLM-based methods benefit from accurate program-entity hints, they are highly sensitive to noisy or misleading identifiers.
+By grounding reasoning in structured concurrency knowledge and hierarchy-based retrieval, ConFL achieves superior robustness and maintains strong localization performance even under misleading or identifier-free bug reports.
+These results demonstrate that explicitly modeling concurrency interactions is critical for reliable fault localization in realistic settings.
+}
+\end{tcolorbox}
+

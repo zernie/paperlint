@@ -1,0 +1,187 @@
+% \section{Methodology} % Scalable 3D CT Volume Generation with PRDiT
+\section{Scalable 3D CT Volume Generation with PRDiT}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\textwidth]{images/methodology/local_denoiser2.pdf}
+\caption{Detailed structure of our \emph{Local Denoiser} module. The time embedding is used to modulate the local predictions via adaptive layer normalization~\citep{Peebles2022DiT}.}
+\label{fig:local}
+\end{figure}
+
+When processing high-resolution 3D medical images, training a Transformer-based diffusion model to capture both low- and high-frequency components can quickly become prohibitively
+expensive and time-consuming. To overcome this challenge, we introduce our \emph{Pixel-Level Residual Diffusion Transformer} (PRDiT) in this section.  
+As illustrated in Figure~\ref{fig1}, PRDiT decomposes the 3D diffusion process into two distinct branches: a \emph{Local Denoiser} and a \emph{Global Residual DiT} model. The local denoiser estimates the `local' content of each 3D patch independently to provide a prior estimate of both signal and noise of the 3D volume purely based on within-patch information, and is described in detail in Section~\ref{m1}. The residual diffusion Transformer's job is then to compute a refinement to these predictions by leveraging its global receptive field to correct any remaining errors across patch boundaries, as detailed in Section~\ref{m2}. We detail our \emph{predictor-corrector} diffusion sampling method in Section \ref{m3}, before introducing an efficient way to scale our 3D generative architecture to higher resolutions with only minimal computational overhead in Section~\ref{m4}. All code required to train and evaluate PRDiT will be made publicly available\footnote{\label{fn:code_repo}All code for training and evaluating PRDiT is available at \href{https://github.com/Fredy-Zhang/PRDiT}{https://github.com/Fredy-Zhang/PRDiT}}.
+
+% Figure~\ref{fig1} illustrates our Pixel-Level Residual Diffusion Transformer which is composed of two separate modules: the \emph{Local Denoiser} and our \emph{Global Residual DiT} model. First, our local patch‑level denoiser processes the independently 3D patches to estimate signal and noise and capture fine‑grained local details, described in Section \ref{m1}. Then a global residual transformer with 3D positional and temporal context captures global structure by refining remaining errors before reassembling the full volume, described in Section \ref{m2}.
+%constructing a high-resolution generative model by leveraging an existing low-resolution pretrained model in Section \ref{m4}.
+
+% : Blind Signal \& Noise Estimation
+\subsection{The Local Denoiser}
+\label{m1}
+Given an input volume $\boldsymbol{X} \!\in\! \mathbb{R}^{C\times H\times W\times D},$
+we extract $N$ volumetric patches $\{\boldsymbol{x}_i\!\in\!\mathbb{R}^{C\times p\times p\times p}\}_{i=1}^N$ using a sliding window of size~$p$ and stride \(s<p\) to allow overlap between neighboring patches. This ensures that adjacent patches share contextual information at their borders, which we found to improve continuity in the reconstructed volume and helps to mitigate boundary artifacts (see Table~\ref{tab:ablation}\,(\subref{tab:ablation_components})). Each patch is then vectorized (i.e., flattened) to $\boldsymbol{v}_i = \mathrm{vec}(\boldsymbol{x}_i)\!\in\!\mathbb{R}^d$, with $d=C \times p^3$.
+
+Following the forward diffusion process proposed by \citet{zhang2023improving}, we sample a timestep $t\in\{1,\dots,T\}$ and compute the noisy input volume at this timestep as
+\begin{equation}
+    \boldsymbol{v}_i^t = \cos(\frac{t}{T} \frac{\pi}{2})\,\boldsymbol{v}_i \;+\;\sin(\frac{t}{T} \frac{\pi}{2})\,\boldsymbol{\epsilon}_i,\quad \text{with} \;\;
+  \boldsymbol{\epsilon}_i\sim\mathcal{N}(0,I).
+\end{equation}
+At each diffusion timestep~$t$, we first compute a base embedding~$\boldsymbol{c}\!=\!\mathrm{TimeEmbed}(t)\in\mathbb{R}^h$ which is shared between both branches to facilitate consistent temporal conditioning. We project~$\boldsymbol{c}$ into a \emph{branch-specific} time embedding for the local branch as $\boldsymbol{c}_{\mathrm{local}}\in\mathbb{R}^d$ using a linear layer, and pass it to the AdaLN-modulation network~\citep{Peebles2022DiT} to produce the LayerNorm's shift/scale parameters $(\boldsymbol{\gamma}_1,\boldsymbol{\beta}_1,\boldsymbol{\gamma}_2,\boldsymbol{\beta}_2)$. As illustrated in Figure~\ref{fig:local}, these parameters allow our denoiser to adapt its processing of the volumetric patches based on the provided timestep for both refinement steps
+\begin{equation}
+    \begin{aligned}
+  \boldsymbol{z}_1 &= \mathrm{SwiGLU}\bigl(\boldsymbol{\gamma}_1\odot\mathrm{LayerNorm}(\boldsymbol{v}_i^t)+\boldsymbol{\beta}_1\bigr)\\
+  \boldsymbol{z}_2 &= \mathrm{SwiGLU}\bigl(\boldsymbol{\gamma}_2\odot\mathrm{LayerNorm}(\boldsymbol{z}_1)+\boldsymbol{\beta}_2\bigr),
+\end{aligned}
+\end{equation}
+which yields, after a residual skip connection $\boldsymbol{z}=\boldsymbol{z}_2+\boldsymbol{v}_i^t$ followed by a linear projection and reshaping, the predictions of the denoised input patch $\hat{\boldsymbol{x}}_i\in\mathbb{R}^{C\times s^3}$ as well as the noise $\hat{\boldsymbol{\epsilon}}_i\in\mathbb{R}^{C\times s^3}$. Note that the reshaped outputs do no longer overlap but provide estimates at the exact same dimensions as the input image and noise -- aligning our Local Denoiser's output predictions with the standard diffusion objective of jointly estimating clean signal and noise. 
+%, yielding its outputs $[\hat{\boldsymbol{v}}_i,\;\hat{\boldsymbol{\epsilon}}_i]$
+% \[
+%   (\alpha_1,\beta_1,\alpha_2,\beta_2)
+%   = \mathrm{AdaLN}(c_{\mathrm{local}})
+%   \;\in\;\mathbb{R}^{4d}.
+% \]
+% Note that the  global residual stage, we similarly compute
+% \[
+%   c_{\mathrm{fine}}
+%   = W_{\mathrm{f}}\,c + b_{\mathrm{f}}
+%   \;\in\;\mathbb{R}^h,
+% \]
+% and use \(c_{\mathrm{fine}}\) within each AdaLN layer of the DiT blocks, ensuring consistent temporal conditioning across both modules. 
+
+% and add a residual skip \(z=z_2+v_i\). A final linear projection produces 
+% \[
+% [\hat v_i,\;\hat \epsilon_i]
+% = W_{\mathrm{final}}(z)
+% \;\in\;\mathbb{R}^{2d},
+% \quad
+% \hat v_i,\;\hat \epsilon_i\in\mathbb{R}^d.
+% \]
+% which is reshaped back to \(\hat x_i\in\mathbb{R}^{C\times p^3}\). Here \(\hat v_i\) is the denoised patch and \(\hat\epsilon_i\) is the predicted noise, which aligns our MLP’s outputs with the standard diffusion objective of jointly estimating clean signal and noise.
+
+We train the denoiser by minimizing the per‐patch loss
+\begin{equation}\label{eq:local_loss}
+  \mathcal{L}_\mathrm{local}
+  = \mathbb{E}_{i}\Bigl[\|\hat{\boldsymbol{x}_i} - \boldsymbol{x}_i\|_2^2
+    \;+\;\|\hat{\boldsymbol{\epsilon}_i} - \boldsymbol{\epsilon}_i\|_2^2\Bigr]
+\end{equation}
+to ensure we efficiently capture the local structure of each patch and accurately estimate its noise. 
+At inference time, the denoised patch predictions $\{\hat{\boldsymbol{x}}_i\}^N$ together with the corresponding noise estimates $\{\hat{\boldsymbol{\epsilon}}_i\}^N$ are reassembled to provide a prior estimate of the entire input volume's signal and noise. This allows our Global Residual Diffusion Transformer, which will be described in the following, to focus exclusively on correcting the outputs via `global' residuals $\{\boldsymbol{x}_i - \hat{\boldsymbol{x}}_i\}^N$, thereby reducing overall learning complexity and training time.
+
+
+\subsection{The Global Residual Diffusion Transformer}
+\label{m2}
+% To further refine the estimates obtained from the Local Denoiser by exploiting `global' information across the entire volume, 
+% This pixel-level diffusion transformer, referred to as global residual DiT, integrates time embeddings to guide the denoising process across multiple diffusion steps, ensuring smooth transitions from noisy to refined outputs. By operating directly on voxel data, our model retains the high-resolution details critical for medical imaging tasks, such as identifying subtle anatomical structures or pathological features. The absence of a latent encoding stage reduces computational overhead and avoids potential information loss, making the architecture particularly suitable for datasets with limited samples. 
+Complementing the Local Denoiser, which processes each volume-patch independently without any global information, our Global Residual Diffusion Transformer component leverages the `\emph{global}' full-volume context by jointly attending to all patch embeddings through multi-head self-attention. Following the original 2D DiT~\citep{Peebles2022DiT}, our model inherits the scalable nature of Diffusion Transformers, meaning it can enhance generation quality at increased computational resources by adjusting the Transformer’s depth, width, or patch size, without necessitating network redesign. This adaptability supports diverse resolutions and volumes of medical data.
+
+We freeze the Local Denoiser and train our global component to produce residuals that refine the local predictions (see Figure~\ref{fig1}) using the same per‐patch diffusion loss
+\begin{equation}
+  \mathcal{L}_\mathrm{global}
+  = \mathbb{E}_{i}\bigl[\|\tilde{\boldsymbol{x}}_i - \boldsymbol{x}_i\|_2^2 + \,\|\tilde{\boldsymbol{\epsilon}}_i - \boldsymbol{\epsilon}_i\|_2^2\bigr],
+\end{equation}
+now with $\tilde{\boldsymbol{x}}_i = \hat{\boldsymbol{x}}_i + \Delta\hat{\boldsymbol{x}}_i$ denoting the refined patch and $\tilde{\boldsymbol{\epsilon}}_i = \hat{\boldsymbol{\epsilon}}_i + \Delta\hat{\boldsymbol{\epsilon}}_i$ the refined noise.  
+% \subsection{Loss Functions}
+% The training objective 
+
+% Once the Global Residual DiT has converged, we unfreeze both the Local Denoiser and transformer modules, and jointly fine‑tune them using the per‑patch diffusion loss. This coordinated optimization enhances their synergy and further improves reconstruction fidelity.
+
+% \subsection{Diffusion Sampling Method at Inference Time}
+\subsection{Improving Sample Quality via Predictor-Corrector Diffusion Sampling}
+\label{m3}
+% \textcolor{red}{MH:  TODO - rewrite/refine. @Freddy: Are all the details correct? How much of this is `new'/unknown, and do we need to cite someone?}\\
+% \red{Yes, this sampling method is from our previous works, }\\
+% put k forward , k-1 backward at begining\\
+% \textcolor{blue}{During inference, PRDiT generates synthetic CT volumes using a modified reverse diffusion sampling method.} \textcolor{red}{During inference, PRDiT employs a reverse-diffusion sampler derived from the deterministic ("cold") gradient-update scheme~\citep{zhang2023improving}.} 
+During inference, PRDiT generates 3D CT volumes using a modified reverse-diffusion sampling method derived from the deterministic (`cold') gradient-update scheme in~\citep{zhang2023improving}. Our approach reformulates their gradient-based generative path into distinct \emph{cold predictor} and \emph{hot corrector} steps: predicting a $k$-step jump forward before correcting by a $k-1$ backwards step. We found this to significantly improve both stability and generative quality (see ablations Section~\ref{sec:abl}). Note that $k$ does not need to be an integer value, but is kept to $k=2$ across most of our experiments.
+
+% Concretely, 
+As outlined in Algorithm~\ref{alg:pccosine1}, given a diffusion schedule with $T$ timesteps, the predictor step advances $k$ timesteps forward by applying the following $k$-scaled gradient update:
+\begin{equation}
+\label{eq5}
+\boldsymbol{x}_{t-k} = \boldsymbol{x}_t - k \cdot \nabla\Bigl(\cos(\beta_t)\hat{\boldsymbol{x}}_0 + \sin(\beta_t)\hat{\boldsymbol{\epsilon}}\Bigr), \quad k \geq 1,
+\end{equation}
+with $\beta_t = \frac{t}{T}\frac{\pi}{2}$, and $\hat{\boldsymbol{x}}_0$ and $\hat{\boldsymbol{\epsilon}}$ are the estimated clean volume and noise component predicted by the model.  
+When $k=1$, this procedure reduces to the standard single-step gradient update used in conventional \emph{cold} diffusion sampling which advances one single timestep. For $k>1$, the method becomes a \emph{hot} diffusion process when combined with our corrector, introducing fresh noise per update to increase the level of stochastic exploration. 
+
+Concretely, following the $k$-step predictor stage, we perform a correction through a $k-1$ backwards diffusion step to reintroduce controlled noise and refine the sample as
+% \begin{equation}
+%     \Gamma_{t}^{(k)} := \frac{\cos(\beta_{t-1})}{\cos(\beta_{t-k})},
+% \end{equation}
+\begin{equation}
+\label{eq6}
+    \boldsymbol{x}_{t-1} = \Gamma_{t}^{(k)}\,\boldsymbol{x}_{t-k} + \sqrt{1 - \bigl(\Gamma_{t}^{(k)}\bigr)^{2}}\;\boldsymbol{\epsilon}', \quad \text{with} \;\; \Gamma_{t}^{(k)} := \frac{\cos(\beta_{t-1})}{\cos(\beta_{t-k})} 
+\end{equation}
+and where $\boldsymbol{\epsilon}' \sim \mathcal{N}(0, I)$ is newly injected random noise.  
+This predictor–corrector scheme balances deterministic guidance (cold predictor) with adaptive stochasticity (hot corrector), enabling PRDiT to better preserve fine structures while maintaining global coherence in the generated volumes.
+
+\begin{algorithm}[h!]
+\DontPrintSemicolon
+\setlength{\baselineskip}{1.17\baselineskip}
+\caption{Predictor-Corrector Sampling}
+\label{alg:pccosine1}
+\SetKwComment{SideComment}{$\triangleright$\ }{}
+
+\KwIn{
+    \begin{tabular}[t]{@{}l@{}}
+    \hspace{2.7mm}Initial sample $x_T \in \mathbb{R}^{B \times C \times D \times H \times W}$; \\
+    \hspace{2.7mm}Diffusion model $f_\theta$ with $f_\theta(x_t,t) := (\hat{\epsilon}_t,\hat{x}_0^{\,t})$; \\
+    \hspace{2.7mm}Predictor step multiplier $k \ge 1$.
+    \end{tabular}
+}
+\KwOut{
+    Sample sequence $\mathcal{X} = (x_t)_{t=0}^{T}$ and predictions $\hat{\mathcal{X}}_0 = (\hat{x}_0^{\,t})_{t=1}^{T}$.
+}
+
+\BlankLine
+\textbf{Initialize:} $\mathcal{X} \gets {x_T}$, angle map $\beta_t \gets \frac{\pi}{2}\frac{t}{T}$.\;
+
+\For{$t = T, T-1, \dots, 1$}{
+    $x_t \gets \text{last}(\mathcal{X})$\;
+    $(\hat{\epsilon}_t, \hat{x}_0^{\,t}) \gets f_\theta(x_t, t)$ \SideComment*[r]{Model predictions at time $t$}
+    $g_t \gets \sin(\beta_t)\,\hat{x}_0^{\,t} - \cos(\beta_t)\,\hat{\epsilon}_t$ \SideComment*[r]{Gradient direction in cosine plane}
+    $k \leftarrow \min(k, t)$ \SideComment*[r]{Avoid $t-k<0$, when $t$ is small}
+    $\Delta\beta \leftarrow \beta_t - \beta_{t-k}$\;
+    $x_{t-k} \gets x_t - \Delta\beta \cdot g_t$ \SideComment*[r]{Predictor: $k$-step jump to time $(t-k)$}
+    $\Gamma_{t}^{(k)} \gets \cos(\beta_{t-1})/\cos(\beta_{t-k})$ \SideComment*[r]{Scaling for variance preservation}
+    $\epsilon' \sim \mathcal{N}(0,I)$\;
+    $x_{t-1} \gets\!\Gamma_{t}^{(k)} x_{t-k}\!+\!\sqrt{1\!-\!\big(\Gamma_{t}^{(k)}\big)^2}\,\epsilon'$ \SideComment*[r]{Corrector: \!\!\!\!\!variance preservation}
+    $\mathcal{X} \leftarrow \mathcal{X} \cup \{x_{t-1}\}$\;
+}
+\Return{$(\hat{\mathcal{X}}_0,\, \mathcal{X})$}\;
+\end{algorithm}
+
+\subsection{Efficiently Generating 3D Volumes at Higher Resolutions}
+\label{m4}
+Training Diffusion Transformers from scratch at high resolutions like $256^3$ is impractical under typical GPU budgets: moving from $128^3$ to $256^3$ increases the voxel/token count by $8\times$, and the quadratic cost of self-attention raises memory/compute by roughly $64\times$. In practice this forces tiny batch sizes, triggers frequent out-of-memory failures, and destabilizes optimization, which makes the end-to-end high-resolution training inefficient and brittle (and often infeasible).
+To mitigate this, we construct a high-resolution generator that reuses our already-trained low-resolution model. As illustrated in Figure~\ref{fig:highres}, we train only an additional high-resolution residual refinement module, which operates locally on individual volume patches and focuses on recovering the missing high-frequency details.
+Given a high-resolution noisy input volume $\boldsymbol{X}^{\text{\tiny{HR}}}$, we first downsample it to the lower resolution, apply the trained low-resolution model, and then upsample the prediction back to high resolution. This yields our initial `rough' estimates for both signal and noise to be refined. 
+
+A key design choice is the use of \emph{nearest downsampling}. Unlike smoother methods such as trilinear interpolation, nearest downsampling avoids averaging pixel values, which would otherwise attenuate high-frequency noise and reduce the signal’s overall energy. Preserving this energy is essential to maintain the noise statistics expected by the pretrained low-resolution model, ensuring the downsampled input aligns with the model’s training distribution and thereby avoiding mismatches during denoising.  
+% Let $D$ be $2{\times}$ nearest downsampling, which can keep the energy level match  and $U$ be $2{\times}$ upsampling (nearest or trilinear). For a high-resolution noisy state $x_t^{\mathrm{H}}$:
+% \[
+% x_t^{\mathrm{L}} = D(x_t^{\mathrm{H}}),\qquad
+% (\hat{x}_0^{\mathrm{L}},\,\hat{\varepsilon}^{\mathrm{L}}) = f_{\mathrm{L}}(x_t^{\mathrm{L}},\,t),\qquad
+% \bar{x}_0^{\mathrm{H}} = U(\hat{x}_0^{\mathrm{L}}),\;\;\bar{\varepsilon}^{\mathrm{H}} = U(\hat{\varepsilon}^{\mathrm{L}}),
+% \]
+% which preserves low frequencies by construction ($D(\bar{x}_0^{\mathrm{H}})\!\approx\!\hat{x}_0^{\mathrm{L}}$).
+For the upsampling step, we apply trilinear interpolation to the predicted clean low-resolution image $\hat{\boldsymbol{X}}_0^{\text{\tiny{LR}}}$ to obtain $\hat{\boldsymbol{X}}_0^{\text{\tiny{HR}}}$, as this smoother interpolation better preserves structural continuity and reduces artifacts in the anatomical features, yielding a more natural high-resolution initialization. Since the noise is inherently stochastic and discontinuous, we apply nearest upsampling to the predicted noise $\hat{\boldsymbol{\epsilon}}^{\text{\tiny{LR}}}$ to obtain $\hat{\boldsymbol{\epsilon}}^{\text{\tiny{HR}}}$, ensuring its energy level is preserved. 
+
+To recover details lost during down- and upsampling, we introduce a high-resolution residual refinement module based our previously-introduced Local Denoiser design (Figure~\ref{fig:local}). This module refines the upsampled signal and noise estimates from the low-resolution component using the set of noisy input volume-patches and information about the current time step as shown in Figure~\ref{fig:highres}.
+% \[
+% (\Delta x_0^{\mathrm{H}},\,\Delta \varepsilon^{\mathrm{H}})
+% = g_{\mathrm{H}}\!\big([\,x_t^{\mathrm{H}}\;\|\;\bar{x}_0^{\mathrm{H}}\;\|\;\bar{\varepsilon}^{\mathrm{H}}\,],\,t\big),\qquad
+% \hat{x}_0^{\mathrm{H}}=\bar{x}_0^{\mathrm{H}}+\Delta x_0^{\mathrm{H}},\;\;
+% \hat{\varepsilon}^{\mathrm{H}}=\bar{\varepsilon}^{\mathrm{H}}+\Delta \varepsilon^{\mathrm{H}}.
+% \]
+We keep the already-trained low-resolution model frozen and train only the refinement module at high resolution, which helps it focus its capacity on fine structures rather than relearning global anatomy. Our training uses the standard signal-and-noise estimation objective on high-resolution patches (Equation~(\ref{eq:local_loss})), augmented with a low-frequency consistency term that encourages the downsampled high-resolution predictions to match the low-resolution outputs. We found this simple constraint to help keeping large-scale appearance stable while allowing the residual module to allocate its capacity to high-frequency detail.
+
+Unlike cascaded super-resolution methods that typically modify only the final sample and often disrupt the low-frequency structure learned during diffusion, our approach integrates the high-resolution residual refinement module directly within the sampling loop. At each step, we downsample the current state to query the low-resolution model, upsample its estimate, and immediately refine high-frequency details before proceeding. This in-loop strategy yields sharp textures, reduces edge artifacts and promotes more stable detail formation throughout the diffusion process.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1.0\textwidth]{images/methodology/high_arc_4.pdf}
+\vspace{-18pt}
+\caption{Our high-resolution PRDiT\textuparrow$^{256}$ model integrates the pretrained and frozen lower-resolution PRDiT\textuparrow$^{128}$ core to serve as a structural prior. Scaling the $128^3$ base resolution through trilinear upsampling allows its dedicated High-Resolution Residual path to capture fine-grained details in a parameter-efficient manner to generate high-quality $256^3$ outputs.}
+\vspace{-10pt}
+\label{fig:highres}
+\end{figure}

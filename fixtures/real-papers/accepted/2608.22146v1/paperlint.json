@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "cscw-2026",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acm-acmsmall"
+      },
+      "opened": "2026-08-23",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2026-08-23",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

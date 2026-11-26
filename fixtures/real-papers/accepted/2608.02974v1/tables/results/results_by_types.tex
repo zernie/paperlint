@@ -1,0 +1,54 @@
+
+\begin{table*}[h]
+\centering \footnotesize
+\caption{MRR and MAP results under different bug report qualities.}\label{tab:db}
+\vspace{-8pt}
+\begin{subtable}{0.32\textwidth}
+\centering
+\caption{PE (with hint)}
+\begin{tabular}{lcc}
+\toprule
+Technique & MRR & MAP \\
+\midrule
+BRTracer & 0.136 & 0.134 \\
+boostNSift & 0.167 & 0.161 \\
+BLCoiR & 0.048 & 0.048 \\
+FlexFL & 0.607 & 0.597 \\
+\Name{} & \textbf{0.756} & \textbf{0.724} \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\hfill
+\begin{subtable}{0.32\textwidth}
+\centering
+\caption{PE (without hint)}
+\begin{tabular}{lcc}
+\toprule
+Technique & MRR & MAP \\
+\midrule
+BRTracer & 0.026 & 0.024 \\
+boostNSift & 0.042 & 0.040 \\
+BLCoiR & 0.007 & 0.007 \\
+FlexFL & 0.021 & 0.021 \\
+\Name{} & \textbf{0.189} & \textbf{0.189} \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\hfill
+\begin{subtable}{0.32\textwidth}
+\centering
+\caption{NL}
+\begin{tabular}{lcc}
+\toprule
+Technique & MRR & MAP \\
+\midrule
+BRTracer & 0.052 & 0.054 \\
+boostNSift & 0.054 & 0.049 \\
+BLCoiR & 0.018 & 0.020 \\
+FlexFL & 0.023 & 0.021 \\
+\Name{} & \textbf{0.320} & \textbf{0.321} \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\end{table*}
+

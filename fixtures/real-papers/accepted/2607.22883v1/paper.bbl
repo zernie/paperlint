@@ -1,0 +1,750 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{78}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Abdullin et~al\mbox{.}(2025)]%
+        {abdullin2025testwarscomparativestudy}
+\bibfield{author}{\bibinfo{person}{Azat Abdullin}, \bibinfo{person}{Pouria Derakhshanfar}, {and} \bibinfo{person}{Annibale Panichella}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Test Wars: A Comparative Study of SBST, Symbolic Execution, and LLM-Based Approaches to Unit Test Generation}.
+\newblock
+\showeprint[arxiv]{2501.10200}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2501.10200}{doi:\nolinkurl{10.48550/arXiv.2501.10200}}
+
+
+\bibitem[Ahmad et~al\mbox{.}(2021)]%
+        {ahmad-etal-2021-PLBART}
+\bibfield{author}{\bibinfo{person}{Wasi Ahmad}, \bibinfo{person}{Saikat Chakraborty}, \bibinfo{person}{Baishakhi Ray}, {and} \bibinfo{person}{Kai-Wei Chang}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Unified Pre-training for Program Understanding and Generation}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies}}. \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{address}{Online}, \bibinfo{pages}{2655--2668}.
+\newblock
+\href{https://doi.org/10.18653/v1/2021.naacl-main.211}{doi:\nolinkurl{10.18653/v1/2021.naacl-main.211}}
+
+
+\bibitem[Alagarsamy et~al\mbox{.}(2024)]%
+        {A3TestIST}
+\bibfield{author}{\bibinfo{person}{Saranya Alagarsamy}, \bibinfo{person}{Chakkrit Tantithamthavorn}, {and} \bibinfo{person}{Aldeida Aleti}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{A3Test: Assertion-Augmented Automated Test Case Generation}.
+\newblock \bibinfo{journal}{\emph{Information and Software Technology}}  \bibinfo{volume}{176} (\bibinfo{year}{2024}), \bibinfo{pages}{107565}.
+\newblock
+\showISSN{0950-5849}
+\href{https://doi.org/10.1016/j.infsof.2024.107565}{doi:\nolinkurl{10.1016/j.infsof.2024.107565}}
+
+
+\bibitem[Alshahwan et~al\mbox{.}(2024)]%
+        {AutoTestImprvMetaFSE2024}
+\bibfield{author}{\bibinfo{person}{Nadia Alshahwan}, \bibinfo{person}{Jubin Chheda}, \bibinfo{person}{Anastasia Finogenova}, \bibinfo{person}{Beliz Gokkaya}, \bibinfo{person}{Mark Harman}, \bibinfo{person}{Inna Harper}, \bibinfo{person}{Alexandru Marginean}, \bibinfo{person}{Shubho Sengupta}, {and} \bibinfo{person}{Eddy Wang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Automated Unit Test Improvement using Large Language Models at Meta}. In \bibinfo{booktitle}{\emph{Companion Proceedings of the 32nd ACM International Conference on the Foundations of Software Engineering}} (Porto de Galinhas, Brazil) \emph{(\bibinfo{series}{FSE 2024})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{185–196}.
+\newblock
+\showISBNx{9798400706585}
+\href{https://doi.org/10.1145/3663529.3663839}{doi:\nolinkurl{10.1145/3663529.3663839}}
+
+
+\bibitem[Altmayer~Pizzorno and Berger(2025)]%
+        {coverup}
+\bibfield{author}{\bibinfo{person}{Juan Altmayer~Pizzorno} {and} \bibinfo{person}{Emery~D. Berger}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{CoverUp: Effective High Coverage Test Generation for Python}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{2}, \bibinfo{number}{FSE} (\bibinfo{date}{June} \bibinfo{year}{2025}), \bibinfo{pages}{2897–2919}.
+\newblock
+\showISSN{2994-970X}
+\href{https://doi.org/10.1145/3729398}{doi:\nolinkurl{10.1145/3729398}}
+
+
+\bibitem[Ammann et~al\mbox{.}(1998)]%
+        {Model-checking-test-gen-2}
+\bibfield{author}{\bibinfo{person}{P.E. Ammann}, \bibinfo{person}{P.E. Black}, {and} \bibinfo{person}{W. Majurski}.} \bibinfo{year}{1998}\natexlab{}.
+\newblock \showarticletitle{Using model checking to generate tests from specifications}. In \bibinfo{booktitle}{\emph{Proceedings Second International Conference on Formal Engineering Methods (Cat.No.98EX241)}}. \bibinfo{pages}{46--54}.
+\newblock
+\href{https://doi.org/10.1109/ICFEM.1998.730569}{doi:\nolinkurl{10.1109/ICFEM.1998.730569}}
+
+
+\bibitem[Anthropic(2024a)]%
+        {anthropic2024claude35sonnet}
+\bibfield{author}{\bibinfo{person}{Anthropic}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \bibinfo{title}{Claude 3.5 Sonnet}.
+\newblock
+\shownote{Accessed: 2025-02-19}.
+\newblock
+\urldef\tempurl%
+\url{https://www.anthropic.com/news/claude-3-5-sonnet}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Anthropic(2024b)]%
+        {anthropic2024claude3}
+\bibfield{author}{\bibinfo{person}{Anthropic}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \bibinfo{title}{Introducing the Next Generation of Claude}.
+\newblock
+\shownote{Accessed: 2025-03-13}.
+\newblock
+\urldef\tempurl%
+\url{https://www.anthropic.com/news/claude-3-family}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Anthropic(2025)]%
+        {anthropic2025claude4sonnet}
+\bibfield{author}{\bibinfo{person}{Anthropic}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Claude 4 Sonnet}.
+\newblock
+\shownote{Accessed: 2025-05-23}.
+\newblock
+\urldef\tempurl%
+\url{https://www.anthropic.com/claude/sonnet}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Beck(2002)]%
+        {beck2022test-driven-dev}
+\bibfield{author}{\bibinfo{person}{Kent Beck}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Test-Driven Development: By Example}}.
+\newblock \bibinfo{publisher}{Addison-Wesley Professional}.
+\newblock
+
+
+\bibitem[Brown et~al\mbox{.}(2020)]%
+        {LMareFew-Shot-Learner}
+\bibfield{author}{\bibinfo{person}{Tom~B. Brown} {et~al\mbox{.}}} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Language models are few-shot learners}. In \bibinfo{booktitle}{\emph{Proceedings of the 34th International Conference on Neural Information Processing Systems}} (Vancouver, BC, Canada) \emph{(\bibinfo{series}{NIPS '20})}. \bibinfo{publisher}{Curran Associates Inc.}, \bibinfo{address}{Red Hook, NY, USA}, Article \bibinfo{articleno}{159}, \bibinfo{numpages}{25}~pages.
+\newblock
+\showISBNx{9781713829546}
+\href{https://doi.org/10.48550/arXiv.2005.14165}{doi:\nolinkurl{10.48550/arXiv.2005.14165}}
+
+
+\bibitem[Brunsfeld(2018)]%
+        {tree-sitter}
+\bibfield{author}{\bibinfo{person}{Max Brunsfeld}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{title}{Tree-sitter: An incremental parsing system for programming tools}.
+\newblock
+\shownote{Accessed: 2025-02-21}.
+\newblock
+\href{https://doi.org/10.5281/zenodo.4619183}{doi:\nolinkurl{10.5281/zenodo.4619183}}
+
+
+\bibitem[Cadar et~al\mbox{.}(2008)]%
+        {symbolic-execution-test-gen-2}
+\bibfield{author}{\bibinfo{person}{Cristian Cadar}, \bibinfo{person}{Daniel Dunbar}, {and} \bibinfo{person}{Dawson Engler}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{KLEE: unassisted and automatic generation of high-coverage tests for complex systems programs}. In \bibinfo{booktitle}{\emph{Proceedings of the 8th USENIX Conference on Operating Systems Design and Implementation}} (San Diego, California) \emph{(\bibinfo{series}{OSDI'08})}. \bibinfo{publisher}{USENIX Association}, \bibinfo{address}{USA}, \bibinfo{pages}{209–224}.
+\newblock
+
+
+\bibitem[Chen et~al\mbox{.}(2021)]%
+        {Codex}
+\bibfield{author}{\bibinfo{person}{Mark Chen} {et~al\mbox{.}}} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{Evaluating Large Language Models Trained on Code}.
+\newblock
+\showeprint[arxiv]{2107.03374}~[cs.LG]
+\href{https://doi.org/10.48550/arXiv.2107.03374}{doi:\nolinkurl{10.48550/arXiv.2107.03374}}
+
+
+\bibitem[Chen et~al\mbox{.}(2024)]%
+        {ChatUniTestFSE2024Demo}
+\bibfield{author}{\bibinfo{person}{Yinghao Chen}, \bibinfo{person}{Zehao Hu}, \bibinfo{person}{Chen Zhi}, \bibinfo{person}{Junxiao Han}, \bibinfo{person}{Shuiguang Deng}, {and} \bibinfo{person}{Jianwei Yin}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{ChatUniTest: A Framework for LLM-Based Test Generation}. In \bibinfo{booktitle}{\emph{Companion Proceedings of the 32nd ACM International Conference on the Foundations of Software Engineering}} (Porto de Galinhas, Brazil) \emph{(\bibinfo{series}{FSE 2024})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{572–576}.
+\newblock
+\showISBNx{9798400706585}
+\href{https://doi.org/10.1145/3663529.3663801}{doi:\nolinkurl{10.1145/3663529.3663801}}
+
+
+\bibitem[Chinh et~al\mbox{.}(2019)]%
+        {chinh2019ways}
+\bibfield{author}{\bibinfo{person}{Bonnie Chinh}, \bibinfo{person}{Himanshu Zade}, \bibinfo{person}{Abbas Ganji}, {and} \bibinfo{person}{Cecilia Aragon}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Ways of qualitative coding: A case study of four strategies for resolving disagreements}. In \bibinfo{booktitle}{\emph{Extended Abstracts of the 2019 CHI Conference on Human Factors in Computing Systems}}. \bibinfo{pages}{1--6}.
+\newblock
+\href{https://doi.org/10.1145/3290607.3312879}{doi:\nolinkurl{10.1145/3290607.3312879}}
+
+
+\bibitem[Daka and Fraser(2014)]%
+        {SurveyOnUnitTestPracticesandProblems}
+\bibfield{author}{\bibinfo{person}{Ermira Daka} {and} \bibinfo{person}{Gordon Fraser}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{A Survey on Unit Testing Practices and Problems}. In \bibinfo{booktitle}{\emph{2014 IEEE 25th International Symposium on Software Reliability Engineering}}. \bibinfo{pages}{201--211}.
+\newblock
+\href{https://doi.org/10.1109/ISSRE.2014.11}{doi:\nolinkurl{10.1109/ISSRE.2014.11}}
+
+
+\bibitem[Dakhel et~al\mbox{.}(2024)]%
+        {TestGenLLMandMutIST}
+\bibfield{author}{\bibinfo{person}{Arghavan~Moradi Dakhel}, \bibinfo{person}{Amin Nikanjam}, \bibinfo{person}{Vahid Majdinasab}, \bibinfo{person}{Foutse Khomh}, {and} \bibinfo{person}{Michel~C. Desmarais}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Effective test generation using pre-trained Large Language Models and mutation testing}.
+\newblock \bibinfo{journal}{\emph{Information and Software Technology}}  \bibinfo{volume}{171} (\bibinfo{year}{2024}), \bibinfo{pages}{107468}.
+\newblock
+\showISSN{0950-5849}
+\href{https://doi.org/10.1016/j.infsof.2024.107468}{doi:\nolinkurl{10.1016/j.infsof.2024.107468}}
+
+
+\bibitem[{DeepSeek-AI}(2025a)]%
+        {deepseekai2025deepseekr1incentivizingreasoningcapability}
+\bibfield{author}{\bibinfo{person}{{DeepSeek-AI}}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \bibinfo{title}{DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning}.
+\newblock
+\showeprint[arxiv]{2501.12948}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2501.12948}{doi:\nolinkurl{10.48550/arXiv.2501.12948}}
+
+
+\bibitem[{DeepSeek-AI}(2025b)]%
+        {deepseekai2025deepseekv3technicalreport}
+\bibfield{author}{\bibinfo{person}{{DeepSeek-AI}}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \bibinfo{title}{DeepSeek-V3 Technical Report}.
+\newblock
+\showeprint[arxiv]{2412.19437}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2412.19437}{doi:\nolinkurl{10.48550/arXiv.2412.19437}}
+
+
+\bibitem[Dinella et~al\mbox{.}(2022)]%
+        {TOGA}
+\bibfield{author}{\bibinfo{person}{Elizabeth Dinella}, \bibinfo{person}{Gabriel Ryan}, \bibinfo{person}{Todd Mytkowicz}, {and} \bibinfo{person}{Shuvendu~K. Lahiri}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{TOGA: a neural method for test oracle generation}. In \bibinfo{booktitle}{\emph{Proceedings of the 44th International Conference on Software Engineering}} (Pittsburgh, Pennsylvania) \emph{(\bibinfo{series}{ICSE '22})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{2130–2141}.
+\newblock
+\showISBNx{9781450392211}
+\href{https://doi.org/10.1145/3510003.3510141}{doi:\nolinkurl{10.1145/3510003.3510141}}
+
+
+\bibitem[Enoiu et~al\mbox{.}(2016)]%
+        {Model-checking-test-gen-1}
+\bibfield{author}{\bibinfo{person}{Eduard~P. Enoiu}, \bibinfo{person}{Adnan \v{C}au\v{s}evi\'{c}}, \bibinfo{person}{Thomas~J. Ostrand}, \bibinfo{person}{Elaine~J. Weyuker}, \bibinfo{person}{Daniel Sundmark}, {and} \bibinfo{person}{Paul Pettersson}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Automated test generation using model checking: an industrial evaluation}.
+\newblock \bibinfo{journal}{\emph{Int. J. Softw. Tools Technol. Transf.}} \bibinfo{volume}{18}, \bibinfo{number}{3} (\bibinfo{date}{June} \bibinfo{year}{2016}), \bibinfo{pages}{335–353}.
+\newblock
+\showISSN{1433-2779}
+\href{https://doi.org/10.1007/s10009-014-0355-9}{doi:\nolinkurl{10.1007/s10009-014-0355-9}}
+
+
+\bibitem[Fraser and Arcuri(2014)]%
+        {Evosuite}
+\bibfield{author}{\bibinfo{person}{Gordon Fraser} {and} \bibinfo{person}{Andrea Arcuri}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{A Large-Scale Evaluation of Automated Unit Test Generation Using EvoSuite}.
+\newblock \bibinfo{journal}{\emph{ACM Trans. Softw. Eng. Methodol.}} \bibinfo{volume}{24}, \bibinfo{number}{2}, Article \bibinfo{articleno}{8} (\bibinfo{date}{Dec.} \bibinfo{year}{2014}), \bibinfo{numpages}{42}~pages.
+\newblock
+\showISSN{1049-331X}
+\href{https://doi.org/10.1145/2685612}{doi:\nolinkurl{10.1145/2685612}}
+
+
+\bibitem[Gao et~al\mbox{.}(2003)]%
+        {Specification-Base-Testing}
+\bibfield{author}{\bibinfo{person}{Jerry Gao}, \bibinfo{person}{H.-S.~Jacob Tsao}, {and} \bibinfo{person}{Ye Wu}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Testing and Quality Assurance for Component-Based Software}}.
+\newblock \bibinfo{publisher}{Artech House}.
+\newblock
+
+
+\bibitem[Google(2025a)]%
+        {Google2025Gemini2.5Flash}
+\bibfield{author}{\bibinfo{person}{Google}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \bibinfo{title}{Gemini 2.5 Flash Model}.
+\newblock \bibinfo{howpublished}{\url{https://ai.google.dev/gemini-api/docs/models\#gemini-2.5-flash}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[Google(2025b)]%
+        {Google2025Gemini2.5Pro}
+\bibfield{author}{\bibinfo{person}{Google}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \bibinfo{title}{Gemini 2.5 Pro Model}.
+\newblock \bibinfo{howpublished}{\url{https://ai.google.dev/gemini-api/docs/models\#gemini-2.5-pro}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[He et~al\mbox{.}(2025)]%
+        {he2025usepropertybasedtestingbridge}
+\bibfield{author}{\bibinfo{person}{Lehan He}, \bibinfo{person}{Zeren Chen}, \bibinfo{person}{Zhe Zhang}, \bibinfo{person}{Jing Shao}, \bibinfo{person}{Xiang Gao}, {and} \bibinfo{person}{Lu Sheng}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Use Property-Based Testing to Bridge LLM Code Generation and Validation}.
+\newblock
+\showeprint[arxiv]{2506.18315}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2506.18315}{doi:\nolinkurl{10.48550/arXiv.2506.18315}}
+
+
+\bibitem[Holtzman et~al\mbox{.}(2020)]%
+        {Holtzman2020TheCuriousCase}
+\bibfield{author}{\bibinfo{person}{Ari Holtzman}, \bibinfo{person}{Jan Buys}, \bibinfo{person}{Li Du}, \bibinfo{person}{Maxwell Forbes}, {and} \bibinfo{person}{Yejin Choi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{The Curious Case of Neural Text Degeneration}. In \bibinfo{booktitle}{\emph{International Conference on Learning Representations}}.
+\newblock
+\href{https://doi.org/10.48550/arXiv.1904.09751}{doi:\nolinkurl{10.48550/arXiv.1904.09751}}
+
+
+\bibitem[Hossain and Dwyer(2025)]%
+        {TOGLL}
+\bibfield{author}{\bibinfo{person}{Soneya~Binta Hossain} {and} \bibinfo{person}{Matthew~B. Dwyer}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{TOGLL: Correct and Strong Test Oracle Generation with LLMs}. In \bibinfo{booktitle}{\emph{2025 IEEE/ACM 47th International Conference on Software Engineering (ICSE)}}. \bibinfo{pages}{1475--1487}.
+\newblock
+\href{https://doi.org/10.1109/ICSE55347.2025.00098}{doi:\nolinkurl{10.1109/ICSE55347.2025.00098}}
+
+
+\bibitem[Hossain et~al\mbox{.}(2025)]%
+        {Doc2OracLL}
+\bibfield{author}{\bibinfo{person}{Soneya~Binta Hossain}, \bibinfo{person}{Raygan Taylor}, {and} \bibinfo{person}{Matthew Dwyer}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Doc2OracLL: Investigating the Impact of Documentation on LLM-Based Test Oracle Generation}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{2}, \bibinfo{number}{FSE}, Article \bibinfo{articleno}{FSE084} (\bibinfo{date}{June} \bibinfo{year}{2025}), \bibinfo{numpages}{22}~pages.
+\newblock
+\href{https://doi.org/10.1145/3729354}{doi:\nolinkurl{10.1145/3729354}}
+
+
+\bibitem[Huang et~al\mbox{.}(2025)]%
+        {huang2025measuringinfluenceincorrectcode}
+\bibfield{author}{\bibinfo{person}{Dong Huang}, \bibinfo{person}{Jie~M. Zhang}, \bibinfo{person}{Mark Harman}, \bibinfo{person}{Mingzhe Du}, {and} \bibinfo{person}{Heming Cui}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{Measuring the Influence of Incorrect Code on Test Generation}.
+\newblock
+\showeprint[arxiv]{2409.09464}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2409.09464}{doi:\nolinkurl{10.48550/arXiv.2409.09464}}
+
+
+\bibitem[Inozemtseva and Holmes(2014)]%
+        {CovNotStronglyCorrWithEffICSE2014}
+\bibfield{author}{\bibinfo{person}{Laura Inozemtseva} {and} \bibinfo{person}{Reid Holmes}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Coverage is not strongly correlated with test suite effectiveness}. In \bibinfo{booktitle}{\emph{Proceedings of the 36th International Conference on Software Engineering}} (Hyderabad, India) \emph{(\bibinfo{series}{ICSE 2014})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{435–445}.
+\newblock
+\showISBNx{9781450327565}
+\href{https://doi.org/10.1145/2568225.2568271}{doi:\nolinkurl{10.1145/2568225.2568271}}
+
+
+\bibitem[Jain and {Le Goues}(2025)]%
+        {testforge_multi_round}
+\bibfield{author}{\bibinfo{person}{Kush Jain} {and} \bibinfo{person}{Claire {Le Goues}}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{TestForge: Feedback-Driven, Agentic Test Suite Generation}.
+\newblock
+\showeprint[arxiv]{2503.14713}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2503.14713}{doi:\nolinkurl{10.48550/arXiv.2503.14713}}
+
+
+\bibitem[Just et~al\mbox{.}(2014)]%
+        {Defects4j}
+\bibfield{author}{\bibinfo{person}{Ren\'{e} Just}, \bibinfo{person}{Darioush Jalali}, {and} \bibinfo{person}{Michael~D. Ernst}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Defects4J: a database of existing faults to enable controlled testing studies for Java programs}. In \bibinfo{booktitle}{\emph{Proceedings of the 2014 International Symposium on Software Testing and Analysis}} (San Jose, CA, USA) \emph{(\bibinfo{series}{ISSTA 2014})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{437–440}.
+\newblock
+\showISBNx{9781450326452}
+\href{https://doi.org/10.1145/2610384.2628055}{doi:\nolinkurl{10.1145/2610384.2628055}}
+
+
+\bibitem[Landis and Koch(1977)]%
+        {landis1977measurement}
+\bibfield{author}{\bibinfo{person}{J.~Richard Landis} {and} \bibinfo{person}{Gary~G. Koch}.} \bibinfo{year}{1977}\natexlab{}.
+\newblock \showarticletitle{The measurement of observer agreement for categorical data}.
+\newblock \bibinfo{journal}{\emph{Biometrics}} \bibinfo{volume}{33}, \bibinfo{number}{1} (\bibinfo{year}{1977}), \bibinfo{pages}{159--174}.
+\newblock
+\href{https://doi.org/10.2307/2529310}{doi:\nolinkurl{10.2307/2529310}}
+
+
+\bibitem[Lemieux et~al\mbox{.}(2023)]%
+        {CODAMOSAICSE2023}
+\bibfield{author}{\bibinfo{person}{Caroline Lemieux}, \bibinfo{person}{Jeevana~Priya Inala}, \bibinfo{person}{Shuvendu~K. Lahiri}, {and} \bibinfo{person}{Siddhartha Sen}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{CodaMosa: Escaping Coverage Plateaus in Test Generation with Pre-trained Large Language Models}. In \bibinfo{booktitle}{\emph{2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)}}. \bibinfo{pages}{919--931}.
+\newblock
+\href{https://doi.org/10.1109/ICSE48619.2023.00085}{doi:\nolinkurl{10.1109/ICSE48619.2023.00085}}
+
+
+\bibitem[Lewis et~al\mbox{.}(2020)]%
+        {lewis-etal-2020-bart}
+\bibfield{author}{\bibinfo{person}{Mike Lewis}, \bibinfo{person}{Yinhan Liu}, \bibinfo{person}{Naman Goyal}, \bibinfo{person}{Marjan Ghazvininejad}, \bibinfo{person}{Abdelrahman Mohamed}, \bibinfo{person}{Omer Levy}, \bibinfo{person}{Veselin Stoyanov}, {and} \bibinfo{person}{Luke Zettlemoyer}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{BART}: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation, Translation, and Comprehension}. In \bibinfo{booktitle}{\emph{Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics}}, \bibfield{editor}{\bibinfo{person}{Dan Jurafsky}, \bibinfo{person}{Joyce Chai}, \bibinfo{person}{Natalie Schluter}, {and} \bibinfo{person}{Joel Tetreault}} (Eds.). \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{address}{Online}, \bibinfo{pages}{7871--7880}.
+\newblock
+\href{https://doi.org/10.18653/v1/2020.acl-main.703}{doi:\nolinkurl{10.18653/v1/2020.acl-main.703}}
+
+
+\bibitem[Li et~al\mbox{.}(2023)]%
+        {buggy_intention_infer}
+\bibfield{author}{\bibinfo{person}{Tsz-On Li}, \bibinfo{person}{Wenxi Zong}, \bibinfo{person}{Yibo Wang}, \bibinfo{person}{Haoye Tian}, \bibinfo{person}{Ying Wang}, \bibinfo{person}{Shing-Chi Cheung}, {and} \bibinfo{person}{Jeff Kramer}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Nuances are the Key: Unlocking ChatGPT to Find Failure-Inducing Tests with Differential Prompting}.
+\newblock
+\showeprint[arxiv]{2304.11686}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2304.11686}{doi:\nolinkurl{10.48550/arXiv.2304.11686}}
+
+
+\bibitem[Liu et~al\mbox{.}(2025)]%
+        {trickybug}
+\bibfield{author}{\bibinfo{person}{Kaibo Liu}, \bibinfo{person}{Zhenpeng Chen}, \bibinfo{person}{Yiyang Liu}, \bibinfo{person}{Jie~M. Zhang}, \bibinfo{person}{Mark Harman}, \bibinfo{person}{Yudong Han}, \bibinfo{person}{Yun Ma}, \bibinfo{person}{Yihong Dong}, \bibinfo{person}{Ge Li}, {and} \bibinfo{person}{Gang Huang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{LLM}-Powered Test Case Generation for Detecting Bugs in Plausible Programs}. In \bibinfo{booktitle}{\emph{Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}}, \bibfield{editor}{\bibinfo{person}{Wanxiang Che}, \bibinfo{person}{Joyce Nabende}, \bibinfo{person}{Ekaterina Shutova}, {and} \bibinfo{person}{Mohammad~Taher Pilehvar}} (Eds.). \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{address}{Vienna, Austria}, \bibinfo{pages}{430--440}.
+\newblock
+\showISBNx{979-8-89176-251-0}
+\href{https://doi.org/10.18653/v1/2025.acl-long.20}{doi:\nolinkurl{10.18653/v1/2025.acl-long.20}}
+
+
+\bibitem[Lops et~al\mbox{.}(2024)]%
+        {Few-shot-test-gen}
+\bibfield{author}{\bibinfo{person}{Andrea Lops}, \bibinfo{person}{Fedelucio Narducci}, \bibinfo{person}{Azzurra Ragone}, {and} \bibinfo{person}{Michelantonio Trizio}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{AgoneTest: Automated creation and assessment of Unit tests leveraging Large Language Models}. In \bibinfo{booktitle}{\emph{Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering}} (Sacramento, CA, USA) \emph{(\bibinfo{series}{ASE '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{2440–2441}.
+\newblock
+\showISBNx{9798400712487}
+\href{https://doi.org/10.1145/3691620.3695318}{doi:\nolinkurl{10.1145/3691620.3695318}}
+
+
+\bibitem[Lu et~al\mbox{.}(2024)]%
+        {lu-etal-2024-mathgenie}
+\bibfield{author}{\bibinfo{person}{Zimu Lu}, \bibinfo{person}{Aojun Zhou}, \bibinfo{person}{Houxing Ren}, \bibinfo{person}{Ke Wang}, \bibinfo{person}{Weikang Shi}, \bibinfo{person}{Junting Pan}, \bibinfo{person}{Mingjie Zhan}, {and} \bibinfo{person}{Hongsheng Li}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{M}ath{G}enie: Generating Synthetic Data with Question Back-translation for Enhancing Mathematical Reasoning of {LLM}s}. In \bibinfo{booktitle}{\emph{Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}}, \bibfield{editor}{\bibinfo{person}{Lun-Wei Ku}, \bibinfo{person}{Andre Martins}, {and} \bibinfo{person}{Vivek Srikumar}} (Eds.). \bibinfo{publisher}{Association for Computational Linguistics}, \bibinfo{address}{Bangkok, Thailand}, \bibinfo{pages}{2732--2747}.
+\newblock
+\href{https://doi.org/10.18653/v1/2024.acl-long.151}{doi:\nolinkurl{10.18653/v1/2024.acl-long.151}}
+
+
+\bibitem[Lukasczyk and Fraser(2022)]%
+        {pynguin}
+\bibfield{author}{\bibinfo{person}{Stephan Lukasczyk} {and} \bibinfo{person}{Gordon Fraser}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Pynguin: automated unit test generation for Python}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM/IEEE 44th International Conference on Software Engineering: Companion Proceedings}} (Pittsburgh, Pennsylvania) \emph{(\bibinfo{series}{ICSE '22})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{168–172}.
+\newblock
+\showISBNx{9781450392235}
+\href{https://doi.org/10.1145/3510454.3516829}{doi:\nolinkurl{10.1145/3510454.3516829}}
+
+
+\bibitem[Mathews and Nagappan(2024)]%
+        {buggycodeprevent}
+\bibfield{author}{\bibinfo{person}{Noble~Saji Mathews} {and} \bibinfo{person}{Meiyappan Nagappan}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Design choices made by LLM-based test generators prevent them from finding bugs}.
+\newblock
+\showeprint[arxiv]{2412.14137}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2412.14137}{doi:\nolinkurl{10.48550/arXiv.2412.14137}}
+
+
+\bibitem[Miles et~al\mbox{.}(2014)]%
+        {huberman2014qualitative}
+\bibfield{author}{\bibinfo{person}{Matthew~B. Miles}, \bibinfo{person}{A.~Michael Huberman}, {and} \bibinfo{person}{Johnny Salda{\~n}a}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Qualitative Data Analysis: A Methods Sourcebook} (\bibinfo{edition}{third} ed.)}.
+\newblock \bibinfo{publisher}{SAGE Publications}, \bibinfo{address}{Thousand Oaks, California}.
+\newblock
+
+
+\bibitem[Mitchell et~al\mbox{.}(2023)]%
+        {DetectGPT}
+\bibfield{author}{\bibinfo{person}{Eric Mitchell}, \bibinfo{person}{Yoonho Lee}, \bibinfo{person}{Alexander Khazatsky}, \bibinfo{person}{Christopher~D. Manning}, {and} \bibinfo{person}{Chelsea Finn}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{DetectGPT: zero-shot machine-generated text detection using probability curvature}. In \bibinfo{booktitle}{\emph{Proceedings of the 40th International Conference on Machine Learning}} (Honolulu, Hawaii, USA) \emph{(\bibinfo{series}{ICML'23})}. \bibinfo{publisher}{JMLR.org}, Article \bibinfo{articleno}{1038}, \bibinfo{numpages}{13}~pages.
+\newblock
+\href{https://doi.org/10.48550/arXiv.2301.11305}{doi:\nolinkurl{10.48550/arXiv.2301.11305}}
+
+
+\bibitem[O'Connor and Joffe(2020)]%
+        {oconnor2020intercoder}
+\bibfield{author}{\bibinfo{person}{Cliodhna O'Connor} {and} \bibinfo{person}{Helene Joffe}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Intercoder reliability in qualitative research: Debates and practical guidelines}.
+\newblock \bibinfo{journal}{\emph{International Journal of Qualitative Methods}}  \bibinfo{volume}{19} (\bibinfo{year}{2020}), \bibinfo{pages}{1609406919899220}.
+\newblock
+\href{https://doi.org/10.1177/1609406919899220}{doi:\nolinkurl{10.1177/1609406919899220}}
+
+
+\bibitem[{OpenAI}(2024)]%
+        {openai2024gpt4ocard}
+\bibfield{author}{\bibinfo{person}{{OpenAI}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{GPT-4o System Card}.
+\newblock
+\showeprint[arxiv]{2410.21276}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2410.21276}{doi:\nolinkurl{10.48550/arXiv.2410.21276}}
+
+
+\bibitem[OpenAI(2025a)]%
+        {openai2025gpt41}
+\bibfield{author}{\bibinfo{person}{OpenAI}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \bibinfo{title}{GPT-4.1}.
+\newblock \bibinfo{howpublished}{\url{https://openai.com/index/gpt-4-1/}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[OpenAI(2025b)]%
+        {openai2025gptoss120bgptoss20bmodel}
+\bibfield{author}{\bibinfo{person}{OpenAI}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \bibinfo{title}{gpt-oss-120b and gpt-oss-20b Model Card}.
+\newblock
+\showeprint[arxiv]{2508.10925}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2508.10925}{doi:\nolinkurl{10.48550/arXiv.2508.10925}}
+
+
+\bibitem[OpenAI(2025c)]%
+        {openai2025o4mini}
+\bibfield{author}{\bibinfo{person}{OpenAI}.} \bibinfo{year}{2025}\natexlab{c}.
+\newblock \bibinfo{title}{OpenAI Models - O4 Mini}.
+\newblock \bibinfo{howpublished}{\url{https://platform.openai.com/docs/models/o4-mini}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[Pan et~al\mbox{.}(2025)]%
+        {pan2025asternaturalmultilanguageunit}
+\bibfield{author}{\bibinfo{person}{Rangeet Pan}, \bibinfo{person}{Myeongsoo Kim}, \bibinfo{person}{Rahul Krishna}, \bibinfo{person}{Raju Pavuluri}, {and} \bibinfo{person}{Saurabh Sinha}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{title}{ASTER: Natural and Multi-language Unit Test Generation with LLMs}.
+\newblock
+\showeprint[arxiv]{2409.03093}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2409.03093}{doi:\nolinkurl{10.48550/arXiv.2409.03093}}
+
+
+\bibitem[P\u{a}s\u{a}reanu et~al\mbox{.}(2008)]%
+        {symbolic-execution-test-gen-1}
+\bibfield{author}{\bibinfo{person}{Corina~S. P\u{a}s\u{a}reanu}, \bibinfo{person}{Peter~C. Mehlitz}, \bibinfo{person}{David~H. Bushnell}, \bibinfo{person}{Karen Gundy-Burlet}, \bibinfo{person}{Michael Lowry}, \bibinfo{person}{Suzette Person}, {and} \bibinfo{person}{Mark Pape}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Combining unit-level symbolic execution and system-level concrete execution for testing {NASA} software}. In \bibinfo{booktitle}{\emph{Proceedings of the 2008 International Symposium on Software Testing and Analysis}} (Seattle, WA, USA) \emph{(\bibinfo{series}{ISSTA '08})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{15–26}.
+\newblock
+\showISBNx{9781605580500}
+\href{https://doi.org/10.1145/1390630.1390635}{doi:\nolinkurl{10.1145/1390630.1390635}}
+
+
+\bibitem[{Qwen Team}(2025a)]%
+        {alibaba2025qwen3coder}
+\bibfield{author}{\bibinfo{person}{{Qwen Team}}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \bibinfo{title}{Qwen3-Coder: Agentic Coding in the World}.
+\newblock \bibinfo{howpublished}{\url{https://qwenlm.github.io/blog/qwen3-coder/}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[{Qwen Team}(2025b)]%
+        {alibaba2025qwen3}
+\bibfield{author}{\bibinfo{person}{{Qwen Team}}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \bibinfo{title}{Qwen3: Think Deeper, Act Faster}.
+\newblock \bibinfo{howpublished}{\url{https://qwenlm.github.io/blog/qwen3/}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[Rao et~al\mbox{.}(2023)]%
+        {CAT-LMASE2023}
+\bibfield{author}{\bibinfo{person}{Nikitha Rao}, \bibinfo{person}{Kush Jain}, \bibinfo{person}{Uri Alon}, \bibinfo{person}{Claire {Le Goues}}, {and} \bibinfo{person}{Vincent~J. Hellendoorn}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{CAT-LM Training Language Models on Aligned Code and Tests}. In \bibinfo{booktitle}{\emph{Proceedings of the 38th IEEE/ACM International Conference on Automated Software Engineering}} (Echternach, Luxembourg) \emph{(\bibinfo{series}{ASE '23})}. \bibinfo{publisher}{IEEE Press}, \bibinfo{pages}{409–420}.
+\newblock
+\showISBNx{9798350329964}
+\href{https://doi.org/10.1109/ASE56229.2023.00193}{doi:\nolinkurl{10.1109/ASE56229.2023.00193}}
+
+
+\bibitem[Salda{\~n}a(2025)]%
+        {saldana2021coding}
+\bibfield{author}{\bibinfo{person}{Johnny Salda{\~n}a}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The Coding Manual for Qualitative Researchers} (\bibinfo{edition}{fifth} ed.)}.
+\newblock \bibinfo{publisher}{SAGE Publications Ltd}.
+\newblock
+\href{https://doi.org/10.4135/9781036235611}{doi:\nolinkurl{10.4135/9781036235611}}
+
+
+\bibitem[Schäfer et~al\mbox{.}(2024)]%
+        {EmpEvalforLLMUTAutoGenTSE}
+\bibfield{author}{\bibinfo{person}{Max Schäfer}, \bibinfo{person}{Sarah Nadi}, \bibinfo{person}{Aryaz Eghbali}, {and} \bibinfo{person}{Frank Tip}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{An Empirical Evaluation of Using Large Language Models for Automated Unit Test Generation}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Software Engineering}} \bibinfo{volume}{50}, \bibinfo{number}{1} (\bibinfo{year}{2024}), \bibinfo{pages}{85--105}.
+\newblock
+\href{https://doi.org/10.1109/TSE.2023.3334955}{doi:\nolinkurl{10.1109/TSE.2023.3334955}}
+
+
+\bibitem[Shang et~al\mbox{.}(2025)]%
+        {FintuningLLMforUT}
+\bibfield{author}{\bibinfo{person}{Ye Shang}, \bibinfo{person}{Quanjun Zhang}, \bibinfo{person}{Chunrong Fang}, \bibinfo{person}{Siqi Gu}, \bibinfo{person}{Jianyi Zhou}, {and} \bibinfo{person}{Zhenyu Chen}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{A Large-Scale Empirical Study on Fine-Tuning Large Language Models for Unit Testing}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{2}, \bibinfo{number}{ISSTA}, Article \bibinfo{articleno}{ISSTA074} (\bibinfo{date}{June} \bibinfo{year}{2025}), \bibinfo{numpages}{23}~pages.
+\newblock
+\href{https://doi.org/10.1145/3728951}{doi:\nolinkurl{10.1145/3728951}}
+
+
+\bibitem[Shin et~al\mbox{.}(2024)]%
+        {codet5domainadaptUT}
+\bibfield{author}{\bibinfo{person}{Jiho Shin}, \bibinfo{person}{Sepehr Hashtroudi}, \bibinfo{person}{Hadi Hemmati}, {and} \bibinfo{person}{Song Wang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Domain Adaptation for Code Model-based Unit Test Case Generation}.
+\newblock
+\showeprint[arxiv]{2308.08033}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2308.08033}{doi:\nolinkurl{10.48550/arXiv.2308.08033}}
+
+
+\bibitem[Siddiq et~al\mbox{.}(2024)]%
+        {LLMforJunitTestGenEASE2024}
+\bibfield{author}{\bibinfo{person}{Mohammed~Latif Siddiq}, \bibinfo{person}{Joanna~Cecilia Da~Silva~Santos}, \bibinfo{person}{Ridwanul~Hasan Tanvir}, \bibinfo{person}{Noshin Ulfat}, \bibinfo{person}{Fahmid Al~Rifat}, {and} \bibinfo{person}{Vin\'{\i}cius Carvalho~Lopes}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Using Large Language Models to Generate JUnit Tests: An Empirical Study}. In \bibinfo{booktitle}{\emph{Proceedings of the 28th International Conference on Evaluation and Assessment in Software Engineering}} (Salerno, Italy) \emph{(\bibinfo{series}{EASE '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{313–322}.
+\newblock
+\showISBNx{9798400717017}
+\href{https://doi.org/10.1145/3661167.3661216}{doi:\nolinkurl{10.1145/3661167.3661216}}
+
+
+\bibitem[Sommerville(2011)]%
+        {sommerville2011software}
+\bibfield{author}{\bibinfo{person}{Ian Sommerville}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Software Engineering} (\bibinfo{edition}{ninth} ed.)}.
+\newblock \bibinfo{publisher}{Pearson Education}, \bibinfo{address}{Boston, MA}.
+\newblock
+
+
+\bibitem[Song and Cohen(2025)]%
+        {song2025llmcp}
+\bibfield{author}{\bibinfo{person}{Yuliang Song} {and} \bibinfo{person}{Eldan Cohen}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Do LLMs Understand Constraint Programming? Zero-Shot Constraint Programming Model Generation Using LLMs}. In \bibinfo{booktitle}{\emph{Proceedings of the 19th Learning and Intelligent Optimization Conference (LION-25)}}. \bibinfo{pages}{16--31}.
+\newblock
+\href{https://doi.org/10.1007/978-3-032-09156-7_2}{doi:\nolinkurl{10.1007/978-3-032-09156-7_2}}
+
+
+\bibitem[Storhaug and Li(2024)]%
+        {storhaug2024parameterefficientfinetuninglargelanguage}
+\bibfield{author}{\bibinfo{person}{André Storhaug} {and} \bibinfo{person}{Jingyue Li}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Parameter-Efficient Fine-Tuning of Large Language Models for Unit Test Generation: An Empirical Study}.
+\newblock
+\showeprint[arxiv]{2411.02462}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2411.02462}{doi:\nolinkurl{10.48550/arXiv.2411.02462}}
+
+
+\bibitem[Tang et~al\mbox{.}(2024)]%
+        {ChatVSSBSTTSE}
+\bibfield{author}{\bibinfo{person}{Yutian Tang}, \bibinfo{person}{Zhijie Liu}, \bibinfo{person}{Zhichao Zhou}, {and} \bibinfo{person}{Xiapu Luo}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{ChatGPT vs SBST: A Comparative Assessment of Unit Test Suite Generation}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Software Engineering}} \bibinfo{volume}{50}, \bibinfo{number}{6} (\bibinfo{year}{2024}), \bibinfo{pages}{1340--1359}.
+\newblock
+\href{https://doi.org/10.1109/TSE.2024.3382365}{doi:\nolinkurl{10.1109/TSE.2024.3382365}}
+
+
+\bibitem[Touvron et~al\mbox{.}(2023)]%
+        {Llama}
+\bibfield{author}{\bibinfo{person}{Hugo Touvron} {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{LLaMA: Open and Efficient Foundation Language Models}.
+\newblock
+\showeprint[arxiv]{2302.13971}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2302.13971}{doi:\nolinkurl{10.48550/arXiv.2302.13971}}
+
+
+\bibitem[Tufano et~al\mbox{.}(2021)]%
+        {UnitTestCaseGenTrans}
+\bibfield{author}{\bibinfo{person}{Michele Tufano}, \bibinfo{person}{Dawn Drain}, \bibinfo{person}{Alexey Svyatkovskiy}, \bibinfo{person}{Shao~Kun Deng}, {and} \bibinfo{person}{Neel Sundaresan}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{Unit Test Case Generation with Transformers and Focal Context}.
+\newblock
+\showeprint[arxiv]{2009.05617}~[cs.SE]
+\href{https://doi.org/10.48550/arXiv.2009.05617}{doi:\nolinkurl{10.48550/arXiv.2009.05617}}
+
+
+\bibitem[Vaswani et~al\mbox{.}(2017)]%
+        {vaswani2023attentionneed}
+\bibfield{author}{\bibinfo{person}{Ashish Vaswani}, \bibinfo{person}{Noam Shazeer}, \bibinfo{person}{Niki Parmar}, \bibinfo{person}{Jakob Uszkoreit}, \bibinfo{person}{Llion Jones}, \bibinfo{person}{Aidan~N. Gomez}, \bibinfo{person}{Lukasz Kaiser}, {and} \bibinfo{person}{Illia Polosukhin}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{title}{Attention Is All You Need}.
+\newblock
+\showeprint[arxiv]{1706.03762}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.1706.03762}{doi:\nolinkurl{10.48550/arXiv.1706.03762}}
+
+
+\bibitem[Wang et~al\mbox{.}(2024a)]%
+        {SoftwareTestingWithLLMSurvey}
+\bibfield{author}{\bibinfo{person}{Junjie Wang}, \bibinfo{person}{Yuchao Huang}, \bibinfo{person}{Chunyang Chen}, \bibinfo{person}{Zhe Liu}, \bibinfo{person}{Song Wang}, {and} \bibinfo{person}{Qing Wang}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Software Testing With Large Language Models: Survey, Landscape, and Vision}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Software Engineering}} \bibinfo{volume}{50}, \bibinfo{number}{4} (\bibinfo{date}{April} \bibinfo{year}{2024}), \bibinfo{pages}{911–936}.
+\newblock
+\showISSN{0098-5589}
+\href{https://doi.org/10.1109/TSE.2024.3368208}{doi:\nolinkurl{10.1109/TSE.2024.3368208}}
+
+
+\bibitem[Wang et~al\mbox{.}(2021)]%
+        {wang2021codet5}
+\bibfield{author}{\bibinfo{person}{Yue Wang}, \bibinfo{person}{Weishi Wang}, \bibinfo{person}{Shafiq Joty}, {and} \bibinfo{person}{Steven C.~H. Hoi}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation}.
+\newblock
+\showeprint[arxiv]{2109.00859}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2109.00859}{doi:\nolinkurl{10.48550/arXiv.2109.00859}}
+
+
+\bibitem[Wang et~al\mbox{.}(2024b)]%
+        {HITS:HighCoveLLMUTGen}
+\bibfield{author}{\bibinfo{person}{Zejun Wang}, \bibinfo{person}{Kaibo Liu}, \bibinfo{person}{Ge Li}, {and} \bibinfo{person}{Zhi Jin}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{HITS: High-coverage LLM-based Unit Test Generation via Method Slicing}. In \bibinfo{booktitle}{\emph{Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering}} (Sacramento, CA, USA) \emph{(\bibinfo{series}{ASE '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1258–1268}.
+\newblock
+\showISBNx{9798400712487}
+\href{https://doi.org/10.1145/3691620.3695501}{doi:\nolinkurl{10.1145/3691620.3695501}}
+
+
+\bibitem[xAI(2025a)]%
+        {xai2025grok3}
+\bibfield{author}{\bibinfo{person}{xAI}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \bibinfo{title}{Grok-3 Model Documentation}.
+\newblock \bibinfo{howpublished}{\url{https://docs.x.ai/docs/models/grok-3}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[xAI(2025b)]%
+        {xai2025grok4}
+\bibfield{author}{\bibinfo{person}{xAI}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \bibinfo{title}{Grok-4 Model Documentation}.
+\newblock \bibinfo{howpublished}{\url{https://docs.x.ai/docs/models/grok-4}}.
+\newblock
+\shownote{Accessed: 2025-08-19}.
+\newblock
+
+
+\bibitem[Yang et~al\mbox{.}(2024b)]%
+        {OnLLMUTGenEvalASE2024}
+\bibfield{author}{\bibinfo{person}{Lin Yang}, \bibinfo{person}{Chen Yang}, \bibinfo{person}{Shutao Gao}, \bibinfo{person}{Weijing Wang}, \bibinfo{person}{Bo Wang}, \bibinfo{person}{Qihao Zhu}, \bibinfo{person}{Xiao Chu}, \bibinfo{person}{Jianyi Zhou}, \bibinfo{person}{Guangtai Liang}, \bibinfo{person}{Qianxiang Wang}, {and} \bibinfo{person}{Junjie Chen}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{On the Evaluation of Large Language Models in Unit Test Generation}. In \bibinfo{booktitle}{\emph{Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering}} (Sacramento, CA, USA) \emph{(\bibinfo{series}{ASE '24})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1607–1619}.
+\newblock
+\showISBNx{9798400712487}
+\href{https://doi.org/10.1145/3691620.3695529}{doi:\nolinkurl{10.1145/3691620.3695529}}
+
+
+\bibitem[Yang et~al\mbox{.}(2023)]%
+        {yang2023rethinkingbenchmarkcontaminationlanguage}
+\bibfield{author}{\bibinfo{person}{Shuo Yang}, \bibinfo{person}{Wei-Lin Chiang}, \bibinfo{person}{Lianmin Zheng}, \bibinfo{person}{Joseph~E. Gonzalez}, {and} \bibinfo{person}{Ion Stoica}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \bibinfo{title}{Rethinking Benchmark and Contamination for Language Models with Rephrased Samples}.
+\newblock
+\showeprint[arxiv]{2311.04850}~[cs.CL]
+\href{https://doi.org/10.48550/arXiv.2311.04850}{doi:\nolinkurl{10.48550/arXiv.2311.04850}}
+
+
+\bibitem[Yang et~al\mbox{.}(2024a)]%
+        {Code_translation_llm}
+\bibfield{author}{\bibinfo{person}{Zhen Yang}, \bibinfo{person}{Fang Liu}, \bibinfo{person}{Zhongxing Yu}, \bibinfo{person}{Jacky~Wai Keung}, \bibinfo{person}{Jia Li}, \bibinfo{person}{Shuo Liu}, \bibinfo{person}{Yifan Hong}, \bibinfo{person}{Xiaoxue Ma}, \bibinfo{person}{Zhi Jin}, {and} \bibinfo{person}{Ge Li}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Exploring and Unleashing the Power of Large Language Models in Automated Code Translation}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{1}, \bibinfo{number}{FSE}, Article \bibinfo{articleno}{71} (\bibinfo{date}{July} \bibinfo{year}{2024}), \bibinfo{numpages}{24}~pages.
+\newblock
+\href{https://doi.org/10.1145/3660778}{doi:\nolinkurl{10.1145/3660778}}
+
+
+\bibitem[Yin et~al\mbox{.}(2024)]%
+        {CoT-for-APR}
+\bibfield{author}{\bibinfo{person}{Xin Yin}, \bibinfo{person}{Chao Ni}, \bibinfo{person}{Shaohua Wang}, \bibinfo{person}{Zhenhao Li}, \bibinfo{person}{Limin Zeng}, {and} \bibinfo{person}{Xiaohu Yang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{ThinkRepair: Self-Directed Automated Program Repair}. In \bibinfo{booktitle}{\emph{Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis}} (Vienna, Austria) \emph{(\bibinfo{series}{ISSTA 2024})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1274–1286}.
+\newblock
+\showISBNx{9798400706127}
+\href{https://doi.org/10.1145/3650212.3680359}{doi:\nolinkurl{10.1145/3650212.3680359}}
+
+
+\bibitem[Yuan et~al\mbox{.}(2024)]%
+        {EvalImprChatgptUTGenFSE2024}
+\bibfield{author}{\bibinfo{person}{Zhiqiang Yuan}, \bibinfo{person}{Mingwei Liu}, \bibinfo{person}{Shiji Ding}, \bibinfo{person}{Kaixin Wang}, \bibinfo{person}{Yixuan Chen}, \bibinfo{person}{Xin Peng}, {and} \bibinfo{person}{Yiling Lou}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Evaluating and Improving ChatGPT for Unit Test Generation}.
+\newblock \bibinfo{journal}{\emph{Proc. ACM Softw. Eng.}} \bibinfo{volume}{1}, \bibinfo{number}{FSE}, Article \bibinfo{articleno}{76} (\bibinfo{date}{July} \bibinfo{year}{2024}), \bibinfo{numpages}{24}~pages.
+\newblock
+\href{https://doi.org/10.1145/3660783}{doi:\nolinkurl{10.1145/3660783}}
+
+
+\bibitem[Zhao et~al\mbox{.}(2026)]%
+        {zhao2026replication}
+\bibfield{author}{\bibinfo{person}{Junda Zhao}, \bibinfo{person}{Shurui Zhou}, {and} \bibinfo{person}{Eldan Cohen}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{Replication Package for ``Evaluating and Mitigating the Misguidance Effect of Buggy Code in {LLM}-Generated Unit Tests''}.
+\newblock
+\href{https://doi.org/10.5281/zenodo.21428156}{doi:\nolinkurl{10.5281/zenodo.21428156}}
+
+
+\end{thebibliography}

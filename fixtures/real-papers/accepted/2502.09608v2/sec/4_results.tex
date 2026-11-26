@@ -1,0 +1,341 @@
+\section{Results}
+\label{sec:results}
+\Cref{fig:teaser,fig:qualitative,fig:qualitative_artists,fig:qualitative3} present qualitative results of our method across a diverse range of sketches. These include various object categories, both abstract and detailed scenes, different styles, and sketches from our new dataset featuring stroke variations and challenging abstractions. Our method effectively handles object categories beyond those used in our fine-tuning from the SketchyScene dataset, such as toys, furniture, and food items.
+Our approach successfully addresses challenging scenarios, such as detailed scenes with numerous objects and occluded objects, as seen in \Cref{fig:teaser} and the first row of \Cref{fig:qualitative}. More results are provided in the supplementary material.
+% Additionally, it demonstrates robustness to occluded objects, as illustrated in \Cref{fig:qualitative_artists}, and performs effectively on uncommon categories, such as exotic plants and abstract shapes, shown in \Cref{fig:qualitative3}. These results highlight the versatility and adaptability of our method to diverse sketching styles and complex object arrangements.
+
+
+\begin{figure}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    
+    {\small
+    \begin{tabular}{c c c}
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/a.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/market_kid_balloon.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/bunny_blackboard.png}} \\
+        
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/c.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/b.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/1_pour_drink.png}} \\
+        
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/SketchAgent/1071.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1083.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/CLIPasso_3/0249.png}} \\
+    \end{tabular}
+    }
+    \vspace{-0.2cm}
+    \caption{\textbf{\methodname{} segmentation results. } Our method handles sketches of diverse styles and levels of complexity. The first two rows show artist-drawn sketches spanning a range of scenarios, including wildlife scenes, crowded urban markets, and cartoon characters in various settings. }
+    \vspace{-4mm}
+    \label{fig:qualitative}
+\end{figure}
+
+
+% \input{tables/object_detection_metrics}
+\input{tables/object_detection_met2}
+\begin{table}
+\small
+\setlength{\tabcolsep}{3pt}
+% \addtolength{\belowcaptionskip}{-5pt}
+\centering
+\caption{\textbf{Quantitative comparisons from image segmentation. }We report Accuracy and IoU metrics across eight datasets, along with the mean and standard deviation for each method. Our method consistently outperforms baselines across all datasets.}
+\label{tb:segmentation1}
+\vspace{-2mm} 
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l | c c c c | c c c c}
+    \toprule
+    \multirow{4}{*}{\diagbox{Dataset}{Method}}
+    & \multicolumn{4}{c|}{{Acc $\uparrow$}} & \multicolumn{4}{c}{{IoU $\uparrow$}} \\ 
+    &
+    \makecell{Sketchy\\Scene} &
+    \makecell{G-\\SAM} &
+    \makecell{\rev{Auto-}\\\rev{SAM}} & 
+    \textbf{Ours} & 
+    \makecell{Sketchy\\Scene} &
+    \makecell{G-\\SAM} &
+    \makecell{\rev{Auto-}\\\rev{SAM}} & 
+    \textbf{Ours} 
+    \\
+    \midrule
+    SketchyScene & $0.79$ & $0.54$ & $0.24$ & $\mathbf{0.92}$ & $0.72$ & $0.26$ & $0.17$ & $\mathbf{0.88}$ \\
+    \rev{Zhang \etal} & $0.42$ & $0.72$ & $0.09$ & $\mathbf{0.86}$ & $0.33$ & $0.51$ & $0.04$ & $\mathbf{0.74}$ \\
+    SketchAgent & $0.39$ & $0.35$ & $0.12$ & $\mathbf{0.88}$ & $0.38$ & $0.16$ & $0.06$ & $\mathbf{0.84}$ \\
+    C-Base & $0.70$ & $0.54$ & $0.08$ & $\mathbf{0.91}$ & $0.64$ & $0.32$ & $0.07$ & $\mathbf{0.88}$ \\
+    C-Calligraphic  & $0.66$ & $0.50$ & $0.06$ & $\mathbf{0.87}$ & $0.63$ & $0.30$ & $0.05$ & $\mathbf{0.86}$ \\
+    C-Charcoal  & $0.59$ & $0.47$ & $0.12$ & $\mathbf{0.85}$ & $0.43$ & $0.26$ & $0.06$ & $\mathbf{0.84}$ \\
+    C-BrushPen & $0.66$ & $0.51$ & $0.05$ & $\mathbf{0.89}$ & $0.54$ & $0.29$ & $0.05$ & $\mathbf{0.85}$ \\
+    InstantStyle & $0.43$ & $0.65$ & $0.25$ & $\mathbf{0.70}$ & $0.32$ & $0.44$ & $0.16$ & $ \mathbf{0.78}$ \\
+    \midrule
+    All & $0.58$ & $0.53$ & $0.13$ & $\mathbf{0.87}$ & $0.50$ & $0.32$ & $0.08$ & $\mathbf{0.82}$ \\
+    & \footnotesize{$\pm 0.15 $} & \footnotesize{$\pm 0.11$} & \footnotesize{$\pm 0.08$} & \footnotesize{$\pm 0.04$} & \footnotesize{$\pm 0.16$} & \footnotesize{$\pm 0.11$} & \footnotesize{$\pm 0.05$} & \footnotesize{$\pm 0.07$}  \\
+    \bottomrule
+\end{tabular}
+}
+\vspace{-3mm} 
+\end{table}
+
+\begin{table}[h]
+\small
+\centering
+\caption{\textbf{Quantitative comparisons from image segmentation on the filtered datasets.} We report Accuracy and IoU metrics across eight datasets, along with the mean and standard deviation for each method. Since Bourouis \etal performs semantic segmentation, and requires an input text prompt, we provide ground truth class labels as prompts to generate segmentations, \rev{and use 0.01 for confidence threshold to ensure all sketch pixels are segmented.}} 
+\label{tb:bbox}
+\vspace{-2mm} 
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l|ccc|ccc}
+    \toprule
+    \multirow{4}{*}{\diagbox{Dataset}{Method}} &
+    \multicolumn{3}{c|}{Acc $\uparrow$} & 
+    \multicolumn{3}{c}{IoU $\uparrow$} \\
+    & 
+    \makecell{\rev{Bour-}\\ \rev{ouis}} & 
+    \makecell{\rev{Sketch}\\ \rev{Seger}} & 
+    \textbf{Ours} & 
+    \makecell{\rev{Bour-}\\ \rev{ouis}} & 
+    \makecell{\rev{Sketch}\\ \rev{Seger}} & 
+    \textbf{Ours} \\
+    \midrule
+    SketchyScene&  $0.79$ & $\mathbf{0.96}$ & $0.93$ & $0.58$ & $\mathbf{0.90}$ & $\mathbf{0.90}$ \\
+    \rev{Zhang \etal} &  $0.69$ & $0.65$ & $\mathbf{0.86}$ & $0.50$ & $0.22$ & $\mathbf{0.75}$ \\
+    SketchAgent &  $0.71$ & $0.69$ & $\mathbf{0.93}$ & $0.52$ & $0.48$ & $\mathbf{0.88}$ \\
+    C-Base  &  $0.83$ & $0.86$ & $\mathbf{0.94}$ & $0.66$ & $0.73$ & $\mathbf{0.92}$ \\
+    C-Calligraphic &  $0.79$ & $0.76$ & $\mathbf{0.88}$ & $0.61$ & $0.61$ & $\mathbf{0.88}$ \\
+    C-Charcoal  &  $0.80$ & $0.80$ & $\mathbf{0.85}$ & $0.61$ & $0.57$ & $\mathbf{0.85}$ \\
+    C-BrushPen &  $0.81$ & $0.79$ & $\mathbf{0.91}$ & $0.63$ & $0.59$ & $\mathbf{0.88}$ \\
+    InstantStyle &  $0.76$ &  $0.70$  & $\mathbf{0.80}$ & $0.51$ &  $0.45$  & $\mathbf{0.75}$ \\
+     \midrule
+    All & $0.77$ & $0.78$  & $\mathbf{0.89}$ & $0.58$ &  $0.57$ &  $\mathbf{0.85}$ \\
+    & \footnotesize{$\pm 0.05 $} & \footnotesize{$\pm 0.10$}  & \footnotesize{$\pm 0.05$} & \footnotesize{$\pm 0.06$} & \footnotesize{$\pm 0.20$} &  \footnotesize{$\pm 0.07$} \\
+    \bottomrule
+\end{tabular}
+}
+\vspace{-3mm}
+\end{table}
+
+\subsection{Comparisons}
+We evaluate our method alongside existing scene sketch segmentation approaches, including SketchyScene \cite{Zou18SketchyScene}, \rev{SketchSeger \cite{yang2023sceneHierTransformer}}, and the method proposed by Bourouis \etal \shortcite{bourouis2024open}. We include additional baselines: Grounding DINO \cite{liu2023grounding} applied directly to sketches, automatic labeling with the Recognize-Anything Model (RAM) \cite{zhang2023recognize}, and \rev{the Automatic SAM pipeline, which samples a 32×32 uniform grid of prompts and selects the top 50 masks to form disjoint regions.} Our evaluation dataset consists of \rev{8076} samples: $1,113$ test samples from the SketchyScene dataset, $330$ samples from the Zhang \etal dataset, $1,113$ samples from each of the CLIPasso brush styles: Base, Calligraphic Pen, Charcoal, and Brush Pen, $1,113$ samples from the SketchAgent style, and $1068$ samples from the InstantStyle sketch dataset.
+Each method was applied to these datasets following their recommended best practices. Note that the SketchyScene mask generation implementation relies on legacy dependencies that are no longer executable. Therefore, we used SAM for mask generation based on their detected bounding boxes, which yielded better performance than reported in the original paper. \Cref{fig:comparison} illustrates selected segmentation results for all instance segmentation methods, with additional results provided in the supplementary material. Since the method by Bourouis \etal \shortcite{bourouis2024open} \rev{and SketchSeger \shortcite{yang2023sceneHierTransformer} }are designed for semantic segmentation rather than instance segmentation, it was evaluated separately on a filtered subset of our dataset, where each scene contained only one instance per class. 
+
+\begin{figure}
+    \centering
+    \vspace{-2mm}
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\columnwidth}{!}{%
+    {\small
+    \begin{tabular}{c c c c c}
+        Input & SketchyScene & Grounded SAM & Ours \\
+        
+         \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/L0_sample376/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/L0_sample376/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/L0_sample376/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/L0_sample376/ours.png}} \\
+
+        % \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/input.png}} &
+        % \frame{\includegraphics[ width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/SketchyScene.png}} &
+        % \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/groundedSAM.png}} &
+        % \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/ours.png}} \\
+        
+        \frame{\includegraphics[trim=0 100 0 110, clip, width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/input.png}} &
+        \frame{\includegraphics[trim=0 100 0 110, clip, width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/SketchyScene.png}} &
+        \frame{\includegraphics[trim=0 100 0 110, clip, width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/groundedSAM.png}} &
+        \frame{\includegraphics[trim=0 100 0 110, clip, width=0.23\linewidth]{figs/fig9_comparison_visualizations/0115004430/ours.png}} \\
+
+    
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0919/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0919/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0919/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0919/ours.png}} \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0017/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0017/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0017/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0017/ours.png}} \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0083/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0083/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0083/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/0083/ours.png}} \\
+
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/50960/input.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/50960/SketchyScene.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/50960/groundedSAM.png}} &
+        \frame{\includegraphics[width=0.23\linewidth]{figs/fig9_comparison_visualizations/50960/ours.png}} \\
+    \end{tabular}
+    }
+    }
+    \vspace{-0.3cm}
+    \caption{\textbf{Qualitative comparison of instance segmentation methods. }Each row corresponds to a different sketch dataset. Black pixels indicate regions where segmentation was not applied. Our method effectively segments sketch pixels into distinct instances, outperforming alternative approaches.}
+    \label{fig:comparison}
+    \vspace{-4mm}
+\end{figure}
+
+
+\paragraph{Object Detection Evaluation}
+For object detection, we report Intersection over Union (IoU), which measures the overlap between predicted and ground-truth bounding boxes, Average Recall (AR), which evaluates the ability to detect all relevant objects, and Average Precision (AP), which combines precision and recall across various IoU thresholds. Our goal is to assess the ability to precisely detect any object in the sketch, regardless of its class. To achieve this, we calculate the mean of these metrics across object instances rather than across classes. 
+% This approach allows for flexibility in class label predictions, meaning that incorrect class labels are not penalized, and it accommodates methods that do not produce class labels.
+The results for instance segmentation methods are summarized in \cref{tb:bbox_instance}. 
+% The datasets are listed in the leftmost column, and each set of three columns corresponds to a specific metric (shown at the top) for each method. \maneesh{Don't need to describe things that visually obvious in the table or things taht will go in the table caption. Here I would just focus on saying the amin takeaways -- we perform better than the others. Even better if we can point to sharp increases in performance and explain why we see those increases.}
+The SketchyScene method performs well on the SketchyScene data, while its performance significantly declines across all metrics when applied to other datasets, particularly for the challenging styles of the SketchAgent samples. 
+In contrast, our method demonstrates consistent performance across all datasets, achieving an average AR score of \rev{0.79}, as shown in the last row of the table. Notably, our method outperforms SketchyScene even on its native dataset, demonstrating the effectiveness of leveraging priors from pretrained models on natural images and adapting them for sketch segmentation.
+The scores obtained for our baseline method, Grounding DINO, support our claim that this model struggles to generalize to the domain of sketches without adaptation, despite its strong performance on natural images. This is evident from the large margin in scores between our method and Grounding DINO, seeing an increase of \rev{38\%} in IoU, \rev{48\%} increase in AR, and \rev{48\%} increase in AP.  Furthermore, while we fine-tuned Grounding DINO exclusively on the SketchyScene dataset, the results in the table confirm that this approach surprisingly generalizes well to very different types of sketches and object categories.
+
+\paragraph{Segmentation Evaluation}
+We evaluate the final segmentation results using two common metrics: Pixel Accuracy (Acc), which measures the ratio of correctly labeled pixels to the total pixel count in a sketch, and  Intersection over Union (IoU), which evaluates the overlap between the predicted and ground-truth segmentation masks. The results for instance segmentation methods are presented in \cref{tb:segmentation1}, while the results for Bourouis \etal \shortcite{bourouis2024open} and \rev{SketchSeger \shortcite{yang2023sceneHierTransformer}} are shown separately in \cref{tb:bbox} since it performs semantic segmentation and requires dataset filtering. 
+As shown, our method outperforms alternative approaches across both metrics, with a particularly notable advantage over Grounded SAM. \rev{While SketchSeger performs well on SketchyScene dataset, its performance degrades significantly on the symbolic style SketchAgent and struggles to generalize to novel categories included in Zhang \etal and InstantStyle styles.} Meanwhile, our method demonstrates robustness to various styles, especially excelling on the challenging \rev{Zhang \etal and } SketchAgent style compared to other methods. 
+
+\begin{figure}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\columnwidth}{!}{%
+    {\small
+    \begin{tabular}{c c c c}
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/office.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/bunny_cook.png}} & \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/messy_room.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/animal_hike.png}} \\
+        
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/parrot.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/underwater.png}} & \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/corgi_laptop.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/poster_room.png}} \\
+        
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/cheese_board.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/plant.png}} & \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/knitting.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs/ours_desaturated/hand.png}} \\
+
+        \frame{\includegraphics[width=0.3\linewidth]{figs_supp/FSCOCO_good_examples/000000477143_final_segment.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs_supp/FSCOCO_good_examples/000000006336_final_segment.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs_supp/FSCOCO_good_examples/000000019239_final_segment.png}} &
+        \frame{\includegraphics[width=0.3\linewidth]{figs_supp/FSCOCO_good_examples/000000111000_final_segment.png}}\\
+
+        \frame{\includegraphics[trim=0 100 0 50, clip, width=0.3\linewidth]{figs_supp/CBSC_good_results/0114153955_final_segment.png}} &
+        \frame{\includegraphics[trim=0 100 0 50, clip, width=0.3\linewidth]{figs_supp/CBSC_good_results/0115173307_final_segment.png}} &
+        \frame{\includegraphics[trim=0 100 0 50, clip, width=0.3\linewidth]{figs_supp/CBSC_good_results/0115170719_final_segment.png}} &
+        \frame{\includegraphics[trim=0 100 0 50, clip, width=0.3\linewidth]{figs_supp/CBSC_good_results/0115124951_final_segment.png}} \\
+    \end{tabular}
+    }}
+    \vspace{-0.2cm}
+    \caption{\textbf{\methodname{} results on artist-drawn and freehand sketches. }Our method accurately segments artist-drawn sketches in the first three rows and effectively handles quick, novice freehand sketches from the Zhang \etal \shortcite{zhang2018CBSC} and FSCOCO-Seg \shortcite{bourouis2024open} datasets in the bottom two rows.}
+    \vspace{-2mm}
+    \label{fig:qualitative_artists}
+\end{figure}
+
+
+\begin{figure*}
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{2}
+    % \addtolength{\belowcaptionskip}{-7.5pt}
+    \resizebox{0.85\textwidth}{!}{%
+    {\small
+    \begin{tabular}{c c c c c c c}
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1066.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1084.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1086.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1055.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1069.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1056.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchyScene/L0_sample1013.png}} \\
+
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample17.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample410.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample419.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample432.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample542.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample585.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/SketchyScene/L0_sample745.png}} \\
+
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0093.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0121.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0134.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0147.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0423.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0436.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_0/0454.png}} \\
+
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0044.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0863.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0755.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0726.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0137.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0087.png}} &
+        % \frame{\includegraphics[width=0.13\linewidth]{figs/ours/CLIPasso_1/0174.png}} \\
+
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0082.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0127.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0152.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0508.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0175.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0227.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso2/0311.png}} \\
+        
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0012.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/1017.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0679.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0121.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0428.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0018.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/CLIPasso_3/0102.png}} \\
+
+        
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/1017.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/0501.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/0812.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/0595.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/1066.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/1062.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/SketchAgent/0876.png}} \\
+
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/174896.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/176038.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/223726.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/291981.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/463175.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/484080.png}} &
+        \frame{\includegraphics[width=0.13\linewidth]{figs/ours_desaturated/instantstyle_new/495980.png}} \\
+        
+    \\     
+    \end{tabular}
+    }
+    }
+    \vspace{-10mm}
+    \caption{\textbf{\methodname{} segmentation results on synthetic sketches.}  Our method is able to precisely segment SketchyScene dataset (first row) and our \datasetname{} dataset: CLIPasso variants (second and third rows), abstract SketchAgent sketches (fourth row), and detailed InstantStyle sketches (last row).}
+    \label{fig:qualitative3}
+\end{figure*}
+
+
+
+% We also evaluate Precision, defined as the ratio of correctly detected objects to the total number of detections, and Recall, the ratio of correctly detected objects to the total number of actual objects. Additionally, we report AP at specific IoU thresholds, such as AP50 and AP75, which provide insights into the model's performance at different levels of localization accuracy. 
+% \yael{as can be seen .... describe once we have}
+
+
+
+
+
+
+
+% \begin{figure}
+%     \centering
+%     \setlength{\tabcolsep}{0pt}
+%     {\small
+%     \begin{tabular}{c@{\hspace{1pt}}|@{\hspace{1pt}}c c c c}
+%         Input & LDP & OpenVocab & Ours \\
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} 
+%         \\
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png}  \\
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png}  \\
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png} &
+%         \includegraphics[width=0.2\linewidth]{figs/placeholder2.png}  \\
+%     \end{tabular}
+%     }
+%     \caption{Qualitative results - comparison (Partial Scenes)}
+%     \label{fig:comparison_partial}
+% \end{figure}

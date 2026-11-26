@@ -1,0 +1,142 @@
+% =============================================================================
+% Mathematical Macros for KV Cache Paper
+% =============================================================================
+% Naming convention:
+%   \v<letter> - bold lowercase (vectors), e.g., \vx, \vk, \vq
+%   \m<letter> - bold uppercase (matrices), e.g., \mK, \mV, \mQ
+%   \hv<letter> - hat bold lowercase (estimated vectors)
+%   \hm<letter> - hat bold uppercase (estimated matrices)
+% =============================================================================
+
+% -----------------------------------------------------------------------------
+% Bold lowercase letters (vectors): \va, \vb, ..., \vz
+% -----------------------------------------------------------------------------
+\newcommand{\va}{\bm{a}}
+\newcommand{\vb}{\bm{b}}
+\newcommand{\vc}{\bm{c}}
+\newcommand{\vd}{\bm{d}}
+\newcommand{\ve}{\bm{e}}
+\newcommand{\vf}{\bm{f}}
+\newcommand{\vg}{\bm{g}}
+\newcommand{\vh}{\bm{h}}
+\newcommand{\vi}{\bm{i}}
+\newcommand{\vj}{\bm{j}}
+\newcommand{\vk}{\bm{k}}
+\newcommand{\vl}{\bm{l}}
+\newcommand{\vm}{\bm{m}}
+\newcommand{\vn}{\bm{n}}
+\newcommand{\vo}{\bm{o}}
+\newcommand{\vp}{\bm{p}}
+\newcommand{\vq}{\bm{q}}
+\newcommand{\vr}{\bm{r}}
+\newcommand{\vs}{\bm{s}}
+\newcommand{\vt}{\bm{t}}
+\newcommand{\vu}{\bm{u}}
+\newcommand{\vv}{\bm{v}}
+\newcommand{\vw}{\bm{w}}
+\newcommand{\vx}{\bm{x}}
+\newcommand{\vy}{\bm{y}}
+\newcommand{\vz}{\bm{z}}
+
+% -----------------------------------------------------------------------------
+% Bold uppercase letters (matrices): \mA, \mB, ..., \mZ
+% -----------------------------------------------------------------------------
+\newcommand{\mA}{\bm{A}}
+\newcommand{\mB}{\bm{B}}
+\newcommand{\mC}{\bm{C}}
+\newcommand{\mD}{\bm{D}}
+\newcommand{\mE}{\bm{E}}
+\newcommand{\mF}{\bm{F}}
+\newcommand{\mG}{\bm{G}}
+\newcommand{\mH}{\bm{H}}
+\newcommand{\mI}{\bm{I}}
+\newcommand{\mJ}{\bm{J}}
+\newcommand{\mK}{\bm{K}}
+\newcommand{\mL}{\bm{L}}
+\newcommand{\mM}{\bm{M}}
+\newcommand{\mN}{\bm{N}}
+\newcommand{\mO}{\bm{O}}
+\newcommand{\mP}{\bm{P}}
+\newcommand{\mQ}{\bm{Q}}
+\newcommand{\mR}{\bm{R}}
+\newcommand{\mS}{\bm{S}}
+\newcommand{\mT}{\bm{T}}
+\newcommand{\mU}{\bm{U}}
+\newcommand{\mV}{\bm{V}}
+\newcommand{\mW}{\bm{W}}
+\newcommand{\mX}{\bm{X}}
+\newcommand{\mY}{\bm{Y}}
+\newcommand{\mZ}{\bm{Z}}
+
+% -----------------------------------------------------------------------------
+% Hat symbols for vectors (estimated): \hvx, \hvy, ...
+% -----------------------------------------------------------------------------
+\newcommand{\hvk}{\hat{\bm{k}}}
+\newcommand{\hvq}{\hat{\bm{q}}}
+\newcommand{\hvv}{\hat{\bm{v}}}
+\newcommand{\hvx}{\hat{\bm{x}}}
+\newcommand{\hvy}{\hat{\bm{y}}}
+
+% -----------------------------------------------------------------------------
+% Hat symbols for matrices (estimated): \hmK, \hmV, ...
+% -----------------------------------------------------------------------------
+\newcommand{\hmK}{\hat{\bm{K}}}
+\newcommand{\hmV}{\hat{\bm{V}}}
+\newcommand{\hmQ}{\hat{\bm{Q}}}
+\newcommand{\hmX}{\hat{\bm{X}}}
+\newcommand{\hmY}{\hat{\bm{Y}}}
+
+% -----------------------------------------------------------------------------
+% Common operators and functions
+% -----------------------------------------------------------------------------
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\attn}{Attention}
+\DeclareMathOperator{\concat}{concat}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% -----------------------------------------------------------------------------
+% Common abbreviations
+% -----------------------------------------------------------------------------
+\newcommand{\eg}{\textit{e.g.}\xspace}
+\newcommand{\ie}{\textit{i.e.}\xspace}
+\newcommand{\cf}{\textit{cf.}\xspace}
+\newcommand{\etal}{\textit{et al.}\xspace}
+\newcommand{\etc}{\textit{etc.}\xspace}
+
+% -----------------------------------------------------------------------------
+% Bold Greek letters (vectors): \valpha, \vbeta, ...
+% -----------------------------------------------------------------------------
+\newcommand{\valpha}{\bm{\alpha}}
+\newcommand{\vbeta}{\bm{\beta}}
+\newcommand{\vgamma}{\bm{\gamma}}
+\newcommand{\vdelta}{\bm{\delta}}
+\newcommand{\vepsilon}{\bm{\epsilon}}
+\newcommand{\vtheta}{\bm{\theta}}
+\newcommand{\vlambda}{\bm{\lambda}}
+\newcommand{\vmu}{\bm{\mu}}
+\newcommand{\vpi}{\bm{\pi}}
+\newcommand{\vsigma}{\bm{\sigma}}
+\newcommand{\vphi}{\bm{\phi}}
+\newcommand{\vpsi}{\bm{\psi}}
+\newcommand{\vomega}{\bm{\omega}}
+
+% -----------------------------------------------------------------------------
+% Function call notation for algorithms: \func{name}{args}{suffix}
+% Usage: \func{LLM.Forward}{x}{} or \func{LLM.Embed}{c}{}
+% -----------------------------------------------------------------------------
+\newcommand{\func}[3]{\texttt{#1}#2\texttt{#3}}
+\usepackage{xspace}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{todonotes}
+\usepackage{soul}
+\newcommand{\yuchen}[1]{%
+  {\sethlcolor{pink}\hl{Yuchen: #1}}%
+}
+
+\newcommand{\yichi}[1]{%
+  {\sethlcolor{blue!20}\hl{Yichi: #1}}%
+}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx} 

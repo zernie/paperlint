@@ -1,0 +1,49 @@
+\section{Motivation Example}
+\label{sec:motivation}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{moti-exp.pdf}
+\caption{Motivation Example.}
+\label{fig:moti}
+\vspace{-0.5cm}
+\end{figure}
+
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.9\linewidth]{script_pipeline.pdf}
+\caption{Overview of our approach.}
+\label{fig:approach}
+\vspace{-0.1cm}
+\end{figure*}
+
+
+Given the high cost of silent correctness or performance regressions during model training, automatically identifying library defects and assessing their potential impact on downstream client programs has become an urgent and practical need.
+% Despite the critical importance of defect awareness in DL libraries, current practices fall short in several key aspects. 
+Real-world deep learning libraries like Transformers frequently fix silent defects—bugs that do not crash programs but silently degrade numerical accuracy or runtime efficiency under specific conditions.
+However, client developers often lack the visibility and expertise to determine whether such internal fixes are relevant to their own configurations.
+
+
+Figure~\ref{fig:moti} shows this challenge through two representative PRs from Transformers, both affecting Flash Attention on Ascend NPUs: 
+\textbf{PR \#37575} fixes a subtle mistake in the default value of the \texttt{softmax \_scale} parameter. 
+If a user enables Flash Attention v2 (\texttt{attn\_imp lementation="flash\_attention\_2"}) without explicitly setting \texttt{softmax\_scale}, 
+the resulting attention output may become numerically unstable, harming model quality. 
+\textbf{PR \#37698} resolves a memory inefficiency where the attention mask is first initialized on the CPU and then moved to the NPU. 
+This silent performance defect causes unnecessary CPU memory allocation and long-term accumulation in certain deployment settings. 
+
+The middle part of Figure~\ref{fig:moti} shows a simplified snippet from a downstream client project (\textit{OpenEMMA, an open-source autonomous driving framework}) that uses Transformers with Flash Attention v2 and NPU hardware—satisfying the trigger conditions of both PRs.
+However, neither bug manifests through obvious exceptions or logs, and the developers were unaware of their presence before manual inspection.
+Such usage patterns, which involve using pretrained configurations and enabling hardware-optimized features, are commonly seen in downstream DL programs and can make silent defects difficult to detect.
+
+This example highlights a fundamental gap in current DL library usage:
+developers cannot feasibly monitor every upstream change or PR, nor can they easily determine if a specific patch is relevant to their setup. 
+Furthermore, existing tools either focus on syntax-level patch analysis or general-purpose summarization, lacking the semantic reasoning and domain knowledge needed to bridge the gap between internal bug fixes and client-side manifestations.
+These observations motivate our work. 
+We propose a novel approach named \appname, analyzes library-level bug-fix PRs and automatically traces their potential runtime impact on client programs.
+By combining defect pattern modeling, trigger condition extraction, and client-side reasoning, our framework aims to assist users in identifying whether they are silently affected.
+
+% We focus on deep learning (DL) libraries because they represent the most defect-sensitive and rapidly evolving class of numerical computation frameworks. 
+% Unlike conventional scientific libraries, DL frameworks combine heterogeneous backend code and distributed training logic, where small configuration-level defects can silently degrade model accuracy or efficiency. 
+% Thus, DL libraries offer a challenging yet practically impactful domain for defect-impact analysis.
+

@@ -1,0 +1,164 @@
+\section{Measurement on New CN iTrues}
+\label{sec:measurement}
+
+We further ran \textit{iFinder} on seven widely used open-source CN implementations, including Open5GS 5G, free5GC, OAI 5G, SD-Core, eUPF, Open5GS LTE, and OAI LTE, covering both 4G and 5G systems and in three different languages (C, C++, and Go). Our goal is to assess whether the discovered vulnerabilities are isolated implementation bugs or instead indicate systemic weaknesses in modern core networks.
+
+\subsection{Discoveries}
+
+\begin{table}[!t]
+  \centering
+  \caption{Vulnerability discovery results by implementation.}
+  \resizebox{0.49\textwidth}{!}{
+    \begin{tabular}{lcccc}
+    \toprule
+    Target & Language &\#Discovered & \#Confirmed & \#CVE \\
+    \midrule
+    Open5GS 5G &C &10 & 9 & 9 \\
+    free5GC &Go &14 & 14 & 12 \\
+    OAI 5G &C++ &11 & 11 & 11 \\
+    SD-Core &Go &7 & 7 & 7 \\
+    eUPF &Go &5 & 5 & 5 \\
+    \midrule
+    Open5GS LTE &C & 30 & 30 & 30 \\
+    OAI LTE &C++ & 7 & 7 & 7 \\
+    \midrule
+    \textbf{Total} & &\textbf{84} & \textbf{83} & \textbf{81} \\
+    \bottomrule
+    \end{tabular}
+  }
+  \label{tab:overall_results}
+\end{table}
+
+\noindent\textbf{Landscape}. Across the seven evaluated implementations, \textit{iFinder} reported 84 previously unknown vulnerabilities spanning two protocols, GTP-C and PFCP (Table~\ref{tab:overall_results}). \textit{At the time of writing, 83 findings have been confirmed by developers, and 81 have been assigned CVE identifiers}, spanning all seven implementations. 
+While we do not claim to have exhaustively captured all iTrue vulnerabilities in these codebases, the pervasiveness of the flaws, and their recurrence across multiple systems (implemented in different programming languages) and across different protocols, strongly suggests that iTrues are not isolated implementation bugs but rather systemic weaknesses in carrier core networks, rooted in implicit trust in internal peers. As discussed earlier, this assumption is increasingly invalidated as CNs migrate to less protected cloud environments.
+
+Of particular interest, we observe that certain iTrue flaws in 5G systems appear to be inherited from their 4G counterparts. This suggests that the new risk can arise from a failure to adapt legacy designs and assumptions to a deployment environment that is no longer equally trusted. Note that many production CNs today support both 4G and 5G simultaneously, so risks originating in 4G components remain a serious security concern. 
+
+
+What is most surprising is the diversity of vulnerabilities that nonetheless fall under the same high-level category. For example, in free5GC, repeatedly sending PFCP \texttt{Session Establishment Request} messages can drive the UPF into a crash by exhausting internal resources.
+In Open5GS, repeatedly sending GTPv2-C \texttt{Create Session Request} messages can similarly cause the SGW-C to terminate by depleting multiple internal resource pools, including UE contexts, transaction timers, and bearer-related structures. Despite differences in the targeted resources, protocols, and implementation languages, both cases can be attributed to the same root cause: handlers implicitly trust that internal requestors will behave prudently and will not intentionally deplete finite resources. This optimism often leads to fragile exception handling that is incomplete or inconsistently applied. As a result, resource exhaustion is more likely to surface as a process crash than as controlled rejection or graceful degradation. Notably, despite their diversity, both flaws are captured by the same detection pattern.
+
+
+
+
+
+\begin{table}[!t]
+  \centering
+  \caption{Cross-protocol distribution of vulnerability patterns.}
+  \resizebox{0.38\textwidth}{!}{
+    \begin{tabular}{lccc}
+    \toprule
+    Pattern & GTP-C & PFCP & Total \\
+    \midrule
+    Malformed Field & 11 & 3 & 14 \\
+    Absent Field & 6 & 25 & 31 \\
+    Invalid Value & 4 & 8 & 12 \\
+    Invalid State & 7 & 1 & 8 \\
+    Invalid Reference & 2 & 3 & 5 \\
+    Resource Exhaustion  & 7 & 7 & 14 \\
+    \midrule
+    \textbf{Total} & \textbf{37} & \textbf{47} & \textbf{84} \\
+    \bottomrule
+    \end{tabular}
+  }
+  \label{tab:pattern_distribution}
+\end{table}
+
+
+\vspace{2pt}\noindent\textbf{Cross-protocol pattern distribution}. To characterize the discovered vulnerabilities, we analyzed their distribution across pattern families, as summarized in Table~\ref{tab:pattern_distribution}. Notably, every pattern family recurs in both GTP-C and PFCP, suggesting that many vulnerabilities arise from shared implementation assumptions rather than protocol-specific semantics.
+Among all patterns, \textit{Absent Field} is the most common, accounting for 31 of the 84 vulnerabilities, with a substantial fraction occurring in PFCP implementations (25/31). This result is consistent with PFCP handlers implicitly assuming the presence of mandatory information elements and proceeding along nominal control procedures without enforcing completeness checks.
+\textit{Malformed Field} is another prevalent pattern, reflecting insufficient validation of length fields and structural counts in complex message formats. Compared with PFCP, GTP-C exhibits more \textit{Malformed Field} vulnerabilities, likely because GTP-C messages rely on a richer and more diverse IE ecosystem, with extensive use of grouped IEs and nested length fields. This complexity makes GTP-C parsers more susceptible to desynchronization, which can in turn trigger memory-safety issues or logic errors.
+In addition, \textit{Invalid Value} and \textit{Invalid State} show a skewed distribution: \textit{Invalid Value} is more prevalent in PFCP, whereas \textit{Invalid State} occurs more often in GTP-C. This asymmetry may reflect the more complex state machines managed by GTP-C implementations, which are more susceptible to inconsistencies under unexpected message sequences. By comparison, \textit{Invalid Reference} and \textit{Resource Exhaustion} are more evenly distributed across the two protocols, likely because both protocols manage broadly comparable categories of resources and therefore exhibit similar exposure to \textit{Invalid Reference} and \textit{Resource Exhaustion} vulnerabilities.
+
+ 
+Interestingly, although PFCP is a newer protocol originally introduced for CUPS and later widely adopted in 5G architectures, it exhibits more vulnerabilities than GTP-C in our study (47 versus 37). One plausible explanation is that PFCP handlers are often implemented as internal resource-management interfaces, where messages are more likely to be assumed well-formed and thus receive less rigorous validation.
+Overall, the cross-protocol recurrence of syntax-, semantics-, and resource-related pattern families suggests that implicit-trust assumptions can persist at the implementation level across protocol generations, leading to accumulated gaps in validation logic rather than isolated programming errors.
+
+
+\begin{table}[!t]
+  \centering
+  \caption{Vulnerability breakdown by CN components.}
+  \resizebox{0.26\textwidth}{!}{
+    \begin{tabular}{lcccc}
+    \toprule
+    \multirow{2}{*}{Component} & \multicolumn{2}{c}{Protocol} & \multirow{2}{*}{Total} \\
+    \cmidrule(r){2-3}
+     & GTP-C & PFCP & \\
+    \midrule
+    \multicolumn{4}{l}{\textit{4G Core}} \\
+    \quad MME & 2 & N/A & 2 \\
+    \quad SGW & 32 & 1 & 33 \\
+    \quad PGW & 3 & 0 & 3 \\
+    \midrule
+    \multicolumn{4}{l}{\textit{5G Core}} \\
+    \quad SMF & N/A & 9 & 9 \\
+    \quad UPF & N/A & 37 & 37 \\
+    \midrule
+    \textbf{Total} & \textbf{37} & \textbf{47} & \textbf{84} \\
+    \bottomrule
+    \end{tabular}
+  }
+  \label{tab:nf_breakdown}
+\end{table}
+
+\vspace{2pt}\noindent\textbf{Component-level breakdowns}. To understand where these implicit-trust assumptions most frequently surface in practice, we further examined how vulnerabilities are distributed across core network components, with results summarized in Table~\ref{tab:nf_breakdown}.
+The results also revealed a skewed distribution. In 4G systems, the Serving Gateway (SGW) accounted for the majority of GTP-C vulnerabilities (32/37). In 5G systems, the User Plane Function (UPF) accounted for the majority of PFCP vulnerabilities (37/47).
+Such observed concentration is because SGW/UPF components maintain long-lived protocol state across multi-step procedures, manage scarce and performance-critical resources, and mediate interactions among multiple peers while reconciling control-plane decisions with user-plane resource allocation. Such cross-plane coupling increases the complexity of state transitions and error handling, which can make missing validation and incomplete recovery paths more likely to surface.
+Moreover, the discovered flaws span both 4G and 5G, and this cross-generation coverage yet again supports the view that iTrue reflects a systemic weakness rather than isolated bugs in individual codebases: these components sit at the intersection of stateful control logic and resource management.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Case Studies}
+\label{sec: case studies}
+We present two case studies to demonstrate the security impact of the newly discovered iTrue vulnerabilities.
+
+\noindent\textbf{Denial of service}.
+\textit{iFinder} reported an iTrue vulnerability in SGW-C caused by missing syntactic validation of the Bearer Quality of Service (QoS) Information Element (IE) when parsing GTPv2-C \textit{Create Session Request} messages. Specifically, a \textit{Create Session Request} that carries a Bearer QoS IE with an invalid fixed-length encoding can trigger an assertion, causing SGW-C to crash and resulting in a DoS.
+As stated in our threat model, we consider a remote adversary with no direct control over cellular CN components, but who can send arbitrary GTPv2-C messages to trigger the vulnerability. In our study, we successfully executed an end-to-end DoS attack against Open5GS LTE in our testbed. As shown in Figure~\ref{fig: dos}, the attack proceeds as follows: (1) the attacker sends a GTPv2-C \textit{Create Session Request} containing a Bearer QoS IE with an invalid fixed-length encoding; (2) when SGW-C parses the malformed IE, it crashes immediately, triggering SGW-U to release the SGW-U-eNB GTP-U tunnels.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/core_network-DoS_cropped.pdf}
+  \caption{Example attack exploiting malformed GTPv2-C messages to trigger denial-of-service in a core network component by abusing missing validation checks.}
+  \label{fig: dos}
+\end{figure}
+
+
+
+
+\vspace{2pt}\noindent\textbf{Session hijacking}. 
+\textit{iFinder} detected an iTrue vulnerability in the UPF caused by missing uniqueness validation of Packet Detection Rule (PDR) IDs when processing PFCP \textit{Session Modification Request} messages. Specifically, by injecting a duplicate PDR ID with a lower \texttt{Precedence} value (i.e., higher priority), an attacker can overrule the legitimate rule. This logic flaw causes the UPF to match the malicious PDR first during packet processing, resulting in session hijacking.
+
+In line with the threat model, we assume an Internet attacker with no direct control over core-network components who, through a cloud-native misconfiguration that exposes the N4 interface, can send arbitrary PFCP messages to the UPF to trigger a vulnerability.
+We demonstrated an end-to-end session-hijacking attack on OAI 5G in our testbed. 
+As shown in Figure~\ref{fig: session hijacking}, the attack proceeds as follows: (1) the attacker sends a PFCP \textit{Association Setup Request} to the UPF; (2) the victim UE initiates an attach, triggering the SMF to send a PFCP \textit{Session Establishment Request} to the UPF; (3) the attacker then issues a PFCP \textit{Session Modification Request} that reuses the victim's PDR ID with a lower \texttt{Precedence} value (higher priority) and binds it to a malicious Forwarding Action Rule (FAR); (4) the UPF admits the duplicate PDR and sorts PDRs by precedence, placing the malicious rule ahead of the legitimate one; and (5) during packet processing, the UPF matches the malicious PDR first, and establishes a new forwarding tunnel between UPF and attacker; and (6) as a result, the victim's uplink traffic is forwarded to the attacker rather than to the Internet.  
+Beyond the OAI testbed, we further validated this flaw on two commercial 5G core networks. In collaboration with a partner vendor, we reproduced the attack in the vendor's lab environment under default configurations. In both cases, the same root cause (missing uniqueness validation of PDR IDs) was present, and the attack exhibited the same session-hijacking behavior observed on OAI. Specifically, the duplicate PDR with a lower \texttt{Precedence} value (higher priority) overruled the legitimate rule for forwarding the victim's uplink traffic to the Internet, redirecting it to the attacker instead. One vendor has fixed the issue, and a CVE has been assigned (CVE-2026-8233); the other, a major 5G carrier, is still in the remediation process.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/core_network-session_hijacking_v2_cropped.pdf}
+  \caption{Example attack exploiting duplicate PDR IDs in PFCP \textit{Session Modification Request} messages to trigger session hijacking in UPF by abusing missing uniqueness validation.}
+  \label{fig: session hijacking}
+\end{figure}
+
+
+

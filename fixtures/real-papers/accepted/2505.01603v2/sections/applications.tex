@@ -1,0 +1,104 @@
+\section{\dandelion Programs}\label{sec:design-app}
+
+\subsection{User Interface}\label{sec:design:interface}
+
+A complete \dandelion program (which we refer to as a ``composition'') is a graph $ G = (V, E) $, where: vertices V are one of (i) user-provided compute-only code, i.e., ``compute functions'', (ii) \dandelion-provided facilities for I/O, i.e., ``communication functions'', or (iii) other \dandelion programs, i.e., ``compositions''.
+Directed Edges $E$ = (V1, V2, M) connecting the vertices show that one output set of V1 is an input set of V2. M is a metadata descriptor, specifying which output and input set this edge describes as well as a keyword indicating how data is distributed to instances of V2. The keyword is one of `all', `each', or `key', indicating if all input items in the set should be given to a single instance of V2, if each item should be given to a separate instance, or if items should be given to separate instances grouped by their keys.
+Keys are set by the user when formatting output data and are only used for grouping.
+
+\begin{figure}
+\centering
+\includegraphics[trim={0 0.6cm 0 0},width=0.9\linewidth]{figures/app_dataflow.pdf}
+\caption{Dataflow for log processing example application.}\label{fig:middleware-app-diagram}
+\end{figure}
+
+Figure~\ref{fig:middleware-app-diagram} depicts an example \dandelion application that performs  distributed log processing. The composition consists of three user-defined {\color{computation}{compute functions}} and multiple calls to the \dandelion  {\color{communication}{ HTTP communication function}}.
+The first compute function, \texttt{\color{computation}{Access}}, takes an input (e.g., an access token) and produces an output (e.g., an http request) that is then passed to the \texttt{\color{communication}{HTTP}} communication function provided by \dandelion. This function carries out the request and forwards the response (e.g., a list of authorized log service HTTP endpoints) to the \texttt{\color{computation}{FanOut}} function. \texttt{\color{computation}{FanOut}} function then takes this list and formats requests to retrieve the log files from each HTTP endpoint, dispatching them to \texttt{\color{communication}{HTTP}} functions in parallel.
+The last compute function, \texttt{\color{computation}{Render}}, aggregates the responses and templates them into a single output returned to the user. 
+For more complex applications, compositions can include nested compositions, or spawn new compositions dynamically through \dandelion's HTTP interface, e.g., to support dynamic control flow. 
+
+\dandelion provides a composition language to help users express DAGs of compute functions and communication functions in a more developer-friendly syntax.
+Listing~\ref{lst:middleware_composition} shows an example of the log processing example application expressed as a composition in \dandelion's DSL. Our DSL is inspired by the domain-specific languages that other dataflow systems like Spark~\cite{spark} and Timely~\cite{naiad} provide for users to specify DAGs.
+Our language could be replaced with other DSLs.
+Currently, users need to provide the composition and all compute function binaries directly, but ideally applications could be automatically decomposed into pure compute and communication functions, as we discuss in \S\ref{sec:prog:porting}.
+
+\fakepara{Communication Functions.}\label{sec:prog:comm}
+Platform-provided communication functions enable user applications to interact with other services. They are designed to support high-level protocols with established user interfaces.
+A well-defined user interface enables the platform to safely validate requests to protect against malicious requests. It also frees the user from worrying about the lower-level implementation. Since communication functions are trusted, they are allowed to call system calls to establish and manage new connections. While \dandelion could support protocols such as gRPC or SCP, our current implementation focuses on HTTP, since cloud services generally expose REST APIs~\cite{restful_2013, rest-api}. \dandelion's HTTP function first sanitizes inputs and then makes the specified GET/PUT/POST/DELETE requests, handing the response back to the composition for further processing.
+
+\fakepara{Compute Functions.} \label{sec:prog:compute}
+Compute functions can use familiar interfaces for memory allocation, local filesystem operations, and basic utilities like math functions, formatting, etc by linking to \dandelion's custom libc (\dlibc) or libc++ (\dlibcpp). These libraries provide a high-level interface with a userspace in-memory virtual filesystem.
+The in-memory filesystem represents function input sets and output sets as folders, with items as files within these folders. This enables a compute function to read inputs and write outputs as standard file operations without invoking system calls. 
+Functions requiring system calls (e.g., mmap, mprotect, socket or threading) have stub implementations, returning appropriate error codes.
+Our current prototype provides SDKs for developing compute functions in C and C++, as well as a Python interpreter (see \S\ref{sec:prog:sdk}).
+
+\dlibc and \dlibcpp run on top of a lower-level system interface.
+This interface uses a special data structure that \dandelion sets up before the function starts to point to descriptors for the input sets and items in the function's memory. Before the function exits, it sets up the structure with the output sets and item descriptors. When a compute function uses the virtual file system to create outputs, \dlibc automatically adds all files inside folders that represent output sets as output items. 
+
+\subsection{Language and Compilation Support}\label{sec:prog:sdk}
+\dandelion provides software development kits (SDK) for functions written in C and C++.
+These SDKs help users compile their functions against \dlibc /\dlibcpp or the low-level interface.
+To support Python functions, we have compiled the CPython interpreter using our C SDK.
+The same approach can be taken to support other interpreted languages with interpreters written in C or C++.
+To support more compiled langauges, we aim to extend our SDK to be compatible with LLVM, such that any language with an LLVM frontend can be easily compiled for \dandelion.
+Additional languages can also be supported by \dandelion's rWasm backend (\S\ref{impl:compute-engine}), as it accepts Wasm code as input, which is a compilation target for many languages~\cite{emscripten}. 
+
+\subsection{Porting Applications to \dandelion}\label{sec:prog:porting}
+
+\dandelion users currently need to express their applications as DAGs of pure compute and communication functions.
+Some applications like data analytics naturally fit this model, as query engines represent SQL queries as DAGs of operators. We also find that cloud-native applications like image or log processing pipelines that ingest data from cloud storage fit this programming model well. Based on our initial exploration with a Text2SQL agentic application in \S\ref{sec:eval:target_apps}, \dandelion can also be suitable for some agentic AI workflows, which are an emerging class of applications that involve interactions between AI inference services, vector databases for retrieval, and custom user logic for pre- and post-processing data between these services. 
+
+\begin{lstlisting}[basicstyle=\ttfamily, style=codestyle, caption={Pseudocode for log processing application.},captionpos=b, label={lst:middleware_pseudocode}, float=t]
+auth_token = format_request(args[1])
+auth_response = http_get(auth_url, auth_token)
+authorized_servers = auth_processing(auth_response)
+responses = []
+for sever in authorized_servers:
+    responses.push(http_get(server))
+rendered_html = <html template start>
+for response in responses:
+    if response.successful():
+        rendered_html.append(reponse.render())
+    else:
+        rendered_html.append(response.error())
+rendered_html.append(<html template end>)
+\end{lstlisting}
+
+However, users may also wish to port existing applications to \dandelion.
+To illustrate this process, consider the  pseudocode in Listing~\ref{lst:middleware_pseudocode} for the log processing example application from Figure~\ref{fig:middleware-app}.
+To port this application, the developer needs to be split the compute logic into separate functions between each of the two HTTP calls that the application issues. This results in three separate compute functions.
+The first compute function, called \texttt{\color{computation}{Access}}, contains the parsing logic for the input token and forms the request (line 1 from Listing~\ref{lst:middleware_pseudocode} ).
+The second compute function, called \texttt{\color{computation}{FanOut}}, contains the logic from lines 3-5 in Listing~\ref{lst:middleware_pseudocode} while the third compute function, called \texttt{\color{computation}{Render}}, contains the logic from lines 7-13. 
+The HTTP requests issued on lines 2 and 6 in Listing~\ref{lst:middleware_pseudocode} are done by communication functions in \dandelion.
+Listing~\ref{lst:middleware_composition} shows the composition that the user would write to express how \dandelion should pass data between compute and communication functions.
+The \texttt{\color{blue}{each}} keyword on both of the \texttt{\color{communication}{HTTP}} functions tells \dandelion it can parallelize the requests, while the \texttt{\color{blue}{all}} keywords on the compute functions indicate that all results of the preceding functions are collected and fed to a single instance of the function.
+
+\begin{lstlisting}[basicstyle=\ttfamily, style=codestyle, caption={Log processing application from Listing 1 expressed as a Dandelion composition DAG using our DSL.},captionpos=b, label={lst:middleware_composition}, float=t]
+|\color{blue}composition| |\color{computation}RenderLogs|(|\color{teal}AccessToken|) => |\color{brown}HTMLOutput| {
+    |\color{computation}Access|(|\color{teal}AccessToken| = |\color{blue}all| AccessToken)
+        => (AuthRequest = |\color{brown}HTTPRequest|);
+    |\color{communication}HTTP|(|\color{teal}Request| = |\color{blue}each| AuthRequest)
+        => (AuthResponse = |\color{brown}Response|);
+    |\color{computation}FanOut|(|\color{teal}HTTPResponse| = |\color{blue}all| AuthResponse)        
+        => (LogRequests = |\color{brown}HTTPRequests|);
+    |\color{communication}HTTP|(|\color{teal}Request| = |\color{blue}each| LogRequests)
+        => (LogResponses = |\color{brown}Response|);
+    |\color{computation}Render|(|\color{teal}HTTPResponses| = |\color{blue}all| LogResponses)
+        => (HTMLOutput = |\color{brown}HTMLOutput|);
+}
+\end{lstlisting}
+
+For applications that use asynchronous programming~\cite{rust-async} (supported in popular languages like Python, Rust, and C++), we expect that \dandelion could use a compiler to automatically decompose an application into its pure compute and communication components by dividing the application into a graph of continuations~\cite{flanaganEssenceCompilingContinuations1993}.
+Continuations are language-level primitives that can save the program state at arbitrary locations (e.g., at communication I/O boundaries) and resume execution at a later time.
+We plan to explore this approach as future work, drawing inspiration from VectorVisor~\cite{ginzburgVectorVisorBinaryTranslation}, which uses continuations to port code containing system calls to run on GPUs. 
+
+\subsection{Fault handling}
+
+When a communication function fails, it forwards the appropriate error code to the next downstream function(s).
+For example, an HTTP function may return \texttt{404 Not Found} as a response.
+\dandelion compositions support conditional control flow, so failures can be handled gracefully.
+By default, functions are only executed if each of the input sets contains at least one item.
+This allows certain functions to only run if a failure message is present and to skip execution of further downstream functions if the failure cannot be recovered from.
+Sets that do not need to contain an item for the function to run can be marked as optional.
+
+\dandelion's failure handling could benefit from additional techniques, such as the log-based approaches in Boki~\cite{jiaBokiStatefulServerless2021}, Beldi~\cite{qiHalfmoonLogOptimalFaultTolerant2023} or Halfmoon~\cite{qiHalfmoonLogOptimalFaultTolerant2023}. These systems can be used to find reentry points in compositions and skip functions that have successfully committed their progress.

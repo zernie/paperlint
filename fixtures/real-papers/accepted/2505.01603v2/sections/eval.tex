@@ -1,0 +1,246 @@
+\section{Performance Evaluation}\label{sec:eval}
+
+We evaluate \dandelion's sandbox creation (\S\ref{sec:eval:sandbox-creation}) and function execution latency and throughput (\S\ref{sec:eval:compute}) with different isolation backends. We investigate the impact of executing an application as a composition of compute and communication functions in \dandelion versus as single function with Firecracker or Wasmtime (\S\ref{sec:eval:composition}).
+We also show that \dandelion's separation of compute and communication functions enables more efficient CPU scheduling (\S\ref{sec:eval:right-sizing}). Finally, we show \dandelion's end-to-end performance benefits when multiplexing real applications with different compute and I/O intensities (\S\ref{sec:eval:timeplot}), more complex workflows for elastic query processing (\S\ref{sec:eval:target_apps}), and its memory savings when running the Azure Functions production trace (\S\ref{sec:eval:azure}). 
+
+\subsection{Methodology}
+
+
+\textbf{Hardware configurations.} 
+We run experiments on several CPU platforms.
+Our default machine is a dual-socket Intel Xeon E5-2630v3 with 16 physical cores, 256GiB of DRAM, and a Mellanox ConnectX-3 NIC. We also use this type of machine to run the loader.
+For experiments with the CHERI backend, we run \dandelion on an Arm Morello board~\cite{morello} that implements CHERI capabilities on top of the aarch64 instruction set with a 4-core processor, 16GiB of RAM, and a Mellanox ConnectX-3.
+We disable frequency scaling for all experiments.
+For Azure trace experiments, we use Cloudlab~\cite{cloudlab} d430 nodes, which have dual-socket Intel E5-2630v3 CPUs with a total of 16 physical cores and 64GB of DRAM.
+
+\fakepara{Baselines.}
+We compare \dandelion to Firecracker~\cite{firecracker}, the open-source MicroVM hypervisor used by AWS Lambda. 
+We use a simple HTTP relay to route requests to MicroVMs and spawn new MicroVMs.
+When the relay receives a request for a hot function, it passes it to the first available MicroVM.
+When it gets a cold request, it boots a new MicroVM and forwards the request on as soon as that VM is ready. We run Firecracker (which we abbreviate as FC) with and without snapshots~\cite{firecracker:snapshot_restoration}.
+The Firecracker baseline represents VM-based isolation approaches. \dandelion's most similar backend for comparison is the KVM backend, as it relies on the same hardware virtualization.
+
+We use the same HTTP relay setup for gVisor~\cite{gvisor}, which uses containers instead of MicroVMs. 
+The most comparable isolation backend in \dandelion is the process backend, as it also uses processes with restricted capabilities.
+
+We also run Spin~\cite{spin}, an open-source framework for building and running event-driven applications with Wasmtime~\cite{wasmtime}. We use Spin's recommended default settings, which include enabling pooled allocation with 1000 Wasmtime instances.
+For simplicity, we refer to the Spin/Wasmtime setup as Wasmtime or WT.
+This baseline represents software fault isolation and is most suitable to compare to \dandelion's rWasm isolation backend.
+
+\fakepara{Software setup.} 
+We run Ubuntu 22.04.
+On the Morello board, we use a modified kernel with Morello support based on version 6.7.0, with programs running in CHERI hybrid mode.
+We use Firecracker 1.5.0, a Firecracker quickstart guest kernel, and a rootfs built on top of Alpine~\cite{alpine} with only necessary packages added.
+For gVisor, we use the 20240715 release with an Alpine Linux base image. For best performance, we choose the KVM platform for gVisor’s syscall interception.
+For Spin/Wasmtime, we use Spin version 3.0 configured with its recommended defaults and Wasmtime 25.0.3.
+We use Dirigent~\cite{dirigent} as the cluster manager for Azure trace experiments.
+
+\begin{table}[t]
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+                    & CHERI & rWasm & process & KVM \\ \hline
+Marshal requests    & 12    & 15    & 12    & 30    \\ \hline
+Load from disk      & 29    & 147   & 54    & 194   \\ \hline
+Transfer input      & 2     & 2     & 6     & 2     \\ \hline
+Execute function    & 5     & 20    & 371   & 536   \\ \hline
+Get/send output     & 9     & 12    & 9     & 25    \\ \hline
+Other               & 32    & 45    & 34    & 102   \\ \hline \hline
+Total               & 89    & 241   & 486   & 889   \\ \hline
+\end{tabular}
+\caption{\dandelion avg. latency breakdown in $\mu$s for each isolation backend running 1x1 matmul on Morello.}
+\label{tab:latency-breakdown}
+\end{table}
+
+\subsection{Sandbox Creation}\label{sec:eval:sandbox-creation}
+
+Table~\ref{tab:latency-breakdown} shows the unloaded latency breakdown for \dandelion sandbox creation with each isolation backend. The CHERI backend performs best as it executes within a single address space without spawn new threads on the critical path. The main work is loading the executable, parsing it, and moving it to the correct place in memory (\textit{load from disk} in Table~\ref{tab:latency-breakdown}).
+The rWasm backend, using software isolation, achieves fast function execution but is mainly limited by slow dynamic loading. % at higher throughput.
+The process backend spends most of the time creating and preparing new processes (\textit{execute function} in Table~\ref{tab:latency-breakdown}), while KVM backend is slowed by lightweight VM setup, worse on Morello with a CHERI-compatible kernel.
+When using the default Linux 5.15 kernel, the total latencies of the rWasm, process, and KVM backends are 109, 539, and 218 microseconds, respectively.
+
+We compare \dandelion's sandbox creation tail latency to other systems as we sweep throughput in Figure~\ref{fig:rps-sweep-morello}, using 1x1 64-bit integer matrix multiplication with 0\% hot invocations. Creating a sandbox in Firecracker (FC) involves booting a fresh MicroVM, which takes over 150ms. FC can reduce startup latency by loading pre-initialized MicroVM state from a snapshot on disk instead of initializing the guest OS and application on the critical path. However, snapshot restoration still involves creating a MicroVM and restoring its state, limiting it to 120 RPS.
+gVisor~\cite{gvisor} uses a hardened container instead of a MicroVM. 
+As gVisor performed worse than FC with snapshots, we omit it in remaining plots.
+Initializing a Spin/Wasmtime (WT) instance is lightweight due to multiple optimizations, including pooling memory allocation and pre-instantiating Wasm components, which allows WT to achieve 7000 RPS peak throughput.
+Although not shown in the figure, we also experimented with Microsoft's recent Hyperlight Wasm~\cite{hyperlight-wasm} system, using their default sandbox configurations.
+We measure 9.1 ms average unloaded cold start latency with Hyperlight Wasm, which includes launching a ProtoWasmSandbox (2.8ms), loading the Wasmtime runtime (4.2ms) and loading the Wasm module (2.1ms).
+We also considered Unikraft~\cite{unikraft}, but did not run separate experiments. Their paper reports a 3.1ms VM boot time to user space \textit{main} function using Firecracker as VMM.
+This excludes the time to receive a request and send a response, which would be inclued in our experiment, making its performance very similar to FC with snapshots.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[trim={0 1cm 0 0},width=0.95\columnwidth]{figures/matmul_1x1_load_latency_P99.pdf}
+    \caption{Tail latency vs. throughput for 1x1 matmul on the Morello server, with 0\% hot requests.}
+    \label{fig:rps-sweep-morello}
+\end{figure}
+
+\subsection{Compute Function Performance}\label{sec:eval:compute}
+
+
+Figure~\ref{fig:rps-sweep-97hot} shows a compute microbenchmark (128x128 64-bit integer matrix multiplication) on the default server setup.
+We conservatively use a 97\% hot request ratio for Firecracker experiments, based on Shahrad et al.~\cite{serverless-in-the-wild} observing that 3.5\% of applications in the Azure Functions trace experience \textit{only} cold starts, even if sandboxes are never torn down.
+We plot median latency with 5th and 95th percentile error bars to show the impact of cold starts on overall performance.
+\dandelion and Wasmtime create a new sandbox per request. 
+For \dandelion, we load the function binary from disk instead of in-memory cache for 3\% of requests.
+\dandelion shows low, stable latency, peaking at 4800 RPS with the KVM backend, but its rWasm backend suffers from slower matrix multiplication code due to transpilation. 
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[trim={0 1cm 0 0},width=0.9\columnwidth]{figures/matmul_128x128_with_97_hot_requests_load_latency.pdf}
+    \caption{Compute function (128x128 matmul) on 16-core server. Latency is median, with 5\textsuperscript{th}/ 95\textsuperscript{th} percentile error bars.  \vspace{-1.6em}}
+    \label{fig:rps-sweep-97hot}
+\end{figure}
+
+
+Firecracker shows similarly low unloaded latency by committing extra memory for hot MicroVMs, ensuring that most requests do not require booting a new sandbox. However, its latency gradually increases and saturates at 3000 RPS (with snapshots), becoming increasingly unstable after 2800 RPS due to CPU contention between active MicroVMs and MicroVM creations.
+Wasmtime, despite its fast sandbox creation, has higher unloaded latency and saturates at only 2600 RPS due to the compiler toolchain's less efficient code generation and optimization.
+To support 128x128 matrix multiplication in Hyperlight Wasm, we increase default configuration guest\_input\_buffer, guest\_output\_buffer, and guest\_stack\_size to 1 MB each, and guest\_heap\_size to 2 MB, which is the minimum required to avoid out of memory errors. Hyperlight Wasm has a high unloaded average latency of 27.5ms, including sandbox creation (2.6ms), runtime loading (12.1ms), module loading (4.7ms), and function execution (8.1ms). 
+
+\subsection{Composition Performance Overhead}\label{sec:eval:composition}
+
+While \S\ref{sec:eval:sandbox-creation} showed performance of individual sandbox creation, decomposing applications into compute and communication functions can increase the number of sandboxes that need to be created.
+To evaluate this tradeoff, we design a microbenchmark that fetches a 64KiB array and computes sum, min and max over a sample of the elements; we call this sequence a phase. We sweep the number of phases in the microbenchmark from 2 to 16.
+
+We compare \dandelion KVM with Wasmtime, Firecracker hot (VM already running) and Firecracker with cold start from snapshots.
+For \dandelion, we consider loading the compute function code from disk (uncached) and copying from memory (cached) to see how keeping code ready in RAM impacts chains of functions.
+All systems show linear growth in latency as we increase the number of compute-communication phases.
+Firecracker hot scales best, but \dandelion KVM uncached is only 1.3ms (17\%) slower than Firecracker hot at 8 phases and 4ms slower at 16 phases. 
+Notably, \dandelion KVM cached vs. uncached differs by just 0.5ms at 16 phases, indicating disk loading is competitive even for long chains. 
+Wasmtime has the same slope as \dandelion KVM, hinting at potentially worse application scaling on Wasmtime, which is balanced out by the repeated sandbox creations in \dandelion in this experiment.
+Firecracker cold start from snapshots has higher base latency but same latency slope as Firecracker hot.
+Nonetheless, \dandelion KVM uncached is 4.6x faster at 16 phases. 
+Overall, our results show that \dandelion still provides great performance even for applications requiring numerous sandbox creations.
+
+\begin{figure}[t]
+	\centering
+    \includegraphics[width=0.44\textwidth]{figures/hybrid_vs_split_P99_delay=10.0.pdf}
+        \vspace{-0.4cm}
+	\caption{Separating compute and communication function execution in \dandelion vs. unifying in \hybrid for two types of applications (compute-intensive and I/O intensive).}
+	\label{fig:dandelion-cpu-efficiency}
+\end{figure}
+
+
+\subsection{Throughput Benefits of Compute-Comm Split}\label{sec:eval:right-sizing}
+
+In this section, we highlight an additional benefit \dandelion gains from splitting compute and communication: more efficient core multiplexing.
+In traditional FaaS, each sandbox runs its own networking, and the OS scheduler multiplexes sandboxes across CPU cores, incurring costly context switches.
+Determining the optimal number of sandboxes to execute concurrently per node to maximize application throughput is hard. 
+Compute-intensive sandboxes benefit from low CPU oversubscription, while I/O intensive ones need high oversubscription to fully utilize the CPU resources. Moreover, sandboxes can switch between being I/O intensive and compute intensive at any time.
+
+\dandelion's compute-communication split enables cooperative networking, run-to-completion for compute functions, and efficient reallocation of CPU cores between compute and communication functions. %different task queues to adjust the resources allocated to each type of engine.
+To measure the impact of \dandelion's programming model, while keeping the rest of the system the same, we implement \dandelion -hybrid (\hybrid). It uses the same system architecture and isolation backends as \dandelion, but supports running a composition as a single ``hybrid'' function, allowing opening sockets for communication.
+
+
+
+In Figure~\ref{fig:dandelion-cpu-efficiency}, we run the compute-intensive (matrix multiplication) and I/O-intensive (fetch and compute) microbenchmarks used in \S\ref{sec:eval:composition}, varying 1 to 8 threads per CPU core (tpc), with and without core pinning for D-hybrid.
+We present the highest-performing configurations in either microbenchmark (3-5 tpc without pinning and 1 tpc with pinning).
+Depending on the compute and I/O intensity of the applications, D-hybrid requires fundamentally different levels of concurrency to maximize throughput (i.e. 1 tpc pinned for matrix multiplication and 5 tpc unpinned for fetch and compute).
+Designing a controller to adjust concurrency based on system load metrics like CPU utilization is non-trivial: matrix multiplication achieves peak throughput at 90\% CPU utilization with tpc 1 with pinning, while fetch and compute achieves peak throughput at 70\% CPU utilization with tpc 5 without pinning.
+
+In contrast, \dandelion's control plane achieves the highest
+throughput for both workloads.
+\dandelion delivers even higher throughput and consistently lower tail latency for the I/O-intensive application by running compute tasks to completion on dedicated cores and aggregating cooperating communication tasks on the remaining cores, minimizing context switches.
+In the next section, we further show how \dandelion multiplexes requests from multiple applications with different compute and I/O intensities.
+
+
+\begin{figure}[t]
+    \centering
+  \includegraphics[trim={0 0cm 0 0},width=0.45\textwidth]{figures/mixed_load_timeplot.png}
+    \caption{Multiplexing compute vs. I/O-intensive apps, with changing RPS over time. \dandelion dynamically adjusts compute/comm engines to maintain low latency. Red dots show requests where latency exceeds 65ms.
+    \vspace{-0.8em}}
+    \label{fig:middleware-app}
+\end{figure}
+
+\subsection{Multiplexing Applications}\label{sec:eval:timeplot}
+While previous experiments showed that \dandelion outperforms Firecracker and Wasmtime with compute and composition microbenchmarks, we now evaluate its behavior in a more realistic setting where the system needs to manage mixed workloads with bursty traffic.
+
+In Figure~\ref{fig:middleware-app}, we run the distributed log processing application from Figure~\ref{fig:middleware-app-diagram} (I/O-intensive) and an image compression application that transforms an 18kB QOI~\cite{qoi-compression} image to PNG (compute-intensive) on \dandelion, Firecracker (with snapshot), and Wasmtime under a bursty load pattern. Image compression is as an example of image processing and log processing is an example of HTML templating, which are both common task from FaaS benchmarks~\cite{copikSeBSServerlessBenchmark2021, kimFunctionBenchSuiteWorkloads2019, vSwarm}.
+Consistent with previous experiments, we use a 97\% hot request ratio for Firecracker.
+
+Firecracker has a bi-modal latency distribution for both applications. This is because 97\% of requests are served by hot VMs, which benefit from pre-warmed state, while the remaining 3\% incur cold-start (snapshot restoration) overhead.
+By overprovisioning memory to maximize warm starts, Firecracker achieves a relatively low average request latency for both compression (20.4ms) and log processing (25.6ms), but has high variance at 389\% and 1495\% respectively due to the cold starts.
+Spin/Wasmtime, on the other hand, struggles to handle the mixed workload effectively, increasing the latency of both applications.
+As discussed in \S\ref{sec:eval:compute}, Wasmtime suffers from less efficient code generation and optimization. 
+Spin’s reliance on the Rust Tokio async runtime also exacerbates interference between applications~\cite{tokio-runtime, tokio-scheduling-blog}.
+Spin schedules functions cooperatively, meaning a thread can be occupied by a compute intensive function for an arbitrary amount of time.
+We observe that image compression tasks hog resources, causing log processing tasks to queue behind them, increasing tail latency.
+While this keeps the variance of the compression application relatively low at 6.1\%, this is not a good tradeoff as the average latency is 53.3ms. The log processing application has a 79.2\% variance with an average latency of 28.9ms.
+
+\dandelion maintains stable latency for both applications, even during load bursts, due to fast cold starts and the controller's dynamic re-allocation of CPU cores, e.g., it scales from a single I/O core at the beginning of the experiment to 4 I/O cores to accommodate I/O-intensive log processing during peak load. 
+For the image compression application, \dandelion achieves an average latency of 18.2ms and p99 latency of 19.6ms, which is 38.6\% lower than Firecracker and 67.1\% lower than Wasmtime.
+For the log processing application, \dandelion delivers an average latency of 27.9ms and p99 latency of 30.6ms, which is 19.5\% lower than Firecracker and 33.5\% lower than Wasmtime.
+\dandelion reduces performance variability, achieving the lowest relative variance of 1.3\% for image compression and 2.9\% for log processing.
+Overall, \dandelion efficiently multiplexes requests with different compute and I/O intensities and maintains low and stable latency despite creating a sandbox on the critical path for each request.
+
+% mixed-app data for SOSP'25 (cut first second)
+% ('dandelion_process', 'compression-app')
+% average 18.23088555896292, variance 0.23679042546091986, percentage 1.298842147273014
+% ('dandelion_process', 'middleware-app')
+% average 27.9192808895127, variance 0.8016579708388263, percentage 2.8713417584474836
+% ('firecracker_snapshot', 'compression-app')
+% average 20.384298508502926, variance 79.41799958921642, percentage 389.603790172562
+% ('firecracker_snapshot', 'middleware-app')
+% average 25.595561647440675, variance 382.69795321006677, percentage 1495.1731025927033
+% ('wasmtime', 'compression-app')
+% average 53.33612329244494, variance 3.2606828426079084, percentage 6.113460524173087
+% ('wasmtime', 'middleware-app')
+% average 28.899354094477832, variance 22.88610289465722, percentage 79.1924373805654
+
+
+% stats:average latency comparison, variance comparsion,
+% Firecracker
+% Wasmtime: image compression app got deprioritized
+
+\subsection{Elastic Data Processing with \dandelion}
+\label{sec:eval:target_apps}
+
+We now explore \dandelion's suitability for a broader range of target applications with more complex workflows.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[trim={0 1.25cm 0 0},width=0.45\textwidth]{figures/ssb_query_latency_dandelion.pdf}
+    \vspace{1em}
+    \caption{SSB query latency and cost in US cents compared to Athena. The queries ingest $\sim$700MB input data from S3. 
+    } 
+    \label{fig:ssb_query_latency}
+\end{figure}
+
+\fakepara{Serverless query processing.} Query-as-a-Service (QaaS) offerings like AWS Athena~\cite{athena} enable SQL-based data analysis on cloud storage, with providers managing infrastructure and billing per byte read.
+We show that \dandelion improves QaaS elasticity.
+Figure~\ref{fig:ssb_query_latency} shows query execution latency and cost with Athena and \dandelion for Star Schema Benchmark~\cite{ssb-benchmark} queries (which are based on the industry standard TPC-H~\cite{tpch} benchmark) using 700MB of input data. The queries include filter, projection, join, order by, and aggregation operators, which we implement in \dandelion by porting the Apache Arrow Acero~\cite{acero} library operators and linking against \texttt{hlibc++}. We run \dandelion on an EC2 m7a.8xlarge instance in the same region as the S3 bucket and compute cost based on the execution time and EC2 VM price. Athena charges per bytes read and we exclude the queuing delay in the plot.
+\dandelion quickly boots sandboxes and spreads query execution across all 32 CPU cores, achieving 40\% lower latency and 67\% lower cost than Athena. We expect \dandelion's secure isolation of query operators to be particularly useful for queries that embed user-defined functions (UDFs), as these contain arbitrary and untrusted user code that needs to be sandboxed in multi-tenant environments~\cite{containerized-udf}. For example, AWS Athena executes UDFs in AWS Lambda.
+While this experiment does not compare the two systems running on the same hardware or with the same operator implementations, we include it to compare the latency and cost of a commercially available service with what we can achieve using \dandelion as the underlying QaaS system on EC2 VMs. 
+With larger input data sizes (we tested up to 7GB), matching Athena's latency requires scaling query execution across multiple \dandelion nodes, but we continue to see lower query execution cost compared to Athena.
+
+\fakepara{Agentic AI query processing workflow.} We explore \dandelion's suitability for emerging agentic AI applications, which consist of multiple interacting components, including model inference services, retrievers, and external tools and often require pre- and post-processing compute logic between these calls~\cite{agentic-ai-databricks, efficient-compound-ai-hotos}. 
+We target Text2SQL workflows, a popular subset of agentic AI application, converting natural language queries to SQL.
+A Masters student with no prior experience with \dandelion ported a Text2SQL workflow from the TAG benchmark suite~\cite{biswal2024text2sqlenoughunifyingai} in a few hours.
+The workflow processes a sample prompt in $\sim2$s with five steps:
+1. parsing the input prompt (221 ms), 2. requesting an LLM with the prompt via HTTP (1238 ms), 3. extracting the SQL query from the LLM’s response (207 ms), 4. issuing the SQL query via HTTP to a SQLite database (136 ms), and 5. formatting the database response (213 ms). 
+We implement the parsing, SQL extraction, and formatting as \dandelion Python compute functions, while the LLM and database queries are performed by \dandelion communication functions. 
+We use Gemma-3-4b-it running on a single H100 NVL as our LLM inference service exposed over a REST API. 
+The LLM inference step is the pipeline's bottleneck, accounting for 61\% of the total end-to-end latency.
+
+\subsection{Azure Functions Trace Evaluation}\label{sec:eval:azure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[trim={0 1cm 0 0},width=0.5\textwidth]{figures/committed_memory_100_100000_anonymousfalse.pdf}
+    \caption{Memory committed over time for Azure trace experiment. Dotted lines show the average. %\vspace{-1.2em}
+    } 
+    \label{fig:azure-trace}
+\end{figure}
+
+Finally, we compare the performance and memory efficiency of \dandelion (with process isolation backend) and Firecracker, while running the Azure Functions trace sample in the CloudLab setup. We sample 100 functions from day 6, hour 8 of the trace using the InVitro~\cite{ustiugov:in_vitro} sampler.
+We use the autoscaling policy in Knative~\cite{knative}, a popular open-source FaaS orchestrator, to control the number of Firecracker MicroVMs over time based on application load.
+We find that Knative scales MicroVMs for this trace such that on average 3.3\% of invocations are cold. This validates our 97\% hot requests setting in prior experiments.
+
+Figure~\ref{fig:azure-trace} shows the memory committed by Firecracker with Knative autoscaling compared to \dandelion over a 20-minute long trace. To minimize cold starts, Firecracker maintains MicroVMs long after a request has finished executing, which requires committing memory for long periods. In contrast, \dandelion commits and consumes memory only while requests are actively running since a new context is created for each request. This enables \dandelion to commit only 4\% of the memory Firecracker commits on average (109 MB vs. 2619 MB), achieving significant cost savings and comparable or even lower end-to-end response time for functions. 
+% PER-FUNCTION
+% dandelion - p50 = 515.135 ms - p99 = 11328.784 ms
+% firecracker - p50 = 1183.307 ms - p99 = 18111.2 ms
+% PER-INVOCATION
+% dandelion - p50 = 512.337 ms - p99 = 10002.127 ms
+% firecracker - p50 = 1520.247 ms - p99 = 18625.099 ms
+\dandelion also reduces the p99 end-to-end latency by 46\% %1.86$\times$ 
+compared to Firecracker in this experiment. 

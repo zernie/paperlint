@@ -1,0 +1,200 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Template for USENIX papers.
+%
+% History:
+%
+% - TEMPLATE for Usenix papers, specifically to meet requirements of
+%   USENIX '05. originally a template for producing IEEE-format
+%   articles using LaTeX. written by Matthew Ward, CS Department,
+%   Worcester Polytechnic Institute. adapted by David Beazley for his
+%   excellent SWIG paper in Proceedings, Tcl 96. turned into a
+%   smartass generic template by De Clarke, with thanks to both the
+%   above pioneers. Use at your own risk. Complaints to /dev/null.
+%   Make it two column with no page numbering, default is 10 point.
+%
+% - Munged by Fred Douglis <douglis@research.att.com> 10/97 to
+%   separate the .sty file from the LaTeX source template, so that
+%   people can more easily include the .sty file into an existing
+%   document. Also changed to more closely follow the style guidelines
+%   as represented by the Word sample file.
+%
+% - Note that since 2010, USENIX does not require endnotes. If you
+%   want foot of page notes, don't include the endnotes package in the
+%   usepackage command, below.
+% - This version uses the latex2e styles, not the very ancient 2.09
+%   stuff.
+%
+% - Updated July 2018: Text block size changed from 6.5" to 7"
+%
+% - Updated Dec 2018 for ATC'19:
+%
+%   * Revised text to pass HotCRP's auto-formatting check, with
+%     hotcrp.settings.submission_form.body_font_size=10pt, and
+%     hotcrp.settings.submission_form.line_height=12pt
+%
+%   * Switched from \endnote-s to \footnote-s to match Usenix's policy.
+%
+%   * \section* => \begin{abstract} ... \end{abstract}
+%
+%   * Make template self-contained in terms of bibtex entires, to allow
+%     this file to be compiled. (And changing refs style to 'plain'.)
+%
+%   * Make template self-contained in terms of figures, to
+%     allow this file to be compiled. 
+%
+%   * Added packages for hyperref, embedding fonts, and improving
+%     appearance.
+%   
+%   * Removed outdated text.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix2019_v3}
+
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+% inlined bib file
+\usepackage[available, functional]{usenixbadges}
+\usepackage{filecontents}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % for professional tables
+\newcommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{amsfonts}
+\usepackage[small,compact]{titlesec}
+\usepackage{booktabs} % For better table lines
+\usepackage{pifont}    % For checkmarks and crosses
+\usepackage{xcolor}
+
+\newcommand{\cmark}{\ding{51}}% Check mark
+\newcommand{\xmark}{\ding{55}}% Cross mark
+
+% \newcommand{\edit}[1]{\textcolor{blue}{#1}}
+\newcommand{\edit}[1]{#1}
+
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {0pt} % No vertical space before
+  {0pt} % No vertical space after
+  {\normalfont\normalsize\bfseries}} % Keep the existing style
+\makeatother
+
+% Ensure a space after the heading
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\hspace{.25em}}
+
+
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+%don't want date printed
+\date{}
+
+% \author{Jason Mohoney, Devesh Sarda, Mengze Tang, Shihabur Rahman Chowdhury*, Anil Pacaci*, Ihab F. Ilyas\textdagger, Theodoros Rekatsinas*, Shivaram Venkataraman}
+
+
+% \def \authors{Jason Mohoney, Devesh Sarda, Mengze Tang, Shihabur Rahman Chowdhury*, Anil Pacaci*, Ihab F. Ilyas\textdagger, Theodoros Rekatsinas*, Shivaram Venkataraman}
+% \affiliation{
+%         \institution{University of Wisconsin-Madison}
+%         \institution{\textdagger University of Waterloo}
+%         \institution{*Apple}
+%     \country{}
+% }
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+
+\title{\Large \bf Quake: Adaptive Indexing for Vector Search}
+
+% \author{Paper \#870}
+%for single author (just remove % characters)
+% \author{
+% {\rm Your N.\ Here}\\
+% Your Institution
+% \and
+% {\rm Second Name}\\
+% Second Institution
+% copy the following lines to add more authors
+% \and
+% {\rm Name}\\
+%Name Institution
+% } % end author
+
+% \author{{Jason Mohoney} \\ University of Wisconsin-Madison \and {Devesh Sarda} \\ University of Wisconsin-Madison \and {Mengze Tang} \\ University of Wisconsin-Madison \and {Shihabur Rahman Chowdhury} \\ Apple \and{ Anil Pacaci} \\ Apple \and {Ihab F. Ilyas} \\ University of Waterloo \and {Theodoros Rekatsinas} \\ Apple \and {Shivaram Venkatarama} \\ University of Wisconsin-Madison }
+
+
+\author{
+  {\rm Jason Mohoney} \\ University of Wisconsin-Madison
+  \and
+  {\rm Devesh Sarda} \\ University of Wisconsin-Madison
+  \and
+  {\rm Mengze Tang} \\ University of Wisconsin-Madison
+  \and
+  {\rm Shihabur Rahman Chowdhury} \\ Apple
+  \and
+  {\rm Anil Pacaci} \\ Apple
+  \and
+  {\rm Ihab F. Ilyas} \\ University of Waterloo
+  \and
+  {\rm Theodoros Rekatsinas} \\ Apple
+  \and
+  {\rm Shivaram Venkataraman} \\ University of Wisconsin-Madison
+}
+
+
+
+\maketitle
+
+\pagestyle{empty}
+
+%-------------------------------------------------------------------------------
+\begin{abstract}
+%-------------------------------------------------------------------------------
+\input{sections/S0_abstract}
+\end{abstract}
+
+\input{sections/s1_intro}
+
+\input{sections/s2_background}
+
+\input{sections/s3_overview}
+
+\input{sections/s4_adaptive_maintenance}
+
+\input{sections/s5_adaptive_partition_selection}
+
+\input{sections/s6_implementation}
+
+\input{sections/s7_experiments}
+
+\input{sections/s8_discussion}
+
+\input{sections/s9_conclusion}
+
+
+%-------------------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{sections/ref}
+
+\input{sections/osdi25_ae_appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks

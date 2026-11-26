@@ -1,0 +1,42 @@
+\begin{figure*}[t]
+\vspace{-0.05in}
+\captionof{table}{\textbf{Quantitative comparison results} on RealTalk~\citep{realtalk}. Best results highlighted in \textbf{bold}. $^{*}$ denotes the reproduced version that is publicly unavailable. We also report the results from a non-interactive talking head model~\citep{float}, shown in gray, for reference.
+} \label{tab:quantitative_realtalk}
+\centering
+\begin{minipage}{1\linewidth}
+    \vspace*{-2mm}
+    \resizebox{1.0\textwidth}{!}{
+        \renewcommand{\arraystretch}{0.94}
+        \renewcommand{\tabcolsep}{4pt}
+        \begin{tabular}{l c cc c c c  c  c c  c c}
+        \toprule
+         & \multicolumn{2}{c}{Interaction} & \multicolumn{2}{c}{Reactiveness} & \multicolumn{2}{c}{Motion Richness} & \multicolumn{3}{c}{Visual Quality} & \multicolumn{2}{c}{Lip Synchronization} \\
+        \cmidrule(l{2pt}r{2pt}){2-3}
+        \cmidrule(l{2pt}r{2pt}){4-5}
+        \cmidrule(l{2pt}r{2pt}){6-7}
+        \cmidrule(l{2pt}r{2pt}){8-10}
+        \cmidrule(l{2pt}r{2pt}){11-12}
+        Method & User Input & Latency $\downarrow$ & rPCC-Exp $\downarrow$ & rPCC-Pose $\downarrow$ & SID $\uparrow$ & Var $\uparrow$ & FID $\downarrow$ & FVD $\downarrow$ & CSIM $\uparrow$ & LSE-D $\downarrow$ & LSE-C $\uparrow$ \\
+        \midrule
+        \textcolor{gray}{FLOAT}~\citep{float}           & \redx & \textcolor{gray}{2.4s} & 
+        \textcolor{gray}{0.054} & \textcolor{gray}{0.182} & \textcolor{gray}{2.785} & \textcolor{gray}{2.778} & \textcolor{gray}{81.297} & \textcolor{gray}{438.817} & \textcolor{gray}{0.845}  & \textcolor{gray}{8.135} & \textcolor{gray}{6.361} \\
+        % \midrule
+        INFP$^{*}$~\citep{infp}                   & \greencheck & 3.4s & 0.035 & 0.064 & 2.343 & 1.638 & 24.551 & \textbf{159.000} & \textbf{0.867} & \textbf{8.027} & 6.536 \\
+        \textbf{Ours}                & \greencheck & \textbf{0.5s} & \textbf{0.003} & \textbf{0.036} & \textbf{2.442} & \textbf{1.734}  & \textbf{24.328} & 170.874 & 0.833  &  8.060 & \textbf{6.723}\\
+        \midrule        
+        GT       & N/A & N/A & 0.000 & 0.000 & 3.972 & 1.658 & N/A & N/A & 0.796 & 7.790 & 6.940 \\
+        \bottomrule
+        \end{tabular}
+        }
+\end{minipage}
+\centering
+\begin{minipage}{1.0\textwidth}
+    \centering
+    \vspace*{0.05in}
+    \caption{\textbf{Human preference study} on  interactive avatar generation models, comparing Avatar Forcing and INFP$^{*}$.} 
+    \vspace*{-0.15in}
+    \includegraphics[width=0.98\textwidth]{figure/human_eval_3col_final.pdf}
+    \label{fig:human_eval}
+    \vspace*{-0.1in}
+\end{minipage}
+\end{figure*}

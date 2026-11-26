@@ -1,0 +1,18 @@
+\begin{table}
+\centering
+\caption{Ablation studies on motion block sizes on RealTalk.}\label{tab:apx_ablation_block_size}
+\vspace{-0.1in}
+\resizebox{0.99\linewidth}{!}{
+\begin{tabular}{l|cccccc}
+\toprule
+\# blocks & Latency (s) $\downarrow$ & rPCC-Exp $\downarrow$ & rPCC-Pose $\downarrow$ & FVD $\downarrow$ & SID $\uparrow$ & LSE-D $\downarrow$ \\
+\midrule
+10 & \textbf{0.3} & 0.012 & 0.056 & 222.47 & \underline{2.355} & 7.290\\
+2  & 1.5 & \textbf{0.003} & \textbf{0.031} & \textbf{155.81} & 2.145 & \textbf{6.555}\\
+\midrule
+\textbf{5 (Ours)}  & 0.5 & \textbf{0.003} & \underline{0.036} & \underline{170.87} & \textbf{2.442} & \underline{6.723} \\
+\bottomrule
+\end{tabular}
+}
+\vspace{-0.1in}
+\end{table}

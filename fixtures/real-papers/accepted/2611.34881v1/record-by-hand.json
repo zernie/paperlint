@@ -1,0 +1,327 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "neurips_2026.sty",
+      "role": "preamble"
+    },
+    {
+      "path": "preamble.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/0_abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1_introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/teaser.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2_related_work.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/data_aug_summary.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3_method.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/coco_train_npmi_strange_bench_examples.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/strange_bench_pipeline.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4_results.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/strange_per_tier_across_models.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/codino_r50_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/codino_r50_main_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/gdino_swinb_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/gdino_swinb_main_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/dinov3_main.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_main_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_user_study_listing_main_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5_conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7_acknowledgements.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_appendix.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_appendix_1.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/codino_r50_o365.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/codino_r50_o365_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/codino_r50_strange_bench_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/codino_r50_extra_tiers.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/codino_r50_extra_tiers_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/strange_per_tier_t6.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/gdino_swinb_o365.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/gdino_swinb_o365_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/gdino_swinb_strange_bench_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/dinov3_ft_full.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_ft_cd_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_ft_strange_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/dinov3_lp_full.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_lp_main_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_lp_cd_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/dinov3_lp_strange_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/beta_sweep.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/app_circularity.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_circ_tiers_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_circ_reslice_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_circ_o365_aas_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_circ_heldout_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_circ_xgen_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/app_scale_ladder.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/app_spatial_arrangement.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_spatial_entropy_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/app_partner_mask.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_partner_mask_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/app_aas_draws.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_aas_draws_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_appendix_2.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/figures/nmpi_train_vs_val.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/alpha_sweep_codino_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_appendix_0.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/strange_tiers.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/strange_tiers_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_user_study_quality_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "static/tables/generated/app_user_study_listing_tabular.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/6_appendix_3.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "eecf70914d49e69e3307c2dbc4c8582ee4024ba4436776156f4beb0ae5e8c824",
+    "neurips_2026.sty": "0c1ad36961fcd9198dcc2558cf2793e1df39973bde8264fd701f5e7970672757",
+    "preamble.tex": "166238a69c8c03a129d095ba4912adf2173753184aee5c83035773bcd4e9ec92",
+    "sections/0_abstract.tex": "3635d11276cd830d0cdf60545346d600d620b1e5d7f8833d867ae663b49b6f61",
+    "sections/1_introduction.tex": "2ef2f035d2a78803b8857a8b1f49e617774d86dfb38f028240a4ac42d9bc9338",
+    "static/figures/teaser.tex": "9836315e97430ece1a4a09897124b0239e2241bcf3129e78fd2d976b9db055f0",
+    "sections/2_related_work.tex": "33e0f23c12384d6b8f5af8ed96cc1fe6aae3e4d1c6a7bf7f954b55a9b6649138",
+    "static/tables/data_aug_summary.tex": "37bc199ff8d764c932670d38e8e686e59aa1ec1f3f20db85e8804d4a4e75eabc",
+    "sections/3_method.tex": "7d8f8d3cfad1d69a7502898afe4ebf732ce86ced4c55833fd625242ca78b1480",
+    "static/figures/coco_train_npmi_strange_bench_examples.tex": "f9d8edcec7aad2ae426cd2af7d63201779ee1f16ad1793505181856391aab4a1",
+    "static/figures/strange_bench_pipeline.tex": "df68c95da60ac36f28f95c468cd97c13cc797dddad3bbac906b3035070959470",
+    "sections/4_results.tex": "e1b0e482aad3f5042a2c174897b39033d653d9d375fc7a1b9bcf72bba4750eca",
+    "static/figures/strange_per_tier_across_models.tex": "c981c2fba25ef7dd93520889da15c5ff05aa7791f6eba4c0300b6181a3e6e9d6",
+    "static/tables/codino_r50_main.tex": "3c5cd85b8a777381b1ef4fee5db75ebbd485c162b6226da249f12e1678a7b64a",
+    "static/tables/generated/codino_r50_main_tabular.tex": "8761c382d947b823b6b55f109fd8c8d6d84581882a3b14e1a957ceac319abebc",
+    "static/tables/gdino_swinb_main.tex": "760191e5f40c1f460d5695aec6a8007950245f83cf52942e3cfe2ecd6072c4c7",
+    "static/tables/generated/gdino_swinb_main_tabular.tex": "c751d2dc92c1cd9dc838d55015f364392b1fcba24b2eeffd7dacda0ee6433c53",
+    "static/tables/dinov3_main.tex": "27d5bf7c531a801de86b463e54094d98e9dc3f05e6c6592131bf02bb3c1b8f56",
+    "static/tables/generated/dinov3_main_tabular.tex": "100d421920e167c9da4e6c8c1ee6d0a2dd7ca8d31eed2653588457a431f96ac5",
+    "static/tables/generated/app_user_study_listing_main_tabular.tex": "370224ba6859dbdff5a0f1b49964c7be22132f51ea65abb2d4a4d93a4de56305",
+    "sections/5_conclusion.tex": "688eb4eddc2fbe44b3fe9f0de0365580b3e594d44d0f448f43603022dbdd6776",
+    "sections/7_acknowledgements.tex": "36450878799445316351e5857924dc54620609c9c3d69c363d01ceb8127c302a",
+    "sections/6_appendix.tex": "0757dd1c02e6bc804129384c308470de6e14b7dcd5f9024c89e9df31e94881b6",
+    "sections/6_appendix_1.tex": "508f3cd8597e5eba7fd85c86f0b87c007023fa46fe1730236d18069eec5732ab",
+    "static/tables/codino_r50_o365.tex": "4e151d59fc1eb09591e55c9342f3f6af1fa82a692ba8b68f7b042dbceaf9d7a4",
+    "static/tables/generated/codino_r50_o365_tabular.tex": "9f3799a458325523e79a964a27821780ab829cbf23b02dd24d91f2d4939f77ed",
+    "static/tables/generated/codino_r50_strange_bench_tabular.tex": "5f7fee0173ca6dfa50ff00355a8b21790da8d2f1fae78a8cdef7c59cc1459de5",
+    "static/tables/codino_r50_extra_tiers.tex": "92b64dfeeafa2a20fca01544b68a354013c69cd9d4c84aa198f09f080a60caec",
+    "static/tables/generated/codino_r50_extra_tiers_tabular.tex": "11d4889330b36ec2f9658cd8c07cdd443a8fa0ad5c5ef7e8032f93cad164af81",
+    "static/figures/strange_per_tier_t6.tex": "fbcc5f52ec507a041063366bd1fbe9a3ebf3163af6fa5646c19b7d9728e98fe6",
+    "static/tables/gdino_swinb_o365.tex": "f342d77ded8f5c49d8fd2e40a0a5d509534bf5df2d1c94454f1673edf355fe65",
+    "static/tables/generated/gdino_swinb_o365_tabular.tex": "7afeff1caa6e438298b03366d1afb2afd4389a5775193459400a9620485d0291",
+    "static/tables/generated/gdino_swinb_strange_bench_tabular.tex": "84020c6a3a027a527cbd763f0431cbee1a4da9aebb18bb6cf2732c41164bd986",
+    "static/tables/dinov3_ft_full.tex": "a1b4ced3d9411d39be87c0483b66ea6f1fa62028bb3b5bdb5e88efc3f452b04f",
+    "static/tables/generated/dinov3_ft_cd_tabular.tex": "4af1ec6999f40add89556ebea7ca21e3a69ed4721be4914cd9d218b5b675c763",
+    "static/tables/generated/dinov3_ft_strange_tabular.tex": "5f3e0684ea0db0b136e4366e17a86885f6861045c507b28dec0a5ee661c8dcbc",
+    "static/tables/dinov3_lp_full.tex": "56584601a0280ac9be2f28c922cbe95e80ef97d2946eb8b9ebca4a7edf63a037",
+    "static/tables/generated/dinov3_lp_main_tabular.tex": "cd34b448382ff96c1b3e9450d641687050545e2ec0582467313c96b123873b74",
+    "static/tables/generated/dinov3_lp_cd_tabular.tex": "91f8584874f5a197a0d353196da3f0a5917b9c56bf3c1150d0e3fe5d13ddd0fe",
+    "static/tables/generated/dinov3_lp_strange_tabular.tex": "23041eeb2f14077a1df7e22bc71f41ce055e12763e19112308585fb4a9182460",
+    "static/tables/beta_sweep.tex": "3db7a12117c6d09ef20a5c8f684daa6aeaf4dca65de0c1359c4c095445ba0e93",
+    "static/tables/app_circularity.tex": "abab721a2dfe4d3ba62c5e103e03a33c2aff4f2bc69558b2befae759fc021200",
+    "static/tables/generated/app_circ_tiers_tabular.tex": "d7155911e0e14d679222f07db1b5c122da047e1d72d8d7f5fc83d671b4283f50",
+    "static/tables/generated/app_circ_reslice_tabular.tex": "a074cb7e77ac0118b109089755f5728c9b79cb01ea53e2e2888f41472c931587",
+    "static/tables/generated/app_circ_o365_aas_tabular.tex": "ff4c17adca2a4c4079505f730fd0238a3305a92a487846e335679ae3121d3fe6",
+    "static/tables/generated/app_circ_heldout_tabular.tex": "56c6612b01bba4f251d4388cf14f89d11a4d9ee2ecc0c55c1221282a9b00180d",
+    "static/tables/generated/app_circ_xgen_tabular.tex": "8dbf2acf8ea4a2831bd948218692aa0bd192768eda6695fa9d722e763772a69d",
+    "static/tables/app_scale_ladder.tex": "0cf405388e51f98217a8aecfd7c6af1c1e2434d77b7cf9716a269fa866d47f00",
+    "static/tables/app_spatial_arrangement.tex": "7b1c8470bca54d82db8a01b5fdc76ecad225e0bb966fca4eae4e2c63e93ba499",
+    "static/tables/generated/app_spatial_entropy_tabular.tex": "b14428aa8eb20023bdc117c383a56fe56158337bc2762782725736176158c42a",
+    "static/tables/app_partner_mask.tex": "dbb2612cb16a3bdb05e3d2ee6d669403b7b5fabcd2b3e2fdb0169277313e78d4",
+    "static/tables/generated/app_partner_mask_tabular.tex": "4c8535747a81c16bdd32630c934b3b3053d27222b01206f03a41bd1fdf36dfaf",
+    "static/tables/app_aas_draws.tex": "73d65f931ae5ad570e3f304d4ba7373f11b35411b71c2b0051bf12ad1dfab3bf",
+    "static/tables/generated/app_aas_draws_tabular.tex": "4f8e8eee40fed5bfd729cc42a9598af243bc0b2e1d883fe79feda1ed520d0c6a",
+    "sections/6_appendix_2.tex": "cabfa850ff6f07b4c1807be3bf1c71af832db8221e246ba0016eb51d13c7d22b",
+    "static/figures/nmpi_train_vs_val.tex": "2b5b95c98883469f29d0dcc1f13a327c77e9675a8f90a5ea5778418d2e43eb42",
+    "static/tables/generated/alpha_sweep_codino_tabular.tex": "2a0097808bb6abe2b76ed42a7dd30cac06b04541361d05c8ff49de2b1a77d6fc",
+    "sections/6_appendix_0.tex": "06fc2447c951c12c97dcfc175f29936290f2d05cfdc1e14c404e05a213be9517",
+    "static/tables/strange_tiers.tex": "6e9c77eb31289373644d31ed0ecabeebb4dcbdd90c318fda30039c4f93b086ac",
+    "static/tables/generated/strange_tiers_tabular.tex": "0b88af79f12d94e53a2bd41951ee853109e5c17bd7126ff31f06931f3ad34c05",
+    "static/tables/generated/app_user_study_quality_tabular.tex": "fa83ad222409da3cfaad89cff8a3ffebf9c33eff9d79705a5c70b317ed2dcf06",
+    "static/tables/generated/app_user_study_listing_tabular.tex": "c9263a244d6c3344aed83cf4486b5aff2fcb4fea19c268c955a41a2428de9252",
+    "sections/6_appendix_3.tex": "2d3de05d68288520b5768dbb68550f2ee15435de6eaaa41b3ee2e12dd9cb9116"
+  }
+}

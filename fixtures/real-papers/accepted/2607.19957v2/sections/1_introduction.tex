@@ -1,0 +1,40 @@
+\section{Introduction}
+
+\begin{figure}[ht]
+    \centering
+    \footnotesize
+    \includegraphics[width=\linewidth]{assets/KV_updated_intro_tight.pdf}
+    \vspace{-0.2in}
+    \caption{ \textbf{New threat} from position-independent KV reuse in multi-tenant systems. \textbf{(1) Prefix reuse is slow} because reuse requires the same preceding prefix. \textbf{(2) Position-independent reuse is fast but unsafe} because it will reuse a {hijacked KV} despite position mismatch, enabling cross-user attacker-controlled outputs without any adversarial text.
+    }
+    \label{fig:new_threat}
+    \vspace{-0.2in}
+\end{figure}
+
+LLMs are now widely deployed in personal assistance~\cite{park2023generative, schick2023toolformer}, healthcare~\cite{singhal2023large, nori2023capabilities}, and retrieval-augmented applications~\cite{lewis2020retrieval, edge2024local}, where user queries are often augmented with long contextual input for accurate responses. However, long inputs slow down inference because the model must perform a full prefill pass to build the Key-Value (KV), which dominates the time-to-first-token (TTFT) and scales super-linearly with
+input length~\cite{dao2022flashattention, kwon2023efficient}. To reduce this overhead, modern inference engines increasingly rely on caching and reusing KV across requests, as adopted by major providers, \eg, Anthropic Claude~\cite{anthropiccache}, Google Gemini~\cite{googlecache} and OpenAI ChatGPT~\cite{openaicache}. Traditional reuse is strictly \textbf{prefix-based}~\cite{pope2023efficiently}, requiring exact matches of both tokens and positions, resulting in a low hit rate~\cite{yao2025cacheblend}, and provides marginal benefit compared with no KV cache reuse. Figure~\ref{fig:new_threat}\textcolor{Green}{(b)(1)} shows that reuse requires the same preceding prefix: KV3 was cached after chunk 2, so if chunk 2 is missing in the future query, KV3 cannot be reused even if chunk 3's text is identical.
+
+Recent system research proposes efficiency-driven optimizations that relax prefix and position constraints, including {\textbf{(i) position-independent KV reuse}}~\cite{yao2025cacheblend, hu2025epic, wang2025mepic, yang2025kvshare, yang2025kvlink}, which enables chunk-level reuse if the tokens match, regardless of original prefix. Position-independent reuse is already deployed in commercial platforms such as LMCache~\cite{LMCache} (commercializing the award-winning research prototype CacheBlend~\cite{yao2025cacheblend}), as well as a growing body of follow-up work~\cite{hu2025epic, wang2025mepic, yang2025kvshare}; and {\textbf{(ii) multi-tenant KV reuse}}~\cite{vllm, wu2025know}, where KV states computed for one user's request are shared to accelerate independent requests from different users that contain overlapping context. 
+Widely adopted open-source serving engines such as vLLM~\cite{vllm}, used by organizations including Cloudflare and IBM, enable shared KV reuse by default. In practice, users frequently submit overlapping text (e.g., retrieved documents, organizational knowledge bases, or public materials), making cache reuse common and predictable. 
+
+While significantly improving efficiency, these optimizations assume that a text chunk's KV state remains invariant across different preceding contexts.
+% 
+However, KV states in Transformers are inherently \emph{context-dependent}, and the same text chunk can produce different internal states under different contexts. Prior work views this misalignment as a utility issue caused by attention shift, and mitigates it via selective recomputation~\cite{yao2025cacheblend, hu2025epic}, refreshing 10-20\% KV under the new context to recover accuracy. In contrast, we reveal this misalignment as a \textbf{critical security vulnerability}: \emph{by decoupling KV states from their causal context, modern reuse mechanisms inadvertently create a channel for adversarial KV cache hijacking.} We formalize this security vulnerability in Section~\ref{sec:attack_surface}. Next, we demonstrate that this channel is not only theoretical but can be exploited in realistic deployments.
+
+
+% \sys's highlevel idea
+We propose \sys, the \emph{first} KV cache hijacking attack against position-independent KV cache systems under multi-tenant deployment, to demonstrate that an unprivileged attacker can stealthily alter the LLM inference behavior of other users.
+As shown in {Figure~\ref{fig:new_threat}\textcolor{Green}{(a)}}, an attacker can prepend a \textcolor{blue!70!black}{commonly reused benign} \smash{\roundtightfbox{blue!70!black}{lightblue}{Text Chunk 3}} (e.g., company FAQs) with an \textcolor{red!70!black}{adversarially optimized prefix}  \smash{\roundtightfbox{red!70!black}{lightred}{Text Chunk 2}}. This prefix encodes a hidden \emph{adversarial objective} by \textcolor{red!70!black}{conditioning the} \smash{\tightfbox{red!70!black}{lightblue}{\textcolor{red!70!black}{KV Cache 3}}} of the benign chunk 3 on the \smash{\roundtightfbox{red!70!black}{lightred}{Text Chunk 2}}.
+Under position-independent reuse ({Figure~\ref{fig:new_threat}\textcolor{Green}{(b)}}), a subsequent benign user query may trigger \textcolor{red!70!black}{reuse of the} \smash{\tightfbox{red!70!black}{lightblue}{\textcolor{red!70!black}{KV Cache 3}}} despite the absence of its preceding prefix (text chunk 2), enabling \emph{silent cross-user output hijacking} without any adversarial tokens appearing in the benign user's input.
+% 
+This is the key difference from prompt injection~\cite{liu2024formalizing}, where adversarial tokens must appear in the victim's input, either directly or via retrieved content.
+
+\sys is both powerful and practical in terms of the following aspects. \emph{(1) Attack success:} it attains an average 94\% attack success rate with a single attempt. \emph{(2) Robustness and Practice:} it remains effective under realistic deployment conditions, even when the match chunk hit rate is as low as 10\% and when recomputation is enabled at levels up to 50\%. \emph{(3) Persistence:} it retains its impact even when over 1,000 tokens of new, unrelated context are inserted, indicating that a single adversarial injection can persist through multi-turn interactions. \emph{(4) Transferability:} it demonstrates strong cross-model transferability under a black box threat model, as the same malicious prefix succeeds across multiple models. 
+
+
+\paragraph{Contribution.} We make the following contributions:
+\begin{icompact}
+    \item We identify and formalize a new threat introduced by efficiency-oriented KV reuse optimization.
+    \item We design \sys, the \emph{first} attack framework that hijacks KV reuse, revealing a previously unknown vulnerability in modern LLM serving systems.
+    \item We evaluate state-of-the-art KV reuse mechanisms across multiple models and benchmarks, showing that they remain vulnerable even with selective recomputation and low cache hit rates, and offer suggestions for building secure-by-design KV cache systems.
+\end{icompact}

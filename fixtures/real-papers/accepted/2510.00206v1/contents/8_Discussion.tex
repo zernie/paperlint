@@ -1,0 +1,15 @@
+\section{Discussion and Future Work}
+\label{sec:discussion}
+
+\myparagraph{Generalizability to LoRA Variants}
+Our kernel fusion design is extensible to other popular LoRA variants like DoRA~\cite{liu2024dora} and VeRA~\cite{kopiczko2023vera}.
+These methods typically add pre- or post-processing functions around the core LoRA computation.
+Our optimizations are orthogonal to these modifications, and users can define prologue/epilogue functions to extend our kernels.
+While manual extension is effective, a more general approach is to integrate our fusion patterns into a compiler framework.
+As future work, we plan to leverage \texttt{torch.compile} by adding compiler annotations as hints that guide the fusion process of the LoRA pattern.
+This would automate the optimization for both existing and future LoRA variants, eliminating the need for manual kernel development and system expertise from users.
+
+\myparagraph{Generalizability to Quantization}
+The kernels proposed in \Name can be directly applied to 4-bit QLoRA~\cite{dettmers2023qlora}. 
+Current QLoRA implementations dequantize 4-bit weights to half-precision before LoRA computation, allowing our kernels to work without modification.
+While dequantization could be fused with the LoRA path, recent work shows that two-step approaches are often more performant for large token counts~\cite{ding2025tilus}.

@@ -1,0 +1,741 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{95}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[AWS({[n.\,d.]})]%
+        {AWSOutage2024}
+\bibinfo{title}{Summary of the AWS Service Event in the Northern Virginia (US-EAST-1) Region}.
+\newblock
+\urldef\tempurl%
+\url{https://aws.amazon.com/message/073024/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Online; accessed 2025-05-10]}.
+
+
+\bibitem[afl(nd)]%
+        {afl}
+\bibinfo{title}{american fuzzy lop}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/google/AFL}}.
+\newblock
+
+
+\bibitem[apa(nda)]%
+        {apache-flink}
+\bibinfo{title}{{Apache Flink}}.
+\newblock \bibinfo{howpublished}{\url{https://flink.apache.org/}}.
+\newblock
+
+
+\bibitem[apa(ndb)]%
+        {apache-hbase}
+\bibinfo{title}{{Apache HBase}}.
+\newblock \bibinfo{howpublished}{\url{https://hbase.apache.org/}}.
+\newblock
+
+
+\bibitem[apa(ndc)]%
+        {apache-ozone}
+\bibinfo{title}{{Apache OZone}}.
+\newblock \bibinfo{howpublished}{\url{https://ozone.apache.org/}}.
+\newblock
+
+
+\bibitem[asy(nd)]%
+        {async-prof}
+\bibinfo{title}{{async-profiler: Sampling CPU and HEAP profiler for Java featuring AsyncGetCallTrace + perf\_events}}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/async-profiler/async-profiler}}.
+\newblock
+
+
+\bibitem[blo(nda)]%
+        {blockadetest}
+\bibinfo{title}{Blockade}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/worstcase/blockade}}.
+\newblock
+
+
+\bibitem[cri(nd)]%
+        {criu}
+\bibinfo{title}{{CRIU}}.
+\newblock \bibinfo{howpublished}{\url{https://criu.org/Main_Page}}.
+\newblock
+
+
+\bibitem[jep(nda)]%
+        {jepsenio}
+\bibinfo{title}{Distributed Systems Safety Research}.
+\newblock \bibinfo{howpublished}{\url{https://jepsen.io/}}.
+\newblock
+
+
+\bibitem[apa(ndd)]%
+        {apache-hdfs}
+\bibinfo{title}{{HDFS} architecture guide}.
+\newblock \bibinfo{howpublished}{\url{https://hadoop.apache.org/docs/r2.10.2/}}.
+\newblock
+
+
+\bibitem[apa(nde)]%
+        {apache-hdfs3}
+\bibinfo{title}{{HDFS} architecture guide}.
+\newblock \bibinfo{howpublished}{\url{https://hadoop.apache.org/docs/r3.4.1/}}.
+\newblock
+
+
+\bibitem[hdf(nd)]%
+        {hdfs_ha}
+\bibinfo{title}{{HDFS High Availability}}.
+\newblock \bibinfo{howpublished}{\url{https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html}}.
+\newblock
+
+
+\bibitem[jep(ndb)]%
+        {jepsenflink}
+\bibinfo{title}{{Jepsen Flink}}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/apache/flink/tree/release-1.14.6/flink-jepsen}}.
+\newblock
+
+
+\bibitem[jun(nda)]%
+        {junit}
+\bibinfo{title}{{JUnit 4}}.
+\newblock \bibinfo{howpublished}{\url{https://junit.org/junit4/}}.
+\newblock
+
+
+\bibitem[blo(ndb)]%
+        {blockaeozone}
+\bibinfo{title}{{OZone Blockade Tests}}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/apache/ozone/tree/ozone-1.4.0/hadoop-ozone/fault-injection-test/network-tests/src/test/blockade}}.
+\newblock
+
+
+\bibitem[jun(ndb)]%
+        {junit-parameterized-test}
+\bibinfo{title}{Parameterized tests}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/junit-team/junit4/wiki/Parameterized-tests}}.
+\newblock
+
+
+\bibitem[byt(nd)]%
+        {byteman}
+\bibinfo{title}{{Simplify Java tracing, monitoring and testing with Byteman}}.
+\newblock \bibinfo{howpublished}{\url{https://byteman.jboss.org/}}.
+\newblock
+
+
+\bibitem[wal(nd)]%
+        {wala}
+\bibinfo{title}{{T.J. Watson Libraries for Analysis}}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/wala/WALA}}.
+\newblock
+
+
+\bibitem[Alquraan et~al\mbox{.}(2018)]%
+        {alquraan2018analysis}
+\bibfield{author}{\bibinfo{person}{Ahmed Alquraan}, \bibinfo{person}{Hatem Takruri}, \bibinfo{person}{Mohammed Alfatafta}, {and} \bibinfo{person}{Samer Al-Kiswany}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{An analysis of Network-Partitioning failures in cloud systems}. In \bibinfo{booktitle}{\emph{13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}}. \bibinfo{pages}{51--68}.
+\newblock
+
+
+\bibitem[Alvaro et~al\mbox{.}(2015)]%
+        {alvaro2015lineage}
+\bibfield{author}{\bibinfo{person}{Peter Alvaro}, \bibinfo{person}{Joshua Rosen}, {and} \bibinfo{person}{Joseph~M Hellerstein}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Lineage-driven fault injection}. In \bibinfo{booktitle}{\emph{Proceedings of the 2015 ACM SIGMOD International Conference on Management of Data}}. \bibinfo{pages}{331--346}.
+\newblock
+
+
+\bibitem[Bai et~al\mbox{.}(2023)]%
+        {bai2023testing}
+\bibfield{author}{\bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Zi-Xuan Fu}, \bibinfo{person}{Kai-Tao Xie}, {and} \bibinfo{person}{Zu-Ming Jiang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Testing error handling code with software fault injection and error-coverage-guided fuzzing}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Dependable and Secure Computing}} \bibinfo{volume}{21}, \bibinfo{number}{4} (\bibinfo{year}{2023}), \bibinfo{pages}{1724--1739}.
+\newblock
+
+
+\bibitem[Bai et~al\mbox{.}(2024)]%
+        {bai2024multi}
+\bibfield{author}{\bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Hao-Xuan Song}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Multi-dimensional and message-guided fuzzing for robotic programs in robot operating system}. In \bibinfo{booktitle}{\emph{Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}}. \bibinfo{pages}{763--778}.
+\newblock
+
+
+\bibitem[Bai et~al\mbox{.}(2016a)]%
+        {bai2016mining}
+\bibfield{author}{\bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Yu-Ping Wang}, \bibinfo{person}{Hu-Qiu Liu}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2016}\natexlab{a}.
+\newblock \showarticletitle{Mining and checking paired functions in device drivers using characteristic fault injection}.
+\newblock \bibinfo{journal}{\emph{Information and Software Technology}}  \bibinfo{volume}{73} (\bibinfo{year}{2016}), \bibinfo{pages}{122--133}.
+\newblock
+
+
+\bibitem[Bai et~al\mbox{.}(2016b)]%
+        {bai2016testing}
+\bibfield{author}{\bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Yu-Ping Wang}, \bibinfo{person}{Jie Yin}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2016}\natexlab{b}.
+\newblock \showarticletitle{Testing error handling code in device drivers using characteristic fault injection}. In \bibinfo{booktitle}{\emph{2016 USENIX Annual Technical Conference (USENIX ATC 16)}}. \bibinfo{pages}{635--647}.
+\newblock
+
+
+\bibitem[Beel et~al\mbox{.}(2016)]%
+        {beel2016paper}
+\bibfield{author}{\bibinfo{person}{Joeran Beel}, \bibinfo{person}{Bela Gipp}, \bibinfo{person}{Stefan Langer}, {and} \bibinfo{person}{Corinna Breitinger}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Paper recommender systems: a literature survey}.
+\newblock \bibinfo{journal}{\emph{International Journal on Digital Libraries}} \bibinfo{volume}{17}, \bibinfo{number}{4} (\bibinfo{year}{2016}), \bibinfo{pages}{305--338}.
+\newblock
+
+
+\bibitem[B{\"o}hme et~al\mbox{.}(2017)]%
+        {bohme2017directed}
+\bibfield{author}{\bibinfo{person}{Marcel B{\"o}hme}, \bibinfo{person}{Van-Thuan Pham}, \bibinfo{person}{Manh-Dung Nguyen}, {and} \bibinfo{person}{Abhik Roychoudhury}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Directed greybox fuzzing}. In \bibinfo{booktitle}{\emph{Proceedings of the 2017 ACM SIGSAC conference on computer and communications security}}. \bibinfo{pages}{2329--2344}.
+\newblock
+
+
+\bibitem[Cadar et~al\mbox{.}(2008)]%
+        {cadar2008klee}
+\bibfield{author}{\bibinfo{person}{Cristian Cadar}, \bibinfo{person}{Daniel Dunbar}, \bibinfo{person}{Dawson~R Engler}, {et~al\mbox{.}}} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Klee: unassisted and automatic generation of high-coverage tests for complex systems programs.}. In \bibinfo{booktitle}{\emph{OSDI}}, Vol.~\bibinfo{volume}{8}. \bibinfo{pages}{209--224}.
+\newblock
+
+
+\bibitem[Chandra and Toueg(1996)]%
+        {chandra1996unreliable}
+\bibfield{author}{\bibinfo{person}{Tushar~Deepak Chandra} {and} \bibinfo{person}{Sam Toueg}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{Unreliable failure detectors for reliable distributed systems}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}} \bibinfo{volume}{43}, \bibinfo{number}{2} (\bibinfo{year}{1996}), \bibinfo{pages}{225--267}.
+\newblock
+
+
+\bibitem[Chen et~al\mbox{.}(2020)]%
+        {chen2020cofi}
+\bibfield{author}{\bibinfo{person}{Haicheng Chen}, \bibinfo{person}{Wensheng Dou}, \bibinfo{person}{Dong Wang}, {and} \bibinfo{person}{Feng Qin}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{CoFI: Consistency-guided fault injection for cloud systems}. In \bibinfo{booktitle}{\emph{Proceedings of the 35th IEEE/ACM International Conference on Automated Software Engineering}}. \bibinfo{pages}{536--547}.
+\newblock
+
+
+\bibitem[Chen et~al\mbox{.}(2024)]%
+        {chen2024chronos}
+\bibfield{author}{\bibinfo{person}{Yuanliang Chen}, \bibinfo{person}{Fuchen Ma}, \bibinfo{person}{Yuanhang Zhou}, \bibinfo{person}{Ming Gu}, \bibinfo{person}{Qing Liao}, {and} \bibinfo{person}{Yu Jiang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Chronos: Finding Timeout Bugs in Practical Distributed Systems by Deep-Priority Fuzzing with Transient Delay}. In \bibinfo{booktitle}{\emph{2024 IEEE Symposium on Security and Privacy (SP)}}. IEEE, \bibinfo{pages}{1939--1955}.
+\newblock
+
+
+\bibitem[Chen et~al\mbox{.}(2023)]%
+        {chen2023push}
+\bibfield{author}{\bibinfo{person}{Yinfang Chen}, \bibinfo{person}{Xudong Sun}, \bibinfo{person}{Suman Nath}, \bibinfo{person}{Ze Yang}, {and} \bibinfo{person}{Tianyin Xu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Push-Button reliability testing for Cloud-Backed applications with rainmaker}. In \bibinfo{booktitle}{\emph{20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23)}}. \bibinfo{pages}{1701--1716}.
+\newblock
+
+
+\bibitem[Chipounov et~al\mbox{.}(2012)]%
+        {chipounov2012s2e}
+\bibfield{author}{\bibinfo{person}{Vitaly Chipounov}, \bibinfo{person}{Volodymyr Kuznetsov}, {and} \bibinfo{person}{George Candea}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{The S2E platform: Design, implementation, and applications}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Computer Systems (TOCS)}} \bibinfo{volume}{30}, \bibinfo{number}{1} (\bibinfo{year}{2012}), \bibinfo{pages}{1--49}.
+\newblock
+
+
+\bibitem[Dinesh et~al\mbox{.}(2020)]%
+        {dinesh2020retrowrite}
+\bibfield{author}{\bibinfo{person}{Sushant Dinesh}, \bibinfo{person}{Nathan Burow}, \bibinfo{person}{Dongyan Xu}, {and} \bibinfo{person}{Mathias Payer}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Retrowrite: Statically instrumenting cots binaries for fuzzing and sanitization}. In \bibinfo{booktitle}{\emph{2020 IEEE Symposium on Security and Privacy (SP)}}. IEEE, \bibinfo{pages}{1497--1511}.
+\newblock
+
+
+\bibitem[Fariha et~al\mbox{.}(2020)]%
+        {fariha2020causality}
+\bibfield{author}{\bibinfo{person}{Anna Fariha}, \bibinfo{person}{Suman Nath}, {and} \bibinfo{person}{Alexandra Meliou}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Causality-guided adaptive interventional debugging}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 ACM SIGMOD International Conference on Management of Data}}. \bibinfo{pages}{431--446}.
+\newblock
+
+
+\bibitem[Fioraldi et~al\mbox{.}(2020)]%
+        {AFLplusplus-Woot20}
+\bibfield{author}{\bibinfo{person}{Andrea Fioraldi}, \bibinfo{person}{Dominik Maier}, \bibinfo{person}{Heiko Ei{\ss}feldt}, {and} \bibinfo{person}{Marc Heuse}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{AFL++}: Combining Incremental Steps of Fuzzing Research}. In \bibinfo{booktitle}{\emph{14th {USENIX} Workshop on Offensive Technologies ({WOOT} 20)}}. \bibinfo{publisher}{{USENIX} Association}.
+\newblock
+
+
+\bibitem[Ganesan et~al\mbox{.}(2017)]%
+        {ganesan2017redundancy}
+\bibfield{author}{\bibinfo{person}{Aishwarya Ganesan}, \bibinfo{person}{Ramnatthan Alagappan}, \bibinfo{person}{Andrea~C Arpaci-Dusseau}, {and} \bibinfo{person}{Remzi~H Arpaci-Dusseau}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Redundancy does not imply fault tolerance: Analysis of distributed storage reactions to file-system faults}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Storage (TOS)}} \bibinfo{volume}{13}, \bibinfo{number}{3} (\bibinfo{year}{2017}), \bibinfo{pages}{1--33}.
+\newblock
+
+
+\bibitem[Gao et~al\mbox{.}(2025)]%
+        {gao2025detecting}
+\bibfield{author}{\bibinfo{person}{Si-Miao Gao}, \bibinfo{person}{Pengcheng Wang}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Jia-Wei Yu}, {and} \bibinfo{person}{Haizhou Wang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Detecting Lifecycle-Related Concurrency Bugs in ROS Programs via Coverage-Guided Fuzzing}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Information Forensics and Security}} (\bibinfo{year}{2025}).
+\newblock
+
+
+\bibitem[Gao et~al\mbox{.}(2023)]%
+        {crashfuzz}
+\bibfield{author}{\bibinfo{person}{Yu Gao}, \bibinfo{person}{Wensheng Dou}, \bibinfo{person}{Dong Wang}, \bibinfo{person}{Wenhan Feng}, \bibinfo{person}{Jun Wei}, \bibinfo{person}{Hua Zhong}, {and} \bibinfo{person}{Tao Huang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Coverage Guided Fault Injection for Cloud Systems}. In \bibinfo{booktitle}{\emph{2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)}}. \bibinfo{pages}{2211--2223}.
+\newblock
+
+
+\bibitem[Gong et~al\mbox{.}(2025)]%
+        {gong2025snowplow}
+\bibfield{author}{\bibinfo{person}{Sishuai Gong}, \bibinfo{person}{Wang Rui}, \bibinfo{person}{Deniz Altinb{\"u}ken}, \bibinfo{person}{Pedro Fonseca}, {and} \bibinfo{person}{Petros Maniatis}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Snowplow: Effective kernel fuzzing with a learned white-box test mutator}. In \bibinfo{booktitle}{\emph{Proceedings of the 30th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}}. \bibinfo{pages}{1124--1138}.
+\newblock
+
+
+\bibitem[Gunawi et~al\mbox{.}(2011)]%
+        {gunawi2011fate}
+\bibfield{author}{\bibinfo{person}{Haryadi~S Gunawi}, \bibinfo{person}{Thanh Do}, \bibinfo{person}{Pallavi Joshi}, \bibinfo{person}{Peter Alvaro}, \bibinfo{person}{Joseph~M Hellerstein}, \bibinfo{person}{Andrea~C Arpaci-Dusseau}, \bibinfo{person}{Remzi~H Arpaci-Dusseau}, \bibinfo{person}{Koushik Sen}, {and} \bibinfo{person}{Dhruba Borthakur}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{{FATE} and {DESTINI}: A framework for cloud recovery testing}. In \bibinfo{booktitle}{\emph{8th USENIX Symposium on Networked Systems Design and Implementation (NSDI 11)}}.
+\newblock
+
+
+\bibitem[Guo et~al\mbox{.}(2013)]%
+        {guo2013failure}
+\bibfield{author}{\bibinfo{person}{Zhenyu Guo}, \bibinfo{person}{Sean McDirmid}, \bibinfo{person}{Mao Yang}, \bibinfo{person}{Li Zhuang}, \bibinfo{person}{Pu Zhang}, \bibinfo{person}{Yingwei Luo}, \bibinfo{person}{Tom Bergan}, \bibinfo{person}{Madan Musuvathi}, \bibinfo{person}{Zheng Zhang}, {and} \bibinfo{person}{Lidong Zhou}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Failure recovery: When the cure is worse than the disease}. In \bibinfo{booktitle}{\emph{14th Workshop on Hot Topics in Operating Systems (HotOS XIV)}}.
+\newblock
+
+
+\bibitem[Habibi et~al\mbox{.}(2024)]%
+        {habibi2023msf}
+\bibfield{author}{\bibinfo{person}{Farzad Habibi}, \bibinfo{person}{Tania Lorido-Botran}, \bibinfo{person}{Ahmad Showail}, \bibinfo{person}{Daniel~C Sturman}, {and} \bibinfo{person}{Faisal Nawab}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{MSF-model: Queuing-based analysis and prediction of metastable failures in replicated storage systems}. In \bibinfo{booktitle}{\emph{2024 43rd International Symposium on Reliable Distributed Systems (SRDS)}}. IEEE, \bibinfo{pages}{12--22}.
+\newblock
+
+
+\bibitem[Han et~al\mbox{.}(1995)]%
+        {han1995doctor}
+\bibfield{author}{\bibinfo{person}{Seungjae Han}, \bibinfo{person}{Kang~G Shin}, {and} \bibinfo{person}{Harold~A Rosenberg}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{Doctor: An integrated software fault injection environment for distributed real-time systems}. In \bibinfo{booktitle}{\emph{Proceedings of 1995 IEEE International Computer Performance and Dependability Symposium}}. IEEE, \bibinfo{pages}{204--213}.
+\newblock
+
+
+\bibitem[Harris(2024)]%
+        {AWSOutage2024Report}
+\bibfield{author}{\bibinfo{person}{David Harris}.}
+\newblock \bibinfo{title}{AWS Outage Hits Amazon Services, Ring, Whole Foods, Alexa}.
+\newblock
+\urldef\tempurl%
+\url{https://www.crn.com/news/cloud/2024/aws-outage-hits-amazon-services-ring-whole-foods-alexa}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{[Online; accessed 2025-05-10]}.
+
+
+\bibitem[Harsh et~al\mbox{.}(2023)]%
+        {harsh2023murphy}
+\bibfield{author}{\bibinfo{person}{Vipul Harsh}, \bibinfo{person}{Wenxuan Zhou}, \bibinfo{person}{Sachin Ashok}, \bibinfo{person}{Radhika~Niranjan Mysore}, \bibinfo{person}{Brighten Godfrey}, {and} \bibinfo{person}{Sujata Banerjee}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Murphy: Performance diagnosis of distributed cloud applications}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGCOMM 2023 Conference}}. \bibinfo{pages}{438--451}.
+\newblock
+
+
+\bibitem[Henschel({[n.\,d.]})]%
+        {henschelintelpt}
+\bibfield{author}{\bibinfo{person}{Jack Henschel}.}
+\newblock \bibinfo{title}{Intel Processor Tracing}.
+\newblock \bibinfo{howpublished}{\url{https://blog.cubieserver.de/publications/Henschel_Intel-PT_2017.pdf}}.
+\newblock
+
+
+\bibitem[Hsueh et~al\mbox{.}(1997)]%
+        {hsueh1997fault}
+\bibfield{author}{\bibinfo{person}{Mei-Chen Hsueh}, \bibinfo{person}{Timothy~K Tsai}, {and} \bibinfo{person}{Ravishankar~K Iyer}.} \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Fault injection techniques and tools}.
+\newblock \bibinfo{journal}{\emph{Computer}} \bibinfo{volume}{30}, \bibinfo{number}{4} (\bibinfo{year}{1997}), \bibinfo{pages}{75--82}.
+\newblock
+
+
+\bibitem[Huang et~al\mbox{.}(2022)]%
+        {huang2022metastable}
+\bibfield{author}{\bibinfo{person}{Lexiang Huang}, \bibinfo{person}{Matthew Magnusson}, \bibinfo{person}{Abishek~Bangalore Muralikrishna}, \bibinfo{person}{Salman Estyak}, \bibinfo{person}{Rebecca Isaacs}, \bibinfo{person}{Abutalib Aghayev}, \bibinfo{person}{Timothy Zhu}, {and} \bibinfo{person}{Aleksey Charapko}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Metastable failures in the wild}. In \bibinfo{booktitle}{\emph{16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)}}. \bibinfo{pages}{73--90}.
+\newblock
+
+
+\bibitem[Isaacs et~al\mbox{.}(2025a)]%
+        {isaacs2025analyzing}
+\bibfield{author}{\bibinfo{person}{Rebecca Isaacs}, \bibinfo{person}{Peter Alvaro}, \bibinfo{person}{Rupak Majumdar}, \bibinfo{person}{Kiran Kumar}, \bibinfo{person}{Muniswamy Reddy}, \bibinfo{person}{Mahmoud Salamati}, {and} \bibinfo{person}{Sadegh Soudjani}.} \bibinfo{year}{2025}\natexlab{a}.
+\newblock \showarticletitle{Analyzing metastable failures}. In \bibinfo{booktitle}{\emph{Proceedings of the 2025 Workshop on Hot Topics in Operating Systems}}. \bibinfo{pages}{172--178}.
+\newblock
+
+
+\bibitem[Isaacs et~al\mbox{.}(2025b)]%
+        {isaacs2025formal}
+\bibfield{author}{\bibinfo{person}{Rebecca Isaacs}, \bibinfo{person}{Peter Alvaro}, \bibinfo{person}{Rupak Majumdar}, \bibinfo{person}{Kiran-Kumar Muniswamy-Reddy}, \bibinfo{person}{Mahmoud Salamati}, {and} \bibinfo{person}{Sadegh Soudjani}.} \bibinfo{year}{2025}\natexlab{b}.
+\newblock \showarticletitle{Formal Analysis of Metastable Failures in Software Systems}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2510.03551}} (\bibinfo{year}{2025}).
+\newblock
+
+
+\bibitem[Jeon and Oh(2022)]%
+        {jeon2022return}
+\bibfield{author}{\bibinfo{person}{Minseok Jeon} {and} \bibinfo{person}{Hakjoo Oh}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Return of CFA: call-site sensitivity can be superior to object sensitivity even for object-oriented programs}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the ACM on Programming Languages}} \bibinfo{volume}{6}, \bibinfo{number}{POPL} (\bibinfo{year}{2022}), \bibinfo{pages}{1--29}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2019)]%
+        {jiang2019fuzzing}
+\bibfield{author}{\bibinfo{person}{Zu-Ming Jiang}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Julia Lawall}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Fuzzing error handling code in device drivers based on software fault injection}. In \bibinfo{booktitle}{\emph{2019 IEEE 30th International Symposium on Software Reliability Engineering (ISSRE)}}. IEEE, \bibinfo{pages}{128--138}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2020)]%
+        {jiang2020fuzzing}
+\bibfield{author}{\bibinfo{person}{Zu-Ming Jiang}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Kangjie Lu}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Fuzzing Error Handling Code using Context-Sensitive Software Fault Injection}. In \bibinfo{booktitle}{\emph{29th USENIX Security Symposium (USENIX Security 20)}}. \bibinfo{pages}{2595--2612}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2022)]%
+        {jiang2022context}
+\bibfield{author}{\bibinfo{person}{Zu-Ming Jiang}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Kangjie Lu}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Context-sensitive and directional concurrency fuzzing for data-race detection}. In \bibinfo{booktitle}{\emph{Network and Distributed Systems Security (NDSS) Symposium 2022}}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2023)]%
+        {jiang2023dynsql}
+\bibfield{author}{\bibinfo{person}{Zu-Ming Jiang}, \bibinfo{person}{Jia-Ju Bai}, {and} \bibinfo{person}{Zhendong Su}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{DynSQL}: Stateful fuzzing for database management systems with complex and valid {SQL} query generation}. In \bibinfo{booktitle}{\emph{32nd USENIX Security Symposium (USENIX Security 23)}}. \bibinfo{pages}{4949--4965}.
+\newblock
+
+
+\bibitem[Jin et~al\mbox{.}(2012)]%
+        {jin2012understanding}
+\bibfield{author}{\bibinfo{person}{Guoliang Jin}, \bibinfo{person}{Linhai Song}, \bibinfo{person}{Xiaoming Shi}, \bibinfo{person}{Joel Scherpelz}, {and} \bibinfo{person}{Shan Lu}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Understanding and detecting real-world performance bugs}. In \bibinfo{booktitle}{\emph{Proceedings of the 33rd ACM SIGPLAN Conference on Programming Language Design and Implementation}} (Beijing, China) \emph{(\bibinfo{series}{PLDI '12})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{77–88}.
+\newblock
+\showISBNx{9781450312059}
+\href{https://doi.org/10.1145/2254064.2254075}{doi:\nolinkurl{10.1145/2254064.2254075}}
+
+
+\bibitem[Johnson et~al\mbox{.}(2020)]%
+        {johnson2020causal}
+\bibfield{author}{\bibinfo{person}{Brittany Johnson}, \bibinfo{person}{Yuriy Brun}, {and} \bibinfo{person}{Alexandra Meliou}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Causal testing: understanding defects' root causes}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM/IEEE 42nd international conference on software engineering}}. \bibinfo{pages}{87--99}.
+\newblock
+
+
+\bibitem[Joshi et~al\mbox{.}(2011)]%
+        {joshi2011prefail}
+\bibfield{author}{\bibinfo{person}{Pallavi Joshi}, \bibinfo{person}{Haryadi~S Gunawi}, {and} \bibinfo{person}{Koushik Sen}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{PREFAIL: A programmable tool for multiple-failure injection}. In \bibinfo{booktitle}{\emph{Proceedings of the 2011 ACM international conference on Object oriented programming systems languages and applications}}. \bibinfo{pages}{171--188}.
+\newblock
+
+
+\bibitem[Ju et~al\mbox{.}(2013)]%
+        {ju2013fault}
+\bibfield{author}{\bibinfo{person}{Xiaoen Ju}, \bibinfo{person}{Livio Soares}, \bibinfo{person}{Kang~G Shin}, \bibinfo{person}{Kyung~Dong Ryu}, {and} \bibinfo{person}{Dilma Da~Silva}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{On fault resilience of openstack}. In \bibinfo{booktitle}{\emph{Proceedings of the 4th annual Symposium on Cloud Computing}}. \bibinfo{pages}{1--16}.
+\newblock
+
+
+\bibitem[Kaufman and Rousseeuw(2009)]%
+        {kaufman2009finding}
+\bibfield{author}{\bibinfo{person}{Leonard Kaufman} {and} \bibinfo{person}{Peter~J Rousseeuw}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Finding groups in data: an introduction to cluster analysis}}.
+\newblock \bibinfo{publisher}{John Wiley \& Sons}.
+\newblock
+
+
+\bibitem[Kim et~al\mbox{.}(2019)]%
+        {kim2019finding}
+\bibfield{author}{\bibinfo{person}{Seulbae Kim}, \bibinfo{person}{Meng Xu}, \bibinfo{person}{Sanidhya Kashyap}, \bibinfo{person}{Jungyeon Yoon}, \bibinfo{person}{Wen Xu}, {and} \bibinfo{person}{Taesoo Kim}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Finding semantic bugs in file systems with an extensible fuzzing framework}. In \bibinfo{booktitle}{\emph{Proceedings of the 27th ACM Symposium on Operating Systems Principles}}. \bibinfo{pages}{147--161}.
+\newblock
+
+
+\bibitem[Kiskis and Shin(1996)]%
+        {kiskis1996synthetic}
+\bibfield{author}{\bibinfo{person}{Daniel~L Kiskis} {and} \bibinfo{person}{Kang~G Shin}.} \bibinfo{year}{1996}\natexlab{}.
+\newblock \showarticletitle{A synthetic workload for a distributed real-time system}.
+\newblock \bibinfo{journal}{\emph{Real-Time Systems}} \bibinfo{volume}{11}, \bibinfo{number}{1} (\bibinfo{year}{1996}), \bibinfo{pages}{5--18}.
+\newblock
+
+
+\bibitem[Krause et~al\mbox{.}(2005)]%
+        {krause2005large}
+\bibfield{author}{\bibinfo{person}{Antje Krause}, \bibinfo{person}{Jens Stoye}, {and} \bibinfo{person}{Martin Vingron}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Large scale hierarchical clustering of protein sequences}.
+\newblock \bibinfo{journal}{\emph{BMC bioinformatics}}  \bibinfo{volume}{6} (\bibinfo{year}{2005}), \bibinfo{pages}{1--12}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2024)]%
+        {li2024exchain}
+\bibfield{author}{\bibinfo{person}{Ao Li}, \bibinfo{person}{Shan Lu}, \bibinfo{person}{Suman Nath}, \bibinfo{person}{Rohan Padhye}, {and} \bibinfo{person}{Vyas Sekar}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{{ExChain}: Exception Dependency Analysis for Root Cause Diagnosis}. In \bibinfo{booktitle}{\emph{21st USENIX Symposium on Networked Systems Design and Implementation (NSDI 24)}}. \bibinfo{pages}{2047--2062}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2019)]%
+        {li2019efficient}
+\bibfield{author}{\bibinfo{person}{Guangpu Li}, \bibinfo{person}{Shan Lu}, \bibinfo{person}{Madanlal Musuvathi}, \bibinfo{person}{Suman Nath}, {and} \bibinfo{person}{Rohan Padhye}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Efficient scalable thread-safety-violation detection: finding thousands of concurrency bugs during testing}. In \bibinfo{booktitle}{\emph{Proceedings of the 27th ACM Symposium on Operating Systems Principles}}. \bibinfo{pages}{162--180}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2018)]%
+        {li2018pcatch}
+\bibfield{author}{\bibinfo{person}{Jiaxin Li}, \bibinfo{person}{Yuxi Chen}, \bibinfo{person}{Haopeng Liu}, \bibinfo{person}{Shan Lu}, \bibinfo{person}{Yiming Zhang}, \bibinfo{person}{Haryadi~S Gunawi}, \bibinfo{person}{Xiaohui Gu}, \bibinfo{person}{Xicheng Lu}, {and} \bibinfo{person}{Dongsheng Li}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Pcatch: Automatically detecting performance cascading bugs in cloud systems}. In \bibinfo{booktitle}{\emph{Proceedings of the Thirteenth EuroSys Conference}}. \bibinfo{pages}{1--14}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2021)]%
+        {li2021challenges}
+\bibfield{author}{\bibinfo{person}{Wang Li}, \bibinfo{person}{Zhouyang Jia}, \bibinfo{person}{Shanshan Li}, \bibinfo{person}{Yuanliang Zhang}, \bibinfo{person}{Teng Wang}, \bibinfo{person}{Erci Xu}, \bibinfo{person}{Ji Wang}, {and} \bibinfo{person}{Xiangke Liao}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Challenges and opportunities: an in-depth empirical study on configuration error injection testing}. In \bibinfo{booktitle}{\emph{Proceedings of the 30th ACM SIGSOFT International Symposium on Software Testing and Analysis}}. \bibinfo{pages}{478--490}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2020)]%
+        {li2020principled}
+\bibfield{author}{\bibinfo{person}{Yue Li}, \bibinfo{person}{Tian Tan}, \bibinfo{person}{Anders M{\o}ller}, {and} \bibinfo{person}{Yannis Smaragdakis}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{A principled approach to selective context sensitivity for pointer analysis}.
+\newblock \bibinfo{journal}{\emph{ACM Transactions on Programming Languages and Systems (TOPLAS)}} \bibinfo{volume}{42}, \bibinfo{number}{2} (\bibinfo{year}{2020}), \bibinfo{pages}{1--40}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2023)]%
+        {li2023towards}
+\bibfield{author}{\bibinfo{person}{Yueying Li}, \bibinfo{person}{Daochen Zha}, \bibinfo{person}{Tianjun Zhang}, \bibinfo{person}{G.~Edward Suh}, \bibinfo{person}{Christina Delimitrou}, {and} \bibinfo{person}{Francis~Y. Yan}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Mitigating Metastable Failures in Distributed Systems with Offline Reinforcement Learning}. In \bibinfo{booktitle}{\emph{The First Tiny Papers Track at {ICLR} 2023, Tiny Papers @ {ICLR} 2023, Kigali, Rwanda, May 5, 2023}}.
+\newblock
+\urldef\tempurl%
+\url{https://openreview.net/forum?id=zYF6NLJl6LM}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Lu et~al\mbox{.}(2019)]%
+        {lu2019crashtuner}
+\bibfield{author}{\bibinfo{person}{Jie Lu}, \bibinfo{person}{Chen Liu}, \bibinfo{person}{Lian Li}, \bibinfo{person}{Xiaobing Feng}, \bibinfo{person}{Feng Tan}, \bibinfo{person}{Jun Yang}, {and} \bibinfo{person}{Liang You}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Crashtuner: Detecting crash-recovery bugs in cloud systems via meta-info analysis}. In \bibinfo{booktitle}{\emph{Proceedings of the 27th ACM Symposium on Operating Systems Principles}}. \bibinfo{pages}{114--130}.
+\newblock
+
+
+\bibitem[Manning et~al\mbox{.}(2009)]%
+        {schutze2008introduction}
+\bibfield{author}{\bibinfo{person}{Christopher~D. Manning}, \bibinfo{person}{Prabhakar Raghavan}, {and} \bibinfo{person}{Hinrich Sch\"{u}tze}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Introduction to information retrieval}}.
+\newblock \bibinfo{publisher}{Cambridge University Press}.
+\newblock
+
+
+\bibitem[Marinescu and Candea(2009)]%
+        {marinescu2009lfi}
+\bibfield{author}{\bibinfo{person}{Paul~D Marinescu} {and} \bibinfo{person}{George Candea}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{LFI: A practical and general library-level fault injector}. In \bibinfo{booktitle}{\emph{2009 IEEE/IFIP International Conference on Dependable Systems \& Networks}}. IEEE, \bibinfo{pages}{379--388}.
+\newblock
+
+
+\bibitem[Meiklejohn et~al\mbox{.}(2021)]%
+        {meiklejohn2021service}
+\bibfield{author}{\bibinfo{person}{Christopher~S Meiklejohn}, \bibinfo{person}{Andrea Estrada}, \bibinfo{person}{Yiwen Song}, \bibinfo{person}{Heather Miller}, {and} \bibinfo{person}{Rohan Padhye}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Service-level fault injection testing}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM Symposium on Cloud Computing}}. \bibinfo{pages}{388--402}.
+\newblock
+
+
+\bibitem[Meng et~al\mbox{.}(2023)]%
+        {meng2023greybox}
+\bibfield{author}{\bibinfo{person}{Ruijie Meng}, \bibinfo{person}{George P{\^\i}rlea}, \bibinfo{person}{Abhik Roychoudhury}, {and} \bibinfo{person}{Ilya Sergey}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Greybox fuzzing of distributed systems}. In \bibinfo{booktitle}{\emph{Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security}}. \bibinfo{pages}{1615--1629}.
+\newblock
+
+
+\bibitem[Meza et~al\mbox{.}(2023)]%
+        {meza2023defcon}
+\bibfield{author}{\bibinfo{person}{Justin~J Meza}, \bibinfo{person}{Thote Gowda}, \bibinfo{person}{Ahmed Eid}, \bibinfo{person}{Tomiwa Ijaware}, \bibinfo{person}{Dmitry Chernyshev}, \bibinfo{person}{Yi Yu}, \bibinfo{person}{Md~Nazim Uddin}, \bibinfo{person}{Rohan Das}, \bibinfo{person}{Chad Nachiappan}, \bibinfo{person}{Sari Tran}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Defcon: Preventing Overload with Graceful Feature Degradation}. In \bibinfo{booktitle}{\emph{17th USENIX Symposium on Operating Systems Design and Implementation (OSDI 23)}}. \bibinfo{pages}{607--622}.
+\newblock
+
+
+\bibitem[Mohan et~al\mbox{.}(2018)]%
+        {mohan2018finding}
+\bibfield{author}{\bibinfo{person}{Jayashree Mohan}, \bibinfo{person}{Ashlie Martinez}, \bibinfo{person}{Soujanya Ponnapalli}, \bibinfo{person}{Pandian Raju}, {and} \bibinfo{person}{Vijay Chidambaram}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Finding Crash-Consistency Bugs with Bounded Black-Box Crash Testing}. In \bibinfo{booktitle}{\emph{13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}}. \bibinfo{pages}{33--50}.
+\newblock
+
+
+\bibitem[Natella et~al\mbox{.}(2016)]%
+        {natella2016assessing}
+\bibfield{author}{\bibinfo{person}{Roberto Natella}, \bibinfo{person}{Domenico Cotroneo}, {and} \bibinfo{person}{Henrique~S Madeira}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Assessing dependability with software fault injection: A survey}.
+\newblock \bibinfo{journal}{\emph{ACM Computing Surveys (CSUR)}} \bibinfo{volume}{48}, \bibinfo{number}{3} (\bibinfo{year}{2016}), \bibinfo{pages}{1--55}.
+\newblock
+
+
+\bibitem[Pearl and Mackenzie(2018)]%
+        {pearl2018book}
+\bibfield{author}{\bibinfo{person}{Judea Pearl} {and} \bibinfo{person}{Dana Mackenzie}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{The book of why: the new science of cause and effect}}.
+\newblock \bibinfo{publisher}{Basic books}.
+\newblock
+
+
+\bibitem[Pham et~al\mbox{.}(2020)]%
+        {pham2020aflnet}
+\bibfield{author}{\bibinfo{person}{Van-Thuan Pham}, \bibinfo{person}{Marcel B{\"o}hme}, {and} \bibinfo{person}{Abhik Roychoudhury}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{AFLnet}: A greybox fuzzer for network protocols}. In \bibinfo{booktitle}{\emph{2020 IEEE 13th International Conference on Software Testing, Validation and Verification (ICST)}}. IEEE, \bibinfo{pages}{460--465}.
+\newblock
+
+
+\bibitem[Qian et~al\mbox{.}(2023)]%
+        {qian2023vicious}
+\bibfield{author}{\bibinfo{person}{Shangshu Qian}, \bibinfo{person}{Wen Fan}, \bibinfo{person}{Lin Tan}, {and} \bibinfo{person}{Yongle Zhang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Vicious Cycles in Distributed Software Systems}. In \bibinfo{booktitle}{\emph{2023 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)}}. IEEE, \bibinfo{pages}{91--103}.
+\newblock
+
+
+\bibitem[Shivers(1988)]%
+        {shivers1988control}
+\bibfield{author}{\bibinfo{person}{Olin Shivers}.} \bibinfo{year}{1988}\natexlab{}.
+\newblock \showarticletitle{Control flow analysis in Scheme}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGPLAN 1988 conference on Programming Language design and Implementation}}. \bibinfo{pages}{164--174}.
+\newblock
+
+
+\bibitem[Sruthi et~al\mbox{.}(2024)]%
+        {sruthi2024demystifying}
+\bibfield{author}{\bibinfo{person}{PC Sruthi}, \bibinfo{person}{Zinan Guo}, \bibinfo{person}{Deming Chu}, \bibinfo{person}{Zhengyan Chen}, {and} \bibinfo{person}{Yongle Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Demystifying the Fight Against Complexity: A Comprehensive Study of Live Debugging Activities in Production Cloud Systems}. In \bibinfo{booktitle}{\emph{Proceedings of the 2024 ACM Symposium on Cloud Computing}}. \bibinfo{pages}{341--360}.
+\newblock
+
+
+\bibitem[Student(1908)]%
+        {student1908probable}
+\bibfield{author}{\bibinfo{person}{Student}.} \bibinfo{year}{1908}\natexlab{}.
+\newblock \showarticletitle{The probable error of a mean}.
+\newblock \bibinfo{journal}{\emph{Biometrika}} (\bibinfo{year}{1908}), \bibinfo{pages}{1--25}.
+\newblock
+
+
+\bibitem[Sun et~al\mbox{.}(2021)]%
+        {sun2021healer}
+\bibfield{author}{\bibinfo{person}{Hao Sun}, \bibinfo{person}{Yuheng Shen}, \bibinfo{person}{Cong Wang}, \bibinfo{person}{Jianzhong Liu}, \bibinfo{person}{Yu Jiang}, \bibinfo{person}{Ting Chen}, {and} \bibinfo{person}{Aiguo Cui}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Healer: Relation learning guided kernel fuzzing}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGOPS 28th Symposium on Operating Systems Principles}}. \bibinfo{pages}{344--358}.
+\newblock
+
+
+\bibitem[Sun et~al\mbox{.}(2022)]%
+        {sun2022automatic}
+\bibfield{author}{\bibinfo{person}{Xudong Sun}, \bibinfo{person}{Wenqing Luo}, \bibinfo{person}{Jiawei~Tyler Gu}, \bibinfo{person}{Aishwarya Ganesan}, \bibinfo{person}{Ramnatthan Alagappan}, \bibinfo{person}{Michael Gasch}, \bibinfo{person}{Lalith Suresh}, {and} \bibinfo{person}{Tianyin Xu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Automatic reliability testing for cluster management controllers}. In \bibinfo{booktitle}{\emph{16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)}}. \bibinfo{pages}{143--159}.
+\newblock
+
+
+\bibitem[Tan et~al\mbox{.}(2017)]%
+        {tan2017efficient}
+\bibfield{author}{\bibinfo{person}{Tian Tan}, \bibinfo{person}{Yue Li}, {and} \bibinfo{person}{Jingling Xue}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Efficient and precise points-to analysis: modeling the heap by merging equivalent automata}. In \bibinfo{booktitle}{\emph{Proceedings of the 38th ACM SIGPLAN Conference on Programming Language Design and Implementation}}. \bibinfo{pages}{278--291}.
+\newblock
+
+
+\bibitem[Vyukov and Konovalov(2015)]%
+        {vyukov2015syzkaller}
+\bibfield{author}{\bibinfo{person}{Dmitry Vyukov} {and} \bibinfo{person}{Andrey Konovalov}.}
+\newblock \bibinfo{title}{Syzkaller: an unsupervised coverage-guided kernel fuzzer}.
+\newblock
+
+
+\bibitem[Wu et~al\mbox{.}(2024)]%
+        {wu2024efficient}
+\bibfield{author}{\bibinfo{person}{Haoze Wu}, \bibinfo{person}{Jia Pan}, {and} \bibinfo{person}{Peng Huang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Efficient Exposure of Partial Failure Bugs in Distributed Systems with Inferred Abstract States}. In \bibinfo{booktitle}{\emph{21st USENIX Symposium on Networked Systems Design and Implementation (NSDI 24)}}. \bibinfo{pages}{1267--1283}.
+\newblock
+
+
+\bibitem[Xie et~al\mbox{.}(2022)]%
+        {xie2022rozz}
+\bibfield{author}{\bibinfo{person}{Kai-Tao Xie}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Yong-Hao Zou}, {and} \bibinfo{person}{Yu-Ping Wang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{ROZZ: property-based fuzzing for robotic programs in ROS}. In \bibinfo{booktitle}{\emph{2022 International Conference on Robotics and Automation (ICRA)}}. IEEE, \bibinfo{pages}{6786--6792}.
+\newblock
+
+
+\bibitem[Zaharia et~al\mbox{.}(2012)]%
+        {Zaharia:2012}
+\bibfield{author}{\bibinfo{person}{Matei Zaharia}, \bibinfo{person}{Mosharaf Chowdhury}, \bibinfo{person}{Tathagata Das}, \bibinfo{person}{Ankur Dave}, \bibinfo{person}{Justin Ma}, \bibinfo{person}{Murphy McCauley}, \bibinfo{person}{Michael~J. Franklin}, \bibinfo{person}{Scott Shenker}, {and} \bibinfo{person}{Ion Stoica}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{{Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing}}. In \bibinfo{booktitle}{\emph{Proceedings of the 9th USENIX Symposium on Networked Systems Design and Implementation (NSDI'12)}}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2021a)]%
+        {zhang20213milebeach}
+\bibfield{author}{\bibinfo{person}{Jun Zhang}, \bibinfo{person}{Robert Ferydouni}, \bibinfo{person}{Aldrin Montana}, \bibinfo{person}{Daniel Bittman}, {and} \bibinfo{person}{Peter Alvaro}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{3milebeach: A tracer with teeth}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM Symposium on Cloud Computing}}. \bibinfo{pages}{458--472}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2021b)]%
+        {zhang2021understanding}
+\bibfield{author}{\bibinfo{person}{Yongle Zhang}, \bibinfo{person}{Junwen Yang}, \bibinfo{person}{Zhuqi Jin}, \bibinfo{person}{Utsav Sethi}, \bibinfo{person}{Kirk Rodrigues}, \bibinfo{person}{Shan Lu}, {and} \bibinfo{person}{Ding Yuan}.} \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{Understanding and detecting software upgrade failures in distributed systems}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM SIGOPS 28th Symposium on Operating Systems Principles}}. \bibinfo{pages}{116--131}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2017)]%
+        {zhang2017hierarchical}
+\bibfield{author}{\bibinfo{person}{Zhongheng Zhang}, \bibinfo{person}{Fionn Murtagh}, \bibinfo{person}{Sven Van~Poucke}, \bibinfo{person}{Su Lin}, {and} \bibinfo{person}{Peng Lan}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Hierarchical cluster analysis in clinical research with heterogeneous study population: highlighting its visualization with R}.
+\newblock \bibinfo{journal}{\emph{Annals of translational medicine}} \bibinfo{volume}{5}, \bibinfo{number}{4} (\bibinfo{year}{2017}), \bibinfo{pages}{75}.
+\newblock
+
+
+\bibitem[Zou et~al\mbox{.}(2025)]%
+        {zou2025blackbox}
+\bibfield{author}{\bibinfo{person}{Yonghao Zou}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Zu-Ming Jiang}, \bibinfo{person}{Ming Zhao}, {and} \bibinfo{person}{Diyu Zhou}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Blackbox Fuzzing of Distributed Systems with Multi-Dimensional Inputs and Symmetry-Based Feedback Pruning}. Network and Distributed System Security (NDSS) Symposium 2025.
+\newblock
+
+
+\bibitem[Zou et~al\mbox{.}(2021)]%
+        {zou2021tcp}
+\bibfield{author}{\bibinfo{person}{Yong-Hao Zou}, \bibinfo{person}{Jia-Ju Bai}, \bibinfo{person}{Jielong Zhou}, \bibinfo{person}{Jianfeng Tan}, \bibinfo{person}{Chenggang Qin}, {and} \bibinfo{person}{Shi-Min Hu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{TCP-Fuzz}: Detecting memory and semantic bugs in {TCP} stacks with fuzzing}. In \bibinfo{booktitle}{\emph{2021 USENIX Annual Technical Conference (USENIX ATC 21)}}. \bibinfo{pages}{489--502}.
+\newblock
+
+
+\end{thebibliography}

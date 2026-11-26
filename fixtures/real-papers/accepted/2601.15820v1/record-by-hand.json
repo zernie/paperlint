@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/0-abstract.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/1-intro-v3.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/2-related-work.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/3-method-v2.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/4-Exp.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/5-Conclusion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/7-appendix.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "5c777426ca699395ddb8d97109f4620fce72cda1edf9a61ea8f829909ee4b1b4",
+    "sections/0-abstract.tex": "9057a297525ef881ea5eb71721198a0e9e0d802cdc45afe0403ef5e3aa966810",
+    "sections/1-intro-v3.tex": "fc9f76f69c26fc3bee9abe79ad149c2a7e060322181946cbe60a7f284fd1e0f6",
+    "sections/2-related-work.tex": "79082a42d05a8305669262f67fe45c381f8e8c3afac613df8cc3694fa670f0de",
+    "sections/3-method-v2.tex": "0e2fc25a06ab8d31c9167e314396e176e764738d1d7531e0c7cfa6717b663e21",
+    "sections/4-Exp.tex": "8515b02fd32959418bdd9b6e9a0f34875d2215decc3ddbef3c246393d03cdede",
+    "sections/5-Conclusion.tex": "17d76b44b55871c564a03d2b0e5b1aca9d6e9d1f10a2ed4fc8ab35b66c04dd80",
+    "sections/7-appendix.tex": "6356870e71b82c716ee79f3be0067ed50ffe904fde13b08582289f863b434f05"
+  }
+}

@@ -1,0 +1,14 @@
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{COCO}} & \multicolumn{4}{c}{\textbf{STRANGE-Bench}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+Augmentation & $\text{F1}^{\text{val}}$ $\uparrow$ & $\text{F1}^{\text{T}}$ $\uparrow$ & $\text{F1}^{\text{A}}$ $\uparrow$ & $\Delta^{\text{T-A}}$ $\downarrow$ & $T_{1\text{-}5}^{\text{T}}$ $\uparrow$ & $T_{1\text{-}5}^{\text{A}}$ $\uparrow$ & $\Delta_{1\text{-}5}$ $\downarrow$ & $T_{\text{never}}$ $\uparrow$ \\
+\midrule
+Std. & \textbf{74.6} & \textbf{71.8} & 63.2 & 8.6 & 63.5 & 39.6 & 23.9 & 38.9 \\
+SCP & 72.3 & 67.9 & 62.2 & \textbf{5.7} & 66.7 & 57.5 & 9.2 & 55.7 \\
+\midrule
+XPaste & \underline{73.1} & \underline{70.3} & \textbf{64.4} & \underline{5.9} & \textbf{75.4} & \underline{67.3} & \underline{8.1} & \underline{67.9} \\
+\midrule
+\rowcolor{oursrow} \textbf{XPaste + AAS$^{\dagger}$ \emph{(ours)}} & 73.0 & 70.1 & \underline{64.2} & \underline{5.9} & \underline{74.1} & \textbf{68.1} & \textbf{6.0} & \textbf{70.1} \\
+\bottomrule
+\end{tabular}

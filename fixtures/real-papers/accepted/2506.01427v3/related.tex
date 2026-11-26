@@ -1,0 +1,78 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Improving C2Rust-Generated Code with Static Analysis}
+
+Several previous studies focus on improving C2Rust-generated code using static
+analysis.
+%
+Concrat~\cite{hong2023concrat} is the most relevant to this work;
+%
+it replaces libc's lock API with Rust std's lock API.
+%
+To resolve the discrepancies between the two lock APIs, it performs static
+analysis to identify the data protected by each lock and the locks held at each
+program point.
+%
+Other studies target language features other than library functions.
+%
+\textsc{Laertes}~\cite{emre2021translating, emre2023aliasing} and
+\textsc{Crown}~\cite{zhang2023ownership} replace raw pointers with references by
+analyzing lifetimes and ownership, while GenC2Rust~\cite{wu2025genc2rust}
+replaces \C{void} pointers with generics by computing typing constraints.
+%
+In addition, Urcrat~\cite{hong2024tag} replaces unions with tagged unions, and
+Nopcrat~\cite{hong2024dont} replaces output parameters with tuples and
+\C{Option}s.
+
+\subsection{C-to-Rust Translation via Large Language Models}
+
+Recent studies have explored using large language models (LLMs) to translate C
+to Rust.
+%
+While LLMs are proficient at generating readable and concise code, their
+translations are often incorrect, resulting in uncompilable code or altered
+semantics, even for small programs such as competitive programming solutions.
+%
+Hong and Ryu~\cite{hong2024type} used GPT-4o mini and observed that 44\% of
+functions became uncompilable;
+%
+% Shiraishi and Shinagawa~\cite{shiraishi2024context} used Claude 3.5 Sonnet and
+% found that 27\% of top-level items were uncompilable;
+%
+Yang et al.~\cite{yang2024vert} used Claude 2 and reported that 35\% of
+functions were uncompilable and 25\% failed property-based tests.
+%
+To improve correctness, Shetty et al.~\cite{shetty2024syzygy} guided LLMs using
+pointer information collected via dynamic analysis, while Zhang et
+al.~\cite{zhang2024scalable} provided hand-written feature mappings for
+Go-to-Rust translation.
+%
+An interesting direction would be to guide LLMs using the static analysis
+proposed in this work.
+
+\subsection{Static Analysis of Code Using I/O APIs}
+
+Previous studies propose typestate analysis that can verify the correct use of
+I/O APIs.
+%
+\textsc{CQual}~\cite{foster2002type} extends C with flow-sensitive type
+qualifiers;
+%
+Plaid~\cite{sunshine2011first} supports first-class typestates;
+%
+Fink et al.'s framework~\cite{fink2008effective} performs typestate verification
+for Java.
+%
+Typestate analysis verifies flow-sensitive properties, e.g., a stream should not
+be read after being closed.
+%
+In contrast, our origin and capability analysis focuses on flow-insensitive
+properties, e.g., whether a certain location is used for closing, to determine
+correct types for transformation.
+%
+After the transformation, the Rust type checker can verify some flow-sensitive
+properties because the notion of ownership in Rust is flow-sensitive.
+%
+For example, reading a closed stream corresponds to using a variable without
+ownership in Rust, which results in a type error.

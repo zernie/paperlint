@@ -1,0 +1,587 @@
+\begin{thebibliography}{100}
+
+\bibitem{alpine}
+{Alpine} {Linux}.
+\newblock Available at \url{https://alpinelinux.org/}.
+
+\bibitem{morello}
+{Arm Morello Program}.
+\newblock \url{https://www.arm.com/architecture/cpu/morello}.
+
+\bibitem{cloudlab}
+Cloudlab.
+\newblock \url{https://www.cloudlab.us/}.
+
+\bibitem{spin}
+Fermyon spin.
+\newblock \url{https://github.com/fermyon/spin}, 2024.
+
+\bibitem{firecracker:snapshot_restoration}
+Firecracker snapshotting.
+\newblock Available at \url{https://github.com/firecracker-microvm/firecracker/blob/main/docs/snapshotting/snapshot-support.md}, 2024.
+
+\bibitem{gvisor}
+{{gVisor}}.
+\newblock Available at \url{https://gvisor.dev/docs}, 2024.
+
+\bibitem{knative}
+Knative.
+\newblock Available at \url{https://knative.dev}, 2024.
+
+\bibitem{rust:green-threads}
+{Rust Module tokio::task}.
+\newblock Available at \url{https://docs.rs/tokio/latest/tokio/task/index.html}, 2024.
+
+\bibitem{wasm}
+{WebAssembly}.
+\newblock \url{https://webassembly.org}, 2024.
+
+\bibitem{wasi}
+{WebAssembly System Interface}.
+\newblock \url{https://wasi.dev/}, 2024.
+
+\bibitem{aws-airflow}
+Amazon managed workflows for apache airflow (mwaa).
+\newblock Available at \url{https://aws.amazon.com/managed-workflows-for-apache-airflow/}, 2025.
+
+\bibitem{acero}
+{{Apache Arrow Acero Overview}}.
+\newblock Available at \url{https://arrow.apache.org/docs/cpp/acero/overview.html}, 2025.
+
+\bibitem{athena}
+{{AWS Athena}}.
+\newblock \url{https://aws.amazon.com/athena/}, 2025.
+
+\bibitem{tokio-runtime}
+Rust tokio runtime.
+\newblock \url{https://docs.rs/tokio/latest/tokio/runtime/index.html}, 2025.
+
+\bibitem{abdi2023palette}
+Mania Abdi, Samuel Ginzburg, Xiayue~Charles Lin, Jose Faleiro, Gohar~Irfan Chaudhry, Inigo Goiri, Ricardo Bianchini, Daniel~S Berger, and Rodrigo Fonseca.
+\newblock {Palette Load Balancing: Locality Hints for Serverless Functions}.
+\newblock In {\em Proceedings of the Eighteenth European Conference on Computer Systems}, pages 365--380, 2023.
+
+\bibitem{firecracker}
+Alexandru Agache, Marc Brooker, Alexandra Iordache, Anthony Liguori, Rolf Neugebauer, Phil Piwonka, and Diana-Maria Popa.
+\newblock {Firecracker: Lightweight Virtualization for Serverless Applications}.
+\newblock In {\em 17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20)}, 2020.
+
+\bibitem{wasmtime}
+Bytecode Alliance.
+\newblock {Wasmtime}.
+\newblock \url{https://wasmtime.dev/}, 2024.
+
+\bibitem{rethinking-serverless}
+Gustavo Alonso, Ana Klimovic, Tom Kuchler, and Michal Wawrzoniak.
+\newblock {Rethinking Serverless Computing: from the Programming Model to the Platform Design}.
+\newblock In {\em VLDB Workshop on Serverless Data Analytics}, 2023.
+
+\bibitem{alzayat2023groundhog}
+Mohamed Alzayat, Jonathan Mace, Peter Druschel, and Deepak Garg.
+\newblock {Groundhog: Efficient Request Isolation in FaaS}.
+\newblock In {\em Proceedings of the Eighteenth European Conference on Computer Systems}, pages 398--415, 2023.
+
+\bibitem{nitro}
+{Amazon Web Services.}
+\newblock {The Security Design of the AWS Nitro System}.
+\newblock \url{https://docs.aws.amazon.com/whitepapers/latest/security-design-of-aws-nitro-system/security-design-of-aws-nitro-system.html}, 2022.
+
+\bibitem{view-of-cloud-2010}
+Michael Armbrust, Armando Fox, Rean Griffith, Anthony~D. Joseph, Randy Katz, Andy Konwinski, Gunho Lee, David Patterson, Ariel Rabkin, Ion Stoica, and Matei Zaharia.
+\newblock A view of cloud computing.
+\newblock {\em Commun. ACM}, 53(4):50–58, April 2010.
+
+\bibitem{astrom1995_pid}
+Karl~Johan {\AA}str{"o}m and Tore H{"a}gglund.
+\newblock Controller design.
+\newblock In {\em PID Controllers: Theory, Design, and Tuning}, chapter~4, pages 120--156. Instrument Society of America, 2 edition, 1995.
+
+\bibitem{aws-rest-api}
+AWS.
+\newblock {What is RESTful API?}
+\newblock \url{https://aws.amazon.com/what-is/restful-api/}, 2025.
+
+\bibitem{azure-durable-functions}
+Microsoft Azure.
+\newblock {What are Durable Functions?}
+\newblock \url{https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=csharp-inproc}.
+
+\bibitem{biswal2024text2sqlenoughunifyingai}
+Asim Biswal, Liana Patel, Siddarth Jha, Amog Kamsetty, Shu Liu, Joseph~E. Gonzalez, Carlos Guestrin, and Matei Zaharia.
+\newblock {Text2SQL} is not enough: Unifying {AI} and databases with {TAG}.
+\newblock \url{https://arxiv.org/abs/2408.14717}, 2024.
+
+\bibitem{wedge-nsdi08}
+Andrea Bittau, Petr Marchenko, Mark Handley, and Brad Karp.
+\newblock {Wedge: Splitting Applications into {Reduced-Privilege} Compartments}.
+\newblock In {\em 5th USENIX Symposium on Networked Systems Design and Implementation (NSDI 08)}, 2008.
+
+\bibitem{rwasm}
+Jay Bosamiya, Wen~Shih Lim, and Bryan Parno.
+\newblock {Provably-Safe} {Multilingual Software Sandboxing} using {WebAssembly}.
+\newblock In {\em 31st USENIX Security Symposium (USENIX Security 22)}, 2022.
+
+\bibitem{seuss}
+James Cadden, Thomas Unger, Yara Awad, Han Dong, Orran Krieger, and Jonathan Appavoo.
+\newblock Seuss: skip redundant paths to make serverless fast.
+\newblock In {\em Proceedings of the Fifteenth European Conference on Computer Systems}, EuroSys '20, New York, NY, USA, 2020. Association for Computing Machinery.
+
+\bibitem{RiseofServerless19}
+Paul Castro, Vatche Ishakian, Vinod Muthusamy, and Aleksander Slominski.
+\newblock {The Rise of Serverless Computing}.
+\newblock {\em Commun. ACM}, 62(12):44–54, 2019.
+
+\bibitem{efficient-compound-ai-hotos}
+Gohar~Irfan Chaudhry, Esha Choukse, Íñigo Goiri, Rodrigo Fonseca, Adam Belay, and Ricardo Bianchini.
+\newblock Towards resource-efficient compound ai systems, 2025.
+
+\bibitem{linux-kernel-vulnerabilities}
+Haogang Chen, Yandong Mao, Xi~Wang, Dong Zhou, Nickolai Zeldovich, and M.~Frans Kaashoek.
+\newblock {Linux Kernel Vulnerabilities: State-of-the-Art Defenses and Open Problems}.
+\newblock In {\em Proceedings of the Second Asia-Pacific Workshop on Systems}, APSys '11, New York, NY, USA, 2011. Association for Computing Machinery.
+
+\bibitem{shreds-security16}
+Yaohui Chen, Sebassujeen Reymondjohnson, Zhichuang Sun, and Long Lu.
+\newblock {Shreds: Fine-Grained Execution Units with Private Memory}.
+\newblock In {\em 2016 IEEE Symposium on Security and Privacy (SP)}, pages 56--71, 2016.
+
+\bibitem{new-directions-cloud}
+Alvin Cheung, Natacha Crooks, Joseph~M. Hellerstein, and Mae Milano.
+\newblock {New Directions in Cloud Programming}.
+\newblock In {\em 11th Conference on Innovative Data Systems Research, {CIDR} 2021, Virtual Event, January 11-15, 2021, Online Proceedings}. www.cidrdb.org, 2021.
+
+\bibitem{emscripten}
+Emscripten Contributors.
+\newblock {Emscripten: An LLVM-to-WebAssembly Compiler}.
+\newblock \url{https://emscripten.org/index.html}, 2015.
+
+\bibitem{copikSeBSServerlessBenchmark2021}
+Marcin Copik, Grzegorz Kwasniewski, Maciej Besta, Michal Podstawski, and Torsten Hoefler.
+\newblock {{SeBS}}: {{A Serverless Benchmark Suite}} for {{Function-as-a-Service Computing}}.
+\newblock {\em arXiv:2012.14132 [cs]}, July 2021.
+
+\bibitem{cloudflare-workers-security}
+{CouldFlare}.
+\newblock Cloudflare workers security model.
+\newblock \url{https://developers.cloudflare.com/workers/reference/security-model/}, 2024.
+
+\bibitem{tpch}
+Transaction Processing~Performance Council.
+\newblock {TPC-H}.
+\newblock \url{https://www.tpc.org/tpch/}, 2025.
+
+\bibitem{dirigent}
+Lazar Cvetkovi\'{c}, Fran\c{c}ois Costa, Mihajlo Djokic, Michal Friedman, and Ana Klimovic.
+\newblock {Dirigent: Lightweight Serverless Orchestration}.
+\newblock In {\em Proceedings of the ACM SIGOPS 30th Symposium on Operating Systems Principles}, SOSP '24, page 369–384, New York, NY, USA, 2024. Association for Computing Machinery.
+
+\bibitem{agentic-ai-databricks}
+Databricks.
+\newblock What are compound {AI} systems and {AI} agents?
+\newblock Available at \url{https://docs.databricks.com/en/generative-ai/agent-framework/ai-agents.html}, 2024.
+
+\bibitem{datadog:state21}
+{Datadog}.
+\newblock {The State of Serverless 2021}.
+\newblock \url{https://www.datadoghq.com/state-of-serverless-2021/}.
+
+\bibitem{compute-centric-networking}
+Yuhan Deng, Angela Montemayor, Amit Levy, and Keith Winstein.
+\newblock {Computation-Centric Networking}.
+\newblock In {\em Proceedings of the 21st ACM Workshop on Hot Topics in Networks}, HotNets '22, 2022.
+
+\bibitem{catalyzer}
+Dong Du, Tianyi Yu, Yubin Xia, Binyu Zang, Guanglu Yan, Chenggang Qin, Qixuan Wu, and Haibo Chen.
+\newblock {Catalyzer: Sub-millisecond Startup for Serverless Computing with Initialization-less Booting}.
+\newblock In {\em Proceedings of the Twenty-Fifth International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '20, page 467–481, New York, NY, USA, 2020. Association for Computing Machinery.
+
+\bibitem{serverless-uphill}
+Nafise Eskandani and Guido Salvaneschi.
+\newblock The uphill journey of {FaaS} in the open-source community.
+\newblock {\em Journal of Systems and Software}, 198:111589, 2023.
+
+\bibitem{fastly-wasm}
+Fastly.
+\newblock Compute@edge.
+\newblock \url{https://docs.fastly.com/products/compute-at-edge}, 2023.
+
+\bibitem{flanaganEssenceCompilingContinuations1993}
+Cormac Flanagan, Amr Sabry, Bruce~F. Duba, and Matthias Felleisen.
+\newblock {The Essence of Compiling with Continuations}.
+\newblock In {\em Proceedings of the {{ACM SIGPLAN}} 1993 Conference on {{Programming}} Language Design and Implementation}, pages 237--247, Albuquerque New Mexico USA, June 1993. ACM.
+
+\bibitem{excamera}
+Sadjad Fouladi, Riad~S. Wahby, Brennan Shacklett, Karthikeyan~Vasuki Balasubramaniam, William Zeng, Rahul Bhalerao, Anirudh Sivaraman, George Porter, and Keith Winstein.
+\newblock {Encoding, Fast and Slow: Low-Latency Video Processing Using Thousands of Tiny Threads}.
+\newblock In {\em 14th USENIX Symposium on Networked Systems Design and Implementation (NSDI 17)}, pages 363--376, Boston, MA, March 2017. USENIX Association.
+
+\bibitem{beam}
+Apache~Software Foundation.
+\newblock {Apache Beam}.
+\newblock \url{https://beam.apache.org/}, 2024.
+
+\bibitem{faascache}
+Alexander Fuerst and Prateek Sharma.
+\newblock {FaasCache: Keeping Serverless Computing Alive with Greedy-dual Caching}.
+\newblock In {\em Proceedings of the 26th ACM International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '21, page 386–400, New York, NY, USA, 2021. Association for Computing Machinery.
+
+\bibitem{sledge}
+Phani~Kishore Gadepalli, Sean McBride, Gregor Peach, Ludmila Cherkasova, and Gabriel Parmer.
+\newblock Sledge: a serverless-first, light-weight wasm runtime for the edge.
+\newblock In {\em Proceedings of the 21st International Middleware Conference}, Middleware '20, page 265–279, New York, NY, USA, 2020. Association for Computing Machinery.
+
+\bibitem{ginzburgVectorVisorBinaryTranslation}
+Samuel Ginzburg, Mohammad Shahrad, and Michael~J. Freedman.
+\newblock {VectorVisor}: A binary translation scheme for {Throughput-Oriented} {GPU} acceleration.
+\newblock In {\em 2023 USENIX Annual Technical Conference (USENIX ATC 23)}, pages 1017--1037, Boston, MA, July 2023. USENIX Association.
+
+\bibitem{kernel-security}
+Cristiano Giuffrida, Anton Kuijsten, and Andrew~S. Tanenbaum.
+\newblock {Enhanced Operating System Security through Efficient and Fine-Grained Address Space Randomization}.
+\newblock In {\em Proceedings of the 21st USENIX Conference on Security Symposium}, Security'12, 2012.
+
+\bibitem{elasticity-definition}
+Nikolas~Roman Herbst, Samuel Kounev, and Ralf~H. Reussner.
+\newblock Elasticity in cloud computing: What it is, and what it is not.
+\newblock In Jeffrey~O. Kephart, Calton Pu, and Xiaoyun Zhu, editors, {\em ICAC}, pages 23--27. USENIX Association, 2013.
+
+\bibitem{dryad}
+Michael Isard, Mihai Budiu, Yuan Yu, Andrew Birrell, and Dennis Fetterly.
+\newblock {Dryad: Distributed Data-parallel Programs From Sequential Building Blocks}.
+\newblock In {\em Proceedings of the 2nd ACM SIGOPS/EuroSys European Conference on Computer Systems 2007}, EuroSys '07, page 59–72, New York, NY, USA, 2007. Association for Computing Machinery.
+
+\bibitem{mosaic}
+Serhii Ivanenko, Carlos Segarra, and Rodrigo Bruno.
+\newblock Mosaic: Optimizing cloud resource efficiency with lazily-packaged application modules.
+\newblock In {\em Proceedings of the 3rd Workshop on SErverless Systems, Applications and MEthodologies}, SESAME' 25, page 21–29, New York, NY, USA, 2025. Association for Computing Machinery.
+
+\bibitem{not-so-fast-wasm}
+Abhinav Jangda, Bobby Powers, Emery~D. Berger, and Arjun Guha.
+\newblock {Not So Fast: Analyzing the Performance of WebAssembly vs. Native Code}.
+\newblock In {\em 2019 USENIX Annual Technical Conference (USENIX ATC 19)}, 2019.
+
+\bibitem{jiaBokiStatefulServerless2021}
+Zhipeng Jia and Emmett Witchel.
+\newblock Boki: {{Stateful Serverless Computing}} with {{Shared Logs}}.
+\newblock In {\em Proceedings of the {{ACM SIGOPS}} 28th {{Symposium}} on {{Operating Systems Principles}}}, {{SOSP}} '21, pages 691--707, New York, NY, USA, October 2021. Association for Computing Machinery.
+
+\bibitem{Johnson:WaVe:2023}
+Evan Johnson, Evan Laufer, Zijie Zhao, Dan Gohman, Shravan Narayan, Stefan Savage, Deian Stefan, and Fraser Brown.
+\newblock {WaVe}: a verifiably secure {WebAssembly} sandboxing runtime.
+\newblock In {\em IEEE Symposium on Security and Privacy (S\&P)}. IEEE, May 2023.
+
+\bibitem{veriwasm}
+Evan Johnson, David Thien, Yousef Alhessi, Shravan Narayan, Fraser Brown, Sorin Lerner, Tyler McMullen, Stefan Savage, and Deian Stefan.
+\newblock \foreignlanguage{russian}{Довер\'{я}й, но провер\'{я}й}: {SFI} safety for native-compiled {Wasm}.
+\newblock In {\em NDSS}, 2021.
+
+\bibitem{huawei-function-trace}
+Artjom Joosen, Ahmed Hassan, Martin Asenov, Rajkarn Singh, Luke Darlow, Jianfeng Wang, and Adam Barker.
+\newblock How does it function? characterizing long-term trends in production serverless workloads.
+\newblock In {\em Proceedings of the 2023 ACM Symposium on Cloud Computing}, SoCC '23, page 443–458, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{kimFunctionBenchSuiteWorkloads2019}
+Jeongchul Kim and Kyungyong Lee.
+\newblock {{FunctionBench}}: {{A Suite}} of {{Workloads}} for {{Serverless Cloud Function Service}}.
+\newblock In {\em 2019 {{IEEE}} 12th {{International Conference}} on {{Cloud Computing}} ({{CLOUD}})}, pages 502--504, Milan, Italy, July 2019. IEEE.
+
+\bibitem{pocket}
+Ana Klimovic, Yawen Wang, Patrick Stuedi, Animesh Trivedi, Jonas Pfefferle, and Christos Kozyrakis.
+\newblock {Pocket: Elastic Ephemeral Storage for Serverless Analytics}.
+\newblock In {\em 13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}, 2018.
+
+\bibitem{minio-log-processing}
+Moiz Kohari.
+\newblock {Anomaly Detection from Log Files: The Performance at Scale Use Case}.
+\newblock \url{https://blog.min.io/anomaly-detection-from-log-files-the-performance-at-scale-use-case/}, 2023.
+
+\bibitem{serverless-end-linux}
+Ricardo Koller and Dan Williams.
+\newblock {Will Serverless End the Dominance of Linux in the Cloud?}
+\newblock In {\em Proceedings of the 16th Workshop on Hot Topics in Operating Systems}, HotOS '17, page 169–173, New York, NY, USA, 2017. Association for Computing Machinery.
+
+\bibitem{func_as_func}
+Tom Kuchler, Michael Giardino, Timothy Roscoe, and Ana Klimovic.
+\newblock {Function as a Function}.
+\newblock In {\em Proceedings of the 2023 ACM Symposium on Cloud Computing}, SoCC '23, 2023.
+
+\bibitem{unikraft}
+Simon Kuenzer, Vlad-Andrei B\u{a}doiu, Hugo Lefeuvre, Sharan Santhanam, Alexander Jung, Gaulthier Gain, Cyril Soldani, Costin Lupu, \c{S}tefan Teodorescu, Costi R\u{a}ducanu, Cristian Banu, Laurent Mathy, R\u{a}zvan Deaconescu, Costin Raiciu, and Felipe Huici.
+\newblock {Unikraft: Fast, Specialized Unikernels the Easy Way}.
+\newblock In {\em Proceedings of the Sixteenth European Conference on Computer Systems}, EuroSys '21, page 376–394, 2021.
+
+\bibitem{granular-computing}
+Collin Lee and John Ousterhout.
+\newblock {Granular Computing}.
+\newblock In {\em Proceedings of the Workshop on Hot Topics in Operating Systems}, HotOS '19, page 149–154, New York, NY, USA, 2019. Association for Computing Machinery.
+
+\bibitem{pond-dram-cost}
+Huaicheng Li, Daniel~S. Berger, Lisa Hsu, Daniel Ernst, Pantea Zardoshti, Stanko Novakovic, Monish Shah, Samir Rajadnya, Scott Lee, Ishwar Agarwal, Mark~D. Hill, Marcus Fontoura, and Ricardo Bianchini.
+\newblock {Pond: CXL-Based Memory Pooling Systems for Cloud Platforms}.
+\newblock In {\em Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}, ASPLOS 2023, page 574–587, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{hypsec}
+Shih-Wei Li, John~S. Koh, and Jason Nieh.
+\newblock {Protecting Cloud Virtual Machines from Hypervisor and Host Operating System Exploits}.
+\newblock In {\em 28th USENIX Security Symposium (USENIX Security 19)}, pages 1357--1374, Santa Clara, CA, August 2019. USENIX Association.
+
+\bibitem{runD}
+Zijun Li, Jiagan Cheng, Quan Chen, Eryu Guan, Zizheng Bian, Yi~Tao, Bin Zha, Qiang Wang, Weidong Han, and Minyi Guo.
+\newblock {RunD: a Lightweight Secure Container Runtime for High-density Deployment and High-concurrency Startup in Serverless Computing}.
+\newblock In {\em 2022 USENIX Annual Technical Conference (USENIX ATC 22)}, pages 53--68, 2022.
+
+\bibitem{faasflow}
+Zijun Li, Yushi Liu, Linsong Guo, Quan Chen, Jiagan Cheng, Wenli Zheng, and Minyi Guo.
+\newblock {FaaSFlow: Enable Efficient Workflow Execution for Function-as-a-Service}.
+\newblock In {\em Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '22, 2022.
+
+\bibitem{dataflower}
+Zijun Li, Chuhao Xu, Quan Chen, Jieru Zhao, Chen Chen, and Minyi Guo.
+\newblock {DataFlower: Exploiting the Data-flow Paradigm for Serverless Workflow Orchestration}.
+\newblock In {\em Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 4}, ASPLOS '23, page 57–72, New York, NY, USA, 2024. Association for Computing Machinery.
+
+\bibitem{lwC-osdi16}
+James Litton, Anjo Vahldiek-Oberwagner, Eslam Elnikety, Deepak Garg, Bobby Bhattacharjee, and Peter Druschel.
+\newblock {Light-Weight Contexts: An OS Abstraction for Safety and Performance}.
+\newblock In {\em 12th USENIX Symposium on Operating Systems Design and Implementation (OSDI 16)}, pages 49--64, 2016.
+
+\bibitem{tokio-scheduling-blog}
+Jiacai Liu.
+\newblock How tokio schedules tasks: A hard lesson learnt.
+\newblock \url{https://rustmagazine.org/issue-4/how-tokio-schedule-tasks/}, 2023.
+
+\bibitem{hand:unikernels}
+Anil Madhavapeddy, Richard Mortier, Charalampos Rotsos, David~J. Scott, Balraj Singh, Thomas Gazagnaire, Steven Smith, Steven Hand, and Jon Crowcroft.
+\newblock Unikernels: Library operating systems for the cloud.
+\newblock pages 461--472, 2013.
+
+\bibitem{mahgoub:sonic}
+Ashraf Mahgoub, Karthick Shankar, Subrata Mitra, Ana Klimovic, Somali Chaterji, and Saurabh Bagchi.
+\newblock {SONIC: Application-Aware Data Passing for Chained Serverless Applications}.
+\newblock pages 285--301, 2021.
+
+\bibitem{lightvm}
+Filipe Manco, Costin Lupu, Florian Schmidt, Jose Mendes, Simon Kuenzer, Sumit Sati, Kenichi Yasukata, Costin Raiciu, and Felipe Huici.
+\newblock {My VM is Lighter (and Safer) than Your Container}.
+\newblock In {\em Proceedings of the 26th Symposium on Operating Systems Principles}, SOSP '17, 2017.
+
+\bibitem{hyperlight-wasm}
+Microsoft.
+\newblock Hyperlight wasm: Fast, secure, and os-free.
+\newblock \url{https://opensource.microsoft.com/blog/2025/03/26/hyperlight-wasm-fast-secure-and-os-free/}, 2025.
+
+\bibitem{azure-security}
+{Microsoft Azure}.
+\newblock {Azure Guidance for Secure Isolation}.
+\newblock \url{https://learn.microsoft.com/en-us/azure/azure-government/azure-secure-isolation-guidance}, 2023.
+
+\bibitem{naiad}
+Derek~G. Murray, Frank McSherry, Rebecca Isaacs, Michael Isard, Paul Barham, and Mart\'{\i}n Abadi.
+\newblock {Naiad: a Timely Dataflow System}.
+\newblock In {\em Proceedings of the Twenty-Fourth ACM Symposium on Operating Systems Principles}, SOSP '13, page 439–455, New York, NY, USA, 2013. Association for Computing Machinery.
+
+\bibitem{ssb-benchmark}
+Patrick O'Neil, Elizabeth O'Neil, Xuedong Chen, and Stephen Revilak.
+\newblock {\em The Star Schema Benchmark and Augmented Fact Table Indexing}, page 237–252.
+\newblock Springer-Verlag, Berlin, Heidelberg, 2009.
+
+\bibitem{graalos-serveless}
+Rishikesh Palve.
+\newblock {Ultra-fast serverless functions powered by GraalOS}.
+\newblock \url{https://blogs.oracle.com/cloud-infrastructure/post/ultrafast-serverless-functions-powered-by-graalos}, 2023.
+
+\bibitem{locus}
+Qifan Pu, Shivaram Venkataraman, and Ion Stoica.
+\newblock {Shuffling, Fast and Slow: Scalable Analytics on Serverless Infrastructure}.
+\newblock In {\em 16th USENIX Symposium on Networked Systems Design and Implementation (NSDI 19)}, 2019.
+
+\bibitem{pulumi}
+{Pulumi}.
+\newblock {Toward a Cloud Native Programming Model}.
+\newblock \url{https://www.pulumi.com/whitepapers/point-of-view/}, 2024.
+
+\bibitem{qiHalfmoonLogOptimalFaultTolerant2023}
+Sheng Qi, Xuanzhe Liu, and Xin Jin.
+\newblock Halfmoon: {{Log-Optimal Fault-Tolerant Stateful Serverless Computing}}.
+\newblock In {\em Proceedings of the 29th {{Symposium}} on {{Operating Systems Principles}}}, {{SOSP}} '23, pages 314--330, New York, NY, USA, October 2023. Association for Computing Machinery.
+
+\bibitem{kvm}
+Avi Qumranet, Yaniv Qumranet, Dor Qumranet, Uri Qumranet, and Anthony Liguori.
+\newblock Kvm: The linux virtual machine monitor.
+\newblock {\em Proceedings Linux Symposium}, 15, 01 2007.
+
+\bibitem{restful_2013}
+L.~Richardson, M.~Amundsen, and S.~Ruby.
+\newblock {\em {RESTful} {Web} {APIs}: {Services} for a {Changing} {World}}.
+\newblock O'Reilly Media, 2013.
+
+\bibitem{nu-nsdi}
+Zhenyuan Ruan, Seo~Jin Park, Marcos~K. Aguilera, Adam Belay, and Malte Schwarzkopf.
+\newblock Nu: Achieving {Microsecond-Scale} resource fungibility with logical processes.
+\newblock In {\em 20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23)}, pages 1409--1427, Boston, MA, April 2023. USENIX Association.
+
+\bibitem{rust-async}
+{Rust contributors.}
+\newblock {Asynchronous Programming in Rust}.
+\newblock \url{https://rust-lang.github.io/async-book/}.
+
+\bibitem{containerized-udf}
+Karla Saur, Tara Mirmira, Konstantinos Karanasos, and Jes\'{u}s Camacho-Rodr\'{\i}guez.
+\newblock {Containerized execution of UDFs: an experimental evaluation}.
+\newblock {\em Proc. VLDB Endow.}, 15(11):3158–3171, July 2022.
+
+\bibitem{medes}
+Divyanshu Saxena, Tao Ji, Arjun Singhvi, Junaid Khalid, and Aditya Akella.
+\newblock {Memory Deduplication for Serverless Computing with Medes}.
+\newblock In {\em Proceedings of the Seventeenth European Conference on Computer Systems}, EuroSys '22, page 714–729, 2022.
+
+\bibitem{malte-dataflow}
+Malte Schwarzkopf.
+\newblock {The Remarkable Utility of Dataflow Computing}.
+\newblock \url{https://www.sigops.org/2020/the-remarkable-utility-of-dataflow-computing/}, 2020.
+
+\bibitem{aws-step-functions}
+Amazon~Web Serivces.
+\newblock {AWS Step Functions}.
+\newblock \url{https://aws.amazon.com/step-functions/}.
+
+\bibitem{rest-api}
+Amazon~Web Services.
+\newblock {What is RESTful API?}
+\newblock \url{https://aws.amazon.com/what-is/restful-api//}, 2024.
+
+\bibitem{aws-lambda-exec-environment}
+Amazon~Web Services.
+\newblock {Understanding the Lambda execution environment}.
+\newblock \url{https://docs.aws.amazon.com/lambda/latest/operatorguide/execution-environment.html}, 2025.
+
+\bibitem{serverless-in-the-wild}
+Mohammad Shahrad, Rodrigo Fonseca, Inigo Goiri, Gohar Chaudhry, Paul Batum, Jason Cooke, Eduardo Laureano, Colby Tresness, Mark Russinovich, and Ricardo Bianchini.
+\newblock {Serverless in the Wild: Characterizing and Optimizing the Serverless Workload at a Large Cloud Provider}.
+\newblock In {\em 2020 USENIX Annual Technical Conference (USENIX ATC 20)}, pages 205--218. USENIX Association, 2020.
+
+\bibitem{x-containers}
+Zhiming Shen, Zhen Sun, Gur-Eyal Sela, Eugene Bagdasaryan, Christina Delimitrou, Robbert Van~Renesse, and Hakim Weatherspoon.
+\newblock {X-Containers: Breaking Down Barriers to Improve Performance and Isolation of Cloud-Native Containers}.
+\newblock In {\em Proceedings of the Twenty-Fourth International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '19, 2019.
+
+\bibitem{faasm}
+Simon Shillaker and Peter Pietzuch.
+\newblock {Faasm: Lightweight Isolation for Efficient Stateful Serverless Computing}.
+\newblock In {\em 2020 USENIX Annual Technical Conference (USENIX ATC 20)}, 2020.
+
+\bibitem{cloudburst}
+Vikram Sreekanti, Chenggang Wu, Xiayue~Charles Lin, Johann Schleier-Smith, Joseph~E. Gonzalez, Joseph~M. Hellerstein, and Alexey Tumanov.
+\newblock {Cloudburst: Stateful Functions-as-a-Service}.
+\newblock {\em Proc. VLDB Endow.}, 13(12), 2020.
+
+\bibitem{microsoft-prevent-sidechannels}
+Boris~Köpf Stavros~Volos.
+\newblock Preventing side-channels in the cloud.
+\newblock Available at \url{https://www.microsoft.com/en-us/research/blog/preventing-side-channels-in-the-cloud/}, 2024.
+
+\bibitem{qoi-compression}
+Dominic Szablewski.
+\newblock {QOI - The Quite OK Image Format for fast, lossless image compression}.
+\newblock Available at \url{https://github.com/phoboslab/qoi}, 2024.
+
+\bibitem{sigmaos}
+Ariel Szekely, Adam Belay, Robert Morris, and M.~Frans Kaashoek.
+\newblock {Unifying serverless and microservice workloads with SigmaOS}.
+\newblock In {\em Proceedings of the ACM SIGOPS 30th Symposium on Operating Systems Principles}, SOSP '24, page 385–402, New York, NY, USA, 2024. Association for Computing Machinery.
+
+\bibitem{lambdata}
+Yang Tang and Junfeng Yang.
+\newblock {Lambdata: Optimizing Serverless Computing by Making Data Intents Explicit}.
+\newblock In {\em 2020 IEEE 13th International Conference on Cloud Computing (CLOUD)}, pages 294--303, 2020.
+
+\bibitem{opencv}
+OpenCV team.
+\newblock {OpenCV}.
+\newblock Available at \url{https://opencv.org/}, 2024.
+
+\bibitem{reap}
+Dimitrii Ustiugov, Plamen Petrov, Marios Kogias, Edouard Bugnion, and Boris Grot.
+\newblock {Benchmarking, Analysis, and Optimization of Serverless Function Snapshots}.
+\newblock In {\em Proceedings of the 26th ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}, 2021.
+
+\bibitem{ustiugov:in_vitro}
+Dmitrii Ustiugov, Dohyun Park, Lazar Cvetkovi\'{c}, Mihajlo Djokic, Hongyu H\`{e}, Boris Grot, and Ana Klimovic.
+\newblock {Enabling In-Vitro Serverless Systems Research}.
+\newblock In {\em Proceedings of the 4th Workshop on Resource Disaggregation and Serverless}, WORDS '23, page 1–7, New York, NY, USA, 2023. Association for Computing Machinery.
+
+\bibitem{v8}
+{V8}.
+\newblock {What is V8?}
+\newblock \url{https://v8.dev/}.
+
+\bibitem{cloudflare-wasm}
+Kenton Varda.
+\newblock {WebAssembly on Cloudflare Workers}.
+\newblock \url{https://blog.cloudflare.com/webassembly-on-cloudflare-workers}, 2018.
+
+\bibitem{vSwarm}
+vHive Ecosystem.
+\newblock {vSwarm - Serverless Benchmark Suite}.
+\newblock Available at \url{https://github.com/vhive-serverless/vSwarm}, 2025.
+
+\bibitem{virtines}
+Nicholas~C. Wanninger, Joshua~J. Bowden, Kirtankumar Shetty, Ayush Garg, and Kyle~C. Hale.
+\newblock {Isolating Functions at the Hardware Limit with Virtines}.
+\newblock In {\em Proceedings of the Seventeenth European Conference on Computer Systems}, EuroSys '22, 2022.
+
+\bibitem{cheri}
+Robert~N.M. Watson, Jonathan Woodruff, Peter~G. Neumann, Simon~W. Moore, Jonathan Anderson, David Chisnall, Nirav Dave, Brooks Davis, Khilan Gudka, Ben Laurie, Steven~J. Murdoch, Robert Norton, Michael Roe, Stacey Son, and Munraj Vadera.
+\newblock {CHERI: A Hybrid Capability-System Architecture for Scalable Software Compartmentalization}.
+\newblock In {\em 2015 IEEE Symposium on Security and Privacy}, pages 20--37, 2015.
+
+\bibitem{boxer-elasticity}
+Michael Wawrzoniak, Rodrigo Bruno, Ana Klimovic, and Gustavo Alonso.
+\newblock Boxer: Faast ephemeral elasticity for off-the-shelf cloud applications, 2024.
+
+\bibitem{wawrzoniak2021boxer}
+Mike Wawrzoniak, Ingo M{\"u}ller, Rodrigo Fraga Barcelos Paulus~Bruno, and Gustavo Alonso.
+\newblock {Boxer: Data analytics on network-enabled serverless platforms}.
+\newblock In {\em 11th Annual Conference on Innovative Data Systems Research (CIDR 2021)}, 2021.
+
+\bibitem{tmo-dram-cost}
+Johannes Weiner, Niket Agarwal, Dan Schatzberg, Leon Yang, Hao Wang, Blaise Sanouillet, Bikash Sharma, Tejun Heo, Mayank Jain, Chunqiang Tang, and Dimitrios Skarlatos.
+\newblock {TMO: transparent memory offloading in datacenters}.
+\newblock In {\em Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '22, page 609–621, New York, NY, USA, 2022. Association for Computing Machinery.
+
+\bibitem{firecracker-container-escape}
+Jietao Xiao, Nanzi Yang, Wenbo Shen, Jinku Li, Xin Guo, Zhiqiang Dong, Fei Xie, and Jianfeng Ma.
+\newblock Attacks are forwarded: Breaking the isolation of {MicroVM-based} containers through operation forwarding.
+\newblock In {\em 32nd USENIX Security Symposium (USENIX Security 23)}, pages 7517--7534, Anaheim, CA, August 2023. USENIX Association.
+
+\bibitem{understanding-wasm-perf}
+Yutian Yan, Tengfei Tu, Lijian Zhao, Yuchen Zhou, and Weihang Wang.
+\newblock Understanding the performance of webassembly applications.
+\newblock In {\em Proceedings of the 21st ACM Internet Measurement Conference}, IMC '21, page 533–549, New York, NY, USA, 2021. Association for Computing Machinery.
+
+\bibitem{lightweight-fault-wasm}
+Zachary Yedidia.
+\newblock Lightweight fault isolation: Practical, efficient, and secure software sandboxing.
+\newblock In {\em Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2}, ASPLOS '24, page 649–665, New York, NY, USA, 2024. Association for Computing Machinery.
+
+\bibitem{yu2023following}
+Minchen Yu, Tingjia Cao, Wei Wang, and Ruichuan Chen.
+\newblock {Following the data, not the function: Rethinking function orchestration in serverless computing}.
+\newblock In {\em 20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23)}, pages 1489--1504, 2023.
+
+\bibitem{dryadLINQ}
+Yuan Yu, Michael Isard, Dennis Fetterly, Mihai Budiu, \'{U}lfar Erlingsson, Pradeep~Kumar Gunda, and Jon Currey.
+\newblock {DryadLINQ: A System For General-Purpose Distributed Data-parallel Computing Using a High-Level Language}.
+\newblock In {\em Proceedings of the 8th USENIX Conference on Operating Systems Design and Implementation}, OSDI'08, page 1–14, USA, 2008. USENIX Association.
+
+\bibitem{spark}
+Matei Zaharia, Mosharaf Chowdhury, Tathagata Das, Ankur Dave, Justin Ma, Murphy McCauley, Michael~J. Franklin, Scott Shenker, and Ion Stoica.
+\newblock {Resilient Distributed Datasets: A Fault-Tolerant Abstraction For In-Memory Cluster Computing}.
+\newblock In {\em Proceedings of the 9th USENIX Conference on Networked Systems Design and Implementation}, NSDI'12, page~2, USA, 2012. USENIX Association.
+
+\bibitem{compound-ai-blog}
+Matei Zaharia, Omar Khattab, Lingjiao Chen, Jared~Quincy Davis, Heather Miller, Chris Potts, James Zou, Michael Carbin, Jonathan Frankle, Naveen Rao, and Ali Ghodsi.
+\newblock {The Shift from Models to Compound AI Systems}.
+\newblock Available at \url{https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/}, 2024.
+
+\end{thebibliography}

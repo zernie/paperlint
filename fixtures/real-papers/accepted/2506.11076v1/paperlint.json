@@ -1,0 +1,17 @@
+{
+  "cycles": [
+    {
+      "id": "naacl-2025",
+      "venue": {
+        "kind": "preset",
+        "extends": "paperlint:acl-latex"
+      },
+      "opened": "2025-06-04",
+      "outcome": {
+        "kind": "accepted",
+        "date": "2025-06-04",
+        "evidence": "README.md"
+      }
+    }
+  ]
+}

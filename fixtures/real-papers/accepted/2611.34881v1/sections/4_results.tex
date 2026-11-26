@@ -1,0 +1,114 @@
+\section{Experiments}
+\label{sec:experiments}
+\vspace{-5.0pt}
+In this section, we evaluate typicality bias across the modern vision stack and study its mitigation. We first provide our experimental setup in Sec.~\ref{sec:experimental_setup}, including datasets, evaluation metrics, models, and augmentation suites. We then survey five model families on the COCO NPMI splits and the synthetic STRANGE-Bench in Sec.~\ref{sec:results_diagnostic}, establishing that the bias persists across the stack and does not consistently shrink with scale. We finally run the systematic mitigation study on three representative families in Sec.~\ref{sec:results_mitigation}, showing that AAS reduces the typicality gap while preserving overall performance. Sec.~\ref{sec:results_human} checks with human raters that the gaps come from the models and not from the rendered scenes.
+
+\subsection{Experimental Setup}
+\label{sec:experimental_setup}
+
+\noindent\textbf{Datasets and metrics.}
+We evaluate on COCO \texttt{val}, Objects365v2 \texttt{val}~\cite{shao2019objects365} (mapped to COCO's 80-class label space for cross-domain transfer), and the synthetic STRANGE-Bench of Sec.~\ref{sec:strange}. On COCO and O365, we report overall performance as a sanity check (typicality-bias mitigation should not regress overall accuracy) and the typicality gap $\Delta^{\text{T-A}} = M^{\text{T}} - M^{\text{A}}$ on the per-anchor NPMI \emph{quintile} ($\alpha = 0.2$) splits of Sec.~\ref{sec:diagnostic}, where $M$ is AP for detection and micro-averaged F1 at a $0.5$ threshold (F1$_{\text{micro}}$) for DINOv3 classification. We compare rows within a family only, since the metrics (AP, F1) and their operating ranges differ. On STRANGE-Bench, we report the per-tier average $T_{1\text{-}5}^{\text{T}}, T_{1\text{-}5}^{\text{A}}$ across tiers $T_1$ to $T_5$ ($k = 0 \dots 4$) and the single-point $T_{\text{never}}$ score, the most extreme atypical case by construction (see Appendix~\ref{app:additional_results} for more details). The main paper uses $11$ of the $17$ sub-tiers ($T_1$ to $T_5$ in both arms and $T_{\text{never}}$); Tab.~\ref{tab:codino_extra_tiers} and Fig.~\ref{fig:strange_diagnostic_t6} report the others.
+
+\input{static/figures/strange_per_tier_across_models}
+\noindent\textbf{Models.} We evaluate typicality bias on a representative model from each of five families spanning the modern vision stack: \emph{specialist detection} (Co-DINO~\cite{zong2023detrs} R-50, Swin-L), \emph{open-vocabulary detection} (Grounding DINO~\cite{liu2024grounding} Swin-B), \emph{self-supervised classification} (DINOv3~\cite{simeoni2025dinov3} ViT-B, both linear-probe and fine-tuned), \emph{vision--language models} (CLIP~\cite{radford2021learning} ViT-B/16, OpenCLIP~\cite{cherti2023reproducible} ViT-B/16 LAION-2B), and \emph{multimodal LLMs} (LLaVA-OneVision-7B~\cite{li2024llava}). 
+For the diagnostic survey, we use the public pretrained checkpoints officially released by the authors. These families span the modern vision stack along two axes: \emph{supervision regime} (fully supervised, language-grounded, self-supervised, contrastive image--text, and instruction-tuned) and \emph{pretraining data scale} (from $\sim 100$K images for COCO-trained specialists to $\sim 2$ billion image--text pairs for OpenCLIP and LLaVA-OneVision). Any persistence of bias across this set is therefore unlikely to be an artifact of a single paradigm or scale.
+
+For the systematic mitigation study, we select one representative from each of the three task settings, spanning supervision regime, architecture, and task: \textbf{Co-DINO R-50} (specialist closed-vocabulary detection), \textbf{Grounding DINO Swin-B} (open-vocabulary, text-conditioned), and \textbf{DINOv3 ViT-B/16 fine-tuned} (SSL foundational backbone fine-tuned for classification). All representative models are trained on COCO~\texttt{train2017} (initialized from the public pretrained checkpoints) under the augmentation variants below. Full training recipes, checkpoint sources, hyperparameters, and compute budgets are provided in Appendix~\ref{app:experimental-details}. We leave vision--language models and multimodal LLMs out of the mitigation study, since their co-occurrence prior is set during web-scale pretraining.
+
+\noindent\textbf{Augmentation suite.}
+We compare AAS against a representative suite of seven augmentations
+spanning two axes, \emph{static}/\emph{dynamic} and \emph{non-generative}/\emph{generative}: \textbf{Color jitter}, \textbf{MixUp}~\cite{zhang2017mixup}, \textbf{Mosaic}~\cite{bochkovskiy2020yolov4}, \textbf{YOLOX}~\cite{ge2021yolox} (MixUp + Mosaic), \textbf{SCP}~\cite{ghiasi2021simple}, \textbf{XPaste}~\cite{zhao2023x}, and \textbf{InstAug}~\cite{kupyn2024dataset}. We additionally report a \textbf{Std.} baseline using only standard augmentation (flip, crop, resize). None of the existing augmentations are designed to break co-occurrence shortcuts; whether they incidentally affect typicality bias is an empirical question we answer below. AAS hyperparameters are selected once on a $25\%$ COCO subset and held fixed across architectures and tasks; per-augmentation hyperparameters are detailed in Appendix~\ref{app:exp-recipes}.
+
+\subsection{Typicality Bias Persists Across the Modern Vision Stack}
+\label{sec:results_diagnostic}
+\vspace{-3.0pt}
+To isolate the bias contained in the \emph{pretrained representation}
+from any introduced by downstream task adaptation, we evaluate each family with the pretrained representation \emph{frozen}: zero-shot for Grounding DINO, CLIP, and OpenCLIP; linear probing for DINOv3; and
+the released checkpoint for Co-DINO. We
+survey the five model families on the COCO quintile split
+(Fig.~\ref{fig:teaser}, right) and on the STRANGE-Bench per-tier breakdown (Fig.~\ref{fig:strange_diagnostic}).
+The COCO quintile gap $\Delta^{\text{T-A}}$ is non-zero for every family we examine, ranging from \textbf{5.4}~p.p.\@ (Co-DINO Swin-L $1\times$) to \textbf{11.0}~p.p.\@ (OpenCLIP ViT-B/16); concretely, specialist detection shows $\Delta^{\text{T-A}}_{\text{AP}} = $ \textbf{9.5}~p.p.\@
+(Co-DINO R-50), \textbf{5.4}~p.p.\@ (Swin-L $1\times$), and \textbf{5.6}~p.p.\@
+(Swin-L $3\times$), open-vocabulary detection
+$\Delta^{\text{T-A}}_{\text{AP}} = $ \textbf{6.3}~p.p.\@ (Grounding DINO
+Swin-B), self-supervised classification
+$\Delta^{\text{T-A}}_{\text{F1}}$ $= $ \textbf{8.6}~p.p.\@ (DINOv3 ViT-B
+linear probe), and vision--language models
+$\Delta^{\text{T-A}}_{\text{mAP}} = $ \textbf{9.5}~p.p.\@ (CLIP ViT-B/16)
+and \textbf{11.0}~p.p.\@ (OpenCLIP ViT-B/16 LAION-2B). The Co-DINO Swin-L checkpoint, pretrained on a multi-dataset blend~\cite{zong2023detrs}, also exhibits $\Delta^{\text{T-A}}_{\text{AP}} = $ \textbf{5.7}~p.p.\@ on COCO val, indicating the bias is a property of the training distribution rather than dataset overfitting. From CLIP (400M image-text pairs) to OpenCLIP (LAION-2B), more pretraining data \emph{widens} rather than shrinks the gap (\textbf{9.5} $\rightarrow$ \textbf{11.0}~p.p.\@); scale alone is not a solution (App.~\ref{app:scale_ladder} separates data from capacity).
+STRANGE-Bench amplifies this picture (Fig.~\ref{fig:strange_diagnostic}): the gap grows with contextual load $k$ at every tier for the DINOv3 linear probe, CLIP and OpenCLIP, reaching $\Delta = 37.2$ for the DINOv3 linear probe at the highest tier; Co-DINO R-50 rises to about $8.0$ by T3 and then stays flat, and the LLaVA-OV gaps (F1 macro) are smaller and do not grow with $k$. Per-tier breakdowns are provided in App.~\ref{app:additional_results}.
+
+\begin{finding}
+\textbf{Diagnosis.} Typicality bias persists across all five model families and four orders of magnitude of pretraining data ($\sim$100K $\rightarrow$ $\sim$2B images); scale and architectural diversity alone do not solve it.
+\end{finding}
+
+\subsection{Anchor-Atypicality Sampling Closes the Typicality Gap}
+\label{sec:results_mitigation}
+
+We evaluate the augmentation suite on the three representative families. An augmentation mitigates typicality bias when it lifts the atypical side while the typical side and overall accuracy hold; a smaller gap that comes from lowering both sides, as with Mosaic on Co-DINO (Tab.~\ref{tab:codino_main}), is not desirable. On STRANGE-Bench, the gap of the Std.\ baselines grows with the number of partners because the atypical side falls while the typical side changes little: from T1 to T5, Co-DINO goes from $90.8$ to $85.5$ AP on typical scenes and from $87.9$ to $77.3$ on atypical ones, DINOv3 from $91.3$ to $88.6$ F1 and from $92.0$ to $48.0$ (per-tier tables in App.~\ref{app:codino_full} and~\ref{app:dinov3_full}). Across all three, AAS preserves overall accuracy, closes
+the typicality gap on the majority of (model, eval-split) cells, and
+improves extreme-atypical performance the most.
+
+\input{static/tables/codino_r50_main}
+
+\noindent\textbf{Supervised detection.}
+On Co-DINO R-50 (Tab.~\ref{tab:codino_main}), SCP + AAS achieves the highest AP on COCO (overall: \textbf{52.9}, typical: \textbf{54.0}, atypical: \textbf{45.5}; $+1.1$~p.p.\@, $+0.8$~p.p.\@ and $+1.5$~p.p.\@ over Std.) and XPaste + AAS on STRANGE-Bench (typical: \textbf{91.7}, atypical: \textbf{90.7}, $T_{\text{never}}$: \textbf{92.1}; $+3.5$~p.p.\@, $+8.8$~p.p.\@ and $+8.8$~p.p.\@ over Std.). AAS lowers the COCO quintile gap of the baseline it starts from on
+both sides (SCP \textbf{9.0}~$\rightarrow$ \textbf{8.5}, XPaste \textbf{9.0}~$\rightarrow$ \textbf{8.8}) and raises overall AP
+($52.1 \rightarrow 52.9$ and $50.9 \rightarrow 51.4$). On STRANGE-Bench the change is larger with AAS:
+$\Delta_{1\text{-}5}$ falls from \textbf{3.9} to \textbf{2.1} ($-1.8$~p.p.\@) for SCP and from \textbf{1.7} to \textbf{1.0} ($-0.7$~p.p.\@) for XPaste, and
+$T_{\text{never}}$ rises from \textbf{87.5} to \textbf{90.1} ($+2.6$~p.p.\@) and from \textbf{90.4} to \textbf{92.1} ($+1.7$~p.p.\@).
+Mosaic and YOLOX reach the smallest COCO gaps ($6.4$ and $6.7$) by lowering AP on both splits
+($-3.7$ to $-7.1$~p.p.\@ vs.\ Std.). AAS closes the
+gap by lifting atypical performance above its Std.\ baseline. Per-tier
+breakdowns and results on the cross-domain Objects365 split are provided in Appendix~\ref{app:codino_full}.
+
+\noindent\textbf{Open-vocabulary detection.}
+Table~\ref{tab:grounding_dino_main} reports Grounding DINO Swin-B
+under five configurations. Three observations stand out. First,
+the zero-shot baseline already exhibits a substantial COCO quintile
+gap ($\Delta^{\text{T-A}} = 6.3$~p.p.\@); fine-tuning on COCO with paste augmentation raises COCO val AP by $1.6$ to $2.0$~p.p.\@ but keeps the gap at $5.6$ to $6.2$. Second, AAS does not lower COCO val AP relative to the row it starts from ($+0.1$~p.p.\@ for SCP, $+0.2$~p.p.\@ for XPaste), with XPaste + AAS the highest (\textbf{58.9}), and keeps the COCO gap within $0.4$~p.p.\@ of that row ($6.2 \rightarrow 6.2$, $5.6 \rightarrow 6.0$). Third,
+on STRANGE-Bench, AAS lifts atypical AP over the row it starts from ($+1.3$~p.p.\@ for SCP, $+1.1$~p.p.\@ for XPaste) and $T_{\text{never}}$ ($+1.2$~p.p.\@, $+0.6$~p.p.\@), and XPaste + AAS attains the highest typical (\textbf{95.0}), atypical (\textbf{94.7}) and $T_{\text{never}}$ (\textbf{95.2}) scores ($+1.7$~p.p.\@, $+3.8$~p.p.\@ and $+2.8$~p.p.\@ over zero-shot) and, with XPaste, the smallest mean tier gap ($\Delta_{1\text{-}5} = $ \textbf{0.3}~p.p.\@; zero-shot: $2.4$~p.p.\@). 
+
+\input{static/tables/gdino_swinb_main}
+
+\input{static/tables/dinov3_main}
+
+\noindent\textbf{SSL classification.}
+Table~\ref{tab:dinov3_main} reports the full augmentation suite on
+DINOv3 ViT-B/16 fine-tuned, with the linear probe shown in the top
+row for reference. AAS yields the largest mitigation effect of the
+three families: XPaste+AAS reduces the COCO quintile gap from
+$\Delta^{\text{T-A}} = $ \textbf{5.5} (Std.) to \textbf{3.9} ($-1.6$
+p.p.\@, a 29\% relative reduction), while improving overall F1
+($81.9 \rightarrow 82.5$, $+0.6$ p.p.\@) and lifting the atypical-split
+score by $+2.5$ p.p.\@ ($74.3 \rightarrow 76.8$). On STRANGE-Bench, the
+gap is essentially eliminated: $\Delta_{1\text{-}5}$ collapses from
+\textbf{22.2} to \textbf{$-0.8$} ($-23.0$ p.p.\@), and $T_{\text{never}}$
+rises from $62.6$ to \textbf{96.1} ($+33.5$ p.p.\@). The non-paste variants
+either leave the gap large (Color jitter, MixUp, InstAug) or reduce
+it primarily by uniform degradation (Mosaic, YOLOX collapse overall
+F1 by $\sim 12$ p.p.\@), while SCP and XPaste already narrow it (COCO $3.7$ and $4.1$, $\Delta_{1\text{-}5}$ $4.3$ and $-0.7$).
+The situation differs for linear probing on DINOv3 ViT-B/16 with the backbone frozen, where augmentations operate only on the head input and their effect is muted; we report and discuss these results in Appendix~\ref{app:dinov3_lp}.
+
+\begin{finding}
+\textbf{Mitigation.} AAS closes the typicality gap by up to
+$\mathbf{1.6}$ p.p.\@ on COCO splits and $\mathbf{23.0}$ p.p.\@ on
+STRANGE-Bench, while preserving overall performance: the
+intervention is asymmetric, lifting atypical-context performance
+without degrading typical-context performance.
+\end{finding}
+
+\subsection{The Typicality Gap Is Not a Rendering Artifact}
+\label{sec:results_human}
+\vspace{-3.0pt}
+\begin{wraptable}{r}{0.33\linewidth}
+\vspace{-11pt}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\captionsetup{font=small}
+\caption{\textbf{Free listing}: anchor recall (\%); models: DINOv3 fine-tuned.}
+\label{tab:human_listing}
+\input{static/tables/generated/app_user_study_listing_main_tabular}
+\vspace{-10pt}
+\end{wraptable}
+Three blinded user studies test whether the gaps on STRANGE-Bench come from the renders or from the models (App.~\ref{app:strange:user-study}); they ran on an initial version of the benchmark with one render per scene and a lighter audit. In \emph{free listing}, raters named every category they could identify in $100$ $T_1$ and $100$ $T_{\text{never}}$ scenes shown without boxes. A rendering defect would hide the anchor from humans and models alike, yet human anchor recall drops by $1.0$~p.p.\@ and that of the DINOv3 Std.\ model by $31.0$~p.p.\@ (Tab.~\ref{tab:human_listing}). In a \emph{quality audit} of $330$ scenes, typical and atypical scenes at the same $k$ differ in pass rate by $2.2$~p.p.\@ on average over four criteria, with no systematic direction.

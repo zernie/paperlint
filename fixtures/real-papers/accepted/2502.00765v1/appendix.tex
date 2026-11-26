@@ -1,0 +1,292 @@
+\section{Proof of Theorem~\ref{thm:suffcond}}
+\label{app:suffcond}
+
+We prove for node classification and it is identical for graph classification. 
+
+Recall $y_a$ and $y_b$ are respectively the class with the most vote $c_{y_a}$ and with the second-most vote $c_{y_b}$ on predicting the target node $v$ in the subgraphs $\{G_i\}'s$. Hence, 
+\begin{align}
+&    c_{y_{a}}-\mathbb{I}(y_{a}>y_{b})\geq c_{y_{b}} \label{eqn:16} \\
+ &   c_{y_{b}}-\mathbb{I}(y_{b}>y_{c})\geq c_{y_{c}}, \forall y_c \in \mathcal{Y}\setminus\{y_{a}\} \label{eqn:17}
+\end{align}
+where $\mathbb{I}$ is the indicator function, and we pick the class with a smaller index when there exist ties. 
+
+Further, on the perturbed graph $G'$ after the attack, the vote $c_{y_{a}}'$ of the class $y_a$ and vote $c_{y_{c}}'$ of any other class $y_{c}\in \mathcal{Y}\setminus \{y_{a}\}$ satisfy the below relationship: 
+\begin{equation}
+\label{eqn:18}
+c_{y_{a}}'\geq c_{y_{a}} - \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) 
+\end{equation}
+\begin{equation}
+\label{eqn:19}
+c_{y_{c}}'\leq c_{y_{c}} + \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)
+%\leq c_{y_{b}}-\mathbb{I}(y_{b}>y_{c}) + \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v
+\end{equation}
+
+To ensure the returned label by the voting node classifier $\bar{f}$ does not change, i.e., $\bar{f}(G)_v = \bar{f}(G')_v, \forall G'$, we must have:
+\begin{equation}
+\label{eqn:20}
+c_{y_{a}}'\geq c_{y_c}'+\mathbb{I}(y_{a}>y_{c}),\forall y_{c}\in \mathcal{Y}\setminus \{y_{a}\}
+\end{equation}
+
+Combining with Eqns \ref{eqn:18} and \ref{eqn:19}, the sufficient condition for Eqn~\ref{eqn:20} to satisfy is to ensure: 
+\begin{equation}
+c_{y_{a}} - \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)  \geq 
+c_{y_{c}} + \sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)
+\end{equation}
+Or, 
+\begin{equation}
+c_{y_{a}}\geq c_{y_{c}} + 2\sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)+\mathbb{I}(y_{a}>y_{c}).
+\end{equation}
+
+Plugging Eqn~\ref{eqn:17}, we further have this condition:
+\begin{equation}
+\label{eqn:23}
+c_{y_{a}} \geq c_{y_{b}}-\mathbb{I}(y_{b}>y_{c})+ 2\sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)+\mathbb{I}(y_{a}>y_{c})
+\end{equation}
+We observe that:
+\begin{equation}
+\label{eqn:24}
+\mathbb{I}(y_{a}>y_{b})\geq \mathbb{I}(y_{a}>y_{c})-\mathbb{I}(y_{b}>y_{c})
+,\forall y_{c}\in \mathcal{Y}\setminus \{y_{a}\}\end{equation}
+Combining Eqn~\ref{eqn:24} with Eqn~\ref{eqn:23}, we have:
+\begin{equation}
+c_{y_{a}} \geq c_{y_{b}}+2\sum_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v)+\mathbb{I}(y_{a}>y_{b})
+\end{equation}
+Let $M = {\lfloor c_{y_a}-c_{y_b}-\mathbb{I}(y_{a}>y_{b})\rfloor} / {2}$, hence 
+$\sum\nolimits_{i=1}^{T}\mathbb{I}(f(G_{i})_v\neq f(G'_{i})_v) \leq M$.
+
+
+
+
+
+\begin{figure*}[t]
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \subfloat[{\small (a) Edge-Centric Graph Division for Node Classification against edge deletion, node deletion and node feature manipulation}]{
+    \includegraphics[width=\linewidth]{figs/edge-division-attack-2.jpg}}
+    \hspace{+10mm}
+   
+    \subfloat[{\small (b) Node-Centric Graph Division for Node Classification against edge deletion, node deletion and node feature manipulation}]{
+    \includegraphics[width=\linewidth]{figs/node-division-attack-2.jpg}}
+    \hspace{+10mm}
+    \caption{Illustration of our edge-centric and node-centric graph division strategies for node classification against edge deletion, node deletion, and node feature manipulation. 
+    {\bf To summarize:} 1 deleted edge  affects at most 1 subgraph prediction in both graph division strategies. In contrast, 1 deleted node with, e.g., $3$ incident edges can affect at most 3 subgraph predictions with edge-centric graph division, but at most 1 subgraph prediction with node-centric graph division.
+    }
+    \label{fig:subgraphs_NC_more}
+   \vspace{-2mm}
+\end{figure*}
+
+
+\begin{figure*}[t]
+    \centering
+    \captionsetup[subfloat]{labelsep=none, format=plain, labelformat=empty}
+
+    \subfloat[{\small (a) Edge-Centric Graph Division for Graph Classification against edge manipulation, node manipulation and feature manipulation}]{
+    \includegraphics[width=0.9\linewidth]{figs/edge-division-attack-3.jpg}}
+    \hspace{+20mm}
+    
+    \subfloat[{\small (b) Node-Centric Graph Division for Graph Classification against edge manipulation, node manipulation and feature manipulation}]{
+    \includegraphics[width=0.9\linewidth]{figs/node-division-attack-3.jpg}}
+    \vspace{-2mm}
+    \caption{Illustration of our edge-centric and node-centric graph division strategies for graph classification. The conclusion are similar to those for node classification.}
+    \label{fig:subgraphs_GC}
+    \vspace{-4mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-E-h.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-E-h.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-E-h.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-E-h.png}}\\
+\vspace{-2mm}
+\caption{Certified node accuracy of our {\nameE} w.r.t. the hash function $h$.}
+\label{fig:node-EC-hash}
+\vspace{-6mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-N-h.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-N-h.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-N-h.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-N-h.png}}\\
+\vspace{-2mm}
+\caption{Certified node accuracy of our {\nameN} w.r.t. the hash function $h$.}
+\label{fig:node-NC-hash}
+\vspace{-6mm}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-E-h.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-E-h.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-E-h.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-E-h.png}}\\
+\vspace{-2mm}
+\caption{Certified graph accuracy of our {\nameE} w.r.t. the hash function $h$.}
+\label{fig:graph-EC-hash}
+\vspace{-6mm}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-N-h.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-N-h.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-N-h.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-N-h.png}}\\
+\vspace{-2mm}
+\caption{Certified graph accuracy of our {\nameN} w.r.t. the hash function $h$.}
+\label{fig:graph-NC-hash}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+
+\section{More Experimental Results}
+
+
+\vspace{+0.05in}
+\noindent 
+Figure~\ref{fig:node-EC-hash}-Figure~\ref{fig:graph-NC-hash} show the certified node/edge accuracy of {\nameE} and  {\nameN} with different hash functions. 
+We observe that our certified accuracy and certified perturbation size are almost the same in all cases. This reveals  {\name} is insensitive to hash functions, and \cite{xia2024gnncert} draws a similar conclusion. 
+
+\vspace{+0.05in}
+\noindent  Figures~\ref{fig:node-EC-T-GSAGE}-\ref{fig:graph-NC-T-GSAGE} show the results where we use GSAGE~\cite{hamilton2017inductive} as the base GNN classifier\footnote{During certification, we use all neighbors of a node,  instead of using randomly sampled nodes in the raw GSAGE, to maintain the divided subgraphs be deterministic.}, and Figures~\ref{fig:node-EC-T-GAT}-\ref{fig:graph-NC-T-GAT} the results where we use GAT~\cite{velivckovic2018graph} as the base GNN classifier. We can see they have similar certified node/graph classification at perturbation size as the model trained using GCN as the base classifier. %Also they have similar observations. 
+
+\vspace{+0.05in}
+\noindent Figure~\ref{fig:node-EC-w-wo}-Figure~\ref{fig:graph-EC-w-wo} show the certified node/graph classification with or without subgraphs for training the GNN classifier. We observe the certified accuracy can be much higher when the subgraphs are used for training. This is because certification also uses subgraphs.   
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-E-GSAGE.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-E-GSAGE.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-E-GSAGE.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-E-GSAGE.png}}\\
+\caption{Certified node accuracy of our {\nameE} with GSAGE w.r.t. the number of subgraphs $T$.}
+\label{fig:node-EC-T-GSAGE}
+\vspace{-6mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-N-GSAGE.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-N-GSAGE.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-N-GSAGE.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-N-GSAGE.png}}\\
+\caption{Certified node accuracy of our {\nameN} with GSAGE w.r.t. the number of subgraphs $T$.}
+\label{fig:node-NC-T-GSAGE}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-E-GSAGE.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-E-GSAGE.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-E-GSAGE.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-E-GSAGE.png}}\\
+\caption{Certified graph accuracy of our {\nameE} with GSAGE w.r.t. the number of subgraphs $T$.}
+\label{fig:graph-EC-T-GSAGE}
+\vspace{-6mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-N-GSAGE.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-N-GSAGE.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-N-GSAGE.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-N-GSAGE.png}}\\
+\caption{Certified graph accuracy of our {\nameN} with GSAGE w.r.t. the number of subgraphs $T$.}
+\label{fig:graph-NC-T-GSAGE}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-E-GAT.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-E-GAT.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-E-GAT.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-E-GAT.png}}\\
+\caption{Certified node accuracy of our {\nameE} with GAT w.r.t. the number of subgraphs $T$.}
+\label{fig:node-EC-T-GAT}
+\vspace{-6mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-N-GAT.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-N-GAT.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-N-GAT.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-N-GAT.png}}\\
+\caption{Certified node accuracy of our {\nameN} with GAT w.r.t. the number of subgraphs $T$.}
+\label{fig:node-NC-T-GAT}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-E-GAT.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-E-GAT.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-E-GAT.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-E-GAT.png}}
+\\
+\caption{Certified graph accuracy of our {\nameE} with GAT w.r.t. the number of subgraphs $T$.}
+\label{fig:graph-EC-T-GAT}
+\vspace{-4mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-N-GAT.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-N-GAT.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-N-GAT.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-N-GAT.png}}\\
+\caption{Certified graph accuracy of our {\nameN} with GAT w.r.t. the number of subgraphs $T$.}
+\label{fig:graph-NC-T-GAT}
+\vspace{-4mm}
+\end{figure*}
+
+
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[Cora-ML]{\includegraphics[width=0.25\textwidth]{figs/CoraML-W.png}}\hfill
+\subfloat[Citeseer]{\includegraphics[width=0.25\textwidth]{figs/Citeseer-W.png}}\hfill
+\subfloat[Pubmed]{\includegraphics[width=0.25\textwidth]{figs/PubMed-W.png}}\hfill
+\subfloat[Amazon-C]{\includegraphics[width=0.25\textwidth]{figs/Computers-W.png}}\\
+\caption{Certified node accuracy of our {\name} with and without subgraphs for training under the default setting.}
+\label{fig:node-EC-w-wo}
+\vspace{-4mm}
+\end{figure*}
+
+
+\begin{figure*}[!t]
+\centering
+\subfloat[AIDS]{\includegraphics[width=0.25\textwidth]{figs/AIDS-W.png}}\hfill
+\subfloat[MUTAG]{\includegraphics[width=0.25\textwidth]{figs/MUTAG-W.png}}\hfill
+\subfloat[PROTEINS]{\includegraphics[width=0.25\textwidth]{figs/PROTEINS-W.png}}\hfill
+\subfloat[DD]{\includegraphics[width=0.25\textwidth]{figs/DD-W.png}}\\
+\caption{Certified graph accuracy of our {\name} with and without subgraphs  for training under the default setting.}
+\label{fig:graph-EC-w-wo}
+\end{figure*}
+
+

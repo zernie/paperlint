@@ -1,0 +1,30 @@
+\begin{figure}
+\centering
+\footnotesize
+\begin{minted}[
+  xleftmargin=2ex, xrightmargin=1ex, frame=lines, fontsize=\footnotesize, linenos, 
+  autogobble, numbersep=1ex, framesep=1mm, breaklines]
+{java}
+while (shouldRun()) { // Loop 1
+    resp = sendHeartBeat();
+    // Loop 2
+    for (DataNodeCommand cmd: resp.getCommands()) {
+        processCommand(cmd);
+    }
+    // ...
+    List<BlockReport> reports = new ArrayList<>();
+    // Loop 3
+    for (Map.Entry kv: perVolumeBlocks.entrySet()) { 
+        reports.add(convertFormat(kv));
+    }
+    // ...
+    for (BlockReport report: reports) {
+        nnRpcStub.blockReport(report);
+        // ...
+    }
+}
+\end{minted}
+% \vspace{-3mm}
+\caption{Pseudo-code demonstrating delay in nested loops, code simplified from \texttt{BPServiceActor} in HDFS.}
+\label{fig:nested-loop-delay}
+\end{figure}

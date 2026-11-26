@@ -1,0 +1,47 @@
+\section{Introduction}\label{sec:intro}
+
+\epigraph{\textit{\textbf{Elasticity} is the degree to which a system is able to adapt to workload changes by provisioning and deprovisioning resources in an autonomic manner, such that at each point in time, the available resources match the current demand as closely as possible~\cite{elasticity-definition}.}}{}
+
+Elasticity is a key selling point of cloud computing~\cite{view-of-cloud-2010}.
+The more elastic the infrastructure, the more cost-efficient cloud computing can become, since fewer resources need to be pre-provisioned before a request arrives to ensure low latency.
+Infrastructure as a Service (IaaS) offers greater elasticity than purchasing on-premise servers, as users can boot virtual machines (VMs) in tens of seconds~\cite{boxer-elasticity} and rent them for as long as they need. Serverless computing~\cite{RiseofServerless19} pushes elasticity even further, as Function as a Service (FaaS) platforms boot tasks in tens to hundreds of milliseconds~\cite{firecracker,reap, catalyzer} and autoscale sandboxes based on invocation load~\cite{serverless-in-the-wild}.
+
+However, even serverless cloud platforms are not elastic enough to avoid pre-provisioning expensive resources. To achieve low latency and high throughput, FaaS platforms keep many idle function sandboxes ready in memory~\cite{firecracker, serverless-in-the-wild}. For example, when running the Azure Functions trace~\cite{serverless-in-the-wild}, the Knative~\cite{knative} serverless platform aggressively autoscales sandboxes such that 97\% of requests execute in sandboxes whose memory was provisioned before the invocation arrived (warm starts).  
+Although this improves median latency, it causes the platform to commit 16$\times$ more memory on average (red line in Figure~\ref{fig:mem-overhead}) than the memory required for running active requests (blue line). Provisioning so many extra sandboxes in memory is expensive, since DRAM dominates server costs~\cite{tmo-dram-cost, pond-dram-cost}. 
+
+\begin{figure}
+	\centering
+	\includegraphics[trim={0 1.0cm 0 0.5cm},width=0.5\textwidth]{figures/firecracker_motivation_memory.pdf}
+	\caption{Azure trace execution with 100 functions, comparing committed memory for all VMs on the node with Knative autoscaling vs. for the VMs actively serving requests. Keeping VMs hot reduces cold starts, but consumes extra DRAM, which is expensive. Dotted lines show the average.}
+	\label{fig:mem-overhead}
+\end{figure}
+
+The current approach of capping costs by pre-provisioning sandboxes for many, but not all functions leads to the additional problem of high performance variability. The small percentage of requests that are cold starts incur noticeable extra latency to boot a sandbox on the critical path. Figure~\ref{fig:hotStartServer} shows how sensitive tail latency is to the percentage of hot requests (note the log scale!), despite sandbox creation optimizations like snapshots~\cite{firecracker:snapshot_restoration}. The high tail latency due to cold starts particularly impacts user-facing tasks like web serving and interactive data processing. 
+
+We show that a key barrier to achieving true elasticity in the cloud is executing each function in a sandbox derived from a container or VM that \textit{exposes a POSIX-like interface to the function}. 
+A minimal KVM~\cite{kvm} instance can boot in less than 140 thousand cycles~\cite{virtines} (i.e. $\sim52\mu s$ at 2.69GHz). However, booting a hello-world function in a Firecracker MicroVM (which is based on KVM) takes over 10\textit{ms} even with snapshots.
+Much of this time is spent on loading the guest OS snapshot and configuring the MicroVM's network setup (>8\textit{ms} is spent on demand paging the snapshot and re-establishing the guest-host connection), which are needed to provide a POSIX-like interface to the user function. 
+
+Although prioritizing POSIX compatibility was essential in the early days of cloud computing to ease migration from on-premise deployments, cloud-native application development is increasingly common today. Developers build applications for cloud environments, leveraging numerous cloud services for storage, analytics, AI inference, and more, which are all exposed over REST APIs~\cite{aws-rest-api}. Cloud-native programming is evolving~\cite{serverless-end-linux, new-directions-cloud, rethinking-serverless, compute-centric-networking, func_as_func, mosaic, pulumi, yu2023following, cloudburst, boxer-elasticity, serverless-uphill, lambdata, dataflower}, with systems like SigmaOS~\cite{sigmaos} demonstrating that well-tailored interfaces for cloud-native applications can eliminate the need for traditional POSIX-like interfaces. Even today's FaaS platforms, such as AWS Lambda, are not fully POSIX compliant, as functions cannot accept incoming connections~\cite{wawrzoniak2021boxer}. 
+Hence, now is the right time to rethink cloud abstractions that can enable the underlying infrastructure to become more efficient and truly elastic. 
+
+\begin{figure}
+	\centering
+	\includegraphics[trim={0 1.25cm 0 0},width=\columnwidth]{figures/firecracker_motivation_hot-vs-cold.pdf}
+	\caption{128x128 int64 matmul running in Firecracker MicroVMs. The \% of cold requests greatly impacts performance.}
+	\label{fig:hotStartServer}
+\end{figure}
+
+We propose \dandelion, an elastic cloud platform with a declarative cloud-native programming model that replaces the POSIX-based network interface with a higher-level (e.g., HTTP-based) interface for applications to interact with remote services like cloud storage, databases, and AI inference services. \dandelion executes applications expressed as direct acyclic graphs (DAGs) of \textit{pure compute functions} and \textit{communication functions}. Pure compute functions are bodies of (untrusted) user code, which take a declared list of inputs and produce a declared list of outputs. Communication functions are implemented by the \dandelion platform and can be invoked (but not modified) in user application DAGs. \dandelion currently implements a communication function for HTTP communication, which enables REST API interactions. We plan to add more communication functions to support additional protocols. 
+
+
+Decomposing a cloud application into pure compute and communication functions enables redesigning the function execution system for high elasticity.
+First, \dandelion can securely execute pure compute functions in lightweight sandboxes that are fast to cold start, since the sandboxes do not need a guest OS setup for networking, threading, etc. or an isolated virtual network device on the host.
+Second, \dandelion can dedicate a CPU core for each compute function and run it to completion to minimize context switches, since a pure function does not block.\footnote{Compute functions do not issue syscalls. \dandelion allocates an isolated memory region for each function before it starts executing, loads inputs in this region (e.g., via a memory-mapped file system), and provides a standard C/C++ library that allows file read/writes without syscalls (see \S\ref{sec:design:interface}).}
+ Finally, it enables \dandelion to run a cooperative runtime for network I/O per node (rather than per sandbox) and elastically adjust the CPU core allocation based on the number of compute vs. communication functions in the system.  
+
+We implement several applications on \dandelion, including a distributed log processing application (which interacts with an authentication service and storage servers over HTTP), SQL query processing (which ingests data from S3), and a simple Text2SQL agentic AI workflow (which uses communication functions to prompt an LLM and to query a remote database).
+The platform design is not tied to a particular sandbox mechanism. To demonstrate this, we implement \dandelion with four different lightweight isolation backends for compute functions (KVM~\cite{kvm}, Linux processes, CHERI memory capabilities~\cite{cheri}, and rWasm~\cite{rwasm}).
+We compare \dandelion's performance and security trade-offs to current FaaS platforms that use Firecracker~\cite{firecracker}, gVisor~\cite{gvisor}, or Wasmtime~\cite{wasmtime} for isolation. \dandelion boots sandboxes in 100s of $\mu$s, or even under 90$\mu$s for CHERI-based sandboxes, which is over an order of magnitude faster than Firecracker snapshot booting. \dandelion makes it practical to cold-start every request, reducing memory overprovisioning by 96\% compared to Knative autoscaling when replaying the Azure Functions trace and reducing execution time variance.
+\dandelion improves elasticity for query processing compared to the AWS Athena serverless query service, achieving 40\% lower latency and 67\% lower cost for short-running queries.
+The code for \dandelion is available at \url{https://github.com/eth-easl/dandelion}.

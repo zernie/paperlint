@@ -1,0 +1,160 @@
+% =====================================================================
+% EXPERIMENTS
+% =====================================================================
+
+\section{Experiments}
+\label{sec:experiments}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/cifar_results.pdf}
+  \caption{CIFAR-10 with 20\% label noise (top) and 100\% label noise
+  (bottom), with $K=8$ SGD seeds per width. We plot cross-entropy of the train set, the per-seed
+  test set (mean over seeds; band $\pm 1$ s.d.), and the probability-averaged
+  ensemble of 8 Gaussian-prior SGLD chains with 10 retained draws per chain
+  (green, dashed).
+  Under both noise levels the per-seed test cross-entropy exhibits a
+  pronounced double-descent peak near the interpolation threshold while the ensemble
+  cross-entropy is smaller, particularly near interpolation.
+  Test cross-entropy uses independently corrupted labels and 0/1 error uses clean labels.
+  We include 0/1 error for reference, but note that it cannot separate near-uniform
+  predictions from overconfident wrong predictions in the 100\% noise case---the
+  distinction cross-entropy resolves.}
+  \label{fig:ensemble}
+\end{figure}
+
+We investigate this picture across two model families that span the standard
+double-descent literature---CNNs and random forests---each with a varying
+parameter count across the interpolation threshold on a classification
+task. Throughout we report \emph{cross-entropy} as the
+primary metric. Cross-entropy is the natural quantity in our framework because
+it estimates the test log-loss $L_n(P^*)$ in~\eqref{eq:testloss} and therefore
+measures predictive density rather than 0/1 correctness; classification accuracy
+is reported for context but does not enter the decomposition~\eqref{eq:decomp}.
+
+\paragraph{Ensemble as a Bayes predictor.}
+Following Section~\ref{sec:gibbs}, we approximate the Bayes predictor
+$Q^\pi_{n+1}$ using finite runs of $K$ independent SGLD chains under an explicit Gaussian
+prior, averaging retained predictive probabilities within each chain and
+then across chains. Crucially, we
+average \emph{class probabilities} (the softmax outputs), \emph{not logits}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/gap_vs_seeds.pdf}
+  \caption{Effect of the number of seeds $K$ averaged into the SGD ensemble.
+  Left panels: the difference in the ensemble test metric between two widths
+  ($k{=}8\to 10$ for 20\% noise, $k{=}10\to 14$ for 100\% noise),
+  computed as the larger width minus the smaller, as a function of $K$.
+  Right panels: the ensemble test curve as $K$ varies. We report 0/1 error
+  for 20\% noise and cross-entropy for 100\% noise. Lines give means over
+  20 random subsets of 64 seeds (20\% noise) or 16 seeds (100\% noise),
+  with no replacement within each subset. Left-panel subsets are paired
+  across widths; bands give $\pm 1$ s.d. The full ensemble is used once.
+  Under 20\% noise the difference is negative for $K\ge32$.
+  Under 100\% noise, the difference remains positive at $K=16$.}
+  \label{fig:gap-vs-seeds}
+\end{figure}
+
+\subsection{Bayes predictor and double descent}
+\label{sec:exp-ensemble}
+
+We train a 5-layer CNN of varying width $k$ on CIFAR-10 with a fixed
+fraction of training labels replaced by uniformly random labels, sweeping widths. For each
+$k$ we train $K=8$ independently initialized SGD seeds and $K=8$ SGLD
+chains, and compare the mean per-seed SGD test cross-entropy with the
+SGLD ensemble test cross-entropy. SGD is a finite optimization of the
+maximum-likelihood objective. Full
+training details (architecture, optimizer, schedule, batch size, number
+of gradient steps) are deferred to Appendix~\ref{app:training}.
+
+\paragraph{CIFAR-10.}
+We focus first on the canonical $20\%$ label noise setup
+(Figure~\ref{fig:ensemble}). The training cross-entropy approaches
+zero at the interpolation threshold and remains close to zero for all larger $k$,
+confirming that we are operating in the interpolation regime. The per-seed
+test cross-entropy exhibits the double-descent peak near the interpolation
+threshold, while the SGLD ensemble cross-entropy
+shows no pronounced interpolation peak. We hypothesize that
+the second descent is primarily produced by the MLE-vs-Bayes gap~(III),
+but cannot conclude this directly due to the possible confounding effect
+of the approximation-and-shift term~(I).
+
+\paragraph{Random labels.}
+To isolate the MLE-vs-Bayes gap~(III) from the approximation-and-shift
+term~(I), we repeat the experiment with $100\%$ label noise: training labels
+drawn uniformly at random, independently of the input. Under this $P^*$ the
+true conditional is uniform, $P^*(Y\mid X)\equiv 1/10$. Setting the final-layer weights and biases to zero gives uniform
+softmax outputs, so there is a $\theta_0\in\Theta$ with
+$D(P^*\,\|\,P_{\theta_0})=0$. Hence
+$P^*_\Theta=P^*$ in distribution and
+$(\mathrm{I})=\mathcal{R}_n(P^*)-\mathcal{R}_n(P^*_\Theta)=0$.
+
+The training cross-entropy approaches zero at the interpolation threshold, and
+the per-seed test cross-entropy exhibits a pronounced peak there
+(Figure~\ref{fig:ensemble}). The ensemble test cross-entropy remains near
+$\log 10$, so the empirical SGD-vs-ensemble gap is large near the
+interpolation threshold. At $k=14$, the mean SGD loss is $8.659$ nats and
+the SGLD ensemble loss is $2.303$ nats, giving a gap of $6.356$ nats.
+Since $P^*_\Theta=P^*$ here by construction,
+\eqref{eq:gap-lower-bounds-III} identifies the expected MLE-vs-ensemble gap
+as a lower bound on (III) in the ideal posterior-sampling model.
+The large measured gap near interpolation supports the MLE-vs-Bayes gap
+as a major contributor to the peak.
+
+Longer chains and a smaller step size changed ensemble log-loss by at most
+$0.019$ nats at the checked widths (Appendix~\ref{app:sampling}).
+These checks preserve the qualitative comparison. An SGD-ensemble
+control is also included there.
+
+\paragraph{SGD ensembling.}
+As a practical extension, we also average the class probabilities of
+independently trained SGD models.
+Figure~\ref{fig:gap-vs-seeds} compares the ensemble curves as $K$ varies.
+Increasing $K$ improves the ensemble test metric. Under $20\%$ noise,
+the plotted ensemble curves are monotone for $K=32$ and $K=64$; under
+$100\%$ noise, the peak shrinks but remains at $K=16$.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/rf_double_descent.pdf}
+  \caption{Random forests and BART on MNIST ($n=10^4$, 10 classes)
+  across the two-phase complexity axis $N^{\mathrm{max}}_{\mathrm{leaf}}/N_{\mathrm{tree}}$.
+  \textbf{Top row}: clean training labels. \textbf{Bottom row}: $100\%$ random
+  training labels. Both rows use clean test labels. Solid curves give the
+  original single-forest train and test scores. The BART ensemble (green, dashed)
+  averages regression outputs over 16 chains with 25 draws each, then clips
+  and normalizes the ten scores for evaluation. Under both label settings the
+  forest test cross-entropy (orange) exhibits a pronounced double-descent peak
+  near the interpolation threshold. With random training labels, the BART
+  ensemble cross-entropy stays near $\log 10$.}
+  \label{fig:rf}
+\end{figure}
+
+\subsection{Random forests and BART}
+\label{sec:exp-rf}
+
+To compare with a structurally different model family, we now
+consider random forests \citep{breiman2001random} on MNIST, following the
+double-descent setup of \citet{belkin2019reconciling}. We train on
+$n=10^4$ samples and sweep complexity along the two-phase axis
+$N^{\mathrm{max}}_{\mathrm{leaf}}/N_{\mathrm{tree}}$: Phase~1 holds
+$N_{\mathrm{tree}}=1$ and varies the maximum number of leaves
+$N^{\mathrm{max}}_{\mathrm{leaf}}$ from small values up to the
+interpolation threshold (where the train cross-entropy first reaches zero);
+Phase~2 fixes $N^{\mathrm{max}}_{\mathrm{leaf}}$ at the interpolation
+threshold and grows $N_{\mathrm{tree}}$. We run the experiment under both
+clean labels and $100\%$ random labels. For comparison, we use a BART-style Gaussian regression ensemble
+\citep{chipman2010bart}, averaging 16 chains with 25 retained draws each
+before clipping and normalizing the ten class scores. This is an empirical
+comparison, not a classification posterior predictive to which
+\eqref{eq:gap-lower-bounds-III} directly applies.
+
+Figure~\ref{fig:rf} shows train and test cross-entropy across the
+complexity axis under both label settings. The forest test cross-entropy
+exhibits a pronounced double-descent peak around the interpolation
+threshold and then drops sharply once additional trees are added in
+Phase~2; the peak is more dramatic under $100\%$ random labels. The
+BART ensemble cross-entropy is substantially smaller near interpolation,
+mirroring the attenuation of the peak in the CNN result.
+

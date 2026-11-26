@@ -1,0 +1,31 @@
+\begin{abstract}
+% Modern deep learning (DL) applications heavily rely on third-party libraries such as Transformers and Megatron for model training and inference. 
+Deep learning (DL) libraries like Transformers and Megatron are now widely adopted in modern AI programs. 
+However, when these libraries introduce defects—ranging from silent computation errors to subtle performance regressions—it is often challenging for downstream users to assess whether their own programs are affected. 
+Such impact analysis requires not only understanding the defect semantics but also checking whether the client code satisfies complex triggering conditions involving configuration flags, runtime environments, and indirect API usage.
+We present \appname, an agent coordination framework for fine-grained defect and impact analysis in DL library updates.
+\appname coordinates four specialized agents across three steps:
+(1) the \textit{PR Miner} and \textit{Code Diff Analyzer} extract structured defect semantics from commits or pull requests,
+(2) the \textit{Orchestrator Agent} synthesizes these signals into a unified defect pattern with trigger conditions, and
+(3) the \textit{Impact Analyzer} checks downstream programs to determine whether the defect can be triggered.
+To improve accuracy and explainability, \appname integrates static analysis with DL-specific domain rules for defect reasoning and client-side tracing.
+We evaluate \appname on 157 PRs and 70 commits across two representative DL libraries. 
+It achieves 90\% precision in defect identification and generates high-quality structured fields (average field score 1.6/2). 
+On 122 client programs, \appname identifies affected cases with 90\% recall and 80\% precision, substantially outperforming other baselines. 
+% Case studies further demonstrate its ability to uncover silent defects missed by developers and support actionable mitigation decisions without version upgrades.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007.10011006.10011072</concept_id>
+       <concept_desc>Software and its engineering~Software libraries and repositories</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Software and its engineering~Software libraries and repositories}
+
+\keywords{Multi-Agent Framework, Pull Request, Defect Impact Analysis}
+

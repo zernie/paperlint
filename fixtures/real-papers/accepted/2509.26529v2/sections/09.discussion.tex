@@ -1,0 +1,26 @@
+\section{Discussion}
+
+In this section, we discuss \tool's generality, its usage in real-world scenarios, and lessons learned from the \vcs detected.
+
+\subsection{Generality of \tool}
+
+\para{Across distributed system components.} 
+\tool can identify causal relationships across components of distributed systems 
+(currently supports JVM-based components).
+For example, \tool can identify causal relationships between faults in HBase and its underlying HDFS, provided that integration tests driving multiple system components are available. 
+
+\para{Generality of faults.}
+\tool's fine-grained fault injection (\Cref{sec:fia:faults-to-inject}) is both representative and general.
+First, we achieve completeness in exception injection by targeting all \texttt{throw} statements, which are then conservatively pruned via a rule-based approach. Second, we also achieve completeness in contention injection for \vcs by simulating their common cause -- workload-induced contention~\cite{huang2022metastable, qian2023vicious} -- with spinning delay.
+Third, we make a practical tradeoff with the system-specific error injection by using a heuristic (i.e., targeting boolean-returning functions) to maintain generality. While this heuristic may miss some error detectors implemented as branch conditions, such cases are often captured by exception injections if they guard \texttt{throw} statements. Conversely, a fully complete approach would require  input from developers to distinguish normal branch conditions from the remaining system-specific error detectors.
+
+\subsection{Using \tool in Real-World Scenarios}
+
+We expect \tool to be applied 
+before releases 
+to catch potential \vcs due to its exhaustive testing approach. 
+To adapt \tool for regular regression testing, \tool's budget allocation algorithm can be refined to focus on faults in the classes or packages that 1) have been involved in prior failures or 2) involve heavy code changes and newly introduced test workloads. However, this remains a future direction that requires thorough evaluation.
+
+\subsection{Lessons Learned}
+
+Several ways can be applied to reduce the possibility of encountering \vcs in real-world distributed systems. First, workload should never be piggybacked on critical requests (e.g., heartbeat or failure detectors). A surge in the user traffic can easily drive the system into a cascading failure. Second, distributed systems should properly implement throttling mechanisms by proactively monitoring current system load such as the queue length. In addition to dropping requests at the server side, clients should be properly informed to refrain themselves from retrying to avoid a retry storm. Third, asynchronous requests can be used with priority queues to ensure that critical operations are handled first in a unusual traffic spike.

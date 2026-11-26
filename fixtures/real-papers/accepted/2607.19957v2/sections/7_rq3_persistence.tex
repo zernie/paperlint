@@ -1,0 +1,16 @@
+\subsection{RQ3: Persistence}
+
+\paragraph{Setup.} 
+RQ3 investigates the persistence of the malicious impact induced by \sys within a multi-turn conversation scenario. 
+% 
+To simulate multi-turn interactions, we first hijack the user's KV cache using \sys. Then we insert filler tokens of length $L_\mathrm{context}$ that are unrelated to the hijacked target topic before issuing the target query, and observe \emph{whether the attack influence is diluted} in the model's response.
+% 
+All experiments are conducted on the HotpotQA dataset using Llama-3.1-8B and the same hyperparameters as in Section~\ref{sec:rq1}. 
+% 
+We evaluate the effectiveness of \sys without KV cache (\textit{Full}), with full KV cache (\textit{Vanilla}), and with three recomputation methods (\textit{Random}, \textit{EPIC}, and \textit{CacheBlend}). We use white-box setting and report Acc for model performance, and U-ASR and T-ASR for the effectiveness of \sys.
+
+\paragraph{Results.} 
+Table~\ref{tab:rq3_asr_vs_context_length} illustrates the impact of multi-turn conversation length $L_{\text{context}}$ on the effectiveness of \sys. In our experiments, we increase the length of the unrelated filler context from 0 up to 2048 tokens. We find that even with a context length of 1024, the average T-ASR remains high at 55\%. Furthermore, when the context length extends to 2048, the T-ASR remains at 47\%. Notably, once the context reaches a certain length, doubling it results in only a marginal 8\% decline in the ASR.
+
+\paragraph{Conclusion.} 
+These findings confirm that once cached, the hijacked KV cache retains sufficient influence to manipulate the LLM's token generation process over long-range interactions, despite the presence of extensive unrelated context. 

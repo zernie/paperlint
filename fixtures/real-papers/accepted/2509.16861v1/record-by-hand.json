@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputs": [
+    {
+      "path": "paper.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/introduction.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/background.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/approach.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/exp_design.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/results.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/discussion.tex",
+      "role": "body"
+    },
+    {
+      "path": "sections/threats.tex",
+      "role": "body"
+    }
+  ],
+  "written": [],
+  "bibdata": [],
+  "bibtex": {
+    "ran": false
+  },
+  "sha256": {
+    "paper.tex": "f19087d598886f760a65c620ec5e77de0ced00e700e23a24326d69e2fbc53ca7",
+    "sections/introduction.tex": "b25c494411616f50d0dea8e5de498afdd7e1568bfe1e850d4c302a3230449cf5",
+    "sections/background.tex": "7bb1c4c136f5329f8a0666b038a16e6ad55cb1ff939985770f67be3c8e4299b3",
+    "sections/approach.tex": "967c6fa09d560c3173298c5014e7c40f2324c85a12dcb40364551de76875661a",
+    "sections/exp_design.tex": "828d83a7eaebea25076c354c1830aa8ebc3602aebaa0ea1268d4a3415d38c611",
+    "sections/results.tex": "242636c9e3d430dfed132b6f1caed57ed6db353fca437361fd0add6df8247dff",
+    "sections/discussion.tex": "ca4c8c7aac8874f28f3845f69fa1b6e5bceea9902b02bee4b226b8f0e8c1cbff",
+    "sections/threats.tex": "2858b7dd5fc193521a3b27f3ae8bfdeccf29f4bc90fd5c3e77de6b30ecc2d6b2"
+  }
+}
