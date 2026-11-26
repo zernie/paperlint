@@ -3,7 +3,7 @@
  * when an edition is full, and that quotas and caps count the whole manifest, earlier batches too.
  */
 import { describe, expect, test } from "vitest";
-import { targets, type Counted } from "./collect.ts";
+import { targets, type Counted, type ProbeLine } from "./collect.ts";
 import {
   ACCEPTED,
   BY,
