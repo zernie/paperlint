@@ -1736,33 +1736,6 @@
     "title": "Scaling LLM Test-Time Compute with Mobile NPU on Smartphones",
     "versionNote": "latest arXiv version 2025-09-27; venue date 2025-09-27"
   },
-  "2505.00254v5": {
-    "clsOpts": "letterpaper,twocolumn,10pt",
-    "style": "usenix",
-    "styleOpts": "",
-    "mainCandidates": 1,
-    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
-    "edits": [],
-    "renames": [
-      "main.bbl to paper.bbl",
-      "main.tex to paper.tex"
-    ],
-    "title": "AVA: Towards Agentic Video Analytics with Vision Language Models",
-    "versionNote": "latest arXiv version 2025-10-31; venue date 2025-05-01"
-  },
-  "2505.04021v3": {
-    "clsOpts": "letterpaper,twocolumn,10pt",
-    "style": "usenix2020",
-    "styleOpts": "",
-    "mainCandidates": 1,
-    "presetWhy": "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "Prism: Cost-Efficient Multi-LLM Serving via GPU Memory Ballooning",
-    "versionNote": "latest arXiv version 2026-06-10; venue date 2025-05-06"
-  },
   "2505.01603v2": {
     "clsOpts": "sigplan,10pt",
     "style": null,
@@ -1773,17 +1746,6 @@
     "renames": [],
     "title": "Unlocking True Elasticity for the Cloud-Native Era with Dandelion",
     "versionNote": "latest arXiv version 2025-10-27; venue date 2025-05-02"
-  },
-  "2509.26529v2": {
-    "clsOpts": "sigplan, screen, authorversion, 10pt",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "no preset: the class is acmart with format [sigplan, screen, authorversion, 10pt], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
-    "edits": [],
-    "renames": [],
-    "title": "CSnake: Detecting Self-Sustaining Cascading Failure via Causal Stitching of Fault Propagations",
-    "versionNote": "latest arXiv version 2025-10-25; venue date 2025-09-30"
   },
   "2505.01616v3": {
     "clsOpts": "letterpaper,twocolumn,10pt",
@@ -1823,20 +1785,6 @@
     ],
     "title": "Quake: Adaptive Indexing for Vector Search",
     "versionNote": "latest arXiv version 2025-06-06; venue date 2025-06-03"
-  },
-  "2510.00206v1": {
-    "clsOpts": "sigplan,twocolumn,10pt",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "no preset: the class is acmart with format [sigplan,twocolumn,10pt], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.bbl to paper.bbl",
-      "main.tex to paper.tex"
-    ],
-    "title": "LoRAFusion: Efficient LoRA Fine-Tuning for LLMs",
-    "versionNote": "latest arXiv version 2025-09-30; venue date 2025-09-30"
   },
   "2501.16684v1": {
     "clsOpts": "letterpaper, 10 pt, conference",

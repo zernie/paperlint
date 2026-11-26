@@ -9,8 +9,8 @@ answers which question.
 
 The folder holds two groups, run together by `fixtures/real-papers.test.ts` and told apart below:
 
-- **Camera-ready papers, each linted against the venue that accepted it** (165, arXiv ids as
-  directory names: 12 chosen on 2026-11-19, 80 sampled by a script on 2026-11-20, 73 more on
+- **Camera-ready papers, each linted against the venue that accepted it** (161, arXiv ids as
+  directory names: 12 chosen on 2026-11-19, 80 sampled by a script on 2026-11-20, 69 more on
   2026-11-27). They measure
   precision on the venue's own rules. [`sampling/`](sampling/) holds the record of the sample:
   the script, its queries and quotas, and every candidate it looked at.
@@ -98,13 +98,19 @@ Over all fields the most frequent reasons: the arXiv non-exclusive licence 321, 
 statement 203, «Workshop» in the comment 197 (and «workshop» 34), over 300 KB 188, CC BY-NC-ND 58,
 CC BY-NC-SA 51, class `article` where `acmart` is required 50.
 
-#### The third batch (2026-11-27): 73 papers, the same script with higher quotas
+#### The third batch (2026-11-27): 69 papers, the same script with higher quotas
 
 The quotas in `sampling/queries.json` were raised and committed before the run: ml 30, nlp 24,
 ai 16, security 20, se 16, hci 16, systems 20, other 12 (154; they were 80). The rules, sources and
 editions are those of the second batch. The run resumed from the log, so no candidate of the
 second batch was judged again. It judged 522 new candidates (80 from the Semantic Scholar listing)
-and kept 73, in 40 minutes. No rule was loosened.
+and kept 73, in 40 minutes. No rule was loosened. Four of the 73 were then removed: they came from
+the Semantic Scholar listing of one edition while their own arXiv comment names the next («Accepted
+by EuroSys 2026» for 2509.26529v2 and 2510.00206v1, listed under EuroSys 2025; «OSDI'26» for
+2505.04021v3 under OSDI 2025; «Accepted to NDSI 2026» for 2505.00254v5 under NSDI 2025). The
+listing's year is the publication year, which can precede the edition. A listed paper whose comment
+names its venue with another year is now rejected (`judgeListedVenue`); «NDSI», a typo, is not the
+venue's name, so that paper was removed by hand. The table counts the 69 kept.
 
 | field | kept this run | total / quota | probed this run | yield |
 | --- | ---: | --- | ---: | ---: |
@@ -114,10 +120,11 @@ and kept 73, in 40 minutes. No rule was loosened.
 | security | 9 | 19 / 20 | 31 | 29.0% |
 | se | 8 | 16 / 16 | 66 | 12.1% |
 | hci | 8 | 16 / 16 | 157 | 5.1% |
-| systems | 10 | 20 / 20 | 48 | 20.8% |
+| systems | 6 | 16 / 20 | 48 | 12.5% |
 | other | 6 | 12 / 12 | 32 | 18.8% |
 
-**security is one short:** each of its editions ended full (5 papers) or exhausted (no candidate
+**systems is four short**, the four removed above: the next run fills it. **security is one
+short:** each of its editions ended full (5 papers) or exhausted (no candidate
 left that passes), so 19 is what the editions hold today, not a stopped run. One `other` walk
 (ICCV 2025) ended on a Semantic Scholar 429; `other` was full without it. `node
 scripts/grow-real-papers/main.ts --summary` prints the whole log's table, every edition included.
@@ -337,7 +344,7 @@ The 80 sampled on 2026-11-20, generated from `venue-manifest.json` and `sampling
 | [2502.00626v2](2502.00626v2/README.md) | other | SIGGRAPH 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 175 KB |
 | [2501.10143v1](2501.10143v1/README.md) | other | SIGIR 2025, S2 listing | `paperlint:acm-sigconf` | `acmart` | CC BY 4.0 | 103 KB |
 
-The 73 sampled on 2026-11-27, generated the same way:
+The 69 sampled on 2026-11-27, generated the same way:
 
 | paper | field | accepted at | linted as | class | licence | text |
 | --- | --- | --- | --- | --- | --- | ---: |
@@ -399,12 +406,8 @@ The 73 sampled on 2026-11-27, generated the same way:
 | [2609.00808v1](2609.00808v1/README.md) | hci | CSCW 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 196 KB |
 | [2609.12070v1](2609.12070v1/README.md) | hci | CSCW 2026 | `paperlint:acm-acmsmall` | `acmart` | CC BY 4.0 | 138 KB |
 | [2509.23324v1](2509.23324v1/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 268 KB |
-| [2509.26529v2](2509.26529v2/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY-SA 4.0 | 273 KB |
-| [2510.00206v1](2510.00206v1/README.md) | systems | EuroSys 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 168 KB |
-| [2505.00254v5](2505.00254v5/README.md) | systems | NSDI 2025, S2 listing | named, no preset | `article` + `usenix` | CC BY 4.0 | 194 KB |
 | [2505.01616v3](2505.01616v3/README.md) | systems | NSDI 2025, S2 listing | named, no preset | `article` + `usenix` | CC BY 4.0 | 81 KB |
 | [2601.13496v1](2601.13496v1/README.md) | systems | NSDI 2026, S2 listing | named, no preset | `article` + `usenix_2020_09` | CC BY 4.0 | 129 KB |
-| [2505.04021v3](2505.04021v3/README.md) | systems | OSDI 2025, S2 listing | named, no preset | `article` + `usenix2020` | CC BY 4.0 | 185 KB |
 | [2506.03437v2](2506.03437v2/README.md) | systems | OSDI 2025, S2 listing | named, no preset | `article` + `usenix2019_v3` | CC BY 4.0 | 227 KB |
 | [2504.17096v2](2504.17096v2/README.md) | systems | SOSP 2025, S2 listing | named, no preset | `acmart` | CC BY 4.0 | 198 KB |
 | [2505.01603v2](2505.01603v2/README.md) | systems | SOSP 2025, S2 listing | named, no preset | `acmart` | CC BY-SA 4.0 | 229 KB |

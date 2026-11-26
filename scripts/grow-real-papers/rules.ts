@@ -121,11 +121,40 @@ export function judgeComment(
   return { ok: true, track: findings ? "Findings" : null };
 }
 
-/** Rule 1 on a Semantic Scholar listing: the venue string names the main proceedings. */
-export const judgeListedVenue = (venue: string): Verdict<{ track: null }> =>
-  /workshop|companion|poster|demo|tutorial|doctoral/i.test(venue)
-    ? no(`S2 venue string is not the main proceedings: "${venue}"`)
-    : { ok: true, track: null };
+/** The other years the comment names right after the slot's venue (`EuroSys 2026`, `OSDI'26`). */
+const otherYears = (
+  comment: string,
+  slot: Pick<Slot, "venue" | "year">,
+): readonly number[] =>
+  [
+    ...comment.matchAll(
+      new RegExp(`(?:${slot.venue})[^0-9]{0,14}((?:20)?\\d{2})(?![0-9])`, "gi"),
+    ),
+  ]
+    .map((m) => 2000 + (Number(m[1]) % 100))
+    .filter((y) => y !== slot.year);
+
+/**
+ * Rule 1 on a Semantic Scholar listing: the venue string names the main proceedings, and the
+ * paper's own arXiv comment does not name the venue with another year (the listing's year is its
+ * publication year, which for EuroSys and OSDI papers can be the year before the edition).
+ */
+export function judgeListedVenue(
+  venue: string,
+  own: Readonly<{
+    comment: string;
+    slot: Pick<Slot, "venue" | "series" | "year">;
+  }>,
+): Verdict<{ track: null }> {
+  if (/workshop|companion|poster|demo|tutorial|doctoral/i.test(venue))
+    return no(`S2 venue string is not the main proceedings: "${venue}"`);
+  const other = otherYears(own.comment, own.slot)[0];
+  return other === undefined
+    ? { ok: true, track: null }
+    : no(
+        `the arXiv comment names ${own.slot.series} ${String(other)}, not ${own.slot.series} ${String(own.slot.year)}`,
+      );
+}
 
 /** Rule 2: the `<license>` of arXiv's OAI record, exactly one of `LICENCES`. */
 export function judgeLicence(

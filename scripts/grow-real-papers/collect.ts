@@ -202,7 +202,9 @@ async function judge(w: Walk, st: State, c: Candidate, slot: Slot) {
   if (c.s2 !== undefined && c.updated === "")
     return { reason: "arXiv metadata missing for the listed id" };
   const rule1 =
-    c.s2 === undefined ? judgeComment(c, slot) : judgeListedVenue(c.s2.venue);
+    c.s2 === undefined
+      ? judgeComment(c, slot)
+      : judgeListedVenue(c.s2.venue, { comment: c.comment, slot });
   if (rule1.ok) return judgeSources(w, c, slot, rule1.track);
   return {
     reason: rule1.reason,

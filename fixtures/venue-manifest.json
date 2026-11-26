@@ -3291,50 +3291,6 @@
     "acceptance": "s2-venue-listing"
   },
   {
-    "arxiv_id": "2505.00254v5",
-    "field": "systems",
-    "series": "NSDI",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "b31ee91fb33232a6d5cabf3e6d4b17a981df57976943ef887981fa82a5cd151d",
-    "main_tex": "./main.tex",
-    "class": "article",
-    "category": "cs.CV",
-    "size_bytes": 198436,
-    "dir": "2505.00254v5",
-    "accepted": {
-      "quote": "Semantic Scholar venue listing: venue \"Symposium on Networked Systems Design and Implementation\", year 2025, publication date 2025-05-01; arXiv comment: Accepted to NDSI 2026, 19pages, 12 figures, complementary evaluations and appendix",
-      "url": "https://arxiv.org/abs/2505.00254v5",
-      "venue": "NSDI 2025"
-    },
-    "preset": null,
-    "kind": null,
-    "source": "semantic-scholar",
-    "acceptance": "s2-venue-listing"
-  },
-  {
-    "arxiv_id": "2505.04021v3",
-    "field": "systems",
-    "series": "OSDI",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "d056dd71d286f5287083056ca64d37fd798e6d5189756c06d4e028366d789cd1",
-    "main_tex": "./main.tex",
-    "class": "article",
-    "category": "cs.DC",
-    "size_bytes": 189565,
-    "dir": "2505.04021v3",
-    "accepted": {
-      "quote": "Semantic Scholar venue listing: venue \"USENIX Symposium on Operating Systems Design and Implementation\", year 2025, publication date 2025-05-06; arXiv comment: OSDI'26",
-      "url": "https://arxiv.org/abs/2505.04021v3",
-      "venue": "OSDI 2025"
-    },
-    "preset": null,
-    "kind": null,
-    "source": "semantic-scholar",
-    "acceptance": "s2-venue-listing"
-  },
-  {
     "arxiv_id": "2505.01603v2",
     "field": "systems",
     "series": "SOSP",
@@ -3350,28 +3306,6 @@
       "quote": "Semantic Scholar venue listing: venue \"Symposium on Operating Systems Principles\", year 2025, publication date 2025-05-02; arXiv comment: 13 pages, 10 figures",
       "url": "https://arxiv.org/abs/2505.01603v2",
       "venue": "SOSP 2025"
-    },
-    "preset": null,
-    "kind": null,
-    "source": "semantic-scholar",
-    "acceptance": "s2-venue-listing"
-  },
-  {
-    "arxiv_id": "2509.26529v2",
-    "field": "systems",
-    "series": "EuroSys",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
-    "source_sha256": "ff6d5cdc9fa6a4fb71a8c8b2862c0f8bf374b305134661e1aee9df22a69f1964",
-    "main_tex": "./paper.tex",
-    "class": "acmart",
-    "category": "cs.DC",
-    "size_bytes": 279714,
-    "dir": "2509.26529v2",
-    "accepted": {
-      "quote": "Semantic Scholar venue listing: venue \"European Conference on Computer Systems\", year 2025, publication date 2025-09-30; arXiv comment: Accepted by EuroSys 2026",
-      "url": "https://arxiv.org/abs/2509.26529v2",
-      "venue": "EuroSys 2025"
     },
     "preset": null,
     "kind": null,
@@ -3438,28 +3372,6 @@
       "quote": "Semantic Scholar venue listing: venue \"USENIX Symposium on Operating Systems Design and Implementation\", year 2025, publication date 2025-06-03",
       "url": "https://arxiv.org/abs/2506.03437v2",
       "venue": "OSDI 2025"
-    },
-    "preset": null,
-    "kind": null,
-    "source": "semantic-scholar",
-    "acceptance": "s2-venue-listing"
-  },
-  {
-    "arxiv_id": "2510.00206v1",
-    "field": "systems",
-    "series": "EuroSys",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "7af6a24958322b1b40feeae80896641fafde492c4b533e6170dde389351f5560",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.LG",
-    "size_bytes": 171684,
-    "dir": "2510.00206v1",
-    "accepted": {
-      "quote": "Semantic Scholar venue listing: venue \"European Conference on Computer Systems\", year 2025, publication date 2025-09-30; arXiv comment: Accepted by EuroSys 2026",
-      "url": "https://arxiv.org/abs/2510.00206v1",
-      "venue": "EuroSys 2025"
     },
     "preset": null,
     "kind": null,

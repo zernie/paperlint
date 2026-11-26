@@ -80,13 +80,61 @@ describe("rule 1: the acceptance wording", () => {
 
   test("a Semantic Scholar venue string must be the main proceedings", () => {
     // Guards: a workshop venue string is rejected.
-    expect(judgeListedVenue("NeurIPS Workshop on X")).toEqual({
+    expect(
+      judgeListedVenue("NeurIPS Workshop on X", {
+        comment: "",
+        slot: { venue: "NeurIPS", series: "NeurIPS", year: 2025 },
+      }),
+    ).toEqual({
       ok: false,
       reason:
         'S2 venue string is not the main proceedings: "NeurIPS Workshop on X"',
     });
     // Guards: the proceedings pass.
-    expect(judgeListedVenue("OSDI")).toEqual({ ok: true, track: null });
+    expect(
+      judgeListedVenue("OSDI", {
+        comment: "",
+        slot: { venue: "OSDI", series: "OSDI", year: 2025 },
+      }),
+    ).toEqual({ ok: true, track: null });
+  });
+
+  test("a listed paper whose own comment names another edition is rejected", () => {
+    const eurosys = { venue: "EuroSys", series: "EuroSys", year: 2025 };
+    // Guards: the listing's year is not the edition when the comment names a later one.
+    expect(
+      judgeListedVenue("European Conference on Computer Systems", {
+        comment: "Accepted by EuroSys 2026",
+        slot: eurosys,
+      }),
+    ).toEqual({
+      ok: false,
+      reason: "the arXiv comment names EuroSys 2026, not EuroSys 2025",
+    });
+    // Guards: a two-digit year after an apostrophe is read too.
+    expect(
+      judgeListedVenue("OSDI", {
+        comment: "OSDI'26",
+        slot: { venue: "OSDI", series: "OSDI", year: 2025 },
+      }),
+    ).toEqual({
+      ok: false,
+      reason: "the arXiv comment names OSDI 2026, not OSDI 2025",
+    });
+    // Guards: the same edition, another venue's year, or no year at all pass.
+    expect(
+      [
+        "Accepted by EuroSys 2025",
+        "Extends our SOSP 2024 paper",
+        "13 pages, 10 figures",
+      ].map((comment) =>
+        judgeListedVenue("EuroSys", { comment, slot: eurosys }),
+      ),
+    ).toEqual([
+      { ok: true, track: null },
+      { ok: true, track: null },
+      { ok: true, track: null },
+    ]);
   });
 });
 

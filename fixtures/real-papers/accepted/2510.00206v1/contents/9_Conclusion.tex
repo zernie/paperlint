@@ -1,8 +1,0 @@
-\section{Conclusion}
-\label{sec:conclusion}
-
-This paper identifies and addresses two critical performance bottlenecks in LLM LoRA fine-tuning: 
-redundant memory access in LoRA modules and missed optimization opportunities for grouping multiple concurrent LoRA jobs. 
-Our solution, \Name, introduces a novel horizontal fusion technique tailored for LoRA kernels that reduces memory traffic by up to 37\% and a complementary job-level scheduling strategy that improves GPU utilization from 65\% to 89\%. 
-Combined, these optimizations achieve up to 1.96$\times$ speedup compared to the state-of-the-art systems across various models and datasets. 
-We hope \Name will help improve the accessibility and efficiency of LLM LoRA fine-tuning for both researchers and practitioners.
