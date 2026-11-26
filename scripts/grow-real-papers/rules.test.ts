@@ -6,6 +6,7 @@ import {
   judgeClass,
   judgeComment,
   judgeLicence,
+  committedLicenceProblems,
   judgeDeclaredYear,
   judgeListedVenue,
   judgeSize,
@@ -171,6 +172,29 @@ describe("rule 1 on a listing: the year the TeX declares", () => {
         "\\documentclass{article}",
       ].map((t) => judgeDeclaredYear(t, slot)),
     ).toEqual([{ ok: true }, { ok: true }, { ok: true }]);
+  });
+});
+
+describe("a committed paper's recorded licence", () => {
+  test("one of LICENCES passes; any other, or none, is named", () => {
+    // Guards: the one check balance.ts and arxiv-manifest.test.ts both run, on both halves.
+    expect([
+      committedLicenceProblems(
+        "2601.00001v1",
+        "http://creativecommons.org/licenses/by/4.0/",
+      ),
+      committedLicenceProblems(
+        "2601.00002v1",
+        "http://creativecommons.org/licenses/by-nc/4.0/",
+      ),
+      committedLicenceProblems("2601.00003v1", undefined),
+    ]).toEqual([
+      [],
+      [
+        "2601.00002v1: licence http://creativecommons.org/licenses/by-nc/4.0/, not CC BY 4.0, CC BY-SA 4.0 or CC0",
+      ],
+      ["2601.00003v1: licence missing, not CC BY 4.0, CC BY-SA 4.0 or CC0"],
+    ]);
   });
 });
 

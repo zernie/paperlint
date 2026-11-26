@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { LICENCES } from "../scripts/grow-real-papers/rules.ts";
+import { committedLicenceProblems } from "../scripts/grow-real-papers/rules.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -21,9 +21,7 @@ const licenceProblems = (
 ): readonly string[] => {
   const ids = new Set(entries.map((e) => e.arxiv_id));
   return [
-    ...entries
-      .filter((e) => !LICENCES.has(e.license))
-      .map((e) => `${e.arxiv_id}: licence ${e.license}, not CC BY 4.0, CC BY-SA 4.0 or CC0`),
+    ...entries.flatMap((e) => committedLicenceProblems(e.arxiv_id, e.license)),
     ...dirs.filter((d) => !ids.has(d)).map((d) => `${d}: no entry in arxiv-manifest.json`),
   ];
 };

@@ -49,6 +49,21 @@ export const LICENCES: ReadonlyMap<
   ],
 ]);
 
+/**
+ * What is wrong with the licence a committed paper's manifest records: nothing when it is one of
+ * `LICENCES`. The one check of the corpus on disk (`fixtures/real-papers/balance.ts` for the accepted
+ * papers, `fixtures/arxiv-manifest.test.ts` for the preprints); the collector's rule 2 is the gate in.
+ */
+export const committedLicenceProblems = (
+  id: string,
+  licence: string | undefined,
+): readonly string[] =>
+  licence !== undefined && LICENCES.has(licence)
+    ? []
+    : [
+        `${id}: licence ${licence ?? "missing"}, not CC BY 4.0, CC BY-SA 4.0 or CC0`,
+      ];
+
 /** One venue edition of `queries.json`. */
 export const SlotSchema = z.object({
   field: z.string(),
