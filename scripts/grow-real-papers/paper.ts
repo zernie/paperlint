@@ -4,6 +4,7 @@
  * `staging-notes.json` note. Pure: the collector hands the bytes it fetched, and gets back what to write.
  */
 import { recordOf, type StagingPlan } from "./archive.ts";
+import { presetFor, slug, type PresetChoice } from "./preset.ts";
 import type { Preamble, Slot } from "./rules.ts";
 
 /** One candidate paper, as the arXiv API (and, for a listing, Semantic Scholar) describes it. */
@@ -20,73 +21,6 @@ export type Candidate = Readonly<{
   /** Set when the candidate came from a Semantic Scholar venue listing. */
   s2?: Readonly<{ venue: string; publicationDate: string | null }>;
 }>;
-
-export const slug = (s: string): string =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-const FAMILIES: readonly (readonly [RegExp, string, string])[] = [
-  [/^(neurips|nips)_/, "neurips-style", "the NeurIPS style family"],
-  [/^icml/, "icml-style", "the ICML style family"],
-  [/^(acl|emnlp|naacl|eacl)/, "acl-latex", "the ACL style family"],
-  [/^aaai/, "aaai-press", "the AAAI Press style family"],
-];
-const NONE = " as no preset ships for this edition";
-
-type PresetChoice = Readonly<{ preset: string | null; why: string }>;
-const ALIAS: Readonly<Record<string, string>> = {
-  "acm-ccs": "ccs",
-  "ieee-s-p": "sp",
-};
-
-/** The template family of an acmart or IEEEtran class, or null. */
-const classFamily = (p: Preamble): PresetChoice | null => {
-  if (p.cls === "IEEEtran" && p.clsOpts.includes("conference"))
-    return {
-      preset: "paperlint:ieee-conference",
-      why: `the IEEE conference family${NONE}`,
-    };
-  if (p.cls !== "acmart") return null;
-  const fmt = /acmsmall|sigconf/.exec(p.clsOpts)?.[0];
-  return fmt === undefined
-    ? {
-        preset: null,
-        why: `no preset: the class is acmart with format [${p.clsOpts}], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition`,
-      }
-    : {
-        preset: `paperlint:acm-${fmt}`,
-        why: `the acmart ${fmt} family${NONE}`,
-      };
-};
-
-/**
- * The preset a paper is linted against: the edition's when paperlint ships it, else the family of
- * its style or class, else none (a named venue, so no venue rule applies).
- */
-export function presetFor(
-  slot: Pick<Slot, "series" | "year">,
-  p: Preamble,
-  style: string | undefined,
-  shipped: ReadonlySet<string>,
-): PresetChoice {
-  const edition = `${ALIAS[slug(slot.series)] ?? slug(slot.series)}-${String(slot.year)}`;
-  if (shipped.has(edition))
-    return {
-      preset: `paperlint:${edition}`,
-      why: `the shipped edition preset ${edition}`,
-    };
-  const family = FAMILIES.find(([re]) => re.test(style ?? ""));
-  if (family !== undefined)
-    return { preset: `paperlint:${family[1]}`, why: family[2] + NONE };
-  return (
-    classFamily(p) ?? {
-      preset: null,
-      why: "no preset ships for this edition and no template family matches the class: no `extends`, as arxiv-papers does for such papers, but with the accepted cycle",
-    }
-  );
-}
 
 const pair = (r: string): string => {
   const [from, to] = r.split(" to ");
@@ -225,7 +159,7 @@ const noteOf = (k: Kept, choice: PresetChoice) => ({
 const json = (v: unknown): string => `${JSON.stringify(v, null, 2)}\n`;
 
 export function keptPaper(k: Kept): KeptPaper {
-  const choice = presetFor(k.slot, k.preamble, k.style, k.shipped);
+  const choice = presetFor(k, quoteOf(k));
   return {
     id: k.c.id,
     files: new Map<string, Uint8Array | string>([
