@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
 
 /** What no project runs: dependencies, build output, scratch, and the files that are linted, not run. */
+/** The real-papers project: the corpus-wide assertions and the shards that lint the papers. */
+const REAL_PAPERS = [
+  "fixtures/real-papers.test.ts",
+  "fixtures/real-papers/shard-*.test.ts",
+];
 const EXCLUDE = [
   "**/node_modules/**",
   "**/dist/**",
@@ -43,15 +48,16 @@ export default defineConfig({
           include: ["**/*.test.ts", "**/*.test.mjs"],
           // The real papers have a project of their own and a CI job of their own: not repeated on
           // the macOS shards or under coverage.
-          exclude: [...EXCLUDE, "fixtures/real-papers.test.ts"],
+          exclude: [...EXCLUDE, ...REAL_PAPERS],
         },
       },
-      // Every real paper of the corpus in one run of the CLI, with its baseline (fixtures/real-papers/preprints/README.md).
+      // Every real paper of the corpus, each with its baseline, linted in shards that run at once
+      // (fixtures/real-papers/corpus.ts, fixtures/real-papers/preprints/README.md).
       {
         extends: true,
         test: {
           name: "real-papers",
-          include: ["fixtures/real-papers.test.ts"],
+          include: [...REAL_PAPERS],
           testTimeout: 20 * 60_000,
           hookTimeout: 20 * 60_000,
         },

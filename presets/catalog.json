@@ -1,0 +1,524 @@
+{
+  "fields": [
+    {
+      "field": "software-engineering",
+      "title": "Software engineering",
+      "conferences": [
+        {
+          "id": "ase-2026",
+          "series": "ASE",
+          "year": 2026,
+          "family": "acm-sigconf",
+          "templateLabel": "ACM acmart, sigconf (two columns)",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "technical",
+              "pagesMax": null,
+              "bodyPagesMax": 10,
+              "refPagesMax": 2
+            },
+            {
+              "kind": "experience",
+              "pagesMax": null,
+              "bodyPagesMax": 10,
+              "refPagesMax": 2
+            }
+          ],
+          "workshops": [
+            {
+              "id": "agenticdev-2026",
+              "series": "AgenticDev",
+              "year": 2026,
+              "family": "acm-sigconf",
+              "templateLabel": "ACM acmart, sigconf (two columns)",
+              "blind": false,
+              "kinds": [
+                {
+                  "kind": "short",
+                  "pagesMax": null,
+                  "bodyPagesMax": 5,
+                  "refPagesMax": 2
+                },
+                {
+                  "kind": "full",
+                  "pagesMax": null,
+                  "bodyPagesMax": 10,
+                  "refPagesMax": 2
+                },
+                {
+                  "kind": "demo",
+                  "pagesMax": null,
+                  "bodyPagesMax": 5,
+                  "refPagesMax": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fse-2027",
+          "series": "FSE",
+          "year": 2027,
+          "family": "acm-acmsmall",
+          "templateLabel": "ACM acmart, acmsmall (one column)",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "research",
+              "pagesMax": null,
+              "bodyPagesMax": 18,
+              "refPagesMax": 4
+            },
+            {
+              "kind": "major-revision",
+              "pagesMax": null,
+              "bodyPagesMax": 20,
+              "refPagesMax": 4
+            }
+          ],
+          "workshops": []
+        },
+        {
+          "id": "icse-2028",
+          "series": "ICSE",
+          "year": 2028,
+          "family": "acm-sigconf",
+          "templateLabel": "ACM acmart, sigconf (two columns)",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "research",
+              "pagesMax": null,
+              "bodyPagesMax": 10,
+              "refPagesMax": 2
+            }
+          ],
+          "workshops": []
+        },
+        {
+          "id": "icse-2027",
+          "series": "ICSE",
+          "year": 2027,
+          "family": "ieee-conference",
+          "templateLabel": "IEEE IEEEtran, conference",
+          "blind": false,
+          "kinds": [],
+          "workshops": [
+            {
+              "id": "agent-2027",
+              "series": "AGENT",
+              "year": 2027,
+              "family": "ieee-conference",
+              "templateLabel": "IEEE IEEEtran, conference",
+              "blind": false,
+              "kinds": [
+                {
+                  "kind": "full",
+                  "pagesMax": 8,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": 5,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                }
+              ]
+            },
+            {
+              "id": "agentverify-2027",
+              "series": "AGENTVERIFY",
+              "year": 2027,
+              "family": "ieee-conference",
+              "templateLabel": "IEEE IEEEtran, conference",
+              "blind": true,
+              "kinds": [
+                {
+                  "kind": "full",
+                  "pagesMax": 8,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": 4,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "abstract",
+                  "pagesMax": 2,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                }
+              ]
+            },
+            {
+              "id": "nlbse-2027",
+              "series": "NLBSE",
+              "year": 2027,
+              "family": "ieee-conference",
+              "templateLabel": "IEEE IEEEtran, conference",
+              "blind": true,
+              "kinds": [
+                {
+                  "kind": "full",
+                  "pagesMax": 8,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "education",
+                  "pagesMax": 8,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "replication",
+                  "pagesMax": 8,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": 4,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "position",
+                  "pagesMax": 2,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "tool-competition",
+                  "pagesMax": 4,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "msr-2027",
+          "series": "MSR",
+          "year": 2027,
+          "family": "ieee-conference",
+          "templateLabel": "IEEE IEEEtran, conference",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "technical",
+              "pagesMax": null,
+              "bodyPagesMax": 10,
+              "refPagesMax": 2
+            }
+          ],
+          "workshops": []
+        }
+      ]
+    },
+    {
+      "field": "security",
+      "title": "Security",
+      "conferences": [
+        {
+          "id": "ccs-2026",
+          "series": "ACM CCS",
+          "year": 2026,
+          "family": "acm-sigconf",
+          "templateLabel": "ACM acmart, sigconf (two columns)",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "research",
+              "pagesMax": null,
+              "bodyPagesMax": 12,
+              "refPagesMax": null
+            }
+          ],
+          "workshops": [
+            {
+              "id": "aisec-2026",
+              "series": "AISec",
+              "year": 2026,
+              "family": "acm-sigconf",
+              "templateLabel": "ACM acmart, sigconf (two columns)",
+              "blind": false,
+              "kinds": [
+                {
+                  "kind": "research",
+                  "pagesMax": 12,
+                  "bodyPagesMax": 10,
+                  "refPagesMax": 2
+                },
+                {
+                  "kind": "benchmark",
+                  "pagesMax": 12,
+                  "bodyPagesMax": 10,
+                  "refPagesMax": 2
+                },
+                {
+                  "kind": "position",
+                  "pagesMax": 12,
+                  "bodyPagesMax": 10,
+                  "refPagesMax": 2
+                },
+                {
+                  "kind": "sok",
+                  "pagesMax": 12,
+                  "bodyPagesMax": 10,
+                  "refPagesMax": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "acsac-2026",
+          "series": "ACSAC",
+          "year": 2026,
+          "family": "ieee-conference",
+          "templateLabel": "IEEE IEEEtran, conference",
+          "blind": false,
+          "kinds": [],
+          "workshops": [
+            {
+              "id": "aidc-2026",
+              "series": "AIDC",
+              "year": 2026,
+              "family": "ieee-conference",
+              "templateLabel": "IEEE IEEEtran, conference",
+              "blind": true,
+              "kinds": [
+                {
+                  "kind": "regular",
+                  "pagesMax": null,
+                  "bodyPagesMax": 12,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": null,
+                  "bodyPagesMax": 6,
+                  "refPagesMax": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sp-2027",
+          "series": "IEEE S&P",
+          "year": 2027,
+          "family": "ieee-conference",
+          "templateLabel": "IEEE IEEEtran, conference",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "research",
+              "pagesMax": 18,
+              "bodyPagesMax": 13,
+              "refPagesMax": 5
+            },
+            {
+              "kind": "sok",
+              "pagesMax": null,
+              "bodyPagesMax": 13,
+              "refPagesMax": null
+            }
+          ],
+          "workshops": []
+        }
+      ]
+    },
+    {
+      "field": "nlp",
+      "title": "Natural language processing",
+      "conferences": [
+        {
+          "id": "emnlp-2026",
+          "series": "EMNLP",
+          "year": 2026,
+          "family": "acl-latex",
+          "templateLabel": "article + \\usepackage{acl}",
+          "blind": false,
+          "kinds": [],
+          "workshops": [
+            {
+              "id": "realm-2026",
+              "series": "REALM",
+              "year": 2026,
+              "family": "acl-latex",
+              "templateLabel": "article + \\usepackage{acl}",
+              "blind": false,
+              "kinds": [
+                {
+                  "kind": "long",
+                  "pagesMax": null,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": null,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "naacl-2027",
+          "series": "NAACL",
+          "year": 2027,
+          "family": "acl-latex",
+          "templateLabel": "article + \\usepackage{acl}",
+          "blind": false,
+          "kinds": [],
+          "workshops": [
+            {
+              "id": "langcode-2027",
+              "series": "LangCode",
+              "year": 2027,
+              "family": "acl-latex",
+              "templateLabel": "article + \\usepackage{acl}",
+              "blind": true,
+              "kinds": [
+                {
+                  "kind": "long",
+                  "pagesMax": null,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "short",
+                  "pagesMax": null,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                },
+                {
+                  "kind": "system",
+                  "pagesMax": null,
+                  "bodyPagesMax": null,
+                  "refPagesMax": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "ml-ai",
+      "title": "Machine learning and AI",
+      "conferences": [
+        {
+          "id": "aaai-2027",
+          "series": "AAAI",
+          "year": 2027,
+          "family": "aaai-press",
+          "templateLabel": "article + \\usepackage[submission]{aaai2027}",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "main",
+              "pagesMax": 9,
+              "bodyPagesMax": 7,
+              "refPagesMax": 2
+            }
+          ],
+          "workshops": []
+        },
+        {
+          "id": "icml-2027",
+          "series": "ICML",
+          "year": 2027,
+          "family": "icml-style",
+          "templateLabel": "article + \\usepackage{icml2027}",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "main",
+              "pagesMax": null,
+              "bodyPagesMax": 8,
+              "refPagesMax": null
+            },
+            {
+              "kind": "camera-ready",
+              "pagesMax": null,
+              "bodyPagesMax": 9,
+              "refPagesMax": null
+            }
+          ],
+          "workshops": []
+        },
+        {
+          "id": "neurips-2026",
+          "series": "NeurIPS",
+          "year": 2026,
+          "family": "neurips-style",
+          "templateLabel": "article + \\usepackage{neurips_2026}",
+          "blind": true,
+          "kinds": [
+            {
+              "kind": "main",
+              "pagesMax": null,
+              "bodyPagesMax": 9,
+              "refPagesMax": null
+            },
+            {
+              "kind": "camera-ready",
+              "pagesMax": null,
+              "bodyPagesMax": 10,
+              "refPagesMax": null
+            }
+          ],
+          "workshops": []
+        }
+      ]
+    }
+  ],
+  "families": [
+    {
+      "id": "aaai-press",
+      "templateLabel": "article + \\usepackage[submission]{aaai2027}",
+      "anyConferenceOf": null
+    },
+    {
+      "id": "acl-latex",
+      "templateLabel": "article + \\usepackage{acl}",
+      "anyConferenceOf": "ACL"
+    },
+    {
+      "id": "acm-acmsmall",
+      "templateLabel": "ACM acmart, acmsmall (one column)",
+      "anyConferenceOf": "ACM"
+    },
+    {
+      "id": "acm-sigconf",
+      "templateLabel": "ACM acmart, sigconf (two columns)",
+      "anyConferenceOf": "ACM"
+    },
+    {
+      "id": "icml-style",
+      "templateLabel": "article + \\usepackage{icml2027}",
+      "anyConferenceOf": null
+    },
+    {
+      "id": "ieee-conference",
+      "templateLabel": "IEEE IEEEtran, conference",
+      "anyConferenceOf": "IEEE"
+    },
+    {
+      "id": "neurips-style",
+      "templateLabel": "article + \\usepackage{neurips_2026}",
+      "anyConferenceOf": null
+    }
+  ]
+}

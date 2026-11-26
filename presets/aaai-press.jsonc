@@ -78,6 +78,7 @@
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
+  "template_label": "article + \\usepackage[submission]{aaai2027}",
 
   // The two lines of the kit, each `% DO NOT CHANGE THIS`. `tex/template` requires `article` with
   // `letterpaper`, and the style aaai2027 with `submission`: the option that removes the author

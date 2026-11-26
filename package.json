@@ -25,7 +25,8 @@
     "sync:skills": "node scripts/sync-skills.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check . && npm run sync:skills -- --check",
-    "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site && npm run test:browser --prefix site"
+    "site:build": "npm ci --prefix site && npm run lint --prefix site && npm run typecheck --prefix site && npm run test --prefix site && npm run build --prefix site && npm run test:browser --prefix site",
+    "catalog": "node scripts/venue-catalog.ts presets"
   },
   "dependencies": {
     "@clack/prompts": "1.9.0",

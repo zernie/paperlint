@@ -1,5 +1,5 @@
 /**
- * Every rule, on every real paper of the corpus, in ONE run of the CLI: the accepted papers of
+ * Every rule, on every real paper of the corpus: the accepted papers of
  * `real-papers/accepted/` (published; the calibration yardstick) and the arXiv preprints of
  * `real-papers/preprints/` (drafts; `real-papers/README.md` says what each folder answers). The
  * subject is the corpus as one object: each directory of those folders is a paper with its own
@@ -10,102 +10,61 @@
  * drop is what a fix looks like. The comparison is `real-papers/baseline.ts`, the one the install
  * e2e uses too, not a second copy.
  *
- * One `paperlint lint --json` over a temporary project holding every paper under `papers/`, not one
- * run per paper: measured, one run is 1.7 s a paper and one CLI run per paper about 3 s, startup
- * being a large part of the second. It is its own vitest project (`real-papers`), outside `unit`, so
- * the macOS shards and the coverage job do not repeat it; CI runs it in the job of the same name.
+ * The lint itself runs in the `real-papers/shard-<n>.test.ts` files, one `paperlint lint --json` each
+ * over its share of the papers, at once on the runner's cores (`real-papers/corpus.ts`); this file
+ * holds what is asserted about the corpus as a whole, the shards' coverage of it among them. One run
+ * over many papers, not one run per paper: measured, one run is 1.7 s a paper and one CLI run per
+ * paper about 3 s, startup being a large part of the second. They are their own vitest project
+ * (`real-papers`), outside `unit`, so the macOS shards and the coverage job do not repeat them; CI
+ * runs it in the job of the same name.
  *
  * What is asserted beside the lint comparison, not in a second lint loop: the `tex/register` measures
  * of the accepted papers (below), which read the parse tree of one paper and not lint's output. The
  * register band the AIDC preset anchors on is held by `src/register-bands.test.ts`.
  */
-import { cpSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { describe, expect, it, vi } from "vitest";
-import { run } from "../src/cli.ts";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { expect, it, describe } from "vitest";
 import { latexReader } from "../src/adapters/latex/index.ts";
 import { nodeFiles } from "../src/adapters/node/index.ts";
 import { sourcesCodec } from "../src/adapters/sources-record/index.ts";
 import { judgeRegister, measureRegister } from "../src/register.ts";
 import { readPaper } from "../src/tex-paper.ts";
-import { layRecord, withRecord } from "../test/recorded-fixture.ts";
-import { useTempDir, writeTree } from "../test/support.ts";
+import { withRecord } from "../test/recorded-fixture.ts";
 import {
-  compareToBaseline,
-  countByPaper,
-  RECORDED_OPT_IN,
-  recordedFindings,
-} from "./real-papers/baseline.ts";
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ACCEPTED_DIR = join(HERE, "real-papers", "accepted");
-const FOLDERS = [ACCEPTED_DIR, join(HERE, "real-papers", "preprints")];
-
-/** The directories of a folder that are not papers: the record of how `accepted/` was sampled. */
-const NOT_PAPERS: ReadonlySet<string> = new Set(["sampling"]);
-
-/** Every paper: its directory name (unique across the folders) and where it is. */
-const PAPERS = FOLDERS.flatMap((root) =>
-  readdirSync(root)
-    .filter(
-      (name) =>
-        !NOT_PAPERS.has(name) && statSync(join(root, name)).isDirectory(),
-    )
-    .map((name) => ({ name, dir: join(root, name) })),
-);
-
-/** One `paperlint lint --json` over a project holding all of `PAPERS`: findings per rule, per paper. */
-async function lintAll(): Promise<ReturnType<typeof countByPaper>> {
-  const dir = writeTree(useTempDir("paperlint-real-papers-"), {
-    "package.json": '{"name":"consumer","private":true}',
-    // The opt-in rules the baselines count, on for every paper (baseline.ts says why).
-    "paperlint.json": JSON.stringify({ rules: RECORDED_OPT_IN }),
-  });
-  for (const { name, dir: from } of PAPERS) {
-    cpSync(from, join(dir, "papers", name), {
-      recursive: true,
-      verbatimSymlinks: true,
-    });
-    // The paper as a build left it: lint reads the files of the paper from the record, not the text.
-    layRecord(join(dir, "papers", name));
-  }
-  const out: string[] = [];
-  await run(["lint", "--json"], {
-    cwd: dir,
-    log: (...a: unknown[]) => out.push(a.join(" ")),
-    err: () => undefined,
-  });
-  return countByPaper(out.join("\n"));
-}
+  ACCEPTED_DIR,
+  PAPERS,
+  SHARDS,
+  shardOf,
+} from "./real-papers/corpus.ts";
 
 it("the corpus holds papers, with names that are unique — an empty or colliding listing would make every case below vacuous", () => {
   expect(PAPERS.length).toBeGreaterThanOrEqual(100);
   expect(new Set(PAPERS.map((p) => p.name)).size).toBe(PAPERS.length);
 });
 
-/**
- * The day the baselines were measured. `paper/edition-over` reads the clock: an edition preset whose
- * last deadline passes (`sp-2027`'s on 2027-04-09) would grow a baseline on that day with no change
- * to the code or the papers. The lint runs on this day, so a count moves only when something here does.
- */
-const MEASURED_ON = "2026-11-19T12:00:00Z";
+describe("the shards", () => {
+  it("are numbered 1 to their count, so every shard file lints a share", () => {
+    // Guards: a gap (shard-1, shard-3) would leave the papers of the missing number unlinted.
+    expect(SHARDS).toEqual(SHARDS.map((_, i) => i + 1));
+    expect(SHARDS.length).toBeGreaterThan(1);
+  });
 
-describe("every real paper, in one run", () => {
-  it(
-    "says no more than recorded, and no recorded rule has gone quiet",
-    // 279 papers linted in 885.4 s on 2026-11-27, in one run: 10 minutes was no longer enough.
-    { timeout: 20 * 60_000 },
-    async () => {
-      vi.setSystemTime(MEASURED_ON);
-      const found = await lintAll().finally(() => vi.useRealTimers());
-      const verdicts = PAPERS.map(({ name, dir }) => ({
-        name,
-        ...compareToBaseline(found[name] ?? {}, recordedFindings(dir)),
-      })).filter((v) => v.grew.length > 0 || v.vanished.length > 0);
-      expect(verdicts).toEqual([]);
-    },
-  );
+  it("hold every paper exactly once, so no paper goes unlinted", () => {
+    const names = PAPERS.map((p) => p.name);
+    const dealt = SHARDS.flatMap((n) => shardOf(names, n, SHARDS.length));
+    // Guards: a paper in no shard, or in two.
+    expect(dealt.toSorted()).toEqual(names.toSorted());
+  });
+
+  it("deal round-robin: shard n of k takes every k-th item from the n-th", () => {
+    // Guards: the dealing itself, on a list whose length the shard count does not divide.
+    expect([1, 2, 3].map((n) => shardOf(["a", "b", "c", "d", "e", "f", "g"], n, 3))).toEqual([
+      ["a", "d", "g"],
+      ["b", "e"],
+      ["c", "f"],
+    ]);
+  });
 });
 
 /**

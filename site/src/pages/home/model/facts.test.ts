@@ -1,12 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import {
-  presetName,
-  readmeContent,
-  venueCount,
-  venueGrid,
-} from "@/shared/lib/readme";
+import { parseCatalog, venueCount } from "@/shared/lib/venues";
 import { facts } from "./facts.ts";
 
 const root = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -23,12 +18,7 @@ describe("facts", () => {
   });
 
   it("counts the same venues the venue grid shows", () => {
-    const readme = read("README.md");
-    const grid = venueGrid(
-      read("docs/venues.md"),
-      readmeContent(readme).venues,
-      (id) => presetName(read(`presets/${id}.jsonc`)),
-    );
+    const grid = parseCatalog(read("presets/catalog.json"));
     const shown = grid.fields
       .flatMap((f) => f.conferences)
       .flatMap((c) => [c.id, ...c.workshops.map((w) => w.id)]);

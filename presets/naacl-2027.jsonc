@@ -13,6 +13,7 @@
   // The call quoted above.
   "url": "https://2027.naacl.org/calls/main_conference_papers/",
   "extends": "paperlint:acl-latex",
+  "field": "nlp",
 
   // What the conference is called in a paper's text (tex/venue-leftover).
   "aliases": ["NAACL"],

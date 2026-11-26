@@ -14,10 +14,8 @@ import {
   layoutEntries,
   readmeContent,
   headlineVenues,
-  presetName,
-  venueCount,
-  venueGrid,
 } from "@/shared/lib/readme";
+import { parseCatalog, venueCount } from "@/shared/lib/venues";
 import { glossary } from "@/shared/config";
 import { highlight } from "@/shared/lib/highlight";
 import { CodeLine } from "@/shared/ui/code-line";
@@ -45,9 +43,7 @@ const tree = layoutEntries(readRepo("docs/layout.md"), [
   "versions/",
 ]);
 const venueNames = headlineVenues(readme.venues);
-const venues = venueGrid(readRepo("docs/venues.md"), readme.venues, (id) =>
-  presetName(readRepo(`presets/${id}.jsonc`)),
-);
+const catalog = parseCatalog(readRepo("presets/catalog.json"));
 const firstRun = explainOutput(readme.lintOutput);
 const packageLicense = (
   JSON.parse(readRepo("package.json")) as { readonly license: string }
@@ -198,11 +194,11 @@ export function HomePage() {
       <main>
         <Hero
           venues={venueNames}
-          facts={facts(venueCount(venues), packageLicense)}
+          facts={facts(venueCount(catalog), packageLicense)}
         />
         <Journey stops={stops} />
         <Install perPaper={perPaper} />
-        <Venues grid={venues} />
+        <Venues catalog={catalog} />
         <Faq />
       </main>
       <SiteFooter disclaimer={readme.disclaimer} />

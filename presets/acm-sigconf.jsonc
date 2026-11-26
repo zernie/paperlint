@@ -11,6 +11,8 @@
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
+  "template_label": "ACM acmart, sigconf (two columns)",
+  "any_conference_of": "ACM",
 
   // `tex/template` requires a paper's class to be acmart WITH `sigconf`: acmart's default format is
   // `manuscript`, a single-column layout no sigconf venue takes. Other options (review, anonymous,

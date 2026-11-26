@@ -135,6 +135,8 @@ export interface Preset {
    * paper of this venue may use as its own. Empty when no file of the chain names a parent.
    */
   readonly parentNames: readonly string[];
+  /** The conference it is held at, as the chain names it (`parent`); null when no file does. */
+  readonly parent: ParentLink | null;
   /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
   readonly requiredSections: readonly RequiredSection[];
@@ -291,7 +293,7 @@ function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
   leaf: { readonly preset: PresetFile },
-): Omit<Preset, "parentNames"> & { readonly parent: ParentLink | null } {
+): Omit<Preset, "parentNames"> {
   const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
     id: labelOf(spec),
@@ -377,11 +379,8 @@ function resolveFrom(
     return err({ kind: "parent-cycle", chain: here });
   const chain = chainUp([leaf.value], leaf.value, deps);
   if (!chain.ok) return err(refusal(chain.error, deps.venuesDir));
-  const { parent, ...preset } = merged(
-    spec,
-    [...chain.value].reverse(),
-    leaf.value,
-  );
+  const preset = merged(spec, [...chain.value].reverse(), leaf.value);
+  const { parent } = preset;
   const names = parent === null ? ok([]) : parentNamesOf(parent, here, deps);
   return names.ok ? ok({ ...preset, parentNames: names.value }) : names;
 }
