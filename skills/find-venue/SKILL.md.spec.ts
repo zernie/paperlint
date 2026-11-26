@@ -49,7 +49,8 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
 - **archival-weight** = (peer-reviewed? — required) × (indexed/archival? — required) × parent-venue
   prestige (a bonus, not a gate). **Non-archival ⇒ archival-weight ≈ 0** — it is not a publication,
   so it sinks to the bottom no matter how nice the CFP reads.
-- **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk).
+- **topic-fit** — how squarely the paper matches the CFP scope (a stretch fit raises reject risk),
+  judged from the table's fit-per-finding column, not from the title.
 - **accept-probability** — realistic odds given the paper's maturity and how selective the venue is.
 - **deadline-feasibility** — can the paper (and artifact) be ready by the deadline? A great venue you
   miss is a zero.
@@ -67,13 +68,26 @@ rank = archival-weight × topic-fit × accept-probability × deadline-feasibilit
 ## Output
 
 1. **Comparison table** — one row per candidate: venue, parent, deadline (AoE + local), page limit,
-   type fit, **indexed? (Y/N + where)**, double-blind, remote, selectivity, computed rank.
+   type fit, **indexed? (Y/N + where)**, double-blind, remote, selectivity, computed rank, and two
+   more:
+   - **fit per finding** — for each of the paper's two or three findings, the call's nearest topic
+     or sentence quoted word for word with its URL, or \`none\`;
+   - **desk pressure** — the last edition's submissions, acceptances and program days, or
+     \`first edition: unknown\`.
 2. **Keep/switch recommendation** — the top-ranked venue with the one-line reason, and (if the paper
    already has a target) an explicit **keep** or **switch** verdict against it. Note the intended
    \`extend-paper\` upgrade target for later. After a **switch**, the paper's revision plan is for the
    old cycle: say that it must be rewritten for the new one (\`paper-pipeline\`, "The revision plan").
+3. **Scope letter** — a draft letter to the picked venue's organisers, at the contact the venue's
+   own page gives, to be sent before the paper is ported to the venue. It asks two things: whether
+   the weakest finding (a \`none\`, or the most distant quote) is in scope, and what the venue weighs
+   when it screens submissions. The author sends it; the reply is saved as a dated file in the
+   paper's \`submission/\` folder.
 
 ## Rules
+- A table with no \`none\` is not a desk prediction: a call can match every finding and the venue
+  still desk-reject the paper on an emphasis its call never states. The scope letter goes out
+  whatever the table says.
 - Fetch every CFP fact from the real page; never invent a deadline, page limit, or indexing status.
 - Indexed + peer-reviewed is a gate, not a tiebreaker — a non-archival venue cannot win on charm.
 - Don't hold a finished paper hostage to prestige; ship archival now, extend later.
