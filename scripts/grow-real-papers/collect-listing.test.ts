@@ -61,7 +61,7 @@ describe("from a Semantic Scholar listing, the edition year", () => {
         name: "main.tex",
         body: mainTex(
           "Hi.",
-          "\\documentclass{article}\\usepackage{acl}\n\\acmYear{2026}",
+          "\\documentclass{article}\\usepackage{acl}\n\\acmConference[ACL '26]{X}{2026}{Y}",
         ),
       },
     ]);
@@ -83,7 +83,7 @@ describe("from a Semantic Scholar listing, the edition year", () => {
         1,
         "s4v1",
         "rejected",
-        "the paper's TeX declares the 2026 edition (\\acmConference, \\acmYear), not ACL 2025",
+        "the paper's TeX declares the 2026 edition (\\acmConference), not ACL 2025",
       ],
     ]);
   });

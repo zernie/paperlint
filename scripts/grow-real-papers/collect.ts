@@ -9,11 +9,11 @@
  * rerunning; a quota already met adds nothing.
  */
 import { stagingPlan, sha256, unpack } from "./archive.ts";
+import { judgeDeclaredVenue } from "./declared-venue.ts";
 import { keptPaper, type Candidate, type KeptPaper } from "./paper.ts";
 import {
   judgeClass,
   judgeComment,
-  judgeDeclaredYear,
   judgeLicence,
   judgeListedVenue,
   judgeSize,
@@ -166,11 +166,8 @@ async function judgeSources(
 ): Promise<Judged> {
   const got = await fetchSources(w.get, c.id);
   if ("reason" in got) return { reason: got.reason };
-  // A listing's year is the publication year; the paper's own TeX names the edition.
-  const edition: Verdict =
-    c.s2 === undefined
-      ? { ok: true }
-      : judgeDeclaredYear(got.plan.mainText, slot);
+  // The comment or the listing says where it was accepted; the TeX says what this source is.
+  const edition: Verdict = judgeDeclaredVenue(got.plan.mainText, slot);
   if (!edition.ok) return { reason: edition.reason };
   const staged = judgeStaged(slot, got.plan);
   if ("reason" in staged) return staged;

@@ -265,7 +265,7 @@ jobs:
         run: npm run test:e2e:studies
         timeout-minutes: 5
 
-      # Every rule over every real paper of the corpus (165 accepted, 108 arXiv preprints) in ONE
+      # Every rule over every real paper of the corpus (158 accepted, 108 arXiv preprints) in ONE
       # `paperlint lint --json`, against each paper's baseline: the vitest project `real-papers`,
       # outside `unit` so the macOS shards and the coverage run do not repeat it. No TeX needed.
       # Why every paper runs, and what it costs: fixtures/real-papers/preprints/README.md. The lint

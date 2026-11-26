@@ -1241,50 +1241,6 @@
     "acceptance": "arxiv-comment"
   },
   {
-    "arxiv_id": "2603.21530v1",
-    "field": "se",
-    "series": "ICSE",
-    "year": 2026,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "9933aae3803959f5db0a2e85270f4f27ecf70a6d6f8052aee601fdc908422f02",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.SE",
-    "size_bytes": 222446,
-    "dir": "2603.21530v1",
-    "accepted": {
-      "quote": "Accepted to ICSE 2026 Industry Challenge Track",
-      "url": "https://arxiv.org/abs/2603.21530v1",
-      "venue": "ICSE 2026"
-    },
-    "preset": "paperlint:acm-sigconf",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
-    "arxiv_id": "2503.17220v2",
-    "field": "se",
-    "series": "ISSTA",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "fe2f366c307597258bd29dc89d996c88c4512afa5f51be76e5b887adcf23013a",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.SE",
-    "size_bytes": 203790,
-    "dir": "2503.17220v2",
-    "accepted": {
-      "quote": "Accepted at ISSTA 2025",
-      "url": "https://arxiv.org/abs/2503.17220v2",
-      "venue": "ISSTA 2025"
-    },
-    "preset": "paperlint:acm-sigconf",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
     "arxiv_id": "2412.16620v1",
     "field": "se",
     "series": "ISSTA",
@@ -1830,28 +1786,6 @@
       "venue": "IJCAI 2025"
     },
     "preset": null,
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
-    "arxiv_id": "2503.22283v1",
-    "field": "hci",
-    "series": "CHI",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "312c857b0419b5b10d5f78f299cdd6ea45a6825c8df8620c692af06f05eaa0a7",
-    "main_tex": "./CHI_2025_Submission.tex",
-    "class": "acmart",
-    "category": "cs.HC",
-    "size_bytes": 101430,
-    "dir": "2503.22283v1",
-    "accepted": {
-      "quote": "Accepted at the 2025 Conference on Human Factors in Computing Systems (CHI 2025)",
-      "url": "https://arxiv.org/abs/2503.22283v1",
-      "venue": "CHI 2025"
-    },
-    "preset": "paperlint:acm-sigconf",
     "kind": null,
     "source": "arxiv-comment",
     "acceptance": "arxiv-comment"
@@ -2873,28 +2807,6 @@
     "acceptance": "arxiv-comment"
   },
   {
-    "arxiv_id": "2601.14132v2",
-    "field": "se",
-    "series": "ICSE",
-    "year": 2026,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "325932a597597e5bd7ebbd0d799eb6158bc570f36620f950407de5406f8c6846",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.SE",
-    "size_bytes": 258339,
-    "dir": "2601.14132v2",
-    "accepted": {
-      "quote": "Accepted for ICSE 2026 Track \"Software Architecture BoF\"",
-      "url": "https://arxiv.org/abs/2601.14132v2",
-      "venue": "ICSE 2026"
-    },
-    "preset": "paperlint:acm-sigconf",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
     "arxiv_id": "2509.16861v1",
     "field": "se",
     "series": "ASE",
@@ -2912,28 +2824,6 @@
       "venue": "ASE 2025"
     },
     "preset": "paperlint:ieee-conference",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
-    "arxiv_id": "2608.12144v1",
-    "field": "se",
-    "series": "ISSTA",
-    "year": 2026,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "76b325d79173b599d7392b7f6ba01ffdb15f56ba0d884323ac67264da26c23a7",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.SE",
-    "size_bytes": 263702,
-    "dir": "2608.12144v1",
-    "accepted": {
-      "quote": "Proceedings of 35th ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA 2026)",
-      "url": "https://arxiv.org/abs/2608.12144v1",
-      "venue": "ISSTA 2026"
-    },
-    "preset": null,
     "kind": null,
     "source": "arxiv-comment",
     "acceptance": "arxiv-comment"
@@ -3159,28 +3049,6 @@
     "acceptance": "arxiv-comment"
   },
   {
-    "arxiv_id": "2603.08080v1",
-    "field": "hci",
-    "series": "CHI",
-    "year": 2026,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "96e892d44897ff10a2549799d5430fc215696ab45b2ba4a9fdd46e13a14706e0",
-    "main_tex": "./main.tex",
-    "class": "acmart",
-    "category": "cs.HC",
-    "size_bytes": 255317,
-    "dir": "2603.08080v1",
-    "accepted": {
-      "quote": "This version has been accepted at CHI 2026",
-      "url": "https://arxiv.org/abs/2603.08080v1",
-      "venue": "CHI 2026"
-    },
-    "preset": "paperlint:acm-sigconf",
-    "kind": null,
-    "source": "arxiv-comment",
-    "acceptance": "arxiv-comment"
-  },
-  {
     "arxiv_id": "2608.22146v1",
     "field": "hci",
     "series": "CSCW",
@@ -3352,28 +3220,6 @@
       "venue": "ICRA 2025"
     },
     "preset": null,
-    "kind": null,
-    "source": "semantic-scholar",
-    "acceptance": "s2-venue-listing"
-  },
-  {
-    "arxiv_id": "2501.15915v1",
-    "field": "other",
-    "series": "SIGIR",
-    "year": 2025,
-    "license": "http://creativecommons.org/licenses/by/4.0/",
-    "source_sha256": "6c0427bc91cde33ed7f1ce07f61db18f33ab5f6893c0c3756b685ca47de6b2a5",
-    "main_tex": "./sample-sigconf.tex",
-    "class": "acmart",
-    "category": "cs.CL",
-    "size_bytes": 271398,
-    "dir": "2501.15915v1",
-    "accepted": {
-      "quote": "Semantic Scholar venue listing: venue \"Annual International ACM SIGIR Conference on Research and Development in Information Retrieval\", year 2025, publication date 2025-01-27",
-      "url": "https://arxiv.org/abs/2501.15915v1",
-      "venue": "SIGIR 2025"
-    },
-    "preset": "paperlint:acm-sigconf",
     "kind": null,
     "source": "semantic-scholar",
     "acceptance": "s2-venue-listing"

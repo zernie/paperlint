@@ -7,7 +7,6 @@ import {
   judgeComment,
   judgeLicence,
   committedLicenceProblems,
-  judgeDeclaredYear,
   judgeListedVenue,
   judgeSize,
   MAX_BYTES,
@@ -138,40 +137,6 @@ describe("rule 1 on a Semantic Scholar listing", () => {
       { ok: true, track: null },
       { ok: true, track: null },
     ]);
-  });
-});
-
-describe("rule 1 on a listing: the year the TeX declares", () => {
-  const slot = { series: "EuroSys", year: 2025 };
-  test("an ACM edition year other than the slot's is rejected", () => {
-    // Guards: a listing's 2025 that the paper's own \\acmConference says is the 2026 edition.
-    expect(
-      judgeDeclaredYear(
-        "\\acmYear{2026}\n\\acmConference[EUROSYS '26]{European Conference on Computer Systems}{April 27--30, 2026}",
-        slot,
-      ),
-    ).toEqual({
-      ok: false,
-      reason:
-        "the paper's TeX declares the 2026 edition (\\acmConference, \\acmYear), not EuroSys 2025",
-    });
-    // Guards: \\acmYear alone is read too.
-    expect(judgeDeclaredYear("\\acmYear{2024}", slot)).toEqual({
-      ok: false,
-      reason:
-        "the paper's TeX declares the 2024 edition (\\acmConference, \\acmYear), not EuroSys 2025",
-    });
-  });
-
-  test("the slot's year, a commented-out line, or no declaration pass", () => {
-    // Guards: silent on a matching year, on a comment, and on a paper that declares nothing.
-    expect(
-      [
-        "\\acmYear{2025}\n\\acmConference[EuroSys '25]{X}{2025}",
-        "% \\acmYear{2026}",
-        "\\documentclass{article}",
-      ].map((t) => judgeDeclaredYear(t, slot)),
-    ).toEqual([{ ok: true }, { ok: true }, { ok: true }]);
   });
 });
 

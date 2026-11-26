@@ -567,31 +567,6 @@
     ],
     "title": "EchoFuzz: Empowering Smart Contract Fuzzing with Large Language Models"
   },
-  "2603.21530v1": {
-    "clsOpts": "sigconf",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "LLM-Based Test Case Generation in DBMS through Monte Carlo Tree Search"
-  },
-  "2503.17220v2": {
-    "clsOpts": "sigconf,nonacm",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.bbl to paper.bbl",
-      "main.tex to paper.tex"
-    ],
-    "title": "InfraFix: Technology-Agnostic Repair of Infrastructure as Code"
-  },
   "2412.16620v1": {
     "clsOpts": "acmsmall,screen",
     "style": null,
@@ -910,19 +885,6 @@
       "ijcai25.tex to paper.tex"
     ],
     "title": "GCTAM: Global and Contextual Truncated Affinity Combined Maximization Model For Unsupervised Graph Anomaly Detection"
-  },
-  "2503.22283v1": {
-    "clsOpts": "sigconf",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "CHI_2025_Submission.bbl to paper.bbl",
-      "CHI_2025_Submission.tex to paper.tex"
-    ],
-    "title": "BanglAssist: A Bengali-English Generative AI Chatbot for Code-Switching and Dialect-Handling in Customer Service"
   },
   "2503.00228v1": {
     "clsOpts": "sigconf",
@@ -1504,18 +1466,6 @@
     ],
     "title": "On Improving Robustness of Deepfake Image Detectors"
   },
-  "2601.14132v2": {
-    "clsOpts": "sigconf",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "Toward architecting self-coding information systems"
-  },
   "2509.16861v1": {
     "clsOpts": "10pt,conference, review",
     "style": null,
@@ -1525,18 +1475,6 @@
     "edits": [],
     "renames": [],
     "title": "AdaptiveGuard: Towards Adaptive Runtime Safety for LLM-Powered Software"
-  },
-  "2608.12144v1": {
-    "clsOpts": "sigplan,screen",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "no preset: the class is acmart with format [sigplan,screen], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "ADEPT: A Unified Framework for Deep Learning Test Adequacy"
   },
   "2601.09440v1": {
     "clsOpts": "sigconf,screen",
@@ -1659,18 +1597,6 @@
     ],
     "title": "Ctrl-F-Resist. Practices, Challenges, and Technical Needs of Civil Society Organizations Monitoring the Far-Right Online"
   },
-  "2603.08080v1": {
-    "clsOpts": "sigconf, screen",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "MRDrive: An Open Source Mixed Reality Driving Simulator for Automotive User Research"
-  },
   "2608.22146v1": {
     "clsOpts": "acmsmall",
     "style": null,
@@ -1769,20 +1695,6 @@
     "renames": [],
     "title": "SliceOcc: Indoor 3D Semantic Occupancy Prediction with Vertical Slice Representation",
     "versionNote": "latest arXiv version 2025-01-28; venue date 2025-01-28"
-  },
-  "2501.15915v1": {
-    "clsOpts": "sigconf,natbib=true,anonymous=false",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "the acmart sigconf family as no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "sample-sigconf.bbl to paper.bbl",
-      "sample-sigconf.tex to paper.tex"
-    ],
-    "title": "Parametric Retrieval Augmented Generation",
-    "versionNote": "latest arXiv version 2025-01-27; venue date 2025-01-27"
   },
   "2502.09608v2": {
     "clsOpts": "acmtog, ",

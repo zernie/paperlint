@@ -93,6 +93,31 @@ describe("rules 1 to 4 in the fixed order", () => {
   });
 });
 
+describe("rule 1 read from the paper itself", () => {
+  test("an accepted comment loses to a TeX that declares a companion track", async () => {
+    const companion = tarGz([
+      {
+        name: "main.tex",
+        body: mainTex(
+          "Hi.",
+          "\\documentclass{article}\\usepackage{acl}\n\\acmConference[ACL Companion '25]{Companion}{2025}{X}",
+        ),
+      },
+    ]);
+    const { get } = world([["p1", ACCEPTED]], { p1: { src: companion } });
+    const r = await walk({ get, queries: queries() });
+    // Guards: the check runs on a candidate found by its comment, not only on a listed one.
+    expect(r.log).toEqual([
+      [
+        1,
+        "p1",
+        "rejected",
+        "the paper's TeX declares a track that is not the main proceedings: \"ACL Companion '25\"",
+      ],
+    ]);
+  });
+});
+
 describe("quotas and caps are totals over the manifest", () => {
   const earlier: readonly Counted[] = [
     { arxiv_id: "old1", field: "nlp", series: "ACL", year: 2024 },

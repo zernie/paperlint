@@ -187,30 +187,6 @@ export function judgeLicence(
 export const stripComments = (t: string): string =>
   t.replace(/(^|[^\\])%.*$/gm, "$1");
 
-/**
- * Rule 1 on a listing, read from the paper itself: the edition year its ACM preamble declares, in
- * `\acmConference[<SHORT> 'YY]` or `\acmYear{YYYY}`. A Semantic Scholar listing files a paper under
- * its publication year, which for EuroSys is the year before the edition; the TeX does not.
- */
-export function judgeDeclaredYear(
-  main: string,
-  slot: Pick<Slot, "series" | "year">,
-): Verdict {
-  const t = stripComments(main);
-  const years = [
-    ...[...t.matchAll(/\\acmConference\s*\[[^\]]*'(\d{2})\s*\]/g)].map(
-      (m) => 2000 + Number(m[1]),
-    ),
-    ...[...t.matchAll(/\\acmYear\s*\{(\d{4})\}/g)].map((m) => Number(m[1])),
-  ];
-  const other = years.find((y) => y !== slot.year);
-  return other === undefined
-    ? { ok: true }
-    : no(
-        `the paper's TeX declares the ${String(other)} edition (\\acmConference, \\acmYear), not ${slot.series} ${String(slot.year)}`,
-      );
-}
-
 /** The first `\documentclass` of a main file, its options, and every package it loads. */
 export type Preamble = Readonly<{
   cls: string | null;
