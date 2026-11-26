@@ -67,7 +67,8 @@ const paper = (name, files) => {
 
 /**
  * A fake TeX. `pdflatex` writes paper.aux / paper.log (and paper.pdf on success) in its cwd;
- * `bibtex` writes paper.bbl. Every call is recorded with its argv, cwd and TEXINPUTS.
+ * `bibtex` writes paper.bbl; `kpsewhich` finds a file in its cwd, or `plain.bst` in the TeX tree.
+ * Every call is recorded with its argv, cwd and TEXINPUTS.
  */
 function fakeTex({
   aux = "\\relax\n",
@@ -99,6 +100,14 @@ function fakeTex({
     if (bin === "bibtex") {
       writeFileSync(join(opts.cwd, "paper.bbl"), "\\begin{thebibliography}{1}");
       return { status: 0, stdout: "This is BibTeX\n", stderr: "" };
+    }
+    if (bin === "kpsewhich") {
+      const name = args.at(-1);
+      if (existsSync(join(opts.cwd, name)))
+        return { status: 0, stdout: `./${name}\n`, stderr: "" };
+      return name === "plain.bst"
+        ? { status: 0, stdout: "/texmf/bibtex/bst/plain.bst\n", stderr: "" }
+        : { status: 1, stdout: "", stderr: "" };
     }
     return { status: 99 };
   };
@@ -260,8 +269,8 @@ it("a clean build, with leftover scripts that must NOT run", async () => {
     !existsSync(join(clean, "RAN")) && !existsSync(join(clean, "RAN2")),
   );
   check(
-    "🔴 and nothing but pdflatex/bibtex was started",
-    tex.calls.every((c) => c.bin === "pdflatex" || c.bin === "bibtex"),
+    "🔴 and nothing but pdflatex/bibtex (and the kpsewhich lookup) was started",
+    tex.calls.every((c) => ["pdflatex", "bibtex", "kpsewhich"].includes(c.bin)),
   );
   check(
     "one line per ignored script tells the author it is ignored",
@@ -365,15 +374,16 @@ it("the bibtex path", async () => {
   });
   check("a paper with a \\cite builds", rb.status === "built");
   const bibCalls = btex.calls.filter((c) => c.bin === "bibtex");
+  const passes = btex.calls.filter((c) => c.bin !== "kpsewhich");
   check(
     "bibtex ran exactly once, on the job name",
     bibCalls.length === 1 && bibCalls[0].args.join(" ") === "paper",
   );
   check(
     "…between two pdflatex passes, and the build still ends on the final pass",
-    btex.calls[0].bin === "pdflatex" &&
-      btex.calls[1].bin === "bibtex" &&
-      btex.calls.at(-1).args.at(-1).includes("\\finalpass"),
+    passes[0].bin === "pdflatex" &&
+      passes[1].bin === "bibtex" &&
+      passes.at(-1).args.at(-1).includes("\\finalpass"),
   );
 });
 
