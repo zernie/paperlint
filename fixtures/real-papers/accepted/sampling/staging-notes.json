@@ -820,19 +820,6 @@
     "title": "Tempo: Compiled Dynamic Deep Learning with Symbolic Dependence Graphs",
     "versionNote": "latest arXiv version 2025-10-08; venue date 2025-01-09"
   },
-  "2503.20191v2": {
-    "clsOpts": "sigplan,twocolumn",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "no preset: the class is acmart with format [sigplan,twocolumn], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.tex to paper.tex"
-    ],
-    "title": "Maya: Optimizing Deep Learning Training Workloads using GPU Runtime Emulation",
-    "versionNote": "latest arXiv version 2025-11-15; venue date 2025-03-26"
-  },
   "2501.17311v2": {
     "clsOpts": "letterpaper, conference",
     "style": null,
@@ -1721,20 +1708,6 @@
     ],
     "title": "Sailor: Automating Distributed Training over Dynamic, Heterogeneous, and Geo-distributed Clusters",
     "versionNote": "latest arXiv version 2025-09-26; venue date 2025-04-23"
-  },
-  "2509.23324v1": {
-    "clsOpts": "sigplan,10pt",
-    "style": null,
-    "styleOpts": null,
-    "mainCandidates": 1,
-    "presetWhy": "no preset: the class is acmart with format [sigplan,10pt], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition",
-    "edits": [],
-    "renames": [
-      "main.bbl to paper.bbl",
-      "main.tex to paper.tex"
-    ],
-    "title": "Scaling LLM Test-Time Compute with Mobile NPU on Smartphones",
-    "versionNote": "latest arXiv version 2025-09-27; venue date 2025-09-27"
   },
   "2505.01603v2": {
     "clsOpts": "sigplan,10pt",

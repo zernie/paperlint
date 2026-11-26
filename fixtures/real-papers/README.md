@@ -5,7 +5,7 @@ as LaTeX source, and each folder answers a different question:
 
 | folder | what it holds | the question it answers |
 | --- | --- | --- |
-| [`accepted/`](accepted/README.md) | papers a venue **accepted and published**: six older ones (ACSAC, AgenticDev) and 161 camera-ready papers (12 chosen on 2026-11-19, 80 sampled by a script on 2026-11-20, 69 on 2026-11-27, quotas per field), each linted against the venue that accepted it | **Is the rule right?** The calibration yardstick: a finding here is presumed false until shown otherwise, because the venue published the paper. The thresholds of the opt-in rules are set on it. |
+| [`accepted/`](accepted/README.md) | papers a venue **accepted and published**: six older ones (ACSAC, AgenticDev) and 159 camera-ready papers (12 chosen on 2026-11-19, 79 sampled by a script on 2026-11-20, 68 on 2026-11-27, quotas per field), each linted against the venue that accepted it | **Is the rule right?** The calibration yardstick: a finding here is presumed false until shown otherwise, because the venue published the paper. The thresholds of the opt-in rules are set on it. |
 | [`preprints/`](preprints/README.md) | 108 arXiv **preprints**, drafts under no venue's checklist | **What do authors actually lint?** Recall (what paperlint finds in drafts), and stress for the parser and for crashes on whatever authors leave in a source. |
 
 Both folders are run together by [`../real-papers.test.ts`](../real-papers.test.ts) (the vitest
