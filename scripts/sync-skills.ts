@@ -1,15 +1,40 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { generate } from "rulesync";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
-const sourcePath = ".claude/skills/add-venue/SKILL.md";
+const CLAUDE_SKILLS = join(".claude", "skills");
 
-/** Stage the compiled skill alone. Its eval and spec are repository authoring files. */
-async function stageSkill(inputRoot: string, source: string): Promise<void> {
-  const skill = join(inputRoot, "skills", "add-venue");
+/**
+ * The repository's own maintainer skills: the real folders under `.claude/skills/`. The symlinks
+ * there point at the package's shipped skills, which Codex does not need.
+ */
+const ownSkills = async (root: string): Promise<readonly string[]> =>
+  (await readdir(join(root, CLAUDE_SKILLS), { withFileTypes: true }))
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .toSorted();
+
+/** Stage one compiled skill alone. Its eval and spec are repository authoring files. */
+async function stageSkill(
+  inputRoot: string,
+  root: string,
+  name: string,
+): Promise<void> {
+  const source = await readFile(
+    join(root, CLAUDE_SKILLS, name, "SKILL.md"),
+    "utf8",
+  );
+  const skill = join(inputRoot, "skills", name);
   await mkdir(skill, { recursive: true });
   await writeFile(
     join(skill, "SKILL.md"),
@@ -21,10 +46,10 @@ async function stageSkill(inputRoot: string, source: string): Promise<void> {
 }
 
 export async function syncSkills(root: string, check: boolean): Promise<void> {
-  const source = await readFile(join(root, sourcePath), "utf8");
+  const names = await ownSkills(root);
   const inputRoot = await mkdtemp(join(tmpdir(), "paperlint-rulesync-"));
   try {
-    await stageSkill(inputRoot, source);
+    for (const name of names) await stageSkill(inputRoot, root, name);
     const result = await generate({
       inputRoots: [inputRoot],
       outputRoots: [root],
@@ -38,11 +63,11 @@ export async function syncSkills(root: string, check: boolean): Promise<void> {
     assert.equal(
       result.sourceLoadFailed,
       false,
-      "Rulesync could not read add-venue",
+      `Rulesync could not read ${names.join(", ")}`,
     );
     assert.ok(
       !check || !result.hasDiff,
-      "Run npm run sync:skills to refresh the Codex skill",
+      "Run npm run sync:skills to refresh the Codex skills",
     );
   } finally {
     await rm(inputRoot, { recursive: true, force: true });

@@ -6,11 +6,10 @@
 # re-escape markdown and desync the hash, so the two gates would fight forever.
 # The spec (SKILL.md.spec.ts) IS formatted.
 skills/*/SKILL.md
-.claude/skills/add-venue/SKILL.md
-.claude/skills/grow-real-papers/SKILL.md
+.claude/skills/*/SKILL.md
 
 # Rulesync owns the generated frontmatter and formatting.
-.agents/skills/add-venue/SKILL.md
+.agents/skills/*/SKILL.md
 
 # Every CLAUDE.md (the root and each folder's) is compiled from the CLAUDE.md.spec.ts beside it,
 # for the same reason.
