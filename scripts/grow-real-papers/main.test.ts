@@ -3,6 +3,7 @@
  * laid out as `fixtures/` is, and a resumed run reading the log it left. The world is a temp
  * directory and a fake `Get`; the spawned CLI is given a queries file that asks for nothing.
  */
+import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -13,10 +14,10 @@ import {
   useTempDir,
   writeTree,
 } from "../../test/support.ts";
-import { argsOf, FIXTURES, run, type Args, type World } from "./main.ts";
-import { fakeGet, mainTex, tarGz } from "./testkit.ts";
+import { argsOf, FIXTURES, gitCommitted, run, type World } from "./main.ts";
+import { NOW, queriesJson, setup } from "./main.testkit.ts";
+import { fakeGet } from "./testkit.ts";
 
-const NOW = Date.parse("2026-11-20T00:00:00Z");
 const DEFAULT_QUERIES = join(
   FIXTURES,
   "real-papers",
@@ -29,7 +30,13 @@ describe("the options", () => {
   test.each([
     [
       [],
-      { queries: DEFAULT_QUERIES, only: null, deadline: Infinity, write: null },
+      {
+        queries: DEFAULT_QUERIES,
+        only: null,
+        deadline: Infinity,
+        write: null,
+        summary: false,
+      },
     ],
     [
       [
@@ -49,6 +56,7 @@ describe("the options", () => {
         only: ["ml", "nlp"],
         deadline: NOW + 600_000,
         write: resolve("out"),
+        summary: false,
       },
     ],
     [
@@ -58,6 +66,7 @@ describe("the options", () => {
         only: null,
         deadline: NOW + 60_000,
         write: null,
+        summary: false,
       },
     ],
   ])("%j", (argv, args) => {
@@ -79,33 +88,6 @@ describe("the options", () => {
   });
 });
 
-const BY = "http://creativecommons.org/licenses/by/4.0/";
-const queriesJson = JSON.stringify({
-  hardCap: 5,
-  maxPages: 1,
-  quotas: { nlp: 2 },
-  slots: [
-    {
-      field: "nlp",
-      series: "ACL",
-      year: 2025,
-      cap: 2,
-      queries: ['co:"ACL 2025"'],
-      max_results: 50,
-      venue: "acl",
-      classSpec: "acl",
-    },
-  ],
-});
-const entry = (id: string) =>
-  `<entry><id>http://arxiv.org/abs/${id}</id><updated>2025-05-01</updated><title>T</title><arxiv:comment>Accepted at ACL 2025</arxiv:comment></entry>`;
-const camera = tarGz([
-  {
-    name: "main.tex",
-    body: mainTex("Hi.", "\\documentclass{article}\\usepackage{acl}"),
-  },
-]);
-
 const TMP = useTempDir("grow-main-");
 const ids = (path: string) =>
   z
@@ -113,43 +95,9 @@ const ids = (path: string) =>
     .parse(parseJson(readFileSync(path, "utf8")))
     .map((e) => e.arxiv_id);
 
-/** A fixtures tree with one earlier entry, one preprint, and a world over a fake `Get`. */
-function setup(name: string) {
-  const root = join(TMP, name);
-  writeTree(root, {
-    "fixtures/venue-manifest.json": JSON.stringify([
-      { arxiv_id: "old", field: "nlp" },
-    ]),
-    "fixtures/arxiv-manifest.json": JSON.stringify([{ arxiv_id: "pre1v1" }]),
-    "presets/acl-2025.jsonc": "{}",
-    "presets/README.md": "",
-    "queries.json": queriesJson,
-  });
-  const { get, asked } = fakeGet([
-    ["api/query", `<feed>${entry("pre1v2")}${entry("k1v1")}</feed>`],
-    ["oai2", `<license>${BY}</license>`],
-    ["src/", camera],
-  ]);
-  const out: string[] = [];
-  const world: World = {
-    get,
-    now: () => NOW,
-    log: (l) => out.push(l),
-    fixtures: join(root, "fixtures"),
-    presets: join(root, "presets"),
-  };
-  const args = (write: string | null): Args => ({
-    queries: join(root, "queries.json"),
-    only: null,
-    deadline: Infinity,
-    write,
-  });
-  return { root, world, out, asked, args };
-}
-
 describe("a run", () => {
   test("a dry run prints each decision and every staged path, and writes nothing", async () => {
-    const s = setup("dry");
+    const s = setup(join(TMP, "dry"));
     const before = readdirSync(join(s.root, "fixtures"));
     // Guards: a dry run succeeds.
     expect(await run(s.args(null), s.world)).toBe(0);
@@ -164,6 +112,12 @@ describe("a run", () => {
       "    stage README.md",
       "nlp/ACL 2025: full at rank 2",
       "dry run: 1 paper(s) would be added; nothing written (--write DIR stages them)",
+      "field | total / quota | kept (this run) | probed (this run) | yield | top 3 rejection reasons",
+      "nlp | 2 / 2 | 1 | 2 | 50.0% | already in the corpora (1)",
+      "edition | count / cap",
+      "ACL 2025 | 1 / 5",
+      "every walk finished",
+      "next: commit the quotas, then rerun with --write fixtures",
     ]);
     // Guards: nothing written into fixtures/.
     expect(readdirSync(join(s.root, "fixtures"))).toEqual(before);
@@ -172,7 +126,7 @@ describe("a run", () => {
 
 describe("a run with --write", () => {
   test("--write stages into the directory, and a rerun resumes from its log", async () => {
-    const s = setup("write");
+    const s = setup(join(TMP, "write"));
     const out = join(s.root, "staged");
     expect(await run(s.args(out), s.world)).toBe(0);
     const sampling = join(out, "real-papers", "accepted", "sampling");
@@ -207,8 +161,9 @@ describe("a run with --write", () => {
     s.out.length = 0;
     expect(await run(s.args(out), s.world)).toBe(0);
     // Guards: the rerun counts the staged paper, so the quota of 2 is met and nothing is asked.
-    expect([s.out, s.asked.length]).toEqual([
-      ["staged 0 paper(s) into " + out],
+    expect([s.out[0], s.out.at(-1), s.asked.length]).toEqual([
+      "staged 0 paper(s) into " + out,
+      "next: npx vitest run fixtures/real-papers/balance.test.ts fixtures/real-papers/inputs.test.ts",
       asked,
     ]);
   });
@@ -216,7 +171,7 @@ describe("a run with --write", () => {
 
 describe("a run with --write that stops halfway", () => {
   test("a paper whose files fail to write is not logged as kept, so a rerun judges it again", async () => {
-    const s = setup("broken");
+    const s = setup(join(TMP, "broken"));
     const out = join(s.root, "staged");
     // A file where the paper's directory must go makes staging its files fail.
     writeTree(out, { "real-papers/accepted/k1v1": "" });
@@ -241,7 +196,7 @@ describe("a run with --write that stops halfway", () => {
 
 describe("a run with --write into fixtures/", () => {
   test("a second paper adds to the staged notes and manifest", async () => {
-    const s = setup("inplace");
+    const s = setup(join(TMP, "inplace"));
     const out = join(s.root, "fixtures");
     writeFileSync(
       join(s.root, "queries.json"),
@@ -272,24 +227,88 @@ describe("the command", () => {
       }),
     });
     const ok = runNode(main, ["--queries", join(root, "q.json")]);
-    // Guards: no slot, no request, a dry run that says so.
-    expect([ok.status, ok.stdout.trim()]).toEqual([
+    const printed = ok.stdout.trim().split("\n");
+    // Guards: no slot, no request, a dry run that says so and names the next step.
+    expect([ok.status, printed[0], printed.at(-1)]).toEqual([
       0,
       "dry run: 0 paper(s) would be added; nothing written (--write DIR stages them)",
+      "next: commit the quotas, then rerun with --write fixtures",
     ]);
   });
 });
 
 describe("a run whose search fails", () => {
   test("prints the edition's error", async () => {
-    const s = setup("fails");
+    const s = setup(join(TMP, "fails"));
     const world: World = { ...s.world, get: fakeGet([]).get };
-    // Guards: a failed search still ends the run cleanly.
-    expect(await run(s.args(null), world)).toBe(0);
-    // Guards: the edition's end names the error.
-    expect(s.out).toEqual([
+    // Guards: a failed search is an unfinished run: exit 1.
+    expect(await run(s.args(null), world)).toBe(1);
+    // Guards: the edition's end names the error, and the summary repeats it with the cure.
+    expect([s.out[0], ...s.out.slice(-2)]).toEqual([
       'nlp/ACL 2025: search error at rank 0 (co:"ACL 2025" page 0: 404)',
-      "dry run: 0 paper(s) would be added; nothing written (--write DIR stages them)",
+      'not finished: nlp/ACL 2025 ended by search error (co:"ACL 2025" page 0: 404); rerun to resume',
+      "next: rerun the same command to finish the walks",
     ]);
+  });
+});
+
+describe("the guards", () => {
+  test("--write refuses while the queries file is not committed, and asks nothing", async () => {
+    const s = setup(join(TMP, "uncommitted"));
+    const world: World = { ...s.world, committed: () => false };
+    // Guards: exit 2, one line naming the file, no request made.
+    expect([await run(s.args(join(s.root, "out")), world), s.asked]).toEqual([
+      2,
+      [],
+    ]);
+    expect(s.out).toEqual([
+      `refusing --write: ${join(s.root, "queries.json")} has changes git has not committed; commit the quotas first, as they are fixed before collecting`,
+    ]);
+  });
+
+  test("--summary reads the log, fetches nothing, and fails on a kept id the manifest lacks", async () => {
+    const s = setup(join(TMP, "summary"));
+    // Guards: no log yet: the summary alone, exit 0, no request.
+    expect([
+      await run(s.args(null, true), s.world),
+      s.out.at(-1),
+      s.asked,
+    ]).toEqual([0, "ACL 2025 | 0 / 5", []]);
+    const log = join(s.root, "fixtures", "real-papers", "accepted", "sampling");
+    writeTree(log, {
+      "probe-log.jsonl": `${JSON.stringify({ id: "gone1", field: "nlp", series: "ACL", year: 2025, rank: 1, query: "q", source: "arxiv-comment", acceptance: "arxiv-comment", outcome: "kept", reason: "passes rules 1-4" })}\n`,
+    });
+    // Guards: a kept line with no manifest entry fails by name.
+    expect([await run(s.args(null, true), s.world), s.out.at(-1)]).toEqual([
+      1,
+      "❌ kept in the log but not in venue-manifest.json: gone1",
+    ]);
+  });
+
+  test("gitCommitted: tracked and clean only", () => {
+    const repo = join(TMP, "repo");
+    writeTree(repo, { "q.json": "{}", "new.json": "{}" });
+    const git = (...a: string[]) =>
+      execFileSync("git", [
+        "-C",
+        repo,
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@example.com",
+        ...a,
+      ]);
+    git("init", "-q");
+    git("add", "q.json");
+    git("commit", "-qm", "q");
+    const clean = gitCommitted(join(repo, "q.json"));
+    writeFileSync(join(repo, "q.json"), "{ }");
+    // Guards: clean is committed; changed, untracked, and outside a repository are not.
+    expect([
+      clean,
+      gitCommitted(join(repo, "q.json")),
+      gitCommitted(join(repo, "new.json")),
+      gitCommitted(join(TMP, "summary", "queries.json")),
+    ]).toEqual([true, false, false, false]);
   });
 });

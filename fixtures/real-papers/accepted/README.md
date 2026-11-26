@@ -117,7 +117,13 @@ A later batch follows these rules, so that the set stays a sample and not a sele
    reason and, for each kept paper, the files it would stage; it writes nothing). `--write fixtures`
    stages in place: the paper directories, their `venue-manifest.json` entries, and the lines of
    `sampling/probe-log.jsonl` and `sampling/staging-notes.json`, each as soon as a candidate is
-   decided. `--only ml,nlp` restricts the fields; `--minutes N` or `--deadline <ISO>` stop it, and a
+   decided, and only while `sampling/queries.json` is committed (rule 1). Every run ends with the
+   summary of `scripts/grow-real-papers/summary.ts` — per field the manifest's total against its
+   quota beside what this run kept and probed, per edition its count against the cap — and the
+   command to run next; it exits 1 when a walk stopped by time or a search error.
+   `node scripts/grow-real-papers/main.ts --summary` prints the same table over the whole log
+   without fetching anything, and exits 1 when the log keeps a paper the manifest lacks.
+   `--only ml,nlp` restricts the fields; `--minutes N` or `--deadline <ISO>` stop it, and a
    rerun resumes from the log (a failed download is judged again, nothing else is). Quotas, caps and
    the 5 per edition are **totals** over every entry of `venue-manifest.json`, earlier batches
    included: a quota already met adds nothing. Papers already in either manifest are skipped. The

@@ -1,5 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -65,5 +72,42 @@ describe("repository skill sync", () => {
       [join(import.meta.dirname, "sync-skills.ts"), "--check"],
       { cwd: tmpdir(), stdio: "pipe" },
     );
+  });
+});
+
+describe("which skills are synced", () => {
+  it("copies every real folder under .claude/skills, and no symlinked shipped skill", async () => {
+    const root = await mkdtemp(join(tmpdir(), "paperlint-skill-test-"));
+    const skill = (name: string) =>
+      `---\nname: ${name}\ndescription: A skill.\n---\n\n# Body.\n`;
+    const copy = (name: string) =>
+      readFile(join(root, ".agents", "skills", name, "SKILL.md"), "utf8");
+    try {
+      for (const name of ["one", "two"]) {
+        await mkdir(join(root, ".claude", "skills", name), { recursive: true });
+        await writeFile(
+          join(root, ".claude", "skills", name, "SKILL.md"),
+          skill(name),
+        );
+      }
+      await mkdir(join(root, "skills", "shipped"), { recursive: true });
+      await writeFile(
+        join(root, "skills", "shipped", "SKILL.md"),
+        skill("shipped"),
+      );
+      await symlink(
+        join(root, "skills", "shipped"),
+        join(root, ".claude", "skills", "shipped"),
+      );
+      await syncSkills(root, false);
+      // Guards: both real folders copied; the symlink, a shipped skill, left out.
+      expect([
+        (await copy("one")).includes("name: one"),
+        (await copy("two")).includes("name: two"),
+      ]).toEqual([true, true]);
+      await expect(copy("shipped")).rejects.toThrow();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

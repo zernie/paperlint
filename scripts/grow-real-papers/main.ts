@@ -4,14 +4,21 @@
  *
  *   node scripts/grow-real-papers/main.ts [--only ml,nlp] [--minutes N | --deadline ISO]
  *        [--queries FILE] [--write FIXTURES-DIR]
+ *   node scripts/grow-real-papers/main.ts --summary [--queries FILE]
  *
  * Without `--write`, a dry run: it fetches and judges exactly as a real run, prints each candidate
  * with its rank and reason and, for each kept paper, where each staged file would go — and writes
  * nothing. `--write DIR` stages into DIR laid out as `fixtures/` is: `DIR/venue-manifest.json`
  * (entries appended), `DIR/real-papers/accepted/<id>/`, and `probe-log.jsonl` and
  * `staging-notes.json` in `DIR/real-papers/accepted/sampling/`, each written as soon as a candidate
- * is decided, so a stopped run resumes from its log. `--write fixtures` stages in place.
+ * is decided, so a stopped run resumes from its log. `--write fixtures` stages in place, and only
+ * while the queries file is committed (rule 1: the quotas are fixed before collecting).
+ *
+ * Every run ends with `summary.ts`'s table and the command to run next, and exits 1 when a walk
+ * stopped by time or a search error. `--summary` fetches nothing: it prints the table over the whole
+ * log and exits 1 when the log keeps a paper the manifest lacks.
  */
+import { execFileSync } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
@@ -20,7 +27,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as R from "remeda";
 import { z } from "zod";
@@ -38,6 +45,7 @@ import {
 import { realClock, throttledGet } from "./http.ts";
 import type { KeptPaper } from "./paper.ts";
 import { baseId, type Get } from "./sources.ts";
+import { logReport, report } from "./summary.ts";
 
 /** This repository's `fixtures/`, found from this file, never from the caller's directory. */
 export const FIXTURES = fileURLToPath(
@@ -50,9 +58,17 @@ export type Args = Readonly<{
   only: readonly string[] | null;
   deadline: number;
   write: string | null;
+  summary: boolean;
 }>;
 
-const KNOWN = ["--only", "--minutes", "--deadline", "--queries", "--write"];
+const KNOWN = [
+  "--only",
+  "--minutes",
+  "--deadline",
+  "--queries",
+  "--write",
+  "--summary",
+];
 
 /** The value after a flag: undefined when the flag is absent, "" when it has none. */
 const valueOf = (argv: readonly string[], flag: string): string | undefined =>
@@ -85,6 +101,7 @@ export function argsOf(argv: readonly string[], now: number): Args | string {
     only: valueOf(argv, "--only")?.split(",") ?? null,
     deadline,
     write: write === undefined ? null : resolve(write),
+    summary: argv.includes("--summary"),
   };
 }
 
@@ -109,7 +126,26 @@ export type World = Readonly<{
   /** The repository's `fixtures/`: the manifests and the log every run reads. */
   fixtures: string;
   presets: string;
+  /** Whether the file is tracked by git with no uncommitted change. */
+  committed: (path: string) => boolean;
 }>;
+
+/** The real `committed`: tracked, and `git status` shows nothing for it; false outside a repository. */
+export function gitCommitted(path: string): boolean {
+  const opts = { cwd: dirname(resolve(path)), encoding: "utf8" } as const;
+  try {
+    execFileSync("git", ["ls-files", "--error-unmatch", basename(path)], {
+      ...opts,
+      stdio: "pipe",
+    });
+    return (
+      execFileSync("git", ["status", "--porcelain", "--", basename(path)], opts)
+        .length === 0
+    );
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Writes one decided candidate into `out`: when kept, its files and entries first; its log line
@@ -173,11 +209,12 @@ function load(args: Args, world: World) {
 const endLine = (e: SlotEnd): string =>
   `${e.slot}: ${e.ended} at rank ${String(e.walkedTo)}${e.error === undefined ? "" : ` (${e.error})`}`;
 
-/** Runs the walk; prints what it decided; with `--write`, stages as it goes. Returns the exit code. */
-export async function run(args: Args, world: World): Promise<number> {
-  const before = load(args, world);
+/** The walk itself: each decision printed and, with `--write`, staged as soon as it is made. */
+async function walk(args: Args, world: World, before: ReturnType<typeof load>) {
   const added: Counted[] = [];
+  const judged: ProbeLine[] = [];
   const emit = (line: ProbeLine, paper?: KeptPaper): void => {
+    judged.push(line);
     world.log(
       `#${String(line.rank)} ${line.id} ${line.series} ${String(line.year)}: ${line.outcome} — ${line.reason}`,
     );
@@ -195,12 +232,42 @@ export async function run(args: Args, world: World): Promise<number> {
     emit,
   });
   for (const e of ends) world.log(endLine(e));
+  return { added, judged, ends };
+}
+
+const print = (
+  world: World,
+  r: Readonly<{ lines: readonly string[]; code: number }>,
+): number => {
+  for (const l of r.lines) world.log(l);
+  return r.code;
+};
+
+/**
+ * Runs the walk, then prints the summary and the next command; `--summary` prints the summary of
+ * the log alone. Returns the exit code.
+ */
+export async function run(args: Args, world: World): Promise<number> {
+  const before = load(args, world);
+  if (args.summary)
+    return print(world, logReport({ ...before, lines: before.logged }));
+  if (args.write !== null && !world.committed(args.queries)) {
+    world.log(
+      `refusing --write: ${args.queries} has changes git has not committed; commit the quotas first, as they are fixed before collecting`,
+    );
+    return 2;
+  }
+  const { added, judged, ends } = await walk(args, world, before);
   world.log(
     args.write === null
       ? `dry run: ${String(added.length)} paper(s) would be added; nothing written (--write DIR stages them)`
       : `staged ${String(added.length)} paper(s) into ${args.write}`,
   );
-  return 0;
+  const entries = [...before.entries, ...added];
+  return print(
+    world,
+    report({ ...before, entries, lines: judged, ends }, args.write !== null),
+  );
 }
 
 if (isMain(import.meta.url)) {
@@ -216,6 +283,7 @@ if (isMain(import.meta.url)) {
       log: console.log,
       fixtures: FIXTURES,
       presets: presetsDir(),
+      committed: gitCommitted,
     }),
   );
 }
