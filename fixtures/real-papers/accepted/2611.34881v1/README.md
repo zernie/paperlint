@@ -5,7 +5,7 @@
 - **Category:** cs.CV; **document class:** `[]{article}`, **style package:** `neurips_2026[eandd, final]`
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** NeurIPS 2026. The arXiv comment of [2611.34881v1](https://arxiv.org/abs/2611.34881v1) says: «This paper was accepted to the 40th Conference on Neural Information Processing Systems (NeurIPS 2026). Track on Evaluations and Datasets. Dataset: huggingface.co/datasets/sidgairo18/strange-bench»
-- **Linted as:** `paperlint:neurips-2026`, the camera-ready of an accepted attempt (the shipped edition preset neurips-2026)
+- **Linted as:** `paperlint:neurips-style`, the camera-ready of an accepted attempt (the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd, final] do not name it)
 - **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def`, each at its path from the archive's root, where arXiv compiles. Dropped: images, PDFs, data.
 - **Renamed, nothing inside changed:** `main.bbl` to `paper.bbl`, `main.tex` to `paper.tex`.
 - **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.

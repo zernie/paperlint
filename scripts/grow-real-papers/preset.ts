@@ -19,17 +19,56 @@ const FAMILIES: readonly (readonly [RegExp, string, string])[] = [
 const NONE = " as no preset ships for this edition";
 
 /**
- * Shipped edition presets that cover one track only, and what the acceptance evidence must say to
- * name it: `presets/ase-2026.jsonc` is the Research Track's call, with its Data Availability
- * Statement; every other ASE 2026 track falls back to the family (`accepted/README.md`).
+ * Shipped edition presets that cover one track only, and where the paper names that track. ASE
+ * 2026's preset is the Research Track's call, with its Data Availability Statement, and only the
+ * acceptance evidence names an ASE track. NeurIPS 2026's preset is the Main Track's call; the paper's
+ * own style line names its track (`\usepackage[main]{neurips_2026}`, `[eandd]` for Evaluations &
+ * Datasets, `[position]`), so the comment is not read. Every other track falls back to the family
+ * (`accepted/README.md`).
  */
-const ONE_TRACK: Readonly<
-  Record<string, Readonly<{ track: string; named: RegExp }>>
-> = {
+type OneTrack = Readonly<
+  | { track: string; namedBy: "evidence"; named: RegExp }
+  | { track: string; namedBy: "style option"; option: string }
+>;
+const ONE_TRACK: Readonly<Record<string, OneTrack>> = {
   "ase-2026": {
     track: "Research Track",
+    namedBy: "evidence",
     named: /\bresearch\s+(?:track|papers?)\b/i,
   },
+  "neurips-2026": {
+    track: "Main Track",
+    namedBy: "style option",
+    option: "main",
+  },
+};
+
+/** The options of a package line, one per comma-separated entry. */
+const optionsOf = (opts: string): readonly string[] =>
+  opts.split(",").map((o) => o.trim());
+
+/** Whether the paper names the one track the edition preset covers. */
+const namesTrack = (
+  only: OneTrack,
+  evidence: string,
+  styleOpts: string,
+): boolean => {
+  switch (only.namedBy) {
+    case "evidence":
+      return only.named.test(evidence);
+    case "style option":
+      return optionsOf(styleOpts).includes(only.option);
+  }
+};
+
+/** What was read and did not name the track, for the README. */
+const unnamedBy = (only: OneTrack, styleOpts: string): string => {
+  switch (only.namedBy) {
+    case "evidence":
+      return "the acceptance evidence does not name it";
+    case "style option":
+      return `the style options [${styleOpts}] do not name it`;
+  }
 };
 
 export type PresetChoice = Readonly<{ preset: string | null; why: string }>;
@@ -77,7 +116,8 @@ const familyOf = (
 
 /**
  * The preset a paper is linted against: the edition's when paperlint ships it and, for an edition
- * preset of one track, `evidence` (the acceptance quote) names that track; else the family of its
+ * preset of one track, the paper names that track (in `evidence`, the acceptance quote, or in
+ * `styleOpts`, per `ONE_TRACK`); else the family of its
  * style or class; else none (a named venue, so no venue rule applies).
  */
 export function presetFor(
@@ -85,18 +125,21 @@ export function presetFor(
     slot,
     preamble: p,
     style,
+    styleOpts = "",
     shipped,
   }: Readonly<{
     slot: Pick<Slot, "series" | "year">;
     preamble: Preamble;
     style?: string | undefined;
+    styleOpts?: string | undefined;
     shipped: ReadonlySet<string>;
   }>,
   evidence: string,
 ): PresetChoice {
   const edition = `${ALIAS[slug(slot.series)] ?? slug(slot.series)}-${String(slot.year)}`;
   const only = ONE_TRACK[edition];
-  const onOtherTrack = only !== undefined && !only.named.test(evidence);
+  const onOtherTrack =
+    only !== undefined && !namesTrack(only, evidence, styleOpts);
   if (shipped.has(edition) && !onOtherTrack)
     return {
       preset: `paperlint:${edition}`,
@@ -104,7 +147,7 @@ export function presetFor(
     };
   const because =
     shipped.has(edition) && only !== undefined
-      ? `, as the shipped edition preset ${edition} covers the ${only.track} only and the acceptance evidence does not name it`
+      ? `, as the shipped edition preset ${edition} covers the ${only.track} only and ${unnamedBy(only, styleOpts)}`
       : NONE;
   return familyOf(p, style, because);
 }
