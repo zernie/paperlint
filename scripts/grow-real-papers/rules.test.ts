@@ -223,6 +223,12 @@ const CLASS_REJECTED: readonly (readonly [string, string, string, string])[] = [
     "template: class acmart in review mode [sigconf,review]",
   ],
   [
+    "the class in review mode by a key's value",
+    "acm",
+    "\\documentclass[sigconf, review = True]{acmart}",
+    "template: class acmart in review mode [sigconf,review = True]",
+  ],
+  [
     "a class neither alternative takes",
     "acm_or_ieee",
     "\\documentclass{article}",
@@ -239,6 +245,8 @@ const CLASS_KEPT: readonly (readonly [string, string, object])[] = [
   ["ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
   ["acm_or_ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
   ["acm_or_ieee", "\\documentclass[sigconf]{acmart}", { ok: true }],
+  // A boolean key switched off is not review mode (acmart.cls declares review with \define@boolkey).
+  ["acm", "\\documentclass[sigconf,review=false]{acmart}", { ok: true }],
   [
     "usenix",
     "\\documentclass{article}\\usepackage{usenix2019_v3}",

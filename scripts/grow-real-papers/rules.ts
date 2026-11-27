@@ -239,6 +239,19 @@ export function preambleOf(main: string): Preamble {
 export const optionList = (options: readonly string[]): string =>
   options.join(",");
 
+/**
+ * Whether an option switches one of `keys` on. Class and style options are keyval: acmart.cls declares
+ * `review` with a boolean key whose default is true, so a bare `review` and `review=true` are review
+ * mode and `review=false` is not. The parser has already split the list; this reads one entry.
+ */
+const switchesOn =
+  (keys: readonly string[]) =>
+  (option: string): boolean => {
+    const [key = "", ...value] = option.split("=");
+    const set = value.length === 0 ? "true" : value.join("=").trim();
+    return keys.includes(key.trim()) && set.toLowerCase() === "true";
+  };
+
 type ClassVerdict = Verdict<{
   style?: string;
   styleOptions?: readonly string[];
@@ -259,7 +272,7 @@ const withStyle =
       return no(
         `class ${String(p.cls)} without the venue style package (${String(style)})`,
       );
-    if (hit.options.some((o) => reviewOptions.includes(o)))
+    if (hit.options.some(switchesOn(reviewOptions)))
       return no(
         `style ${hit.name} in review/submission mode [${optionList(hit.options)}]`,
       );
@@ -274,7 +287,7 @@ const ofClass =
   (p) => {
     if (!classes.includes(p.cls ?? ""))
       return no(`class ${String(p.cls)}, not ${classes.join("/")}`);
-    if (p.clsOptions.some((o) => reviewOptions.includes(o)))
+    if (p.clsOptions.some(switchesOn(reviewOptions)))
       return no(
         `class ${String(p.cls)} in review mode [${optionList(p.clsOptions)}]`,
       );
