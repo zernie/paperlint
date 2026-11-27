@@ -43,31 +43,27 @@ const ONE_TRACK: Readonly<Record<string, OneTrack>> = {
   },
 };
 
-/** The options of a package line, one per comma-separated entry. */
-const optionsOf = (opts: string): readonly string[] =>
-  opts.split(",").map((o) => o.trim());
-
 /** Whether the paper names the one track the edition preset covers. */
 const namesTrack = (
   only: OneTrack,
   evidence: string,
-  styleOpts: string,
+  styleOptions: readonly string[],
 ): boolean => {
   switch (only.namedBy) {
     case "evidence":
       return only.named.test(evidence);
     case "style option":
-      return optionsOf(styleOpts).includes(only.option);
+      return styleOptions.includes(only.option);
   }
 };
 
 /** What was read and did not name the track, for the README. */
-const unnamedBy = (only: OneTrack, styleOpts: string): string => {
+const unnamedBy = (only: OneTrack, styleOptions: readonly string[]): string => {
   switch (only.namedBy) {
     case "evidence":
       return "the acceptance evidence does not name it";
     case "style option":
-      return `the style options [${styleOpts}] do not name it`;
+      return `the style options [${optionList(styleOptions)}] do not name it`;
   }
 };
 
@@ -114,32 +110,29 @@ const familyOf = (
   );
 };
 
+/** What a preset is chosen from: the edition, the preamble, and rule 3's style and its options. */
+export type PresetInput = Readonly<{
+  slot: Pick<Slot, "series" | "year">;
+  preamble: Preamble;
+  style?: string | undefined;
+  styleOptions?: readonly string[] | undefined;
+  shipped: ReadonlySet<string>;
+}>;
+
 /**
  * The preset a paper is linted against: the edition's when paperlint ships it and, for an edition
  * preset of one track, the paper names that track (in `evidence`, the acceptance quote, or in
- * `styleOpts`, per `ONE_TRACK`); else the family of its
+ * `styleOptions`, per `ONE_TRACK`); else the family of its
  * style or class; else none (a named venue, so no venue rule applies).
  */
 export function presetFor(
-  {
-    slot,
-    preamble: p,
-    style,
-    styleOpts = "",
-    shipped,
-  }: Readonly<{
-    slot: Pick<Slot, "series" | "year">;
-    preamble: Preamble;
-    style?: string | undefined;
-    styleOpts?: string | undefined;
-    shipped: ReadonlySet<string>;
-  }>,
+  { slot, preamble: p, style, styleOptions = [], shipped }: PresetInput,
   evidence: string,
 ): PresetChoice {
   const edition = `${ALIAS[slug(slot.series)] ?? slug(slot.series)}-${String(slot.year)}`;
   const only = ONE_TRACK[edition];
   const onOtherTrack =
-    only !== undefined && !namesTrack(only, evidence, styleOpts);
+    only !== undefined && !namesTrack(only, evidence, styleOptions);
   if (shipped.has(edition) && !onOtherTrack)
     return {
       preset: `paperlint:${edition}`,
@@ -147,7 +140,7 @@ export function presetFor(
     };
   const because =
     shipped.has(edition) && only !== undefined
-      ? `, as the shipped edition preset ${edition} covers the ${only.track} only and ${unnamedBy(only, styleOpts)}`
+      ? `, as the shipped edition preset ${edition} covers the ${only.track} only and ${unnamedBy(only, styleOptions)}`
       : NONE;
   return familyOf(p, style, because);
 }

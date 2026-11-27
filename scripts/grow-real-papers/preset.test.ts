@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 import { presetFor } from "./preset.ts";
-import { preambleOf } from "./rules.ts";
+import { judgeClass, preambleOf } from "./rules.ts";
 
 const slot = { series: "ACL", year: 2025 };
 const ccsShipped = new Set(["ccs-2025"]);
@@ -120,29 +120,29 @@ describe("an edition preset whose track the style option names", () => {
   test.each([
     {
       name: "the main option gets the edition preset",
-      styleOpts: "main, final",
+      styleOptions: ["main", "final"],
       preset: "paperlint:neurips-2026",
     },
     {
       name: "another track's option gets the family",
-      styleOpts: "eandd,final",
+      styleOptions: ["eandd", "final"],
       preset: "paperlint:neurips-style",
     },
     {
       name: "no track option gets the family",
-      styleOpts: "final",
+      styleOptions: ["final"],
       preset: "paperlint:neurips-style",
     },
     {
       name: "a word that contains the option is not the option",
-      styleOpts: "mainly, final",
+      styleOptions: ["mainly", "final"],
       preset: "paperlint:neurips-style",
     },
-  ])("$name", ({ styleOpts, preset }) => {
+  ])("$name", ({ styleOptions, preset }) => {
     // Guards: the track comes from the paper's own style line, whatever the comment says.
     expect(
       presetFor(
-        { slot: neurips, preamble: p, style, styleOpts, shipped },
+        { slot: neurips, preamble: p, style, styleOptions, shipped },
         "Accepted at NeurIPS 2026 Main Track",
       ).preset,
     ).toBe(preset);
@@ -151,12 +151,47 @@ describe("an edition preset whose track the style option names", () => {
     // Guards: the README names the track and where it was read.
     expect(
       presetFor(
-        { slot: neurips, preamble: p, style, styleOpts: "eandd, final", shipped },
+        {
+          slot: neurips,
+          preamble: p,
+          style,
+          styleOptions: ["eandd", "final"],
+          shipped,
+        },
         "Accepted at NeurIPS 2026",
       ),
     ).toEqual({
       preset: "paperlint:neurips-style",
-      why: "the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd, final] do not name it",
+      why: "the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd,final] do not name it",
     });
+  });
+});
+
+const NEURIPS_2026 = { series: "NeurIPS", year: 2026 };
+
+describe("rule 3 into the preset", () => {
+  test("the track is read from what rule 3 returns for the style line", () => {
+    // Guards: presetFor reads the key judgeClass writes; a renamed key drops every paper to the family.
+    const read = (line: string) => {
+      const pre = preambleOf(`\\documentclass{article}${line}`);
+      const kept = judgeClass("neurips", pre);
+      return kept.ok
+        ? presetFor(
+            {
+              slot: NEURIPS_2026,
+              preamble: pre,
+              ...kept,
+              shipped: new Set(["neurips-2026"]),
+            },
+            "",
+          ).preset
+        : kept.reason;
+    };
+    expect([
+      read("\\usepackage[main,\n final]{neurips_2026}"),
+      read(
+        "% \\usepackage[main]{neurips_2026}\n\\usepackage[eandd, final]{neurips_2026}",
+      ),
+    ]).toEqual(["paperlint:neurips-2026", "paperlint:neurips-style"]);
   });
 });
