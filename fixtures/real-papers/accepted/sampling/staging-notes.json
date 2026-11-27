@@ -201,7 +201,7 @@
     "style": "neurips_2026",
     "styleOpts": "eandd, final",
     "mainCandidates": 1,
-    "presetWhy": "the shipped edition preset neurips-2026",
+    "presetWhy": "the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd,final] do not name it",
     "edits": [],
     "renames": [
       "neurips_2026.bbl to paper.bbl",
@@ -1019,7 +1019,7 @@
     "style": "neurips_2026",
     "styleOpts": "eandd, final",
     "mainCandidates": 1,
-    "presetWhy": "the shipped edition preset neurips-2026",
+    "presetWhy": "the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd,final] do not name it",
     "edits": [],
     "renames": [
       "main.bbl to paper.bbl",
@@ -1082,7 +1082,7 @@
     "style": "neurips_2026",
     "styleOpts": "eandd,final",
     "mainCandidates": 1,
-    "presetWhy": "the shipped edition preset neurips-2026",
+    "presetWhy": "the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd,final] do not name it",
     "edits": [],
     "renames": [
       "main.tex to paper.tex"

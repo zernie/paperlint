@@ -256,6 +256,11 @@ A later batch follows these rules, so that the set stays a sample and not a sele
   (2604.08115v1), EMNLP 2025 Industry Track (2602.22696v1), NeurIPS 2026's Track on Evaluations and
   Datasets (2611.24904v1), «Accepted to CHI 2026 (preprint)» (2603.19504v1) and OOPSLA 2026 «R1»
   (2602.20049v1). One entry is EMNLP 2025 Findings (`track: "Findings"`, 2604.24052v1).
+- **NeurIPS 2026's track is read from the style line, not the comment.** `neurips-2026` is the Main
+  Track's preset, and a paper names its track in `\usepackage[main]{neurips_2026}` (`[eandd]` for
+  Evaluations & Datasets). On 2026-11-27 the three `[eandd]` papers (2611.24904v1, 2611.34825v1,
+  2611.34881v1) moved from `paperlint:neurips-2026` to `paperlint:neurips-style` (`ONE_TRACK` in
+  `scripts/grow-real-papers/preset.ts`); their comments name no track.
 - **The style's mode is not a rule.** For NeurIPS the script checks only that `neurips_20xx` is
   loaded, and a bare `\usepackage{neurips_2025}` is the submission layout. In this batch every
   NeurIPS paper loads `[final]`, every ICML paper `[accepted]`, every ICLR paper sets
@@ -310,7 +315,7 @@ The 76 of the 80 sampled on 2026-11-20 that remain, generated from `venue-manife
 | [2609.07876v1](2609.07876v1/README.md) | ml | NeurIPS 2025 | `paperlint:neurips-style` | `article` + `neurips_2025[final]` | CC BY 4.0 | 193 KB |
 | [2610.22056v1](2610.22056v1/README.md) | ml | NeurIPS 2025 | `paperlint:neurips-style` | `article` + `neurips_2025[final]` | CC BY 4.0 | 97 KB |
 | [2611.24376v1](2611.24376v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[main, final]` | CC BY 4.0 | 191 KB |
-| [2611.24904v1](2611.24904v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[eandd, final]` | CC BY 4.0 | 235 KB |
+| [2611.24904v1](2611.24904v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-style` | `article` + `neurips_2026[eandd, final]` | CC BY 4.0 | 235 KB |
 | [2511.17153v1](2511.17153v1/README.md) | nlp | ACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 170 KB |
 | [2603.02248v1](2603.02248v1/README.md) | nlp | ACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 195 KB |
 | [2604.08115v1](2604.08115v1/README.md) | nlp | ACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 141 KB |
@@ -384,8 +389,8 @@ The 63 of the 69 sampled on 2026-11-27 that remain, generated the same way:
 | [2611.30168v1](2611.30168v1/README.md) | ml | ICML 2026 | `paperlint:icml-style` | `article` + `icml2026[accepted]` | CC BY 4.0 | 256 KB |
 | [2604.11223v1](2604.11223v1/README.md) | ml | NeurIPS 2025 | `paperlint:neurips-style` | `article` + `neurips_2025[final]` | CC BY 4.0 | 283 KB |
 | [2611.33759v1](2611.33759v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[main,final]` | CC BY 4.0 | 108 KB |
-| [2611.34825v1](2611.34825v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[eandd,final]` | CC BY 4.0 | 127 KB |
-| [2611.34881v1](2611.34881v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-2026` | `article` + `neurips_2026[eandd, final]` | CC BY 4.0 | 267 KB |
+| [2611.34825v1](2611.34825v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-style` | `article` + `neurips_2026[eandd,final]` | CC BY 4.0 | 127 KB |
+| [2611.34881v1](2611.34881v1/README.md) | ml | NeurIPS 2026 | `paperlint:neurips-style` | `article` + `neurips_2026[eandd, final]` | CC BY 4.0 | 267 KB |
 | [2508.18740v1](2508.18740v1/README.md) | nlp | ACL 2025 (Findings) | `paperlint:acl-latex` | `article` + `acl` | CC BY 4.0 | 231 KB |
 | [2509.18719v1](2509.18719v1/README.md) | nlp | ACL 2025 | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 138 KB |
 | [2609.23257v2](2609.23257v2/README.md) | nlp | ACL 2026 (Findings) | `paperlint:acl-latex` | `article` + `acl[final]` | CC BY 4.0 | 143 KB |

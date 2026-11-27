@@ -596,7 +596,7 @@
       "url": "https://arxiv.org/abs/2611.24904v1",
       "venue": "NeurIPS 2026"
     },
-    "preset": "paperlint:neurips-2026",
+    "preset": "paperlint:neurips-style",
     "kind": null,
     "source": "arxiv-comment",
     "acceptance": "arxiv-comment"
@@ -2027,7 +2027,7 @@
       "url": "https://arxiv.org/abs/2611.34881v1",
       "venue": "NeurIPS 2026"
     },
-    "preset": "paperlint:neurips-2026",
+    "preset": "paperlint:neurips-style",
     "kind": null,
     "source": "arxiv-comment",
     "acceptance": "arxiv-comment"
@@ -2137,7 +2137,7 @@
       "url": "https://arxiv.org/abs/2611.34825v1",
       "venue": "NeurIPS 2026"
     },
-    "preset": "paperlint:neurips-2026",
+    "preset": "paperlint:neurips-style",
     "kind": null,
     "source": "arxiv-comment",
     "acceptance": "arxiv-comment"

@@ -5,7 +5,7 @@
 - **Category:** cs.CV; **document class:** `[]{article}`, **style package:** `neurips_2026[eandd, final]`
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** NeurIPS 2026. The arXiv comment of [2611.24904v1](https://arxiv.org/abs/2611.24904v1) says: «Accepted at NeurIPS 2026, Track on Evaluations and Datasets. 53 pages. Project page: https://shagun8.github.io/shadowtransfer/ . Code: https://github.com/shagun8/shadowtransfer . Data: https://huggingface.co/datasets/shagunmittal/ShadowTransfer (DOI 10.57967/hf/11483)»
-- **Linted as:** `paperlint:neurips-2026`, the camera-ready of an accepted attempt (the shipped edition preset neurips-2026)
+- **Linted as:** `paperlint:neurips-style`, the camera-ready of an accepted attempt (the NeurIPS style family, as the shipped edition preset neurips-2026 covers the Main Track only and the style options [eandd,final] do not name it)
 - **Text sources only, figures omitted.** Kept: `.tex`, `.bib`, `.bbl`, `.cls`, `.sty`, `.bst`, `.cfg`, `.def` of the main file's directory. Dropped: images, PDFs, data.
 - **Renamed, nothing inside changed:** `neurips_2026.bbl` to `paper.bbl`, `neurips_2026.tex` to `paper.tex`.
 - **Ours:** `paperlint.json`, `PIPELINE-STATUS.md`, `record-by-hand.json`, `baseline.json`, `README.md`.

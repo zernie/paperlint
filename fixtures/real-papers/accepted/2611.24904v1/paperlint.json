@@ -4,7 +4,7 @@
       "id": "neurips-2026",
       "venue": {
         "kind": "preset",
-        "extends": "paperlint:neurips-2026"
+        "extends": "paperlint:neurips-style"
       },
       "opened": "2026-11-18",
       "outcome": {
