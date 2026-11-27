@@ -234,7 +234,7 @@ const CLASS_KEPT: readonly (readonly [string, string, object])[] = [
   [
     "neurips",
     "\\documentclass{article}\\usepackage[final]{neurips_2025}",
-    { ok: true, style: "neurips_2025", styleOpts: "final" },
+    { ok: true, style: "neurips_2025", styleOptions: ["final"] },
   ],
   ["ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
   ["acm_or_ieee", "\\documentclass[conference]{IEEEtran}", { ok: true }],
@@ -245,7 +245,7 @@ const CLASS_KEPT: readonly (readonly [string, string, object])[] = [
     {
       ok: true,
       style: "usenix2019_v3",
-      styleOpts: "",
+      styleOptions: [],
     },
   ],
 ];
@@ -261,15 +261,44 @@ describe("rule 3: the class and style", () => {
     // Guards: the first uncommented class, its path and extension dropped, every package.
     expect(preambleOf(main)).toEqual({
       cls: "acmart",
-      clsOpts: "sigconf,review",
+      clsOptions: ["sigconf", "review"],
+      // A class option is global: every package sees it, as TeX passes it on.
       pkgs: [
-        { name: "neurips_2025", opts: "final" },
-        { name: "amsmath", opts: "" },
-        { name: "amssymb", opts: "" },
+        { name: "neurips_2025", options: ["sigconf", "review", "final"] },
+        { name: "amsmath", options: ["sigconf", "review"] },
+        { name: "amssymb", options: ["sigconf", "review"] },
       ],
     });
     // Guards: no class at all.
-    expect(preambleOf("text")).toEqual({ cls: null, clsOpts: "", pkgs: [] });
+    expect(preambleOf("text")).toEqual({ cls: null, clsOptions: [], pkgs: [] });
+    // Guards: two class lines under a conditional the reader cannot settle: the first in the text.
+    expect(
+      preambleOf(
+        "\\ifdefined\\review\\documentclass[review]{acmart}\\else\\documentclass[sigconf]{acmart}\\fi",
+      ),
+    ).toEqual({ cls: "acmart", clsOptions: ["review"], pkgs: [] });
+    // Guards: a package line inside a false conditional is not loaded; options are split as TeX
+    // splits them, spaces and line breaks dropped.
+    expect(
+      preambleOf(
+        [
+          "\\documentclass{article}",
+          "\\iffalse \\usepackage{neurips_2025} \\fi",
+          "\\usepackage[eandd,",
+          "  final]{neurips_2026}",
+        ].join("\n"),
+      ).pkgs,
+    ).toEqual([{ name: "neurips_2026", options: ["eandd", "final"] }]);
+    // Guards: review mode set on the class reaches the style, as it does in TeX.
+    expect(
+      judgeClass(
+        "acl",
+        preambleOf("\\documentclass[review]{article}\\usepackage{acl}"),
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "template: style acl in review/submission mode [review]",
+    });
     // Guards: an escaped percent stays.
     expect(stripComments("a\\% b % c")).toBe("a\\% b ");
   });

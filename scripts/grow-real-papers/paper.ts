@@ -5,7 +5,7 @@
  */
 import { recordOf, type StagingPlan } from "./archive.ts";
 import { presetFor, slug, type PresetChoice } from "./preset.ts";
-import type { Preamble, Slot } from "./rules.ts";
+import { optionList, type Preamble, type Slot } from "./rules.ts";
 
 /** One candidate paper, as the arXiv API (and, for a listing, Semantic Scholar) describes it. */
 export type Candidate = Readonly<{
@@ -45,7 +45,7 @@ export type Kept = Readonly<{
   plan: StagingPlan;
   preamble: Preamble;
   style?: string;
-  styleOpts?: string;
+  styleOptions?: readonly string[];
   sourceSha: string;
   shipped: ReadonlySet<string>;
 }>;
@@ -78,7 +78,7 @@ const readmeOf = (k: Kept, choice: PresetChoice): string => {
   const style =
     k.style === undefined
       ? ""
-      : `, **style package:** \`${k.style}${k.styleOpts ? `[${k.styleOpts}]` : ""}\``;
+      : `, **style package:** \`${k.style}${k.styleOptions?.length ? `[${optionList(k.styleOptions)}]` : ""}\``;
   const evidence =
     c.s2 === undefined
       ? `The arXiv comment of [${c.id}](${absUrl(c)}) says: «${quoteOf(k)}»`
@@ -91,7 +91,7 @@ const readmeOf = (k: Kept, choice: PresetChoice): string => {
 
 - **Authors:** ${c.authors.join(", ")}
 - **Source:** arXiv [${c.id}](${absUrl(c)}), e-print \`https://arxiv.org/src/${c.id}\` (sha256 \`${k.sourceSha}\`)
-- **Category:** ${c.category}; **document class:** \`[${p.clsOpts}]{${String(p.cls)}}\`${style}
+- **Category:** ${c.category}; **document class:** \`[${optionList(p.clsOptions)}]{${String(p.cls)}}\`${style}
 - **Licence:** [${k.licence.name}](${k.licence.url}), as the arXiv abstract page states. The files are redistributed under it.
 - **Accepted at:** ${venueOf(k)}. ${evidence}
 - **Linted as:** ${linted}, the camera-ready of an accepted attempt (${choice.why})
@@ -143,9 +143,9 @@ const versionNote = (
     : `latest arXiv version ${updated}; venue date ${s2.publicationDate ?? "not given"}`;
 
 const noteOf = (k: Kept, choice: PresetChoice) => ({
-  clsOpts: k.preamble.clsOpts,
+  clsOpts: optionList(k.preamble.clsOptions),
   style: k.style ?? null,
-  styleOpts: k.styleOpts ?? null,
+  styleOpts: k.styleOptions === undefined ? null : optionList(k.styleOptions),
   mainCandidates: k.plan.mainCandidates,
   presetWhy: choice.why,
   edits: k.plan.edits,

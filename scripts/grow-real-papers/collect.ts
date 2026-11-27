@@ -143,14 +143,18 @@ function judgeStaged(
   slot: Slot,
   plan: Sources["plan"],
 ):
-  | Readonly<{ preamble: Preamble; style?: string; styleOpts?: string }>
+  | Readonly<{
+      preamble: Preamble;
+      style?: string;
+      styleOptions?: readonly string[];
+    }>
   | Judged {
   const preamble = preambleOf(plan.mainText);
   const cls = judgeClass(slot.classSpec, preamble);
   if (!cls.ok)
     return {
       reason: cls.reason,
-      detail: { cls: preamble.cls, clsOpts: preamble.clsOpts },
+      detail: { cls: preamble.cls, clsOptions: preamble.clsOptions },
     };
   const size = judgeSize(plan.size);
   if (!size.ok) return { reason: size.reason };

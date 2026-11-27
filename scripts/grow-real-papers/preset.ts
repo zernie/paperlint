@@ -2,7 +2,7 @@
  * The preset a kept paper is linted against: the shipped edition preset, else the template family
  * of its style or class, else none. Pure.
  */
-import type { Preamble, Slot } from "./rules.ts";
+import { optionList, type Preamble, type Slot } from "./rules.ts";
 
 export const slug = (s: string): string =>
   s
@@ -40,17 +40,17 @@ const ALIAS: Readonly<Record<string, string>> = {
 
 /** The template family of an acmart or IEEEtran class, or null; `why` ends with `because`. */
 const classFamily = (p: Preamble, because: string): PresetChoice | null => {
-  if (p.cls === "IEEEtran" && p.clsOpts.includes("conference"))
+  if (p.cls === "IEEEtran" && p.clsOptions.includes("conference"))
     return {
       preset: "paperlint:ieee-conference",
       why: `the IEEE conference family${because}`,
     };
   if (p.cls !== "acmart") return null;
-  const fmt = /acmsmall|sigconf/.exec(p.clsOpts)?.[0];
+  const fmt = p.clsOptions.find((o) => o === "acmsmall" || o === "sigconf");
   return fmt === undefined
     ? {
         preset: null,
-        why: `no preset: the class is acmart with format [${p.clsOpts}], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition`,
+        why: `no preset: the class is acmart with format [${optionList(p.clsOptions)}], which is neither the sigconf nor the acmsmall family, and no preset ships for this edition`,
       }
     : {
         preset: `paperlint:acm-${fmt}`,
