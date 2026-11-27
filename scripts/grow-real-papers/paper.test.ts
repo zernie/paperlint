@@ -47,7 +47,7 @@ const base: Kept = {
   plan: plan(),
   preamble: preambleOf(main),
   style: "acl",
-  styleOpts: "",
+  styleOptions: [],
   sourceSha: "abc",
   shipped: new Set(),
 };
@@ -151,7 +151,7 @@ describe("a kept paper's entry", () => {
 /** A paper kept from a Semantic Scholar listing, with no style. */
 const listed = (publicationDate: string | null, comment: string) =>
   keptPaper({
-    ...R.omit(base, ["style", "styleOpts"]),
+    ...R.omit(base, ["style", "styleOptions"]),
     c: { ...base.c, comment, s2: { venue: "OSDI", publicationDate } },
     preamble: preambleOf("\\documentclass{article}"),
     plan: plan([file("ms.tex", mainTex("")), file("w.tex", "\\input{ms}")]),
@@ -232,7 +232,7 @@ describe("the README's variants", () => {
   test("a style with options, and a main file already named paper.tex", () => {
     const k = keptPaper({
       ...base,
-      styleOpts: "final",
+      styleOptions: ["final"],
       plan: plan([file("paper.tex", main)]),
     });
     const readme = String(k.files.get("README.md")).split("\n");

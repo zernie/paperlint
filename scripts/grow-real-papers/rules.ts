@@ -6,6 +6,11 @@
  * and the balance test cannot disagree on them.
  */
 import { z } from "zod";
+import { latexReader } from "../../src/adapters/latex/index.ts";
+import type {
+  ClassCandidate,
+  ClassLine,
+} from "../../src/domain/tex-document.ts";
 
 /** At most this many papers per venue edition (series and year), over every manifest entry. */
 export const PER_EDITION = 5;
@@ -190,37 +195,75 @@ export const stripComments = (t: string): string =>
 /** The first `\documentclass` of a main file, its options, and every package it loads. */
 export type Preamble = Readonly<{
   cls: string | null;
-  clsOpts: string;
-  pkgs: readonly Readonly<{ name: string; opts: string }>[];
+  clsOptions: readonly string[];
+  pkgs: readonly Readonly<{ name: string; options: readonly string[] }>[];
 }>;
 
+/** The class a `\documentclass` line names, without a path or `.cls`: `../acmart.cls` is `acmart`. */
+const bareClass = (cls: string): string =>
+  cls.replace(/^.*\//, "").replace(/\.cls$/, "");
+
+/** The first class line the reader found, or none. */
+const firstClass = (line: ClassLine): ClassCandidate | null => {
+  switch (line.kind) {
+    case "missing":
+    case "unseen":
+      return null;
+    case "ambiguous":
+      return line.candidates[0];
+    case "class":
+    case "empty":
+    case "unread":
+      return line;
+  }
+};
+
+/**
+ * The preamble through the linter's own LaTeX reader (unified-latex, `src/adapters/latex/`), not a
+ * pattern over the text: comments, conditionals and option lists are read as TeX reads them. A
+ * package's options are those in effect: the class's (global) options, then `\PassOptionsToPackage`,
+ * then its own line's, so review mode set on the class reaches the style as it does in TeX.
+ */
 export function preambleOf(main: string): Preamble {
-  const t = stripComments(main);
-  const dc = /\\documentclass\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}/.exec(t);
-  const pkgs = [
-    ...t.matchAll(
-      /\\(?:usepackage|RequirePackage)\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g,
-    ),
-  ].flatMap((m) =>
-    String(m[2])
-      .split(",")
-      .map((n) => ({ name: n.trim(), opts: m[1] ?? "" })),
-  );
-  const cls =
-    dc === null
-      ? null
-      : String(dc[2])
-          .trim()
-          .replace(/^.*\//, "")
-          .replace(/\.cls$/, "");
-  return { cls, clsOpts: dc?.[1] ?? "", pkgs };
+  const line = firstClass(latexReader.documentClass(main));
+  return {
+    cls: line?.kind === "class" ? bareClass(line.cls) : null,
+    clsOptions: line?.kind === "class" ? line.options : [],
+    pkgs: latexReader
+      .packages(main)
+      .map((p) => ({ name: p.name, options: p.options })),
+  };
 }
 
-type ClassVerdict = Verdict<{ style?: string; styleOpts?: string }>;
+/** Options as a `[…]` list, for a reason or a README. */
+export const optionList = (options: readonly string[]): string =>
+  options.join(",");
+
+/**
+ * Whether an option switches one of `keys` on. Class and style options are keyval: acmart.cls declares
+ * `review` with a boolean key whose default is true, so a bare `review` and `review=true` are review
+ * mode and `review=false` is not. The parser has already split the list; this reads one entry.
+ */
+const switchesOn =
+  (keys: readonly string[]) =>
+  (option: string): boolean => {
+    const [key = "", ...value] = option.split("=");
+    const set = value.length === 0 ? "true" : value.join("=").trim();
+    return keys.includes(key.trim()) && set.toLowerCase() === "true";
+  };
+
+type ClassVerdict = Verdict<{
+  style?: string;
+  styleOptions?: readonly string[];
+}>;
 type ClassSpec = (p: Preamble) => ClassVerdict;
 
 const withStyle =
-  (classes: readonly string[], style: RegExp, reviewOpts?: RegExp): ClassSpec =>
+  (
+    classes: readonly string[],
+    style: RegExp,
+    reviewOptions: readonly string[] = [],
+  ): ClassSpec =>
   (p) => {
     if (!classes.includes(p.cls ?? ""))
       return no(`class ${String(p.cls)}, not ${classes.join("/")}`);
@@ -229,18 +272,25 @@ const withStyle =
       return no(
         `class ${String(p.cls)} without the venue style package (${String(style)})`,
       );
-    if (reviewOpts?.test(hit.opts) === true)
-      return no(`style ${hit.name} in review/submission mode [${hit.opts}]`);
-    return { ok: true, style: hit.name, styleOpts: hit.opts };
+    if (hit.options.some(switchesOn(reviewOptions)))
+      return no(
+        `style ${hit.name} in review/submission mode [${optionList(hit.options)}]`,
+      );
+    return { ok: true, style: hit.name, styleOptions: hit.options };
   };
 
 const ofClass =
-  (classes: readonly string[], reviewOpts?: RegExp): ClassSpec =>
+  (
+    classes: readonly string[],
+    reviewOptions: readonly string[] = [],
+  ): ClassSpec =>
   (p) => {
     if (!classes.includes(p.cls ?? ""))
       return no(`class ${String(p.cls)}, not ${classes.join("/")}`);
-    if (reviewOpts?.test(p.clsOpts) === true)
-      return no(`class ${String(p.cls)} in review mode [${p.clsOpts}]`);
+    if (p.clsOptions.some(switchesOn(reviewOptions)))
+      return no(
+        `class ${String(p.cls)} in review mode [${optionList(p.clsOptions)}]`,
+      );
     return { ok: true };
   };
 
@@ -261,21 +311,21 @@ export const CLASS_SPECS: Readonly<Record<string, ClassSpec>> = {
   acl: withStyle(
     ["article"],
     /^(acl|acl_natbib|emnlp(_?20\d\d)?|naacl(_?20\d\d)?|eacl(_?20\d\d)?|acl20\d\d)$/,
-    /\breview\b/,
+    ["review"],
   ),
-  aaai: withStyle(["article"], /^aaai\d{2,4}$/, /submission/),
-  ijcai: withStyle(["article"], /^ijcai\d\d$/, /review|submission/),
+  aaai: withStyle(["article"], /^aaai\d{2,4}$/, ["submission"]),
+  ijcai: withStyle(["article"], /^ijcai\d\d$/, ["review", "submission"]),
   usenix: either(withStyle(["article"], /^usenix/), ofClass(["usenix"])),
   ieee: ofClass(["IEEEtran"]),
   ndss: ofClass(["IEEEtran"]),
   icra: ofClass(["IEEEtran", "ieeeconf"]),
-  acm: ofClass(["acmart"], /\breview\b/),
-  acm_or_ieee: either(ofClass(["acmart"], /\breview\b/), ofClass(["IEEEtran"])),
+  acm: ofClass(["acmart"], ["review"]),
+  acm_or_ieee: either(ofClass(["acmart"], ["review"]), ofClass(["IEEEtran"])),
   vldb: either(
     withStyle(["article", "acmart"], /^vldb/),
-    ofClass(["acmart"], /\breview\b/),
+    ofClass(["acmart"], ["review"]),
   ),
-  cvpr: withStyle(["article"], /^(cvpr|iccv|eccv)(_?20\d\d)?$/, /review/),
+  cvpr: withStyle(["article"], /^(cvpr|iccv|eccv)(_?20\d\d)?$/, ["review"]),
 };
 
 /** Rule 3 for one slot; a `classSpec` this file does not know is a broken `queries.json`. */
