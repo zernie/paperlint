@@ -28,7 +28,7 @@ here and that every `paperlint:` id below exists.
 | `paperlint:acm-sigconf`     | ACM `acmart`, sigconf (two columns)             |
 | `paperlint:acm-acmsmall`    | ACM `acmart`, acmsmall (one column)             |
 | `paperlint:ieee-conference` | IEEE `IEEEtran`, conference                     |
-| `paperlint:acl-latex`       | `article` + `\usepackage{acl}`                  |
+| `paperlint:acl-latex`       | ACL `article` + `\usepackage{acl}`              |
 | `paperlint:neurips-style`   | `article` + `\usepackage{neurips_2026}`         |
 | `paperlint:icml-style`      | `article` + `\usepackage{icml2027}`             |
 | `paperlint:aaai-press`      | `article` + `\usepackage[submission]{aaai2027}` |
